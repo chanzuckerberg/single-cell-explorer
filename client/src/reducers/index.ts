@@ -3,6 +3,7 @@ import thunk, { ThunkDispatch } from "redux-thunk";
 
 import cascadeReducers from "./cascade";
 import undoable from "./undoable";
+import collections from "./collections";
 import config from "./config";
 import annoMatrix from "./annoMatrix";
 import obsCrossfilter from "./obsCrossfilter";
@@ -41,6 +42,7 @@ const Reducer = undoable(
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDialation],
     ["autosave", autosave],
+    ["collections", collections],
   ]),
   [
     "annoMatrix",

@@ -118,6 +118,9 @@ const saveOnActions = new Set<string>([
   "geneset: add genes",
   "geneset: delete genes",
   "geneset: set gene description",
+
+  /* collections */
+  "collection load complete",
 ]);
 
 /**
