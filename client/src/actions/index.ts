@@ -15,6 +15,18 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { UserInfoPayload } from "../reducers/userInfo";
+import {
+  createAPIPrefix,
+  createDatasetUrl,
+  createExplorerUrl,
+} from "../util/stateManager/collectionsHelpers";
+import {
+  KEYS,
+  storageGet,
+  storageSet,
+  WORK_IN_PROGRESS_WARN_STATE,
+} from "../components/util/localStorage";
+import { postExplainNewTab } from "../components/framework/toasters";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -57,6 +69,23 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
   return config;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+async function collectionFetchAndLoad(dispatch: any) {
+  /*
+  Fetch dataset meta for the current visualization then fetch the corresponding collection.
+   */
+  const datasetMeta = await datasetMetaFetch();
+  const { collection_id: collectionId, dataset_id: selectedDatasetId } =
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    datasetMeta as any;
+  const collection = await collectionFetch(collectionId);
+  dispatch({
+    type: "collection load complete",
+    collection,
+    selectedDatasetId,
+  });
+}
+
 async function userInfoFetch(dispatch: AppDispatch): Promise<UserInfoPayload> {
   return fetchJson<{ userinfo: UserInfoPayload }>("userinfo").then(
     (response) => {
@@ -92,6 +121,23 @@ async function genesetsFetch(dispatch: any, config: any) {
   }
 }
 
+async function datasetMetaFetch() {
+  /*
+   Fetch dataset meta for the current dataset.
+   TODO(cc) revisit swap of explorer URL origin for environments without a corresponding Portal instance (eg local, canary)
+   */
+  const explorerUrl = createExplorerUrl();
+  const explorerUrlParam = encodeURIComponent(explorerUrl);
+  return fetchPortalJson(`datasets/meta?url=${explorerUrlParam}`);
+}
+
+async function collectionFetch(collectionId: string) {
+  /*
+   Fetch collection with the given ID.
+   */
+  return fetchPortalJson(`collections/${collectionId}`);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function prefetchEmbeddings(annoMatrix: any) {
   /*
@@ -120,6 +166,7 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
         userInfoFetch(dispatch),
+        collectionFetchAndLoad(dispatch),
       ]);
 
       genesetsFetch(dispatch, config);
@@ -269,10 +316,75 @@ const requestDifferentialExpression =
     }
   };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+export const checkExplainNewTab = () => (dispatch: any) => {
+  /*
+  Opens toast "work in progress" warning.
+   */
+  if (
+    storageGet(KEYS.WORK_IN_PROGRESS_WARN) === WORK_IN_PROGRESS_WARN_STATE.ON
+  ) {
+    dispatch({ type: "work in progress warning displayed" });
+    postExplainNewTab(
+      "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
+    );
+    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.OFF);
+  }
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+export const openDataset = (dataset: any) => (dispatch: any) => {
+  /*
+  Update in a new tab the browser location to dataset's deployment URL, kick off data load.
+  */
+
+  const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+  const datasetUrl = createDatasetUrl(deploymentUrl);
+
+  dispatch({ type: "dataset opened" });
+  storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.ON);
+  window.open(datasetUrl, "_blank");
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+export const switchDataset = (dataset: any) => (dispatch: any) => {
+  /*
+  Update browser location to dataset's deployment URL, kick off data load. 
+  TODO(cc) revisit:
+    - origin (and data root) switch for environments without corresponding Portal instance (eg local, canary)
+    - globals update: move to server-side, split from initial doc returned from server?
+   */
+  dispatch({ type: "dataset switch" });
+
+  const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+  const datasetUrl = createDatasetUrl(deploymentUrl);
+  dispatch(updateLocation(datasetUrl));
+
+  globals.API.prefix = createAPIPrefix(globals.API.prefix, datasetUrl);
+  dispatch(doInitialDataLoad());
+};
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+const updateLocation = (url: string) => (dispatch: any) => {
+  /*
+  Add entry to the session's history stack.
+   */
+  dispatch({ type: "location update" });
+  window.history.pushState(null, "", url);
+};
+
 function fetchJson<T>(pathAndQuery: string): Promise<T> {
   return doJsonRequest<T>(
     `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
   ) as Promise<T>;
+}
+
+function fetchPortalJson(url: string) {
+  /* 
+  Fetch JSON from Portal API.
+  TODO(cc) revisit - required for dataset meta and collection requests from Portal 
+   */
+  return doJsonRequest(`${globals.API.portalPrefix}${url}`);
 }
 
 export default {
@@ -280,6 +392,9 @@ export default {
   requestDifferentialExpression,
   requestSingleGeneExpressionCountsForColoringPOST,
   requestUserDefinedGene,
+  checkExplainNewTab,
+  openDataset,
+  switchDataset,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:
