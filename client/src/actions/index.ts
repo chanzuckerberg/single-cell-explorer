@@ -15,6 +15,14 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
+import { Collection, Dataset } from "../common/types/entities";
+import {
+  KEYS,
+  storageGet,
+  storageSet,
+  WORK_IN_PROGRESS_WARN_STATE,
+} from "../components/util/localStorage";
+import { postExplainNewTab } from "../components/framework/toasters";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -58,6 +66,45 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
     config,
   });
   return config;
+}
+
+/*
+ Fetch collection and save collection to store.
+ @param dispatch Function facilitating update of store.
+ @param config Response from config endpoint containing collection ID for the current dataset.
+ */
+async function collectionFetch(
+  dispatch: AppDispatch,
+  config: Config
+): Promise<void> {
+  if (window.origin.indexOf("localhost")) {
+    config.dataset_identification = {
+      collection_id: "169b39dd-c166-4177-b610-c5970a526b74",
+      collection_visibility: "PUBLIC",
+      dataset_id: "4dee4aec-405f-4627-96fb-cafd994c58bf",
+    };
+  }
+  const {
+    dataset_identification: {
+      collection_id: collectionId,
+      dataset_id: selectedDatasetId,
+    },
+  } = config;
+  if (!collectionId || !selectedDatasetId) {
+    dispatchNetworkErrorMessageToUser(
+      "Dataset identification not found for current dataset"
+    );
+    return;
+  }
+  const collection = await fetchPortalJson<Collection>(
+    `collections/${collectionId}`
+  );
+  dispatch({
+    type: "collection load complete",
+    collection,
+    portalUrl: "https://cellxgene.staging.single-cell.czi.technology/", // TODO pull from config once 70 is completed.
+    selectedDatasetId,
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -110,6 +157,8 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
+
+      collectionFetch(dispatch, config);
 
       genesetsFetch(dispatch, config);
 
@@ -258,10 +307,82 @@ const requestDifferentialExpression =
     }
   };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+export const checkExplainNewTab = () => (dispatch: any) => {
+  /*
+  Opens toast "work in progress" warning.
+   */
+  if (
+    storageGet(KEYS.WORK_IN_PROGRESS_WARN) === WORK_IN_PROGRESS_WARN_STATE.ON
+  ) {
+    dispatch({ type: "work in progress warning displayed" });
+    postExplainNewTab(
+      "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
+    );
+    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.OFF);
+  }
+};
+
+/*
+ Open selected dataset in a new tab.
+ @param dataset Dataset to open in new tab.
+ */
+export const openDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to open dataset.");
+      return;
+    }
+
+    dispatch({ type: "dataset opened" });
+    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.ON);
+    window.open(deploymentUrl, "_blank");
+  };
+
+/*
+ Update browser location to selected dataset's deployment URL, kick off data load for the selected dataset.
+ @param dataset Dataset to switch to and load in the current tab.
+ */
+export const switchDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    dispatch({ type: "dataset switch" });
+
+    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to switch datasets.");
+      return;
+    }
+    dispatch(updateLocation(deploymentUrl));
+    globals.updateApiPrefix();
+    dispatch(doInitialDataLoad());
+  };
+
+/*
+ Update browser location by adding corresponding entry to the session's history stack.
+ @param url - URL to update browser location to. 
+ */
+const updateLocation = (url: string) => (dispatch: AppDispatch) => {
+  dispatch({ type: "location update" });
+  window.history.pushState(null, "", url);
+};
+
 function fetchJson<T>(pathAndQuery: string): Promise<T> {
   return doJsonRequest<T>(
     `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
   ) as Promise<T>;
+}
+
+/* 
+ Fetch JSON from Portal API.
+ TODO(cc) revisit - remove once #59 is completed. 
+ */
+function fetchPortalJson<T>(url: string): Promise<T> {
+  return doJsonRequest(
+    `https://api.cellxgene.staging.single-cell.czi.technology/dp/v1/${url}`
+  );
 }
 
 export default {
@@ -269,6 +390,9 @@ export default {
   requestDifferentialExpression,
   requestSingleGeneExpressionCountsForColoringPOST,
   requestUserDefinedGene,
+  checkExplainNewTab,
+  openDataset,
+  switchDataset,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:

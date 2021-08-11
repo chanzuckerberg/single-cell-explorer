@@ -2,6 +2,10 @@ import React from "react";
 import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
+/* app dependencies */
+import { IconNames as CXGIconNames } from "../icon";
+import Icon from "../icon/icon";
+
 const InformationMenu = React.memo((props) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'libraryVersions' does not exist on type ... Remove this comment to see the full error message
   const { libraryVersions, tosURL, privacyURL } = props;
@@ -11,60 +15,58 @@ const InformationMenu = React.memo((props) => {
         <Menu>
           <MenuItem
             href="https://chanzuckerberg.github.io/cellxgene/"
-            target="_blank"
-            icon="book"
-            text="Documentation"
+            icon={<Icon icon={CXGIconNames.DOCUMENT} />}
             rel="noopener"
+            target="_blank"
+            text="Documentation"
           />
           <MenuItem
             href="https://join-cellxgene-users.herokuapp.com/"
+            icon={<Icon icon={CXGIconNames.SLACK} />}
             target="_blank"
-            icon="chat"
             text="Chat"
             rel="noopener"
           />
           <MenuItem
             href="https://github.com/chanzuckerberg/cellxgene"
+            icon={<Icon icon={CXGIconNames.GITHUB} />}
             target="_blank"
-            icon="git-branch"
             text="Github"
             rel="noopener"
           />
-          <MenuItem target="_blank" text={libraryVersions?.cellxgene || null} />
-          <MenuItem text="MIT License" />
-          {tosURL && (
-            <MenuItem
-              href={tosURL}
-              target="_blank"
-              text="Terms of Service"
-              rel="noopener"
-            />
-          )}
-          {privacyURL && (
-            <MenuItem
-              href={privacyURL}
-              target="_blank"
-              text="Privacy Policy"
-              rel="noopener"
-            />
-          )}
+          <MenuItem
+            icon={<Icon icon={CXGIconNames.ABOUT} />}
+            popoverProps={{ openOnTargetFocus: false }}
+            text="About cellxgene"
+          >
+            <MenuItem text={libraryVersions?.cellxgene || null} />
+            <MenuItem text="MIT License" />
+            {tosURL && (
+              <MenuItem
+                href={tosURL}
+                rel="noopener"
+                target="_blank"
+                text="Terms of Service"
+              />
+            )}
+            {privacyURL && (
+              <MenuItem
+                href={privacyURL}
+                rel="noopener"
+                target="_blank"
+                text="Privacy Policy"
+              />
+            )}
+          </MenuItem>
         </Menu>
       }
-      position={Position.BOTTOM_RIGHT}
+      position={Position.BOTTOM_LEFT}
       modifiers={{
         preventOverflow: { enabled: false },
         hide: { enabled: false },
       }}
     >
-      <Button
-        data-testid="menu"
-        type="button"
-        icon={IconNames.INFO_SIGN}
-        style={{
-          cursor: "pointer",
-          verticalAlign: "middle",
-        }}
-      />
+      <Button data-testid="menu" icon={IconNames.MENU} minimal type="button" />
     </Popover>
   );
 });

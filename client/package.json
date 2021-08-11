@@ -186,7 +186,10 @@
       "./__tests__/setupMissingGlobals.ts"
     ],
     "coverageDirectory": "./coverage/",
-    "collectCoverage": true
+    "collectCoverage": true,
+    "moduleNameMapper": {
+      "\\.css$": "<rootDir>/__tests__/__mocks__/cssMock.js"
+    }
   },
   "babel": {
     "env": {

@@ -1,6 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
+import { DataPortalProps } from "./common/types/entities";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -8,8 +9,17 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/* Collection and dataset IDs for the current dataset */
+export interface DatasetIdentification {
+  collection_id: string | null;
+  collection_visibility: string | null;
+  dataset_id: string | null;
+}
+
 /* rough shape of config object */
 export interface Config {
+  corpora_props: DataPortalProps;
+  dataset_identification: DatasetIdentification;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
   parameters: {
@@ -18,6 +28,7 @@ export interface Config {
     default_embedding?: string;
     [key: string]: unknown;
   };
+  portalUrl: string;
   links: Record<string, unknown>;
 }
 
@@ -26,12 +37,35 @@ these are default values for configuration the CLI may supply.
 See the REST API and CLI specs for more info.
 */
 export const configDefaults: Config = {
+  corpora_props: {
+    contributors: [],
+    default_embedding: "",
+    layer_descriptions: {
+      X: "",
+    },
+    organism: "",
+    organism_ontology_term_id: "",
+    preprint_doi: "",
+    project_name: "",
+    project_description: "",
+    project_links: [],
+    publication_doi: "",
+    schema_version: "",
+    title: "",
+    version: { corpora_encoding_version: "", corpora_schema_version: "" },
+  },
   features: {},
+  dataset_identification: {
+    collection_id: null,
+    collection_visibility: null,
+    dataset_id: null,
+  },
   displayNames: {},
   parameters: {
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },
+  portalUrl: "",
   links: {},
 };
 
@@ -131,9 +165,27 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
     // prefix: "http://api.clustering.czi.technology/api/",
     // prefix: "http://tabulamuris.cxg.czi.technology/api/",
     // prefix: "http://api-staging.clustering.czi.technology/api/",
+    // prefix:
+    //   "https://api.cellxgene.staging.single-cell.czi.technology/cellxgene/e/Single_cell_drug_screening_mcf7-44-remixed.cxg/",
     prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
     version: "v0.2/",
   };
 }
 
 export const API = _API;
+
+/*
+ Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
+ between datasets is not enabled for local environments.
+ */
+export function updateApiPrefix() {
+  if (typeof window === "undefined") {
+    throw new Error("Unable to set API route.");
+  }
+  const {
+    location: { host, pathname, protocol },
+  } = window;
+  if (!origin.includes("localhost")) {
+    API.prefix = `${protocol}//api.${host}/cellxgene${pathname}api/`;
+  }
+}

@@ -1,48 +1,67 @@
+/* Core dependencies */
 import React, { PureComponent } from "react";
 import { connect } from "react-redux";
-import { Drawer } from "@blueprintjs/core";
+import { Drawer, Position } from "@blueprintjs/core";
 
+/* App dependencies */
 import InfoFormat, { SingleValueCategories } from "./infoFormat";
+import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
+import { Collection, DataPortalProps } from "../../common/types/entities";
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
+/*
+ Actions dispatched by info drawer.
+ */
+interface DispatchProps {
+  toggleDrawer: () => void;
+}
+
+/*
+ Props passed in from parent.
+ */
+interface OwnProps {
+  position?: Position;
+}
+
+/*
+ Props selected from store.
+ */
+interface StateProps {
+  collection: Collection;
+  dataPortalProps: DataPortalProps;
+  isOpen: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: (state as any).annoMatrix.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  datasetTitle: (state as any).config?.displayNames?.dataset ?? "",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  aboutURL: (state as any).config?.links?.["about-dataset"],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  isOpen: (state as any).controls.datasetDrawer,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  dataPortalProps: (state as any).config?.corpora_props,
-}))
-class InfoDrawer extends PureComponent {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  schema: any;
+}
+
+type Props = DispatchProps & OwnProps & StateProps;
+
+/*
+ Map values selected from store to props.
+ */
+const mapStateToProps = (state: RootState): StateProps => ({
+  collection: state.collections?.collection,
+  dataPortalProps: state.config?.corpora_props,
+  isOpen: state.controls.datasetDrawer,
+  schema: state.annoMatrix.schema,
+});
+
+/*
+ Map actions dispatched by info drawer to props.
+ */
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  toggleDrawer: () => dispatch({ type: "toggle dataset drawer" }),
+});
+
+class InfoDrawer extends PureComponent<Props> {
   handleClose = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
-
-    dispatch({ type: "toggle dataset drawer" });
+    const { toggleDrawer } = this.props;
+    toggleDrawer();
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'position' does not exist on type 'Readon... Remove this comment to see the full error message
-      position,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'aboutURL' does not exist on type 'Readon... Remove this comment to see the full error message
-      aboutURL,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'datasetTitle' does not exist on type 'Re... Remove this comment to see the full error message
-      datasetTitle,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
-      schema,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isOpen' does not exist on type 'Readonly... Remove this comment to see the full error message
-      isOpen,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dataPortalProps' does not exist on type ... Remove this comment to see the full error message
-      dataPortalProps,
-    } = this.props;
+  render(): JSX.Element {
+    const { collection, position, schema, isOpen, dataPortalProps } =
+      this.props;
 
     const allCategoryNames = selectableCategoryNames(schema).sort();
     const singleValueCategories: SingleValueCategories = new Map();
@@ -56,15 +75,10 @@ class InfoDrawer extends PureComponent {
     });
 
     return (
-      <Drawer
-        title="Dataset Overview"
-        onClose={this.handleClose}
-        {...{ isOpen, position }}
-      >
+      <Drawer size={480} onClose={this.handleClose} {...{ isOpen, position }}>
         <InfoFormat
           {...{
-            datasetTitle,
-            aboutURL,
+            collection,
             singleValueCategories,
             dataPortalProps: dataPortalProps ?? {},
           }}
@@ -73,4 +87,5 @@ class InfoDrawer extends PureComponent {
     );
   }
 }
-export default InfoDrawer;
+
+export default connect(mapStateToProps, mapDispatchToProps)(InfoDrawer);
