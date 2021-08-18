@@ -77,16 +77,10 @@ def dataset_index(url_dataroot=None, dataset=None):
     if dataset is None:
         if app_config.is_multi_dataset():
             return dataroot_index()
-    else:
-        dataroot = None
-        for key, dataroot_dict in server_config.multi_dataset__dataroot.items():
-            if dataroot_dict["base_url"] == url_dataroot:
-                dataroot = dataroot_dict["dataroot"]
-                break
-        if dataroot is None:
-            abort(HTTPStatus.NOT_FOUND)
+        else:
+            dataset = server_config.single_dataset__datapath
 
-    dataset_config = app_config.get_dataset_config(dataroot)
+    dataset_config = app_config.get_dataset_config(url_dataroot)
     scripts = dataset_config.app__scripts
     inline_scripts = dataset_config.app__inline_scripts
 
@@ -111,8 +105,6 @@ def get_data_adaptor(url_dataroot: str=None, dataset: str=None):
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    if url_dataroot is None:
-        raise DatasetAccessError
     with dataset_metadata_manager.get(
             cache_key=f"{url_dataroot}/{dataset}",
             create_data_function=get_dataset_metadata_for_explorer_location,

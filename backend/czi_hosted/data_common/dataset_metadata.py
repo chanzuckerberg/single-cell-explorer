@@ -69,6 +69,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     in the server config.
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
+
     if app_config.server_config.data_locator__api_base:
         explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_explorer_location}"
         dataset_metadata = request_dataset_metadata_from_data_portal(
@@ -88,6 +89,6 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     dataset_metadata["s3_uri"] = extrapolate_dataset_location_from_config(
         server_config=server_config, dataset_explorer_location=dataset_explorer_location)
     if dataset_metadata["s3_uri"] is None:
-        return common_rest.abort_and_log(HTTPStatus.BAD_REQUEST, "Invalid dataset NONE", loglevel=logging.INFO)
+        return common_rest.abort_and_log(HTTPStatus.BAD_REQUEST, "Dataset not found", loglevel=logging.INFO)
 
     return dataset_metadata
