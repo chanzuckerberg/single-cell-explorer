@@ -111,6 +111,8 @@ def get_data_adaptor(url_dataroot: str=None, dataset: str=None):
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
     matrix_cache_manager = current_app.matrix_data_cache_manager
+    if url_dataroot is None:
+        raise DatasetAccessError
     with dataset_metadata_manager.get(
             cache_key=f"{url_dataroot}/{dataset}",
             create_data_function=get_dataset_metadata_for_explorer_location,
