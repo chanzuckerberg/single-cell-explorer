@@ -1,7 +1,7 @@
 import sortBy from "lodash.sortby";
 /* XXX: cough, cough, ... */
 import { postNetworkErrorToast } from "../components/framework/toasters";
-import type { AppDispatch, RootState } from "../reducers";
+import type { AppDispatch, GetState } from "../reducers";
 
 /*
 dispatch an action error to the user.   Currently we use
@@ -20,10 +20,10 @@ export const dispatchNetworkErrorMessageToUser = (message: string): void => {
 Catch unexpected errors and make sure we don't lose them!
 */
 export function catchErrorsWrap(
-  fn: (dispatch: AppDispatch, getState: () => RootState) => Promise<void>,
+  fn: (dispatch: AppDispatch, getState: GetState) => Promise<void>,
   dispatchToUser = false
 ) {
-  return (dispatch: AppDispatch, getState: () => RootState): void => {
+  return (dispatch: AppDispatch, getState: GetState): void => {
     fn(dispatch, getState).catch((error: Error) => {
       console.error(error);
       if (dispatchToUser) {

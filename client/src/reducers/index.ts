@@ -67,4 +67,6 @@ export type RootState = ReturnType<typeof store.getState>;
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;
 
+export type GetState = () => RootState;
+
 export default store;
