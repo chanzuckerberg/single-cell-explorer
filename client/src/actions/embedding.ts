@@ -5,7 +5,7 @@ action creators related to embeddings choice
 import { Action, ActionCreator } from "redux";
 import { ThunkAction } from "redux-thunk";
 import { AnnoMatrixObsCrossfilter } from "../annoMatrix";
-import type { AppDispatch, RootState } from "../reducers";
+import type { AppDispatch, GetState, RootState } from "../reducers";
 import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
 
@@ -37,24 +37,22 @@ export const layoutChoiceAction: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
 > =
   (newLayoutChoice: string) =>
-  async (dispatch: AppDispatch, getState: () => RootState): Promise<void> => {
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     /*
   On layout choice, make sure we have selected all on the previous layout, AND the new
   layout.
   */
-  const {
-    annoMatrix: prevAnnoMatrix,
-    obsCrossfilter: prevCrossfilter,
-  } = getState();
-  const [annoMatrix, obsCrossfilter] = await _switchEmbedding(
-    prevAnnoMatrix,
-    prevCrossfilter,
-    newLayoutChoice
-  );
-  dispatch({
-    type: "set layout choice",
-    layoutChoice: newLayoutChoice,
-    obsCrossfilter,
-    annoMatrix,
-  });
-};
+    const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevCrossfilter } =
+      getState();
+    const [annoMatrix, obsCrossfilter] = await _switchEmbedding(
+      prevAnnoMatrix,
+      prevCrossfilter,
+      newLayoutChoice
+    );
+    dispatch({
+      type: "set layout choice",
+      layoutChoice: newLayoutChoice,
+      obsCrossfilter,
+      annoMatrix,
+    });
+  };

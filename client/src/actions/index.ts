@@ -12,7 +12,7 @@ import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
-import { AppDispatch, RootState } from "../reducers";
+import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { UserInfoPayload } from "../reducers/userInfo";
 
@@ -109,7 +109,7 @@ Application bootstrap
 */
 const doInitialDataLoad = (): ((
   dispatch: AppDispatch,
-  getState: () => RootState
+  getState: GetState
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });

@@ -1,24 +1,23 @@
-/*
-Action creators for user annotation
-*/
+/**
+ * Action creators for user annotation
+ */
 import difference from "lodash.difference";
 import pako from "pako";
 import * as globals from "../globals";
+import { AppDispatch, GetState } from "../reducers";
 import { MatrixFBS, AnnotationsHelpers } from "../util/stateManager";
 
 const { isUserAnnotation } = AnnotationsHelpers;
 
+/**
+ * Add a new user-created category to the obs annotations.
+ * @param newCategoryName - string name for the category.
+ * @param categoryToDuplicate - obs category to use for initial values, or null.
+ * @returns An empty promise.
+ */
 export const annotationCreateCategoryAction =
   (newCategoryName: string, categoryToDuplicate: string) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
-    /*
-  Add a new user-created category to the obs annotations.
-
-  Arguments:
-    newCategoryName - string name for the category.
-    categoryToDuplicate - obs category to use for initial values, or null.
-  */
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -88,13 +87,12 @@ export const annotationCreateCategoryAction =
     });
   };
 
+/**
+ * Rename a user-created annotation category
+ */
 export const annotationRenameCategoryAction =
   (oldCategoryName: string, newCategoryName: string) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  (dispatch: any, getState: any) => {
-    /*
-  Rename a user-created annotation category
-  */
+  (dispatch: AppDispatch, getState: GetState): void => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -122,18 +120,12 @@ export const annotationRenameCategoryAction =
     });
   };
 
+/**
+ * Delete a user-created category
+ */
 export const annotationDeleteCategoryAction =
   (categoryName: string) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    dispatch: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    getState: any
-  ) => {
-    /*
-  Delete a user-created category
-  */
+  (dispatch: AppDispatch, getState: GetState): void => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -149,6 +141,10 @@ export const annotationDeleteCategoryAction =
     });
   };
 
+/**
+ * Add a new label to a user-defined category.  If assignSelected is true, assign
+ * the label to all currently selected cells.
+ */
 export const annotationCreateLabelInCategory =
   (
     categoryName: string,
@@ -156,12 +152,7 @@ export const annotationCreateLabelInCategory =
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     assignSelected: any // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   ) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
-    /*
-  Add a new label to a user-defined category.  If assignSelected is true, assign
-  the label to all currently selected cells.
-  */
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -190,16 +181,12 @@ export const annotationCreateLabelInCategory =
     });
   };
 
+/**
+ * delete a label from a user-defined category
+ */
 export const annotationDeleteLabelFromCategory =
-  (
-    categoryName: string,
-    labelName: string // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  ) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
-    /*
-    delete a label from a user-defined category
-    */
+  (categoryName: string, labelName: string) =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -221,13 +208,12 @@ export const annotationDeleteLabelFromCategory =
     });
   };
 
+/**
+ * label name change
+ */
 export const annotationRenameLabelInCategory =
   (categoryName: string, oldLabelName: string, newLabelName: string) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
-    /*
-  label name change
-  */
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -255,13 +241,12 @@ export const annotationRenameLabelInCategory =
     });
   };
 
+/**
+ * set the label on all currently selected
+ */
 export const annotationLabelCurrentSelection =
   (categoryName: string, labelName: string) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
-    /*
-  set the label on all currently selected
-  */
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -329,19 +314,12 @@ export const needToSaveObsAnnotations = (
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+/**
+ * Save the user-created obs annotations IF any have changed.
+ */
 export const saveObsAnnotationsAction =
   () =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    dispatch: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    getState: any
-  ) => {
-    /*
-  Save the user-created obs annotations IF any have changed.
-  */
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
     const state = getState();
     const { annotations, autosave } = state;
     const { dataCollectionNameIsReadOnly, dataCollectionName } = annotations;
@@ -358,10 +336,9 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    /*
-  Else, we really do need to save
-  */
-
+    /**
+     * Else, we really do need to save
+     */
     dispatch({
       type: "writable obs annotations - save started",
     });
@@ -408,16 +385,9 @@ export const saveObsAnnotationsAction =
     }
   };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 export const saveGenesetsAction =
   () =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    dispatch: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    getState: any
-  ) => {
+  async (dispatch: AppDispatch, getState: GetState): Promise<unknown> => {
     const state = getState();
 
     // bail if gene sets not available, or in readonly mode.
