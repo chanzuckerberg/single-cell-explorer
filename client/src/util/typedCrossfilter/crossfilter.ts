@@ -78,11 +78,11 @@ export function isCrossfilterData(tbd: unknown): tbd is CrossfilterData {
 export default class ImmutableTypedCrossfilter<
   RecordType extends CrossfilterData = CrossfilterData
 > {
-  data: RecordType;
+  public data: RecordType;
 
-  dimensions: Dimensions;
+  private dimensions: Dimensions;
 
-  selectionCache: PartialSelectionCache;
+  private selectionCache: PartialSelectionCache;
 
   constructor(
     data: RecordType,
@@ -146,13 +146,6 @@ export default class ImmutableTypedCrossfilter<
   hasDimension(name: string): boolean {
     return !!this.dimensions[name];
   }
-
-  /* Helpers */
-  DimTypes = {
-    scalar: ImmutableScalarDimension,
-    enum: ImmutableEnumDimension,
-    spatial: ImmutableSpatialDimension,
-  };
 
   addDimension(
     name: string,
@@ -347,7 +340,7 @@ export default class ImmutableTypedCrossfilter<
     return { bitArray };
   }
 
-  _getSelectionCache(): SelectionCache {
+  private _getSelectionCache(): SelectionCache {
     if (!this.selectionCache) this.selectionCache = {};
 
     if (!this.selectionCache.bitArray) {
@@ -372,12 +365,14 @@ export default class ImmutableTypedCrossfilter<
     return this.selectionCache as SelectionCache;
   }
 
-  _clearSelectionCache(): PartialSelectionCache {
+  private _clearSelectionCache(): PartialSelectionCache {
     this.selectionCache = {};
     return this.selectionCache;
   }
 
-  _setSelectionCache(vals: PartialSelectionCache = {}): PartialSelectionCache {
+  private _setSelectionCache(
+    vals: PartialSelectionCache = {}
+  ): PartialSelectionCache {
     Object.assign(this.selectionCache, vals);
     return this.selectionCache;
   }
@@ -503,9 +498,9 @@ class _ImmutableBaseDimension {
 }
 
 class ImmutableScalarDimension extends _ImmutableBaseDimension {
-  index: IndexArray;
+  protected index: IndexArray;
 
-  value: SortableArray;
+  protected value: SortableArray;
 
   // Two constructor modes - caller can provide a pre-created value array,
   // a map function which will create it, or another array which
@@ -601,7 +596,7 @@ class ImmutableScalarDimension extends _ImmutableBaseDimension {
 }
 
 class ImmutableEnumDimension extends ImmutableScalarDimension {
-  enumIndex: SortableArray;
+  private enumIndex: SortableArray;
 
   constructor(name: string, length: number, params: EnumDimensionParameters) {
     const { value } = params;
@@ -644,13 +639,13 @@ class ImmutableEnumDimension extends ImmutableScalarDimension {
 }
 
 class ImmutableSpatialDimension extends _ImmutableBaseDimension {
-  X: TypedArray;
+  private X: TypedArray;
 
-  Xindex: IndexArray;
+  private Xindex: IndexArray;
 
-  Y: TypedArray;
+  private Y: TypedArray;
 
-  Yindex: IndexArray;
+  private Yindex: IndexArray;
 
   constructor(
     name: string,

@@ -14,7 +14,10 @@ import Dataframe from "./dataframe";
 
 function hashDataframe(df: Dataframe): string {
   if (df.isEmpty()) return "";
-  return df.__columnsAccessor.map((c) => c.__id).join(",");
+  return df
+    .columns()
+    .map((c) => c.__id)
+    .join(",");
 }
 
 function noop(df: Dataframe): Dataframe {

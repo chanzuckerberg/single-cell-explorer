@@ -39,7 +39,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
     this.isView = true;
   }
 
-  addObsAnnoCategory(col: LabelType, category: string): AnnoMatrix {
+  addObsAnnoCategory(col: string, category: string): AnnoMatrix {
     const newAnnoMatrix = this._clone();
     newAnnoMatrix.viewOf = this.viewOf.addObsAnnoCategory(col, category);
     newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
@@ -47,7 +47,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
   }
 
   async removeObsAnnoCategory(
-    col: LabelType,
+    col: string,
     category: string,
     unassignedCategory: string
   ): Promise<AnnoMatrix> {
@@ -61,7 +61,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
     return newAnnoMatrix;
   }
 
-  dropObsColumn(col: LabelType): AnnoMatrix {
+  dropObsColumn(col: string): AnnoMatrix {
     const newAnnoMatrix = this._clone();
     newAnnoMatrix.viewOf = this.viewOf.dropObsColumn(col);
     newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
@@ -80,7 +80,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
     return newAnnoMatrix;
   }
 
-  renameObsColumn(oldCol: LabelType, newCol: LabelType): AnnoMatrix {
+  renameObsColumn(oldCol: string, newCol: string): AnnoMatrix {
     const newAnnoMatrix = this._clone();
     newAnnoMatrix.viewOf = this.viewOf.renameObsColumn(oldCol, newCol);
     newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
@@ -88,7 +88,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
   }
 
   async setObsColumnValues(
-    col: LabelType,
+    col: string,
     rowLabels: Int32Array,
     value: DataframeValue
   ): Promise<AnnoMatrix> {
@@ -104,7 +104,7 @@ abstract class AnnoMatrixView extends AnnoMatrix {
   }
 
   async resetObsColumnValues<T extends DataframeValue>(
-    col: LabelType,
+    col: string,
     oldValue: T,
     newValue: T
   ): Promise<AnnoMatrix> {
@@ -144,13 +144,8 @@ class AnnoMatrixMapView extends AnnoMatrixView {
   ): Promise<[WhereCache | null, Dataframe]> {
     const df = await this.viewOf._fetch(field, query);
     const dfMapped = df.mapColumns(
-      (colData: DataframeValueArray, colIdx: number) => {
-        const colLabel = df.colIndex.getLabel(colIdx);
-        // @ts-expect-error ts-migrate --- TODO revisit:
-        // `colLabel`: Argument of type 'LabelType | undefined' is not assignable to parameter of type 'LabelType'.
+      (colData: DataframeValueArray, _colIdx: number, colLabel: LabelType) => {
         const colSchema = _getColumnSchema(this.schema, field, colLabel);
-        // @ts-expect-error ts-migrate --- TODO revisit:
-        // `colLabel`: Argument of type 'LabelType | undefined' is not assignable to parameter of type 'LabelType'.
         return this.mapFn(field, colLabel, colSchema, colData, df);
       }
     );

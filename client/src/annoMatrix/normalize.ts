@@ -84,7 +84,7 @@ function castColumnToBoolean(df: Dataframe, label: LabelType): Dataframe {
 }
 
 export function normalizeWritableCategoricalSchema(
-  colSchema: AnnotationColumnSchema, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  colSchema: AnnotationColumnSchema,
   col: DataframeColumn
 ): ArraySchema {
   /*

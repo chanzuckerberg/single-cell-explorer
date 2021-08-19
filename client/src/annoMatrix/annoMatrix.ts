@@ -24,7 +24,6 @@ import { _queryValidate, _queryCacheKey, Query } from "./query";
 import { GCHints } from "../common/types/entities";
 import {
   AnnotationColumnSchema,
-  Category,
   Field,
   EmbeddingSchema,
   Schema,
@@ -318,7 +317,7 @@ export default abstract class AnnoMatrix {
    ** norma guarantees around correctness of public API, eg,
    **   - schema will be correct, including the "writable" attribute
    **   - fetch() will return the latest data, even from views
-   **   - immutability guranteeds
+   **   - immutability guarantees
    **
    ** As most of these interfaces mutate the annoMatrix, they return a new
    ** annoMatrix
@@ -338,7 +337,7 @@ export default abstract class AnnoMatrix {
     addObsAnnoCategory("my cell type", "left toenail") -> AnnoMatrix
 
   */
-  abstract addObsAnnoCategory(col: LabelType, category: string): AnnoMatrix;
+  abstract addObsAnnoCategory(col: string, category: string): AnnoMatrix;
 
   /*
   Remove a category value from an obs column, reassign any obs having that value
@@ -357,8 +356,8 @@ export default abstract class AnnoMatrix {
   NOTE: method is async as it may need to fetch data to provide the reassignment.
   */
   abstract removeObsAnnoCategory(
-    col: LabelType,
-    category: Category,
+    col: string,
+    category: string,
     unassignedCategory: string
   ): Promise<AnnoMatrix>;
 
@@ -373,7 +372,7 @@ export default abstract class AnnoMatrix {
 
     dropObsColumn("old annotations") ->  AnnoMatrix
   */
-  abstract dropObsColumn(col: LabelType): AnnoMatrix;
+  abstract dropObsColumn(col: string): AnnoMatrix;
 
   /*
   Add a new writable OBS annotation column, with the caller-specified schema, initial value
@@ -427,10 +426,10 @@ export default abstract class AnnoMatrix {
   Will throw column does not exist or is not writable.
   
   Example:
-    await setObsColmnValues("flavor", [383, 400], "tasty") -> AnnoMtarix
+    await setObsColumnValues("flavor", [383, 400], "tasty") -> AnnoMatrix
   */
   abstract setObsColumnValues(
-    col: LabelType,
+    col: string,
     obsLabels: Int32Array,
     value: DataframeValue
   ): Promise<AnnoMatrix>;
@@ -448,7 +447,7 @@ export default abstract class AnnoMatrix {
 
     */
   abstract resetObsColumnValues<T extends DataframeValue>(
-    col: LabelType,
+    col: string,
     oldValue: T,
     newValue: T
   ): Promise<AnnoMatrix>;
@@ -468,22 +467,22 @@ export default abstract class AnnoMatrix {
     query: Query
   ): WhereCacheColumnLabels | [undefined] {
     /*
-Return cache keys for columns associated with this query.  May return
-[unknown] if no keys are known (ie, nothing is or was cached).
-*/
+    Return cache keys for columns associated with this query.  May return
+    [unknown] if no keys are known (ie, nothing is or was cached).
+    */
     return _whereCacheGet(this._whereCache, this.schema, field, query);
   }
 
   /**
    ** Private interfaces below.
    **/
-  _resolveCachedQueries(field: Field, queries: Query[]): LabelArray {
+  _resolveCachedQueries(field: Field, queries: Query[]): LabelType[] {
     return queries
       .map((query: Query) =>
-        // @ts-expect-error --- TODO revisit:
-        // `filter`: This expression is not callable.
+        // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
+        // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
         _whereCacheGet(this._whereCache, this.schema, field, query).filter(
-          (cacheKey?: LabelType) =>
+          (cacheKey: LabelType) =>
             cacheKey !== undefined && this._cache[field].hasCol(cacheKey)
         )
       )
@@ -502,7 +501,9 @@ Return cache keys for columns associated with this query.  May return
     /* find any query not already cached */
     const uncachedQueries = queries.filter((query) =>
       _whereCacheGet(this._whereCache, this.schema, field, query).some(
-        (cacheKey?: LabelType) =>
+        // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
+        // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
+        (cacheKey: LabelType) =>
           cacheKey === undefined || !this._cache[field].hasCol(cacheKey)
       )
     );
@@ -609,15 +610,13 @@ Return cache keys for columns associated with this query.  May return
   To be effective, the GC callback needs to be invoked from the undo/redo code,
   as much of the cache is pinned by that data structure.
   */
-  _gcField(field: Field, isHot: boolean, pinnedColumns: LabelArray): void {
+  _gcField(field: Field, isHot: boolean, pinnedColumns: LabelType[]): void {
     const maxColumns = isHot ? 256 : 10;
     const cache = this._cache[field];
     if (cache.colIndex.size() < maxColumns) return; // trivial rejection
 
     const candidates = cache.colIndex
       .labels()
-      // @ts-expect-error --- TODO revisit:
-      // `col`: Argument of type 'LabelType' is not assignable to parameter of type 'number'. Type 'string' is not assignable to type 'number'.
       .filter((col: LabelType) => !pinnedColumns.includes(col));
 
     const excessCount = candidates.length + pinnedColumns.length - maxColumns;
@@ -634,25 +633,21 @@ Return cache keys for columns associated with this query.  May return
       });
 
       const toDrop = candidates.slice(0, excessCount);
+
       // helpful debugging - please leave in place.
       // console.log(
       //   `GC: dropping from ${field} hot:${isHot}, columns [${toDrop.join(
       //     ", "
       //   )}]`
       // );
-      // @ts-expect-error --- TODO revisit:
-      // `reduce`: This expression is not callable.
-      this._cache[field] = toDrop.reduce(
-        (df: Dataframe, col: LabelType) => df.dropCol(col),
-        this._cache[field]
-      );
-      toDrop.forEach((col: LabelType) =>
-        _gcInfo.delete(_columnCacheKey(field, col))
-      );
+
+      for (const col of toDrop)
+        this._cache[field] = this._cache[field].dropCol(col);
+      for (const col of toDrop) _gcInfo.delete(_columnCacheKey(field, col));
     }
   }
 
-  _gcFetchCleanup(field: Field, pinnedColumns: LabelArray): void {
+  _gcFetchCleanup(field: Field, pinnedColumns: LabelType[]): void {
     /*
     Called during data load/fetch.  By definition, this is 'hot', so we
     only want to gc X.
@@ -661,8 +656,6 @@ Return cache keys for columns associated with this query.  May return
       this._gcField(
         field,
         true,
-        // @ts-expect-error --- TODO revisit:
-        // Property 'concat' does not exist on type 'LabelArray'.
         pinnedColumns.concat(_getWritableColumns(this.schema, field))
       );
     }

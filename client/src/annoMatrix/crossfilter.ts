@@ -8,6 +8,7 @@ AnnoMatrix stay in sync:
     between Crossfilter and AnnoMatrix.
 */
 import Crossfilter, {
+  CrossfilterSelector,
   CrossfilterDimensionParameters,
 } from "../util/typedCrossfilter";
 import { _getColumnSchema } from "./schema";
@@ -76,7 +77,7 @@ export default class AnnoMatrixObsCrossfilter {
     return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
   }
 
-  dropObsColumn(col: LabelType): AnnoMatrixObsCrossfilter {
+  dropObsColumn(col: string): AnnoMatrixObsCrossfilter {
     const annoMatrix = this.annoMatrix.dropObsColumn(col);
     let { obsCrossfilter } = this;
     const dimName = _dimensionName(Field.obs, col);
@@ -86,10 +87,7 @@ export default class AnnoMatrixObsCrossfilter {
     return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
   }
 
-  renameObsColumn(
-    oldCol: LabelType,
-    newCol: LabelType
-  ): AnnoMatrixObsCrossfilter {
+  renameObsColumn(oldCol: string, newCol: string): AnnoMatrixObsCrossfilter {
     const annoMatrix = this.annoMatrix.renameObsColumn(oldCol, newCol);
     const oldDimName = _dimensionName(Field.obs, oldCol);
     const newDimName = _dimensionName(Field.obs, newCol);
@@ -100,10 +98,7 @@ export default class AnnoMatrixObsCrossfilter {
     return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
   }
 
-  addObsAnnoCategory(
-    col: LabelType,
-    category: string
-  ): AnnoMatrixObsCrossfilter {
+  addObsAnnoCategory(col: string, category: string): AnnoMatrixObsCrossfilter {
     const annoMatrix = this.annoMatrix.addObsAnnoCategory(col, category);
     const dimName = _dimensionName(Field.obs, col);
     let { obsCrossfilter } = this;
@@ -114,7 +109,7 @@ export default class AnnoMatrixObsCrossfilter {
   }
 
   async removeObsAnnoCategory(
-    col: LabelType,
+    col: string,
     category: string,
     unassignedCategory: string
   ): Promise<AnnoMatrixObsCrossfilter> {
@@ -132,7 +127,7 @@ export default class AnnoMatrixObsCrossfilter {
   }
 
   async setObsColumnValues(
-    col: LabelType,
+    col: string,
     rowLabels: Int32Array,
     value: DataframeValue
   ): Promise<AnnoMatrixObsCrossfilter> {
@@ -150,7 +145,7 @@ export default class AnnoMatrixObsCrossfilter {
   }
 
   async resetObsColumnValues<T extends DataframeValue>(
-    col: LabelType,
+    col: string,
     oldValue: T,
     newValue: T
   ): Promise<AnnoMatrixObsCrossfilter> {
@@ -200,8 +195,7 @@ export default class AnnoMatrixObsCrossfilter {
   async select(
     field: Field,
     query: Query,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- TODO revisit: waiting for typings from util/typedCrossfilter
-    spec: any
+    spec: CrossfilterSelector
   ): Promise<AnnoMatrixObsCrossfilter> {
     const { annoMatrix } = this;
     let { obsCrossfilter } = this;
@@ -289,9 +283,8 @@ export default class AnnoMatrixObsCrossfilter {
       this.obsCrossfilter.size() === 0 ||
       this.obsCrossfilter.dimensionNames().length === 0
     ) {
-      // @ts-expect-error ts-migrate --- TODO revisit:
-      // Type 'Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array' is not assignable to type 'A'...
-      return array.fill(selectedValue);
+      array.fill(selectedValue);
+      return array;
     }
     return this.obsCrossfilter.fillByIsSelected(
       array,
@@ -342,9 +335,7 @@ export default class AnnoMatrixObsCrossfilter {
 
     /* assumed to be 1D */
     const col = df.icol(0);
-    const colName = df.colIndex.getLabel(0);
-    // @ts-expect-error --- TODO revisit:
-    // `colName` Argument of type 'LabelType | undefined' is not assignable to parameter of type 'LabelType'. Type 'undefined' is not assignable to type 'LabelType'.
+    const colName: LabelType = df.colIndex.getLabel(0) as LabelType;
     const type = this._getColumnBaseType(field, colName);
     if (type === "string" || type === "categorical" || type === "boolean") {
       return { type: "enum", value: col.asArray() };

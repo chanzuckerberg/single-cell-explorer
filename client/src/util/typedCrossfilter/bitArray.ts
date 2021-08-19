@@ -20,15 +20,13 @@ import { Interval } from "./positiveIntervals";
 // The underlying data structure uses TypedArrays for performance.
 //
 class BitArray {
-  bitarray: Int32Array;
+  private bitarray: Int32Array;
 
-  bitmask: Int32Array;
+  private bitmask: Int32Array;
 
-  dimensionCount: number;
+  public length: number;
 
-  length: number;
-
-  width: number;
+  private width: number;
 
   constructor(length: number) {
     // Initially allocate a 32 bit wide array.  allocDimension() will expand
@@ -41,10 +39,8 @@ class BitArray {
     // Fixed for the life of this object.
     this.length = length;
 
-    // Bitarray width.  width is always greater than dimensionCount/32.
+    // Bitarray width.  width is always greater than num dimensions / 32.
     this.width = 1; // underlying number of 32 bit arrays
-    this.dimensionCount = 0; // num allocated dimensions
-
     this.bitmask = new Int32Array(this.width); // dimension allocation mask
     this.bitarray = new Int32Array(this.width * this.length);
     Object.seal(this);
@@ -137,7 +133,6 @@ class BitArray {
       dim = this._findFreeDimension();
     }
 
-    this.dimensionCount += 1;
     return dim;
   }
 
@@ -149,7 +144,6 @@ class BitArray {
     this.deselectAll(dim);
     const col = dim >>> 5;
     this.bitmask[col] &= ~(1 << dim % 32);
-    this.dimensionCount -= 1;
   }
 
   // return true if this index is selected in ALL dimensions.
