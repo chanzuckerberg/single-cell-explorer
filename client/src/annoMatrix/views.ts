@@ -21,6 +21,7 @@ import {
   EmbeddingSchema,
 } from "../common/types/schema";
 import { LabelIndexBase } from "../util/dataframe/labelIndex";
+import { isTypedArray } from "../common/types/arraytypes";
 
 type MapFn = (
   field: Field,
@@ -232,7 +233,7 @@ function _clipAnnoMatrix(
 ): DataframeValueArray {
   /* only clip obs and var scalar columns */
   if (field !== Field.obs && field !== Field.X) return colData;
-  if (!_isContinuousType(colSchema)) return colData;
+  if (!_isContinuousType(colSchema) || !isTypedArray(colData)) return colData;
   if (qmin < 0) qmin = 0;
   if (qmax > 1) qmax = 1;
   if (qmin === 0 && qmax === 1) return colData;

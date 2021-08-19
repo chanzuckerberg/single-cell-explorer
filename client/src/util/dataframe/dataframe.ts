@@ -301,7 +301,7 @@ class Dataframe {
     get.summarizeCategorical = callOnceLazy(() =>
       _summarizeCategorical(column)
     );
-    get.summarizeContinuous = isContinuous
+    get.summarizeContinuous = isTypedArray(column)
       ? callOnceLazy(() => _summarizeContinuous(column))
       : raiseIsNotContinuous;
 

@@ -298,9 +298,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
     );
 
     const colors = this.computePointColors(colorTable.rgb);
-
-    const { colorAccessor } = colorsProp;
-    const colorByData = colorDf?.col(colorAccessor)?.asArray();
+    const colorByData = colorDf?.icol(0)?.asArray();
     const {
       metadataField: pointDilationCategory,
       categoryField: pointDilationLabel,
@@ -380,9 +378,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
     colors: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     pointDilation: any
-  ): Promise<
-    [Dataframe, Dataframe, Dataframe | null, Dataframe | null]
-  > {
+  ): Promise<[Dataframe, Dataframe, Dataframe | null, Dataframe | null]> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
     const { annoMatrix } = this.props;
     const { metadataField: pointDilationAccessor } = pointDilation;

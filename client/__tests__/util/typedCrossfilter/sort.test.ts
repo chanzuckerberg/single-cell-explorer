@@ -183,7 +183,7 @@ describe("sortIndex", () => {
 
 describe("lowerBound", () => {
   test("non-float path", () => {
-    expect(lowerBound([], 0, 0, 0)).toEqual(0);
+    expect(lowerBound(<number[]>[], 0, 0, 0)).toEqual(0);
 
     expect(lowerBound([0, 1, 2, 3], -1, 0, 4)).toEqual(0);
     expect(lowerBound([0, 1, 2, 3], 0, 0, 4)).toEqual(0);

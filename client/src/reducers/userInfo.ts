@@ -1,6 +1,6 @@
 import { Action } from "redux";
 
-export interface UserInfoAction extends Action<string>, User {
+export interface UserInfoAction extends Action<string> {
   userInfo: UserInfoPayload;
   error: string;
 }

@@ -7,7 +7,9 @@ AnnoMatrix stay in sync:
   - for mutation of the matrix by user annotations, maintain synchronization
     between Crossfilter and AnnoMatrix.
 */
-import Crossfilter from "../util/typedCrossfilter";
+import Crossfilter, {
+  CrossfilterDimensionParameters,
+} from "../util/typedCrossfilter";
 import { _getColumnSchema } from "./schema";
 import {
   AnnotationColumnSchema,
@@ -25,12 +27,6 @@ import { Query } from "./query";
 import { TypedArray } from "../common/types/arraytypes";
 import { LabelArray } from "../util/dataframe/types";
 
-type ObsDimensionParams =
-  | [string, DataframeValueArray, DataframeValueArray]
-  | [string, DataframeValueArray]
-  | [string, DataframeValueArray, Int32ArrayConstructor]
-  | [string, DataframeValueArray, Float32ArrayConstructor];
-
 function _dimensionNameFromDf(field: Field, df: Dataframe): string {
   const colNames = df.colIndex.labels();
   return _dimensionName(field, colNames);
@@ -47,15 +43,15 @@ function _dimensionName(
 export default class AnnoMatrixObsCrossfilter {
   annoMatrix: AnnoMatrix;
 
-  obsCrossfilter: Crossfilter;
+  obsCrossfilter: Crossfilter<Dataframe>;
 
   constructor(
     annoMatrix: AnnoMatrix,
-    _obsCrossfilter: Crossfilter | null = null
+    _obsCrossfilter: Crossfilter<Dataframe> | null = null
   ) {
     this.annoMatrix = annoMatrix;
     this.obsCrossfilter =
-      _obsCrossfilter || new Crossfilter(annoMatrix._cache.obs);
+      _obsCrossfilter || new Crossfilter<Dataframe>(annoMatrix._cache.obs);
     this.obsCrossfilter = this.obsCrossfilter.setData(annoMatrix._cache.obs);
   }
 
@@ -310,17 +306,16 @@ export default class AnnoMatrixObsCrossfilter {
 
   _addObsCrossfilterDimension(
     annoMatrix: AnnoMatrix,
-    obsCrossfilter: Crossfilter,
+    obsCrossfilter: Crossfilter<Dataframe>,
     field: Field,
     df: Dataframe
-  ): Crossfilter {
+  ): Crossfilter<Dataframe> {
     if (field === "var") return obsCrossfilter;
     const dimName = _dimensionNameFromDf(field, df);
     const dimParams = this._getObsDimensionParams(field, df);
+    if (!dimName || !dimParams) return obsCrossfilter;
     obsCrossfilter = obsCrossfilter.setData(annoMatrix._cache.obs);
-    // @ts-expect-error ts-migrate --- TODO revisit:
-    // `...dimParams`: A spread argument must either have a tuple type or be passed to a rest parameter.
-    obsCrossfilter = obsCrossfilter.addDimension(dimName, ...dimParams);
+    obsCrossfilter = obsCrossfilter.addDimension(dimName, dimParams);
     return obsCrossfilter;
   }
 
@@ -333,12 +328,16 @@ export default class AnnoMatrixObsCrossfilter {
   _getObsDimensionParams(
     field: Field,
     df: Dataframe
-  ): ObsDimensionParams | undefined {
-    /* return the crossfilter dimensiontype type and params for this field/dataframe */
+  ): CrossfilterDimensionParameters | undefined {
+    /* return the crossfilter dimension type and params for this field/dataframe */
 
     if (field === Field.emb) {
-      /* assumed to be 2D */
-      return ["spatial", df.icol(0).asArray(), df.icol(1).asArray()];
+      /* assumed to be 2D and float, as that is all the schema supports */
+      return {
+        type: "spatial",
+        X: df.icol(0).asArray() as TypedArray,
+        Y: df.icol(1).asArray() as TypedArray,
+      };
     }
 
     /* assumed to be 1D */
@@ -348,13 +347,21 @@ export default class AnnoMatrixObsCrossfilter {
     // `colName` Argument of type 'LabelType | undefined' is not assignable to parameter of type 'LabelType'. Type 'undefined' is not assignable to type 'LabelType'.
     const type = this._getColumnBaseType(field, colName);
     if (type === "string" || type === "categorical" || type === "boolean") {
-      return ["enum", col.asArray()];
+      return { type: "enum", value: col.asArray() };
     }
     if (type === "int32") {
-      return ["scalar", col.asArray(), Int32Array];
+      return {
+        type: "scalar",
+        value: col.asArray(),
+        ValueArrayCtor: Int32Array,
+      };
     }
     if (type === "float32") {
-      return ["scalar", col.asArray(), Float32Array];
+      return {
+        type: "scalar",
+        value: col.asArray(),
+        ValueArrayCtor: Float32Array,
+      };
     }
     // Currently not supporting boolean and categorical types.
     console.error(

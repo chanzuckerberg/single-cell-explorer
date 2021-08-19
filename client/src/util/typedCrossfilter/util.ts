@@ -1,27 +1,25 @@
 import { sortIndex } from "./sort";
 import { rangeFill as fillRange } from "../range";
+import { SortableArray } from "../../common/types/arraytypes";
+import { IndexArray } from "./types";
 
 /*
     Utility functions, private to this module.
 */
 
-// slice out of one array into another, using an index array
-//
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export function sliceByIndex(src: any, index: any) {
-  if (index === undefined || index === null) {
-    return src;
-  }
-  const dst = new src.constructor(index.length);
-  for (let i = 0; i < index.length; i += 1) {
-    dst[i] = src[index[i]];
-  }
-  return dst;
-}
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export function makeSortIndex(src: any) {
+export function makeSortIndex(src: SortableArray): IndexArray {
   const index = fillRange(new Uint32Array(src.length));
   sortIndex(index, src);
   return index;
+}
+
+export class NotImplementedError extends Error {
+  constructor(msg: string) {
+    super(msg);
+
+    // Maintains proper stack trace for where our error was thrown (only available on V8)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, NotImplementedError);
+    }
+  }
 }

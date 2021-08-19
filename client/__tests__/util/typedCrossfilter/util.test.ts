@@ -1,7 +1,4 @@
-import {
-  sliceByIndex,
-  makeSortIndex,
-} from "../../../src/util/typedCrossfilter/util";
+import { makeSortIndex } from "../../../src/util/typedCrossfilter/util";
 import { rangeFill as fillRange } from "../../../src/util/range";
 
 describe("fillRange", () => {
@@ -19,59 +16,6 @@ describe("fillRange", () => {
       new Uint32Array([1, 2, 3, 4])
     );
     expect(fillRange([])).toMatchObject(new Uint32Array([]));
-  });
-});
-
-describe("sliceByIndex", () => {
-  test("Array", () => {
-    expect(sliceByIndex([0, 1, 2, 3, 4], [0, 1, 2])).toMatchObject([0, 1, 2]);
-    expect(sliceByIndex([0, 1, 2, 3, 4], [2, 1, 0])).toMatchObject([2, 1, 0]);
-    expect(sliceByIndex([0, 1, 2, 3, 4], [])).toMatchObject([]);
-    expect(sliceByIndex([], [])).toMatchObject([]);
-  });
-
-  test("Uint32Array", () => {
-    expect(
-      sliceByIndex([0, 1, 2, 3, 4], new Uint32Array([0, 1, 2]))
-    ).toMatchObject([0, 1, 2]);
-    expect(
-      sliceByIndex([0, 1, 2, 3, 4], new Uint32Array([2, 1, 0]))
-    ).toMatchObject([2, 1, 0]);
-    expect(sliceByIndex([0, 1, 2, 3, 4], new Uint32Array([]))).toMatchObject(
-      []
-    );
-    expect(sliceByIndex([], new Uint32Array([]))).toMatchObject([]);
-
-    expect(
-      sliceByIndex(new Uint32Array([0, 1, 2, 3, 4]), new Uint32Array([0, 1, 2]))
-    ).toMatchObject(new Uint32Array([0, 1, 2]));
-    expect(
-      sliceByIndex(new Uint32Array([0, 1, 2, 3, 4]), new Uint32Array([2, 1, 0]))
-    ).toMatchObject(new Uint32Array([2, 1, 0]));
-    expect(
-      sliceByIndex(
-        new Uint32Array([0, 1, 2, 3, 4]),
-        new Uint32Array(new Uint32Array([]))
-      )
-    ).toMatchObject(new Uint32Array([]));
-    expect(
-      sliceByIndex(new Uint32Array([]), new Uint32Array([]))
-    ).toMatchObject(new Uint32Array([]));
-  });
-
-  test("Float32Array", () => {
-    expect(
-      sliceByIndex(new Float32Array([0, 1, 2, 3, 4]), [0, 1, 2])
-    ).toMatchObject(new Float32Array([0, 1, 2]));
-    expect(
-      sliceByIndex(new Float32Array([0, 1, 2, 3, 4]), [2, 1, 0])
-    ).toMatchObject(new Float32Array([2, 1, 0]));
-    expect(sliceByIndex(new Float32Array([0, 1, 2, 3, 4]), [])).toMatchObject(
-      new Float32Array([])
-    );
-    expect(sliceByIndex(new Float32Array([]), [])).toMatchObject(
-      new Float32Array([])
-    );
   });
 });
 

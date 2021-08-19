@@ -10,29 +10,38 @@ TL;DR: sort order is:
 
 import isNumber from "is-number";
 import * as globals from "../globals";
+import { Category } from "../common/types/schema";
 
-function caseInsensitiveCompare(a: string, b: string): number {
+function caseInsensitiveCompare(
+  a: string | number | boolean,
+  b: string | number | boolean
+): number {
   const textA = String(a).toUpperCase();
   const textB = String(b).toUpperCase();
   return textA < textB ? -1 : textA > textB ? 1 : 0;
 }
 
+/** typescript type safety */
+function isNumberForReal(tbd: unknown): tbd is number {
+  return isNumber(tbd);
+}
+
 const catLabelSort = (
   isUserAnno: boolean,
-  values: Array<string>
-): Array<string> => {
+  values: Array<Category>
+): Array<Category> => {
   /* this sort could be memoized for perf */
 
-  const strings: string[] = [];
-  const ints: string[] = [];
-  const unassignedOrNaN: string[] = [];
+  const strings: (string | number | boolean)[] = [];
+  const ints: (string | number | boolean)[] = [];
+  const unassignedOrNaN: (string | number | boolean)[] = [];
 
-  values.forEach((v: string) => {
+  values.forEach((v) => {
     if (isUserAnno && v === globals.unassignedCategoryLabel) {
       unassignedOrNaN.push(v);
     } else if (String(v).toLowerCase() === "nan") {
       unassignedOrNaN.push(v);
-    } else if (isNumber(v)) {
+    } else if (isNumberForReal(v)) {
       ints.push(v);
     } else {
       strings.push(v);
