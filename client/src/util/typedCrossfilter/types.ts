@@ -9,7 +9,6 @@ import {
 /**
  * Cross-filter shared types.
  */
-
 export type NonFloatSortableArray =
   | Array<number | string | boolean>
   | IntTypedArray

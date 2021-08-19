@@ -504,7 +504,7 @@ class ImmutableScalarDimension extends _ImmutableBaseDimension {
 
   // Two constructor modes - caller can provide a pre-created value array,
   // a map function which will create it, or another array which
-  // will copied into the user-specified value array.
+  // will be copied into the user-specified value array.
 
   constructor(name: string, length: number, params: ScalarDimensionParameters) {
     super(name);
@@ -655,7 +655,7 @@ class ImmutableSpatialDimension extends _ImmutableBaseDimension {
     super(name);
 
     const { X, Y } = params;
-    if (X.length !== Y.length && X.length !== length) {
+    if (X.length !== Y.length || X.length !== length) {
       throw new RangeError(
         "SpatialDimension values must have same dimensionality as crossfilter"
       );
