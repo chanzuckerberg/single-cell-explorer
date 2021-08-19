@@ -7,7 +7,7 @@ import {
   Field,
   Schema,
 } from "../common/types/schema";
-import { LabelArray, LabelType } from "../util/dataframe/types";
+import { LabelType } from "../util/dataframe/types";
 
 export function _getColumnSchema(
   schema: Schema,
@@ -48,7 +48,7 @@ export function _getColumnDimensionNames(
   schema: Schema,
   field: Field,
   col: LabelType
-): LabelArray | undefined {
+): LabelType[] | undefined {
   /*
 		field/col may be an alias for multiple columns. Currently used to map ND 
 		values to 1D dataframe columns for embeddings/layout. Signified by the presence

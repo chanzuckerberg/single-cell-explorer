@@ -31,4 +31,8 @@ more complex API.  In a few cases, elements of that API were incorporated.
 See test cases for some concrete examples.
 */
 
+export type {
+  CrossfilterSelector,
+  CrossfilterDimensionParameters,
+} from "./types";
 export { default } from "./crossfilter";

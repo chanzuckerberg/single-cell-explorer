@@ -22,7 +22,7 @@ rangeFill(array, start, step) -> array
 
 */
 
-import { TypedArray, NumberArray } from "../common/types/arraytypes";
+import { NumberArray } from "../common/types/arraytypes";
 
 function _doFill<T extends NumberArray>(
   arr: T,
@@ -36,7 +36,11 @@ function _doFill<T extends NumberArray>(
   return arr;
 }
 
-export function rangeFill(arr: NumberArray, start = 0, step = 1): NumberArray {
+export function rangeFill<T extends NumberArray>(
+  arr: T,
+  start = 0,
+  step = 1
+): T {
   return _doFill(arr, start, step, arr.length);
 }
 

@@ -16,8 +16,13 @@ export type TypedArray =
   | Float32Array
   | Float64Array;
 
-export type UnsignedTypedArray = Uint8Array | Uint16Array | Uint32Array;
+export type UnsignedIntTypedArray =
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array;
 export type FloatTypedArray = Float32Array | Float64Array;
+export type IntTypedArray = Int8Array | Int16Array | Int32Array;
 
 export type TypedArrayConstructor =
   | Int8ArrayConstructor
@@ -29,25 +34,34 @@ export type TypedArrayConstructor =
   | Float32ArrayConstructor
   | Float64ArrayConstructor;
 
+/** this general type is the basis of all data stored in dataframe/crossfilter */
+export type SortableArray = Array<number | string | boolean> | TypedArray;
+
+/** used if you accept array-ish, but don't care about the contents of the object */
 export type AnyArray = Array<unknown> | TypedArray;
 
-export interface GenericArrayConstructor<T extends AnyArray> {
+export interface GenericArrayConstructor<T> {
   new (
     ...args: ConstructorParameters<
       typeof Int8Array &
         typeof Uint8Array &
+        typeof Uint8ClampedArray &
         typeof Int16Array &
         typeof Uint16Array &
         typeof Int32Array &
         typeof Uint32Array &
         typeof Float32Array &
         typeof Float64Array &
-        typeof Array
+        typeof Array &
+        T
     >
   ): T;
 }
 
 export type NumberArray = Array<number> | TypedArray;
+export type NumberArrayConstructor = GenericArrayConstructor<
+  Array<number> | TypedArray
+>;
 
 export type Int8 = Int8Array[0];
 export type Uint8 = Uint8Array[0];
@@ -80,15 +94,31 @@ export function isFloatTypedArray(tbd: unknown): tbd is FloatTypedArray {
 }
 
 /**
- * Test if the paramter is a float TypedArray
+ * Test if the paramter is an unsigned int TypedArray
  * @param tbd - value to be tested
- * @returns - true if `tbd` is a float typed array.
+ * @returns - true if `tbd` is an unsigned int typed array.
  */
-export function isUnsignedTypedArray(tbd: unknown): tbd is UnsignedTypedArray {
+export function isUnsignedIntTypedArray(
+  tbd: unknown
+): tbd is UnsignedIntTypedArray {
   return (
     tbd instanceof Uint8Array ||
+    tbd instanceof Uint8ClampedArray ||
     tbd instanceof Uint16Array ||
     tbd instanceof Uint32Array
+  );
+}
+
+/**
+ * Test if the paramter is an int TypedArray
+ * @param tbd - value to be tested
+ * @returns - true if `tbd` is an int typed array.
+ */
+export function isIntTypedArray(tbd: unknown): tbd is IntTypedArray {
+  return (
+    tbd instanceof Int8Array ||
+    tbd instanceof Int16Array ||
+    tbd instanceof Int32Array
   );
 }
 

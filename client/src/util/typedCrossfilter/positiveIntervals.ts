@@ -11,17 +11,19 @@
 // Code assumes intervals have a low cardinality; many operations are done
 // with a brute force scan.   Little attempt to reduce GC pressure.
 //
+
+export type Interval = [number, number];
+export type IntervalArray = Interval[];
+
 class PositiveIntervals {
   // Canonicalize - ensure that:
   //  1. no overlapping intervals
   //  2. sorted in order of interval min.
   //
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static canonicalize(A: any) {
+  static canonicalize(A: IntervalArray): IntervalArray {
     if (A.length <= 1) return A;
     const copy = A.slice();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    copy.sort((a: any, b: any) => a[0] - b[0]);
+    copy.sort((a, b) => a[0] - b[0]);
     const res = [];
     res.push(copy[0]);
     for (let i = 1, len = copy.length; i < len; i += 1) {
@@ -30,7 +32,6 @@ class PositiveIntervals {
         res.push(copy[i]);
       } else if (copy[i][1] > res[res.length - 1][1]) {
         // merge this into previous
-        // eslint-disable-line prefer-destructuring -- destructuring impedes readability
         res[res.length - 1][1] = copy[i][1];
       }
     }
@@ -40,14 +41,15 @@ class PositiveIntervals {
   // Return interval with values belonging to both A and B. Essentially
   // a set union operation.
   //
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static union(A: any, B: any) {
+  static union(A: IntervalArray, B: IntervalArray): IntervalArray {
     return PositiveIntervals.canonicalize([...A, ...B]);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static _flatten(A: any, B: any) {
-    const points = []; /* point, A, start */
+  static _flatten(
+    A: IntervalArray,
+    B: IntervalArray
+  ): [number, boolean, boolean][] {
+    const points: [number, boolean, boolean][] = []; /* point, A, start */
     for (let a = 0; a < A.length; a += 1) {
       points.push([A[a][0], true, true]);
       points.push([A[a][1], true, false]);
@@ -64,8 +66,7 @@ class PositiveIntervals {
   // A - B, ie, the interval with all values in A that are not in B.  Essentially
   // a set difference operation.
   //
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static difference(A: any, B: any) {
+  static difference(A: IntervalArray, B: IntervalArray): IntervalArray {
     // Corner cases
     if (A.length === 0 || B.length === 0) {
       return PositiveIntervals.canonicalize(A);
@@ -75,7 +76,7 @@ class PositiveIntervals {
     const cB = PositiveIntervals.canonicalize(B);
 
     const points = PositiveIntervals._flatten(cA, cB);
-    const res = [];
+    const res: IntervalArray = [];
     let aDepth = 0;
     let depth = 0;
     let intervalStart;
@@ -101,8 +102,7 @@ class PositiveIntervals {
   // Return interval with values belonging to A or B.  Essentially a set
   // intersection.
   //
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static intersection(A: any, B: any) {
+  static intersection(A: IntervalArray, B: IntervalArray): IntervalArray {
     if (A.length === 0 || B.length === 0) {
       return [];
     }
@@ -111,7 +111,7 @@ class PositiveIntervals {
     const cB = PositiveIntervals.canonicalize(B);
 
     const points = PositiveIntervals._flatten(cA, cB);
-    const res = [];
+    const res: IntervalArray = [];
     let depth = 0;
     let intervalStart;
     for (let i = 0; i < points.length; i += 1) {

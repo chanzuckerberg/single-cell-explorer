@@ -6,7 +6,8 @@ of computing quantiles.  Would be good to switch from sort to
 partition at some point.
 */
 import {
-  AnyArray,
+  SortableArray,
+  NumberArray,
   GenericArrayConstructor,
 } from "../../common/types/arraytypes";
 import { ContinuousColumnSummary, CategoricalColumnSummary } from "./types";
@@ -16,7 +17,7 @@ import { sortArray } from "../typedCrossfilter/sort";
 // [ 0, 0.01, 0.02, ..., 1.0]
 const centileNames = new Array(101).fill(0).map((_v, idx) => idx / 100);
 
-export function summarizeContinuous(col: AnyArray): ContinuousColumnSummary {
+export function summarizeContinuous(col: NumberArray): ContinuousColumnSummary {
   let nan = 0;
   let pinf = 0;
   let ninf = 0;
@@ -66,7 +67,9 @@ export function summarizeContinuous(col: AnyArray): ContinuousColumnSummary {
   };
 }
 
-export function summarizeCategorical(col: AnyArray): CategoricalColumnSummary {
+export function summarizeCategorical(
+  col: SortableArray
+): CategoricalColumnSummary {
   const categoryCounts = new Map();
   if (col) {
     for (let r = 0, l = col.length; r < l; r += 1) {

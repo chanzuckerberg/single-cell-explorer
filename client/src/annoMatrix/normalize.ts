@@ -11,6 +11,7 @@ import {
   ArraySchema,
   Field,
   Schema,
+  Category,
 } from "../common/types/schema";
 
 export function normalizeResponse(
@@ -83,7 +84,7 @@ function castColumnToBoolean(df: Dataframe, label: LabelType): Dataframe {
 }
 
 export function normalizeWritableCategoricalSchema(
-  colSchema: AnnotationColumnSchema, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  colSchema: AnnotationColumnSchema,
   col: DataframeColumn
 ): ArraySchema {
   /*
@@ -91,7 +92,7 @@ export function normalizeWritableCategoricalSchema(
   the categories array contains all unique values in the data array, AND that
   the array is UI sorted.
   */
-  const categorySet = new Set<string>(
+  const categorySet = new Set<Category>(
     col.summarizeCategorical().categories.concat(colSchema.categories ?? [])
   );
   if (!categorySet.has(unassignedCategoryLabel)) {
@@ -125,7 +126,7 @@ export function normalizeCategorical(
 
   // consolidate all categories from data and schema into a single list
   const colDataSummary = col.summarizeCategorical();
-  const allCategories = new Set<string>(
+  const allCategories = new Set<Category>(
     colDataSummary.categories.concat(colSchema.categories ?? [])
   );
 

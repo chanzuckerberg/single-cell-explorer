@@ -93,6 +93,7 @@ interface DataframeConstructor {
 export type MapColumnsCallbackFn = (
   data: DataframeValueArray,
   idx: number,
+  lbl: LabelType,
   df: Dataframe
 ) => DataframeValueArray;
 
@@ -103,10 +104,10 @@ function raiseIsNotContinuous<R = void>(): R {
 
 class Dataframe {
   /** @internal */
-  __columns: DataframeValueArray[];
+  private __columns: DataframeValueArray[];
 
   /** @internal */
-  __columnsAccessor: DataframeColumn[] = [];
+  private __columnsAccessor: DataframeColumn[] = [];
 
   __id: string;
 
@@ -168,7 +169,7 @@ class Dataframe {
   }
 
   /** @internal */
-  static __errorChecks(
+  private static __errorChecks(
     dims: [number, number],
     columnarData: AnyArray[],
     rowIndex: LabelIndex,
@@ -212,7 +213,7 @@ class Dataframe {
   }
 
   /** @internal */
-  static __compileColumn(
+  private static __compileColumn(
     column: DataframeValueArray,
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
@@ -301,7 +302,7 @@ class Dataframe {
     get.summarizeCategorical = callOnceLazy(() =>
       _summarizeCategorical(column)
     );
-    get.summarizeContinuous = isContinuous
+    get.summarizeContinuous = isTypedArray(column)
       ? callOnceLazy(() => _summarizeContinuous(column))
       : raiseIsNotContinuous;
 
@@ -343,7 +344,7 @@ class Dataframe {
   }
 
   /** @internal */
-  __compile(accessors: (DataframeColumn | null)[]): void {
+  private __compile(accessors: (DataframeColumn | null)[]): void {
     /*
     Compile data accessors for each column.
 
@@ -632,7 +633,7 @@ class Dataframe {
   }
 
   /** @internal */
-  __subset(
+  private __subset(
     newRowIndex: LabelIndex | null,
     newColIndex: LabelIndex | null
   ): Dataframe {
@@ -924,7 +925,12 @@ class Dataframe {
     callback MUST not modify the column, but instead return a mutated copy.
     */
     const columns = this.__columns.map((colData, colIdx) =>
-      callback(colData, colIdx, this)
+      callback(
+        colData,
+        colIdx,
+        this.colIndex.getLabel(colIdx) as LabelType,
+        this
+      )
     );
     const columnsAccessor: (DataframeColumn | null)[] = columns.map((c, idx) =>
       this.__columns[idx] === c ? this.__columnsAccessor[idx] : null

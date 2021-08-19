@@ -8,7 +8,11 @@ import {
   removeObsAnnoCategory,
   removeObsAnnoColumn,
 } from "../util/stateManager/schemaHelpers";
-import { isAnyArray } from "../common/types/arraytypes";
+import {
+  isAnyArray,
+  TypedArray,
+  TypedArrayConstructor,
+} from "../common/types/arraytypes";
 import { _whereCacheCreate, WhereCache } from "./whereCache";
 import AnnoMatrix from "./annoMatrix";
 import PromiseLimit from "../util/promiseLimit";
@@ -35,10 +39,9 @@ import {
   Dataframe,
   DataframeValue,
   DataframeValueArray,
-  LabelType,
 } from "../util/dataframe";
 
-const promiseThrottle = new PromiseLimit(5);
+const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 
 export default class AnnoMatrixLoader extends AnnoMatrix {
   baseURL: string;
@@ -68,7 +71,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
   /**
    ** Public.  API described in base class.
    **/
-  addObsAnnoCategory(col: LabelType, category: string): AnnoMatrix {
+  addObsAnnoCategory(col: string, category: string): AnnoMatrix {
     /*
     Add a new category (aka label) to the schema for an obs column.
     */
@@ -85,7 +88,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
   }
 
   async removeObsAnnoCategory(
-    col: LabelType,
+    col: string,
     category: string,
     unassignedCategory: string
   ): Promise<AnnoMatrix> {
@@ -112,7 +115,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     return newAnnoMatrix;
   }
 
-  dropObsColumn(col: LabelType): AnnoMatrix {
+  dropObsColumn(col: string): AnnoMatrix {
     /*
 		drop column from field
 		*/
@@ -170,7 +173,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     return newAnnoMatrix;
   }
 
-  renameObsColumn(oldCol: LabelType, newCol: LabelType): AnnoMatrix {
+  renameObsColumn(oldCol: string, newCol: string): AnnoMatrix {
     /*
     Rename the obs oldColName to newColName.  oldCol must be writable.
     */
@@ -183,22 +186,21 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     const value = this._cache.obs.hasCol(oldCol)
       ? this._cache.obs.col(oldCol).asArray()
       : undefined;
+    if (value === undefined) return this;
     return this.dropObsColumn(oldCol).addObsColumn(
       {
         ...oldColSchema,
-        // @ts-expect-error ts-migrate --- TODO revisit:
-        // `name`: Type 'LabelType' is not assignable to type 'string'. Type 'number' is not assignable to type 'string'.
         name: newCol,
       },
-      // @ts-expect-error ts-migrate --- TODO revisit:
-      // `value`: Object is possibly 'undefined'.
-      value.constructor,
+      value.constructor as typeof value extends TypedArray
+        ? TypedArrayConstructor
+        : ArrayConstructor,
       value
     );
   }
 
   async setObsColumnValues(
-    col: LabelType,
+    col: string,
     rowLabels: Int32Array,
     value: DataframeValue
   ): Promise<AnnoMatrix> {
@@ -235,7 +237,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
   }
 
   async resetObsColumnValues<T extends DataframeValue>(
-    col: LabelType,
+    col: string,
     oldValue: T,
     newValue: T
   ): Promise<AnnoMatrix> {
@@ -249,9 +251,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     ) as AnnotationColumnSchema;
     _writableObsCategoryTypeCheck(colSchema); // throws on error
 
-    // @ts-expect-error ts-migrate --- TODO revisit:
-    // `colSchema.categories`: Object is possibly 'undefined'.
-    if (!colSchema.categories.includes(oldValue)) {
+    if (!colSchema.categories?.includes(oldValue)) {
       throw new Error("unknown category");
     }
 
@@ -322,8 +322,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
         throw new Error("Unknown field name");
     }
     const buffer = await promiseThrottle.priorityAdd(priority, doRequest);
-    // @ts-expect-error --- TODO revisit:
-    // `buffer`:  Argument of type 'unknown' is not assignable to parameter of type 'ArrayBuffer | ArrayBuffer[]'. Type 'unknown' is not assignable to type 'ArrayBuffer[]'.
     let result = matrixFBSToDataframe(buffer);
     if (!result || result.isEmpty()) throw Error("Unknown field/col");
 

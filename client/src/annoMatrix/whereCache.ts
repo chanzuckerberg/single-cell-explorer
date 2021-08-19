@@ -51,7 +51,7 @@ creates a cache entry of:
 import { _getColumnDimensionNames } from "./schema";
 import { _hashStringValues, Query } from "./query";
 import { Field, Schema } from "../common/types/schema";
-import { LabelArray } from "../util/dataframe/types";
+import { LabelType, LabelArray } from "../util/dataframe/types";
 
 export interface WhereCache {
   summarize?: {
@@ -67,7 +67,7 @@ export interface WhereCache {
 export type WhereCacheColumnLabels = LabelArray;
 
 interface WhereCacheTerms {
-  [key: string]: Map<string, Map<string, WhereCacheColumnLabels>>;
+  [key: string]: Map<string, Map<string, LabelType[]>>;
 }
 
 export function _whereCacheGet(
@@ -75,7 +75,7 @@ export function _whereCacheGet(
   schema: Schema,
   field: Field,
   query: Query
-): WhereCacheColumnLabels | [undefined] {
+): LabelType[] | [undefined] {
   /* 
 	query will either be an where query (object) or a column name (string).
 
@@ -119,6 +119,10 @@ export function _whereCacheCreate(
 	*/
   if (typeof query !== "object") return null;
 
+  const columnLabelsAsArray: LabelType[] = Array.isArray(columnLabels)
+    ? columnLabels
+    : Array.from(columnLabels);
+
   if ("where" in query) {
     const {
       field: queryField,
@@ -129,7 +133,7 @@ export function _whereCacheCreate(
       where: {
         [field]: {
           [queryField]: new Map([
-            [queryColumn, new Map([[queryValue, columnLabels]])],
+            [queryColumn, new Map([[queryValue, columnLabelsAsArray]])],
           ]),
         },
       },
@@ -148,7 +152,7 @@ export function _whereCacheCreate(
         [field]: {
           [method]: {
             [queryField]: new Map([
-              [queryColumn, new Map([[queryValueHash, columnLabels]])],
+              [queryColumn, new Map([[queryValueHash, columnLabelsAsArray]])],
             ]),
           },
         },

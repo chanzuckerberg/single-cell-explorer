@@ -1,7 +1,9 @@
 import filter from "lodash.filter";
 import zip from "lodash.zip";
 
-import Crossfilter from "../../../src/util/typedCrossfilter";
+import Crossfilter, {
+  CrossfilterSelector,
+} from "../../../src/util/typedCrossfilter";
 
 const someData = [
   {
@@ -126,8 +128,7 @@ const someData = [
   },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-let payments: any = null;
+let payments: Crossfilter<typeof someData>;
 beforeEach(() => {
   payments = new Crossfilter(someData);
 });
@@ -139,13 +140,11 @@ describe("ImmutableTypedCrossfilter", () => {
     expect(payments.all()).toEqual(someData);
 
     const p = payments
-      .addDimension(
-        "quantity",
-        "scalar",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        (i: any, d: any) => d[i].quantity,
-        Int32Array
-      )
+      .addDimension("quantity", {
+        type: "scalar",
+        value: payments.all().map((d) => d.quantity),
+        ValueArrayCtor: Int32Array,
+      })
       .select("quantity", { mode: "all" });
     expect(p).toBeDefined();
     expect(p.all()).toEqual(someData);
@@ -162,13 +161,11 @@ describe("ImmutableTypedCrossfilter", () => {
     - delDimension()
     - select
     */
-    const p2 = payments.addDimension(
-      "quantity",
-      "scalar",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (i: any, data: any) => data[i].quantity,
-      Int32Array
-    );
+    const p2 = payments.addDimension("quantity", {
+      type: "scalar",
+      value: payments.all().map((d) => d.quantity),
+      ValueArrayCtor: Int32Array,
+    });
 
     expect(payments).not.toBe(p2);
     const p3 = p2.select("quantity", { mode: "all" });
@@ -183,22 +180,25 @@ describe("ImmutableTypedCrossfilter", () => {
 
   test("select all and none", () => {
     let p = payments
-      .addDimension(
-        "quantity",
-        "scalar",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        (i: any, d: any) => d[i].quantity,
-        Int32Array
-      ) // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      .addDimension("tip", "scalar", (i: any, d: any) => d[i].tip, Float32Array)
-      .addDimension(
-        "total",
-        "scalar",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        (i: any, d: any) => d[i].total,
-        Float32Array
-      ) // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      .addDimension("type", "enum", (i: any, d: any) => d[i].type);
+      .addDimension("quantity", {
+        type: "scalar",
+        value: payments.all().map((d) => d.quantity),
+        ValueArrayCtor: Int32Array,
+      })
+      .addDimension("tip", {
+        type: "scalar",
+        value: payments.all().map((d) => d.tip),
+        ValueArrayCtor: Float32Array,
+      })
+      .addDimension("total", {
+        type: "scalar",
+        value: payments.all().map((d) => d.total),
+        ValueArrayCtor: Float32Array,
+      })
+      .addDimension("type", {
+        type: "enum",
+        value: payments.all().map((d) => d.type),
+      });
     expect(p).toBeDefined();
 
     /* expect all records to be selected - default init state */
@@ -250,24 +250,19 @@ describe("ImmutableTypedCrossfilter", () => {
   });
 
   describe("scalar dimension", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let p: any;
+    let p: typeof payments;
     beforeEach(() => {
       p = payments
-        .addDimension(
-          "quantity",
-          "scalar",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-          (i: any, d: any) => d[i].quantity,
-          Int32Array
-        )
-        .addDimension(
-          "tip",
-          "scalar",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-          (i: any, d: any) => d[i].tip,
-          Float32Array
-        )
+        .addDimension("quantity", {
+          type: "scalar",
+          value: payments.all().map((d) => d.quantity),
+          ValueArrayCtor: Int32Array,
+        })
+        .addDimension("tip", {
+          type: "scalar",
+          value: payments.all().map((d) => d.tip),
+          ValueArrayCtor: Float32Array,
+        })
         .select("tip", { mode: "all" });
     });
 
@@ -305,16 +300,19 @@ describe("ImmutableTypedCrossfilter", () => {
       )
     );
     test("bad mode", () => {
-      expect(() => p.select("type", { mode: "bad mode" })).toThrow(Error);
+      expect(() =>
+        p.select("type", { mode: "bad mode" } as unknown as CrossfilterSelector)
+      ).toThrow(Error);
     });
   });
 
   describe("enum dimension", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let p: any;
+    let p: typeof payments;
     beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      p = payments.addDimension("type", "enum", (i: any, d: any) => d[i].type);
+      p = payments.addDimension("type", {
+        type: "enum",
+        value: payments.all().map((d) => d.type),
+      });
     });
 
     test("all", () => {
@@ -347,17 +345,18 @@ describe("ImmutableTypedCrossfilter", () => {
       );
     });
     test("bad mode", () => {
-      expect(() => p.select("type", { mode: "bad mode" })).toThrow(Error);
+      expect(() =>
+        p.select("type", { mode: "bad mode" } as unknown as CrossfilterSelector)
+      ).toThrow(Error);
     });
   });
 
   describe("spatial dimension", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let p: any;
+    let p: typeof payments;
     beforeEach(() => {
-      const X = someData.map((r) => r.coords[0]);
-      const Y = someData.map((r) => r.coords[1]);
-      p = payments.addDimension("coords", "spatial", X, Y);
+      const X = Float32Array.from(someData.map((r) => r.coords[0]));
+      const Y = Float32Array.from(someData.map((r) => r.coords[1]));
+      p = payments.addDimension("coords", { type: "spatial", X, Y });
     });
 
     test("all", () => {
@@ -432,7 +431,12 @@ describe("ImmutableTypedCrossfilter", () => {
       ],
     ])("within-polygon %p", (polygon, expected) => {
       expect(
-        p.select("coords", { mode: "within-polygon", polygon }).allSelected()
+        p
+          .select("coords", {
+            mode: "within-polygon",
+            polygon: polygon as [number, number][],
+          })
+          .allSelected()
       ).toEqual(
         zip(someData, expected)
           .filter((x) => x[1])
@@ -442,24 +446,19 @@ describe("ImmutableTypedCrossfilter", () => {
   });
 
   describe("non-finite scalars", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let p: any;
+    let p: typeof payments;
     beforeEach(() => {
       p = payments
-        .addDimension(
-          "quantity",
-          "scalar",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-          (i: any, d: any) => d[i].quantity,
-          Int32Array
-        )
-        .addDimension(
-          "nonFinite",
-          "scalar",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-          (i: any, d: any) => d[i].nonFinite,
-          Float32Array
-        )
+        .addDimension("quantity", {
+          type: "scalar",
+          value: payments.all().map((d) => d.quantity),
+          ValueArrayCtor: Int32Array,
+        })
+        .addDimension("nonFinite", {
+          type: "scalar",
+          value: payments.all().map((d) => d.nonFinite),
+          ValueArrayCtor: Float32Array,
+        })
         .select("quantity", { mode: "all" });
     });
 
