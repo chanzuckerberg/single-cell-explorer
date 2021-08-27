@@ -200,10 +200,10 @@ class DatasetConfig(BaseConfig):
         server_config = self.app_config.server_config
         if server_config.single_dataset__datapath:
             if self.diffexp__enable:
-                    context["messagefn"](
-                        "CAUTION: due to the size of your dataset, "
-                        "running differential expression may take longer or fail."
-                    )
+                context["messagefn"](
+                    "CAUTION: due to the size of your dataset, "
+                    "running differential expression may take longer or fail."
+                )
 
     def handle_X_approximate_distribution(self):
         self.validate_correct_type_of_configuration_attribute("X_approximate_distribution", str)

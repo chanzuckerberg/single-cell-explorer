@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import requests
 
-from backend.czi_hosted.app.app import handle_api_base_url
+from backend.common.errors import DatasetNotFoundError
 from backend.czi_hosted.common.config.app_config import AppConfig
 from backend.test import decode_fbs, FIXTURES_ROOT
 from backend.test.fixtures.fixtures import pbmc3k_colors
@@ -644,6 +644,34 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.headers["Content-Type"], "application/json")
         expected_response_body = {'schema': {'annotations': {'obs': {'columns': [{'name': 'name_0', 'type': 'string', 'writable': False}, {'name': 'n_genes', 'type': 'int32', 'writable': False}, {'name': 'percent_mito', 'type': 'float32', 'writable': False}, {'name': 'n_counts', 'type': 'float32', 'writable': False}, {'categories': ['CD4 T cells', 'CD14+ Monocytes', 'B cells', 'CD8 T cells', 'NK cells', 'FCGR3A+ Monocytes', 'Dendritic cells', 'Megakaryocytes'], 'name': 'louvain', 'type': 'categorical', 'writable': False}], 'index': 'name_0'}, 'var': {'columns': [{'name': 'name_0', 'type': 'string', 'writable': False}, {'name': 'n_cells', 'type': 'int32', 'writable': False}], 'index': 'name_0'}}, 'dataframe': {'nObs': 2638, 'nVar': 1838, 'type': 'float32'}, 'layout': {'obs': [{'dims': ['draw_graph_fr_0', 'draw_graph_fr_1'], 'name': 'draw_graph_fr', 'type': 'float32'}, {'dims': ['pca_0', 'pca_1'], 'name': 'pca', 'type': 'float32'}, {'dims': ['tsne_0', 'tsne_1'], 'name': 'tsne', 'type': 'float32'}, {'dims': ['umap_0', 'umap_1'], 'name': 'umap', 'type': 'float32'}]}}}
         self.assertEqual(json.loads(result.data), expected_response_body)
+
+    @patch('backend.czi_hosted.data_common.dataset_metadata.request_dataset_metadata_from_data_portal')
+    @patch('backend.czi_hosted.data_common.dataset_metadata.extrapolate_dataset_location_from_config')
+    def test_metadata_manager_caches_missing_dataset(self, mock_extrapolate, mock_request):
+        mock_request.return_value = None
+        mock_extrapolate.return_value = None
+        self.TEST_DATASET_URL_BASE = "/e/no_dataset.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+        endpoint = "schema"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+
+        endpoint = "config"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(mock_request.call_count, 1)
+        self.assertEqual(mock_request.call_count, 1)
+
+    def test_dataset_does_not_exist(self):
+        self.TEST_DATASET_URL_BASE = "/e/no_dataset.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+        endpoint = "schema"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
 
 
 class MockResponse:

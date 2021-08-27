@@ -5,7 +5,7 @@ from typing import Optional
 
 import typing
 
-from backend.common.errors import DatasetAccessError
+from backend.common.errors import DatasetAccessError, DatasetNotFoundError
 from contextlib import contextmanager
 
 from backend.czi_hosted.data_common.rwlock import RWLock
@@ -90,6 +90,7 @@ class CacheItemInfo(object):
         self.cache_item = cache_item
         self.last_access = timestamp
         self.num_access = 1
+        self.error = None
 
     def update_latest_cache_access(self):
         self.last_access = time.time()
@@ -165,19 +166,27 @@ class CacheManager(object):
             self.evict_data(self.get_old_data())
             cache_item_info = self.data.get(cache_key)
             if cache_item_info is not None:
+                if cache_item_info.error is not None:
+                    raise cache_item_info.error
                 cache_item_info.update_latest_cache_access()
                 cache_item = cache_item_info.cache_item
 
             if cache_item is None:
-                self.evict_data(self.get_extra_data())
-                cache_item = CacheItem()
-                desired_data = cache_item.get(
-                    cache_key=cache_key,
-                    create_data_function=create_data_function,
-                    create_data_args=create_data_args
-                )
-                cache_item_info = CacheItemInfo(cache_item, time.time())
-                self.data[cache_key] = cache_item_info
+                try:
+                    self.evict_data(self.get_extra_data())
+                    cache_item = CacheItem()
+                    cache_item_info = CacheItemInfo(None, time.time())
+                    desired_data = cache_item.get(
+                        cache_key=cache_key,
+                        create_data_function=create_data_function,
+                        create_data_args=create_data_args
+                    )
+                    cache_item_info.cache_item = cache_item
+                except (DatasetNotFoundError, DatasetAccessError) as e:
+                    cache_item_info.error = e
+                    raise
+                finally:
+                    self.data[cache_key] = cache_item_info
 
         try:
             assert cache_item
@@ -229,7 +238,7 @@ class CacheManager(object):
                 to_del.append((key, info))
         return to_del
 
-    def evict_data(self, to_del: list=[]):
+    def evict_data(self, to_del: list = []):
         """
         Delete cache items if they are not currently in use
         """
@@ -245,4 +254,3 @@ class CacheManager(object):
                     del self.data[key]
                 except KeyError:
                     pass
-

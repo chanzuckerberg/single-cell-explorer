@@ -22,7 +22,7 @@ from server_timing import Timing as ServerTiming
 
 import backend.czi_hosted.common.rest as common_rest
 from backend.common.utils.data_locator import DataLocator
-from backend.common.errors import DatasetAccessError, RequestException
+from backend.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError
 from backend.czi_hosted.common.health import health_check
 from backend.common.utils.utils import path_join, Float32JSONEncoder
 from backend.czi_hosted.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
@@ -90,7 +90,7 @@ def dataset_index(url_dataroot=None, dataset=None):
             args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
             return render_template("index.html", **args)
 
-    except DatasetAccessError as e:
+    except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
@@ -101,7 +101,7 @@ def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
 
 
-def get_data_adaptor(url_dataroot: str=None, dataset: str=None):
+def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
     matrix_cache_manager = current_app.matrix_data_cache_manager
@@ -114,7 +114,7 @@ def get_data_adaptor(url_dataroot: str=None, dataset: str=None):
             cache_key=f"{url_dataroot}/{dataset}",
             create_data_function=MatrixDataLoader(
                 location=dataset_metadata['s3_uri'],
-                url_dataroot = url_dataroot,
+                url_dataroot=url_dataroot,
                 app_config=app_config).validate_and_open,
             create_data_args={}
         )
@@ -139,7 +139,7 @@ def rest_get_data_adaptor(func):
             with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
-        except DatasetAccessError as e:
+        except (DatasetAccessError, DatasetNotFoundError) as e:
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )

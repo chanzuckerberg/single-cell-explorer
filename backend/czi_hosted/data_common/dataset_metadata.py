@@ -1,11 +1,11 @@
 import json
 import logging
-from http import HTTPStatus
 
 import requests
+from flask import current_app
+
 from backend.common.utils.utils import path_join
-from backend.common.errors import DatasetAccessError
-import backend.czi_hosted.common.rest as common_rest
+from backend.common.errors import DatasetNotFoundError, DatasetAccessError
 from backend.czi_hosted.common.config.app_config import AppConfig
 from backend.czi_hosted.common.config.server_config import ServerConfig
 
@@ -89,6 +89,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     dataset_metadata["s3_uri"] = extrapolate_dataset_location_from_config(
         server_config=server_config, dataset_explorer_location=dataset_explorer_location)
     if dataset_metadata["s3_uri"] is None:
-        return common_rest.abort_and_log(HTTPStatus.BAD_REQUEST, "Dataset not found", loglevel=logging.INFO)
+        current_app.logger.log(logging.INFO, f"Dataset not found: {dataset_explorer_location}")
+        raise DatasetNotFoundError(f"Dataset location not found for {dataset_explorer_location}")
 
     return dataset_metadata

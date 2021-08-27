@@ -32,6 +32,8 @@ define_request_exception("FilterError", "Raised when filter is malformed")
 define_request_exception("JSONEncodingValueError", "Raised when data cannot be encoded into json")
 define_request_exception("MimeTypeError", "Raised when incompatible MIME type selected")
 define_request_exception("DatasetAccessError", "Raised when file loaded into a DataAdaptor is misformatted")
+define_request_exception(
+    "DatasetNotFoundError", "Raised when the dataset location cant be found based on the explorer url")
 define_request_exception("DisabledFeatureError", "Raised when an attempt to use a disabled feature occurs")
 define_request_exception("AnnotationsError", "Raised when an attempt to use the annotations feature fails")
 define_request_exception(
