@@ -226,9 +226,6 @@ class AppConfig(object):
         self.is_completed = True
         self.check_config()
 
-    def get_matrix_data_cache_manager(self):
-        return self.server_config.matrix_data_cache_manager
-
     def is_multi_dataset(self):
         return self.server_config.multi_dataset__dataroot is not None
 

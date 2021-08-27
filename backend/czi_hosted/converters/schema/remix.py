@@ -58,9 +58,9 @@ def safe_add_field(adata_attr, field_name, field_value):
     """Add a field and value to an AnnData, but don't clobber an exising value."""
 
     if (
-        isinstance(field_value, list)
-        and field_value
-        and isinstance(field_value[0], dict)
+            isinstance(field_value, list)
+            and field_value
+            and isinstance(field_value[0], dict)
     ):
         field_value = json.dumps(field_value)
     if field_name in adata_attr:
@@ -165,13 +165,13 @@ def merge_df(df, domain, index, columns):
     elif domain == "log1p":
         merged_df = (
             pd.DataFrame(np.expm1(to_merge, dtype=np.float128), index=index, columns=columns)
-            .sum(axis=1, level=0, skipna=False)
+                .sum(axis=1, level=0, skipna=False)
         )
         merged_df = pd.DataFrame(np.log1p(merged_df.to_numpy()), index=merged_df.index, columns=merged_df.columns)
     elif domain == "sqrt":
         merged_df = (
             pd.DataFrame(np.square(to_merge), index=index, columns=columns)
-            .sum(axis=1, level=0, skipna=False)
+                .sum(axis=1, level=0, skipna=False)
         )
         merged_df = pd.DataFrame(np.sqrt(merged_df.to_numpy()), index=merged_df.index, columns=merged_df.columns)
 
@@ -216,14 +216,15 @@ def fixup_gene_symbols(adata, fixup_config):
 
     return fixup_adata
 
+
 def _strip_version(adata):
     """Remove version information from the AnnData object."""
 
     if "version" in adata.uns_keys():
         del adata.uns["version"]
 
-def apply_schema(source_h5ad, remix_config, output_filename):
 
+def apply_schema(source_h5ad, remix_config, output_filename):
     try:
         import scanpy
     except ImportError:

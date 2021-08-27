@@ -70,17 +70,3 @@ class DataLocatorAdaptorTest(unittest.TestCase):
         config.complete_config()
         data = AnndataAdaptor(locator, config)
         self.stdAsserts(data)
-
-    def test_url_https(self):
-        url = "https://raw.githubusercontent.com/chanzuckerberg/cellxgene/main/example-dataset/pbmc3k.h5ad"
-        locator = DataLocator(url)
-        config = self.get_basic_config()
-        data = AnndataAdaptor(locator, config)
-        self.stdAsserts(data)
-
-    def test_url_http(self):
-        url = "http://raw.githubusercontent.com/chanzuckerberg/cellxgene/main/example-dataset/pbmc3k.h5ad"
-        locator = DataLocator(url)
-        config = self.get_basic_config()
-        data = AnndataAdaptor(locator, config)
-        self.stdAsserts(data)

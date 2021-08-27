@@ -1,1 +1,1 @@
--r ./backend/server/requirements.txt
+-r ./backend/czi_hosted/requirements.txt

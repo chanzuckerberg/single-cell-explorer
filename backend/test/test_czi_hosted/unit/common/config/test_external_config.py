@@ -28,16 +28,17 @@ class TestExternalConfig(ConfigTests):
         self.assertEqual(convert_string_to_value("{'a':10, 'b':'string'}"), dict(a=int(10), b="string"))
 
     def test_environment_variable(self):
+
         configfile = self.custom_external_config(
             environment=[
-                dict(name="DATAPATH", path=["server", "single_dataset", "datapath"], required=True),
+                dict(name="DATAROOT", path=["server", "multi_dataset", "dataroot"], required=True),
                 dict(name="DIFFEXP", path=["dataset", "diffexp", "enable"], required=True),
             ],
             config_file_name="environment_external_config.yaml",
         )
 
         env = os.environ
-        env["DATAPATH"] = f"{FIXTURES_ROOT}/pbmc3k.cxg"
+        env["DATAROOT"] = f"{FIXTURES_ROOT}"
         env["DIFFEXP"] = "False"
         config = AppConfig()
         config.update_from_config_file(configfile)
@@ -48,21 +49,27 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get("/api/v0.2/config")
+        response = session.get("/d/pbmc3k.cxg/api/v0.2/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertTrue(data_config["config"]["parameters"]["disable-diffexp"])
 
-        os.environ["DATAPATH"] = f"{FIXTURES_ROOT}/a95c59b4-7f5d-4b80-ad53-a694834ca18b.h5ad"
+        # os.environ["DATAPATH"] = f"{FIXTURES_ROOT}/a95c59b4-7f5d-4b80-ad53-a694834ca18b.h5ad"
         os.environ["DIFFEXP"] = "True"
+
+        config = AppConfig()
+        config.update_from_config_file(configfile)
+
+
+        # config.update_from_config_file(configfile)
+        config.update_server_config(app__flask_secret_key="123 magic")
 
         server= self.create_app(config)
 
         server.testing = True
         session = server.test_client()
 
-        # session = requests.Session()
-        response = session.get("/api/v0.2/config")
+        response = session.get("/d/a95c59b4-7f5d-4b80-ad53-a694834ca18b.h5ad/api/v0.2/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "a95c59b4-7f5d-4b80-ad53-a694834ca18b")
         self.assertFalse(data_config["config"]["parameters"]["disable-diffexp"])

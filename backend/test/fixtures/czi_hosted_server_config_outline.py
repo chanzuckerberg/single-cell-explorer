@@ -30,6 +30,9 @@ f"""server:
     matrix_cache:
       max_datasets: {max_cached_datasets}
       timelimit_s: {timelimit_s}
+    metadata_cache:
+      max_datasets: {max_cached_dataset_metadata}
+      timelimit_s: {timelimit_s_metadata}
 
   single_dataset:
     datapath: {dataset_datapath}
@@ -45,8 +48,9 @@ f"""server:
       target_workunit: {target_workunit}  # The target number of matrix elements that are evaluated in one thread.
 
   data_locator:
+    api_base: {data_locator_api_base}
     s3:
-      region_name: {data_locater_region_name}
+      region_name: {data_locator_region_name}
 
   adaptor:
     cxg_adaptor:

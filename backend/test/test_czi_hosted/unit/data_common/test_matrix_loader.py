@@ -6,7 +6,8 @@ import unittest
 
 from backend.czi_hosted.common.config.app_config import AppConfig
 from backend.common.errors import DatasetAccessError
-from backend.czi_hosted.data_common.matrix_loader import MatrixDataCacheManager
+from backend.czi_hosted.data_common.cache import CacheManager
+from backend.czi_hosted.data_common.matrix_loader import MatrixDataLoader
 from backend.test import FIXTURES_ROOT
 
 
@@ -21,24 +22,34 @@ class MatrixCacheTest(unittest.TestCase):
             shutil.copytree(source, target)
 
     def use_dataset(self, matrix_cache, dirname, app_config, dataset_index):
-        with matrix_cache.data_adaptor(None, os.path.join(dirname, str(dataset_index) + ".cxg"), app_config) as adaptor:
-            pass
-        return adaptor
+        dataset_location = os.path.join(dirname, str(dataset_index) + ".cxg")
+        with matrix_cache.get(
+                cache_key=dataset_location,
+                create_data_function=MatrixDataLoader(location=dataset_location, app_config=app_config).validate_and_open,
+                create_data_args={}
+        ) as adaptor:
+            return adaptor
+
+
 
     def use_dataset_with_error(self, matrix_cache, dirname, app_config, dataset_index):
+        dataset_location = os.path.join(dirname, str(dataset_index) + ".cxg")
         try:
-            with matrix_cache.data_adaptor(None, os.path.join(dirname, str(dataset_index) + ".cxg"), app_config):
+            with matrix_cache.get(
+                    cache_key=dataset_location,
+                    create_data_function=MatrixDataLoader(dataset_location, app_config=app_config).validate_and_open,
+                    create_data_args={}):
                 raise DatasetAccessError("something bad happened")
         except DatasetAccessError:
-            # the MatrixDataCacheManager rethrows the exception, so catch and ignore
+            # the CacheManager rethrows the exception, so catch and ignore
             pass
 
     def get_datasets(self, matrix_cache, dirname):
-        datasets = matrix_cache.datasets
+        datasets = matrix_cache.data
         result = {}
         for k, v in datasets.items():
-            # filter out the dirname and the .cxg from the name
-            newk = int(k[1][len(dirname) + 1 : -4])
+            # filter out the dirname and the .cxg from the name (should be an int)
+            newk = int(k.split("/")[-1][0:-4])
             result[newk] = v
 
         return result
@@ -52,37 +63,37 @@ class MatrixCacheTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as dirname:
             self.make_temporay_datasets(dirname, 5)
             app_config = AppConfig()
-            m = MatrixDataCacheManager(max_cached=3, timelimit_s=None)
+            matrix_cache = CacheManager(max_cached=3, timelimit_s=None)
 
             # should have only dataset 0
-            self.use_dataset(m, dirname, app_config, 0)
-            self.check_datasets(m, dirname, [0])
+            self.use_dataset(matrix_cache, dirname, app_config, 0)
+            self.check_datasets(matrix_cache, dirname, [0])
 
             # should have datasets 0, 1
-            self.use_dataset(m, dirname, app_config, 1)
-            self.check_datasets(m, dirname, [0, 1])
+            self.use_dataset(matrix_cache, dirname, app_config, 1)
+            self.check_datasets(matrix_cache, dirname, [0, 1])
 
             # should have datasets 0, 1, 2
-            self.use_dataset(m, dirname, app_config, 2)
-            self.check_datasets(m, dirname, [0, 1, 2])
+            self.use_dataset(matrix_cache, dirname, app_config, 2)
+            self.check_datasets(matrix_cache, dirname, [0, 1, 2])
 
             # should have datasets 1, 2, 3
-            self.use_dataset(m, dirname, app_config, 3)
-            self.check_datasets(m, dirname, [1, 2, 3])
+            self.use_dataset(matrix_cache, dirname, app_config, 3)
+            self.check_datasets(matrix_cache, dirname, [1, 2, 3])
 
             # use dataset 1, making is more recent than dataset 2
-            self.use_dataset(m, dirname, app_config, 1)
-            self.check_datasets(m, dirname, [1, 2, 3])
+            self.use_dataset(matrix_cache, dirname, app_config, 1)
+            self.check_datasets(matrix_cache, dirname, [1, 2, 3])
 
             # use dataset 4, should have 1,3,4
-            self.use_dataset(m, dirname, app_config, 4)
-            self.check_datasets(m, dirname, [1, 3, 4])
+            self.use_dataset(matrix_cache, dirname, app_config, 4)
+            self.check_datasets(matrix_cache, dirname, [1, 3, 4])
 
             # use dataset 4 a few more times, get the count to 3
-            self.use_dataset(m, dirname, app_config, 4)
-            self.use_dataset(m, dirname, app_config, 4)
+            self.use_dataset(matrix_cache, dirname, app_config, 4)
+            self.use_dataset(matrix_cache, dirname, app_config, 4)
 
-            datasets = self.get_datasets(m, dirname)
+            datasets = self.get_datasets(matrix_cache, dirname)
             self.assertEqual(datasets[1].num_access, 2)
             self.assertEqual(datasets[3].num_access, 1)
             self.assertEqual(datasets[4].num_access, 3)
@@ -92,7 +103,7 @@ class MatrixCacheTest(unittest.TestCase):
             self.make_temporay_datasets(dirname, 2)
 
             app_config = AppConfig()
-            m = MatrixDataCacheManager(max_cached=3, timelimit_s=1)
+            m = CacheManager(max_cached=3, timelimit_s=1)
 
             adaptor = self.use_dataset(m, dirname, app_config, 0)
             adaptor1 = self.use_dataset(m, dirname, app_config, 0)
@@ -114,7 +125,7 @@ class MatrixCacheTest(unittest.TestCase):
             self.make_temporay_datasets(dirname, 1)
 
             app_config = AppConfig()
-            m = MatrixDataCacheManager(max_cached=3, timelimit_s=1)
+            m = CacheManager(max_cached=3, timelimit_s=1)
 
             # use the 0 datasets
             self.use_dataset(m, dirname, app_config, 0)

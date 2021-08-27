@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import tempfile
 import unittest
@@ -13,7 +14,7 @@ from backend.czi_hosted.common.corpora import (
     corpora_get_props_from_anndata,
 )
 from backend.test.test_czi_hosted.unit import BaseTest
-from backend.test import PROJECT_ROOT
+from backend.test import PROJECT_ROOT, FIXTURES_ROOT
 
 VERSION = "v0.2"
 
@@ -132,12 +133,11 @@ class CorporaRESTAPITest(BaseTest):
     def setUpClass(cls, app_config=None):
         if not app_config:
             app_config = AppConfig()
-        cls.tmp_dir = tempfile.TemporaryDirectory()
         src = f"{PROJECT_ROOT}/example-dataset/pbmc3k.h5ad"
-        dst = f"{cls.tmp_dir.name}/pbmc3k.h5ad"
-        shutil.copyfile(src, dst)
-        cls.setCorporaFields(dst)
-        app_config.update_server_config(single_dataset__datapath=dst)
+        cls.dst = f"{FIXTURES_ROOT}/corpora-pbmc3k.h5ad"
+        shutil.copyfile(src, cls.dst)
+        cls.setCorporaFields(cls.dst)
+        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
 
         super().setUpClass(app_config)
         cls.app.testing = True
@@ -145,7 +145,11 @@ class CorporaRESTAPITest(BaseTest):
 
     def setUp(self):
         self.session = self.client
-        self.url_base = "/api/v0.2/"
+        self.url_base = "/d/corpora-pbmc3k.h5ad/api/v0.2/"
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        os.remove(cls.dst)
 
     def test_config(self):
         endpoint = "config"

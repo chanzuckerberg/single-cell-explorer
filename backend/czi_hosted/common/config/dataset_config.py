@@ -6,6 +6,7 @@ from backend.czi_hosted.common.annotations.hosted_tiledb import AnnotationsHoste
 from backend.czi_hosted.common.annotations.local_file_csv import AnnotationsLocalFile
 from backend.czi_hosted.common.config.base_config import BaseConfig
 from backend.common.errors import ConfigurationError
+from backend.czi_hosted.data_common.matrix_loader import MatrixDataLoader
 from backend.czi_hosted.db.db_utils import DbUtils
 
 
@@ -147,8 +148,12 @@ class DatasetConfig(BaseConfig):
         # so that we can remove errors early in the process.
         server_config = self.app_config.server_config
         if server_config.single_dataset__datapath and self.user_annotations__local_file_csv__file:
-            with server_config.matrix_data_cache_manager.data_adaptor(
-                self.tag, server_config.single_dataset__datapath, self.app_config
+            with server_config.matrix_data_cache_manager.get(
+                    cache_key=server_config.single_dataset__datapath,
+                    create_data_function=MatrixDataLoader(
+                        location=server_config.single_dataset__datapath,
+                        app_config=self.app_config).validate_and_open,
+                    create_data_args={"dataset_config": self}
             ) as data_adaptor:
                 data_adaptor.check_new_labels(self.user_annotations.read_labels(data_adaptor))
 
@@ -194,14 +199,11 @@ class DatasetConfig(BaseConfig):
 
         server_config = self.app_config.server_config
         if server_config.single_dataset__datapath:
-            with server_config.matrix_data_cache_manager.data_adaptor(
-                self.tag, server_config.single_dataset__datapath, self.app_config
-            ) as data_adaptor:
-                if self.diffexp__enable and data_adaptor.parameters.get("diffexp_may_be_slow", False):
-                    context["messagefn"](
-                        "CAUTION: due to the size of your dataset, "
-                        "running differential expression may take longer or fail."
-                    )
+            if self.diffexp__enable:
+                context["messagefn"](
+                    "CAUTION: due to the size of your dataset, "
+                    "running differential expression may take longer or fail."
+                )
 
     def handle_X_approximate_distribution(self):
         self.validate_correct_type_of_configuration_attribute("X_approximate_distribution", str)

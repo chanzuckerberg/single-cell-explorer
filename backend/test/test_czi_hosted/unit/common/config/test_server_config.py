@@ -47,7 +47,7 @@ class TestServerConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.server_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 41)
+        self.assertEqual(mock_check_attrs.call_count, 44)
 
     def test_handle_app__throws_error_if_port_doesnt_exist(self):
         config = self.get_config(port=99999999)
@@ -68,7 +68,7 @@ class TestServerConfig(ConfigTests):
             "d2": {"base_url": "set2/subdir", "dataroot": "s3://shouldnt/work"},
         }
         file_name = self.custom_app_config(
-            dataroot=dataroot, config_file_name=self.config_file_name, data_locater_region_name="true"
+            dataroot=dataroot, config_file_name=self.config_file_name, data_locator_region_name="true"
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -83,7 +83,7 @@ class TestServerConfig(ConfigTests):
             "d2": {"base_url": "set2/subdir", "dataroot": "s3://hosted-cellxgene-dev"},
         }
         file_name = self.custom_app_config(
-            dataroot=dataroot, config_file_name=self.config_file_name, data_locater_region_name="true"
+            dataroot=dataroot, config_file_name=self.config_file_name, data_locator_region_name="true"
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -260,32 +260,35 @@ class TestServerConfig(ConfigTests):
         assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
         assert data_config["config"]["parameters"]["annotations"] is False
         assert data_config["config"]["parameters"]["disable-diffexp"] is False
+
         assert data_config["config"]["parameters"]["about_legal_tos"] == "tos_set1.html"
 
         response = session.get("/set2/pbmc3k.cxg/api/v0.2/config")
 
         data_config = json.loads(response.data)
-        assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
-        assert data_config["config"]["parameters"]["annotations"] is True
-        assert data_config["config"]["parameters"]["about_legal_tos"] == "tos_set2.html"
+        self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
+        self.assertTrue(data_config["config"]["parameters"]["annotations"])
+        self.assertEqual(data_config["config"]["parameters"]["about_legal_tos"], "tos_set2.html")
 
         response = session.get("/set3/pbmc3k.cxg/api/v0.2/config")
         data_config = json.loads(response.data)
-        assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
-        assert data_config["config"]["parameters"]["annotations"] is True
-        assert data_config["config"]["parameters"]["disable-diffexp"] is False
-        assert data_config["config"]["parameters"]["about_legal_tos"] == "tos_default.html"
+        self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
+        self.assertTrue(data_config["config"]["parameters"]["annotations"])
+        self.assertFalse(data_config["config"]["parameters"]["disable-diffexp"])
+        self.assertEqual(data_config["config"]["parameters"]["about_legal_tos"], "tos_default.html")
 
         response = session.get("/health")
-        assert json.loads(response.data)["status"] == "pass"
+        self.assertEqual(json.loads(response.data)["status"], "pass")
 
         # access a dataset (no slash)
-        response = session.get("/set2/pbmc3k.cxg")
-        self.assertEqual(response.status_code, 200)
+        with self.subTest("access a dataset without a trailing a slash"):
+            response = session.get("/set2/pbmc3k.cxg")
+            self.assertEqual(response.status_code, 200)
 
         # access a dataset (with slash)
-        response = session.get("/set2/pbmc3k.cxg/")
-        self.assertEqual(response.status_code, 200)
+        with self.subTest("access a dataset with a slash"):
+            response = session.get("/set2/pbmc3k.cxg/")
+            self.assertEqual(response.status_code, 200)
 
     @patch("backend.czi_hosted.common.config.server_config.diffexp_tiledb.set_config")
     def test_handle_diffexp(self, mock_tiledb_config):

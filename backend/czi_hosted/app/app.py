@@ -22,9 +22,10 @@ from server_timing import Timing as ServerTiming
 
 import backend.czi_hosted.common.rest as common_rest
 from backend.common.utils.data_locator import DataLocator
-from backend.common.errors import DatasetAccessError, RequestException
+from backend.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError
 from backend.czi_hosted.common.health import health_check
 from backend.common.utils.utils import path_join, Float32JSONEncoder
+from backend.czi_hosted.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from backend.czi_hosted.data_common.matrix_loader import MatrixDataLoader
 
 webbp = Blueprint("webapp", "backend.czi_hosted.common.web", template_folder="templates")
@@ -77,29 +78,19 @@ def dataset_index(url_dataroot=None, dataset=None):
         if app_config.is_multi_dataset():
             return dataroot_index()
         else:
-            location = server_config.single_dataset__datapath
-    else:
-        dataroot = None
-        for key, dataroot_dict in server_config.multi_dataset__dataroot.items():
-            if dataroot_dict["base_url"] == url_dataroot:
-                dataroot = dataroot_dict["dataroot"]
-                break
-        if dataroot is None:
-            abort(HTTPStatus.NOT_FOUND)
-        location = path_join(dataroot, dataset)
+            dataset = server_config.single_dataset__datapath
 
     dataset_config = app_config.get_dataset_config(url_dataroot)
     scripts = dataset_config.app__scripts
     inline_scripts = dataset_config.app__inline_scripts
 
     try:
-        cache_manager = current_app.matrix_data_cache_manager
-        with cache_manager.data_adaptor(url_dataroot, location, app_config) as data_adaptor:
+        with get_data_adaptor(url_dataroot=url_dataroot, dataset=dataset) as data_adaptor:
             data_adaptor.set_uri_path(f"{url_dataroot}/{dataset}")
             args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
             return render_template("index.html", **args)
 
-    except DatasetAccessError as e:
+    except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
@@ -110,35 +101,23 @@ def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
 
 
-def get_data_adaptor(url_dataroot=None, dataset=None):
-    config = current_app.app_config
-    server_config = config.server_config
-    dataset_key = None
-
-    if dataset is None:
-        datapath = server_config.single_dataset__datapath
-    else:
-        dataroot = None
-        for key, dataroot_dict in server_config.multi_dataset__dataroot.items():
-            if dataroot_dict["base_url"] == url_dataroot:
-                dataroot = dataroot_dict["dataroot"]
-                dataset_key = key
-                break
-
-        if dataroot is None:
-            raise DatasetAccessError(f"Invalid dataset {url_dataroot}/{dataset}")
-        datapath = path_join(dataroot, dataset)
-        # path_join returns a normalized path.  Therefore it is
-        # sufficient to check that the datapath starts with the
-        # dataroot to determine that the datapath is under the dataroot.
-        if not datapath.startswith(dataroot):
-            raise DatasetAccessError(f"Invalid dataset {url_dataroot}/{dataset}")
-
-    if datapath is None:
-        return common_rest.abort_and_log(HTTPStatus.BAD_REQUEST, "Invalid dataset NONE", loglevel=logging.INFO)
-
-    cache_manager = current_app.matrix_data_cache_manager
-    return cache_manager.data_adaptor(dataset_key, datapath, config)
+def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+    app_config = current_app.app_config
+    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
+    matrix_cache_manager = current_app.matrix_data_cache_manager
+    with dataset_metadata_manager.get(
+            cache_key=f"{url_dataroot}/{dataset}",
+            create_data_function=get_dataset_metadata_for_explorer_location,
+            create_data_args={"app_config": app_config}
+    ) as dataset_metadata:
+        return matrix_cache_manager.get(
+            cache_key=f"{url_dataroot}/{dataset}",
+            create_data_function=MatrixDataLoader(
+                location=dataset_metadata['s3_uri'],
+                url_dataroot=url_dataroot,
+                app_config=app_config).validate_and_open,
+            create_data_args={}
+        )
 
 
 def requires_authentication(func):
@@ -160,7 +139,7 @@ def rest_get_data_adaptor(func):
             with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
-        except DatasetAccessError as e:
+        except (DatasetAccessError, DatasetNotFoundError) as e:
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
@@ -168,7 +147,7 @@ def rest_get_data_adaptor(func):
     return wrapped_function
 
 
-def  dataroot_test_index():
+def dataroot_test_index():
     # the following index page is meant for testing/debugging purposes
     data = '<!doctype html><html lang="en">'
     data += "<head><title>Hosted Cellxgene</title></head>"
@@ -195,7 +174,7 @@ def  dataroot_test_index():
         for fname in locator.ls():
             location = path_join(dataroot, fname)
             try:
-                MatrixDataLoader(location, app_config=config)
+                MatrixDataLoader(location, url_dataroot=url_dataroot, app_config=config)
                 datasets.append((url_dataroot, fname))
             except DatasetAccessError:
                 # skip over invalid datasets
@@ -466,6 +445,8 @@ class Server:
             )
 
         self.app.matrix_data_cache_manager = server_config.matrix_data_cache_manager
+        self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
+
         self.app.app_config = app_config
 
         auth = server_config.auth
