@@ -15,6 +15,8 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { UserInfoPayload } from "../reducers/userInfo";
+import { Collection } from "../common/types/entities";
+import { MetaPayload } from "../reducers/collections";
 import {
   createAPIPrefix,
   createDatasetUrl,
@@ -69,21 +71,40 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
   return config;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-async function collectionFetchAndLoad(dispatch: any) {
-  /*
-  Fetch dataset meta for the current visualization then fetch the corresponding collection.
-   */
+/*
+ Fetch collection with the given ID.
+ @param collectionId - ID of collection to be fetched.
+ @returns Collection with the given ID.
+ */
+async function collectionFetch(collectionId: string): Promise<Collection> {
+  return fetchPortalJson<Collection>(`collections/${collectionId}`);
+}
+
+/*
+ Fetch dataset meta for the current visualization then fetch the corresponding collection. Save collection to store.
+ @param dispatch Functional facilitating update of store.
+ */
+async function collectionFetchAndLoad(dispatch: AppDispatch): Promise<void> {
   const datasetMeta = await datasetMetaFetch();
   const { collection_id: collectionId, dataset_id: selectedDatasetId } =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    datasetMeta as any;
+    datasetMeta;
   const collection = await collectionFetch(collectionId);
   dispatch({
     type: "collection load complete",
     collection,
     selectedDatasetId,
   });
+}
+
+/*
+ Fetch dataset meta for the current dataset.
+ @returns Response from Portal's meta endpoint.
+ TODO(cc) revisit swap of explorer URL origin for environments without a corresponding Portal instance (eg local, canary)
+ */
+async function datasetMetaFetch(): Promise<MetaPayload> {
+  const explorerUrl = createExplorerUrl();
+  const explorerUrlParam = encodeURIComponent(explorerUrl);
+  return fetchPortalJson<MetaPayload>(`datasets/meta?url=${explorerUrlParam}`);
 }
 
 async function userInfoFetch(dispatch: AppDispatch): Promise<UserInfoPayload> {
@@ -119,23 +140,6 @@ async function genesetsFetch(dispatch: any, config: any) {
       data: defaultResponse,
     });
   }
-}
-
-async function datasetMetaFetch() {
-  /*
-   Fetch dataset meta for the current dataset.
-   TODO(cc) revisit swap of explorer URL origin for environments without a corresponding Portal instance (eg local, canary)
-   */
-  const explorerUrl = createExplorerUrl();
-  const explorerUrlParam = encodeURIComponent(explorerUrl);
-  return fetchPortalJson(`datasets/meta?url=${explorerUrlParam}`);
-}
-
-async function collectionFetch(collectionId: string) {
-  /*
-   Fetch collection with the given ID.
-   */
-  return fetchPortalJson(`collections/${collectionId}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -379,11 +383,11 @@ function fetchJson<T>(pathAndQuery: string): Promise<T> {
   ) as Promise<T>;
 }
 
-function fetchPortalJson(url: string) {
-  /* 
-  Fetch JSON from Portal API.
-  TODO(cc) revisit - required for dataset meta and collection requests from Portal 
-   */
+/* 
+ Fetch JSON from Portal API.
+ TODO(cc) revisit - required for dataset meta and collection requests from Portal 
+ */
+function fetchPortalJson<T>(url: string): Promise<T> {
   return doJsonRequest(`${globals.API.portalPrefix}${url}`);
 }
 
