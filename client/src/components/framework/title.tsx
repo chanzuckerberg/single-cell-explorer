@@ -1,7 +1,7 @@
 import React from "react";
 import * as globals from "../../globals";
 
-const Title = () => (
+const Title = (): JSX.Element => (
   <span
     style={{
       fontSize: 24,
