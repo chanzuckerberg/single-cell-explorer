@@ -1,7 +1,7 @@
 export type Category = number | string | boolean;
 
 export interface AnnotationColumnSchema {
-  categories?: Category[];
+  categories: Category[];
   name: string;
   type: "string" | "float32" | "int32" | "categorical" | "boolean";
   writable: boolean;
