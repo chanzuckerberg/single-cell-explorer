@@ -58,6 +58,9 @@ const skipOnActions = new Set<string>([
   "geneset: disable add new genes mode",
   "geneset: activate rename geneset mode",
   "geneset: disable rename geneset mode",
+
+  /* collections */
+  "collection load complete",
 ]);
 
 /*
@@ -118,9 +121,6 @@ const saveOnActions = new Set<string>([
   "geneset: add genes",
   "geneset: delete genes",
   "geneset: set gene description",
-
-  /* collections */
-  "collection load complete",
 ]);
 
 /**
