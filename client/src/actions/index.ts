@@ -16,7 +16,6 @@ import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { UserInfoPayload } from "../reducers/userInfo";
 import { Collection } from "../common/types/entities";
-import { MetaPayload } from "../reducers/collections";
 import {
   createAPIPrefix,
   createDatasetUrl,
@@ -29,6 +28,7 @@ import {
   WORK_IN_PROGRESS_WARN_STATE,
 } from "../components/util/localStorage";
 import { postExplainNewTab } from "../components/framework/toasters";
+import { MetaPayload } from "../reducers/collections";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
