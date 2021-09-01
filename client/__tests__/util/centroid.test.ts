@@ -31,7 +31,11 @@ describe("centroid", () => {
       schema,
       "field4",
       obsAnnotations,
-      { current: "umap", currentDimNames: ["umap_0", "umap_1"] },
+      {
+        current: "umap",
+        currentDimNames: ["umap_0", "umap_1"],
+        available: ["umap"],
+      },
       obsLayout
     );
 
@@ -57,7 +61,11 @@ describe("centroid", () => {
       schema,
       "field3",
       obsAnnotations,
-      { current: "umap", currentDimNames: ["umap_0", "umap_1"] },
+      {
+        current: "umap",
+        currentDimNames: ["umap_0", "umap_1"],
+        available: ["umap"],
+      },
       obsLayout
     );
 
