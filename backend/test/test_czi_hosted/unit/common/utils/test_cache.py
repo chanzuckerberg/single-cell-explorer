@@ -24,11 +24,11 @@ class CacheItemTest(unittest.TestCase):
     def test_get_item_calls_create_data_function_with_all_args(self):
         cache_item = CacheItem()
         data = cache_item.get("cache_key", self.create_data)
-        self.assertEqual({"cache_key":"cache_key"}, data)
+        self.assertEqual({"cache_key": "cache_key"}, data)
 
         cache_item = CacheItem()
-        data = cache_item.get("cache_key", self.create_data, {"a":"b", "c": "d"})
-        self.assertEqual({"cache_key":"cache_key", "a":"b", "c": "d"}, data)
+        data = cache_item.get("cache_key", self.create_data, {"a": "b", "c": "d"})
+        self.assertEqual({"cache_key": "cache_key", "a": "b", "c": "d"}, data)
 
     def test_get_item_returns_none_if_no_data_and_no_create_data_function(self):
         cache_item = CacheItem()
@@ -166,8 +166,10 @@ class CacheItemTest(unittest.TestCase):
         # this should not throw an error
         cache_item.attempt_delete()
 
+
 class CacheManagerTest(unittest.TestCase):
     CACHE_TIME_LIMIT = 2
+
     def test_cache_manager_retrieves_cached_data(self):
         cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
         get_data = Mock()
@@ -187,13 +189,13 @@ class CacheManagerTest(unittest.TestCase):
         with cache_manager.get("key_one", get_data) as cache_item:
             self.assertIsNotNone(cache_item)
             self.assertEqual(get_data.call_count, 0)
-        sleep(self.CACHE_TIME_LIMIT+1)
+        sleep(self.CACHE_TIME_LIMIT + 1)
         with cache_manager.get("key_one", get_data) as cache_item:
             self.assertIsNotNone(cache_item)
             self.assertEqual(get_data.call_count, 1)
         mock_attempt_delete = Mock(spec=cache_manager.data.get("key_one").cache_item.attempt_delete)
         cache_manager.data.get("key_one").cache_item.attempt_delete = mock_attempt_delete
-        sleep(self.CACHE_TIME_LIMIT+1)
+        sleep(self.CACHE_TIME_LIMIT + 1)
         with cache_manager.get("key_two", lambda x: {x: x}) as cache_item_two:
             self.assertIsNotNone(cache_item_two)
         self.assertEqual(mock_attempt_delete.call_count, 1)
