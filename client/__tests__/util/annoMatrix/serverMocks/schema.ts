@@ -6,26 +6,32 @@ export const schema: { schema: RawSchema } = {
       obs: {
         columns: [
           {
+            categories: [],
             name: "name_0",
             type: "string",
             writable: false,
           },
           {
+            categories: [],
+
             name: "n_genes",
             type: "int32",
             writable: false,
           },
           {
+            categories: [],
             name: "percent_mito",
             type: "float32",
             writable: false,
           },
           {
+            categories: [],
             name: "n_counts",
             type: "float32",
             writable: false,
           },
           {
+            categories: [],
             name: "louvain",
             type: "string",
             writable: false,
@@ -36,11 +42,13 @@ export const schema: { schema: RawSchema } = {
       var: {
         columns: [
           {
+            categories: [],
             name: "name_0",
             type: "string",
             writable: false,
           },
           {
+            categories: [],
             name: "n_cells",
             type: "int32",
             writable: false,
