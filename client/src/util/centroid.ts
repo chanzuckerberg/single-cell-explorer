@@ -6,6 +6,8 @@ import {
   createCategorySummaryFromDfCol,
   isSelectableCategoryName,
 } from "./stateManager/controlsHelpers";
+import { Schema } from "../common/types/schema";
+import { LayoutChoiceState } from "../reducers/layoutChoice";
 
 /*
   Centroid coordinate calculation
@@ -16,22 +18,22 @@ import {
 
 /*
 Generates a mapping of labels to data needed to calculate centroids
-label -> {
- length: int,
- holdsFinite: Boolean,
- xCoordinates: Float32Array,
- yCoordinates: Float32Array
-}
 */
+
+export interface CentroidCoordinateObject {
+  length: number;
+  hasFinite: boolean;
+  xCoordinates: Float32Array;
+  yCoordinates: Float32Array;
+}
+
 const getCoordinatesByLabel = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any,
+  schema: Schema,
   categoryName: string,
   categoryDf: Dataframe,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: any,
+  layoutChoice: LayoutChoiceState,
   layoutDf: Dataframe
-) => {
+): Map<string, CentroidCoordinateObject> => {
   const coordsByCategoryLabel = new Map();
   // If the coloredBy is not a categorical col
   if (!isSelectableCategoryName(schema, categoryName)) {
@@ -72,7 +74,6 @@ const getCoordinatesByLabel = (
       let coords = coordsByCategoryLabel.get(label);
       if (coords === undefined) {
         // Get the number of cells which are in the label
-        // @ts-expect-error ts-migrate(2538) FIXME: Blocked by StateManager/ControlsHelpers
         const numInLabel = categoryValueCounts[labelIndex];
         coords = {
           hasFinite: false,
@@ -105,14 +106,12 @@ const getCoordinatesByLabel = (
 */
 
 const calcMedianCentroid = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any,
+  schema: Schema,
   categoryName: string,
   categoryDf: Dataframe,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: any,
+  layoutChoice: LayoutChoiceState,
   layoutDf: Dataframe
-) => {
+): Map<string, [number, number]> => {
   // generate a map describing the coordinates for each label within the given category
   const dataMap = getCoordinatesByLabel(
     schema,
@@ -146,13 +145,10 @@ const calcMedianCentroid = (
 
 // A simple function to hash the parameters
 const hashMedianCentroid = (
-  // @ts-expect-error ts-migrate(6133) FIXME: 'schema' is declared but its value is never read.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any,
+  _: Schema,
   categoryName: string,
   categoryDf: Dataframe,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: any,
+  layoutChoice: LayoutChoiceState,
   layoutDf: Dataframe
 ): string => {
   const category = categoryDf.col(categoryName);

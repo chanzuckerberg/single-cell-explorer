@@ -3,6 +3,8 @@ Helper functions for the controls reducer
 */
 
 import difference from "lodash.difference";
+import { AnnotationColumnSchema, Category } from "../../common/types/schema";
+import { DataframeColumn } from "../dataframe";
 
 import fromEntries from "../fromEntries";
 import { isCategoricalAnnotation } from "./annotationsHelpers";
@@ -57,8 +59,17 @@ export function selectableCategoryNames(schema: any, names: any) {
   return names.filter((name: any) => isSelectableCategoryName(schema, name));
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export function createCategorySummaryFromDfCol(dfCol: any, colSchema: any) {
+export function createCategorySummaryFromDfCol(
+  dfCol: DataframeColumn,
+  colSchema: AnnotationColumnSchema
+): {
+  allCategoryValues: Array<Category>; // array: of natively typed category values (all of them)
+  categoryValues: Array<Category>; // array: of natively typed category values (top N only)
+  categoryValueIndices: Map<Category, number>; // map: category value (native type) -> category index (top N only)
+  numCategoryValues: number; // number: of values in the category (top N)
+  categoryValueCounts: Array<number>; // array: cardinality of each category, (top N)
+  isUserAnno: boolean; // bool
+} {
   const { writable: isUserAnno } = colSchema;
 
   /*
@@ -70,22 +81,20 @@ export function createCategorySummaryFromDfCol(dfCol: any, colSchema: any) {
   const { categories: allCategoryValues } = colSchema;
   const categoryValues = allCategoryValues;
   const categoryValueCounts = allCategoryValues.map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    (cat: any) => summary.categoryCounts.get(cat) ?? 0
+    (cat: Category) => summary.categoryCounts.get(cat) ?? 0
   );
   const categoryValueIndices = new Map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    categoryValues.map((v: any, i: any) => [v, i])
+    categoryValues.map((v: Category, i: number) => [v, i])
   );
   const numCategoryValues = categoryValueIndices.size;
 
   return {
-    allCategoryValues, // array: of natively typed category values (all of them)
-    categoryValues, // array: of natively typed category values (top N only)
-    categoryValueIndices, // map: category value (native type) -> category index (top N only)
-    numCategoryValues, // number: of values in the category (top N)
-    categoryValueCounts, // array: cardinality of each category, (top N)
-    isUserAnno, // bool
+    allCategoryValues,
+    categoryValues,
+    categoryValueIndices,
+    numCategoryValues,
+    categoryValueCounts,
+    isUserAnno,
   };
 }
 
