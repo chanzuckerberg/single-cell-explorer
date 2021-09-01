@@ -7,7 +7,6 @@ from backend.czi_hosted.data_common.cache import CacheItem, CacheManager
 
 
 class CacheItemTest(unittest.TestCase):
-
     def create_data(self, cache_key, **create_data_args):
         data = {cache_key: cache_key}
         for key, value in create_data_args.items():
@@ -17,9 +16,7 @@ class CacheItemTest(unittest.TestCase):
     def test_get_item_returns_data(self):
         cache_item = CacheItem()
         some_data = {"some": "data"}
-        self.assertEqual(
-            cache_item.get("key", lambda key: some_data), some_data
-        )
+        self.assertEqual(cache_item.get("key", lambda key: some_data), some_data)
 
     def test_get_item_calls_create_data_function_with_all_args(self):
         cache_item = CacheItem()
@@ -78,6 +75,7 @@ class CacheItemTest(unittest.TestCase):
 
     def test_delete_calls_cleanup_and_clears_data(self):
         with self.subTest("Test delete call cleanup method on data adaptor"):
+
             class TestData:
                 def cleanup(self):
                     pass
