@@ -2,6 +2,7 @@ import unittest
 from time import sleep
 from unittest.mock import Mock
 
+from backend.common.errors import DatasetNotFoundError
 from backend.czi_hosted.data_common.cache import CacheItem, CacheManager
 
 
@@ -243,4 +244,29 @@ class CacheManagerTest(unittest.TestCase):
         self.assertGreater(updated_cache_item_info.last_access, cache_item_last_access)
         self.assertGreater(updated_cache_item_info.num_access, cache_item_access_count)
 
+    def test_cache_manager_stores_errors(self):
+        cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
+        mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item:
+                self.assertIsNotNone(cache_item)
+                self.assertIsNotNone(cache_item.error)
+                self.assertIsNone(cache_item.data)
+                self.assertEqual(cache_item.error, DatasetNotFoundError)
 
+    def test_cache_manager_doesnt_try_to_retrieve_data_for_cache_items_with_errors(self):
+        cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
+        mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item:
+                self.assertIsNotNone(cache_item)
+                self.assertIsNotNone(cache_item.error)
+                self.assertIsNone(cache_item.data)
+                self.assertEqual(cache_item.error, DatasetNotFoundError)
+
+        # This should reraise the exception without recalling the get data function
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item:
+                self.assertEqual(cache_item.error, DatasetNotFoundError)
+
+        self.assertEqual(mock_get_data_raises_error.call_count, 1)
