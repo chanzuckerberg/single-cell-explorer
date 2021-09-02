@@ -8,15 +8,15 @@ import InformationMenu from "./infoMenu";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    libraryVersions: (state as any).config?.library_versions,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    aboutLink: (state as any).config?.links?.["about-dataset"],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    tosURL: (state as any).config?.parameters?.about_legal_tos,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    privacyURL: (state as any).config?.parameters?.about_legal_privacy,
-  }))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  libraryVersions: (state as any).config?.library_versions,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  aboutLink: (state as any).config?.links?.["about-dataset"],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  tosURL: (state as any).config?.parameters?.about_legal_tos,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  privacyURL: (state as any).config?.parameters?.about_legal_privacy,
+}))
 class LeftSideBar extends React.Component {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
@@ -46,7 +46,7 @@ class LeftSideBar extends React.Component {
           alignItems: "center",
         }}
       >
-        <div>
+        <div data-testid="header">
           <Logo size={28} />
           <Title />
         </div>
