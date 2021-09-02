@@ -13,6 +13,7 @@ import {
   Schema,
   EmbeddingSchema,
   AnnotationColumnSchema,
+  CategoricalAnnotationColumnSchema,
 } from "../../common/types/schema";
 import { LabelType } from "../dataframe/types";
 
@@ -102,7 +103,10 @@ export function removeObsAnnoCategory(
   category: string
 ): Schema {
   /* remove a category from a categorical annotation */
-  const categories = schema.annotations.obsByName[name]?.categories;
+  // TODO: #35 Use type guards to insure type instead of casting
+  const categories = (
+    schema.annotations.obsByName[name] as CategoricalAnnotationColumnSchema
+  )?.categories;
 
   if (!categories) {
     throw new Error("column does not exist or is not categorical");
@@ -115,7 +119,11 @@ export function removeObsAnnoCategory(
   const newSchema = _reindexObsAnno(_copyObsAnno(schema));
 
   /* remove category.  Do not need to resort as this can't change presentation order */
-  newSchema.annotations.obsByName[name].categories?.splice(idx, 1);
+
+  // TODO: #35 Use type guards to insure type instead of casting
+  (
+    newSchema.annotations.obsByName[name] as CategoricalAnnotationColumnSchema
+  ).categories?.splice(idx, 1);
 
   return newSchema;
 }
@@ -124,16 +132,15 @@ export function removeObsAnnoCategory(
 export function addObsAnnoCategory(schema: any, name: any, category: any) {
   /* add a category to a categorical annotation */
   const categories = schema.annotations.obsByName[name]?.categories;
-  if (!categories)
-    throw new Error("column does not exist or is not categorical");
-
   const idx = categories.indexOf(category);
   if (idx !== -1) throw new Error("category already exists");
 
   const newSchema = _reindexObsAnno(_copyObsAnno(schema));
 
   /* add category, retaining presentation sort order */
-  const catAnno = newSchema.annotations.obsByName[name];
+  const catAnno = newSchema.annotations.obsByName[
+    name
+  ] as CategoricalAnnotationColumnSchema;
 
   catAnno.categories = catLabelSort(catAnno.writable, [
     ...(catAnno.categories || []),

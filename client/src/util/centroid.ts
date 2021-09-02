@@ -6,7 +6,10 @@ import {
   createCategorySummaryFromDfCol,
   isSelectableCategoryName,
 } from "./stateManager/controlsHelpers";
-import { Schema } from "../common/types/schema";
+import {
+  CategoricalAnnotationColumnSchema,
+  Schema,
+} from "../common/types/schema";
 import { LayoutChoiceState } from "../reducers/layoutChoice";
 
 /*
@@ -47,7 +50,9 @@ const getCoordinatesByLabel = (
 
   const categorySummary = createCategorySummaryFromDfCol(
     categoryDf.col(categoryName),
-    schema.annotations.obsByName[categoryName]
+    schema.annotations.obsByName[
+      categoryName
+    ] as CategoricalAnnotationColumnSchema
   );
 
   const { isUserAnno, categoryValueIndices, categoryValueCounts } =

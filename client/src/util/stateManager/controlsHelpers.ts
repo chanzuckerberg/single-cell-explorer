@@ -3,7 +3,10 @@ Helper functions for the controls reducer
 */
 
 import difference from "lodash.difference";
-import { AnnotationColumnSchema, Category } from "../../common/types/schema";
+import {
+  CategoricalAnnotationColumnSchema,
+  Category,
+} from "../../common/types/schema";
 import { DataframeColumn } from "../dataframe";
 
 import fromEntries from "../fromEntries";
@@ -61,7 +64,7 @@ export function selectableCategoryNames(schema: any, names: any) {
 
 export function createCategorySummaryFromDfCol(
   dfCol: DataframeColumn,
-  colSchema: AnnotationColumnSchema
+  colSchema: CategoricalAnnotationColumnSchema
 ): {
   allCategoryValues: Array<Category>; // array: of natively typed category values (all of them)
   categoryValues: Array<Category>; // array: of natively typed category values (top N only)

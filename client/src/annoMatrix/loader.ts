@@ -34,6 +34,7 @@ import {
   Field,
   EmbeddingSchema,
   RawSchema,
+  CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
 import {
   Dataframe,
@@ -138,7 +139,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     value: T
   ): AnnoMatrix {
     /*
-		add a column to field, initializing with value.  Value may 
+		add a column to field, initializing with value.  Value may
     be one of:
       * an array of values
       * a primitive type, including null or undefined.
@@ -229,7 +230,8 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
 
     const newAnnoMatrix = this._clone();
     newAnnoMatrix._cache.obs = this._cache.obs.replaceColData(col, data);
-    const { categories } = colSchema;
+    // TODO: #35 Use type guards to insure type instead of casting
+    const { categories } = colSchema as CategoricalAnnotationColumnSchema;
     if (!categories?.includes(value)) {
       newAnnoMatrix.schema = addObsAnnoCategory(this.schema, col, value);
     }
@@ -244,11 +246,12 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     /*
     Set all rows with value 'oldValue' to 'newValue'.
     */
+    // TODO: #35 Use type guards to insure type instead of casting
     const colSchema = _getColumnSchema(
       this.schema,
       Field.obs,
       col
-    ) as AnnotationColumnSchema;
+    ) as CategoricalAnnotationColumnSchema;
     _writableObsCategoryTypeCheck(colSchema); // throws on error
 
     if (!colSchema.categories?.includes(oldValue)) {
