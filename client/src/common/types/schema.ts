@@ -1,11 +1,19 @@
 export type Category = number | string | boolean;
 
-export interface AnnotationColumnSchema {
+export interface CategoricalAnnotationColumnSchema {
   categories: Category[];
   name: string;
-  type: "string" | "float32" | "int32" | "categorical" | "boolean";
+  type: "categorical";
   writable: boolean;
 }
+
+export type AnnotationColumnSchema =
+  | CategoricalAnnotationColumnSchema
+  | {
+      name: string;
+      type: "string" | "float32" | "int32" | "boolean";
+      writable: boolean;
+    };
 
 export interface XMatrixSchema {
   nObs: number;
