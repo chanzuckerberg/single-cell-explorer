@@ -1,5 +1,4 @@
-import { Action } from "redux";
-import type { RootState } from ".";
+import type { Action } from "redux";
 
 export interface CentroidLabelsState {
   showLabels: boolean;
@@ -16,7 +15,8 @@ const initialState: CentroidLabelsState = {
 const centroidLabels = (
   state = initialState,
   action: CentroidLabelsAction,
-  sharedNextState: RootState
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  sharedNextState: any
 ): CentroidLabelsState => {
   const {
     colors: { colorAccessor },

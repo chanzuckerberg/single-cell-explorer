@@ -8,7 +8,6 @@ import {
 import { Dataframe, LabelType, DataframeColumn } from "../util/dataframe";
 import {
   AnnotationColumnSchema,
-  ArraySchema,
   Field,
   Schema,
   Category,

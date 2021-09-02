@@ -8,8 +8,7 @@ about commonly used names.  Preferentially, pick in the following order:
   4. give up, use the first available
 */
 
-import { Action } from "redux";
-import type { RootState } from ".";
+import type { Action } from "redux";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 
 function bestDefaultLayout(layouts: Array<string>): string {
@@ -41,7 +40,8 @@ export interface LayoutChoiceAction extends Action<string> {
 const LayoutChoice = (
   state: LayoutChoiceState,
   action: LayoutChoiceAction,
-  nextSharedState: RootState
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,  @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  nextSharedState: any
 ): LayoutChoiceState => {
   switch (action.type) {
     case "initial data load complete": {
