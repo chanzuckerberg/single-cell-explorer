@@ -76,10 +76,6 @@ smoke-test:
 smoke-test-annotations:
 	cd client && $(MAKE) smoke-test-annotations
 
-.PHONY: test-db
-test-db:
-	cd backend/czi_hosted && $(MAKE) test-db
-
 # FORMATTING CODE
 
 .PHONY: fmt

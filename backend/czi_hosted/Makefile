@@ -15,7 +15,6 @@ unit-test:
 		--start-directory ../test/test_czi_hosted/unit \
 		--top-level-directory ../.. \
 		--verbose; test_result=$$?; \
-	$(MAKE) clean-test-db; \
 	exit $$test_result \
 
 
