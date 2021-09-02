@@ -12,6 +12,7 @@ import {
   Field,
   Schema,
   Category,
+  CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
 
 export function normalizeResponse(
@@ -86,20 +87,28 @@ function castColumnToBoolean(df: Dataframe, label: LabelType): Dataframe {
 export function normalizeWritableCategoricalSchema(
   colSchema: AnnotationColumnSchema,
   col: DataframeColumn
-): ArraySchema {
+): CategoricalAnnotationColumnSchema {
   /*
   Ensure all enum writable / categorical schema have a categories array, that
   the categories array contains all unique values in the data array, AND that
   the array is UI sorted.
   */
   const categorySet = new Set<Category>(
-    col.summarizeCategorical().categories.concat(colSchema.categories ?? [])
+    col.summarizeCategorical().categories.concat(
+      // TODO #35: Use type guards instead of casting
+      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
+    )
   );
   if (!categorySet.has(unassignedCategoryLabel)) {
     categorySet.add(unassignedCategoryLabel);
   }
-  colSchema.categories = catLabelSort(true, Array.from(categorySet));
-  return colSchema;
+  // TODO #35: Use type guards instead of casting
+
+  (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
+    true,
+    Array.from(categorySet)
+  );
+  return colSchema as CategoricalAnnotationColumnSchema;
 }
 
 export function normalizeCategorical(
@@ -127,12 +136,19 @@ export function normalizeCategorical(
   // consolidate all categories from data and schema into a single list
   const colDataSummary = col.summarizeCategorical();
   const allCategories = new Set<Category>(
-    colDataSummary.categories.concat(colSchema.categories ?? [])
+    // TODO #35: Use type guards instead of casting
+
+    colDataSummary.categories.concat(
+      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
+    )
   );
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {
-    colSchema.categories = catLabelSort(writable, [...allCategories.keys()]);
+    (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
+      writable,
+      [...allCategories.keys()]
+    );
     return df;
   }
 
@@ -167,7 +183,11 @@ export function normalizeCategorical(
   revisedCategories.push(
     revisedCategories.splice(revisedCategories.indexOf(overflowCatName), 1)[0]
   );
-  colSchema.categories = catLabelSort(writable, revisedCategories);
+  // TODO #35: Use type guards instead of casting
+  (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
+    writable,
+    revisedCategories
+  );
 
   return df;
 }
