@@ -115,6 +115,13 @@ export async function getElementCoordinates(testId: any) {
   });
 }
 
+async function clickAcknowledgeLoginHint() {
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  if (!(await isElementPresent(getTestId("login-hint-yes")))) return;
+
+  await clickOn("login-hint-yes");
+}
+
 async function clickTermsOfService() {
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
   if (!(await isElementPresent(getTestId("tos-cookies-accept")))) return;
@@ -140,6 +147,7 @@ export async function goToPage(url: any) {
   });
 
   await nameNewAnnotation();
+  await clickAcknowledgeLoginHint();
   await clickTermsOfService();
 }
 
