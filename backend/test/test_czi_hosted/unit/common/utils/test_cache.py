@@ -273,7 +273,7 @@ class CacheManagerTest(unittest.TestCase):
 
 
     def test_cache_manager_can_delete_cache_items_with_errors(self):
-        cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
+        cache_manager = CacheManager(max_cached=1, timelimit_s=self.CACHE_TIME_LIMIT)
         mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
         with self.assertRaises(DatasetNotFoundError):
             with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item_info:
@@ -281,9 +281,11 @@ class CacheManagerTest(unittest.TestCase):
                 self.assertIsNotNone(cache_item_info.error)
                 self.assertIsNone(cache_item_info.cache_item.data)
                 self.assertEqual(cache_item_info.error, DatasetNotFoundError)
-        sleep(self.CACHE_TIME_LIMIT + 1)
-        # Retrieving a different cache item should trigger the data expiration policy which should delete "key_one" item
+        # Retrieving a different cache item should trigger the data eviction policy which should delete "key_one" item
         with cache_manager.get("key_two", lambda x: {x: x}) as cache_item_info:
             self.assertIsNotNone(cache_item_info)
-
+        self.assertEqual(len(cache_manager.data.items()), 1)
+        self.assertIsNotNone(cache_manager.data['key_two'])
+        with self.assertRaises(KeyError):
+            cache_manager.data['key_one']
 
