@@ -38,9 +38,9 @@ build-czi-hosted: clean build-client
 	cp -r backend/common $(BUILDDIR)/backend/common
 	cp backend/__init__.py $(BUILDDIR)
 	cp backend/__init__.py $(BUILDDIR)/backend
-	cp MANIFEST_hosted.in README.md setup.cfg setup_hosted.py $(BUILDDIR)
-	mv $(BUILDDIR)/setup_hosted.py $(BUILDDIR)/setup.py
-	mv $(BUILDDIR)/MANIFEST_hosted.in $(BUILDDIR)/MANIFEST.in
+	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
+	mv $(BUILDDIR)/setup.py $(BUILDDIR)/setup.py
+	mv $(BUILDDIR)/MANIFEST.in $(BUILDDIR)/MANIFEST.in
 
 # If you are actively developing in the backend folder use this, dirties the source tree
 .PHONY: build-for-czi-hosted-dev
