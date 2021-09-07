@@ -2,11 +2,11 @@ import unittest
 from time import sleep
 from unittest.mock import Mock
 
+from backend.common.errors import DatasetNotFoundError
 from backend.czi_hosted.data_common.cache import CacheItem, CacheManager
 
 
 class CacheItemTest(unittest.TestCase):
-
     def create_data(self, cache_key, **create_data_args):
         data = {cache_key: cache_key}
         for key, value in create_data_args.items():
@@ -16,18 +16,16 @@ class CacheItemTest(unittest.TestCase):
     def test_get_item_returns_data(self):
         cache_item = CacheItem()
         some_data = {"some": "data"}
-        self.assertEqual(
-            cache_item.get("key", lambda key: some_data), some_data
-        )
+        self.assertEqual(cache_item.get("key", lambda key: some_data), some_data)
 
     def test_get_item_calls_create_data_function_with_all_args(self):
         cache_item = CacheItem()
         data = cache_item.get("cache_key", self.create_data)
-        self.assertEqual({"cache_key":"cache_key"}, data)
+        self.assertEqual({"cache_key": "cache_key"}, data)
 
         cache_item = CacheItem()
-        data = cache_item.get("cache_key", self.create_data, {"a":"b", "c": "d"})
-        self.assertEqual({"cache_key":"cache_key", "a":"b", "c": "d"}, data)
+        data = cache_item.get("cache_key", self.create_data, {"a": "b", "c": "d"})
+        self.assertEqual({"cache_key": "cache_key", "a": "b", "c": "d"}, data)
 
     def test_get_item_returns_none_if_no_data_and_no_create_data_function(self):
         cache_item = CacheItem()
@@ -77,6 +75,7 @@ class CacheItemTest(unittest.TestCase):
 
     def test_delete_calls_cleanup_and_clears_data(self):
         with self.subTest("Test delete call cleanup method on data adaptor"):
+
             class TestData:
                 def cleanup(self):
                     pass
@@ -165,8 +164,10 @@ class CacheItemTest(unittest.TestCase):
         # this should not throw an error
         cache_item.attempt_delete()
 
+
 class CacheManagerTest(unittest.TestCase):
     CACHE_TIME_LIMIT = 2
+
     def test_cache_manager_retrieves_cached_data(self):
         cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
         get_data = Mock()
@@ -186,13 +187,13 @@ class CacheManagerTest(unittest.TestCase):
         with cache_manager.get("key_one", get_data) as cache_item:
             self.assertIsNotNone(cache_item)
             self.assertEqual(get_data.call_count, 0)
-        sleep(self.CACHE_TIME_LIMIT+1)
+        sleep(self.CACHE_TIME_LIMIT + 1)
         with cache_manager.get("key_one", get_data) as cache_item:
             self.assertIsNotNone(cache_item)
             self.assertEqual(get_data.call_count, 1)
         mock_attempt_delete = Mock(spec=cache_manager.data.get("key_one").cache_item.attempt_delete)
         cache_manager.data.get("key_one").cache_item.attempt_delete = mock_attempt_delete
-        sleep(self.CACHE_TIME_LIMIT+1)
+        sleep(self.CACHE_TIME_LIMIT + 1)
         with cache_manager.get("key_two", lambda x: {x: x}) as cache_item_two:
             self.assertIsNotNone(cache_item_two)
         self.assertEqual(mock_attempt_delete.call_count, 1)
@@ -243,4 +244,48 @@ class CacheManagerTest(unittest.TestCase):
         self.assertGreater(updated_cache_item_info.last_access, cache_item_last_access)
         self.assertGreater(updated_cache_item_info.num_access, cache_item_access_count)
 
+    def test_cache_manager_stores_errors(self):
+        cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
+        mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item_info:
+                self.assertIsNotNone(cache_item_info)
+                self.assertIsNotNone(cache_item_info.error)
+                self.assertIsNone(cache_item_info.cache_item.data)
+                self.assertEqual(cache_item_info.error, DatasetNotFoundError)
+
+    def test_cache_manager_doesnt_try_to_retrieve_data_for_cache_items_with_errors(self):
+        cache_manager = CacheManager(max_cached=3, timelimit_s=self.CACHE_TIME_LIMIT)
+        mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item_info:
+                self.assertIsNotNone(cache_item_info)
+                self.assertIsNotNone(cache_item_info.error)
+                self.assertIsNone(cache_item_info.cache_item.data)
+                self.assertEqual(cache_item_info.error, DatasetNotFoundError)
+
+        # This should reraise the exception without recalling the get data function
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item_info:
+                self.assertEqual(cache_item_info.error, DatasetNotFoundError)
+
+        self.assertEqual(mock_get_data_raises_error.call_count, 1)
+
+
+    def test_cache_manager_can_delete_cache_items_with_errors(self):
+        cache_manager = CacheManager(max_cached=1, timelimit_s=self.CACHE_TIME_LIMIT)
+        mock_get_data_raises_error = Mock(side_effect=DatasetNotFoundError(f"Dataset location not found for this guy"))
+        with self.assertRaises(DatasetNotFoundError):
+            with cache_manager.get("key_one", mock_get_data_raises_error) as cache_item_info:
+                self.assertIsNotNone(cache_item_info)
+                self.assertIsNotNone(cache_item_info.error)
+                self.assertIsNone(cache_item_info.cache_item.data)
+                self.assertEqual(cache_item_info.error, DatasetNotFoundError)
+        # Retrieving a different cache item should trigger the data eviction policy which should delete "key_one" item
+        with cache_manager.get("key_two", lambda x: {x: x}) as cache_item_info:
+            self.assertIsNotNone(cache_item_info)
+        self.assertEqual(len(cache_manager.data.items()), 1)
+        self.assertIsNotNone(cache_manager.data['key_two'])
+        with self.assertRaises(KeyError):
+            cache_manager.data['key_one']
 
