@@ -86,8 +86,11 @@ def get_client_config(app_config, data_adaptor, current_app):
             create_data_function=get_dataset_metadata_for_explorer_location,
             create_data_args={"app_config": app_config}
     ) as dataset_identifiers:
-        dataset_identifiers.pop("s3_uri", None)
-        config['dataset_identification'] = dataset_identifiers
+        config['dataset_identification'] = {
+            "dataset_id": dataset_identifiers["dataset_id"],
+            "collection_id": dataset_identifiers["collection_id"],
+            "collection_visibility": dataset_identifiers["collection_visibility"]
+        }
     if dataset_config.app__authentication_enable and auth.is_valid_authentication_type():
         config["authentication"] = {
             "requires_client_login": auth.requires_client_login(),

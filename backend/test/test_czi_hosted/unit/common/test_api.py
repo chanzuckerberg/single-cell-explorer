@@ -54,7 +54,7 @@ class EndPoints(BaseTest):
         self.assertEqual(result_data["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertEqual(result_data["config"]["dataset_identification"],
                          {'collection_id': None, 'collection_visibility': None,
-                          'dataset_id': None, 'tombstoned': False})
+                          'dataset_id': None})
 
     def test_get_layout_fbs(self):
         endpoint = "layout/obs"
@@ -686,7 +686,7 @@ class TestDataLocatorMockApi(BaseTest):
         })
         mock_get.return_value = MockResponse(body=response_body, status_code=200)
         endpoint = "config"
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v1.cxg"
         url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
         result = self.client.get(url)
         self.assertEqual(result.status_code, HTTPStatus.OK)
@@ -694,7 +694,7 @@ class TestDataLocatorMockApi(BaseTest):
         result_data = json.loads(result.data)
         self.assertEqual(result_data["config"]["dataset_identification"],
                          {'collection_id': "4f098ff4-4a12-446b-a841-91ba3d8e3fa6", 'collection_visibility': "PUBLIC",
-                          'dataset_id': "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939", 'tombstoned': 'False'})
+                          'dataset_id': "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939"})
 
 
 class MockResponse:
