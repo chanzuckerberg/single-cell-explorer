@@ -69,14 +69,16 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     in the server config.
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
-
+    current_app.logger.log(logging.INFO, f"Looking for dataset: {dataset_explorer_location}")
     if app_config.server_config.data_locator__api_base:
         explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_explorer_location}"
+        current_app.logger.log(logging.INFO, f"Looking: {explorer_url_path}")
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base,
             explorer_url=explorer_url_path
         )
         if dataset_metadata:
+            current_app.logger.log(logging.INFO, f"Dataset Metadata: {dataset_metadata}")
             return dataset_metadata
     server_config = app_config.server_config
     dataset_metadata = {
