@@ -18,11 +18,11 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(
-            url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}",
+            url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/",
             headers=headers
         )
         if response.status_code == 200:
-            dataset_identifiers = json.loads(response.body)
+            dataset_identifiers = json.loads(response.content)
             return dataset_identifiers
         else:
             return None
@@ -69,7 +69,6 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     in the server config.
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
-
     if app_config.server_config.data_locator__api_base:
         explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_explorer_location}"
         dataset_metadata = request_dataset_metadata_from_data_portal(
@@ -78,6 +77,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         )
         if dataset_metadata:
             return dataset_metadata
+
     server_config = app_config.server_config
     dataset_metadata = {
         "collection_id": None,
