@@ -626,7 +626,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k_v0.cxg/")
+            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v0.cxg/")
 
     @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
@@ -642,7 +642,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k.cxg/')
+            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/')
 
         # check schema loads correctly even with metadata api exception
         self.assertEqual(result.status_code, HTTPStatus.OK)
