@@ -128,16 +128,24 @@ export function removeObsAnnoCategory(
   return newSchema;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export function addObsAnnoCategory(schema: any, name: any, category: any) {
+export function addObsAnnoCategory(
+  schema: Schema,
+  name: string,
+  category: string
+): Schema {
   /* add a category to a categorical annotation */
-  const categories = schema.annotations.obsByName[name]?.categories;
+  const categories = (
+    schema.annotations.obsByName[name] as CategoricalAnnotationColumnSchema
+  )?.categories;
+  if (!categories)
+    throw new Error("column does not exist or is not categorical");
   const idx = categories.indexOf(category);
   if (idx !== -1) throw new Error("category already exists");
 
   const newSchema = _reindexObsAnno(_copyObsAnno(schema));
 
   /* add category, retaining presentation sort order */
+  // TODO: #35 Use type guards to insure type instead of casting
   const catAnno = newSchema.annotations.obsByName[
     name
   ] as CategoricalAnnotationColumnSchema;
