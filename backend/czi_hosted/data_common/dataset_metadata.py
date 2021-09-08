@@ -76,7 +76,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
             explorer_url=explorer_url_path
         )
         if dataset_metadata:
-            if dataset_metadata['tombstoned'] == "True":
+            if dataset_metadata['tombstoned'] == "true":
                 current_app.logger.log(logging.CRITICAL, f"Dataset has been tombstoned: {dataset_explorer_location}")
                 raise TombstoneException(
                     message=f"Dataset {dataset_metadata['dataset_id']} from collection "
