@@ -1,9 +1,12 @@
+import logging
 import threading
 import time
 from collections import Callable
 from typing import Optional
 
 import typing
+
+from flask import current_app
 
 from backend.common.errors import DatasetAccessError, DatasetNotFoundError, TombstoneException
 from contextlib import contextmanager
@@ -182,6 +185,7 @@ class CacheManager(object):
                         create_data_args=create_data_args
                     )
                 except (DatasetNotFoundError, DatasetAccessError, TombstoneException) as e:
+                    current_app.logger.log(logging.CRITICAL, f"Error accessing dataset: {e}")
                     cache_item_info.error = e
                     raise
                 finally:
