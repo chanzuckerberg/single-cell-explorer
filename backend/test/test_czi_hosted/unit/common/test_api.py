@@ -124,8 +124,8 @@ class EndPoints(BaseTest):
         result = self.client.get(url, headers=header)
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
-# TEMP: Testing count 15 to match hardcoded values for diffexp
-# TODO(#1281): Switch back to dynamic values
+    # TEMP: Testing count 15 to match hardcoded values for diffexp
+    # TODO(#1281): Switch back to dynamic values
     def test_diff_exp(self):
         endpoint = "diffexp/obs"
         url = f"{self.TEST_URL_BASE}{endpoint}"
@@ -401,7 +401,6 @@ class EndPointsCxg(EndPoints):
         app_config = AppConfig()
         app_config.update_default_dataset_config(user_annotations__enable=False)
 
-
     def test_get_genesets_json(self):
         self.app.auth.is_user_authenticated = lambda: True
         endpoint = "genesets"
@@ -518,7 +517,8 @@ class TestDataLocatorMockApi(BaseTest):
         cls.config = AppConfig()
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
-            multi_dataset__dataroot={"e": {"base_url":"e", "dataroot": FIXTURES_ROOT}},
+            app__web_base_url="https://cellxgene.staging.single-cell.czi.technology.com",
+            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             authentication__type="test",
             authentication__insecure_test_environment=True,
             app__flask_secret_key="testing",
@@ -546,7 +546,7 @@ class TestDataLocatorMockApi(BaseTest):
         cls.schema = json.loads(result.data)
 
         assert mock_get.call_count == 1
-        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/" # noqa
+        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"  # noqa
 
     @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
     def test_data_adaptor_uses_corpora_api(self, mock_get):
@@ -644,11 +644,24 @@ class TestDataLocatorMockApi(BaseTest):
             f"http://{mock_get._mock_call_args[1]['url']}",
             'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k.cxg/')
 
-
         # check schema loads correctly even with metadata api exception
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")
-        expected_response_body = {'schema': {'annotations': {'obs': {'columns': [{'name': 'name_0', 'type': 'string', 'writable': False}, {'name': 'n_genes', 'type': 'int32', 'writable': False}, {'name': 'percent_mito', 'type': 'float32', 'writable': False}, {'name': 'n_counts', 'type': 'float32', 'writable': False}, {'categories': ['CD4 T cells', 'CD14+ Monocytes', 'B cells', 'CD8 T cells', 'NK cells', 'FCGR3A+ Monocytes', 'Dendritic cells', 'Megakaryocytes'], 'name': 'louvain', 'type': 'categorical', 'writable': False}], 'index': 'name_0'}, 'var': {'columns': [{'name': 'name_0', 'type': 'string', 'writable': False}, {'name': 'n_cells', 'type': 'int32', 'writable': False}], 'index': 'name_0'}}, 'dataframe': {'nObs': 2638, 'nVar': 1838, 'type': 'float32'}, 'layout': {'obs': [{'dims': ['draw_graph_fr_0', 'draw_graph_fr_1'], 'name': 'draw_graph_fr', 'type': 'float32'}, {'dims': ['pca_0', 'pca_1'], 'name': 'pca', 'type': 'float32'}, {'dims': ['tsne_0', 'tsne_1'], 'name': 'tsne', 'type': 'float32'}, {'dims': ['umap_0', 'umap_1'], 'name': 'umap', 'type': 'float32'}]}}}
+        expected_response_body = {'schema': {'annotations': {'obs': {
+            'columns': [{'name': 'name_0', 'type': 'string', 'writable': False},
+                        {'name': 'n_genes', 'type': 'int32', 'writable': False},
+                        {'name': 'percent_mito', 'type': 'float32', 'writable': False},
+                        {'name': 'n_counts', 'type': 'float32', 'writable': False}, {
+                            'categories': ['CD4 T cells', 'CD14+ Monocytes', 'B cells', 'CD8 T cells', 'NK cells',
+                                           'FCGR3A+ Monocytes', 'Dendritic cells', 'Megakaryocytes'], 'name': 'louvain',
+                            'type': 'categorical', 'writable': False}], 'index': 'name_0'}, 'var': {
+            'columns': [{'name': 'name_0', 'type': 'string', 'writable': False},
+                        {'name': 'n_cells', 'type': 'int32', 'writable': False}], 'index': 'name_0'}},
+                                             'dataframe': {'nObs': 2638, 'nVar': 1838, 'type': 'float32'}, 'layout': {
+                'obs': [{'dims': ['draw_graph_fr_0', 'draw_graph_fr_1'], 'name': 'draw_graph_fr', 'type': 'float32'},
+                        {'dims': ['pca_0', 'pca_1'], 'name': 'pca', 'type': 'float32'},
+                        {'dims': ['tsne_0', 'tsne_1'], 'name': 'tsne', 'type': 'float32'},
+                        {'dims': ['umap_0', 'umap_1'], 'name': 'umap', 'type': 'float32'}]}}}
         self.assertEqual(json.loads(result.data), expected_response_body)
 
     @patch('backend.czi_hosted.data_common.dataset_metadata.request_dataset_metadata_from_data_portal')
@@ -699,6 +712,23 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result_data["config"]["dataset_identification"],
                          {'collection_id': "4f098ff4-4a12-446b-a841-91ba3d8e3fa6", 'collection_visibility': "PUBLIC",
                           'dataset_id': "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939"})
+
+    @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
+    def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
+        response_body = json.dumps({
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
+            "tombstoned": "True"
+        })
+        mock_get.return_value = MockResponse(body=response_body, status_code=200)
+        endpoint = "config"
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
+        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(result.headers['Location'], "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939") # noqa E501
 
 
 class MockResponse:

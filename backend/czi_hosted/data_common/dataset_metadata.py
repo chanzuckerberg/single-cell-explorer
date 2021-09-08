@@ -5,7 +5,7 @@ import requests
 from flask import current_app
 
 from backend.common.utils.utils import path_join
-from backend.common.errors import DatasetNotFoundError, DatasetAccessError
+from backend.common.errors import DatasetNotFoundError, DatasetAccessError, TombstoneException
 from backend.czi_hosted.common.config.app_config import AppConfig
 from backend.czi_hosted.common.config.server_config import ServerConfig
 
@@ -76,6 +76,13 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
             explorer_url=explorer_url_path
         )
         if dataset_metadata:
+            if dataset_metadata['tombstoned'] == "True":
+                raise TombstoneException(
+                    message=f"Dataset {dataset_metadata['dataset_id']} from collection "
+                            f"{dataset_metadata['collection_id']} has been tombstoned and is no longer available",
+                    status_code=302,
+                    collection_id=dataset_metadata['collection_id'],
+                    dataset_id=dataset_metadata['dataset_id'])
             return dataset_metadata
 
     server_config = app_config.server_config

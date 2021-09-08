@@ -22,7 +22,7 @@ from server_timing import Timing as ServerTiming
 
 import backend.czi_hosted.common.rest as common_rest
 from backend.common.utils.data_locator import DataLocator
-from backend.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError
+from backend.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError, TombstoneException
 from backend.czi_hosted.common.health import health_check
 from backend.common.utils.utils import path_join, Float32JSONEncoder
 from backend.czi_hosted.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
@@ -148,6 +148,8 @@ def rest_get_data_adaptor(func):
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
+        except TombstoneException as e:
+            return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
 
     return wrapped_function
 

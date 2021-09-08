@@ -19,6 +19,12 @@ class RequestException(CellxgeneException):
         super().__init__(message)
         self.status_code = status_code or self.default_status_code
 
+class TombstoneException(RequestException):
+    def __init__(self, message, status_code, collection_id, dataset_id):
+        super().__init__(message, status_code)
+        self.collection_id = collection_id
+        self.dataset_id = dataset_id
+
 
 def define_exception(name, doc):
     globals()[name] = type(name, (CellxgeneException,), dict(__doc__=doc))
