@@ -15,7 +15,7 @@ import {
   AnnotationColumnSchema,
   CategoricalAnnotationColumnSchema,
 } from "../../common/types/schema";
-import { LabelType } from "../dataframe/types";
+import { DataframeValue, LabelType } from "../dataframe/types";
 
 /*
 System wide schema assumptions:
@@ -131,7 +131,7 @@ export function removeObsAnnoCategory(
 export function addObsAnnoCategory(
   schema: Schema,
   name: string,
-  category: string
+  category: DataframeValue
 ): Schema {
   /* add a category to a categorical annotation */
   const categories = (
