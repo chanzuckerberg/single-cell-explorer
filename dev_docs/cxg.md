@@ -116,11 +116,13 @@ This optional field contains a copy of the category color table, which MAY be us
 
 ## Corpora Schema Encoding
 
-The [Corpora schema](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/) defines a set of metadata and encoding conventions for annotated matrices.  When a Corpora dataset is encoded as a CXG, the following shall apply.
+Note: This section is technically not part of the CXG specification, but rather provides an expectation of what metadata will be available in a CXG file that is converted from Corpora Schema-compliant H5AD file; we use "WILL" rather than "MUST" to document these expectations.
 
-### Corpora metadata property [TODO]
+The [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema) defines a set of metadata and encoding conventions for annotated matrices.  When a Corpora dataset is encoded as a CXG, the following WILL apply.   
 
-A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the AnnData Corpora encoding.
+### Corpora metadata property
+
+A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
 
 
 These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__` field named `corpora`: 
@@ -132,13 +134,11 @@ These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__`
 These Corpora metadata properties MAY exist in the CXG `__cxg_group_metadata__` field named `corpora`:
 * `contributors`
 * `default_embedding`
-* `default_field`
 * `project_name`
 * `project_description`
 * `project_links`
 * `preprint_doi`
 * `publication_doi`
-* `tags`
 
 For example:
 ```
@@ -157,14 +157,14 @@ For example:
 
 All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
 
-### Compatibility with Corpora Schema 1.1.0
+### Compatibility with CXG 0.1.0
 
-For backwards compatibility and continuity with Corpora Schema 1.1.0, the following MUST be implemented.
+For CXG v0.1.0 files that were created from [Corpora Schema 1.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md) H5AD files, the following WILL apply:
 
 #### Presentation Hints
-* The [Corpora Schema 1.1.0 `title`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-metadata) value MUST be saved in the `cxg_properties.title` field.
-* The [Corpora Schema 1.1.0 `color_map`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), when present in the dataset, MUST be saved in the `cxg_category_colors` field and NOT in the `corpora` field.
-* The [Corpora Schema 1.1.0 SUMMARY `project_link`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), if present, MUST be saved in the `cxg_properties.about` field.
+* The [Corpora Schema 1.1.0 `title`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-metadata) value WILL be saved in the `cxg_properties.title` field.
+* The [Corpora Schema 1.1.0 `color_map`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), MAY be saved in the `cxg_category_colors` field and WILL NOT be saved in the `corpora` field.
+* The [Corpora Schema 1.1.0 SUMMARY `project_link`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), MAY be saved in the `cxg_properties.about` field.
 
 Where these values differ in the final CXG, the `cxg_properties` values WILL take precedence.
 
