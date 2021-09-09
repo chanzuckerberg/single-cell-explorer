@@ -35,12 +35,12 @@ return promise fetching user-configured colors
 async function userColorsFetchAndLoad(
   dispatch: AppDispatch
 ): Promise<{ type: string; userColors: ConvertedUserColors }> {
-  return fetchJson("colors").then((response) =>
+  return fetchJson<{ [category: string]: { [label: string]: string } }>(
+    "colors"
+  ).then((response) =>
     dispatch({
       type: "universe: user color load success",
-      userColors: loadUserColorConfig(
-        response as { [category: string]: { [label: string]: string } }
-      ),
+      userColors: loadUserColorConfig(response),
     })
   );
 }

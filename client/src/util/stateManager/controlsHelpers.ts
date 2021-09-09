@@ -109,8 +109,19 @@ export function createCategorySummaryFromDfCol(
   };
 }
 
-export function createCategoricalSelection(names: string[]): {
-  [key: string]: Map<unknown, unknown>;
-} {
+/**
+ * key is label, value is selected or not
+ * See client/src/reducers/categoricalSelection.ts for state description
+ */
+type SelectionState = Map<string, boolean>;
+
+interface CategoricalSelection {
+  // Categorical annotation name
+  [key: string]: SelectionState;
+}
+
+export function createCategoricalSelection(
+  names: string[]
+): CategoricalSelection {
   return fromEntries(names.map((name) => [name, new Map()]));
 }

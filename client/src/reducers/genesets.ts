@@ -22,6 +22,7 @@
  * routes. Do not rely on it to enforce geneset integrity - eg, no duplicate
  * genes in a geneset.
  */
+import { AnyAction } from "redux";
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "../globals";
 
 interface Gene {
@@ -43,16 +44,14 @@ interface State {
   genesets: Genesets;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const GeneSets = (
   state: State = {
     initialized: false,
     lastTid: undefined,
     genesets: new Map(),
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
-) => {
+  action: AnyAction
+): State => {
   switch (action.type) {
     /**
      * Initial, load-time bootstrap.
@@ -393,7 +392,10 @@ const GeneSets = (
       }
 
       // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-      const genesets = new Map([...diffExpGeneSets, ...state.genesets]); // clone
+      const genesets = new Map([
+        ...diffExpGeneSets,
+        ...state.genesets,
+      ]) as Genesets; // clone
 
       return {
         ...state,

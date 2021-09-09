@@ -95,9 +95,7 @@ describe("categorical color helpers", () => {
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schema.annotations.obsByName.categoricalColumn.categories;
     for (let i = 0; i < schema.dataframe.nObs; i += 1) {
-      expect(makeScale(ct.rgb[i])).toEqual(
-        ct?.scale && ct?.scale(cats.indexOf(data[i]))
-      );
+      expect(makeScale(ct.rgb[i])).toEqual(ct?.scale?.(cats.indexOf(data[i])));
     }
   });
 
@@ -114,9 +112,7 @@ describe("categorical color helpers", () => {
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schemaClone.annotations.obsByName.categoricalColumn.categories;
     for (let i = 0; i < schemaClone.dataframe.nObs; i += 1) {
-      expect(makeScale(ct.rgb[i])).toEqual(
-        ct?.scale && ct?.scale(cats.indexOf(data[i]))
-      );
+      expect(makeScale(ct.rgb[i])).toEqual(ct?.scale?.(cats.indexOf(data[i])));
     }
   });
 
@@ -151,7 +147,7 @@ describe("categorical color helpers", () => {
     const data = obsDataframe.col("categoricalColumn").asArray();
     for (let i = 0; i < schema.dataframe.nObs; i += 1) {
       expect(makeScale(ct.rgb[i])).toEqual(
-        ct?.scale && ct?.scale(cats.indexOf(data[i])).toString()
+        ct?.scale?.(cats.indexOf(data[i])).toString()
       );
     }
   });
