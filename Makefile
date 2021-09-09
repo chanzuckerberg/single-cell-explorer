@@ -79,13 +79,13 @@ fmt-client:
 
 .PHONY: fmt
 fmt-server:
-	black .
+	black server --exclude server/common/fbs/NetEncoding/
 
 .PHONY: lint
 lint: lint-server lint-client
 
 .PHONY: lint-server
-lint-server-server: fmt-py
+lint-server: fmt-py
 	flake8 server --exclude server/tests/ --per-file-ignores='server/tests/fixtures/czi_hosted_dataset_config_outline.py:F821 server/tests/fixtures/czi_hosted_server_config_outline.py:F821 server/tests/performance/scale_test_annotations.py:E501'
 
 .PHONY: lint-client

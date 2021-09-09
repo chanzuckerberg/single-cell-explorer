@@ -6,9 +6,7 @@
 - Python 3.6+
 - Chrome
 
-[See dev section of README](../README.md)
-
-**All instructions are expected to be run from the top level cellxgene directory unless otherwise specified.**
+**All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified.**
 
 ### Environment
 
@@ -52,7 +50,7 @@ To run E2E tests, run `cd client` and `make smoke-test`
 
 #### Run end to end tests interactively during development
 
-1. cellxgene should be installed as [specified in client dev](#install)
+1. explorer should be installed as [specified in client dev](#install)
 
 1. Follow [launch](#launch) instructions for client dev with dataset `example-dataset/pbmc3k`
 
@@ -90,7 +88,7 @@ To install from a candidate python distribution
 
 ### Reloading
 
-If you install cellxgene using `make install-dev` the server will be restarted every time you make changes on the server code. If changes affects the client, the browser must be reloaded.
+If you install explorer using `make install-dev` the server will be restarted every time you make changes on the server code. If changes affects the client, the browser must be reloaded.
 
 ### Linter
 
@@ -115,7 +113,7 @@ If you would like to run the server tests individually, follow the steps below
 ### Install
 
 1. Install prereqs for client: `make dev-env`
-2. Install cellxgene server as described in the [server install](#install) instructions above.
+2. Install explorer server as described in the [server install](#install) instructions above.
 
 ### Launch
 
@@ -151,18 +149,3 @@ If you would like to run the smoke tests against a hot-reloaded version of the c
 - You can also install/launch the server side code from npm scrips (requires python3.6 with virtualenv) with the `scripts/backend_dev` script.
 
 - Check out [e2e Tests](e2e_tests.md) for more details
-
-## Doc changes
-
-To evaluate changes to documentation in `cellxgene/docs`, you must install [jekyll](https://jekyllrb.com/docs/installation/), then run:
-
-```bash
-cd docs
-bundle install
-bundle exec jekyll serve
-```
-
-If changes look good, run the following, then commit and push: 
-```bash
-bundle exec jekyll build
-```
