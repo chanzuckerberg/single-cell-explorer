@@ -77,7 +77,7 @@ fmt: fmt-client fmt-server
 fmt-client:
 	cd client && $(MAKE) fmt
 
-.PHONY: fmt
+.PHONY: fmt-server
 fmt-server:
 	black server --exclude server/common/fbs/NetEncoding/
 
@@ -85,8 +85,8 @@ fmt-server:
 lint: lint-server lint-client
 
 .PHONY: lint-server
-lint-server: fmt-py
-	flake8 server --exclude server/tests/ --per-file-ignores='server/tests/fixtures/czi_hosted_dataset_config_outline.py:F821 server/tests/fixtures/czi_hosted_server_config_outline.py:F821 server/tests/performance/scale_test_annotations.py:E501'
+lint-server:
+	flake8 server --exclude server/tests/,server/common/fbs/NetEncoding/
 
 .PHONY: lint-client
 lint-client:
