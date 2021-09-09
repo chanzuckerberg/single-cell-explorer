@@ -20,13 +20,22 @@ export interface Config {
   dataset_identification: DatasetIdentification;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
+  library_versions: LibraryVersions;
   parameters: {
+    about_legal_privacy?: string;
+    about_legal_tos?: string;
     "disable-diffexp"?: boolean;
     "diffexp-may-be-slow"?: boolean;
     default_embedding?: string;
     [key: string]: unknown;
   };
   links: Record<string, unknown>;
+}
+
+/* shape of config library_versions */
+export interface LibraryVersions {
+  anndata: string;
+  cellxgene: string;
 }
 
 /*
@@ -41,7 +50,13 @@ export const configDefaults: Config = {
     dataset_id: null,
   },
   displayNames: {},
+  library_versions: {
+    anndata: "",
+    cellxgene: "",
+  },
   parameters: {
+    about_legal_privacy: "",
+    about_legal_tos: "",
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },

@@ -11,8 +11,6 @@ import InformationMenu from "./infoMenu";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   libraryVersions: (state as any).config?.library_versions,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  aboutLink: (state as any).config?.links?.["about-dataset"],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   tosURL: (state as any).config?.parameters?.about_legal_tos,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   privacyURL: (state as any).config?.parameters?.about_legal_privacy,
@@ -31,14 +29,10 @@ class LeftSideBar extends React.Component {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'libraryVersions' does not exist on type ... Remove this comment to see the full error message
       libraryVersions,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'aboutLink' does not exist on type 'Reado... Remove this comment to see the full error message
-      aboutLink,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'privacyURL' does not exist on type 'Read... Remove this comment to see the full error message
       privacyURL,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'tosURL' does not exist on type 'Readonly... Remove this comment to see the full error message
       tosURL,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-      dispatch,
     } = this.props;
 
     return (
@@ -62,10 +56,8 @@ class LeftSideBar extends React.Component {
           <InformationMenu
             {...{
               libraryVersions,
-              aboutLink,
               tosURL,
               privacyURL,
-              dispatch,
             }}
           />
         </div>
