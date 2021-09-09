@@ -12,9 +12,8 @@ CXG is a cellxgene-private data format, used for at-rest storage of annotated ma
 
 CXG is built upon the [TileDB](https://tiledb.com/) embedded database. Each CXG is a TileDB [group](https://docs.tiledb.com/main/api-usage/object-management), which in turn includes one or more TileDB multi-dimensional arrays.
 
-This document presumes familiarity with [TileDB terminology and concepts](https://docs.tiledb.com/main/), the [Corpora schema](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md).
+This document presumes familiarity with [TileDB terminology and concepts](https://docs.tiledb.com/main/) and the [Corpora schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md).
 
-This document also leverages the current cellxgene schema, which is documented in the [REST API spec](./REST_API.md). TODO: Update
 
 ### Terminology
 
@@ -121,7 +120,7 @@ The [Corpora schema](https://github.com/chanzuckerberg/single-cell-curation/blob
 
 ### Corpora metadata property [TODO]
 
-A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora AnnData uns](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md#uns-dataset-metadata) container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the AnnData Corpora encoding.
+A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the AnnData Corpora encoding.
 
 
 These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__` field named `corpora`: 
@@ -156,16 +155,16 @@ For example:
 
 ### Other Corpora fields
 
-All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
+All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
 
-### Compatibility with CXG 0.1.0
+### Compatibility with Corpora Schema 1.1.0
 
-For backwards compatibility and continuity with CXG version 0.1.0, the following MUST be implemented.
+For backwards compatibility and continuity with Corpora Schema 1.1.0, the following MUST be implemented.
 
 #### Presentation Hints
-* The [Corpora `title`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-metadata) value MUST be saved in the `cxg_properties.title` field.
-* The [Corpora `color_map`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), when present in the dataset, MUST be saved in the `cxg_category_colors` field and NOT in the `corpora` field.
-* The [Corpora SUMMARY `project_link`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), if present, MUST be saved in the `cxg_properties.about` field.
+* The [Corpora Schema 1.1.0 `title`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-metadata) value MUST be saved in the `cxg_properties.title` field.
+* The [Corpora Schema 1.1.0 `color_map`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), when present in the dataset, MUST be saved in the `cxg_category_colors` field and NOT in the `corpora` field.
+* The [Corpora Schema 1.1.0 SUMMARY `project_link`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-hints), if present, MUST be saved in the `cxg_properties.about` field.
 
 Where these values differ in the final CXG, the `cxg_properties` values WILL take precedence.
 
