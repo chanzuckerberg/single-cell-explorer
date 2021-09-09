@@ -1,6 +1,6 @@
 # Design Principles (HCI)
 
-cellxgene is a tool for scientists investigating single cell rna seq datasets. The design of cellxgene proceeds from a small number of core principles:
+explorer is a tool for scientists investigating single cell rna seq datasets. The design of explorer proceeds from a small number of core principles:
 
 0. the tool, first and foremost, must produce views that are **scientifically valid** at all times
 1. the tool should be highly **scaleable** and handle *exploration* of millions of cells in the browser at interactive speeds, including interactive crossfiltering and dataframe subsetting
