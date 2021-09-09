@@ -8,8 +8,16 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/* Collection and dataset IDs for the current dataset */
+export interface DatasetIdentification {
+  collection_id: string | null;
+  collection_visibility: string | null;
+  dataset_id: string | null;
+}
+
 /* rough shape of config object */
 export interface Config {
+  dataset_identification: DatasetIdentification;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
   parameters: {
@@ -27,6 +35,11 @@ See the REST API and CLI specs for more info.
 */
 export const configDefaults: Config = {
   features: {},
+  dataset_identification: {
+    collection_id: null,
+    collection_visibility: null,
+    dataset_id: null,
+  },
   displayNames: {},
   parameters: {
     "disable-diffexp": false,

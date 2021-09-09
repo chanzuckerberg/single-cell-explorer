@@ -4,6 +4,24 @@ Helper functions for querying, binding and sorting Portal dataset meta and colle
 
 /* app dependencies */
 import * as globals from "../../globals";
+import { DatasetIdentification } from "../../globals";
+
+/**
+ * Populate config dataset identification with default values on local. This is temporary until #47 is resolved.
+ * TODO(cc) remove once #47 is resolved.
+ */
+export function bindDatasetIdentification(
+  datasetIdentification: DatasetIdentification
+): DatasetIdentification {
+  if (globals.API.local) {
+    return {
+      collection_id: "787d970b-7da8-452a-9048-2caae8cbff50",
+      collection_visibility: "PRIVATE",
+      dataset_id: "8dc18651-eaae-42f3-ab2b-b6d09bbbecea",
+    };
+  }
+  return datasetIdentification;
+}
 
 export function createAPIPrefix(
   existingPrefix: string,
@@ -33,27 +51,6 @@ export function createDatasetUrl(deploymentUrl: string): string {
   const dataRoot = globals.API.local ? "d" : bindDataRoot(deploymentUrl);
   const deploymentId = bindDeploymentId(deploymentUrl);
   return `${window.location.origin}/${dataRoot}/${deploymentId}/`;
-}
-
-export function createExplorerUrl(): string {
-  /*
-    The current URL is passed as an "explorer URL" query string parameter to the dataset meta API. For environments where
-    the current origin does not match the origin specified in the dataset deployment URLs (eg local, canary), update the
-    origin to be the origin specified in the globals. Also update the data root for local environments.
-    TODO(cc) revisit special handling for local and canary environments
-     */
-  const url = window.location.href;
-  if (url.indexOf(globals.API.origin) === 0) {
-    return url;
-  }
-  const { origin } = globals.API;
-  if (globals.API.local) {
-    const dataRoot = "e";
-    const deploymentId = bindDeploymentId(url);
-    return `${origin}${dataRoot}/${deploymentId}/`;
-  }
-  const dataRootAndDeploymentId = bindDataRootAndDeploymentId(url);
-  return `${origin}${dataRootAndDeploymentId}/`;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.

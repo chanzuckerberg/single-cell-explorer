@@ -27,14 +27,6 @@ export interface CollectionState {
   selectedDatasetId: string | null;
 }
 
-/*
- Shape of response from Portal meta endpoint.
- */
-export interface MetaPayload {
-  collection_id: string;
-  dataset_id: string;
-}
-
 const Collections = (
   state: CollectionState = {
     // data loading flag
