@@ -27,7 +27,8 @@ def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01):
     :param top_n: number of variables to return stats for
     :param diffexp_lfc_cutoff: minimum
     absolute value returning [ varindex, logfoldchange, pval, pval_adj ] for top N genes
-    :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ], "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
+    :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
+              "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
 
     X_approximate_distribution = adaptor.get_X_approximate_distribution()

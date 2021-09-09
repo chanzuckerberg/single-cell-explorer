@@ -87,7 +87,7 @@ lint: lint-czi-hosted-server lint-client
 
 .PHONY: lint-czi-hosted-server
 lint-czi-hosted-server: fmt-py
-	flake8 server --per-file-ignores='server/tests/fixtures/czi_hosted_dataset_config_outline.py:F821 server/tests/fixtures/czi_hosted_server_config_outline.py:F821 server/tests/performance/scale_test_annotations.py:E501'
+	flake8 server --exclude server/tests/ --per-file-ignores='server/tests/fixtures/czi_hosted_dataset_config_outline.py:F821 server/tests/fixtures/czi_hosted_server_config_outline.py:F821 server/tests/performance/scale_test_annotations.py:E501'
 
 .PHONY: lint-client
 lint-client:
