@@ -16,7 +16,7 @@ dist/
 
 # Environments
 venv/
-cellxgene/
+explorer/
 
 # client build
 server/common/web/static/*
