@@ -101,15 +101,20 @@ def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
 
 
-def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
+    return dataset_metadata_manager.get(
+        cache_key=f"{url_dataroot}/{dataset}",
+        create_data_function=get_dataset_metadata_for_explorer_location,
+        create_data_args={"app_config": app_config}
+    )
+
+
+def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+    app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    with dataset_metadata_manager.get(
-            cache_key=f"{url_dataroot}/{dataset}",
-            create_data_function=get_dataset_metadata_for_explorer_location,
-            create_data_args={"app_config": app_config}
-    ) as dataset_metadata:
+    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
         return matrix_cache_manager.get(
             cache_key=f"{url_dataroot}/{dataset}",
             create_data_function=MatrixDataLoader(

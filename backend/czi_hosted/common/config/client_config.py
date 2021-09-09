@@ -1,11 +1,11 @@
 from backend.czi_hosted import display_version as cellxgene_display_version
+from backend.czi_hosted.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 
 
-def get_client_config(app_config, data_adaptor):
+def get_client_config(app_config, data_adaptor, current_app):
     """
     Return the configuration as required by the /config REST route
     """
-
     server_config = app_config.server_config
     dataset_config = data_adaptor.dataset_config
     annotation = dataset_config.user_annotations
@@ -80,7 +80,17 @@ def get_client_config(app_config, data_adaptor):
         "column_request_max": server_config.limits__column_request_max,
         "diffexp_cellcount_max": server_config.limits__diffexp_cellcount_max,
     }
-
+    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
+    with dataset_metadata_manager.get(
+            cache_key=data_adaptor.uri_path,
+            create_data_function=get_dataset_metadata_for_explorer_location,
+            create_data_args={"app_config": app_config}
+    ) as dataset_identifiers:
+        config['dataset_identification'] = {
+            "dataset_id": dataset_identifiers["dataset_id"],
+            "collection_id": dataset_identifiers["collection_id"],
+            "collection_visibility": dataset_identifiers["collection_visibility"]
+        }
     if dataset_config.app__authentication_enable and auth.is_valid_authentication_type():
         config["authentication"] = {
             "requires_client_login": auth.requires_client_login(),
@@ -93,7 +103,6 @@ def get_client_config(app_config, data_adaptor):
                     "logout": auth.get_logout_url(data_adaptor),
                 }
             )
-
     return client_config
 
 
