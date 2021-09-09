@@ -86,7 +86,6 @@ def dataset_index(url_dataroot=None, dataset=None):
 
     try:
         with get_data_adaptor(url_dataroot=url_dataroot, dataset=dataset) as data_adaptor:
-            current_app.logger.log(logging.CRITICAL, f"Error accessing dataset: {e}")
             data_adaptor.set_uri_path(f"{url_dataroot}/{dataset}")
             args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
             return render_template("index.html", **args)
@@ -150,7 +149,6 @@ def rest_get_data_adaptor(func):
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
         except TombstoneException as e:
-            current_app.logger.log(logging.CRITICAL, f"Dataset has been tombstoned: {e} attempting a redirect")
             return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
 
     return wrapped_function

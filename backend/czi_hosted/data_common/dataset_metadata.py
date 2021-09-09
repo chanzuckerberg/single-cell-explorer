@@ -77,7 +77,6 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         )
         if dataset_metadata:
             if dataset_metadata['tombstoned'] == "true":
-                current_app.logger.log(logging.CRITICAL, f"Dataset has been tombstoned: {dataset_explorer_location}")
                 raise TombstoneException(
                     message=f"Dataset {dataset_metadata['dataset_id']} from collection "
                             f"{dataset_metadata['collection_id']} has been tombstoned and is no longer available",
