@@ -2,7 +2,7 @@ include common.mk
 
 BUILDDIR := build
 CLIENTBUILD := $(BUILDDIR)/client
-CZIHOSTEDBUILD := $(BUILDDIR)/backend/czi_hosted
+CZIHOSTEDBUILD := $(BUILDDIR)/server
 CLEANFILES :=  $(BUILDDIR)/ client/build build dist cellxgene.egg-info
 
 PART ?= patch
@@ -22,7 +22,7 @@ clean-client:
 
 .PHONY: clean-czi-hosted
 clean-czi-hosted:
-	cd backend/czi_hosted && $(MAKE) clean
+	cd server && $(MAKE) clean
 
 # BUILDING PACKAGE
 
@@ -32,22 +32,22 @@ build-client:
 
 .PHONY: build-czi-hosted
 build-czi-hosted: clean build-client
-	git ls-files backend/czi_hosted/ | grep -v 'backend/czi_hosted/test/' | cpio -pdm $(BUILDDIR)
+	git ls-files server/ | grep -v 'server/tests/' | cpio -pdm $(BUILDDIR)
 	cp -r client/build/  $(CLIENTBUILD)
 	$(call copy_client_assets,$(CLIENTBUILD),$(CZIHOSTEDBUILD))
-	cp -r backend/common $(BUILDDIR)/backend/common
-	cp backend/__init__.py $(BUILDDIR)
-	cp backend/__init__.py $(BUILDDIR)/backend
+	cp -r server/common $(BUILDDIR)/server/common
+	cp server/__init__.py $(BUILDDIR)
+	cp server/__init__.py $(BUILDDIR)/server
 	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
 
-# If you are actively developing in the backend folder use this, dirties the source tree
+# If you are actively developing in the server folder use this, dirties the source tree
 .PHONY: build-for-czi-hosted-dev
 build-for-czi-hosted-dev: clean-czi-hosted build-client
-	$(call copy_client_assets,client/build,backend/czi_hosted)
+	$(call copy_client_assets,client/build,server)
 
 .PHONY: copy-client-assets-czi-hosted
 copy-client-assets-czi-hosted:
-	$(call copy_client_assets,client/build,backend/czi_hosted)
+	$(call copy_client_assets,client/build,server)
 
 
 .PHONY: test-czi-hosted
@@ -59,12 +59,7 @@ unit-test-client:
 
 .PHONY: unit-test-czi-hosted
 unit-test-czi-hosted:
-	cd backend/czi_hosted && $(MAKE) unit-test
-
-
-.PHONY: unit-test-common
-unit-test-common:
-	cd backend/common && $(MAKE) unit-test
+	cd server && $(MAKE) unit-test
 
 .PHONY: smoke-test
 smoke-test:
@@ -92,7 +87,7 @@ lint: lint-czi-hosted-server lint-client
 
 .PHONY: lint-czi-hosted-server
 lint-czi-hosted-server: fmt-py
-	flake8 backend/czi_hosted --per-file-ignores='backend/test/fixtures/czi_hosted_dataset_config_outline.py:F821 backend/test/fixtures/czi_hosted_server_config_outline.py:F821 backend/test/performance/scale_test_annotations.py:E501'
+	flake8 server --per-file-ignores='server/tests/fixtures/czi_hosted_dataset_config_outline.py:F821 server/tests/fixtures/czi_hosted_server_config_outline.py:F821 server/tests/performance/scale_test_annotations.py:E501'
 
 .PHONY: lint-client
 lint-client:
@@ -115,7 +110,7 @@ dev-env-client:
 
 .PHONY: dev-env-czi-hosted
 dev-env-czi-hosted:
-	pip install -r backend/czi_hosted/requirements-dev.txt
+	pip install -r server/requirements-dev.txt
 
 # quicker than re-building client
 .PHONY: gen-package-lock
