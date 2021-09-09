@@ -131,15 +131,6 @@ These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__`
 * `X_normalization`
 * `X_approximate_distribution`
 
-These Corpora metadata properties MAY exist in the CXG `__cxg_group_metadata__` field named `corpora`:
-* `contributors`
-* `default_embedding`
-* `project_name`
-* `project_description`
-* `project_links`
-* `preprint_doi`
-* `publication_doi`
-
 For example:
 ```
 {
@@ -147,8 +138,7 @@ For example:
         "schema_version": "2.0.0",
         "title": "Analysis of 8 datasets of healthy and diseased mouse heart",
         "X_normalization": "CPM",
-        "X_approximate_distribution": "normal",
-        "project_name": "Diseased Mouse Heart Study"
+        "X_approximate_distribution": "normal
     }
 }
 ```
