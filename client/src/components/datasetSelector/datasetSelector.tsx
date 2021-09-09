@@ -64,11 +64,13 @@ class DatasetSelector extends PureComponent {
     const { origin } = globals.API;
     const homeProp = this.buildBreadcrumbProp({
       href: origin,
+      key: "bc-home",
       shortText: "Home",
       text: "Home",
     });
     const collectionProp = this.buildBreadcrumbProp({
       href: `${origin}collections/${collection.id}`,
+      key: `bc-collection-${collection.id}`,
       shortText: "Collection",
       text: collection.name,
     });
@@ -90,6 +92,7 @@ class DatasetSelector extends PureComponent {
         };
       });
     const datasetProp = this.buildBreadcrumbProp({
+      key: `bc-dataset-${selectedDataset.id}`,
       shortText: "Dataset",
       text: selectedDataset.name,
       datasets,

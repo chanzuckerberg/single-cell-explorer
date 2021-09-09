@@ -250,7 +250,7 @@ const TruncatingBreadcrumbs = React.memo(
         // breadcrumb-specific props, resulting in this component being a relatively transparent wrapper around
         // BP's Breadcrumbs component. For an example pattern, see `overflowListProps` on BP Breadcrumbs component.
         const currentItem = i === bcItems.length - 1;
-        return <li key={item.text}>{renderBreadcrumb(item, currentItem)}</li>;
+        return <li key={item.key}>{renderBreadcrumb(item, currentItem)}</li>;
       });
 
     useEffect(() => {

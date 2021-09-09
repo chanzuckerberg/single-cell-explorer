@@ -17,9 +17,9 @@ import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { UserInfoPayload } from "../reducers/userInfo";
 import { Collection } from "../common/types/entities";
 import {
+  bindDatasetIdentification,
   createAPIPrefix,
   createDatasetUrl,
-  createExplorerUrl,
 } from "../util/stateManager/collectionsHelpers";
 import {
   KEYS,
@@ -28,7 +28,6 @@ import {
   WORK_IN_PROGRESS_WARN_STATE,
 } from "../components/util/localStorage";
 import { postExplainNewTab } from "../components/framework/toasters";
-import { MetaPayload } from "../reducers/collections";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -72,39 +71,33 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
 }
 
 /*
- Fetch collection with the given ID.
- @param collectionId - ID of collection to be fetched.
- @returns Collection with the given ID.
+ Fetch collection and save collection to store.
+ @param dispatch Function facilitating update of store.
+ @param config Response from config endpoint containing collection ID for the current dataset.
  */
-async function collectionFetch(collectionId: string): Promise<Collection> {
-  return fetchPortalJson<Collection>(`collections/${collectionId}`);
-}
-
-/*
- Fetch dataset meta for the current visualization then fetch the corresponding collection. Save collection to store.
- @param dispatch Functional facilitating update of store.
- */
-async function collectionFetchAndLoad(dispatch: AppDispatch): Promise<void> {
-  const datasetMeta = await datasetMetaFetch();
+async function collectionFetch(
+  dispatch: AppDispatch,
+  config: Config
+): Promise<void> {
+  const datasetIdentification = bindDatasetIdentification(
+    config.dataset_identification
+  );
   const { collection_id: collectionId, dataset_id: selectedDatasetId } =
-    datasetMeta;
-  const collection = await collectionFetch(collectionId);
+    datasetIdentification;
+  if (!collectionId || !selectedDatasetId) {
+    dispatchNetworkErrorMessageToUser(
+      "Dataset identification not found for current dataset"
+    );
+    return;
+  }
+  const collection = await fetchPortalJson<Collection>(
+    `collections/${collectionId}`
+  );
   dispatch({
     type: "collection load complete",
     collection,
     selectedDatasetId,
   });
-}
-
-/*
- Fetch dataset meta for the current dataset.
- @returns Response from Portal's meta endpoint.
- TODO(cc) revisit swap of explorer URL origin for environments without a corresponding Portal instance (eg local, canary)
- */
-async function datasetMetaFetch(): Promise<MetaPayload> {
-  const explorerUrl = createExplorerUrl();
-  const explorerUrlParam = encodeURIComponent(explorerUrl);
-  return fetchPortalJson<MetaPayload>(`datasets/meta?url=${explorerUrlParam}`);
 }
 
 async function userInfoFetch(dispatch: AppDispatch): Promise<UserInfoPayload> {
@@ -170,8 +163,9 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
         userInfoFetch(dispatch),
-        collectionFetchAndLoad(dispatch),
       ]);
+
+      collectionFetch(dispatch, config);
 
       genesetsFetch(dispatch, config);
 
