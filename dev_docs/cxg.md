@@ -12,7 +12,7 @@ CXG is a cellxgene-private data format, used for at-rest storage of annotated ma
 
 CXG is built upon the [TileDB](https://tiledb.com/) embedded database. Each CXG is a TileDB [group](https://docs.tiledb.com/main/api-usage/object-management), which in turn includes one or more TileDB multi-dimensional arrays.
 
-This document presumes familiarity with [TileDB terminology and concepts](https://docs.tiledb.com/main/) and the [Corpora schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md).
+This document presumes familiarity with [TileDB terminology and concepts](https://docs.tiledb.com/main/) and the [Corpora schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md).
 
 
 ### Terminology
@@ -122,7 +122,7 @@ The [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curatio
 
 ### Corpora metadata property
 
-A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
+A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
 
 
 These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__` field named `corpora`: 
@@ -145,7 +145,7 @@ For example:
 
 ### Other Corpora fields
 
-All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
+All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
 
 ### Compatibility with CXG 0.1.0
 

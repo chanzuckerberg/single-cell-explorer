@@ -1,9 +1,9 @@
 """
-Corpora schema conventions support.  Helper functions for reading.
+Corpora schema 1.x conventions support.  Helper functions for reading.
 
-https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md
+https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/1.1.0/corpora_schema.md
 
-https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema_h5ad_implementation.md
+https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/1.1.0/anndata_encoding.md
 """
 import collections
 import json
