@@ -15,15 +15,20 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     Check the data portal metadata api for datasets stored under the given url_path
     If present return dataset metadata object else return None
     """
+    current_app.logger.log(logging.CRITICAL, f"ZZZ - Arrived at request_dataset_metadata_from_data_portal")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
+        current_app.logger.log(logging.CRITICAL, f"ZZZ - Dataset metadata request base url: {data_portal_api_base}")
+        current_app.logger.log(logging.CRITICAL, f"ZZZ - Dataset metadata request explorer url: {explorer_url}")
+        current_app.logger.log(logging.CRITICAL, f"ZZZ - Dataset metadata request response.status_code: {response.status_code}")
         if response.status_code == 200:
             dataset_identifiers = json.loads(response.content)
             return dataset_identifiers
         else:
             return None
     except Exception:
+        current_app.logger.log(logging.CRITICAL, f"ZZZ - Dataset metadata request: EXCEPTION RAISED.")
         return None
 
 
@@ -66,11 +71,13 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     in the server config.
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
+    current_app.logger.log(logging.CRITICAL, f"ZZZ - Arrived at get_dataset_metadata_for_explorer_location")
     if app_config.server_config.data_locator__api_base:
         explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_explorer_location}"
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
+        current_app.logger.log(logging.CRITICAL, f"ZZZ - Dataset metadata: {dataset_metadata}")
         if dataset_metadata:
             if dataset_metadata['tombstoned'] == "true":
                 raise TombstoneException(

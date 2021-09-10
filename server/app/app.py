@@ -102,6 +102,7 @@ def handle_request_exception(error):
 
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
+    current_app.logger.log(logging.CRITICAL, f"ZZZ - Arrived at get_dataset_metadata")
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
     return dataset_metadata_manager.get(
@@ -112,6 +113,7 @@ def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
 
 
 def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+    current_app.logger.log(logging.CRITICAL, f"ZZZ - Arrived at get_data_adaptor")
     app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
     with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
