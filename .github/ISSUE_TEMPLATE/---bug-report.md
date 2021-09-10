@@ -1,6 +1,6 @@
 ---
 name: "\U0001F41E Bug report"
-about: Create a report to identify a bug in cellxgene
+about: Create a report to identify a bug in single-cell-explorer
 title: "[BUG]"
 labels: bug
 assignees: ''
@@ -24,8 +24,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Version (please complete the following information):**
- - Desktop or hosted?:
- - Browser (if hosted) [e.g. chrome, safari]:
+ - Browser [e.g. chrome, safari]:
  - Version [e.g. 0.13.0]:
 
 **Additional context**

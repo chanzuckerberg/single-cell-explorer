@@ -65,11 +65,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: make pydist-czi-hosted install-dist dev-env-czi-hosted
+        run: make pydist-server install-dist dev-env-server
       - name: Unit tests
         run: |
-          make unit-test-czi-hosted
-          bash <(curl -s https://codecov.io/bash) -y .codecov.yml -k backend/czi-hosted -cF backend,python,unitTest
+          make unit-test-server
+          bash <(curl -s https://codecov.io/bash) -y .codecov.yml -k server -cF server,python,unitTest
           cd client && ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,unitTest
 
   smoke-tests:
@@ -96,7 +96,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: make pydist-czi-hosted install-dist
+        run: make pydist-server install-dist
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test

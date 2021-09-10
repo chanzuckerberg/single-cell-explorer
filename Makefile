@@ -2,14 +2,14 @@ include common.mk
 
 BUILDDIR := build
 CLIENTBUILD := $(BUILDDIR)/client
-CZIHOSTEDBUILD := $(BUILDDIR)/backend/czi_hosted
+SERVERBUILD := $(BUILDDIR)/server
 CLEANFILES :=  $(BUILDDIR)/ client/build build dist cellxgene.egg-info
 
 PART ?= patch
 
 # CLEANING
 .PHONY: clean
-clean: clean-lite clean-czi-hosted clean-client
+clean: clean-lite clean-server clean-client
 
 # cleaning the client's node_modules is the longest one, so we avoid that if possible
 .PHONY: clean-lite
@@ -20,9 +20,9 @@ clean-lite:
 clean-client:
 	cd client && $(MAKE) clean
 
-.PHONY: clean-czi-hosted
-clean-czi-hosted:
-	cd backend/czi_hosted && $(MAKE) clean
+.PHONY: clean-server
+clean-server:
+	cd server && $(MAKE) clean
 
 # BUILDING PACKAGE
 
@@ -30,41 +30,35 @@ clean-czi-hosted:
 build-client:
 	cd client && $(MAKE) ci build
 
-.PHONY: build-czi-hosted
-build-czi-hosted: clean build-client
-	git ls-files backend/czi_hosted/ | grep -v 'backend/czi_hosted/test/' | cpio -pdm $(BUILDDIR)
+.PHONY: build-server
+build-server: clean build-client
+	git ls-files server/ | grep -v 'server/tests/' | cpio -pdm $(BUILDDIR)
 	cp -r client/build/  $(CLIENTBUILD)
-	$(call copy_client_assets,$(CLIENTBUILD),$(CZIHOSTEDBUILD))
-	cp -r backend/common $(BUILDDIR)/backend/common
-	cp backend/__init__.py $(BUILDDIR)
-	cp backend/__init__.py $(BUILDDIR)/backend
+	$(call copy_client_assets,$(CLIENTBUILD),$(SERVERBUILD))
+	cp -r server/common $(BUILDDIR)/server/common
+	cp server/__init__.py $(BUILDDIR)
+	cp server/__init__.py $(BUILDDIR)/server
 	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
 
-# If you are actively developing in the backend folder use this, dirties the source tree
-.PHONY: build-for-czi-hosted-dev
-build-for-czi-hosted-dev: clean-czi-hosted build-client
-	$(call copy_client_assets,client/build,backend/czi_hosted)
+# If you are actively developing in the server folder use this, dirties the source tree
+.PHONY: build-for-server-dev
+build-for-server-dev: clean-server build-client
+	$(call copy_client_assets,client/build,server)
 
-.PHONY: copy-client-assets-czi-hosted
-copy-client-assets-czi-hosted:
-	$(call copy_client_assets,client/build,backend/czi_hosted)
+.PHONY: copy-client-assets-server
+copy-client-assets-server:
+	$(call copy_client_assets,client/build,server)
 
-
-.PHONY: test-czi-hosted
-test-czi-hosted: unit-test-czi-hosted unit-test-common smoke-test
+.PHONY: test-server
+test-server: unit-test-server smoke-test
 
 .PHONY: unit-test-client
 unit-test-client:
 	cd client && $(MAKE) unit-test
 
-.PHONY: unit-test-czi-hosted
-unit-test-czi-hosted:
-	cd backend/czi_hosted && $(MAKE) unit-test
-
-
-.PHONY: unit-test-common
-unit-test-common:
-	cd backend/common && $(MAKE) unit-test
+.PHONY: unit-test-server
+unit-test-server:
+	cd server && $(MAKE) unit-test
 
 .PHONY: smoke-test
 smoke-test:
@@ -77,22 +71,22 @@ smoke-test-annotations:
 # FORMATTING CODE
 
 .PHONY: fmt
-fmt: fmt-client fmt-py
+fmt: fmt-client fmt-server
 
 .PHONY: fmt-client
 fmt-client:
 	cd client && $(MAKE) fmt
 
-.PHONY: fmt
-fmt-py:
-	black .
+.PHONY: fmt-server
+fmt-server:
+	black server --exclude server/common/fbs/NetEncoding/
 
 .PHONY: lint
-lint: lint-czi-hosted-server lint-client
+lint: lint-server lint-client
 
-.PHONY: lint-czi-hosted-server
-lint-czi-hosted-server: fmt-py
-	flake8 backend/czi_hosted --per-file-ignores='backend/test/fixtures/czi_hosted_dataset_config_outline.py:F821 backend/test/fixtures/czi_hosted_server_config_outline.py:F821 backend/test/performance/scale_test_annotations.py:E501'
+.PHONY: lint-server
+lint-server:
+	flake8 server --exclude server/tests/,server/common/fbs/NetEncoding/
 
 .PHONY: lint-client
 lint-client:
@@ -100,22 +94,22 @@ lint-client:
 
 # CREATING DISTRIBUTION RELEASE
 
-.PHONY: pydist-czi-hosted
-pydist-czi-hosted: build-czi-hosted
+.PHONY: pydist-server
+pydist-server: build-server
 	cd $(BUILDDIR); python setup.py sdist -d ../dist
 	@echo "done"
 
 .PHONY: dev-env
-dev-env: dev-env-client dev-env-czi-hosted
+dev-env: dev-env-client dev-env-server
 
 .PHONY: dev-env-client
 dev-env-client:
 	cd client && $(MAKE) ci
 
 
-.PHONY: dev-env-czi-hosted
-dev-env-czi-hosted:
-	pip install -r backend/czi_hosted/requirements-dev.txt
+.PHONY: dev-env-server
+dev-env-server:
+	pip install -r server/requirements-dev.txt
 
 # quicker than re-building client
 .PHONY: gen-package-lock
@@ -137,4 +131,3 @@ install-dist: uninstall
 .PHONY: uninstall
 uninstall:
 	pip uninstall -y cellxgene || :
-
