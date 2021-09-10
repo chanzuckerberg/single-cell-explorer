@@ -3,10 +3,8 @@ import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 /* app dependencies */
-import IconAbout from "./iconAbout";
-import IconDocument from "./iconDocument";
-import IconGitHub from "./iconGitHub";
-import IconSlack from "./iconSlack";
+import { IconNames as CXGIconNames } from "../icon";
+import Icon from "../icon/icon";
 
 const InformationMenu = React.memo((props) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'libraryVersions' does not exist on type ... Remove this comment to see the full error message
@@ -17,27 +15,27 @@ const InformationMenu = React.memo((props) => {
         <Menu>
           <MenuItem
             href="https://chanzuckerberg.github.io/cellxgene/"
-            icon={<IconDocument />}
+            icon={<Icon icon={CXGIconNames.DOCUMENT} />}
             rel="noopener"
             target="_blank"
             text="Documentation"
           />
           <MenuItem
             href="https://join-cellxgene-users.herokuapp.com/"
-            icon={<IconSlack />}
+            icon={<Icon icon={CXGIconNames.SLACK} />}
             target="_blank"
             text="Chat"
             rel="noopener"
           />
           <MenuItem
             href="https://github.com/chanzuckerberg/cellxgene"
-            icon={<IconGitHub />}
+            icon={<Icon icon={CXGIconNames.GITHUB} />}
             target="_blank"
             text="Github"
             rel="noopener"
           />
           <MenuItem
-            icon={<IconAbout />}
+            icon={<Icon icon={CXGIconNames.ABOUT} />}
             popoverProps={{ openOnTargetFocus: false }}
             text="About cellxgene"
           >
