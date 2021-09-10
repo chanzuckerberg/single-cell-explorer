@@ -531,7 +531,7 @@ class TestDataLocatorMockApi(BaseTest):
                 "collection_visibility": "PUBLIC",
                 "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
                 "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-                "tombstoned": "False",
+                "tombstoned": False,
             }
         )
         mock_get.return_value = MockResponse(body=cls.response_body, status_code=200)
@@ -607,7 +607,7 @@ class TestDataLocatorMockApi(BaseTest):
                 "collection_visibility": "PUBLIC",
                 "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
                 "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-                "tombstoned": "False",
+                "tombstoned": False,
             }
         )
         mock_get.return_value = MockResponse(body=response_body, status_code=200)
@@ -730,7 +730,7 @@ class TestDataLocatorMockApi(BaseTest):
                 "collection_visibility": "PUBLIC",
                 "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
                 "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-                "tombstoned": "False",
+                "tombstoned": False,
             }
         )
         mock_get.return_value = MockResponse(body=response_body, status_code=200)
@@ -756,8 +756,8 @@ class TestDataLocatorMockApi(BaseTest):
             "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
             "collection_visibility": "PUBLIC",
             "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-            "tombstoned": "true"
+            "s3_uri": None,
+            "tombstoned": True,
         })
         mock_get.return_value = MockResponse(body=response_body, status_code=200)
         endpoint = "config"
