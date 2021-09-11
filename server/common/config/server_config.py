@@ -4,7 +4,6 @@ import warnings
 from os.path import basename
 from urllib.parse import urlparse, quote_plus
 
-from server.auth.auth import AuthTypeFactory
 from server.common.config import DEFAULT_SERVER_PORT, BIG_FILE_SIZE_THRESHOLD
 from server.common.config.base_config import BaseConfig
 from server.common.utils.data_locator import discover_s3_region_name
@@ -21,8 +20,6 @@ class ServerConfig(BaseConfig):
     def __init__(self, app_config, default_config):
         dictval_cases = [
             ("app", "csp_directives"),
-            ("authentication", "params_oauth", "cookie"),
-            ("authentication", "params_oauth", "jwt_decode_options"),
             ("adaptor", "cxg_adaptor", "tiledb_ctx"),
             ("multi_dataset", "dataroot"),
         ]
@@ -41,25 +38,6 @@ class ServerConfig(BaseConfig):
             self.app__csp_directives = default_config["app"]["csp_directives"]
             self.app__api_base_url = default_config["app"]["api_base_url"]
             self.app__web_base_url = default_config["app"]["web_base_url"]
-
-            self.authentication__type = default_config["authentication"]["type"]
-            self.authentication__insecure_test_environment = default_config["authentication"][
-                "insecure_test_environment"
-            ]
-            self.authentication__params_oauth__oauth_api_base_url = default_config["authentication"]["params_oauth"][
-                "oauth_api_base_url"
-            ]
-            self.authentication__params_oauth__client_id = default_config["authentication"]["params_oauth"]["client_id"]
-            self.authentication__params_oauth__client_secret = default_config["authentication"]["params_oauth"][
-                "client_secret"
-            ]
-            self.authentication__params_oauth__jwt_decode_options = default_config["authentication"]["params_oauth"][
-                "jwt_decode_options"
-            ]
-            self.authentication__params_oauth__session_cookie = default_config["authentication"]["params_oauth"][
-                "session_cookie"
-            ]
-            self.authentication__params_oauth__cookie = default_config["authentication"]["params_oauth"]["cookie"]
 
             self.multi_dataset__dataroot = default_config["multi_dataset"]["dataroot"]
             self.multi_dataset__index = default_config["multi_dataset"]["index"]
@@ -104,13 +82,9 @@ class ServerConfig(BaseConfig):
         # The dataset location cache manager is created during the complete_config and stored here.
         self.dataset_metadata_cache_manager = None
 
-        # The authentication object
-        self.auth = None
-
     def complete_config(self, context):
         self.handle_app(context)
         self.handle_data_source()
-        self.handle_authentication()
         self.handle_data_locator()
         self.handle_adaptor()  # may depend on data_locator
         self.handle_single_dataset(context)  # may depend on adaptor
@@ -178,36 +152,6 @@ class ServerConfig(BaseConfig):
 
         if self.app__web_base_url is None:
             self.app__web_base_url = self.app__api_base_url
-
-    def handle_authentication(self):
-        self.validate_correct_type_of_configuration_attribute("authentication__type", (type(None), str))
-        self.validate_correct_type_of_configuration_attribute("authentication__insecure_test_environment", bool)
-
-        if self.authentication__type == "test" and not self.authentication__insecure_test_environment:
-            raise ConfigurationError("Test auth can only be used in an insecure test environment")
-
-        # oauth
-        ptypes = str if self.authentication__type == "oauth" else (type(None), str)
-        self.validate_correct_type_of_configuration_attribute(
-            "authentication__params_oauth__oauth_api_base_url", ptypes
-        )
-        self.validate_correct_type_of_configuration_attribute("authentication__params_oauth__client_id", ptypes)
-        self.validate_correct_type_of_configuration_attribute("authentication__params_oauth__client_secret", ptypes)
-        self.validate_correct_type_of_configuration_attribute(
-            "authentication__params_oauth__jwt_decode_options", (type(None), dict)
-        )
-        self.validate_correct_type_of_configuration_attribute("authentication__params_oauth__session_cookie", bool)
-
-        if self.authentication__params_oauth__session_cookie:
-            self.validate_correct_type_of_configuration_attribute(
-                "authentication__params_oauth__cookie", (type(None), dict)
-            )
-        else:
-            self.validate_correct_type_of_configuration_attribute("authentication__params_oauth__cookie", dict)
-
-        self.auth = AuthTypeFactory.create(self.authentication__type, self)
-        if self.auth is None:
-            raise ConfigurationError(f"Unknown authentication type: {self.authentication__type}")
 
     def handle_data_locator(self):
         self.validate_correct_type_of_configuration_attribute("data_locator__s3__region_name", (type(None), bool, str))

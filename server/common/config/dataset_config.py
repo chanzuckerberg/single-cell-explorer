@@ -21,7 +21,6 @@ class DatasetConfig(BaseConfig):
             self.app__inline_scripts = default_config["app"]["inline_scripts"]
             self.app__about_legal_tos = default_config["app"]["about_legal_tos"]
             self.app__about_legal_privacy = default_config["app"]["about_legal_privacy"]
-            self.app__authentication_enable = default_config["app"]["authentication_enable"]
 
             self.presentation__max_categories = default_config["presentation"]["max_categories"]
             self.presentation__custom_colors = default_config["presentation"]["custom_colors"]
@@ -68,7 +67,6 @@ class DatasetConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("app__inline_scripts", list)
         self.validate_correct_type_of_configuration_attribute("app__about_legal_tos", (type(None), str))
         self.validate_correct_type_of_configuration_attribute("app__about_legal_privacy", (type(None), str))
-        self.validate_correct_type_of_configuration_attribute("app__authentication_enable", bool)
 
         # scripts can be string (filename) or dict (attributes). Convert string to dict.
         scripts = []
@@ -105,13 +103,6 @@ class DatasetConfig(BaseConfig):
             "user_annotations__hosted_tiledb_array__hosted_file_directory", (type(None), str)
         )
         if self.user_annotations__enable:
-            server_config = self.app_config.server_config
-            if not self.app__authentication_enable:
-                raise ConfigurationError("user annotations requires authentication to be enabled")
-            if not server_config.auth.is_valid_authentication_type():
-                auth_type = server_config.authentication__type
-                raise ConfigurationError(f"authentication method {auth_type} is not compatible with user annotations")
-
             if self.user_annotations__type == "local_file_csv":
                 self.handle_local_file_csv_annotations()
             elif self.user_annotations__type == "hosted_tiledb_array":

@@ -401,7 +401,6 @@ class EndPointsCxg(EndPoints):
         app_config.update_default_dataset_config(user_annotations__enable=False)
 
     def test_get_genesets_json(self):
-        self.app.auth.is_user_authenticated = lambda: True
         endpoint = "genesets"
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url, headers={"Accept": "application/json"})
@@ -466,7 +465,6 @@ class EndPointsCxg(EndPoints):
     def test_get_genesets_csv(self):
         endpoint = "genesets"
         url = f"{self.TEST_URL_BASE}{endpoint}"
-        self.app.auth.is_user_authenticated = lambda: True
         result = self.client.get(url, headers={"Accept": "text/csv"})
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "text/csv")
@@ -513,8 +511,6 @@ class TestDataLocatorMockApi(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
-            authentication__type="test",
-            authentication__insecure_test_environment=True,
             app__flask_secret_key="testing",
             app__debug=True,
             data_locator__s3__region_name="us-east-1",

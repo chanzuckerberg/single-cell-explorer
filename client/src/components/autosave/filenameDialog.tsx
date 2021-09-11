@@ -21,10 +21,6 @@ type State = any;
     (state as any).config?.parameters?.["annotations-user-data-idhash"] ?? null,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   annotations: (state as any).annotations,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  auth: (state as any).config?.authentication,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  userInfo: (state as any).userInfo,
   writableCategoriesEnabled:
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     (state as any).config?.parameters?.annotations ?? false,
@@ -125,15 +121,13 @@ class FilenameDialog extends React.Component<{}, State> {
       annotations,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'idhash' does not exist on type 'Readonly... Remove this comment to see the full error message
       idhash,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'userInfo' does not exist on type 'Readon... Remove this comment to see the full error message
-      userInfo,
     } = this.props;
     const { filenameText } = this.state;
     return (writableCategoriesEnabled || writableGenesetsEnabled) &&
       annotations.promptForFilename &&
       !annotations.dataCollectionNameIsReadOnly &&
       !annotations.dataCollectionName &&
-      userInfo.is_authenticated ? (
+      false ? ( // TODO: delete when removing annotations code
       <Dialog
         icon="tag"
         title="User Generated Data Directory"

@@ -32,9 +32,7 @@ class ConfigTests(BaseTest):
         csp_directives="null",
         api_base_url="null",
         web_base_url="null",
-        auth_type="session",
         insecure_test_environment="false",
-        oauth_api_base_url="null",
         client_id="null",
         client_secret="null",
         jwt_decode_options="null",
@@ -87,8 +85,6 @@ class ConfigTests(BaseTest):
         csp_directives="null",
         api_base_url="null",
         web_base_url="null",
-        auth_type="session",
-        oauth_api_base_url="null",
         client_id="null",
         client_secret="null",
         jwt_decode_options="null",
@@ -118,7 +114,6 @@ class ConfigTests(BaseTest):
         inline_scripts=[],
         about_legal_tos="null",
         about_legal_privacy="null",
-        authentication_enable="true",
         max_categories=1000,
         custom_colors="true",
         enable_users_annotations="true",
@@ -152,8 +147,6 @@ class ConfigTests(BaseTest):
             csp_directives=csp_directives,
             api_base_url=api_base_url,
             web_base_url=web_base_url,
-            auth_type=auth_type,
-            oauth_api_base_url=oauth_api_base_url,
             client_id=client_id,
             client_secret=client_secret,
             jwt_decode_options=jwt_decode_options,
@@ -186,7 +179,6 @@ class ConfigTests(BaseTest):
             inline_scripts=inline_scripts,
             about_legal_tos=about_legal_tos,
             about_legal_privacy=about_legal_privacy,
-            authentication_enable=authentication_enable,
             max_categories=max_categories,
             custom_colors=custom_colors,
             enable_users_annotations=enable_users_annotations,
@@ -222,7 +214,6 @@ class ConfigTests(BaseTest):
         inline_scripts=[],
         about_legal_tos="null",
         about_legal_privacy="null",
-        authentication_enable="true",
         max_categories=1000,
         custom_colors="true",
         enable_users_annotations="true",
@@ -259,11 +250,6 @@ class ConfigTests(BaseTest):
         if environment is None:
             environment = [
                 dict(name="CXG_SECRET_KEY", path=["server", "app", "flask_secret_key"], required=False),
-                dict(
-                    name="CXG_OAUTH_CLIENT_SECRET",
-                    path=["server", "authentication", "params_oauth", "client_secret"],
-                    required=False,
-                ),
             ]
         external_config = {
             "external": {
