@@ -142,8 +142,8 @@ class Categories extends React.Component<{}, State> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'writableCategoriesEnabled' does not exis... Remove this comment to see the full error message
     const { writableCategoriesEnabled, schema } = this.props;
     /* all names, sorted in display order.  Will be rendered in this order */
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
     const allCategoryNames =
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       ControlsHelpers.selectableCategoryNames(schema).sort();
     return (
       <div
