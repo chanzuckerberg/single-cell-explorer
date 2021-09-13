@@ -87,16 +87,11 @@ def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01):
 
     if is_sparse:
         for cols in col_partitions:
-            futures.append(
-                executor.submit(
-                    _mean_var_sparse_ab,
-                    adaptor.open_array("X"), row_selector_A, nA, row_selector_B, nB, cols))
+            futures.append(executor.submit(_mean_var_sparse_ab, matrix, row_selector_A, nA, row_selector_B, nB, cols))
     else:
         for cols in col_partitions:
             futures.append(
-                executor.submit(
-                    _mean_var_ab,
-                    adaptor.open_array("X"), row_selector_AB, row_selector_A_in_AB, row_selector_B_in_AB, cols)
+                executor.submit(_mean_var_ab, matrix, row_selector_AB, row_selector_A_in_AB, row_selector_B_in_AB, cols)
             )
 
     for future in futures:
