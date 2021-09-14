@@ -14,7 +14,6 @@ import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
-import { UserInfoPayload } from "../reducers/userInfo";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -55,19 +54,6 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
     config,
   });
   return config;
-}
-
-async function userInfoFetch(dispatch: AppDispatch): Promise<UserInfoPayload> {
-  return fetchJson<{ userinfo: UserInfoPayload }>("userinfo").then(
-    (response) => {
-      const { userinfo: userInfo } = response || {};
-      dispatch({
-        type: "userInfo load complete",
-        userInfo,
-      });
-      return userInfo;
-    }
-  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -119,7 +105,6 @@ const doInitialDataLoad = (): ((
         configFetch(dispatch),
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
-        userInfoFetch(dispatch),
       ]);
 
       genesetsFetch(dispatch, config);

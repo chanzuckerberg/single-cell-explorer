@@ -31,8 +31,6 @@ def data_with_tmp_tiledb_annotations(ext: MatrixDataType):
     config.update_server_config(
         app__flask_secret_key="secret",
         multi_dataset__dataroot=data_locator.path,
-        authentication__type="test",
-        authentication__insecure_test_environment=True,
     )
     config.update_default_dataset_config(
         embeddings__names=["umap"],
@@ -165,8 +163,6 @@ class BaseTest(unittest.TestCase):
         if not app_config:
             app_config = AppConfig()
             app_config.update_server_config(
-                authentication__type="test",
-                authentication__insecure_test_environment=True,
                 app__flask_secret_key="testing",
                 app__debug=True,
                 multi_dataset__dataroot=f"{FIXTURES_ROOT}",

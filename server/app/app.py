@@ -131,18 +131,6 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
         )
 
 
-def requires_authentication(func):
-    @wraps(func)
-    def wrapped_function(self, *args, **kwargs):
-        auth = current_app.auth
-        if auth.is_user_authenticated():
-            return func(self, *args, **kwargs)
-        else:
-            return make_response("not authenticated", HTTPStatus.UNAUTHORIZED)
-
-    return wrapped_function
-
-
 def rest_get_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
@@ -168,16 +156,6 @@ def dataroot_test_index():
 
     config = current_app.app_config
     server_config = config.server_config
-
-    auth = server_config.auth
-    if auth.is_valid_authentication_type():
-        if server_config.auth.is_user_authenticated():
-            data += f"<p>Logged in as {auth.get_user_id()} / {auth.get_user_name()} / {auth.get_user_email()}</p>"
-        if auth.requires_client_login():
-            if server_config.auth.is_user_authenticated():
-                data += f"<p><a href='{auth.get_logout_url(None)}'>Logout</a></p>"
-            else:
-                data += f"<p><a href='{auth.get_login_url(None)}'>Login</a></p>"
 
     datasets = []
     for dataroot_dict in server_config.multi_dataset__dataroot.values():
@@ -245,20 +223,12 @@ class ConfigAPI(DatasetResource):
         return common_rest.config_get(current_app.app_config, data_adaptor)
 
 
-class UserInfoAPI(DatasetResource):
-    @cache_control_always(no_store=True)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.userinfo_get(current_app.app_config, data_adaptor)
-
-
 class AnnotationsObsAPI(DatasetResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.annotations_obs_get(request, data_adaptor)
 
-    @requires_authentication
     @cache_control(no_store=True)
     @rest_get_data_adaptor
     def put(self, data_adaptor):
@@ -344,7 +314,6 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
     add_resource(ConfigAPI, "/config")
-    add_resource(UserInfoAPI, "/userinfo")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")
     add_resource(AnnotationsVarAPI, "/annotations/var")
@@ -461,9 +430,3 @@ class Server:
         self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
 
         self.app.app_config = app_config
-
-        auth = server_config.auth
-        self.app.auth = auth
-        if auth and auth.requires_client_login():
-            auth.add_url_rules(self.app)
-        auth.complete_setup(self.app)

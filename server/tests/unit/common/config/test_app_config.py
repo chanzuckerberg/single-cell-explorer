@@ -206,17 +206,17 @@ class AppConfigTest(ConfigTests):
         # the path leads to a dict config param, set the config parameter to the new value
         config = AppConfig()
         config.update_single_config_from_path_and_value(
-            ["server", "authentication", "params_oauth", "cookie"], dict(key="mykey1", max_age=100)
+            ["server", "adaptor", "cxg_adaptor", "tiledb_ctx"], dict(key="mykey1", max_age=100)
         )
-        self.assertEqual(config.server_config.authentication__params_oauth__cookie, dict(key="mykey1", max_age=100))
+        self.assertEqual(config.server_config.adaptor__cxg_adaptor__tiledb_ctx, dict(key="mykey1", max_age=100))
 
         # the path leads to an entry within a dict config param, the value is simple
         config = AppConfig()
-        config.server_config.authentication__params_oauth__cookie = dict(key="mykey1", max_age=100)
+        config.server_config.adaptor__cxg_adaptor__tiledb_ctx = dict(key="mykey1", max_age=100)
         config.update_single_config_from_path_and_value(
-            ["server", "authentication", "params_oauth", "cookie", "httponly"],
+            ["server", "adaptor", "cxg_adaptor", "tiledb_ctx", "httponly"],
             True,
         )
         self.assertEqual(
-            config.server_config.authentication__params_oauth__cookie, dict(key="mykey1", max_age=100, httponly=True)
+            config.server_config.adaptor__cxg_adaptor__tiledb_ctx, dict(key="mykey1", max_age=100, httponly=True)
         )
