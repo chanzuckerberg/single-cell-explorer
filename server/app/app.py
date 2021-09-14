@@ -22,7 +22,7 @@ from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
 from server.common.utils.data_locator import DataLocator
-from server.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError, TombstoneException
+from server.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError, TombstoneError
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
@@ -72,11 +72,6 @@ def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
 
 
-@webbp.errorhandler(TombstoneException)
-def handle_tombstone_exception(error):
-    return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
-
-
 # tell the client not to cache the index.html page so that changes to the app work on redeployment
 # note that the bulk of the data needed by the client (datasets) will still be cached
 @webbp.route("/", methods=["GET"])
@@ -104,8 +99,9 @@ def dataset_index(url_dataroot=None, dataset=None):
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
-    except TombstoneException as e:
-        return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
+    except TombstoneError as e:
+        parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
@@ -142,8 +138,9 @@ def rest_get_data_adaptor(func):
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
-        except TombstoneException as e:
-            return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
+        except TombstoneError as e:
+            parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
 
