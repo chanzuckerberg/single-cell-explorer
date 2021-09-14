@@ -1,0 +1,5 @@
+{
+  "testEnvironment": "./jestTestEnvironment.js",
+  "testPathIgnorePatterns": ["/node_modules/", "e2e"],
+  "testRegex": "((\\.|/)(test|spec))\\.[jt]sx?$"
+}
