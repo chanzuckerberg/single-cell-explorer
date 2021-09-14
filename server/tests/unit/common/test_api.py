@@ -543,7 +543,7 @@ class TestDataLocatorMockApi(BaseTest):
         cls.schema = json.loads(result.data)
 
         assert mock_get.call_count == 1
-        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"  # noqa
+        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"  # noqa E501
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_adaptor_uses_corpora_api(self, mock_get):
@@ -623,7 +623,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v0.cxg/",
+            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v0.cxg/",  # noqa E501
         )
 
     @patch("server.data_common.dataset_metadata.requests.get")
@@ -640,7 +640,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/',
+            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/',  # noqa E501
         )
 
         # check schema loads correctly even with metadata api exception

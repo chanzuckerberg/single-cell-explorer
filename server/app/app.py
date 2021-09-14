@@ -104,7 +104,6 @@ def dataset_index(url_dataroot=None, dataset=None):
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
-    
     except TombstoneException as e:
         return redirect(f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}?tombstoned_dataset_id={e.dataset_id}") # noqa E501
 
