@@ -1,6 +1,6 @@
 import quantile from "./quantile";
 import { memoize } from "./dataframe/util";
-import { Dataframe } from "./dataframe";
+import { Dataframe, DataframeValue } from "./dataframe";
 import { unassignedCategoryLabel } from "../globals";
 import {
   createCategorySummaryFromDfCol,
@@ -36,7 +36,7 @@ const getCoordinatesByLabel = (
   categoryDf: Dataframe,
   layoutChoice: LayoutChoiceState,
   layoutDf: Dataframe
-): Map<string, CentroidCoordinateObject> => {
+): Map<DataframeValue, CentroidCoordinateObject> => {
   const coordsByCategoryLabel = new Map();
   // If the coloredBy is not a categorical col
   if (!isSelectableCategoryName(schema, categoryName)) {
@@ -116,7 +116,7 @@ const calcMedianCentroid = (
   categoryDf: Dataframe,
   layoutChoice: LayoutChoiceState,
   layoutDf: Dataframe
-): Map<string, [number, number]> => {
+): Map<DataframeValue, [number, number]> => {
   // generate a map describing the coordinates for each label within the given category
   const dataMap = getCoordinatesByLabel(
     schema,
