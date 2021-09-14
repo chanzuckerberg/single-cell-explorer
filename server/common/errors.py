@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 
 class CellxgeneException(Exception):
-    """Base class for cellxgene exceptions"""
+    """Base class for cellxgene exceptions."""
 
     def __init__(self, message):
         self.message = message
@@ -10,7 +10,7 @@ class CellxgeneException(Exception):
 
 
 class RequestException(CellxgeneException):
-    """Baseclass for exceptions that can be raised from a request."""
+    """Base class for exceptions that can be raised from a request."""
 
     # The default status code is 400 (Bad Request)
     default_status_code = HTTPStatus.BAD_REQUEST
@@ -20,6 +20,8 @@ class RequestException(CellxgeneException):
         self.status_code = status_code or self.default_status_code
 
 class TombstoneException(RequestException):
+    """Base class for tombstoned dataset exception."""
+    
     def __init__(self, message, status_code, collection_id, dataset_id):
         super().__init__(message, status_code)
         self.collection_id = collection_id

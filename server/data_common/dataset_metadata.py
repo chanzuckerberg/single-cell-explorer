@@ -1,8 +1,8 @@
 import json
 import logging
-
 import requests
 from flask import current_app
+from http import HTTPStatus
 
 from server.common.utils.utils import path_join
 from server.common.errors import DatasetNotFoundError, DatasetAccessError, TombstoneException
@@ -83,7 +83,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
                 raise TombstoneException(
                     message=f"Dataset {dataset_metadata['dataset_id']} from collection "
                             f"{dataset_metadata['collection_id']} has been tombstoned and is no longer available",
-                    status_code=302,
+                    status_code=HTTPStatus.FOUND,
                     collection_id=dataset_metadata['collection_id'],
                     dataset_id=dataset_metadata['dataset_id'])
             return dataset_metadata
