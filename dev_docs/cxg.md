@@ -40,15 +40,15 @@ CXG consumers (readers) MUST be prepared to handle any legal TileDB compression,
 ### CXG
 
 The CXG is a TileDB group containing all data and metadata for a single annotated matrix.  The following objects MUST be present in a CXG, except where noted as optional:
-* `__obs__`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute.
-* `__var__`: a TileDB array, of shape (n_var,), containing var annotations, each annotation stored in a separate TileDB array attribute.
-* `__X__`: a TileDB array, of shape (n_obs, n_var), with a single TileDB attribute of numeric type.
-* `__X_col_shift__`: (optional) TileDB array used in column shift encoding, shape (n_var,), dtype = X.dtype. Single unnamed numeric attribute.  
-* `__emb__`: a TileDB group, which in turn contains all (zero or more) embeddings.
-* `__emb__/\<embedding_name\>__`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
-* `__cxg_group_metadata__`: an empty TileDB array, used to store CXG-wide metadata
+* `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute.
+* `var`: a TileDB array, of shape (n_var,), containing var annotations, each annotation stored in a separate TileDB array attribute.
+* `X`: a TileDB array, of shape (n_obs, n_var), with a single TileDB attribute of numeric type.
+* `X_col_shift`: (optional) TileDB array used in column shift encoding, shape (n_var,), dtype = X.dtype. Single unnamed numeric attribute.  
+* `emb`: a TileDB group, which in turn contains all (zero or more) embeddings.
+* `emb/<EMBEDDING_NAME>`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
+* `cxg_group_metadata`: an empty TileDB array, used to store CXG-wide metadata
 
-### obs and var
+### `obs` and `var` arrays
 
 All per-observation (obs) and per-feature (var) data is encoded in a TileDB array named `obs` and `var` respectively, with shape `(n_obs,)` and `(n_var,)`.  Each TileDB array has an array attribute for each obs/var column.  All TileDB array attributes will have the same type and value as the original data, eg, float32, with the following exceptions:
 * bool is encoded as uint8 (1/0)
@@ -78,7 +78,11 @@ TileDB array, with a single anonymous attribute, shape `(n_obs, n_var)`, contain
 
 Optional TileDB array, used to encode per-column offsets for column-shift sparse encoding.  The TileDB array will have a single anonymous attribute, of the same type as the X array, and shape `(n_var,)`.  
 
-If the `X` array is sparse, and the `X_col_shift` array exists, then all values in the `i`'th column were subtracted by `X_col_shift[i]`.
+* If the `X` array is sparse, then the `X_col_shift` array MAY exist. 
+* If the `X` array is dense, then the `X_col_shift` MUST NOT exist.
+
+* When the `X_col_shift` array exists, all values in the `i`'th column of `X` are decremented by the value of the corresponding `X_col_shift[i]`. 
+* When the `X_col_shift` array does not exist, it has identical semantics to a column shift value of zero (0) for each column. 
 
 ### `emb` group and embedding arrays
 
@@ -86,16 +90,16 @@ A CXG MUST have a group named `emb`, which will contain all embeddings.  Embeddi
 
 CXG supports zero or more embeddings. Note that cellxgene currently _requires_ at least one embedding.
 
-### `cxg_group_metadata` group
+### `cxg_group_metadata` array
 
-Required, but empty TileDB array, used to store CXG-wide metadata.  The following fields are defined:
-* `__cxg_version__`: (required) a [semantic version](https://semver.org/) identifying the specification version used to encode the CXG.
-* `__cxg_properties__`: (optional) a dictionary containing dataset wide properties, defined below.
-* `__cxg_category_colors__`: (optional) a categorical color table, defined below.
+Required, but empty TileDB array, used to store CXG-wide metadata within [array metadata](https://docs.tiledb.com/main/solutions/tiledb-embedded/api-usage/array-metadata).  The following fields are defined:
+* `cxg_version`: (required) a [semantic version 2.0](https://semver.org/spec/v2.0.0.html)-compliant version, identifying the specification version used to encode the CXG.
+* `cxg_properties`: (optional) a dictionary containing dataset wide properties, defined below.
+* `cxg_category_colors`: (optional) a categorical color table, defined below.
 
 #### `cxg_properties` field
 
-The `__cxg_properties__` metadata dictionary contains dataset-wide properties, encoded as a JSON dictionary. Currently, the following fields are defined:
+The `cxg_properties` metadata dictionary contains dataset-wide properties, encoded as a JSON dictionary. Currently, the following optional fields are defined:
 * `title`: string, dataset human name (eg, "Lung Tissue")
 * `about`: string, fully-qualified http/https URL, linking to more information on the dataset.
 
@@ -122,10 +126,10 @@ The [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curatio
 
 ### Corpora metadata property
 
-A CXG containing a Corpora dataset WILL contain a property in the `__cxg_group_metadata__` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
+A CXG containing a Corpora dataset WILL contain a property in the `cxg_group_metadata` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
 
 
-These Corpora metadata properties WILL exist in the CXG `__cxg_group_metadata__` field named `corpora`: 
+These Corpora metadata properties WILL exist in the CXG `cxg_group_metadata` field named `corpora`: 
 * `schema_version`
 * `title`
 * `X_normalization`
@@ -138,7 +142,7 @@ For example:
         "schema_version": "2.0.0",
         "title": "Analysis of 8 datasets of healthy and diseased mouse heart",
         "X_normalization": "CPM",
-        "X_approximate_distribution": "normal
+        "X_approximate_distribution": "normal"
     }
 }
 ```
@@ -161,6 +165,6 @@ Where these values differ in the final CXG, the `cxg_properties` values WILL tak
 ## CXG Version History
 
 There were several ad hoc version of CXG created prior to this spec.  This describes the _proposed_ next version of CXG, which incoporates support for Corpora schema semantics.  Prior versions:
-* _unnamed_ - an unnamed development version. Did not include explicit versioning support in the data model, but can be detected by the absence of __cxg_group_metadata__ and any version property. Created in early 2020, and not actively used in production
+* _unnamed_ - an unnamed development version. Did not include explicit versioning support in the data model, but can be detected by the absence of `cxg_group_metadata` and any version property. Created in early 2020, and not actively used in production
 * 0.1 - the first and current version, defined to support the capabilities of the mid-2020 cellxgene.  Created in early 2020, and in active use. Includes everything in this spec, excluding Corpora schema support.  __NOTE:__ this version is encoded with a short-hand (malformed) semver version number.
 * 0.2.0 - this specification.
