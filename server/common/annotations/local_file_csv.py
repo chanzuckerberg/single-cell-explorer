@@ -6,7 +6,7 @@ from datetime import datetime
 from hashlib import blake2b
 
 import pandas as pd
-from flask import session, has_request_context, current_app
+from flask import session
 
 from server import __version__ as cellxgene_version
 from server.common.annotations.annotations import Annotations
@@ -47,10 +47,6 @@ class AnnotationsLocalFile(Annotations):
         return session.get(self.CXG_ANNO_COLLECTION)
 
     def read_labels(self, data_adaptor):
-        if has_request_context():
-            if not current_app.auth.is_user_authenticated():
-                return pd.DataFrame()
-
         fname = self._get_filename(data_adaptor)
         with self.label_lock:
             if fname is not None and os.path.exists(fname) and os.path.getsize(fname) > 0:
@@ -100,7 +96,7 @@ class AnnotationsLocalFile(Annotations):
         Return a short hash that weakly identifies the user and dataset.
         Used to create safe annotations output file names.
         """
-        uid = current_app.auth.get_user_id()
+        uid = "0"
         id = (uid + data_adaptor.get_location()).encode()
         idhash = base64.b32encode(blake2b(id, digest_size=5).digest()).decode("utf-8")
         return idhash
@@ -181,12 +177,5 @@ class AnnotationsLocalFile(Annotations):
             collection_fname = os.path.splitext(fname)[0]
             params["annotations-data-collection-is-read-only"] = True
             params["annotations-data-collection-name"] = collection_fname
-
-        elif session is not None:
-            collection = self.get_collection()
-            if current_app.auth.is_user_authenticated():
-                params["annotations-user-data-idhash"] = self._get_userdata_idhash(data_adaptor)
-                params["annotations-data-collection-is-read-only"] = not self.user_annotations_enabled()
-                params["annotations-data-collection-name"] = collection
 
         parameters.update(params)

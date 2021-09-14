@@ -237,46 +237,6 @@ $ eb open $EB_ENV
 
 ## Advanced Features
 
-### Authentication
-
-Authentication can be configured in the configuration file. Authentication is required
-for User Annotations (see below). User Annotations is a feature where annotations can be
-created by the user
-, and
-then associated with the user's id.
-When the user revisits the site, their annotations will be available.
-
-There are three main authentication modes: null, session, or oauth.  
-In the configuration file specify the authentication mode by setting
-`server / authentication / type`.
-
-#### null
-
-Authentication is disabled: user annotations cannot be enabled.
-
-#### session
-
-The user is associated with their client browser session. This approach is
-simple to setup, but not recommended for hosted cellxgene, since the user will not have access to
-their annotations when running from a different browser, or if their cookies get cleared.
-
-#### oauth
-
-A user logs into cellxgene using an identity provider (like Google), or logs in using
-an email/password. This is the best option, but requires making use of an oauth service and
-additional configuration of the cellxgene server.
-
-To see what this looks like, please look at https://cellxgene.cziscience.com/,
-and view one of the cellxgene datasets.
-For this server, Auth0 (auth0.com) is used for authentication, but there are other options.
-There are good sources of documentation online that describe how to use one of these
-services.
-
-The `params_oauth` section in the configuration file describes characteristics of the
-authentication service, like "client_id" and "client_secret".  
-For security, the client_secret needs to be protected. One option is to
-store it in the AWS Secrets Manager.
-
 ### User Annotations
 
 User annotations can be configured in the configuration file both generally and for a specific data route. The annotations feature is only available when Authorization is enabled. 

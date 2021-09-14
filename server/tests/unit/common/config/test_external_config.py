@@ -109,7 +109,6 @@ class TestExternalConfig(ConfigTests):
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager(self, mock_get_secret_key):
         mock_get_secret_key.return_value = {
-            "oauth_client_secret": "mock_oauth_secret",
             "db_uri": "mock_db_uri",
         }
         configfile = self.custom_external_config(
@@ -122,11 +121,6 @@ class TestExternalConfig(ConfigTests):
                         dict(
                             key="db_uri",
                             path=["dataset", "user_annotations", "hosted_tiledb_array", "db_uri"],
-                            required=True,
-                        ),
-                        dict(
-                            key="oauth_client_secret",
-                            path=["server", "authentication", "params_oauth", "client_secret"],
                             required=True,
                         ),
                     ],
@@ -144,13 +138,11 @@ class TestExternalConfig(ConfigTests):
         app_config.complete_config()
 
         self.assertEqual(app_config.server_config.app__flask_secret_key, "original")
-        self.assertEqual(app_config.server_config.authentication__params_oauth__client_secret, "mock_oauth_secret")
         self.assertEqual(app_config.default_dataset_config.user_annotations__hosted_tiledb_array__db_uri, "mock_db_uri")
 
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):
         mock_get_secret_key.return_value = {
-            "oauth_client_secret": "mock_oauth_secret",
             "db_uri": "mock_db_uri",
         }
 

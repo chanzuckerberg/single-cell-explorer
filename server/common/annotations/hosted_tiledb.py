@@ -35,10 +35,10 @@ class AnnotationsHostedTileDB(Annotations):
             )
 
     def get_user_name(self):
-        return current_app.auth.get_user_name()
+        return "defunct"
 
     def get_user_id(self):
-        return current_app.auth.get_user_id()
+        return "0"
 
     def is_safe_collection_name(self, name):
         """

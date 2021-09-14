@@ -7,8 +7,6 @@ dataset:
     about_legal_tos: {about_legal_tos}
     about_legal_privacy: {about_legal_privacy}
 
-    authentication_enable: {authentication_enable}
-
   presentation:
     max_categories: {max_categories}
     custom_colors: {custom_colors}

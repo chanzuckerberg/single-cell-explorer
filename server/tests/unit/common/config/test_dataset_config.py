@@ -50,7 +50,7 @@ class TestDatasetConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.dataset_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 19)
+        self.assertEqual(mock_check_attrs.call_count, 18)
 
     def test_app_sets_script_vars(self):
         config = self.get_config(scripts=["path/to/script"])
@@ -75,20 +75,8 @@ class TestDatasetConfig(ConfigTests):
         with self.assertRaises(ConfigurationError):
             config.default_dataset_config.handle_app()
 
-    def test_handle_user_annotations_ensures_auth_is_enabled_with_valid_auth_type(self):
-        config = self.get_config(enable_users_annotations="true", authentication_enable="false")
-        config.server_config.complete_config(self.context)
-        with self.assertRaises(ConfigurationError):
-            config.default_dataset_config.handle_user_annotations(self.context)
-
-        config = self.get_config(enable_users_annotations="true", authentication_enable="true", auth_type="pretend")
-        with self.assertRaises(ConfigurationError):
-            config.server_config.complete_config(self.context)
-
     def test_handle_user_annotations__adds_warning_message_if_annotation_vars_set_when_annotations_disabled(self):
-        config = self.get_config(
-            enable_users_annotations="false", authentication_enable="false", db_uri="shouldnt/be/set"
-        )
+        config = self.get_config(enable_users_annotations="false", db_uri="shouldnt/be/set")
         config.default_dataset_config.handle_user_annotations(self.context)
 
         self.assertEqual(self.context["messages"], ["Warning: db_uri ignored as annotations are disabled."])
@@ -96,16 +84,13 @@ class TestDatasetConfig(ConfigTests):
     @patch("server.common.config.dataset_config.DbUtils")
     def test_handle_user_annotations__instantiates_user_annotations_class_correctly(self, mock_db_utils):
         mock_db_utils.return_value = "123"
-        config = self.get_config(
-            enable_users_annotations="true", authentication_enable="true", annotation_type="local_file_csv"
-        )
+        config = self.get_config(enable_users_annotations="true", annotation_type="local_file_csv")
         config.server_config.complete_config(self.context)
         config.default_dataset_config.handle_user_annotations(self.context)
         self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsLocalFile)
 
         config = self.get_config(
             enable_users_annotations="true",
-            authentication_enable="true",
             annotation_type="hosted_tiledb_array",
             db_uri="gotta/set/this",
             hosted_file_directory="and/this",
@@ -114,17 +99,13 @@ class TestDatasetConfig(ConfigTests):
         config.default_dataset_config.handle_user_annotations(self.context)
         self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsHostedTileDB)
 
-        config = self.get_config(
-            enable_users_annotations="true", authentication_enable="true", annotation_type="NOT_REAL"
-        )
+        config = self.get_config(enable_users_annotations="true", annotation_type="NOT_REAL")
         config.server_config.complete_config(self.context)
         with self.assertRaises(ConfigurationError):
             config.default_dataset_config.handle_user_annotations(self.context)
 
     def test_handle_local_file_csv_annotations__sets_dir_if_not_passed_in(self):
-        config = self.get_config(
-            enable_users_annotations="true", authentication_enable="true", annotation_type="local_file_csv"
-        )
+        config = self.get_config(enable_users_annotations="true", annotation_type="local_file_csv")
         config.server_config.complete_config(self.context)
         config.default_dataset_config.handle_local_file_csv_annotations()
         self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsLocalFile)
