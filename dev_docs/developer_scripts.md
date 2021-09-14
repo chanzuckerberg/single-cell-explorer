@@ -1,6 +1,6 @@
 # Developer convenience scripts
 
-This document describes scripts for accelerating cellxgene development.
+This document describes scripts for accelerating explorer development.
 
 Paths are relative to the root project directory. If you need to know what
 this is, run `PROJECT_ROOT=$(git rev-parse --show-toplevel); echo
@@ -73,7 +73,7 @@ Installs requirements files.
 back the development server for the front end. It is intended to ensure that
 the FE developer gets the current version of the backend with a single command
 and no knowledge of python necessary. It creates and activates a virtual
-environment and installs cellxgene from the current branch.
+environment and installs explorer from the current branch.
 
 **Requires** `Python3.6+`, `virtual-env`, `pip`
 
@@ -84,17 +84,17 @@ environment and installs cellxgene from the current branch.
   current state of the FE with [`start-frontend`](#start-frontend), usually in
   a different terminal tab.
 * You can also select a specific dataset using `DATASET=<dataset path> ./scripts/backend_dev`.
-* You can also use `CXG_OPTIONS` to pass options to the `cellxgene launch`
+* You can also use `CXG_OPTIONS` to pass options to the `explorer launch`
   command, as in `CXG_OPTIONS='--disable-annotations' ./scripts/backend_dev`.
 
 **Breakdown**
 
 | command                                  | purpose                                                    |
 | ---------------------------------------- | ---------------------------------------------------------- |
-| python3.6 -m venv cellxgene              | creates cellxgene virtual environment                      |
-| source cellxgene/bin/activate            | activates virtual environment                              |
-| yes \| pip uninstall cellxgene \|\| true | uninstalls cellxgene (if installed)                        |
-| pip install -e .                         | installs current local version of cellxgene                |
+| python3.6 -m venv explorer               | creates explorer virtual environment                       |
+| source explorer/bin/activate             | activates virtual environment                              |
+| yes \| pip uninstall explorer  \|\| true | uninstalls explorer (if installed)                         |
+| pip install -e .                         | installs current local version of explorer                |
 | cellxgene launch                         | launches cellxgene (must supply dataset as last parameter) |
 
 ### Client test scripts
@@ -113,4 +113,4 @@ Methods used to test the client javascript code
   start the rest api separately with the pbmc3k.h5ad file. Note you can use
   the `JEST_ENV` environment variable to change how JEST runs in the browser.
   The test runs against `localhost:3000` by default. You can use the
-  `CXG_URL_BASE` env variable to test non-localhost deployments of cellxgene.
+  `CXG_URL_BASE` env variable to test non-localhost deployments of explorer.
