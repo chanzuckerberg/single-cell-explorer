@@ -95,8 +95,9 @@ describe("categorical color helpers", () => {
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schema.annotations.obsByName.categoricalColumn.categories;
     for (let i = 0; i < schema.dataframe.nObs; i += 1) {
-      // @ts-expect-error ts-migrate(2722) FIXME: Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
-      expect(makeScale(ct.rgb[i])).toEqual(ct.scale(cats.indexOf(data[i])));
+      expect(makeScale(ct.rgb[i])).toEqual(
+        ct?.scale && ct?.scale(cats.indexOf(data[i]))
+      );
     }
   });
 
@@ -113,22 +114,27 @@ describe("categorical color helpers", () => {
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schemaClone.annotations.obsByName.categoricalColumn.categories;
     for (let i = 0; i < schemaClone.dataframe.nObs; i += 1) {
-      // @ts-expect-error ts-migrate(2722) FIXME: Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
-      expect(makeScale(ct.rgb[i])).toEqual(ct.scale(cats.indexOf(data[i])));
+      expect(makeScale(ct.rgb[i])).toEqual(
+        ct?.scale && ct?.scale(cats.indexOf(data[i]))
+      );
     }
   });
 
   test("user defined color order", () => {
     const cats = schema.annotations.obsByName.categoricalColumn.categories;
+
     const shuffleCats = shuffle(
       Array.from(schema.annotations.obsByName.categoricalColumn.categories)
     );
+
     const userDefinedColorTable = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      categoricalColumn: shuffleCats.reduce((acc: any, label: any) => {
-        acc[label] = randRGBColor();
-        return acc;
-      }, {}),
+      categoricalColumn: shuffleCats.reduce(
+        (acc: { [label: string]: string }, label: string) => {
+          acc[label] = randRGBColor();
+          return acc;
+        },
+        {}
+      ),
     };
 
     const userColors = loadUserColorConfig(userDefinedColorTable);
@@ -139,15 +145,13 @@ describe("categorical color helpers", () => {
       "categoricalColumn",
       obsDataframe,
       schema,
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{}' is not assignable to paramet... Remove this comment to see the full error message
       userColors
     );
     expect(ct).toBeDefined();
     const data = obsDataframe.col("categoricalColumn").asArray();
     for (let i = 0; i < schema.dataframe.nObs; i += 1) {
       expect(makeScale(ct.rgb[i])).toEqual(
-        // @ts-expect-error ts-migrate(2722) FIXME: Cannot invoke an object which is possibly 'undefin... Remove this comment to see the full error message
-        ct.scale(cats.indexOf(data[i])).toString()
+        ct?.scale && ct?.scale(cats.indexOf(data[i])).toString()
       );
     }
   });

@@ -1,41 +1,47 @@
-/*
-Helper functions for the embedded graph colors
-*/
+/**
+ * Helper functions for the embedded graph colors
+ */
 import * as d3 from "d3";
 import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
 import memoize from "memoize-one";
+import { Action } from "redux";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
-import { Dataframe, LabelType } from "../dataframe";
+import { Dataframe, DataframeValueArray, LabelType } from "../dataframe";
+import { Field, Schema } from "../../common/types/schema";
+import { Query } from "../../annoMatrix/query";
+import { Genesets } from "../../reducers/genesets";
 
-/*
-given a color mode & accessor, generate an annoMatrix query that will
-fulfill it
-*/
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+interface Colors {
+  // cell label to color mapping
+  rgb: [number, number, number][];
+  // function, mapping label index to color scale
+  scale: d3.ScaleSequential<string, never> | undefined;
+}
+
+/**
+ * Given a color mode & accessor, generate an annoMatrix query that will
+ * fulfill it
+ */
 export function createColorQuery(
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  colorMode: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  colorByAccessor: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  schema: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  genesets: any
-) {
+  colorMode: Action["type"],
+  colorByAccessor: string,
+  schema: Schema,
+  genesets: Genesets
+): [Field, Query] | null {
   if (!colorMode || !colorByAccessor || !schema || !genesets) return null;
 
   switch (colorMode) {
     case "color by categorical metadata":
     case "color by continuous metadata": {
-      return ["obs", colorByAccessor];
+      return [Field.obs, colorByAccessor];
     }
     case "color by expression": {
       const varIndex = schema?.annotations?.var?.index;
       if (!varIndex) return null;
       return [
-        "X",
+        Field.X,
         {
           where: {
             field: "var",
@@ -51,17 +57,17 @@ export function createColorQuery(
       if (!varIndex) return null;
       if (!genesets) return null;
 
-      const _geneset = genesets.get(colorByAccessor);
-      const _setGenes = [..._geneset.genes.keys()];
+      const geneset = genesets.get(colorByAccessor);
+      const setGenes = [...(geneset?.genes.keys() || [])];
 
       return [
-        "X",
+        Field.X,
         {
           summarize: {
             method: "mean",
             field: "var",
             column: varIndex,
-            values: _setGenes,
+            values: setGenes,
           },
         },
       ];
@@ -72,45 +78,43 @@ export function createColorQuery(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function _defaultColors(nObs: any) {
+function _defaultColors(nObs: number): Colors {
   const defaultCellColor = parseRGB(globals.defaultCellColor);
   return {
     rgb: new Array(nObs).fill(defaultCellColor),
     scale: undefined,
   };
 }
+
 const defaultColors = memoize(_defaultColors);
 
-/*
-create colors scale and RGB array and return as object. Parameters:
-  * colorMode - categorical, etc.
-  * colorByAccessor - the annotation label name
-  * colorByDataframe - the actual color-by data
-  * schema - the entire schema
-  * userColors - optional user color table
-Returns:
-  {
-    scale: function, mapping label index to color scale
-    rgb: cell label to color mapping
-  }
-*/
+/**
+ * Create colors scale and RGB array and return as object.
+ *
+ * @param colorMode - categorical, etc.
+ * @param colorByAccessor - the annotation label name
+ * @param colorByDataframe - the actual color-by data
+ * @param schema - the entire schema
+ * @param userColors - optional user color table
+ * @returns colors scale and RGB array as an object
+ */
 function _createColorTable(
   colorMode: string | null,
   colorByAccessor: LabelType | null,
   colorByData: Dataframe | null,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any,
-  userColors = null
+  schema: Schema,
+  userColors: ConvertedUserColors | null = null
 ) {
-  if (colorMode === null || colorByData === null)
+  if (colorMode === null || colorByData === null) {
     return defaultColors(schema.dataframe.nObs);
+  }
 
   switch (colorMode) {
     case "color by categorical metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
+
       const data = colorByData.col(colorByAccessor).asArray();
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
+
       if (userColors && colorByAccessor in userColors) {
         return createUserColors(data, colorByAccessor, schema, userColors);
       }
@@ -139,45 +143,54 @@ function _createColorTable(
 }
 export const createColorTable = memoize(_createColorTable);
 
+interface UserColor {
+  colors: { [label: string]: [number, number, number] };
+  scale: (label: string) => d3.RGBColor;
+}
+
+export interface ConvertedUserColors {
+  [category: string]: UserColor;
+}
+
 /**
  * Create two category label-indexed objects:
- *    - colors: maps label to RGB triplet for that label (used by graph, etc)
- *    - scale: function which given label returns d3 color scale for label
+ *  - colors: maps label to RGB triplet for that label (used by graph, etc)
+ *  - scale: function which given label returns d3 color scale for label
  * Order doesn't matter - everything is keyed by label value.
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export function loadUserColorConfig(userColors: any) {
-  const convertedUserColors = {};
+export function loadUserColorConfig(userColors: {
+  [category: string]: { [label: string]: string };
+}): ConvertedUserColors {
+  const convertedUserColors = {} as ConvertedUserColors;
+
   Object.keys(userColors).forEach((category) => {
     const [colors, scaleMap] = Object.keys(userColors[category]).reduce(
       (acc, label) => {
         const color = parseRGB(userColors[category][label]);
-        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+
         acc[0][label] = color;
-        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+
         acc[1][label] = d3.rgb(255 * color[0], 255 * color[1], 255 * color[2]);
         return acc;
       },
-      [{}, {}]
+      [{} as UserColor["colors"], {} as { [label: string]: d3.RGBColor }]
     );
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const scale = (label: any) => scaleMap[label];
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    convertedUserColors[category] = { colors, scale };
+
+    const scale = (label: string) => scaleMap[label];
+
+    const userColor = { colors, scale };
+
+    convertedUserColors[category] = userColor;
   });
+
   return convertedUserColors;
 }
 
 function _createUserColors(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  data: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  colorAccessor: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  userColors: any
+  data: DataframeValueArray,
+  colorAccessor: LabelType,
+  schema: Schema,
+  userColors: ConvertedUserColors
 ) {
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
   const rgb = createRgbArray(data, colors);
@@ -186,55 +199,65 @@ function _createUserColors(
   // See createColorsByCategoricalMetadata() for another example.
   const { categories } = schema.annotations.obsByName[colorAccessor];
   const categoryMap = new Map();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  categories.forEach((label: any, idx: any) => categoryMap.set(idx, label));
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const scale = (idx: any) => scaleByLabel(categoryMap.get(idx));
+
+  categories?.forEach((label, idx) => categoryMap.set(idx, label));
+
+  const scale = (idx: number) => scaleByLabel(categoryMap.get(idx));
 
   return { rgb, scale };
 }
 const createUserColors = memoize(_createUserColors);
 
+interface CategoryColors {
+  [category: string]: [number, number, number];
+}
+
 function _createColorsByCategoricalMetadata(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  data: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  colorAccessor: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any
-) {
+  data: DataframeValueArray,
+  colorAccessor: LabelType,
+  schema: Schema
+): Colors {
   const { categories } = schema.annotations.obsByName[colorAccessor];
 
   const scale = d3
     .scaleSequential(interpolateRainbow)
-    .domain([0, categories.length]);
+    .domain([0, categories?.length || 0]);
 
   /* pre-create colors - much faster than doing it for each obs */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const colors = categories.reduce((acc: any, cat: any, idx: any) => {
-    acc[cat] = parseRGB(scale(idx));
+  const colors = categories?.reduce((acc: CategoryColors, cat, idx) => {
+    acc[cat as string] = parseRGB(scale(idx));
     return acc;
   }, {});
 
   const rgb = createRgbArray(data, colors);
+
   return { rgb, scale };
 }
+
 const createColorsByCategoricalMetadata = memoize(
   _createColorsByCategoricalMetadata
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function createRgbArray(data: any, colors: any) {
+function createRgbArray(data: DataframeValueArray, colors?: CategoryColors) {
   const rgb = new Array(data.length);
+
+  if (!colors) {
+    throw new Error("`colors` is undefined");
+  }
+
   for (let i = 0, len = data.length; i < len; i += 1) {
     const label = data[i];
-    rgb[i] = colors[label];
+    rgb[i] = colors[String(label)];
   }
+
   return rgb;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function _createColorsByContinuousMetadata(data: any, min: any, max: any) {
+function _createColorsByContinuousMetadata(
+  data: DataframeValueArray,
+  min: number,
+  max: number
+) {
   const colorBins = 100;
   const scale = d3
     .scaleQuantile()
@@ -252,7 +275,7 @@ function _createColorsByContinuousMetadata(data: any, min: any, max: any) {
   for (let i = 0, len = data.length; i < len; i += 1) {
     const val = data[i];
     if (Number.isFinite(val)) {
-      const c = scale(val);
+      const c = scale(val as number);
       rgb[i] = colors[c];
     } else {
       rgb[i] = nonFiniteColor;
@@ -260,6 +283,7 @@ function _createColorsByContinuousMetadata(data: any, min: any, max: any) {
   }
   return { rgb, scale };
 }
+
 export const createColorsByContinuousMetadata = memoize(
   _createColorsByContinuousMetadata
 );

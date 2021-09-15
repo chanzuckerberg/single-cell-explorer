@@ -14,13 +14,13 @@ import {
 
 const utf8Decoder = new TextDecoder("utf-8");
 
-/*
-Matrix flatbuffer decoding support.   See fbs/matrix.fbs
-*/
+/**
+ * Matrix flatbuffer decoding support. See fbs/matrix.fbs
+ */
 
-/*
-Decode NetEncoding.TypedArray
-*/
+/**
+ * Decode NetEncoding.TypedArray
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function decodeTypedArray(uType: any, uValF: any, inplace = false) {
   if (uType === NetEncoding.TypedArray.NONE) {
@@ -42,18 +42,18 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false) {
   return arr;
 }
 
-/*
-Parameter: Uint8Array or ArrayBuffer containing raw flatbuffer Matrix
-Returns: object containing decoded Matrix:
-{
-  nRows: num,
-  nCols: num,
-  columns: [
-    each column, which will be a TypedArray or Array
-  ]
-  colIdx: []|null
-}
-*/
+/**
+ * Parameter: Uint8Array or ArrayBuffer containing raw flatbuffer Matrix
+ * Returns: object containing decoded Matrix:
+ * {
+ *   nRows: num,
+ *   nCols: num,
+ *   columns: [
+ *     each column, which will be a TypedArray or Array
+ *   ],
+ *   colIdx: [] | null,
+ * }
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   const bb = new flatbuffers.ByteBuffer(new Uint8Array(arrayBuffer));
@@ -98,11 +98,10 @@ function encodeTypedArray(builder: any, uType: any, uData: any) {
   return builder.endObject();
 }
 
+/**
+ * Encode the dataframe as an FBS Matrix
+ */
 export function encodeMatrixFBS(df: Dataframe): Uint8Array {
-  /*
-  encode the dataframe as an FBS Matrix
-  */
-
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {
     throw new Error("FBS does not support row index encoding at this time");
@@ -180,14 +179,14 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   return builder.asUint8Array();
 }
 
+/**
+ * Decide what internal data type to use for the data returned from
+ * the server.
+ *
+ * TODO - future optimization: not all int32/uint32 data series require
+ * promotion to float64.  We COULD simply look at the data to decide.
+ */
 function promoteTypedArray(o: TypedArray) {
-  /*
-  Decide what internal data type to use for the data returned from
-  the server.
-
-  TODO - future optimization: not all int32/uint32 data series require
-  promotion to float64.  We COULD simply look at the data to decide.
-  */
   if (isFloatTypedArray(o) || Array.isArray(o)) return o;
 
   let TypedArrayCtor;
@@ -212,20 +211,20 @@ function promoteTypedArray(o: TypedArray) {
   return new TypedArrayCtor(o);
 }
 
+/**
+ * Convert array of Matrix FBS to a Dataframe.
+ *
+ * The application has strong assumptions that all scalar data will be
+ * stored as a float32 or float64 (regardless of underlying data types).
+ * For example, clipping of value ranges (eg, user-selected percentiles)
+ * depends on the ability to use NaN in any numeric type.
+ *
+ * All float data from the server is left as is.  All non-float is promoted
+ * to an appropriate float.
+ */
 export function matrixFBSToDataframe(
   arrayBuffers: ArrayBuffer | ArrayBuffer[]
 ): Dataframe {
-  /*
-  Convert array of Matrix FBS to a Dataframe.
-
-  The application has strong assumptions that all scalar data will be
-  stored as a float32 or float64 (regardless of underlying data types).
-  For example, clipping of value ranges (eg, user-selected percentiles)
-  depends on the ability to use NaN in any numeric type.
-
-  All float data from the server is left as is.  All non-float is promoted
-  to an appropriate float.
-  */
   if (!Array.isArray(arrayBuffers)) {
     arrayBuffers = [arrayBuffers];
   }

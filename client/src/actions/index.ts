@@ -6,7 +6,10 @@ import {
   doJsonRequest,
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
-import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
+import {
+  ConvertedUserColors,
+  loadUserColorConfig,
+} from "../util/stateManager/colorHelpers";
 import * as selnActions from "./selection";
 import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
@@ -29,12 +32,15 @@ function setGlobalConfig(config: any) {
 /*
 return promise fetching user-configured colors
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-async function userColorsFetchAndLoad(dispatch: any) {
+async function userColorsFetchAndLoad(
+  dispatch: AppDispatch
+): Promise<{ type: string; userColors: ConvertedUserColors }> {
   return fetchJson("colors").then((response) =>
     dispatch({
       type: "universe: user color load success",
-      userColors: loadUserColorConfig(response),
+      userColors: loadUserColorConfig(
+        response as { [category: string]: { [label: string]: string } }
+      ),
     })
   );
 }

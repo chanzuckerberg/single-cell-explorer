@@ -24,9 +24,28 @@
  */
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "../globals";
 
+interface Gene {
+  geneSymbol: string;
+  geneDescription: string;
+}
+
+interface Geneset {
+  genesetName: string;
+  genesetDescription: string;
+  genes: Map<Gene["geneSymbol"], Gene>;
+}
+
+export type Genesets = Map<Geneset["genesetName"], Geneset>;
+
+interface State {
+  initialized: boolean;
+  lastTid?: number;
+  genesets: Genesets;
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const GeneSets = (
-  state = {
+  state: State = {
     initialized: false,
     lastTid: undefined,
     genesets: new Map(),
@@ -172,9 +191,8 @@ const GeneSets = (
       /* now that we've confirmed the gene set exists, check for duplicates */
       const genesetNameIsDuplicate = state.genesets.has(update.genesetName);
       const descriptionIsDuplicate =
-        state.genesets.get(update.genesetName) &&
-        state.genesets.get(update.genesetName).genesetDescription ===
-          update.genesetDescription;
+        state.genesets.get(update.genesetName)?.genesetDescription ===
+        update.genesetDescription;
 
       if (genesetNameIsDuplicate && descriptionIsDuplicate)
         throw new Error(
@@ -184,7 +202,7 @@ const GeneSets = (
       const prevGs = state.genesets.get(genesetName);
       const newGs = {
         ...update,
-        genes: prevGs.genes,
+        genes: prevGs?.genes,
       }; // clone
 
       // clone the map, preserving current insert order, but mapping name->newName.
@@ -222,19 +240,11 @@ const GeneSets = (
     case "geneset: add genes": {
       const { genesetName, genes } = action;
 
-      if (!state.genesets.has(genesetName))
-        throw new Error("geneset: add genes -- geneset name does not exist.");
-
-      // clone
-      const genesets = new Map(state.genesets);
-      const gs = {
-        ...genesets.get(genesetName),
-        genes: new Map(genesets.get(genesetName).genes),
-      };
-      genesets.set(genesetName, gs);
+      const genesets = cloneOneGenesetInGenesets(state.genesets, genesetName);
+      const geneset = genesets.get(genesetName) as Geneset;
 
       // add
-      const newGenes = gs.genes;
+      const newGenes = geneset.genes;
       for (const gene of genes) {
         const { geneSymbol } = gene;
         const geneDescription = gene?.geneDescription ?? "";
@@ -270,24 +280,16 @@ const GeneSets = (
      */
     case "geneset: delete genes": {
       const { genesetName, geneSymbols } = action;
-      if (!state.genesets.has(genesetName))
-        throw new Error(
-          "geneset: delete genes -- geneset name does not exist."
-        );
 
-      // clone
-      const genesets = new Map(state.genesets);
-      const gs = {
-        ...genesets.get(genesetName),
-        genes: new Map(genesets.get(genesetName).genes),
-      };
-      genesets.set(genesetName, gs);
+      const genesets = cloneOneGenesetInGenesets(state.genesets, genesetName);
+      const geneset = genesets.get(genesetName) as Geneset;
 
       // delete
-      const { genes } = gs;
+      const { genes } = geneset;
       for (const geneSymbol of geneSymbols) {
         genes.delete(geneSymbol);
       }
+
       return {
         ...state,
         genesets,
@@ -320,24 +322,18 @@ const GeneSets = (
      */
     case "geneset: set gene description": {
       const { genesetName, update } = action;
-      if (!state.genesets.has(genesetName))
-        throw new Error(
-          "geneset: set gene description -- geneset name does not exist."
-        );
 
-      // clone
-      const genesets = new Map(state.genesets);
-      const gs = {
-        ...genesets.get(genesetName),
-        genes: new Map(genesets.get(genesetName).genes),
-      };
-      genesets.set(genesetName, gs);
+      const genesets = cloneOneGenesetInGenesets(state.genesets, genesetName);
+      const geneset = genesets.get(genesetName) as Geneset;
 
       const { geneSymbol, geneDescription } = update;
-      const gene = gs.genes.get(geneSymbol);
-      if (!gene)
+      const gene = geneset.genes.get(geneSymbol);
+
+      if (!gene) {
         throw new Error("geneset: set gene description -- no such gene");
-      gs.genes.set(geneSymbol, {
+      }
+
+      geneset.genes.set(geneSymbol, {
         geneSymbol,
         geneDescription,
       });
@@ -355,7 +351,6 @@ const GeneSets = (
       const { tid } = action;
       if (!Number.isInteger(tid) || tid < 0)
         throw new Error("TID must be a positive integer number");
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       if (state.lastTid !== undefined && tid < state.lastTid)
         throw new Error("TID may not be decremented.");
       return {
@@ -412,3 +407,22 @@ const GeneSets = (
 };
 
 export default GeneSets;
+
+function cloneOneGenesetInGenesets(genesets: Genesets, genesetName: string) {
+  const oldGeneset = genesets.get(genesetName);
+
+  if (!oldGeneset) {
+    throw new Error(
+      "geneset: set gene description -- geneset name does not exist."
+    );
+  }
+
+  const newGenesets = new Map(genesets);
+  const newGeneset = {
+    ...oldGeneset,
+    genes: new Map(oldGeneset.genes),
+  };
+  newGenesets.set(genesetName, newGeneset);
+
+  return newGenesets;
+}

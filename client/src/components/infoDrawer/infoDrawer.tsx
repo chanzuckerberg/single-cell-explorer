@@ -44,7 +44,6 @@ class InfoDrawer extends PureComponent {
       dataPortalProps,
     } = this.props;
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
     const allCategoryNames = selectableCategoryNames(schema).sort();
     const singleValueCategories = new Map();
 
