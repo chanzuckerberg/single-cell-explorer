@@ -356,3 +356,8 @@ class ServerConfig(BaseConfig):
         if self.app__web_base_url.endswith("/"):
             return self.app__web_base_url[:-1]
         return self.app__web_base_url
+
+    def get_data_locator_api_base_url(self):
+        return self.data_locator__api_base
+
+

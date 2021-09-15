@@ -206,6 +206,12 @@ class SchemaAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
 
+class DatasetMetadataAPI(DatasetResource):
+    @cache_control(public=True, max_age=ONE_WEEK)
+    @rest_get_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
+
 
 class ConfigAPI(DatasetResource):
     @cache_control(public=True, max_age=ONE_WEEK)
@@ -304,6 +310,7 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
+    add_resource(DatasetMetadataAPI, "/dataset-metadata")
     add_resource(ConfigAPI, "/config")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")

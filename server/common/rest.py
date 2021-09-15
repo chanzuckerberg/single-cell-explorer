@@ -8,6 +8,8 @@ import json
 from flask import make_response, jsonify, current_app, abort
 from werkzeug.urls import url_unquote
 
+import requests
+
 from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.errors import (
@@ -118,6 +120,33 @@ def schema_get_helper(data_adaptor):
 def schema_get(data_adaptor):
     schema = schema_get_helper(data_adaptor)
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
+
+
+def dataset_metadata_get(app_config, data_adaptor):
+    data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
+    web_base_url = app_config.server_config.get_base_web_url()
+    client_config = get_client_config(app_config, data_adaptor, current_app)
+    print(client_config)
+    dataset_id = client_config["config"]["dataset_identification"]["dataset_id"]
+    collection_id = client_config["config"]["dataset_identification"]["collection_id"]
+    collection_visibility = client_config["config"]["dataset_identification"]["collection_visibility"]
+
+    suffix = "/private" if collection_visibility == "PRIVATE" else ""
+
+    res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+
+    metadata = {
+        "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+        "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
+        "collection_name": res["name"],
+        "collection_description": res["description"],
+        "collection_contact_email": res["contact_email"],
+        "collection_contact_name": res["contact_name"],
+        "collection_links": res["links"],
+        "collection_datasets": res["datasets"],
+    }
+
+    return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
 
 
 def config_get(app_config, data_adaptor):
