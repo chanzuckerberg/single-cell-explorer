@@ -13,10 +13,7 @@ import {
   getTestClass,
   getTestId,
   isElementPresent,
-  goToPage,
 } from "./puppeteerUtils";
-
-import { appUrlBase, TEST_EMAIL, TEST_PASSWORD } from "./config";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function drag(testId: any, start: any, end: any, lasso = false) {
@@ -525,73 +522,4 @@ export async function assertCategoryDoesNotExist(categoryName: any) {
   await expect(result).toBe(false);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export async function login() {
-  await goToPage(appUrlBase);
-
-  await clickOn("log-in");
-
-  // (thuang): Auth0 form is unstable and unsafe for input until verified
-  await waitUntilFormFieldStable('[name="email"]');
-
-  await expect(page).toFillForm("form", {
-    email: TEST_EMAIL,
-    password: TEST_PASSWORD,
-  });
-
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: "networkidle0" }),
-    expect(page).toClick('[name="submit"]'),
-  ]);
-
-  expect(page.url()).toContain(appUrlBase);
-}
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export async function logout() {
-  await clickOnUntil("user-info", async () => {
-    await waitByID("log-out");
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "networkidle0" }),
-      clickOn("log-out"),
-    ]);
-  });
-
-  await waitByID("log-in");
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-async function waitUntilFormFieldStable(selector: any) {
-  const MAX_RETRY = 10;
-  const WAIT_FOR_MS = 200;
-
-  const EXPECTED_VALUE = "aaa";
-
-  let retry = 0;
-
-  while (retry < MAX_RETRY) {
-    try {
-      await expect(page).toFill(selector, EXPECTED_VALUE);
-
-      const fieldHandle = await expect(page).toMatchElement(selector);
-
-      const fieldValue = await page.evaluate(
-        (input) => input.value,
-        fieldHandle
-      );
-
-      expect(fieldValue).toBe(EXPECTED_VALUE);
-
-      break;
-    } catch (error) {
-      retry += 1;
-
-      await page.waitForTimeout(WAIT_FOR_MS);
-    }
-  }
-
-  if (retry === MAX_RETRY) {
-    throw Error("clickOnUntil() assertion failed!");
-  }
-}
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
