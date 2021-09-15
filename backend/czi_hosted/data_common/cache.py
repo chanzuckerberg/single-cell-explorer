@@ -181,11 +181,11 @@ class CacheManager(object):
                         create_data_function=create_data_function,
                         create_data_args=create_data_args
                     )
-                    cache_item_info.cache_item = cache_item
                 except (DatasetNotFoundError, DatasetAccessError) as e:
                     cache_item_info.error = e
                     raise
                 finally:
+                    cache_item_info.cache_item = cache_item
                     self.data[cache_key] = cache_item_info
 
         try:

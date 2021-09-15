@@ -34,6 +34,7 @@ const DATASET_TITLE_FONT_SIZE = 14;
 class LeftSideBar extends React.Component {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClick = () => {
+    // Dataset drawer temporarily disabled (#30).
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
     dispatch({ type: "toggle dataset drawer" });
@@ -102,11 +103,12 @@ class LeftSideBar extends React.Component {
           <Button
             minimal
             style={{
+              backgroundColor: "transparent",
+              cursor: "default",
               fontSize: DATASET_TITLE_FONT_SIZE,
               position: "relative",
               top: -1,
             }}
-            onClick={this.handleClick}
           >
             <Truncate>
               <span style={{ maxWidth: 155 }} data-testid="header">

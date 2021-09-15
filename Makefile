@@ -38,9 +38,7 @@ build-czi-hosted: clean build-client
 	cp -r backend/common $(BUILDDIR)/backend/common
 	cp backend/__init__.py $(BUILDDIR)
 	cp backend/__init__.py $(BUILDDIR)/backend
-	cp MANIFEST_hosted.in README.md setup.cfg setup_hosted.py $(BUILDDIR)
-	mv $(BUILDDIR)/setup_hosted.py $(BUILDDIR)/setup.py
-	mv $(BUILDDIR)/MANIFEST_hosted.in $(BUILDDIR)/MANIFEST.in
+	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
 
 # If you are actively developing in the backend folder use this, dirties the source tree
 .PHONY: build-for-czi-hosted-dev
@@ -75,10 +73,6 @@ smoke-test:
 .PHONY: smoke-test-annotations
 smoke-test-annotations:
 	cd client && $(MAKE) smoke-test-annotations
-
-.PHONY: test-db
-test-db:
-	cd backend/czi_hosted && $(MAKE) test-db
 
 # FORMATTING CODE
 

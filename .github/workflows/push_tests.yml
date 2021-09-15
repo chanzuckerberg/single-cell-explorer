@@ -42,7 +42,7 @@ jobs:
         run: |
           npm run lint
 
-  unit-test-czi-hosted:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

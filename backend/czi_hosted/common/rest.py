@@ -121,7 +121,7 @@ def schema_get(data_adaptor):
 
 
 def config_get(app_config, data_adaptor):
-    config = get_client_config(app_config, data_adaptor)
+    config = get_client_config(app_config, data_adaptor, current_app)
     return make_response(jsonify(config), HTTPStatus.OK)
 
 

@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 import requests
 
-from backend.common.errors import DatasetNotFoundError
 from backend.czi_hosted.common.config.app_config import AppConfig
 from backend.test import decode_fbs, FIXTURES_ROOT
 from backend.test.fixtures.fixtures import pbmc3k_colors
@@ -53,6 +52,9 @@ class EndPoints(BaseTest):
         result_data = json.loads(result.data)
         self.assertIn("library_versions", result_data["config"])
         self.assertEqual(result_data["config"]["displayNames"]["dataset"], "pbmc3k")
+        self.assertEqual(result_data["config"]["dataset_identification"],
+                         {'collection_id': None, 'collection_visibility': None,
+                          'dataset_id': None})
 
     def test_get_layout_fbs(self):
         endpoint = "layout/obs"
@@ -544,7 +546,7 @@ class TestDataLocatorMockApi(BaseTest):
         cls.schema = json.loads(result.data)
 
         assert mock_get.call_count == 1
-        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}" # noqa
+        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/" # noqa
 
     @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
     def test_data_adaptor_uses_corpora_api(self, mock_get):
@@ -622,7 +624,9 @@ class TestDataLocatorMockApi(BaseTest):
 
         # check that the metadata api was correctly called for the new (uncached) dataset
         self.assertEqual(mock_get.call_count, 1)
-        self.assertEqual(f"http://{mock_get._mock_call_args[1]['url']}", 'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k_v0.cxg')
+        self.assertEqual(
+            f"http://{mock_get._mock_call_args[1]['url']}",
+            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k_v0.cxg/")
 
     @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
@@ -636,7 +640,9 @@ class TestDataLocatorMockApi(BaseTest):
 
         # check that the metadata api was correctly called for the new (uncached) dataset
         self.assertEqual(mock_get.call_count, 1)
-        self.assertEqual(f"http://{mock_get._mock_call_args[1]['url']}", 'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k.cxg')
+        self.assertEqual(
+            f"http://{mock_get._mock_call_args[1]['url']}",
+            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k.cxg/')
 
 
         # check schema loads correctly even with metadata api exception
@@ -673,10 +679,31 @@ class TestDataLocatorMockApi(BaseTest):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
+    @patch('backend.czi_hosted.data_common.dataset_metadata.requests.get')
+    def test_config_with_portal_metadata(self, mock_get):
+        response_body = json.dumps({
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
+            "tombstoned": "False"
+        })
+        mock_get.return_value = MockResponse(body=response_body, status_code=200)
+        endpoint = "config"
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v1.cxg"
+        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+        result_data = json.loads(result.data)
+        self.assertEqual(result_data["config"]["dataset_identification"],
+                         {'collection_id': "4f098ff4-4a12-446b-a841-91ba3d8e3fa6", 'collection_visibility': "PUBLIC",
+                          'dataset_id': "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939"})
+
 
 class MockResponse:
     def __init__(self, body, status_code):
-        self.body = body
+        self.content = body
         self.status_code = status_code
 
     def json(self):
