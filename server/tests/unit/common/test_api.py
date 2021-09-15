@@ -624,6 +624,65 @@ class TestDataLocatorMockApi(BaseTest):
             "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k_v0.cxg/",
         )
 
+    @patch("server.common.rest.requests.get")
+    @patch("server.common.config.client_config.get_client_config")
+    def test_dataset_metadata_api_called(self, mock_get, mock_client_config):
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+
+        response_body = {
+            "contact_email": "test_ebezzi", 
+            "contact_name": "test_user", 
+            "datasets": [
+                {
+                    "collection_visibility": "PRIVATE", 
+                    "id": "test_dataset_id", 
+                    "name": "Test Dataset", 
+                }, 
+            ], 
+            "description": "test_description", 
+            "id": "test_collection_id", 
+            "links": [
+                "http://test.link",
+            ], 
+            "name": "Test Collection", 
+            "visibility": "PRIVATE",
+        }
+        
+        mock_get.return_value = MockResponse(body=json.dumps(response_body), status_code=200)
+
+        response_client_config = json.dumps(
+            {
+                "config": {
+                    "dataset_identification": {
+                        "dataset_id": "test_dataset_id",
+                        "collection_id": "test_collection_id",
+                        "collection_visibility": "PUBLIC",
+                    }
+                }
+            }
+        )
+
+        mock_client_config.return_value = MockResponse(body=response_client_config, status_code=200)
+
+        endpoint = "dataset-metadata"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        result = self.client.get(url)
+
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+
+        self.assertEqual(mock_get.call_count, 1)
+
+        response_obj = json.loads(result.data)
+
+        self.assertEqual(result["dataset_id"], "test_dataset_id")
+        self.assertEqual(result["collection_name"], response_obj["name"])
+        self.assertEqual(result["contact_email"], response_obj["contact_email"])
+        self.assertEqual(result["contact_name"], response_obj["contact_name"])
+        self.assertEqual(result["description"], response_obj["description"])
+
+
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k.cxg"
