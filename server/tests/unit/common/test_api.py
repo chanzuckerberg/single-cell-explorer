@@ -631,7 +631,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
 
         response_body = {
-            "contact_email": "test_ebezzi", 
+            "contact_email": "test_email", 
             "contact_name": "test_user", 
             "datasets": [
                 {
