@@ -1,15 +1,23 @@
-const initialState = {
+import type { Action } from "redux";
+
+export interface CentroidLabelsState {
+  showLabels: boolean;
+}
+
+export interface CentroidLabelsAction extends Action<string> {
+  showLabels: boolean;
+}
+
+const initialState: CentroidLabelsState = {
   showLabels: false,
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const centroidLabels = (
   state = initialState,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  action: CentroidLabelsAction,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   sharedNextState: any
-) => {
+): CentroidLabelsState => {
   const {
     colors: { colorAccessor },
   } = sharedNextState;

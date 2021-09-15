@@ -8,10 +8,10 @@ import * as REST from "./stateManager/sampleResponses";
 import { indexEntireSchema } from "../../src/util/stateManager/schemaHelpers";
 import { normalizeWritableCategoricalSchema } from "../../src/annoMatrix/normalize";
 import { Dataframe } from "../../src/util/dataframe";
+import type { Schema } from "../../src/common/types/schema";
 
 describe("centroid", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  let schema: any;
+  let schema: Schema;
   let obsAnnotations: Dataframe;
   let obsLayout: Dataframe;
 
@@ -31,7 +31,11 @@ describe("centroid", () => {
       schema,
       "field4",
       obsAnnotations,
-      { current: "umap", currentDimNames: ["umap_0", "umap_1"] },
+      {
+        current: "umap",
+        currentDimNames: ["umap_0", "umap_1"],
+        available: ["umap"],
+      },
       obsLayout
     );
 
@@ -47,8 +51,7 @@ describe("centroid", () => {
       quantile([0.5], obsLayout.col("umap_1").asArray() as NumberArray)[0],
     ];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    centroidResult.forEach((coordinate: any) => {
+    centroidResult.forEach((coordinate: [number, number]) => {
       expect(coordinate).toEqual(expectedResult);
     });
   });
@@ -58,7 +61,11 @@ describe("centroid", () => {
       schema,
       "field3",
       obsAnnotations,
-      { current: "umap", currentDimNames: ["umap_0", "umap_1"] },
+      {
+        current: "umap",
+        currentDimNames: ["umap_0", "umap_1"],
+        available: ["umap"],
+      },
       obsLayout
     );
 
@@ -72,7 +79,6 @@ describe("centroid", () => {
       quantile([0.5], obsLayout.col("umap_1").asArray() as NumberArray)[0],
     ];
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     centroidResult.forEach((coordinate: any) => {
       expect(coordinate).toEqual(expectedResult);
     });
