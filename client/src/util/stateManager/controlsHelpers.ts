@@ -67,15 +67,15 @@ export function selectableCategoryNames(
 
 interface CategorySummary {
   // Array of natively typed category values (all of them)
-  allCategoryValues?: Category[];
+  allCategoryValues: Category[];
   // Array of natively typed category values (top N only)
-  categoryValues?: Category[];
+  categoryValues: Category[];
   // Category value (native type) -> category index (top N only)
   categoryValueIndices: Map<Category, number>;
   // Number of values in the category (top N)
   numCategoryValues: number;
   // Array of cardinality of each category, (top N)
-  categoryValueCounts?: number[];
+  categoryValueCounts: number[];
   isUserAnno: boolean;
 }
 

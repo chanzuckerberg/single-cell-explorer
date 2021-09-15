@@ -6,10 +6,7 @@ import {
   doJsonRequest,
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
-import {
-  ConvertedUserColors,
-  loadUserColorConfig,
-} from "../util/stateManager/colorHelpers";
+import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
 import * as selnActions from "./selection";
 import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
@@ -17,6 +14,7 @@ import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
+import { ConvertedUserColors } from "../reducers/colors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {

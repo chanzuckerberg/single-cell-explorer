@@ -4,14 +4,22 @@
 import * as d3 from "d3";
 import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
 import memoize from "memoize-one";
-import { Action } from "redux";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
 import { Dataframe, DataframeValueArray, LabelType } from "../dataframe";
-import { Field, Schema } from "../../common/types/schema";
+import {
+  Field,
+  Schema,
+  CategoricalAnnotationColumnSchema,
+} from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
 import { Genesets } from "../../reducers/genesets";
+import {
+  ColorsState,
+  ConvertedUserColors,
+  UserColor,
+} from "../../reducers/colors";
 
 interface Colors {
   // cell label to color mapping
@@ -25,7 +33,7 @@ interface Colors {
  * fulfill it
  */
 export function createColorQuery(
-  colorMode: Action["type"],
+  colorMode: ColorsState["colorMode"],
   colorByAccessor: string,
   schema: Schema,
   genesets: Genesets
@@ -143,15 +151,6 @@ function _createColorTable(
 }
 export const createColorTable = memoize(_createColorTable);
 
-interface UserColor {
-  colors: { [label: string]: [number, number, number] };
-  scale: (label: string) => d3.RGBColor;
-}
-
-export interface ConvertedUserColors {
-  [category: string]: UserColor;
-}
-
 /**
  * Create two category label-indexed objects:
  *  - colors: maps label to RGB triplet for that label (used by graph, etc)
@@ -197,7 +196,10 @@ function _createUserColors(
 
   // color scale function param is INDEX (offset) into schema categories. It is NOT label value.
   // See createColorsByCategoricalMetadata() for another example.
-  const { categories } = schema.annotations.obsByName[colorAccessor];
+  // TODO: #35 Use type guards to insure type instead of casting
+  const { categories } = schema.annotations.obsByName[
+    colorAccessor
+  ] as CategoricalAnnotationColumnSchema;
   const categoryMap = new Map();
 
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
@@ -217,7 +219,10 @@ function _createColorsByCategoricalMetadata(
   colorAccessor: LabelType,
   schema: Schema
 ): Colors {
-  const { categories } = schema.annotations.obsByName[colorAccessor];
+  // TODO: #35 Use type guards to insure type instead of casting
+  const { categories } = schema.annotations.obsByName[
+    colorAccessor
+  ] as CategoricalAnnotationColumnSchema;
 
   const scale = d3
     .scaleSequential(interpolateRainbow)
