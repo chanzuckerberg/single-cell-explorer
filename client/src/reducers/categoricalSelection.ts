@@ -27,7 +27,6 @@ const CategoricalSelection = (
     case "set clip quantiles": {
       const { annoMatrix } = nextSharedState;
       const newState = CH.createCategoricalSelection(
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
         CH.selectableCategoryNames(annoMatrix.schema)
       );
       return newState;

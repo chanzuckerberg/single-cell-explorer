@@ -1,16 +1,33 @@
 /*
-Color By UI state
-*/
+ * Color By UI state
+ */
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+import { Action, AnyAction } from "redux";
+
+export interface UserColor {
+  colors: { [label: string]: [number, number, number] };
+  scale: (label: string) => d3.RGBColor;
+}
+
+export interface ConvertedUserColors {
+  [category: string]: UserColor;
+}
+
+export interface ColorsState {
+  // by continuous, by expression
+  colorMode: Action["type"] | null;
+  // tissue, Apod
+  colorAccessor: string | null;
+  userColors?: ConvertedUserColors;
+}
+
 const ColorsReducer = (
-  state = {
-    colorMode: null /* by continuous, by expression */,
-    colorAccessor: null /* tissue, Apod */,
+  state: ColorsState = {
+    colorMode: null,
+    colorAccessor: null,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
-) => {
+  action: AnyAction
+): ColorsState => {
   switch (action.type) {
     case "universe: user color load success": {
       const { userColors } = action;
