@@ -9,8 +9,6 @@ import json
 from flask import make_response, jsonify, current_app, abort
 from werkzeug.urls import url_unquote
 
-import requests
-
 from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.errors import (

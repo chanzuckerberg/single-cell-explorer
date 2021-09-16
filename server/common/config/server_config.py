@@ -359,5 +359,3 @@ class ServerConfig(BaseConfig):
 
     def get_data_locator_api_base_url(self):
         return self.data_locator__api_base
-
-

@@ -91,6 +91,7 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
 
     return dataset_metadata
 
+
 def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_config: AppConfig):
     data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
     web_base_url = app_config.server_config.get_web_base_url()
@@ -116,4 +117,3 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
     }
 
     return metadata
-
