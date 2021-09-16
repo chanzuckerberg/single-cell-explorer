@@ -206,6 +206,7 @@ class SchemaAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
 
+
 class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
