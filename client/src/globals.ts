@@ -131,7 +131,7 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
     // prefix: "http://api.clustering.czi.technology/api/",
     // prefix: "http://tabulamuris.cxg.czi.technology/api/",
     // prefix: "http://api-staging.clustering.czi.technology/api/",
-    prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
+    prefix: 'https://api.cellxgene.staging.single-cell.czi.technology/cellxgene/api/',
     version: "v0.2/",
   };
 }

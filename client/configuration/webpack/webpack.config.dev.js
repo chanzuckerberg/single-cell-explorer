@@ -80,7 +80,7 @@ const devConfig = {
       // webpack 5 no longer polyfills NodeJS modules, so fake the one we need
       "process.env": JSON.stringify({
         NODE_ENV: process.env.NODE_ENV || "development",
-        CXG_SERVER_PORT: process.env.CXG_SERVER_PORT || "5005",
+        CXG_SERVER_PORT: process.env.CXG_SERVER_PORT || "5006",
       }),
     }),
     new ScriptExtHtmlWebpackPlugin({

@@ -8,11 +8,10 @@ const utils = require("./utils");
 
 process.env.NODE_ENV = "development";
 
-const CLIENT_PORT = process.env.CXG_CLIENT_PORT;
-const { CXG_SERVER_PORT } = process.env;
+const CLIENT_PORT = 3005;
 
 const API = {
-  prefix: `http://localhost:${CXG_SERVER_PORT}/`,
+  prefix: `https://api.cellxgene.staging.single-cell.czi.technology/cellxgene/`,
 };
 
 // Set up compiler
@@ -39,21 +38,21 @@ app.use(
 
 app.use(favicon("./favicon.png"));
 
-app.get("/login", async (req, res) => {
-  try {
-    res.redirect(`${API.prefix}login?dataset=http://localhost:${CLIENT_PORT}`);
-  } catch (err) {
-    console.error(err);
-  }
-});
+// app.get("/login", async (req, res) => {
+//   try {
+//     res.redirect(`${API.prefix}login?dataset=http://localhost:${CLIENT_PORT}`);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
-app.get("/logout", async (req, res) => {
-  try {
-    res.redirect(`${API.prefix}logout?dataset=http://localhost:${CLIENT_PORT}`);
-  } catch (err) {
-    console.error(err);
-  }
-});
+// app.get("/logout", async (req, res) => {
+//   try {
+//     res.redirect(`${API.prefix}logout?dataset=http://localhost:${CLIENT_PORT}`);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
 
 app.listen(CLIENT_PORT, (err) => {
   if (err) {

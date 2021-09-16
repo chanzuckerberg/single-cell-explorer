@@ -5,7 +5,7 @@ server:
   app:
     verbose: false
     debug: false
-    host: localhost
+    host: https://api.cellxgene.staging.single-cell.czi.technology/cellxgene/
     port : null
     open_browser: false
     force_https: false
