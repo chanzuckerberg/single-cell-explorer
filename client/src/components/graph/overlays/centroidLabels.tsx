@@ -153,8 +153,7 @@ export default class CentroidLabels extends PureComponent {
             const deselectOpacity = 0.375;
             // @ts-expect-error ts-migrate(2339) FIXME: Property 'category' does not exist on type 'unknow... Remove this comment to see the full error message
             const { category, colorAccessor, labels } = asyncProps;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-            labels.forEach((coords: any, label: any) => {
+            labels.forEach((coords: [number, number], label: string) => {
               const selected = category.get(label) ?? true;
               // Mirror LSB middle truncation
               let displayLabel = label;
