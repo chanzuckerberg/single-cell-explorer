@@ -579,7 +579,7 @@ class ImmutableScalarDimension extends _ImmutableBaseDimension {
 
   selectRange(spec: SelectRange): DimensionSelectionResult {
     const { value, index } = this;
-    /* 
+    /*
     if !inclusive: [lo, hi) else [lo, hi]
     */
     const { lo, hi, inclusive } = spec;

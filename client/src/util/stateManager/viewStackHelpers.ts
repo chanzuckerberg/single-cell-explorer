@@ -24,7 +24,7 @@ Rules:
 
 There is code elsewhere in the app (eg, menubar/clip.js) which assumes this order.
 
-Views can be interogated for their type with the following:
+Views can be interrogated for their type with the following:
 
 * is a view:  annoMatrix.isView
 * is the loader:  !anonMatrix.isView (or annoMatrix === annoMatrix.base())
@@ -38,26 +38,37 @@ Views can be interogated for their type with the following:
 import { clip, isubsetMask, isubset } from "../../annoMatrix";
 import { memoize } from "../dataframe/util";
 import { Dataframe, LabelIndex } from "../dataframe";
+import {
+  AnnoMatrixClipView,
+  AnnoMatrixRowSubsetView,
+} from "../../annoMatrix/views";
+import AnnoMatrix from "../../annoMatrix/annoMatrix";
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'annoMatrix' implicitly has an 'any' typ... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export function _clipAnnoMatrix(annoMatrix, min, max) {
-  /*
-  clip the annoMatrix.
-  */
-  return annoMatrix.isClipped
-    ? clip(annoMatrix.viewOf, min, max)
-    : clip(annoMatrix, min, max);
+/**
+ * clip the annoMatrix.
+ */
+export function _clipAnnoMatrix(
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView,
+  min: number,
+  max: number
+): AnnoMatrixClipView {
+  if ("isClipped" in annoMatrix) {
+    return clip(annoMatrix.viewOf, min, max);
+  }
+
+  return clip(annoMatrix, min, max);
 }
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'annoMatrix' implicitly has an 'any' typ... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export function _userSubsetAnnoMatrix(annoMatrix, mask) {
-  /*
-  user-requested row subset of annoMatrix, to be added on top of any 
-  other previous row subsets.
-  */
-  const { clipRange } = annoMatrix;
+/**
+ * user-requested row subset of annoMatrix, to be added on top of any
+ * other previous row subsets.
+ */
+export function _userSubsetAnnoMatrix(
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView,
+  mask: Uint8Array
+): AnnoMatrix {
+  const { clipRange } = annoMatrix as AnnoMatrixClipView;
+
   if (clipRange) {
     annoMatrix = annoMatrix.viewOf;
   }
@@ -66,22 +77,21 @@ export function _userSubsetAnnoMatrix(annoMatrix, mask) {
   annoMatrix.userFlags.isUserSubsetView = true;
 
   if (clipRange) {
-    // @ts-expect-error ts-migrate(2556) FIXME: Expected 3 arguments, but got 1 or more.
     annoMatrix = clip(annoMatrix, ...clipRange);
   }
 
   return annoMatrix;
 }
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'annoMatrix' implicitly has an 'any' typ... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export function _userResetSubsetAnnoMatrix(annoMatrix) {
-  /*
-  Reset/remove all user-requested subsets.  Do not remove clip or embedding subset.
-  */
-
+/**
+ * Reset/remove all user-requested subsets.  Do not remove clip or embedding subset.
+ */
+export function _userResetSubsetAnnoMatrix(
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView
+): AnnoMatrix {
   /* stash clipping info, if any */
-  const { clipRange } = annoMatrix;
+  const { clipRange } = annoMatrix as AnnoMatrixClipView;
+
   if (clipRange) {
     annoMatrix = annoMatrix.viewOf;
   }
@@ -93,20 +103,20 @@ export function _userResetSubsetAnnoMatrix(annoMatrix) {
 
   /* re-apply the clip, if any */
   if (clipRange) {
-    // @ts-expect-error ts-migrate(2556) FIXME: Expected 3 arguments, but got 1 or more.
     annoMatrix = clip(annoMatrix, ...clipRange);
   }
 
   return annoMatrix;
 }
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'annoMatrix' implicitly has an 'any' typ... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export function _setEmbeddingSubset(annoMatrix, embeddingDf: Dataframe) {
-  /*
-  Set the embedding subset view.  Only create a subset view for the embedding
-  when it is needed, ie, there are NaN values in the embeddings.
-  */
+/**
+ * Set the embedding subset view. Only create a subset view for the embedding
+ * when it is needed, ie, there are NaN values in the embeddings.
+ */
+export function _setEmbeddingSubset(
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView,
+  embeddingDf: Dataframe
+): AnnoMatrix {
   const embRowOffsets = _getEmbeddingRowOffsets(
     annoMatrix.rowIndex,
     embeddingDf
@@ -120,7 +130,9 @@ export function _setEmbeddingSubset(annoMatrix, embeddingDf: Dataframe) {
   // ... otherwise, do the work
 
   /* stash clipping info, if any */
-  const clipRange = annoMatrix.isClipped ? annoMatrix.clipRange : null;
+  const clipRange = (annoMatrix as AnnoMatrixClipView).isClipped
+    ? (annoMatrix as AnnoMatrixClipView).clipRange
+    : null;
 
   /* pop all subsets, user or embedding */
   while (annoMatrix.isView) {
@@ -135,25 +147,24 @@ export function _setEmbeddingSubset(annoMatrix, embeddingDf: Dataframe) {
 
   /* re-apply clip, if needed */
   if (clipRange) {
-    // @ts-expect-error ts-migrate(2556) FIXME: Expected 3 arguments, but got 1 or more.
     annoMatrix = clip(annoMatrix, ...clipRange);
   }
 
   return annoMatrix;
 }
 
+/**
+ * Given a dataframe containing an embedding:
+ * - if the embedding contains no NaN coordinates, return null
+ * - if the embedding contains NaN coordinates, return a rowIndex
+ *   that contains only the rows with discrete valued coordinates.
+ *
+ * Currently assumes that there will be onl two dimensions in the embedding.
+ */
 function _getEmbeddingRowOffsets(
   _baseRowIndex: LabelIndex,
   embeddingDf: Dataframe
-) {
-  /*
-  given a dataframe containing an embedding:
-    - if the embedding contains no NaN coordinates, return null
-    - if the embedding contains NaN coordinates, return a rowIndex
-      that contains only the rows with discrete valued coordinates.
-
-  Currently assumes that there will be onl two dimensions in the embedding.
-  */
+): Int32Array | null {
   const X = embeddingDf.icol(0).asArray();
   const Y = embeddingDf.icol(1).asArray();
   const offsets = new Int32Array(X.length);
@@ -167,6 +178,7 @@ function _getEmbeddingRowOffsets(
   }
 
   if (numOffsets === X.length) return null;
+
   return offsets.subarray(0, numOffsets);
 }
 
@@ -177,18 +189,22 @@ export function _getDiscreteCellEmbeddingRowIndex(
   if (idx === null) return embeddingDf.rowIndex;
   return embeddingDf.rowIndex.isubset(idx);
 }
+
 export const getDiscreteCellEmbeddingRowIndex = memoize(
   _getDiscreteCellEmbeddingRowIndex,
   (df: Dataframe) => df.__id
 );
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'annoMatrix' implicitly has an 'any' typ... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export function getEmbSubsetView(annoMatrix) {
-  /* if there is an embedding subset in the view stack, return it.  Falsish if not. */
+/**
+ * If there is an embedding subset in the view stack, return it. Falsish if not.
+ */
+export function getEmbSubsetView(
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView
+): AnnoMatrix | undefined {
   while (annoMatrix.isView) {
     if (annoMatrix.userFlags.isEmbSubsetView) return annoMatrix;
     annoMatrix = annoMatrix.viewOf;
   }
+
   return undefined;
 }
