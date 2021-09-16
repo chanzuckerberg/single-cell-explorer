@@ -1,6 +1,5 @@
 import copy
 import logging
-from server.data_common import dataset_metadata
 import sys
 from http import HTTPStatus
 import zlib
@@ -24,6 +23,8 @@ from server.common.errors import (
 )
 from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
+
+from server.data_common import dataset_metadata
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -123,7 +124,10 @@ def schema_get(data_adaptor):
 
 def dataset_metadata_get(app_config, data_adaptor):
     metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config)
-    return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
+    if metadata is not None:
+        return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
+    else:
+        return abort(HTTPStatus.NOT_FOUND)
 
 
 def config_get(app_config, data_adaptor):

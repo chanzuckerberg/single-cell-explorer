@@ -97,23 +97,29 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
     web_base_url = app_config.server_config.get_web_base_url()
 
     base_metadata = get_dataset_metadata_for_explorer_location(dataset_explorer_location, app_config)
+    collection_id = base_metadata.get("collection_id")
+    if collection_id is None:
+        return None
+
     dataset_id = base_metadata["dataset_id"]
-    collection_id = base_metadata["collection_id"]
     collection_visibility = base_metadata["collection_visibility"]
 
     suffix = "/private" if collection_visibility == "PRIVATE" else ""
 
-    res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+    try:
+        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
-    metadata = {
-        "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
-        "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
-        "collection_name": res["name"],
-        "collection_description": res["description"],
-        "collection_contact_email": res["contact_email"],
-        "collection_contact_name": res["contact_name"],
-        "collection_links": res["links"],
-        "collection_datasets": res["datasets"],
-    }
+        metadata = {
+            "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+            "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
+            "collection_name": res["name"],
+            "collection_description": res["description"],
+            "collection_contact_email": res["contact_email"],
+            "collection_contact_name": res["contact_name"],
+            "collection_links": res["links"],
+            "collection_datasets": res["datasets"],
+        }
 
-    return metadata
+        return metadata
+    except Exception:
+        raise DatasetAccessError("Error retrieving dataset metadata")
