@@ -143,7 +143,6 @@ class Categories extends React.Component<{}, State> {
     const { writableCategoriesEnabled, schema } = this.props;
     /* all names, sorted in display order.  Will be rendered in this order */
     const allCategoryNames =
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       ControlsHelpers.selectableCategoryNames(schema).sort();
     return (
       <div

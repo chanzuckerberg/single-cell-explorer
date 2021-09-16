@@ -123,6 +123,7 @@ class FilenameDialog extends React.Component<{}, State> {
       idhash,
     } = this.props;
     const { filenameText } = this.state;
+    // eslint-disable-next-line no-constant-condition -- delete when removing annotations code
     return (writableCategoriesEnabled || writableGenesetsEnabled) &&
       annotations.promptForFilename &&
       !annotations.dataCollectionNameIsReadOnly &&

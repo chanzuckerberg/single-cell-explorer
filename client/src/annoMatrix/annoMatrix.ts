@@ -259,7 +259,7 @@ export default abstract class AnnoMatrix {
 		and returned together.  This is most commonly seen in an embedding,
     which usually has two dimensions.
 
-		A value query allows for fetching based upon the value in another 
+		A value query allows for fetching based upon the value in another
 		field/column, similar to a join.  Currently only supported on the var
 		dimension, allowing query of X columns by var value (eg, gene name)
 
@@ -279,7 +279,7 @@ export default abstract class AnnoMatrix {
     3. Fetch an entire X (expression counts) column that has a var annotation
        value "TYMP" in the var index.
 
-			fetch("X", { 
+			fetch("X", {
 				where: {
           field: "var", column: this.schema.annotations.var.index, value: "TYMP"
         }
@@ -288,7 +288,7 @@ export default abstract class AnnoMatrix {
       In AnnData & Pandas DataFrame API, this is equivalent to:
         adata.X[:, adata.var.index.get_loc("SUMO3")]
 
-		The value query is a recodification and subset of the server REST API 
+		The value query is a recodification and subset of the server REST API
 		value filter JSON.  Range queries and multiple filters are not currently
 		supported.
 
@@ -420,11 +420,11 @@ export default abstract class AnnoMatrix {
   Set all obs with label in array 'obsLabels' to have 'value'.  Typical use would be
   to set a group of cells to have a label on a user-created categorical annotation
   (eg set all selected cells to have a label).
-  
+
   NOTE: async method, as it may need to fetch.
-  
+
   Will throw column does not exist or is not writable.
-  
+
   Example:
     await setObsColumnValues("flavor", [383, 400], "tasty") -> AnnoMatrix
   */
@@ -482,7 +482,7 @@ export default abstract class AnnoMatrix {
         // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
         // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
         _whereCacheGet(this._whereCache, this.schema, field, query).filter(
-          (cacheKey: LabelType) =>
+          (cacheKey: LabelType | undefined) =>
             cacheKey !== undefined && this._cache[field].hasCol(cacheKey)
         )
       )
@@ -593,8 +593,8 @@ export default abstract class AnnoMatrix {
     * user-defined / writable columns must not be GC'ed as they may be
       still pending a save/commit.
     * For views, cost is less and (roughly) proportional with nObs
-    * obs, var and emb do not grow without bounds, and are needed constantly 
-      for rendering.  
+    * obs, var and emb do not grow without bounds, and are needed constantly
+      for rendering.
       a) There is no upside to GC'ing these in the base (loader)
       b) The undo/redo cache can hold a large number in views, which is worth GC'ing
     * X is often much larger than memory, and the UI allows add/del from
@@ -663,7 +663,7 @@ export default abstract class AnnoMatrix {
 
   _gc(hints: GCHints): void {
     /*
-    Called from middleware, or elsewhere.  isHot is true if we are in the active store, 
+    Called from middleware, or elsewhere.  isHot is true if we are in the active store,
     or false if we are in some other context (eg, history state).
     */
     const { isHot } = hints;
@@ -694,8 +694,8 @@ export default abstract class AnnoMatrix {
   semantics while not causing races or other side effects in internal
   cache management.
 
-  Subclasses must override _cloneDeeper() if they have state which requires 
-  something other than a shallow copy.  Overrides MUST call super()._cloneDeepr(), 
+  Subclasses must override _cloneDeeper() if they have state which requires
+  something other than a shallow copy.  Overrides MUST call super()._cloneDeepr(),
   and return its result (after any required modification).  _cloneDeeper()
   will be called on the OLD object, with the NEW object as an argument.
 

@@ -14,6 +14,7 @@ import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
+import { ConvertedUserColors } from "../reducers/colors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -29,9 +30,12 @@ function setGlobalConfig(config: any) {
 /*
 return promise fetching user-configured colors
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-async function userColorsFetchAndLoad(dispatch: any) {
-  return fetchJson("colors").then((response) =>
+async function userColorsFetchAndLoad(
+  dispatch: AppDispatch
+): Promise<{ type: string; userColors: ConvertedUserColors }> {
+  return fetchJson<{ [category: string]: { [label: string]: string } }>(
+    "colors"
+  ).then((response) =>
     dispatch({
       type: "universe: user color load success",
       userColors: loadUserColorConfig(response),
