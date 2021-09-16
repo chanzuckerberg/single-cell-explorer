@@ -624,64 +624,6 @@ class TestDataLocatorMockApi(BaseTest):
             "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=None/e/pbmc3k_v0.cxg/",
         )
 
-    @patch("server.common.rest.requests.get")
-    @patch("server.common.config.client_config.get_client_config")
-    def test_dataset_metadata_api_called(self, mock_get, mock_client_config):
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
-        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
-
-        response_body = {
-            "contact_email": "test_email", 
-            "contact_name": "test_user", 
-            "datasets": [
-                {
-                    "collection_visibility": "PRIVATE", 
-                    "id": "test_dataset_id", 
-                    "name": "Test Dataset", 
-                }, 
-            ], 
-            "description": "test_description", 
-            "id": "test_collection_id", 
-            "links": [
-                "http://test.link",
-            ], 
-            "name": "Test Collection", 
-            "visibility": "PRIVATE",
-        }
-        
-        mock_get.return_value = MockResponse(body=json.dumps(response_body), status_code=200)
-
-        response_client_config = json.dumps(
-            {
-                "config": {
-                    "dataset_identification": {
-                        "dataset_id": "test_dataset_id",
-                        "collection_id": "test_collection_id",
-                        "collection_visibility": "PUBLIC",
-                    }
-                }
-            }
-        )
-
-        mock_client_config.return_value = MockResponse(body=response_client_config, status_code=200)
-
-        endpoint = "dataset-metadata"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url)
-
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-
-        self.assertEqual(mock_get.call_count, 1)
-
-        response_obj = json.loads(result.data)
-
-        self.assertEqual(result["dataset_id"], "test_dataset_id")
-        self.assertEqual(result["collection_name"], response_obj["name"])
-        self.assertEqual(result["contact_email"], response_obj["contact_email"])
-        self.assertEqual(result["contact_name"], response_obj["contact_name"])
-        self.assertEqual(result["description"], response_obj["description"])
-
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
@@ -807,6 +749,86 @@ class TestDataLocatorMockApi(BaseTest):
             },
         )
 
+class TestDatasetMetadata(BaseTest):
+
+    @classmethod
+    @patch("server.data_common.dataset_metadata.requests.get")
+    def setUpClass(cls, mock_get):
+        cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
+        cls.app__web_base_url = "https://cellxgene.staging.single-cell.czi.technology/"
+        cls.config = AppConfig()
+        cls.config.update_server_config(
+            data_locator__api_base=cls.data_locator_api_base,
+            app__web_base_url=cls.app__web_base_url,
+            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            app__flask_secret_key="testing",
+            app__debug=True,
+            data_locator__s3__region_name="us-east-1",
+        )
+        super().setUpClass(cls.config)
+
+        cls.app.testing = True
+        cls.client = cls.app.test_client()
+
+
+    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.data_common.dataset_metadata.requests.get")
+    def test_dataset_metadata_api_called(self, mock_get, mock_dp):
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+
+        response_body = {
+            "contact_email": "test_email", 
+            "contact_name": "test_user", 
+            "datasets": [
+                {
+                    "collection_visibility": "PUBLIC", 
+                    "id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939", 
+                    "name": "Test Dataset", 
+                }, 
+            ], 
+            "description": "test_description", 
+            "id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6", 
+            "links": [
+                "http://test.link",
+            ], 
+            "name": "Test Collection", 
+            "visibility": "PUBLIC",
+        }
+
+        mock_dp_response = {
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
+            "tombstoned": "False",
+        }
+        
+        mock_get.return_value = MockResponse(body=json.dumps(response_body), status_code=200)
+        mock_dp.return_value = mock_dp_response
+
+        endpoint = "dataset-metadata"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        result = self.client.get(url)
+
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+
+        self.assertEqual(mock_get.call_count, 1)
+
+        response_obj = json.loads(result.data)["metadata"]
+
+        self.assertEqual(response_obj["dataset_name"], "Test Dataset")
+
+        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}"
+        self.assertEqual(response_obj["collection_url"], expected_url)
+        self.assertEqual(response_obj["collection_name"], response_body["name"])
+        self.assertEqual(response_obj["collection_contact_email"], response_body["contact_email"])
+        self.assertEqual(response_obj["collection_contact_name"], response_body["contact_name"])
+        self.assertEqual(response_obj["collection_description"], response_body["description"])
+        self.assertEqual(response_obj["collection_links"], response_body["links"])
+        self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
+
 
 class MockResponse:
     def __init__(self, body, status_code):
@@ -814,4 +836,4 @@ class MockResponse:
         self.status_code = status_code
 
     def json(self):
-        return self.json_data
+        return json.loads(self.content)

@@ -1,5 +1,6 @@
 import copy
 import logging
+from server.data_common import dataset_metadata
 import sys
 from http import HTTPStatus
 import zlib
@@ -123,29 +124,7 @@ def schema_get(data_adaptor):
 
 
 def dataset_metadata_get(app_config, data_adaptor):
-    data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
-    web_base_url = app_config.server_config.get_base_web_url()
-    client_config = get_client_config(app_config, data_adaptor, current_app)
-    print(client_config)
-    dataset_id = client_config["config"]["dataset_identification"]["dataset_id"]
-    collection_id = client_config["config"]["dataset_identification"]["collection_id"]
-    collection_visibility = client_config["config"]["dataset_identification"]["collection_visibility"]
-
-    suffix = "/private" if collection_visibility == "PRIVATE" else ""
-
-    res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
-
-    metadata = {
-        "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
-        "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
-        "collection_name": res["name"],
-        "collection_description": res["description"],
-        "collection_contact_email": res["contact_email"],
-        "collection_contact_name": res["contact_name"],
-        "collection_links": res["links"],
-        "collection_datasets": res["datasets"],
-    }
-
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config)
     return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
 
 
