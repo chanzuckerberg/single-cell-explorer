@@ -169,28 +169,27 @@ describe("subset", () => {
     }
   });
 
-  // TODO(cc) temporarily disabling - fix as part of #38.
-  // test("lasso after subset", async () => {
-  //   await goToPage(appUrlBase);
-  //
-  //   for (const select of data.subset.cellset1) {
-  //     if (select.kind === "categorical") {
-  //       await selectCategory(select.metadata, select.values, true);
-  //     }
-  //   }
-  //
-  //   await clickOn("subset-button");
-  //
-  //   const lassoSelection = await calcDragCoordinates(
-  //     "layout-graph",
-  //     data.subset.lasso["coordinates-as-percent"]
-  //   );
-  //
-  //   await drag("layout-graph", lassoSelection.start, lassoSelection.end, true);
-  //
-  //   const cellCount = await getCellSetCount(1);
-  //   expect(cellCount).toBe(data.subset.lasso.count);
-  // });
+  test("lasso after subset", async () => {
+    await goToPage(appUrlBase);
+
+    for (const select of data.subset.cellset1) {
+      if (select.kind === "categorical") {
+        await selectCategory(select.metadata, select.values, true);
+      }
+    }
+
+    await clickOn("subset-button");
+
+    const lassoSelection = await calcDragCoordinates(
+      "layout-graph",
+      data.subset.lasso["coordinates-as-percent"]
+    );
+
+    await drag("layout-graph", lassoSelection.start, lassoSelection.end, true);
+
+    const cellCount = await getCellSetCount(1);
+    expect(cellCount).toBe(data.subset.lasso.count);
+  });
 });
 
 describe("clipping", () => {
