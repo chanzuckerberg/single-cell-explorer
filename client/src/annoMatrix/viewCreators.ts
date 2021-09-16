@@ -63,7 +63,7 @@ export function clip(
   annoMatrix: AnnoMatrix,
   qmin: number,
   qmax: number
-): AnnoMatrix {
+): AnnoMatrixClipView {
   /*
 		Create a view that clips all continuous data to the [min, max] range.
 		The matrix shape does not change, but the continuous values outside the

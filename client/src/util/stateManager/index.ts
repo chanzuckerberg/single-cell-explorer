@@ -1,8 +1,8 @@
-/*
-Model manager providing an abstraction for the use of the reducer code.
-This is all VERY tightly integrated with reducers and actions, and
-exists to support those concepts.
-*/
+/**
+ * Model manager providing an abstraction for the use of the reducer code.
+ * This is all VERY tightly integrated with reducers and actions, and
+ * exists to support those concepts.
+ */
 
 import * as ColorHelpers from "./colorHelpers";
 import * as ControlsHelpers from "./controlsHelpers";
