@@ -195,12 +195,7 @@ class CxgAdaptor(DataAdaptor):
     def open_array(self, name):
         try:
             p = self.get_path(name)
-            # TODO: remove this temporary workaround when TileDB fixes the issue with multi_index
-            if name == "X" or name == "X_col_shift":
-                # workaround: bypass the cache for arrays that use multi_index
-                return CxgAdaptor._open_array(p, self.tiledb_ctx)
-            else:
-                return self.arrays[p]
+            return self.arrays[p]
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError(name)
 
