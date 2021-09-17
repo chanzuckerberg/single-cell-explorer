@@ -86,7 +86,7 @@ lint: lint-server lint-client
 
 .PHONY: lint-server
 lint-server:
-	flake8 server --exclude server/tests/,server/common/fbs/NetEncoding/
+	flake8 server --exclude server/tests/,server/common/fbs/NetEncoding/,server/eb/artifact.dir
 
 .PHONY: lint-client
 lint-client:
