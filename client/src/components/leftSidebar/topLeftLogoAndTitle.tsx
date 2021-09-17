@@ -1,10 +1,24 @@
+/* Core dependencies */
 import React from "react";
 import { connect } from "react-redux";
 
-import * as globals from "../../globals";
+/* App dependencies */
 import Logo from "../framework/logo";
 import Title from "../framework/title";
+import * as globals from "../../globals";
 import InformationMenu from "./infoMenu";
+
+/* Styles */
+export const topLeftLogoAndTileStyle: React.CSSProperties = {
+  alignItems: "center",
+  borderBottom: `1px solid ${globals.lighterGrey}`,
+  display: "flex",
+  justifyContent: "space-between",
+  paddingLeft: 8,
+  paddingTop: 8,
+  width: globals.leftSidebarWidth,
+  zIndex: 1,
+};
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -42,18 +56,7 @@ class LeftSideBar extends React.Component {
     } = this.props;
 
     return (
-      <div
-        style={{
-          paddingLeft: 8,
-          paddingTop: 8,
-          width: globals.leftSidebarWidth,
-          zIndex: 1,
-          borderBottom: `1px solid ${globals.lighterGrey}`,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <div style={topLeftLogoAndTileStyle}>
         <div data-testid="header">
           <Logo size={28} />
           <Title />

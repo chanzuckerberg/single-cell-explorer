@@ -1,41 +1,28 @@
-// Core dependencies
+/* Core dependencies */
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
 
-// App dependencies
+/* App dependencies */
 import Logo from "../framework/logo";
 import Title from "../framework/title";
-import * as globals from "../../globals";
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-function LeftSidebarSkeleton() {
-  /*
-    Skeleton of left side bar, to be displayed during data load.
-    TODO(cc)
-      - Remove dupe of LeftSidebar inline styles
-      - Remove dupe of TopLeftLogoAndTitle styles
-     */
+/* Styles */
+import { leftSidebarStyle } from ".";
+import { topLeftLogoAndTileStyle } from "./topLeftLogoAndTitle";
+
+/*
+ Skeleton of left side bar, to be displayed during data load.
+ @returns Markup displaying left side bar skeleton.
+ */
+function LeftSidebarSkeleton(): JSX.Element {
   return (
-    <div
-      style={{
-        borderRight: `1px solid ${globals.lightGrey}`,
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-      }}
-    >
+    <div style={leftSidebarStyle}>
       {/* TopLeftLogoAndTitle */}
       <div
         style={{
-          paddingLeft: 8,
-          paddingRight: 5,
-          paddingTop: 8,
-          width: globals.leftSidebarWidth,
-          zIndex: 1,
-          borderBottom: `1px solid ${globals.lighterGrey}`,
-          display: "flex",
-          justifyContent: "space-between",
+          ...topLeftLogoAndTileStyle,
           alignItems: "flex-start",
+          paddingRight: 5,
         }}
       >
         <div>
