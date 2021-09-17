@@ -73,9 +73,9 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         )
 
         if dataset_metadata:
-            if dataset_metadata['tombstoned']:
-                dataset_id = dataset_metadata['dataset_id']
-                collection_id = dataset_metadata['collection_id']
+            if dataset_metadata["tombstoned"]:
+                dataset_id = dataset_metadata["dataset_id"]
+                collection_id = dataset_metadata["collection_id"]
                 msg = f"Dataset {dataset_id} from collection {collection_id} has been tombstoned and is no " \
                       "longer available"
 
