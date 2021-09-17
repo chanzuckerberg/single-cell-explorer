@@ -24,7 +24,7 @@ export JEST_ENV := $(call env_or_else_default,JEST_ENV)
 
 .PHONY: start-server
 start-server:
-	cellxgene launch -p $(CXG_SERVER_PORT) $(CXG_OPTIONS) $(DATASET)
+	python -m scripts.start_test_server $(PROJECT_ROOT)
 
 # copy the client assets to a location known to the server
 # $(1) is the source of the client assets
