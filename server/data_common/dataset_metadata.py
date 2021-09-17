@@ -1,11 +1,10 @@
 import json
 import logging
-
 import requests
 from flask import current_app
 
 from server.common.utils.utils import path_join
-from server.common.errors import DatasetNotFoundError, DatasetAccessError
+from server.common.errors import DatasetNotFoundError, DatasetAccessError, TombstoneError
 from server.common.config.app_config import AppConfig
 from server.common.config.server_config import ServerConfig
 
@@ -18,6 +17,7 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
+
         if response.status_code == 200:
             dataset_identifiers = json.loads(response.content)
             return dataset_identifiers
@@ -71,7 +71,16 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
+
         if dataset_metadata:
+            if dataset_metadata["tombstoned"]:
+                dataset_id = dataset_metadata["dataset_id"]
+                collection_id = dataset_metadata["collection_id"]
+                msg = f"Dataset {dataset_id} from collection {collection_id} has been tombstoned and is no " \
+                      "longer available"
+
+                current_app.logger.log(logging.INFO, msg)
+                raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
             return dataset_metadata
 
     server_config = app_config.server_config

@@ -5,7 +5,7 @@ from typing import Optional
 
 import typing
 
-from server.common.errors import DatasetAccessError, DatasetNotFoundError
+from server.common.errors import DatasetAccessError, DatasetNotFoundError, TombstoneError
 from contextlib import contextmanager
 
 from server.data_common.rwlock import RWLock
@@ -184,7 +184,7 @@ class CacheManager(object):
                         create_data_function=create_data_function,
                         create_data_args=create_data_args,
                     )
-                except (DatasetNotFoundError, DatasetAccessError) as e:
+                except (DatasetNotFoundError, DatasetAccessError, TombstoneError) as e:
                     cache_item_info.error = e
                     raise
                 finally:
