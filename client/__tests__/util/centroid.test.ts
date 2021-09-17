@@ -79,7 +79,7 @@ describe("centroid", () => {
       quantile([0.5], obsLayout.col("umap_1").asArray() as NumberArray)[0],
     ];
 
-    centroidResult.forEach((coordinate: any) => {
+    centroidResult.forEach((coordinate) => {
       expect(coordinate).toEqual(expectedResult);
     });
   });
