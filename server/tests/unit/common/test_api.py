@@ -796,10 +796,10 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
 
-
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_dataset_metadata_api_fails_gracefully_on_dataset_not_found(self, mock_dp):
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+        # Force a new dataset name, otherwise a cache entry will be found and the mock will not be applied
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_2.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
 
         # If request_dataset_metadata_from_data_portal, it always returns None

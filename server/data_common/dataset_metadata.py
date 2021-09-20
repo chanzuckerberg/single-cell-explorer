@@ -92,34 +92,41 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
     return dataset_metadata
 
 
-def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_config: AppConfig):
+def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_config: AppConfig, current_app):
     data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
     web_base_url = app_config.server_config.get_web_base_url()
 
-    base_metadata = get_dataset_metadata_for_explorer_location(dataset_explorer_location, app_config)
-    collection_id = base_metadata.get("collection_id")
-    if collection_id is None:
-        return None
-
-    dataset_id = base_metadata["dataset_id"]
-    collection_visibility = base_metadata["collection_visibility"]
-
-    suffix = "/private" if collection_visibility == "PRIVATE" else ""
-
     try:
-        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+        dataset_metadata_manager = current_app.dataset_metadata_cache_manager
+        with dataset_metadata_manager.get(
+            cache_key=dataset_explorer_location,
+            create_data_function=get_dataset_metadata_for_explorer_location,
+            create_data_args={"app_config": app_config},
+        ) as base_metadata:
 
-        metadata = {
-            "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
-            "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
-            "collection_name": res["name"],
-            "collection_description": res["description"],
-            "collection_contact_email": res["contact_email"],
-            "collection_contact_name": res["contact_name"],
-            "collection_links": res["links"],
-            "collection_datasets": res["datasets"],
-        }
+            collection_id = base_metadata.get("collection_id")
+            if collection_id is None:
+                return None
 
-        return metadata
+            dataset_id = base_metadata["dataset_id"]
+            collection_visibility = base_metadata["collection_visibility"]
+
+            suffix = "/private" if collection_visibility == "PRIVATE" else ""
+
+            res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+
+            metadata = {
+                "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
+                "collection_name": res["name"],
+                "collection_description": res["description"],
+                "collection_contact_email": res["contact_email"],
+                "collection_contact_name": res["contact_name"],
+                "collection_links": res["links"],
+                "collection_datasets": res["datasets"],
+            }
+
+            return metadata
+
     except Exception:
         raise DatasetMetadataError("Error retrieving dataset metadata")
