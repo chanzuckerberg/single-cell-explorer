@@ -5,7 +5,7 @@ import requests
 from flask import current_app
 
 from server.common.utils.utils import path_join
-from server.common.errors import DatasetNotFoundError, DatasetAccessError
+from server.common.errors import DatasetNotFoundError, DatasetAccessError, DatasetMetadataError
 from server.common.config.app_config import AppConfig
 from server.common.config.server_config import ServerConfig
 
@@ -122,4 +122,4 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
 
         return metadata
     except Exception:
-        raise DatasetAccessError("Error retrieving dataset metadata")
+        raise DatasetMetadataError("Error retrieving dataset metadata")

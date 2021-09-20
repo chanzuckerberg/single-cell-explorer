@@ -35,6 +35,7 @@ define_request_exception("DatasetAccessError", "Raised when file loaded into a D
 define_request_exception(
     "DatasetNotFoundError", "Raised when the dataset location cant be found based on the explorer url"
 )
+define_request_exception("DatasetMetadataError", "Raised when dataset metadata cannot be retrieved")
 define_request_exception("DisabledFeatureError", "Raised when an attempt to use a disabled feature occurs")
 define_request_exception("AnnotationsError", "Raised when an attempt to use the annotations feature fails")
 define_request_exception(
