@@ -1,7 +1,23 @@
+/* Core dependencies */
 import React from "react";
 import { connect } from "react-redux";
+
+/* App dependencies */
 import GeneExpression from "../geneExpression";
 import * as globals from "../../globals";
+
+/* Styles */
+export const rightSidebarStyle: React.CSSProperties = {
+  /* x y blur spread color */
+  borderLeft: `1px solid ${globals.lightGrey}`,
+  display: "flex",
+  flexDirection: "column",
+  height: "inherit",
+  overflowY: "inherit",
+  padding: globals.leftSidebarSectionPadding,
+  position: "relative",
+  width: "inherit",
+};
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -14,19 +30,7 @@ class RightSidebar extends React.Component {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     return (
-      <div
-        style={{
-          /* x y blur spread color */
-          borderLeft: `1px solid ${globals.lightGrey}`,
-          display: "flex",
-          flexDirection: "column",
-          position: "relative",
-          overflowY: "inherit",
-          height: "inherit",
-          width: "inherit",
-          padding: globals.leftSidebarSectionPadding,
-        }}
-      >
+      <div style={rightSidebarStyle}>
         <GeneExpression />
       </div>
     );

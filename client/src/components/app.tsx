@@ -2,10 +2,11 @@ import React from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
 
+import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
-import Skeleton from "./framework/skeleton";
+import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
@@ -54,7 +55,7 @@ class App extends React.Component {
     return (
       <Container>
         <Helmet title="cellxgene" />
-        {loading ? <Skeleton /> : null}
+        {loading ? <LayoutSkeleton /> : null}
         {error ? (
           <div
             style={{
@@ -73,20 +74,10 @@ class App extends React.Component {
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
             {(viewportRef: any) => (
               <>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    left: 8,
-                    position: "absolute",
-                    right: 8,
-                    top: 0,
-                    zIndex: 3,
-                  }}
-                >
+                <Controls>
                   <DatasetSelector />
                   <MenuBar />
-                </div>
+                </Controls>
                 <Embedding />
                 <Autosave />
                 <TermsOfServicePrompt />
