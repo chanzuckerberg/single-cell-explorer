@@ -14,12 +14,7 @@ import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
-import { Collection } from "../common/types/entities";
-import {
-  bindDatasetIdentification,
-  createAPIPrefix,
-  createDatasetUrl,
-} from "../util/stateManager/collectionsHelpers";
+import { Collection, Dataset } from "../common/types/entities";
 import {
   KEYS,
   storageGet,
@@ -78,11 +73,12 @@ async function collectionFetch(
   dispatch: AppDispatch,
   config: Config
 ): Promise<void> {
-  const datasetIdentification = bindDatasetIdentification(
-    config.dataset_identification
-  );
-  const { collection_id: collectionId, dataset_id: selectedDatasetId } =
-    datasetIdentification;
+  const {
+    dataset_identification: {
+      collection_id: collectionId,
+      dataset_id: selectedDatasetId,
+    },
+  } = config;
   if (!collectionId || !selectedDatasetId) {
     dispatchNetworkErrorMessageToUser(
       "Dataset identification not found for current dataset"
@@ -95,6 +91,7 @@ async function collectionFetch(
   dispatch({
     type: "collection load complete",
     collection,
+    portalUrl: "https://cellxgene.staging.single-cell.czi.technology/", // TODO pull from config once 70 is completed.
     selectedDatasetId,
   });
 }
@@ -315,43 +312,49 @@ export const checkExplainNewTab = () => (dispatch: any) => {
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export const openDataset = (dataset: any) => (dispatch: any) => {
-  /*
-  Update in a new tab the browser location to dataset's deployment URL, kick off data load.
-  */
+/*
+ Update in a new tab the browser location to the selected dataset's deployment URL, kick off data load for the selected
+ dataset.
+ @param dataset Dataset to open in new tab.
+ */
+export const openDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to open dataset.");
+      return;
+    }
 
-  const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
-  const datasetUrl = createDatasetUrl(deploymentUrl);
+    dispatch({ type: "dataset opened" });
+    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.ON);
+    window.open(deploymentUrl, "_blank");
+  };
 
-  dispatch({ type: "dataset opened" });
-  storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.ON);
-  window.open(datasetUrl, "_blank");
-};
+/*
+ Update browser location to selected dataset's deployment URL, kick off data load for the selected dataset.
+ @param dataset Dataset to switch to and load in the current tab.
+ */
+export const switchDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    dispatch({ type: "dataset switch" });
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export const switchDataset = (dataset: any) => (dispatch: any) => {
-  /*
-  Update browser location to dataset's deployment URL, kick off data load. 
-  TODO(cc) revisit:
-    - origin (and data root) switch for environments without corresponding Portal instance (eg local, canary)
-    - globals update: move to server-side, split from initial doc returned from server?
-   */
-  dispatch({ type: "dataset switch" });
+    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to switch datasets.");
+      return;
+    }
+    dispatch(updateLocation(deploymentUrl));
+    globals.updateApiPrefix();
+    dispatch(doInitialDataLoad());
+  };
 
-  const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
-  const datasetUrl = createDatasetUrl(deploymentUrl);
-  dispatch(updateLocation(datasetUrl));
-
-  globals.API.prefix = createAPIPrefix(globals.API.prefix, datasetUrl);
-  dispatch(doInitialDataLoad());
-};
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-const updateLocation = (url: string) => (dispatch: any) => {
-  /*
-  Add entry to the session's history stack.
-   */
+/*
+ Update browser location by adding corresponding entry to the session's history stack.
+ @param url - URL to update browser location to. 
+ */
+const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   dispatch({ type: "location update" });
   window.history.pushState(null, "", url);
 };
@@ -364,10 +367,12 @@ function fetchJson<T>(pathAndQuery: string): Promise<T> {
 
 /* 
  Fetch JSON from Portal API.
- TODO(cc) revisit - required for dataset meta and collection requests from Portal 
+ TODO(cc) revisit - remove once #59 is completed. 
  */
 function fetchPortalJson<T>(url: string): Promise<T> {
-  return doJsonRequest(`${globals.API.portalPrefix}${url}`);
+  return doJsonRequest(
+    `https://api.cellxgene.staging.single-cell.czi.technology/dp/v1/${url}`
+  );
 }
 
 export default {

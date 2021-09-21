@@ -50,7 +50,7 @@ class Layout extends React.Component {
           position: "relative",
           top: 0,
           left: 0,
-          minWidth: "1240px",
+          minWidth: "1282px", // Allow for menubar and min width of dataset selector
         }}
       >
         <div

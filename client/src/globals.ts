@@ -144,27 +144,27 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
     // prefix: "http://api.clustering.czi.technology/api/",
     // prefix: "http://tabulamuris.cxg.czi.technology/api/",
     // prefix: "http://api-staging.clustering.czi.technology/api/",
+    // prefix:
+    //   "https://api.cellxgene.staging.single-cell.czi.technology/cellxgene/e/Single_cell_drug_screening_mcf7-44-remixed.cxg/",
     prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
     version: "v0.2/",
   };
 }
 
-/*
- TODO(cc) temp set local flag to handle differences between local and deployed environments
- */
-_API.local = window.location.hostname === "localhost";
-
-/*
- TODO(cc) temp set Portal staging prefix to handle meta and collection API requests
- */
-_API.portalPrefix =
-  "https://api.cellxgene.staging.single-cell.czi.technology/dp/v1/";
-
-/*
- TODO(cc) temp set of Portal/Explorer origin, required for breadcrumb links as well as generating explore URL param for
-  meta endpoint in environments where hosted origin does not match Portal/dataset deployment URL origin (eg local and
-  canary).
- */
-_API.origin = "https://cellxgene.staging.single-cell.czi.technology/";
-
 export const API = _API;
+
+/*
+ Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
+ between datasets is not enabled for local environments.
+ */
+export function updateApiPrefix() {
+  if (typeof window === "undefined") {
+    throw new Error("Unable to set API route.");
+  }
+  const {
+    location: { host, pathname, protocol },
+  } = window;
+  if (!origin.includes("localhost")) {
+    API.prefix = `${protocol}//api.${host}/cellxgene${pathname}api/`;
+  }
+}

@@ -56,7 +56,6 @@ class InfoDrawer extends PureComponent {
     return (
       <Drawer
         isCloseButtonShown={false}
-        title="Dataset Overview"
         size={480}
         onClose={this.handleClose}
         {...{ isOpen, position }}

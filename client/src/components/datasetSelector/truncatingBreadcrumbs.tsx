@@ -1,6 +1,55 @@
-// Core dependencies
-import { Classes, ResizeSensor } from "@blueprintjs/core";
+/* Core dependencies */
+import {
+  BreadcrumbProps,
+  Classes,
+  MenuItemProps,
+  ResizeSensor,
+} from "@blueprintjs/core";
 import React, { useEffect, useState } from "react";
+import { ResizeEntry } from "@blueprintjs/core/src/components/resize-sensor/resizeObserverTypes";
+
+interface Props {
+  breadcrumbRenderer: (item: TruncatingBreadcrumbProps) => JSX.Element;
+  currentBreadcrumbRenderer: (
+    item: TruncatingBreadcrumbMenuProps
+  ) => JSX.Element;
+  items: TruncatingBreadcrumbProps[];
+}
+
+/*
+ Internal representation of breadcrumb props, with additional config to help calculate truncated state, if any.
+ */
+interface BreadcrumbConfig {
+  displayText: string;
+  hidden: boolean;
+  item: TruncatingBreadcrumbProps;
+  minTextWidth: number;
+  shortTextWidth: number;
+  textWidth: number;
+}
+
+/*
+ Menu items listed in truncating breadcrumbs dataset menu breadcrumb.
+ */
+export interface TruncatingBreadcrumbMenuItemProps extends MenuItemProps {
+  key: string;
+}
+
+/*
+ Props for modeling "current" breadcrumb with menu.
+ */
+export interface TruncatingBreadcrumbMenuProps
+  extends TruncatingBreadcrumbProps {
+  items: TruncatingBreadcrumbMenuItemProps[];
+}
+
+/*
+ Standard breadcrumb link. 
+ */
+export interface TruncatingBreadcrumbProps extends BreadcrumbProps {
+  key: string;
+  shortText: string;
+}
 
 // Characters to be used to indicate display text has been truncated
 const CHAR_ELLIPSIS = "...";
@@ -9,7 +58,6 @@ const CHAR_ELLIPSIS = "...";
 const MIN_VISIBLE_CHARS = 11;
 
 // Approximate padding in pixels for each breadcrumb.
-// TODO(cc) revisit - remove if we calculate actual DOM sizes rather than estimate
 const ITEM_PADDING = 26;
 
 // Approximate pixel to character ratio
@@ -23,137 +71,217 @@ const PIXELS_PER_CHAR = 6;
  S - indicates use of short text (eg "Collection" for collection name or "Dataset" for dataset name)
  H - hidden
  */
-const STATE_FULL = "F"; // eg "Tabula Muris Senis"
-const STATE_TRUNCATED = "T"; // eg "Tabula...Senis"
-const STATE_SHORT_TEXT = "S"; // eg "Collection"
-const STATE_HIDDEN = "H"; // --
+enum BreadcrumbState {
+  "FULL" = "F", // eg "Tabula Muris Senis"
+  "TRUNCATED" = "T", // eg "Tabula...Senis"
+  "SHORT_TEXT" = "S", // eg "Collection"
+  "HIDDEN" = "H", // --
+}
 
 /*
- Breadcrumbs States
- ------------------
- FFF
- FTF
- HSF
- HST
- HHS
+ Breadcrumbs State
+ -----------------
+ FFF - full, full, full
+ FTF - full, truncated, full
+ HSF - hidden, short text, full
+ HST - hidden, short text, truncated
+ HHS - hidden, hidden, short text
  */
-const STATES_FFF = `${STATE_FULL}${STATE_FULL}${STATE_FULL}`;
-const STATES_FTF = `${STATE_FULL}${STATE_TRUNCATED}${STATE_FULL}`;
-const STATES_HSF = `${STATE_HIDDEN}${STATE_SHORT_TEXT}${STATE_FULL}`;
-const STATES_HST = `${STATE_HIDDEN}${STATE_SHORT_TEXT}${STATE_TRUNCATED}`;
-const STATES_HHS = `${STATE_HIDDEN}${STATE_HIDDEN}${STATE_SHORT_TEXT}`;
+type BreadcrumbsState = BreadcrumbState[];
+const STATES_FFF: BreadcrumbsState = [
+  BreadcrumbState.FULL,
+  BreadcrumbState.FULL,
+  BreadcrumbState.FULL,
+];
+const STATES_FTF: BreadcrumbsState = [
+  BreadcrumbState.FULL,
+  BreadcrumbState.TRUNCATED,
+  BreadcrumbState.FULL,
+];
+const STATES_HSF: BreadcrumbsState = [
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.SHORT_TEXT,
+  BreadcrumbState.FULL,
+];
+const STATES_HST: BreadcrumbsState = [
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.SHORT_TEXT,
+  BreadcrumbState.TRUNCATED,
+];
+const STATES_HHS: BreadcrumbsState = [
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.SHORT_TEXT,
+];
 
 /*
  Breadcrumb Transitions
  ----------------------
  Breadcrumbs can transition bidirectionally through states in the following order, and can also repeat individual states.
  */
-const STATES = [STATES_FFF, STATES_FTF, STATES_HSF, STATES_HST, STATES_HHS];
+const BreadcrumbsStateTransitions: BreadcrumbsState[] = [
+  STATES_FFF,
+  STATES_FTF,
+  STATES_HSF,
+  STATES_HST,
+  STATES_HHS,
+];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const calculateRequiredWidth = (itemsState: any, items: any) =>
-  /*
-     Return the total width required to display the given items with the given states.
-     */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  items.reduce((accum: number, item: any, i: number) => {
-    // Grab the state for this item. For example, given the state HTF, the state of the first item is H, the state of
-    // the second item is T and the state of the third item is F.
-    const itemState = itemsState[i];
+/*
+ Calculate the total width required to display the given items with the given states.
+ @param breadcrumbsState - State of each breadcrumb that width required to display is being calculated for. For 
+ example, [F, F, F].
+ @param configs - Set of config objects backing each breadcrumb.
+ @returns Number presenting the total number of pixels required to display the items in their current states.
+ */
+const calculateRequiredWidth = (
+  breadcrumbsState: Partial<BreadcrumbsState>,
+  configs: BreadcrumbConfig[]
+): number =>
+  configs.reduce((accum: number, config: BreadcrumbConfig, i: number) => {
+    // Grab the state for this breadcrumb. For example, given the state HTF, the state of the first item is H, the state
+    // of the second item is T and the state of the third item is F.
+    const itemState = breadcrumbsState[i];
+    if (!itemState) {
+      return accum;
+    }
     // Add the width (of text) corresponding to the item's state.
-    if (isItemShortText(itemState)) {
-      accum += item.shortTextWidth;
-    } else if (isItemTruncated(itemState)) {
-      accum += item.minTextWidth;
-    } else if (isItemFull(itemState)) {
-      accum += item.textWidth;
+    if (isStateShortText(itemState)) {
+      accum += config.shortTextWidth;
+    } else if (isStateTruncated(itemState)) {
+      accum += config.minTextWidth;
+    } else if (isStateFull(itemState)) {
+      accum += config.textWidth;
     }
     return accum;
   }, 0);
 
+/*
+ Return the width that the truncated item has available for display. That is, the available width minus the widths
+ required by the other, non-truncated, items. 
+ @param configs - Set of config objects backing each breadcrumb.
+ @param truncatedIndex - Index of breadcrumb currently being truncated.
+ @param breadcrumbsState - State of each breadcrumb. For example, [F, F, F].
+ @param availableWidth - Full width available to breadcrumbs. 
+ @returns Width that truncated breadcrumb has available for display.
+ */
 const calculateAvailableTruncatedWidth = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  items: any,
+  configs: BreadcrumbConfig[],
   truncatedIndex: number,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  itemsState: any,
+  breadcrumbsState: BreadcrumbsState,
   availableWidth: number
-) => {
-  /*
-    Return the width that the truncated item has available for display. That is, the available width minus the widths
-    required by the other, non-truncated, items. 
-     */
+): number => {
   // Grab the items other than the truncated item.
-  const otherItems = [...items];
+  const otherItems = [...configs];
   otherItems.splice(truncatedIndex, 1);
 
   // Grab the states of the the items, other than the truncated item.
-  const otherItemsState = itemsState.split("");
+  const otherItemsState = [...breadcrumbsState];
   otherItemsState.splice(truncatedIndex, 1);
 
   // Calculate the width of the other items in their corresponding states.
   const otherItemsRequiredWidth = calculateRequiredWidth(
-    otherItemsState.join(""),
+    otherItemsState,
     otherItems
   );
 
   return availableWidth - otherItemsRequiredWidth;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const getItemsStateForAvailableWidth = (items: any, availableWidth: number) => {
-  /*
-    Determine the current items state (eg FFF, FTF etc) for the given available width and set of items.
-     */
-  for (let i = 0; i < STATES.length; i += 1) {
-    const itemsState = STATES[i];
-    const requiredWidth = calculateRequiredWidth(itemsState, items);
+/*
+ Determine the current items state (eg FFF, FTF etc) for the given available width and set of items.
+ @param configs - Set of config objects backing each breadcrumb.
+ @param availableWidth - Full width available to breadcrumbs. 
+ @returns The ideal state for each breadcrumb given the width available. For example, [F, F, F].
+ */
+const getBreadcrumbsStateForAvailableWidth = (
+  configs: BreadcrumbConfig[],
+  availableWidth: number
+): BreadcrumbsState => {
+  for (let i = 0; i < BreadcrumbsStateTransitions.length; i += 1) {
+    const itemsState = BreadcrumbsStateTransitions[i];
+    const requiredWidth = calculateRequiredWidth(itemsState, configs);
     if (availableWidth >= requiredWidth) {
       return itemsState;
     }
   }
-  return STATES[STATES.length - 1]; // There's a problem, default to smallest state. TODO(cc) revisit error case here.
+  return BreadcrumbsStateTransitions[BreadcrumbsStateTransitions.length - 1]; // There's a problem, default to smallest state.
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const initItems = (items: any) =>
-  /*
-    Build initial state of items, including the calculation of short text, truncated text and full text dimensions. Use
-    approximation of six pixels per char. TODO(cc) revisit use of actual widths if approximation is too loose. 
-     */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  items.map((item: any) => ({
-    ...item,
-    displayText: item.text, // Default display to full breadcrumb text
+/*
+  Build initial state of items, including the calculation of short text, truncated text and full text dimensions. Use
+  approximation of six pixels per char.
+  @param rawItems - Set of breadcrumb props passed in via props.
+  @returns Internal representation of breadcrumb props facilitating truncating behavior and rendering.
+ */
+const initItems = (rawItems: TruncatingBreadcrumbProps[]): BreadcrumbConfig[] =>
+  rawItems.map((rawItem: TruncatingBreadcrumbProps) => ({
+    hidden: false,
+    item: rawItem,
+    displayText: rawItem.text as string, // Default display to full breadcrumb text
     minTextWidth: MIN_VISIBLE_CHARS * PIXELS_PER_CHAR + ITEM_PADDING,
-    shortTextWidth: item.shortText.length * PIXELS_PER_CHAR + ITEM_PADDING,
-    textWidth: item.text.length * PIXELS_PER_CHAR + ITEM_PADDING,
+    shortTextWidth: rawItem.shortText.length * PIXELS_PER_CHAR + ITEM_PADDING,
+    textWidth: (rawItem.text as string).length * PIXELS_PER_CHAR + ITEM_PADDING,
   }));
 
-const isItemFull = (stateName: string) => stateName === STATE_FULL;
+/*
+ Returns true if state is full.
+ @param state - Name of state to check.
+ @returns True if given state is full.  
+ */
+const isStateFull = (state: BreadcrumbState): boolean =>
+  state === BreadcrumbState.FULL;
 
-const isItemHidden = (stateName: string) => stateName === STATE_HIDDEN;
+/*
+ Returns true if state is hidden.
+ @param state - Name of state to check.
+ @returns True if given state is hidden.  
+ */
+const isStateHidden = (state: BreadcrumbState): boolean =>
+  state === BreadcrumbState.HIDDEN;
 
-const isItemShortText = (stateName: string) => stateName === STATE_SHORT_TEXT;
+/*
+ Returns true if state is short text.
+ @param state - Name of state to check.
+ @returns True if given state is short text.  
+ */
+const isStateShortText = (state: BreadcrumbState): boolean =>
+  state === BreadcrumbState.SHORT_TEXT;
 
-const isItemTruncated = (stateName: string) => stateName === STATE_TRUNCATED;
+/*
+ Returns true if state is truncated.
+ @param state - Name of state to check.
+ @returns True if given state is truncated.  
+ */
+const isStateTruncated = (state: BreadcrumbState): boolean =>
+  state === BreadcrumbState.TRUNCATED;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const buildResizedItems = (items: any, availableWidth: number) => {
-  /*
-    Resize the items, either the set of visible items, or the individual item display text, to fit the given available
-    width.
-     */
-  const itemsState = getItemsStateForAvailableWidth(items, availableWidth);
+/*
+ Resize the items, either the set of visible items, or the individual item display text, to fit the given available
+ width.
+ @param configs - Set of config objects backing each breadcrumb.
+ @param availableWidth - Full width available to breadcrumbs. 
+ @returns The state for each breadcrumb given the width available. For example, [F, F, F].
+ */
+const buildResizedItems = (
+  configs: BreadcrumbConfig[],
+  availableWidth: number
+): BreadcrumbConfig[] => {
+  const breadcrumbsState = getBreadcrumbsStateForAvailableWidth(
+    configs,
+    availableWidth
+  );
   // TODO(cc) if same state as previous and state does not contain T (eg FFF or FSF or HHS) then don't recalc here
-  return updateItems(itemsState, items, availableWidth);
+  return updateBreadcrumbConfigs(breadcrumbsState, configs, availableWidth);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const truncate = (availableWidth: number, text: string) => {
-  /*
-    Return truncated text with characters removed to reduce text width to the available width. 
-     */
+/*
+ Return truncated text with characters removed to reduce text width to the available width. 
+ @param availableWidth - Full width available to breadcrumbs. 
+ @param text - Text to truncate.
+ @returns Text truncated to the point where it can fit within the given available width.
+ */
+const truncate = (availableWidth: number, text: string): string => {
   const visibleLength = Math.floor(availableWidth / PIXELS_PER_CHAR);
   // Determine the break indices for the "before" and "after" ellipsis text tokens
   const tokenBeforeEndIndex = Math.ceil(visibleLength / 2);
@@ -164,101 +292,103 @@ const truncate = (availableWidth: number, text: string) => {
   return `${tokenBefore}${CHAR_ELLIPSIS}${tokenAfter}`;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const updateItems = (itemsState: any, items: any, availableWidth: number) =>
-  /*
-    Update each item to match its display format to the state being transitioned to.
-     */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  items.map((item: any, i: number) => {
-    const itemState = itemsState[i];
-    if (isItemHidden(itemState)) {
+/*
+ Update each breadcrumb to match its display format to the state being transitioned to.
+ @param breadcrumbsState - State of each breadcrumb. For example, [F, F, F].
+ @param configs - Set of config objects backing each breadcrumb.
+ @param availableWidth - Full width available to breadcrumbs. 
+ @returns Updated set of breadcrumb configs to match the new breadcrumbs state.
+ */
+const updateBreadcrumbConfigs = (
+  breadcrumbsState: BreadcrumbsState,
+  configs: BreadcrumbConfig[],
+  availableWidth: number
+): BreadcrumbConfig[] =>
+  configs.map((config: BreadcrumbConfig, i: number) => {
+    const itemState = breadcrumbsState[i];
+    if (isStateHidden(itemState)) {
       return {
-        ...item,
+        ...config,
         hidden: true,
       };
     }
-    if (isItemShortText(itemState)) {
+    if (isStateShortText(itemState)) {
       return {
-        ...item,
-        displayText: item.shortText,
+        ...config,
+        displayText: config.item.shortText,
         hidden: false,
       };
     }
-    if (isItemTruncated(itemState)) {
+    if (isStateTruncated(itemState)) {
       const truncatedAvailableWidth = calculateAvailableTruncatedWidth(
-        items,
+        configs,
         i,
-        itemsState,
+        breadcrumbsState,
         availableWidth
       );
       return {
-        ...item,
-        displayText: truncate(truncatedAvailableWidth, item.text),
+        ...config,
+        displayText: truncate(
+          truncatedAvailableWidth,
+          config.item.text as string
+        ),
         hidden: false,
       };
     }
     return {
-      ...item,
-      displayText: item.text,
+      ...config,
+      displayText: config.item.text as string,
       hidden: false,
     };
   });
 
-const TruncatingBreadcrumbs = React.memo(
-  // @ts-expect-error --- TODO revisit
-  ({ breadcrumbRenderer, currentBreadcrumbRenderer, items: originalItems }) => {
-    const [items, setItems] = useState([]);
+const TruncatingBreadcrumbs = React.memo<Props>(
+  ({ breadcrumbRenderer, currentBreadcrumbRenderer, items: rawItems }) => {
+    const [items, setItems] = useState<BreadcrumbConfig[]>([]);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const onResize = (entries: any) => {
-      /*
-            On resize callback from ResizeSensor, save the current width of the breadcrumbs.
-            */
+    /*
+     On resize callback from ResizeSensor, save the current width of the breadcrumbs.
+     @param entries - Array of elements being observed for resize events.
+    */
+    const onResize = (entries: ResizeEntry[]) => {
       const availableWidth = Math.floor(entries[0].contentRect.width);
       setItems(buildResizedItems(items, availableWidth));
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const renderBreadcrumb = (item: any, currentProp: any) => {
-      /*
-            Invoke the render callback to render the given breadcrumb. 
-             */
-      if (currentProp) {
-        return currentBreadcrumbRenderer(item);
-      }
-      return breadcrumbRenderer(item);
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const renderBreadcrumbs = (bcItems: any) =>
-      /*
-       Return list element/breadcrumb for each item. 
-       */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      bcItems.map((item: any, i: number) => {
-        if (item.hidden) {
+    /*
+     Return list element/breadcrumb for each breadcrumb config. 
+     @param configs - The set of config objects backing each breadcrumb.
+    */
+    const renderBreadcrumbs = (
+      configs: BreadcrumbConfig[]
+    ): (JSX.Element | null)[] =>
+      configs.map((config: BreadcrumbConfig, i: number) => {
+        if (config.hidden) {
           return null;
         }
-        // TODO(cc) possibly "clean" each item back to the format expected by BP so we can spread the Breadcrumb-specific
-        // props in our render method, and so that knowledge of "displayText" vs "text"  for example, is not required by
-        // parent components.
-        // See datasetSelector.renderBreadcrumb for our usage, and also the following for
-        // an example pattern:
-        // https://github.com/palantir/blueprint/blob/826cbdf95b577c43d5fe95b99c67ee2761c853e0/packages/core/src/components/breadcrumbs/breadcrumbs.tsx#L151
-        // Could possibly also have an explicit breadcrumbsProps props to neatly encapsulate and spread
-        // breadcrumb-specific props, resulting in this component being a relatively transparent wrapper around
-        // BP's Breadcrumbs component. For an example pattern, see `overflowListProps` on BP Breadcrumbs component.
-        const currentItem = i === bcItems.length - 1;
-        return <li key={item.key}>{renderBreadcrumb(item, currentItem)}</li>;
+        const currentItem = i === configs.length - 1;
+        // Create new version of props with updated text for display.
+        const props = {
+          ...config.item,
+          text: config.displayText,
+        };
+        return (
+          <li key={config.item.key}>
+            {currentItem
+              ? currentBreadcrumbRenderer(
+                  props as TruncatingBreadcrumbMenuProps
+                )
+              : breadcrumbRenderer(props)}
+          </li>
+        );
       });
 
+    /*
+     Init/update breadcrumb config from the set of raw breadcrumb props.
+     */
     useEffect(() => {
-      /*
-            init/update truncating breadcrumb items
-            */
-      setItems(initItems(originalItems));
-    }, [originalItems]);
+      setItems(initItems(rawItems));
+    }, [rawItems]);
 
     return (
       <ResizeSensor onResize={onResize}>
