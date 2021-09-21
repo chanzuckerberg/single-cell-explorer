@@ -15,7 +15,7 @@ const DATASET_TITLE_FONT_SIZE = 14;
 @connect((state) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   const { corpora_props: corporaProps } = (state as any).config;
-  const correctVersion = checkValidVersion(corporaProps);
+  const isValidVersion = checkValidVersion(corporaProps);
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     datasetTitle: (state as any).config?.displayNames?.dataset ?? "",
@@ -27,7 +27,7 @@ const DATASET_TITLE_FONT_SIZE = 14;
     tosURL: (state as any).config?.parameters?.about_legal_tos,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     privacyURL: (state as any).config?.parameters?.about_legal_privacy,
-    title: correctVersion ? corporaProps?.title : undefined,
+    title: isValidVersion ? corporaProps?.title : undefined,
   };
 })
 class LeftSideBar extends React.Component {

@@ -1,11 +1,16 @@
-export function checkValidVersion(corporaProps: any) {
-  const isValidVersionOne =
-    ["1.0.0", "1.1.0"].indexOf(corporaProps?.version?.corpora_schema_version) >
-    -1;
+const VERSION_ONES = ["1.0.0", "1.1.0"];
+const VERSION_TWOS = ["2.0.0"];
 
-  // For newer CXGs, the version can be found here
-  const isValidVersionTwo =
-    ["2.0.0"].indexOf(corporaProps?.schema_version) > -1;
+export function checkValidVersion(corporaProps: any) {
+  if (!corporaProps) return false;
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- prop from BE
+  const { version, schema_version } = corporaProps;
+
+  const isValidVersionOne = VERSION_ONES.includes(
+    version?.corpora_schema_version
+  );
+  const isValidVersionTwo = VERSION_TWOS.includes(schema_version);
 
   return isValidVersionOne || isValidVersionTwo;
 }
