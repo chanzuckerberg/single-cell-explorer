@@ -10,12 +10,6 @@ const takeScreenshot = require("./takeScreenshot");
 
 class ScreenshotEnvironment extends PuppeteerEnvironment {
   async handleTestEvent(event, state) {
-    if (["test_start", "test_done"].includes(event.name)) {
-      console.log("------------------event name:\n", event.name);
-      console.log("~~~~ Current test errors\n", new Date(), event.test.errors);
-      console.log("~~~~ Current test\n", new Date(), event.test);
-    }
-
     if (event.name === "error") {
       console.log("error event:", JSON.stringify(event));
     }
