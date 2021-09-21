@@ -7,6 +7,7 @@ import Logo from "../framework/logo";
 import Truncate from "../util/truncate";
 import InfoDrawer from "../infoDrawer/infoDrawer";
 import InformationMenu from "./infoMenu";
+import { checkValidVersion } from "../util/version";
 
 const DATASET_TITLE_FONT_SIZE = 14;
 
@@ -14,10 +15,7 @@ const DATASET_TITLE_FONT_SIZE = 14;
 @connect((state) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   const { corpora_props: corporaProps } = (state as any).config;
-  const correctVersion =
-    ["1.0.0", "1.1.0", "2.0.0"].indexOf(
-      corporaProps?.version?.corpora_schema_version
-    ) > -1;
+  const correctVersion = checkValidVersion(corporaProps);
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     datasetTitle: (state as any).config?.displayNames?.dataset ?? "",

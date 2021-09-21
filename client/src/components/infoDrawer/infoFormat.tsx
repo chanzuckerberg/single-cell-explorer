@@ -1,5 +1,6 @@
 import { H3, H1, UL, HTMLTable, Classes } from "@blueprintjs/core";
 import React from "react";
+import { checkValidVersion } from "../util/version";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const renderContributors = (contributors: any, affiliations: any) => {
@@ -184,11 +185,7 @@ const renderLinks = (projectLinks: any, aboutURL: any) => {
 const InfoFormat = React.memo(
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'datasetTitle' does not exist on type '{ ... Remove this comment to see the full error message
   ({ datasetTitle, singleValueCategories, aboutURL, dataPortalProps = {} }) => {
-    if (
-      ["1.0.0", "1.1.0", "2.0.0"].indexOf(
-        dataPortalProps.version?.corpora_schema_version
-      ) === -1
-    ) {
+    if (checkValidVersion(dataPortalProps)) {
       dataPortalProps = {};
     }
     const {
