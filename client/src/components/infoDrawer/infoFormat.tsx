@@ -185,7 +185,7 @@ const InfoFormat = React.memo(
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'datasetTitle' does not exist on type '{ ... Remove this comment to see the full error message
   ({ datasetTitle, singleValueCategories, aboutURL, dataPortalProps = {} }) => {
     if (
-      ["1.0.0", "1.1.0"].indexOf(
+      ["1.0.0", "1.1.0", "2.0.0"].indexOf(
         dataPortalProps.version?.corpora_schema_version
       ) === -1
     ) {
