@@ -10,7 +10,6 @@ import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
 
-
 if os.path.isdir("/opt/python/log"):
     # This is the standard location where Amazon EC2 instances store the application logs.
     logging.basicConfig(
@@ -80,8 +79,13 @@ class WSGIServer(Server):
         web_base_url = server_config.get_web_base_url()
         if web_base_url:
             web_base_url_parse = urlparse(web_base_url)
-            allowed_origin = f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"
-            CORS(app, supports_credentials=True, origins=allowed_origin)
+            allowed_origins = [f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"]
+            if os.getenv('DEPLOYMENT_STAGE') in ["Staging", "staging"]:
+                allowed_origins.extend([
+                    "https://canary-cellxgene.dev.single-cell.czi.technology/",
+                    r"^http://localhost:\d+",
+                ])
+            CORS(app, supports_credentials=True, origins=allowed_origins)
 
         Talisman(
             app,
