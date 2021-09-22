@@ -320,8 +320,7 @@ export const checkExplainNewTab = () => (dispatch: any) => {
 };
 
 /*
- Update in a new tab the browser location to the selected dataset's deployment URL, kick off data load for the selected
- dataset.
+ Open selected dataset in a new tab.
  @param dataset Dataset to open in new tab.
  */
 export const openDataset =
