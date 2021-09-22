@@ -755,7 +755,7 @@ class TestDatasetMetadata(BaseTest):
             "collection_visibility": "PUBLIC",
             "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
             "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-            "tombstoned": "False",
+            "tombstoned": False,
         }
         super().setUpClass(cls.config)
 
