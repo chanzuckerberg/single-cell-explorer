@@ -8,7 +8,7 @@ import { connect } from "react-redux";
 import { openDataset, switchDataset } from "../../actions";
 import { Collection, Dataset } from "../../common/types/entities";
 import DatasetMenu from "./datasetMenu";
-import { AppDispatch } from "../../reducers";
+import { AppDispatch, RootState } from "../../reducers";
 import TruncatingBreadcrumb from "./truncatingBreadcrumb";
 import TruncatingBreadcrumbs, {
   TruncatingBreadcrumbMenuItemProps,
@@ -20,68 +20,58 @@ import TruncatingBreadcrumbs, {
 // @ts-expect-error --- TODO revisit
 import styles from "./datasetSelector.css";
 
-interface Props {
-  dispatch: AppDispatch;
-  collection?: Collection;
-  portalUrl?: string;
-  selectedDatasetId?: string;
+/*
+ Actions dispatched by dataset selector.
+ */
+interface DispatchProps {
+  openDataset: (dataset: Dataset) => void;
+  switchDataset: (dataset: Dataset) => void;
+}
+
+/*
+ Props selected from store.
+ */
+interface StateProps {
+  collection: Collection;
+  portalUrl: string;
+  selectedDatasetId: string;
   workInProgress: boolean;
 }
+
+type Props = StateProps & DispatchProps;
+
+/*
+ Map slice selected from store to props.
+ */
+const mapStateToProps = (state: RootState): StateProps => {
+  const genesetsInProgress = state.genesets?.genesets?.size > 0;
+  const individualGenesInProgress =
+    state.controls?.userDefinedGenes?.length > 0;
+  return {
+    collection: state.collections?.collection,
+    portalUrl: state.collections?.portalUrl,
+    selectedDatasetId: state.collections?.selectedDatasetId,
+    workInProgress: genesetsInProgress || individualGenesInProgress,
+  };
+};
+
+/*
+ Map actions dispatched by dataset selector to props.
+ */
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  openDataset: (dataset: Dataset) => dispatch(openDataset(dataset)),
+  switchDataset: (dataset: Dataset) => dispatch(switchDataset(dataset)),
+});
 
 /*
  App-level collection and dataset breadcrumbs.
  */
-// @ts-expect-error ts-migrate(1238) TODO revisit
-@connect((state) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- TODO revisit
-  const genesetsInProgress = (state as any).genesets?.genesets?.size > 0;
-  const individualGenesInProgress =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- TODO revisit
-    (state as any).controls?.userDefinedGenes?.length > 0;
-  return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- TODO revisit
-    collection: (state as any).collections?.collection,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- TODO revisit
-    portalUrl: (state as any).collections?.portalUrl,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- TODO revisit
-    selectedDatasetId: (state as any).collections?.selectedDatasetId,
-    workInProgress: genesetsInProgress || individualGenesInProgress,
-  };
-})
 class DatasetSelector extends PureComponent<Props> {
   /*
    Props shared by all breadcrumbs.
    */
   private defaultBreadcrumbProps: Partial<TruncatingBreadcrumbProps> = {
     className: styles.datasetBreadcrumb,
-  };
-
-  /*
-   Create the set of breadcrumbs props to render home > collection name > dataset name, where dataset name reveals the
-   dataset menu.
-   @param dispatch - Function facilitating update of store.
-   @param collection - Collection containing selected dataset.
-   @param selectedDatasetId - ID of selected dataset.
-   @param workInProgress - Flag indicating if user has applied changes to visualization.
-   @param portalUrl - URL to Portal's collection index page.
-   @returns Returns the set of breadcrumbs props for the current selected dataset.
-  */
-  buildBreadcrumbProps = (
-    dispatch: AppDispatch,
-    collection: Collection,
-    selectedDatasetId: string,
-    workInProgress: boolean,
-    portalUrl: string
-  ): TruncatingBreadcrumbProps[] => {
-    const homeProp = this.buildHomeBreadcrumbProps(portalUrl);
-    const collectionProp = this.buildCollectionBreadcrumbProps(collection);
-    const datasetProp = this.buildDatasetBreadcrumbProps(
-      dispatch,
-      collection,
-      selectedDatasetId,
-      workInProgress
-    );
-    return [homeProp, collectionProp, datasetProp];
   };
 
   /*
@@ -95,35 +85,30 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build menu items representing datasets that are siblings of the selected dataset.
-   @param dispatch - Function facilitating update of store.
    @param collection - Collection containing selected dataset.
    @param selectedDatasetID - ID dataset currently being viewed.
    @param workInProgress - Flag indicating if user has applied changes to visualization.
+   @param switchFn - Action dispatched when datasets are to be switched in the current tab.
+   @param openFn - Action dispatched when selected dataset is to be opened in a new tab.
    @returns Returns set of menu items each representing sibling dataset of the current selected dataset.
   */
   buildDatasetMenuItems = (
-    dispatch: AppDispatch,
     collection: Collection,
     selectedDatasetID: string,
-    workInProgress: boolean
+    workInProgress: boolean,
+    switchFn: (dataset: Dataset) => void,
+    openFn: (dataset: Dataset) => void
   ): TruncatingBreadcrumbMenuItemProps[] =>
     [...collection.datasets]
       // Remove current dataset from the set of datasets
       .filter((dataset) => dataset.id !== selectedDatasetID)
       .sort(this.sortDatasets)
       // Build props for rendering dataset as menu item
-      .map((dataset) => {
-        const dispatchAction = workInProgress
-          ? openDataset(dataset)
-          : switchDataset(dataset);
-        return {
-          key: dataset.id,
-          text: dataset.name,
-          onClick: () => {
-            dispatch(dispatchAction);
-          },
-        };
-      });
+      .map((dataset) => ({
+        key: dataset.id,
+        text: dataset.name,
+        onClick: () => (workInProgress ? openFn(dataset) : switchFn(dataset)),
+      }));
 
   /*
    Find the selected dataset from the set of datasets.
@@ -139,27 +124,30 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build "dataset" breadcrumb props for displaying a breadcrumb with a menu.
-   @param dispatch - Function facilitating update of store.
    @param collection - Collection containing selected dataset.
    @param selectedDatasetId - ID of selected dataset.
    @param workInProgress - Flag indicating if user has applied changes to visualization.
+   @param switchFn - Action dispatched when datasets are to be switched in the current tab.
+   @param openFn - Action dispatched when selected dataset is to be opened in a new tab.
    @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
   */
   buildDatasetBreadcrumbProps(
-    dispatch: AppDispatch,
     collection: Collection,
     selectedDatasetId: string,
-    workInProgress: boolean
+    workInProgress: boolean,
+    switchFn: (dataset: Dataset) => void,
+    openFn: (dataset: Dataset) => void
   ): TruncatingBreadcrumbMenuProps {
     const selectedDataset = this.findDatasetById(
       selectedDatasetId,
       collection.datasets
     );
     const datasetMenuItems = this.buildDatasetMenuItems(
-      dispatch,
       collection,
       selectedDatasetId,
-      workInProgress
+      workInProgress,
+      switchFn,
+      openFn
     );
     return {
       ...this.defaultBreadcrumbProps,
@@ -173,15 +161,17 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build "collection" breadcrumb props, links to Portal's collection detail page. 
+   @param portalUrl - URL to Portal.
    @param collection - Collection containing selected dataset.
    @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
   */
   buildCollectionBreadcrumbProps(
+    portalUrl: string,
     collection: Collection
   ): TruncatingBreadcrumbProps {
     return {
       ...this.defaultBreadcrumbProps,
-      href: `${origin}collections/${collection.id}`,
+      href: `${portalUrl}/collections/${collection.id}`,
       key: `bc-collection-${collection.id}`,
       shortText: "Collection",
       text: collection.name,
@@ -245,9 +235,10 @@ class DatasetSelector extends PureComponent<Props> {
   render(): JSX.Element | null {
     const {
       collection,
-      dispatch,
+      openDataset: openFn,
       portalUrl,
       selectedDatasetId,
+      switchDataset: switchFn,
       workInProgress,
     } = this.props;
     if (!collection || !portalUrl || !selectedDatasetId) {
@@ -265,17 +256,21 @@ class DatasetSelector extends PureComponent<Props> {
         <TruncatingBreadcrumbs
           breadcrumbRenderer={this.renderBreadcrumb}
           currentBreadcrumbRenderer={this.renderDatasetBreadcrumb}
-          items={this.buildBreadcrumbProps(
-            dispatch,
-            collection,
-            selectedDatasetId,
-            workInProgress,
-            portalUrl
-          )}
+          items={[
+            this.buildHomeBreadcrumbProps(portalUrl),
+            this.buildCollectionBreadcrumbProps(portalUrl, collection),
+            this.buildDatasetBreadcrumbProps(
+              collection,
+              selectedDatasetId,
+              workInProgress,
+              switchFn,
+              openFn
+            ),
+          ]}
         />
       </div>
     );
   }
 }
 
-export default DatasetSelector;
+export default connect(mapStateToProps, mapDispatchToProps)(DatasetSelector);
