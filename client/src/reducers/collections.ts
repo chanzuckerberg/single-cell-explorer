@@ -14,6 +14,7 @@ import { Collection } from "../common/types/entities";
 export interface CollectionAction extends Action<string> {
   collection: Collection;
   error: string;
+  portalUrl: string;
   selectedDatasetId: string;
 }
 
@@ -24,6 +25,7 @@ export interface CollectionState {
   collection: Collection | null;
   error: string | null;
   loading: boolean;
+  portalUrl: string | null;
   selectedDatasetId: string | null;
 }
 
@@ -34,6 +36,7 @@ const Collections = (
     error: null,
 
     collection: null,
+    portalUrl: null,
     selectedDatasetId: null,
   },
   action: CollectionAction
@@ -51,6 +54,7 @@ const Collections = (
         loading: false,
         error: null,
         collection: action.collection,
+        portalUrl: action.portalUrl,
         selectedDatasetId: action.selectedDatasetId,
       };
     case "initial data load error":

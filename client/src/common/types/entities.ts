@@ -8,6 +8,7 @@ export interface Collection {
   contact_name: string;
   datasets: Dataset[];
   description: string;
+  id: string;
   links: Link[];
   name: string;
 }
@@ -47,8 +48,9 @@ export interface DataPortalProps {
  */
 export interface Dataset {
   id: string;
-  name: string;
+  cell_count: number;
   dataset_deployments: DatasetDeployment[];
+  name: string;
 }
 
 /*
