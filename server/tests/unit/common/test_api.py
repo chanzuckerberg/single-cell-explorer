@@ -716,6 +716,25 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(response.status_code, 404)
 
 
+    @patch("server.data_common.dataset_metadata.requests.get")
+    def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
+        response_body = json.dumps({
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": None,
+            "tombstoned": True,
+        })
+        mock_get.return_value = MockResponse(body=response_body, status_code=200)
+        endpoint = "config"
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
+        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(result.headers['Location'], "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939") # noqa E501
+
+
+
 class TestDatasetMetadata(BaseTest):
 
     @classmethod
@@ -823,23 +842,6 @@ class TestDatasetMetadata(BaseTest):
         result = self.client.get(url)
 
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
-
-    @patch("server.data_common.dataset_metadata.requests.get")
-    def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
-        response_body = json.dumps({
-            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
-            "collection_visibility": "PUBLIC",
-            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-            "s3_uri": None,
-            "tombstoned": True,
-        })
-        mock_get.return_value = MockResponse(body=response_body, status_code=200)
-        endpoint = "config"
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
-        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, 302)
-        self.assertEqual(result.headers['Location'], "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939") # noqa E501
 
 
 class MockResponse:
