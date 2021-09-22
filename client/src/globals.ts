@@ -26,6 +26,7 @@ export interface Config {
     default_embedding?: string;
     [key: string]: unknown;
   };
+  portalUrl: string;
   links: Record<string, unknown>;
 }
 
@@ -45,6 +46,7 @@ export const configDefaults: Config = {
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },
+  portalUrl: "",
   links: {},
 };
 

@@ -73,6 +73,13 @@ async function collectionFetch(
   dispatch: AppDispatch,
   config: Config
 ): Promise<void> {
+  if (window.origin.indexOf("localhost")) {
+    config.dataset_identification = {
+      collection_id: "169b39dd-c166-4177-b610-c5970a526b74",
+      collection_visibility: "PUBLIC",
+      dataset_id: "4dee4aec-405f-4627-96fb-cafd994c58bf",
+    };
+  }
   const {
     dataset_identification: {
       collection_id: collectionId,
