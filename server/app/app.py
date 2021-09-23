@@ -27,7 +27,7 @@ from server.common.errors import (
     RequestException,
     DatasetNotFoundError,
     TombstoneError,
-    DatasetMetadataError
+    DatasetMetadataError,
 )
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
