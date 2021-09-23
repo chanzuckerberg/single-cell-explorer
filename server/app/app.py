@@ -22,7 +22,13 @@ from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
 from server.common.utils.data_locator import DataLocator
-from server.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError, TombstoneError
+from server.common.errors import (
+    DatasetAccessError,
+    RequestException,
+    DatasetNotFoundError,
+    TombstoneError,
+    DatasetMetadataError
+)
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
@@ -134,7 +140,7 @@ def rest_get_data_adaptor(func):
             with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
-        except (DatasetAccessError, DatasetNotFoundError) as e:
+        except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
@@ -211,6 +217,13 @@ class SchemaAPI(DatasetResource):
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
+
+
+class DatasetMetadataAPI(DatasetResource):
+    @cache_control(public=True, max_age=ONE_WEEK)
+    @rest_get_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
 
 
 class ConfigAPI(DatasetResource):
@@ -310,6 +323,7 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
+    add_resource(DatasetMetadataAPI, "/dataset-metadata")
     add_resource(ConfigAPI, "/config")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")
