@@ -17,6 +17,7 @@ export interface DatasetIdentification {
 
 /* rough shape of config object */
 export interface Config {
+  corpora_props: DataPortalProps;
   dataset_identification: DatasetIdentification;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
@@ -31,10 +32,30 @@ export interface Config {
 }
 
 /*
+ Corpora encoding and schema versioning.
+ */
+interface CorporaVersion {
+  corpora_encoding_version: string;
+  corpora_schema_version: string;
+}
+
+/*
+ Rough Data Portal values returned in config.
+ */
+export interface DataPortalProps {
+  organism: string;
+  version?: CorporaVersion;
+}
+
+/*
 these are default values for configuration the CLI may supply.
 See the REST API and CLI specs for more info.
 */
 export const configDefaults: Config = {
+  corpora_props: {
+    organism: "",
+    version: { corpora_encoding_version: "", corpora_schema_version: "" },
+  },
   features: {},
   dataset_identification: {
     collection_id: null,

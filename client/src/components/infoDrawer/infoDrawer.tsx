@@ -1,45 +1,68 @@
-// Core dependencies
+/* Core dependencies */
 import React, { PureComponent } from "react";
 import { connect } from "react-redux";
-import { Drawer } from "@blueprintjs/core";
+import { Drawer, Position } from "@blueprintjs/core";
 
-// App dependencies
+/* App dependencies */
+import { DataPortalProps } from "../../globals";
 import InfoFormat from "./infoFormat";
+import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
+import { Collection } from "../../common/types/entities";
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
+/*
+ Actions dispatched by info drawer.
+ */
+interface DispatchProps {
+  toggleDrawer: () => void;
+}
+
+/*
+ Props passed in from parent.
+ */
+interface OwnProps {
+  position?: Position;
+}
+
+/*
+ Props selected from store.
+ */
+interface StateProps {
+  collection: Collection;
+  dataPortalProps: DataPortalProps;
+  isOpen: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  collection: ((state as any).collections as any)?.collection,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: (state as any).annoMatrix.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  isOpen: (state as any).controls.datasetDrawer,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  dataPortalProps: (state as any).config?.corpora_props,
-}))
-class InfoDrawer extends PureComponent {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  schema: any;
+}
+
+type Props = DispatchProps & OwnProps & StateProps;
+
+/*
+ Map values selected from store to props.
+ */
+const mapStateToProps = (state: RootState): StateProps => ({
+  collection: state.collections?.collection,
+  dataPortalProps: state.config?.corpora_props,
+  isOpen: state.controls.datasetDrawer,
+  schema: state.annoMatrix.schema,
+});
+
+/*
+ Map actions dispatched by info drawer to props.
+ */
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  toggleDrawer: () => dispatch({ type: "toggle dataset drawer" }),
+});
+
+class InfoDrawer extends PureComponent<Props> {
   handleClose = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
-
-    dispatch({ type: "toggle dataset drawer" });
+    const { toggleDrawer } = this.props;
+    toggleDrawer();
   };
 
   render(): JSX.Element {
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'collection' does not exist on type 'Readon... Remove this comment to see the full error message
-      collection,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'position' does not exist on type 'Readon... Remove this comment to see the full error message
-      position,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
-      schema,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isOpen' does not exist on type 'Readonly... Remove this comment to see the full error message
-      isOpen,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dataPortalProps' does not exist on type ... Remove this comment to see the full error message
-      dataPortalProps,
-    } = this.props;
+    const { collection, position, schema, isOpen, dataPortalProps } =
+      this.props;
 
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
     const allCategoryNames = selectableCategoryNames(schema).sort();
@@ -66,4 +89,5 @@ class InfoDrawer extends PureComponent {
     );
   }
 }
-export default InfoDrawer;
+
+export default connect(mapStateToProps, mapDispatchToProps)(InfoDrawer);

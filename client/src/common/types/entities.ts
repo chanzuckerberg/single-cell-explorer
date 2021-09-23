@@ -14,36 +14,6 @@ export interface Collection {
 }
 
 /*
- Corpora encoding and schema versioning.
- */
-interface CorporaVersion {
-  corpora_encoding_version: string;
-  corpora_schema_version: string;
-}
-
-/*
- Provider (person and institute) of dataset data.
- */
-export interface Contributor {
-  email: string;
-  institution: string;
-  name: string;
-}
-
-/*
- Data Portal values returned in config.
- */
-export interface DataPortalProps {
-  contributors: Contributor[];
-  organism: string;
-  preprint_doi: string;
-  project_links: Link[];
-  publication_doi: string;
-  title: string;
-  version?: CorporaVersion;
-}
-
-/*
  Basic dataset model.
  */
 export interface Dataset {
@@ -68,7 +38,7 @@ export interface GCHints {
 }
 
 /*
- Type and location of a related resource. 
+ Type and location of a related resource.
  */
 export interface Link {
   link_name: string;

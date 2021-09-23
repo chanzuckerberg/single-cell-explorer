@@ -3,7 +3,8 @@ import { H3, HTMLTable, Classes, Tooltip, Position } from "@blueprintjs/core";
 import React from "react";
 
 // App dependencies
-import { Collection, DataPortalProps, Link } from "../../common/types/entities";
+import { Collection, Link } from "../../common/types/entities";
+import { DataPortalProps } from "../../globals";
 
 const ONTOLOGY_KEY = "ontology_term_id";
 const COLLECTION_LINK_ORDER_BY = [
