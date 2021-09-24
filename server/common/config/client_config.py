@@ -1,5 +1,4 @@
 from server import display_version as cellxgene_display_version
-from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 
 
 def get_client_config(app_config, data_adaptor, current_app):
@@ -79,15 +78,4 @@ def get_client_config(app_config, data_adaptor, current_app):
         "column_request_max": server_config.limits__column_request_max,
         "diffexp_cellcount_max": server_config.limits__diffexp_cellcount_max,
     }
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    with dataset_metadata_manager.get(
-        cache_key=data_adaptor.uri_path,
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    ) as dataset_identifiers:
-        config["dataset_identification"] = {
-            "dataset_id": dataset_identifiers["dataset_id"],
-            "collection_id": dataset_identifiers["collection_id"],
-            "collection_visibility": dataset_identifiers["collection_visibility"],
-        }
     return client_config
