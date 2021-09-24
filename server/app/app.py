@@ -72,10 +72,12 @@ def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
 
 
-# tell the client not to cache the index.html page so that changes to the app work on redeployment
-# note that the bulk of the data needed by the client (datasets) will still be cached
+# tell the client and CDN not to cache the index.html page, so that changes to the
+# app work on redeployment. Note that the bulk of the data needed by the
+# client (datasets) will still be cached
+# https://web.dev/http-cache/#flowchart
 @webbp.route("/", methods=["GET"])
-@cache_control_always(public=True, max_age=0, no_store=True, no_cache=True, must_revalidate=True)
+@cache_control_always(no_store=True)
 def dataset_index(url_dataroot=None, dataset=None):
     app_config = current_app.app_config
     server_config = app_config.server_config
