@@ -209,6 +209,12 @@ class CacheManager(object):
             if cache_item:
                 cache_item.release()
 
+    def evict_by_key(self, cache_key: str):
+        try:
+            self.evict_data(to_del=[self.data.get(cache_key)])
+        except TypeError:
+            pass
+
     def get_extra_data(self):
         """
         Return a list of tuples (cache_key, cache_item) for least recently used cache_items when the number of
