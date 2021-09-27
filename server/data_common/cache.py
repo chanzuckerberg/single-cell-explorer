@@ -212,7 +212,7 @@ class CacheManager(object):
     def evict_by_key(self, cache_key: str):
         evict = self.data.get(cache_key, None)
         if evict:
-            self.evict_data(to_del=[evict])
+            self.evict_data(to_del=[(cache_key, evict)])
 
     def get_extra_data(self):
         """
