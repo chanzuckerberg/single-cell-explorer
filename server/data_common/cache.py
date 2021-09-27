@@ -210,10 +210,10 @@ class CacheManager(object):
                 cache_item.release()
 
     def evict_by_key(self, cache_key: str):
-        try:
-            self.evict_data(to_del=[self.data.get(cache_key)])
-        except TypeError:
-            pass
+        evict = self.data.get(cache_key, None)
+        if evict:
+            self.evict_data(to_del=[evict])
+
 
     def get_extra_data(self):
         """
