@@ -134,6 +134,7 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
             create_data_args={},
         )
 
+
 def expire_metadata_cache(url_dataroot: str = None, dataset: str = None):
     current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
 
