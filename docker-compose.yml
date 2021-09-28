@@ -25,6 +25,7 @@ services:
     image: "${DOCKER_REPO}corpora-explorer"
     build:
       context: .
+      dockerfile: hosted/Dockerfile
       cache_from:
         - "${DOCKER_REPO}corpora-explorer:branch-main"
       args:
