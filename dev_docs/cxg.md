@@ -4,7 +4,7 @@ Document Status: _draft_
 
 Version: 0.2.0 (_DRAFT, not yet approved_)
 
-Date Last Modified: 2020-07-23
+Date Last Modified: 2021-09-28
 
 ## Introduction
 
@@ -50,8 +50,8 @@ The CXG is a TileDB group containing all data and metadata for a single annotate
 
 ### `obs` and `var` arrays
 
-All per-observation (obs) and per-feature (var) data is encoded in a TileDB array named `obs` and `var` respectively, with shape `(n_obs,)` and `(n_var,)`.  Each TileDB array has an array attribute for each obs/var column.  All TileDB array attributes will have the same type and value as the original data, eg, float32, with the following exceptions:
-* bool is encoded as uint8 (1/0)
+All per-observation (obs) and per-feature (var) data is encoded in a TileDB array named `obs` and `var` respectively, with shape `(n_obs,)` and `(n_var,)`.  Each TileDB array has an array attribute for each obs/var column.  All TileDB array attributes will have the same type and value as the original data, eg, `float32`, with the following exceptions:
+* bool is encoded as `uint8` (1/0)
 * categorical is encoded as string
 * numeric types are cast to 32-bit equivalents
 
