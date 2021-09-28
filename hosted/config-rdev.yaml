@@ -6,7 +6,7 @@ server:
     port: null
     open_browser: false
     force_https: false
-    flask_secret_key: null
+    flask_secret_key: "asd"
     generate_cache_control_headers: true
     server_timing_headers: true
     csp_directives:
@@ -23,18 +23,6 @@ server:
     api_base_url: https://ebezzi-test-frontend.rdev.single-cell.czi.technology/cellxgene/
     web_base_url: https://ebezzi-test-frontend.rdev.single-cell.czi.technology/
 
-  authentication:
-    type: oauth
-    params_oauth:
-      oauth_api_base_url: https://login.cellxgene.dev.single-cell.czi.technology
-      client_id: c3O5vw6lTeuL5uhRwb5FuK1Jwq22mR5R
-      client_secret: null
-      session_cookie: false
-      cookie:
-        key: cxguser
-        httponly: true
-        max_age: 7776000 # This will keep users signed in for up to 90 days
-
   multi_dataset:
     dataroot:
       covid19:
@@ -42,9 +30,6 @@ server:
         dataroot: s3://env-rdev-artifacts/ebezzi-test
       corpora_data_portal:
         base_url: e
-        dataroot: s3://env-rdev-artifacts/ebezzi-test
-      experimental_auth:
-        base_url: experimental
         dataroot: s3://env-rdev-artifacts/ebezzi-test
 
     # The index page when in multi-dataset mode:
@@ -126,7 +111,6 @@ dataset:
     about_legal_tos: /tos/
     about_legal_privacy: /privacy/
 
-    authentication_enable: false
 
   presentation:
     max_categories: 1000
@@ -150,26 +134,3 @@ dataset:
     lfc_cutoff: 0.01
     top_n: 10
 
-per_dataset_config:
-  experimental_auth:
-    app:
-      authentication_enable: true
-
-    user_annotations:
-      enable: true
-
-external:
-  aws_secrets_manager:
-    region: us-west-2
-    secrets:
-      - name: hosted-cellxgene-dev
-        values:
-          - key: flask_secret_key
-            path: [server, app, flask_secret_key]
-            required: true
-          - key: oauth_client_secret
-            path: [server, authentication, params_oauth, client_secret]
-            required: true
-          - key: db_uri
-            path: [dataset, user_annotations, hosted_tiledb_array, db_uri]
-            required: true

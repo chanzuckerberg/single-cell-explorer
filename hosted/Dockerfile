@@ -18,7 +18,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN python3 -m pip install psycopg2-binary
 RUN python3 -m pip install -r requirements.txt
 
-COPY hosted/hack.yaml /config/config.yaml
+COPY hosted/config-rdev.yaml /config/config.yaml
 
 WORKDIR server/eb
 ENV CXG_CONFIG_FILE=/config/config.yaml
