@@ -106,6 +106,13 @@ module.exports = {
     ],
   },
   overrides: [
+    // Override some TypeScript rules just for .js files
+    {
+      files: ["*.js"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+      },
+    },
     {
       files: ["**/*.test.ts"],
       env: {
