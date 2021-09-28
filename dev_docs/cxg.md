@@ -29,7 +29,7 @@ The `cxg` prefix is used for CXG-specific names.
 
 ### Encoding Data With TileDB Arrays
 
-The TileDB array schema authoritatively defines the characteristics of each array (eg, the type of `X` is defined by [`X.schema`](https://tiledb-inc-tiledb-py.readthedocs-hosted.com/en/stable/python-api.html#tiledb.libtiledb.Array.schema)). In some cases, additional metadata is required for the CXG, and is attached to the array using the TileDB [array metadata](https://docs.tiledb.com/main/basic-concepts/array-metadata) capability.
+The TileDB array schema authoritatively defines the characteristics of each array (eg, the type of `X` is defined by [`X.schema`](https://tiledb-inc-tiledb-py.readthedocs-hosted.com/en/stable/python-api.html#tiledb.libtiledb.Array.schema)). In some cases, additional metadata is required for the CXG, and is attached to the array using the TileDB [array metadata](https://docs.tiledb.com/main/basic-concepts/data-format#array-metadata) capability.
 
 All TileDB arrays MUST have a `uint32` domain, zero-based.  All `X` counts and embedding coordinates SHOULD be coerced to `float32`, which is ample precision for visualization purposes, and MUST be a numeric type. Dataframe (metadata) types are generally preserved, or where that is not possible, converted to something with equal representative value in the cellxgene application (eg, categorical types are converted to `string`, bools to `uint8`, etc).
 
