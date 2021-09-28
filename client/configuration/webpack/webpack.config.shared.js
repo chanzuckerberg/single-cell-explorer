@@ -1,14 +1,10 @@
 /* eslint-disable @blueprintjs/classes-constants -- we don't import blueprint here  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const path = require("path");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const fs = require("fs");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const ObsoleteWebpackPlugin = require("obsolete-webpack-plugin");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
+const webpack = require("webpack");
 
 const src = path.resolve("src");
 const nodeModules = path.resolve("node_modules");
@@ -21,6 +17,8 @@ const rawObsoleteHTMLTemplate = fs.readFileSync(
 );
 
 const obsoleteHTMLTemplate = rawObsoleteHTMLTemplate.replace(/'/g, '"');
+
+const deploymentStage = process.env.DEPLOYMENT_STAGE || "test";
 
 module.exports = {
   entry: [
@@ -77,6 +75,13 @@ module.exports = {
     }),
     new ScriptExtHtmlWebpackPlugin({
       async: "obsolete",
+    }),
+    new webpack.DefinePlugin({
+      PLAUSIBLE_DATA_DOMAIN: JSON.stringify(
+        deploymentStage === "prod"
+          ? "cellxgene.cziscience.com"
+          : "cellxgene.staging.single-cell.czi.technology"
+      ),
     }),
   ],
 };
