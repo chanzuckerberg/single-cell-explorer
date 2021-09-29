@@ -1,5 +1,4 @@
 from server import display_version as cellxgene_display_version
-from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 
 
 def get_client_config(app_config, data_adaptor, current_app):
@@ -9,7 +8,6 @@ def get_client_config(app_config, data_adaptor, current_app):
     server_config = app_config.server_config
     dataset_config = data_adaptor.dataset_config
     annotation = dataset_config.user_annotations
-    auth = server_config.auth
 
     # FIXME The current set of config is not consistently presented:
     # we have camalCase, hyphen-text, and underscore_text
@@ -80,51 +78,4 @@ def get_client_config(app_config, data_adaptor, current_app):
         "column_request_max": server_config.limits__column_request_max,
         "diffexp_cellcount_max": server_config.limits__diffexp_cellcount_max,
     }
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    with dataset_metadata_manager.get(
-        cache_key=data_adaptor.uri_path,
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    ) as dataset_identifiers:
-        config["dataset_identification"] = {
-            "dataset_id": dataset_identifiers["dataset_id"],
-            "collection_id": dataset_identifiers["collection_id"],
-            "collection_visibility": dataset_identifiers["collection_visibility"],
-        }
-    if dataset_config.app__authentication_enable and auth.is_valid_authentication_type():
-        config["authentication"] = {
-            "requires_client_login": auth.requires_client_login(),
-        }
-        if auth.requires_client_login():
-            config["authentication"].update(
-                {
-                    # Todo why are these stored on the data_adaptor?
-                    "login": auth.get_login_url(data_adaptor),
-                    "logout": auth.get_logout_url(data_adaptor),
-                }
-            )
     return client_config
-
-
-def get_client_userinfo(app_config, data_adaptor):
-    """
-    Return the userinfo as required by the /userinfo REST route
-    """
-
-    server_config = app_config.server_config
-    dataset_config = data_adaptor.dataset_config
-    auth = server_config.auth
-
-    # make sure the configuration has been checked.
-    app_config.check_config()
-
-    if dataset_config.app__authentication_enable and auth.is_valid_authentication_type():
-        userinfo = {}
-        userinfo["userinfo"] = {
-            "is_authenticated": auth.is_user_authenticated(),
-            "username": auth.get_user_name(),
-            "user_id": auth.get_user_id(),
-            "email": auth.get_user_email(),
-            "picture": auth.get_user_picture(),
-        }
-        return userinfo

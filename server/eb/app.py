@@ -10,7 +10,6 @@ import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
 
-
 if os.path.isdir("/opt/python/log"):
     # This is the standard location where Amazon EC2 instances store the application logs.
     logging.basicConfig(
@@ -56,10 +55,13 @@ class WSGIServer(Server):
         # this should print the failing script's hash to console.
         # See more here: https://github.com/chanzuckerberg/cellxgene/pull/1745
         obsolete_browser_script_hash = ["'sha256-/rmgOi/skq9MpiZxPv6lPb1PNSN+Uf4NaUHO/IjyfwM='"]
+
+        PLAUSIBLE_URL = "https://plausible.io"
+
         csp = {
             "default-src": ["'self'"],
-            "connect-src": ["'self'"] + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'"] + obsolete_browser_script_hash + script_hashes,
+            "connect-src": ["'self'", PLAUSIBLE_URL] + extra_connect_src,
+            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL] + obsolete_browser_script_hash + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
             "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:"],
             "object-src": ["'none'"],
@@ -80,8 +82,13 @@ class WSGIServer(Server):
         web_base_url = server_config.get_web_base_url()
         if web_base_url:
             web_base_url_parse = urlparse(web_base_url)
-            allowed_origin = f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"
-            CORS(app, supports_credentials=True, origins=allowed_origin)
+            allowed_origins = [f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"]
+            if os.getenv('DEPLOYMENT_STAGE') in ["Staging", "staging"]:
+                allowed_origins.extend([
+                    "https://canary-cellxgene.dev.single-cell.czi.technology/",
+                    r"^http://localhost:\d+",
+                ])
+            CORS(app, supports_credentials=True, origins=allowed_origins)
 
         Talisman(
             app,

@@ -14,7 +14,7 @@ import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
-import { UserInfoPayload } from "../reducers/userInfo";
+import { ConvertedUserColors } from "../reducers/colors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -30,9 +30,12 @@ function setGlobalConfig(config: any) {
 /*
 return promise fetching user-configured colors
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-async function userColorsFetchAndLoad(dispatch: any) {
-  return fetchJson("colors").then((response) =>
+async function userColorsFetchAndLoad(
+  dispatch: AppDispatch
+): Promise<{ type: string; userColors: ConvertedUserColors }> {
+  return fetchJson<{ [category: string]: { [label: string]: string } }>(
+    "colors"
+  ).then((response) =>
     dispatch({
       type: "universe: user color load success",
       userColors: loadUserColorConfig(response),
@@ -55,19 +58,6 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
     config,
   });
   return config;
-}
-
-async function userInfoFetch(dispatch: AppDispatch): Promise<UserInfoPayload> {
-  return fetchJson<{ userinfo: UserInfoPayload }>("userinfo").then(
-    (response) => {
-      const { userinfo: userInfo } = response || {};
-      dispatch({
-        type: "userInfo load complete",
-        userInfo,
-      });
-      return userInfo;
-    }
-  );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -119,7 +109,6 @@ const doInitialDataLoad = (): ((
         configFetch(dispatch),
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
-        userInfoFetch(dispatch),
       ]);
 
       genesetsFetch(dispatch, config);

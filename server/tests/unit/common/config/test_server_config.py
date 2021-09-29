@@ -47,7 +47,7 @@ class TestServerConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.server_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 44)
+        self.assertEqual(mock_check_attrs.call_count, 36)
 
     def test_handle_app__throws_error_if_port_doesnt_exist(self):
         config = self.get_config(port=99999999)
@@ -114,16 +114,6 @@ class TestServerConfig(ConfigTests):
     def test_handle_app__sets_web_base_url(self):
         config = self.get_config(web_base_url="anything.com")
         self.assertEqual(config.server_config.app__web_base_url, "anything.com")
-
-    def test_handle_auth__gets_client_secret_from_envvars_or_config_with_envvars_given_preference(self):
-        config = self.get_config(client_secret="KEY_FROM_FILE")
-        config.server_config.handle_authentication()
-        self.assertEqual(config.server_config.authentication__params_oauth__client_secret, "KEY_FROM_FILE")
-
-        os.environ["CXG_OAUTH_CLIENT_SECRET"] = "KEY_FROM_ENV"
-        config.external_config.handle_environment(self.context)
-
-        self.assertEqual(config.server_config.authentication__params_oauth__client_secret, "KEY_FROM_ENV")
 
     def test_handle_data_source__errors_when_passed_zero_or_two_dataroots(self):
         file_name = self.custom_app_config(
@@ -250,7 +240,6 @@ class TestServerConfig(ConfigTests):
         self.config.complete_config()
 
         server = self.create_app(self.config)
-        server.auth.requires_client_login = lambda: False
         server.testing = True
         session = server.test_client()
 
@@ -316,12 +305,3 @@ class TestServerConfig(ConfigTests):
         mock_tiledb_context.assert_called_once_with(
             {"sm.tile_cache_size": 10, "sm.num_reader_threads": 2, "vfs.s3.region": "us-east-1"}
         )
-
-    def test_test_auth_only_in_insecure(self):
-
-        config = self.get_config(auth_type="test")
-        with self.assertRaises(ConfigurationError):
-            config.complete_config()
-
-        config.update_server_config(authentication__insecure_test_environment=True)
-        config.complete_config()

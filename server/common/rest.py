@@ -8,7 +8,7 @@ import json
 from flask import make_response, jsonify, current_app, abort
 from werkzeug.urls import url_unquote
 
-from server.common.config.client_config import get_client_config, get_client_userinfo
+from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.errors import (
     FilterError,
@@ -23,6 +23,8 @@ from server.common.errors import (
 )
 from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
+
+from server.data_common import dataset_metadata
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -120,13 +122,16 @@ def schema_get(data_adaptor):
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
+def dataset_metadata_get(app_config, data_adaptor):
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config, current_app)
+    if metadata is not None:
+        return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
+    else:
+        return abort(HTTPStatus.NOT_FOUND)
+
+
 def config_get(app_config, data_adaptor):
     config = get_client_config(app_config, data_adaptor, current_app)
-    return make_response(jsonify(config), HTTPStatus.OK)
-
-
-def userinfo_get(app_config, data_adaptor):
-    config = get_client_userinfo(app_config, data_adaptor)
     return make_response(jsonify(config), HTTPStatus.OK)
 
 

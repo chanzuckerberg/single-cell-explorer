@@ -1,11 +1,10 @@
 import json
 import logging
-
 import requests
 from flask import current_app
 
 from server.common.utils.utils import path_join
-from server.common.errors import DatasetNotFoundError, DatasetAccessError
+from server.common.errors import DatasetNotFoundError, DatasetAccessError, DatasetMetadataError, TombstoneError
 from server.common.config.app_config import AppConfig
 from server.common.config.server_config import ServerConfig
 
@@ -18,6 +17,7 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
+
         if response.status_code == 200:
             dataset_identifiers = json.loads(response.content)
             return dataset_identifiers
@@ -71,7 +71,16 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
+
         if dataset_metadata:
+            if dataset_metadata["tombstoned"]:
+                dataset_id = dataset_metadata["dataset_id"]
+                collection_id = dataset_metadata["collection_id"]
+                msg = f"Dataset {dataset_id} from collection {collection_id} has been tombstoned and is no " \
+                      "longer available"
+
+                current_app.logger.log(logging.INFO, msg)
+                raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
             return dataset_metadata
 
     server_config = app_config.server_config
@@ -90,3 +99,43 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
         raise DatasetNotFoundError(f"Dataset location not found for {dataset_explorer_location}")
 
     return dataset_metadata
+
+
+def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_config: AppConfig, current_app):
+    data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
+    web_base_url = app_config.server_config.get_web_base_url()
+
+    try:
+        dataset_metadata_manager = current_app.dataset_metadata_cache_manager
+        with dataset_metadata_manager.get(
+            cache_key=dataset_explorer_location,
+            create_data_function=get_dataset_metadata_for_explorer_location,
+            create_data_args={"app_config": app_config},
+        ) as base_metadata:
+
+            collection_id = base_metadata.get("collection_id")
+            if collection_id is None:
+                return None
+
+            dataset_id = base_metadata["dataset_id"]
+            collection_visibility = base_metadata["collection_visibility"]
+
+            suffix = "/private" if collection_visibility == "PRIVATE" else ""
+
+            res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+
+            metadata = {
+                "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
+                "collection_name": res["name"],
+                "collection_description": res["description"],
+                "collection_contact_email": res["contact_email"],
+                "collection_contact_name": res["contact_name"],
+                "collection_links": res["links"],
+                "collection_datasets": res["datasets"],
+            }
+
+            return metadata
+
+    except Exception:
+        raise DatasetMetadataError("Error retrieving dataset metadata")

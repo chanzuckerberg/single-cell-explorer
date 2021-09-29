@@ -141,7 +141,7 @@ class Dataframe {
       * rowIndex/colIndex - null (create default index using offsets as key),
         or a caller-provided index.
       * __columnsAccessor - private interface, do not specify.  Used internally
-        to improve caching of column accessors when possible (eg, clone(), 
+        to improve caching of column accessors when possible (eg, clone(),
         dropCol(), withCol()).
     All columns and indices must have appropriate dimensionality.
     */
@@ -537,8 +537,8 @@ class Dataframe {
       throw new RangeError(`unknown label: ${label}`);
     }
 
-    /* 
-    Corner case to manage: if dropping the last column, return an empty dataframe. 
+    /*
+    Corner case to manage: if dropping the last column, return an empty dataframe.
     */
     if (this.dims[1] === 1) {
       return Dataframe.empty();

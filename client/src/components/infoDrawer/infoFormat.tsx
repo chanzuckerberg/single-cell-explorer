@@ -1,10 +1,16 @@
 import { H3, H1, UL, HTMLTable, Classes } from "@blueprintjs/core";
 import React from "react";
+import { DataPortalProps } from "../../common/types/entities";
+import Category from "../categorical/category";
+import { checkValidVersion } from "../util/version";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const renderContributors = (contributors: any, affiliations: any) => {
+const renderContributors = (
+  contributors: DataPortalProps["contributors"],
+  affiliations: string[]
+) => {
   // eslint-disable-next-line no-constant-condition --  Temp removed contributor section to avoid publishing PII
   if (!contributors || contributors.length === 0 || true) return null;
+
   return (
     <>
       <H3>Contributors</H3>
@@ -28,27 +34,28 @@ const renderContributors = (contributors: any, affiliations: any) => {
 };
 
 // generates a list of unique institutions by order of appearance in contributors
-const buildAffiliations = (contributors = []) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const affiliations: any = [];
+const buildAffiliations = (
+  contributors: { name: string; institution: string }[] = []
+) => {
+  const affiliations: string[] = [];
+
   contributors.forEach((contributor) => {
     const { institution } = contributor;
     if (affiliations.indexOf(institution) === -1) {
       affiliations.push(institution);
     }
   });
+
   return affiliations;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const renderAffiliations = (affiliations: any) => {
+const renderAffiliations = (affiliations: string[]) => {
   if (affiliations.length === 0) return null;
   return (
     <>
       <H3>Affiliations</H3>
       <UL>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
-        {affiliations.map((item: any, index: any) => (
+        {affiliations.map((item, index) => (
           <div key={item}>
             <sup>{index + 1}</sup>
             {"  "}
@@ -60,9 +67,9 @@ const renderAffiliations = (affiliations: any) => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const renderDOILink = (type: any, doi: any) => {
+const renderDOILink = (type: string, doi: string) => {
   if (!doi) return null;
+
   return (
     <>
       <H3>{type}</H3>
@@ -78,10 +85,8 @@ const renderDOILink = (type: any, doi: any) => {
 const ONTOLOGY_KEY = "ontology_term_id";
 // Render list of metadata attributes found in categorical field
 const renderDatasetMetadata = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  singleValueCategories: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  corporaMetadata: any
+  singleValueCategories: SingleValueCategories,
+  corporaMetadata: Partial<DataPortalProps>
 ) => {
   if (singleValueCategories.size === 0) return null;
   return (
@@ -103,13 +108,11 @@ const renderDatasetMetadata = (
           {Object.entries(corporaMetadata).map(([key, value]) => (
             <tr {...{ key }}>
               <td>{`${key}:`}</td>
-              {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'unknown' is not assignable to type 'ReactNod... Remove this comment to see the full error message */}
               <td>{value}</td>
               <td />
             </tr>
           ))}
           {Array.from(singleValueCategories).reduce((elems, pair) => {
-            // @ts-expect-error ts-migrate(2488) FIXME: Type 'unknown' must have a '[Symbol.iterator]()' m... Remove this comment to see the full error message
             const [category, value] = pair;
             // If the value is empty skip it
             if (!value) return elems;
@@ -181,16 +184,26 @@ const renderLinks = (projectLinks: any, aboutURL: any) => {
   );
 };
 
+export type SingleValueCategories = Map<string, Category>;
+
+interface Props {
+  datasetTitle: string;
+  singleValueCategories: SingleValueCategories;
+  aboutURL: string;
+  dataPortalProps: DataPortalProps;
+}
+
 const InfoFormat = React.memo(
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'datasetTitle' does not exist on type '{ ... Remove this comment to see the full error message
-  ({ datasetTitle, singleValueCategories, aboutURL, dataPortalProps = {} }) => {
-    if (
-      ["1.0.0", "1.1.0"].indexOf(
-        dataPortalProps.version?.corpora_schema_version
-      ) === -1
-    ) {
-      dataPortalProps = {};
+  ({
+    datasetTitle,
+    singleValueCategories,
+    aboutURL,
+    dataPortalProps = {} as DataPortalProps,
+  }: Props) => {
+    if (checkValidVersion(dataPortalProps)) {
+      dataPortalProps = {} as DataPortalProps;
     }
+
     const {
       title,
       publication_doi: doi,

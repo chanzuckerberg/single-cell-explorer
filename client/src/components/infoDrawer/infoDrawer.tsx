@@ -2,7 +2,7 @@ import React, { PureComponent } from "react";
 import { connect } from "react-redux";
 import { Drawer } from "@blueprintjs/core";
 
-import InfoFormat from "./infoFormat";
+import InfoFormat, { SingleValueCategories } from "./infoFormat";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -44,12 +44,10 @@ class InfoDrawer extends PureComponent {
       dataPortalProps,
     } = this.props;
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
     const allCategoryNames = selectableCategoryNames(schema).sort();
-    const singleValueCategories = new Map();
+    const singleValueCategories: SingleValueCategories = new Map();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    allCategoryNames.forEach((catName: any) => {
+    allCategoryNames.forEach((catName) => {
       const isUserAnno = schema?.annotations?.obsByName[catName]?.writable;
       const colSchema = schema.annotations.obsByName[catName];
       if (!isUserAnno && colSchema.categories?.length === 1) {

@@ -20,8 +20,6 @@ type State = any;
     (state as any).config?.parameters?.annotations ?? false,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   schema: (state as any).annoMatrix?.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  userInfo: (state as any).userInfo,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Categories extends React.Component<{}, State> {
@@ -142,12 +140,10 @@ class Categories extends React.Component<{}, State> {
       expandedCats,
     } = this.state;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'writableCategoriesEnabled' does not exis... Remove this comment to see the full error message
-    const { writableCategoriesEnabled, schema, userInfo } = this.props;
+    const { writableCategoriesEnabled, schema } = this.props;
     /* all names, sorted in display order.  Will be rendered in this order */
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-    const allCategoryNames = ControlsHelpers.selectableCategoryNames(
-      schema
-    ).sort();
+    const allCategoryNames =
+      ControlsHelpers.selectableCategoryNames(schema).sort();
     return (
       <div
         style={{
@@ -195,11 +191,7 @@ class Categories extends React.Component<{}, State> {
         {writableCategoriesEnabled ? (
           <div style={{ marginBottom: 10 }}>
             <Tooltip
-              content={
-                userInfo.is_authenticated
-                  ? "Create a new category"
-                  : "You must be logged in to create new categorical fields"
-              }
+              content="Create a new category"
               position={Position.RIGHT}
               boundary="viewport"
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -213,7 +205,6 @@ class Categories extends React.Component<{}, State> {
                 data-testid="open-annotation-dialog"
                 onClick={this.handleEnableAnnoMode}
                 intent="primary"
-                disabled={!userInfo.is_authenticated}
               >
                 Create new <strong>category</strong>
               </AnchorButton>

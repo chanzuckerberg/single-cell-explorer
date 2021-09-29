@@ -22,7 +22,13 @@ from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
 from server.common.utils.data_locator import DataLocator
-from server.common.errors import DatasetAccessError, RequestException, DatasetNotFoundError
+from server.common.errors import (
+    DatasetAccessError,
+    RequestException,
+    DatasetNotFoundError,
+    TombstoneError,
+    DatasetMetadataError
+)
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
@@ -67,10 +73,17 @@ def cache_control_always(**cache_kwargs):
     return _cache_control(True, **cache_kwargs)
 
 
-# tell the client not to cache the index.html page so that changes to the app work on redeployment
-# note that the bulk of the data needed by the client (datasets) will still be cached
+@webbp.errorhandler(RequestException)
+def handle_request_exception(error):
+    return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
+
+
+# tell the client and CDN not to cache the index.html page, so that changes to the
+# app work on redeployment. Note that the bulk of the data needed by the
+# client (datasets) will still be cached
+# https://web.dev/http-cache/#flowchart
 @webbp.route("/", methods=["GET"])
-@cache_control_always(public=True, max_age=0, no_store=True, no_cache=True, must_revalidate=True)
+@cache_control_always(no_store=True)
 def dataset_index(url_dataroot=None, dataset=None):
     app_config = current_app.app_config
     server_config = app_config.server_config
@@ -94,11 +107,9 @@ def dataset_index(url_dataroot=None, dataset=None):
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
-
-
-@webbp.errorhandler(RequestException)
-def handle_request_exception(error):
-    return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
+    except TombstoneError as e:
+        parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
@@ -124,18 +135,6 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
         )
 
 
-def requires_authentication(func):
-    @wraps(func)
-    def wrapped_function(self, *args, **kwargs):
-        auth = current_app.auth
-        if auth.is_user_authenticated():
-            return func(self, *args, **kwargs)
-        else:
-            return make_response("not authenticated", HTTPStatus.UNAUTHORIZED)
-
-    return wrapped_function
-
-
 def rest_get_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
@@ -143,10 +142,13 @@ def rest_get_data_adaptor(func):
             with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
-        except (DatasetAccessError, DatasetNotFoundError) as e:
+        except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
+        except TombstoneError as e:
+            parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
 
@@ -159,16 +161,6 @@ def dataroot_test_index():
 
     config = current_app.app_config
     server_config = config.server_config
-
-    auth = server_config.auth
-    if auth.is_valid_authentication_type():
-        if server_config.auth.is_user_authenticated():
-            data += f"<p>Logged in as {auth.get_user_id()} / {auth.get_user_name()} / {auth.get_user_email()}</p>"
-        if auth.requires_client_login():
-            if server_config.auth.is_user_authenticated():
-                data += f"<p><a href='{auth.get_logout_url(None)}'>Logout</a></p>"
-            else:
-                data += f"<p><a href='{auth.get_login_url(None)}'>Login</a></p>"
 
     datasets = []
     for dataroot_dict in server_config.multi_dataset__dataroot.values():
@@ -229,18 +221,18 @@ class SchemaAPI(DatasetResource):
         return common_rest.schema_get(data_adaptor)
 
 
+class DatasetMetadataAPI(DatasetResource):
+    @cache_control(public=True, max_age=ONE_WEEK)
+    @rest_get_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
+
+
 class ConfigAPI(DatasetResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.config_get(current_app.app_config, data_adaptor)
-
-
-class UserInfoAPI(DatasetResource):
-    @cache_control_always(no_store=True)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.userinfo_get(current_app.app_config, data_adaptor)
 
 
 class AnnotationsObsAPI(DatasetResource):
@@ -249,7 +241,6 @@ class AnnotationsObsAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.annotations_obs_get(request, data_adaptor)
 
-    @requires_authentication
     @cache_control(no_store=True)
     @rest_get_data_adaptor
     def put(self, data_adaptor):
@@ -334,8 +325,8 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
+    add_resource(DatasetMetadataAPI, "/dataset-metadata")
     add_resource(ConfigAPI, "/config")
-    add_resource(UserInfoAPI, "/userinfo")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")
     add_resource(AnnotationsVarAPI, "/annotations/var")
@@ -452,9 +443,3 @@ class Server:
         self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
 
         self.app.app_config = app_config
-
-        auth = server_config.auth
-        self.app.auth = auth
-        if auth and auth.requires_client_login():
-            auth.add_url_rules(self.app)
-        auth.complete_setup(self.app)

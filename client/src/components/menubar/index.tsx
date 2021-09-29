@@ -8,7 +8,6 @@ import styles from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
-import AuthButtons from "./authButtons";
 import Subset from "./subset";
 import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
@@ -49,10 +48,6 @@ type State = any;
     scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     libraryVersions: (state as any).config?.library_versions,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    auth: (state as any).config?.authentication,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    userInfo: (state as any).userInfo,
     // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     undoDisabled: state["@@undoable/past"].length === 0,
     // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
@@ -268,10 +263,6 @@ class MenuBar extends React.PureComponent<{}, State> {
       subsetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'userInfo' does not exist on type 'Readon... Remove this comment to see the full error message
-      userInfo,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'auth' does not exist on type 'Readonly<{... Remove this comment to see the full error message
-      auth,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -297,7 +288,6 @@ class MenuBar extends React.PureComponent<{}, State> {
           zIndex: 3,
         }}
       >
-        <AuthButtons {...{ auth, userInfo }} />
         <UndoRedoReset
           // @ts-expect-error ts-migrate(2322) FIXME: Type '{ dispatch: any; undoDisabled: any; redoDisa... Remove this comment to see the full error message
           dispatch={dispatch}

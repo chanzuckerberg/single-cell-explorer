@@ -1,6 +1,5 @@
 export const KEYS = {
   COOKIE_DECISION: "cxg.cookieDecision",
-  LOGIN_PROMPT: "cxg.LOGIN_PROMPT",
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.

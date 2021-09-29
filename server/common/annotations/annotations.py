@@ -1,7 +1,5 @@
 import os
 
-from flask import current_app, has_request_context
-
 from server.common.errors import DisabledFeatureError
 from server.common.utils.type_conversion_utils import get_schema_type_hint_of_array
 from server.common.genesets import write_gene_sets_tidycsv, read_gene_sets_tidycsv, validate_gene_sets
@@ -76,10 +74,6 @@ class Annotations:
         return list(genesets.values())
 
     def read_gene_sets(self, data_adaptor, context=None):
-        if has_request_context():
-            if not current_app.auth.is_user_authenticated():
-                return ({}, 0)
-
         gene_sets_uri_or_path = dataset_uri_to_geneset_uri(data_adaptor.data_locator.uri_or_path)
 
         server_config = data_adaptor.server_config

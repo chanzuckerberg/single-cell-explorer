@@ -1,20 +1,17 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const PuppeteerEnvironment = require("jest-environment-puppeteer");
 require("jest-circus");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const ENV_DEFAULT = require("../../../environment.default.json");
-
-// @ts-expect-error ts-migrate(2451) FIXME: Cannot redeclare block-scoped variable 'takeScreen... Remove this comment to see the full error message
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const takeScreenshot = require("./takeScreenshot");
 
 class ScreenshotEnvironment extends PuppeteerEnvironment {
   async handleTestEvent(event, state) {
-    if (["test_start", "test_done"].includes(event.name)) {
-      console.log("------------------event name:\n", event.name);
-      console.log("~~~~ Current test errors\n", new Date(), event.test.errors);
-      console.log("~~~~ Current test\n", new Date(), event.test);
-    }
+    // (thuang): Enable this when debugging a flaky test, since this provides
+    // the context around the flaky test, which is helpful for debugging.
+    // if (["test_start", "test_done"].includes(event.name)) {
+    //   console.log("------------------event name:\n", event.name);
+    //   console.log("~~~~ Current test errors\n", new Date(), event.test.errors);
+    //   console.log("~~~~ Current test\n", new Date(), event.test);
+    // }
 
     if (event.name === "error") {
       console.log("error event:", JSON.stringify(event));
