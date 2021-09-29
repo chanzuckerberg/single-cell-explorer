@@ -8,7 +8,8 @@ from server.tests.unit import TestServer
 PROJECT_ROOT: str = sys.argv[1]
 
 TEST_CONFIG_FILE = f"{PROJECT_ROOT}/client/__tests__/e2e/test_config.yaml"
-DATASET_DATAPATH = f"{PROJECT_ROOT}/example-dataset/pbmc3k.h5ad"
+DATASET_DATAPATH = f"{PROJECT_ROOT}/example-dataset"
+DATASET = "pbmc3k.h5ad"
 
 # Create AppConfig and update ServerConfig for test server instance
 app_config: AppConfig = AppConfig()
@@ -17,7 +18,7 @@ server_config: ServerConfig = app_config.server_config
 
 app_config.update_server_config(
                 app__flask_secret_key="SparkleAndShine",
-                single_dataset__datapath=DATASET_DATAPATH
+                multi_dataset__dataroot=DATASET_DATAPATH
             )
 app_config.complete_config()
 
