@@ -4,7 +4,7 @@ Document Status: _draft_
 
 Version: 0.2.0 (_DRAFT, not yet approved_)
 
-Date Last Modified: 2021-09-28
+Date Last Modified: 2021-09-29
 
 ## Introduction
 
@@ -167,7 +167,7 @@ All other Corpora schema fields will be encoded into a CXG using the conventions
 *NOTE: As of 2021-09-29, there are still CXG 0.1 files in existence, but these should be 
 replaced with CXG 0.2.0 files in the "near future".  Production CXG 0.1 files exist only in the `cellxgene-data-wrangling-prod` S3 bucket, and do not appear in cellxgene Data Portal.*  
 
-For CXG v0.1.0 files that were created from [Corpora Schema 1.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md) H5AD files, the following WILL apply:
+For CXG 0.1 files that were created from [Corpora Schema 1.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md) H5AD files, the following WILL apply:
 
 #### Presentation Hints
 * The [Corpora Schema 1.1.0 `title`](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md#presentation-metadata) value WILL be saved in the `cxg_properties.title` field.
