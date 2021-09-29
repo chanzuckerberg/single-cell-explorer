@@ -129,7 +129,7 @@ class WSGIServer(Server):
     @staticmethod
     def get_csp_hashes(app, app_config):
         script_hashes = WSGIServer.load_static_csp_hashes(app)
-        script_hashes += WSGIServer.compute_inline_csp_hashes(app, app_config)
+        # script_hashes += WSGIServer.compute_inline_csp_hashes(app, app_config)
         return script_hashes
 
 
