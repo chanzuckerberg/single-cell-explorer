@@ -92,7 +92,7 @@ CXG supports zero or more embeddings. Note that cellxgene currently _requires_ a
 
 ### `cxg_group_metadata` array
 
-Required, but empty TileDB array, used to store CXG-wide metadata within [array metadata](https://docs.tiledb.com/main/solutions/tiledb-embedded/api-usage/array-metadata).  The following fields are defined:
+Required, but empty, TileDB array, used to store CXG-wide metadata within [array metadata](https://docs.tiledb.com/main/solutions/tiledb-embedded/api-usage/array-metadata).  The following fields are defined:
 * `cxg_version`: (required) a [semantic version 2.0](https://semver.org/spec/v2.0.0.html)-compliant version, identifying the specification version used to encode the CXG.
 * `cxg_properties`: (optional) a dictionary containing dataset wide properties, defined below.
 * `cxg_category_colors`: (optional) a categorical color table, defined below.
@@ -122,18 +122,28 @@ This optional field contains a copy of the category color table, which MAY be us
 
 Note: This section is technically not part of the CXG specification, but rather provides an expectation of what metadata will be available in a CXG file that is converted from Corpora Schema-compliant H5AD file; we use "WILL" rather than "MUST" to document these expectations.
 
-The [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/corpora_schema) defines a set of metadata and encoding conventions for annotated matrices.  When a Corpora dataset is encoded as a CXG, the following WILL apply.   
+The [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md) defines a set of metadata and encoding conventions for annotated matrices.  When a Corpora dataset is encoded as a CXG, the following WILL apply.   
 
 ### Corpora metadata property
 
-A CXG containing a Corpora dataset WILL contain a property in the `cxg_group_metadata` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains all properties defined in the [Corpora Schema 2.0.0 "uns"](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
-
+A CXG containing a Corpora dataset WILL contain a property in the `cxg_group_metadata` field named `corpora`. The value WILL be a JSON encoded string, which in turn contains properties defined in the [Corpora Schema 2.0.0 `uns`](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#uns-dataset-metadata) AnnData container. The entire encoding WILL be JSON, rather than a hybrid Python/JSON encoding, but will otherwise follow the data structure defined by the Corpora schema.
 
 These Corpora metadata properties WILL exist in the CXG `cxg_group_metadata` field named `corpora`: 
 * `schema_version`
 * `title`
 * `X_normalization`
+
+These Corpora metadata properties MAY exist:
+* `contributors`
+* `preprint_doi`
+* `publication_doi`
+* `default_embedding`
+* `default_field`
+* `tags `
+* `project_name`
+* `project_description`
 * `X_approximate_distribution`
+
 
 For example:
 ```
@@ -142,16 +152,20 @@ For example:
         "schema_version": "2.0.0",
         "title": "Analysis of 8 datasets of healthy and diseased mouse heart",
         "X_normalization": "CPM",
-        "X_approximate_distribution": "normal"
+        "X_approximate_distribution": "normal",
+        "default_embedding": "X_umap"
     }
 }
 ```
 
 ### Other Corpora fields
 
-All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs`array as defined [above](#obs-and-var).
+All other Corpora schema fields will be encoded into a CXG using the conventions defined in the [Corpora Schema 2.0.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md). For example, fields in `AnnData.obs` will be encoded in the CXG `obs` array as defined [above](#obs-and-var).
 
-### Compatibility with CXG 0.1.0
+### Compatibility with CXG 0.1
+
+*NOTE: As of 2021-09-29, there are still CXG 0.1 files in existence, but these should be 
+replaced with CXG 0.2.0 files in the "near future".  Production CXG 0.1 files exist only in the `cellxgene-data-wrangling-prod` S3 bucket, and do not appear in cellxgene Data Portal.*  
 
 For CXG v0.1.0 files that were created from [Corpora Schema 1.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/2dc6a6f7ea342715d8a400a3cead29c691745df7/schema/1.1.0/corpora_schema.md) H5AD files, the following WILL apply:
 
@@ -164,7 +178,12 @@ Where these values differ in the final CXG, the `cxg_properties` values WILL tak
 
 ## CXG Version History
 
-There were several ad hoc version of CXG created prior to this spec.  This describes the _proposed_ next version of CXG, which incoporates support for Corpora schema semantics.  Prior versions:
-* _unnamed_ - an unnamed development version. Did not include explicit versioning support in the data model, but can be detected by the absence of `cxg_group_metadata` and any version property. Created in early 2020, and not actively used in production
-* 0.1 - the first and current version, defined to support the capabilities of the mid-2020 cellxgene.  Created in early 2020, and in active use. Includes everything in this spec, excluding Corpora schema support.  __NOTE:__ this version is encoded with a short-hand (malformed) semver version number.
-* 0.2.0 - this specification.
+There were several ad hoc version of CXG files created prior to this spec.  This describes the _current_ version of CXG, which incorporates support for Corpora schema semantics.  The known versions are as follows:
+
+| Version | Description | Detection |
+| ------- | ----------- | --------- |
+| _unnamed_ | An unnamed development version. Did not include explicit versioning support in the data model. Created in early 2020, and not actively used in production. | Missing `cxg_group_metadata` |
+| `0.1`       | The first version, defined to support the capabilities of the mid-2020 cellxgene.  Created in early 2020, and in active use. Includes everything in this spec, excluding Corpora schema support.  __NOTE:__ this version is encoded with a short-hand (malformed) semver version number. | `cxg_group_metadata.cxg_version == '0.1'` | 
+| `0.2.0`     | This specification and the current version.  Corpora Schema 1.0.0, 1.1.0, and 2.0.0 H5AD files have all been converted into CXG 0.2.0 files. CXG files generated from Corpora 1.x Schema files can be identified by the `corpora.version.corpora_schema_version` metadata property.  CXG files generated from Corpora 2.0.0 Schema files can be identified via the `corpora.schema_version=2.0.0` property. Arguably, the differences in `corpora` properties could have been captured in a new CXG file version, but in reality they all used the same 0.2.0 CXG version. In the near future, all CXG existing files will have been generated from Corpora 2.0.0 Schema files.  | `cxg_group_metadata.cxg_version == '0.2.0'` |
+
+You may use the `scripts/cxg_inspect.py`, available in this repository, to determine the version of a CXG file, along with the version of the Corpora Schema from which it may (or may not) have been generated.
