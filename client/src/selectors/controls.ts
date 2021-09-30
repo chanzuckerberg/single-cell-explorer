@@ -1,15 +1,15 @@
 /* App dependencies */
 import { RootState } from "../reducers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- - FIXME: unexpected any.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any --- update typings once controls reducer state is typed.
 export const selectControls = (state: RootState): any => state.controls;
 
 /*
- Returns true if the individual genes selection controls have been touched indicating work is in progress.
+ Returns true if individual genes have been created indicating work is in progress.
  @param controls from state
  @returns boolean
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: Argument 'state' should be typed... Remove this comment to see the full error message.
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- update typings once controls reducer state is typed.
 export const selectIsUserStateDirty = (state: any): boolean => {
   const controls = selectControls(state);
 

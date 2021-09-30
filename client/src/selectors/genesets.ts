@@ -5,7 +5,7 @@ import { State } from "../reducers/genesets";
 export const selectGeneSets = (state: RootState): State => state.genesets;
 
 /*
- Returns true if the gene set selection controls have been touched indicating work is in progress.
+ Returns true if genesets have been created indicating work is in progress.
  @param genesets from state
  @returns boolean
  */

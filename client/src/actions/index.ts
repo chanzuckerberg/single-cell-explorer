@@ -19,8 +19,8 @@ import { Collection, Dataset } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
-  storageGetWithExpiry,
-  storageSetWithExpiry,
+  storageGetTransient,
+  storageSetTransient,
 } from "../components/util/transientLocalStorage";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -312,7 +312,7 @@ const requestDifferentialExpression =
 export const checkExplainNewTab =
   () =>
   (dispatch: AppDispatch): void => {
-    const workInProgressWarn = storageGetWithExpiry(KEYS.WORK_IN_PROGRESS_WARN);
+    const workInProgressWarn = storageGetTransient(KEYS.WORK_IN_PROGRESS_WARN);
     if (workInProgressWarn) {
       dispatch({ type: "work in progress warning displayed" });
       postExplainNewTab(
@@ -335,7 +335,7 @@ export const openDataset =
     }
 
     dispatch({ type: "dataset opened" });
-    storageSetWithExpiry(KEYS.WORK_IN_PROGRESS_WARN, 5000);
+    storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 5000);
     window.open(deploymentUrl, "_blank");
   };
 

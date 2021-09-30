@@ -10,7 +10,7 @@ import { RootState } from "../reducers";
 /*
  Returns true if app controls have been touched indicating work is in progress.
  Touched controls include:
- - user defined category.
+ - user defined category,
  - categorical selection,
  - categorical metadata color selection,
  - histogram brush,

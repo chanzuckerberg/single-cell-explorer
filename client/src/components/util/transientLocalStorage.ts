@@ -2,19 +2,18 @@
 import { storageGet, storageRemove, storageSet } from "./localStorage";
 
 /*
- Single use local storage with expiry.
+ Gets local storage that has been set with an expiry value. Single use as local storage is cleared on get.
  @param key - local storage key name
- @returns boolean
+ @returns True if expiry time has not expired.
  */
-export function storageGetWithExpiry(key: string): boolean {
+export function storageGetTransient(key: string): boolean {
   const storeValue = storageGet(key);
   storageRemove(key);
 
   try {
     if (storeValue) {
-      const now = new Date();
       const expiryTime = JSON.parse(storeValue);
-      return now.getTime() < expiryTime;
+      return new Date().getTime() < expiryTime;
     }
     return false;
   } catch (e) {
@@ -23,11 +22,11 @@ export function storageGetWithExpiry(key: string): boolean {
 }
 
 /*
- Sets local storage with expiry.
+ Sets local storage with an expiry value.
  @param key - local storage key name
  @param timeout - time in ms
  */
-export function storageSetWithExpiry(key: string, timeout: number): void {
+export function storageSetTransient(key: string, timeout: number): void {
   const now = new Date();
   const expiryTime = now.getTime() + timeout;
   storageSet(key, JSON.stringify(expiryTime));
