@@ -86,9 +86,7 @@ Optional TileDB array, used to encode per-column offsets for column-shift sparse
 
 ### `emb` group and embedding arrays
 
-A CXG MUST have a group named `emb`, which will contain all embeddings.  Embeddings are encoded as TileDB arrays, of numeric type and shape `(n_obs, >=2)`.  The arrays MUST be a numeric type, and SHOULD be coerced to `float32`. The array values MUST NOT contain any infinite values and MUST contain at least one non-NaN value.  The TileDB array name will be assumed to be the embedding name (conventionally, embedding names in CXG are _not_ prefixed with an `X_` as they are in AnnData).
-
-CXG supports zero or more embeddings. Note that cellxgene currently _requires_ at least one embedding.
+A CXG MUST have a group named `emb`, which will contain all embeddings and MUST have at least one embedding array.  Embeddings are encoded as TileDB arrays, of numeric type and shape `(n_obs, >=2)`.  The arrays MUST be a numeric type, and SHOULD be coerced to `float32`. `Inf` and `NaN` values MAY be used, but the semantics for these values is undefined. The TileDB array name will be assumed to be the embedding name (conventionally, embedding names in CXG are _not_ prefixed with an `X_` as they are in AnnData).
 
 ### `cxg_group_metadata` array
 
