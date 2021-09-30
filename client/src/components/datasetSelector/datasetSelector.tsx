@@ -9,6 +9,7 @@ import { openDataset, switchDataset } from "../../actions";
 import { Collection, Dataset } from "../../common/types/entities";
 import DatasetMenu from "./datasetMenu";
 import { AppDispatch, RootState } from "../../reducers";
+import { selectIsUserStateDirty } from "../../selectors/global";
 import TruncatingBreadcrumb from "./truncatingBreadcrumb";
 import TruncatingBreadcrumbs, {
   TruncatingBreadcrumbMenuItemProps,
@@ -43,17 +44,12 @@ type Props = StateProps & DispatchProps;
 /*
  Map slice selected from store to props.
  */
-const mapStateToProps = (state: RootState): StateProps => {
-  const genesetsInProgress = state.genesets?.genesets?.size > 0;
-  const individualGenesInProgress =
-    state.controls?.userDefinedGenes?.length > 0;
-  return {
-    collection: state.collections?.collection,
-    portalUrl: state.collections?.portalUrl,
-    selectedDatasetId: state.collections?.selectedDatasetId,
-    workInProgress: genesetsInProgress || individualGenesInProgress,
-  };
-};
+const mapStateToProps = (state: RootState): StateProps => ({
+  collection: state.collections?.collection,
+  portalUrl: state.collections?.portalUrl,
+  selectedDatasetId: state.collections?.selectedDatasetId,
+  workInProgress: selectIsUserStateDirty(state),
+});
 
 /*
  Map actions dispatched by dataset selector to props.

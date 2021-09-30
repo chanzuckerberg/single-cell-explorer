@@ -63,14 +63,14 @@ export const postAsyncFailureToast = (message: any) =>
   });
 
 /*
-Dataset opened in new tab
+ Dataset opened in new tab.
+ @param message
+ @returns string
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export const postExplainNewTab = (message: string) => {
+export const postExplainNewTab = (message: string): string =>
   ToastTopCenter.show({
     className: styles.newTabToast,
     message,
     timeout: 5000,
     intent: Intent.PRIMARY,
   });
-};

@@ -3,12 +3,6 @@ export const KEYS = {
   WORK_IN_PROGRESS_WARN: "cxg.WORK_IN_PROGRESS_WARN",
 };
 
-// TODO(cc) review location
-export const WORK_IN_PROGRESS_WARN_STATE = {
-  OFF: "off",
-  ON: "on",
-};
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export function storageGet(key: any, defaultValue = null) {
   try {
@@ -17,6 +11,18 @@ export function storageGet(key: any, defaultValue = null) {
     return val;
   } catch (e) {
     return defaultValue;
+  }
+}
+
+/*
+ Removes local storage item.
+ @param key - local storage key name
+ */
+export function storageRemove(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // continue
   }
 }
 

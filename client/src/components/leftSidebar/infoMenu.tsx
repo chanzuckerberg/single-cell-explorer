@@ -1,13 +1,20 @@
+/* Core dependencies */
 import React from "react";
 import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
-/* app dependencies */
+/* App dependencies */
+import { LibraryVersions } from "../../globals";
 import { IconNames as CXGIconNames } from "../icon";
 import Icon from "../icon/icon";
 
-const InformationMenu = React.memo((props) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'libraryVersions' does not exist on type ... Remove this comment to see the full error message
+interface Props {
+  libraryVersions: LibraryVersions;
+  privacyURL?: string;
+  tosURL?: string;
+}
+
+const InformationMenu = React.memo<Props>((props): JSX.Element => {
   const { libraryVersions, tosURL, privacyURL } = props;
   return (
     <Popover
