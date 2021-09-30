@@ -135,8 +135,11 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
         )
 
 
-def expire_metadata_cache(url_dataroot: str = None, dataset: str = None):
-    current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
+def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
+    try:
+        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
+    except Exception as e:
+        logging.error(e)
 
 
 def rest_get_data_adaptor(func):
@@ -147,7 +150,9 @@ def rest_get_data_adaptor(func):
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            expire_metadata_cache(self.url_dataroot, dataset)
+            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
+            # it from the cache
+            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
