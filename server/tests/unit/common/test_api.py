@@ -735,7 +735,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.headers['Location'],
                          "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939")  # noqa E501
 
-    @patch("server.app.app.expire_metadata_cache")
+    @patch("server.app.app.evict_dataset_from_metadata_cache")
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_metadata_cache_item_invalidated_on_errors(self, mock_dp, mock_expire):
         mock_expire.side_effect = evict_dataset_from_metadata_cache
