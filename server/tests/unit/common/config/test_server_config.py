@@ -272,7 +272,7 @@ class TestServerConfig(ConfigTests):
         # access a dataset (no slash)
         with self.subTest("access a dataset without a trailing a slash"):
             response = session.get("/set2/pbmc3k.cxg")
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 308)
 
         # access a dataset (with slash)
         with self.subTest("access a dataset with a slash"):
