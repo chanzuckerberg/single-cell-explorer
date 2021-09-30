@@ -9,17 +9,12 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
-/* Collection and dataset IDs for the current dataset */
-export interface DatasetIdentification {
-  collection_id: string | null;
-  collection_visibility: string | null;
-  dataset_id: string | null;
-}
+/* Config links types */
+export type ConfigLink = "about-dataset" | "collections-home-page";
 
 /* rough shape of config object */
 export interface Config {
   corpora_props: DataPortalProps;
-  dataset_identification: DatasetIdentification;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
   library_versions: LibraryVersions;
@@ -32,7 +27,7 @@ export interface Config {
     [key: string]: unknown;
   };
   portalUrl: string;
-  links: Record<string, unknown>;
+  links: Record<ConfigLink, unknown>;
 }
 
 /* shape of config library_versions */
@@ -46,29 +41,7 @@ these are default values for configuration the CLI may supply.
 See the REST API and CLI specs for more info.
 */
 export const configDefaults: Config = {
-  corpora_props: {
-    contributors: [],
-    default_embedding: "",
-    layer_descriptions: {
-      X: "",
-    },
-    organism: "",
-    organism_ontology_term_id: "",
-    preprint_doi: "",
-    project_name: "",
-    project_description: "",
-    project_links: [],
-    publication_doi: "",
-    schema_version: "",
-    title: "",
-    version: { corpora_encoding_version: "", corpora_schema_version: "" },
-  },
   features: {},
-  dataset_identification: {
-    collection_id: null,
-    collection_visibility: null,
-    dataset_id: null,
-  },
   displayNames: {},
   library_versions: {
     anndata: "",
@@ -80,7 +53,7 @@ export const configDefaults: Config = {
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },
-  portalUrl: "",
+  // @ts-expect-error -- Revisit typings here with respect to CLI defaults
   links: {},
 };
 

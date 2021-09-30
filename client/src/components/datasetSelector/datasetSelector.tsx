@@ -6,10 +6,11 @@ import { connect } from "react-redux";
 
 /* App dependencies */
 import { openDataset, switchDataset } from "../../actions";
-import { Collection, Dataset } from "../../common/types/entities";
+import { DatasetMetadata, Dataset } from "../../common/types/entities";
 import DatasetMenu from "./datasetMenu";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectIsUserStateDirty } from "../../selectors/global";
+import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import TruncatingBreadcrumb from "./truncatingBreadcrumb";
 import TruncatingBreadcrumbs, {
   TruncatingBreadcrumbMenuItemProps,
@@ -33,9 +34,9 @@ interface DispatchProps {
  Props selected from store.
  */
 interface StateProps {
-  collection: Collection;
+  datasetMetadata: DatasetMetadata;
   portalUrl: string;
-  selectedDatasetId: string;
+  seamlessEnabled: boolean;
   workInProgress: boolean;
 }
 
@@ -44,12 +45,14 @@ type Props = StateProps & DispatchProps;
 /*
  Map slice selected from store to props.
  */
-const mapStateToProps = (state: RootState): StateProps => ({
-  collection: state.collections?.collection,
-  portalUrl: state.collections?.portalUrl,
-  selectedDatasetId: state.collections?.selectedDatasetId,
-  workInProgress: selectIsUserStateDirty(state),
-});
+const mapStateToProps = (state: RootState): StateProps => {
+  return {
+    datasetMetadata: state.datasetMetadata?.datasetMetadata,
+    portalUrl: state.datasetMetadata?.portalUrl,
+    seamlessEnabled: selectIsSeamlessEnabled(state),
+    workInProgress: selectIsUserStateDirty(state),
+  };
+};
 
 /*
  Map actions dispatched by dataset selector to props.
@@ -102,15 +105,15 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build menu items representing datasets that are siblings of the selected dataset.
-   @param collection - Collection containing selected dataset.
+   @param datasetMetadata - Dataset metadata containing selected dataset.
    @param selectedDatasetID - ID dataset currently being viewed.
    @returns Returns set of menu items each representing sibling dataset of the current selected dataset.
   */
   buildDatasetMenuItems = (
-    collection: Collection,
+    datasetMetadata: DatasetMetadata,
     selectedDatasetID: string
   ): TruncatingBreadcrumbMenuItemProps[] =>
-    [...collection.datasets]
+    [...datasetMetadata.collection_datasets]
       // Remove current dataset from the set of datasets
       .filter((dataset) => dataset.id !== selectedDatasetID)
       .sort(this.sortDatasets)
@@ -135,20 +138,19 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build "dataset" breadcrumb props for displaying a breadcrumb with a menu.
-   @param collection - Collection containing selected dataset.
-   @param selectedDatasetId - ID of selected dataset.
+   @param datasetMetadata - Dataset metadata containing selected dataset.
    @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
   */
   buildDatasetBreadcrumbProps(
-    collection: Collection,
-    selectedDatasetId: string
+    datasetMetadata: DatasetMetadata
   ): TruncatingBreadcrumbMenuProps {
+    const { dataset_id: selectedDatasetId } = datasetMetadata;
     const selectedDataset = this.findDatasetById(
       selectedDatasetId,
-      collection.datasets
+      datasetMetadata.collection_datasets
     );
     const datasetMenuItems = this.buildDatasetMenuItems(
-      collection,
+      datasetMetadata,
       selectedDatasetId
     );
     return {
@@ -163,20 +165,18 @@ class DatasetSelector extends PureComponent<Props> {
 
   /*
    Build "collection" breadcrumb props, links to Portal's collection detail page. 
-   @param portalUrl - URL to Portal.
-   @param collection - Collection containing selected dataset.
+   @param datasetMetadata - Dataset metadata containing collection information.
    @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
   */
   buildCollectionBreadcrumbProps(
-    portalUrl: string,
-    collection: Collection
+    datasetMetadata: DatasetMetadata
   ): TruncatingBreadcrumbProps {
     return {
       ...this.defaultBreadcrumbProps,
-      href: `${portalUrl}/collections/${collection.id}`,
-      key: `bc-collection-${collection.id}`,
+      href: datasetMetadata.collection_url,
+      key: `bc-collection`,
       shortText: "Collection",
-      text: collection.name,
+      text: datasetMetadata.collection_name,
     };
   }
 
@@ -235,8 +235,8 @@ class DatasetSelector extends PureComponent<Props> {
       : this.renderBreadcrumb(item);
 
   render(): JSX.Element | null {
-    const { collection, portalUrl, selectedDatasetId } = this.props;
-    if (!collection || !portalUrl || !selectedDatasetId) {
+    const { datasetMetadata, portalUrl, seamlessEnabled } = this.props;
+    if (!seamlessEnabled) {
       return null;
     }
     return (
@@ -253,8 +253,8 @@ class DatasetSelector extends PureComponent<Props> {
           currentBreadcrumbRenderer={this.renderDatasetBreadcrumb}
           items={[
             this.buildHomeBreadcrumbProps(portalUrl),
-            this.buildCollectionBreadcrumbProps(portalUrl, collection),
-            this.buildDatasetBreadcrumbProps(collection, selectedDatasetId),
+            this.buildCollectionBreadcrumbProps(datasetMetadata),
+            this.buildDatasetBreadcrumbProps(datasetMetadata),
           ]}
         />
       </div>

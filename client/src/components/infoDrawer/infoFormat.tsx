@@ -3,7 +3,11 @@ import { H3, HTMLTable, Classes, Tooltip, Position } from "@blueprintjs/core";
 import React from "react";
 
 // App dependencies
-import { Collection, DataPortalProps, Link } from "../../common/types/entities";
+import {
+  DatasetMetadata,
+  DataPortalProps,
+  Link,
+} from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
 import { checkValidVersion } from "../util/version";
 
@@ -34,7 +38,7 @@ interface MetadataView {
 }
 
 interface Props {
-  collection: Collection;
+  datasetMetadata: DatasetMetadata;
   dataPortalProps: DataPortalProps;
   singleValueCategories: SingleValueCategories;
 }
@@ -109,12 +113,17 @@ const getTableStyles = (): React.CSSProperties => ({
 
 /*
  Render collection contact and links.
- @param collection - Collection containing link information to be displayed
+ @param datasetMetadata - Dataset metadata containing collection link information to be displayed
  @returns Markup displaying contact and collection-related links.
  */
-const renderCollectionLinks = (collection: Collection): JSX.Element => {
-  const links = buildCollectionLinks(collection.links);
-  const { contact_name: contactName, contact_email: contactEmail } = collection;
+const renderCollectionLinks = (
+  datasetMetadata: DatasetMetadata
+): JSX.Element => {
+  const links = buildCollectionLinks(datasetMetadata.collection_links);
+  const {
+    collection_contact_name: contactName,
+    collection_contact_email: contactEmail,
+  } = datasetMetadata;
   return (
     <>
       {renderSectionTitle("Collection")}
@@ -296,7 +305,7 @@ const transformSingleValueCategoriesMetadata = (
     });
 
 const InfoFormat = React.memo<Props>(
-  ({ collection, singleValueCategories, dataPortalProps = {} }) => {
+  ({ datasetMetadata, singleValueCategories, dataPortalProps = {} }) => {
     if (checkValidVersion(dataPortalProps as DataPortalProps)) {
       dataPortalProps = {};
     }
@@ -305,9 +314,9 @@ const InfoFormat = React.memo<Props>(
     return (
       <div className={Classes.DRAWER_BODY}>
         <div className={Classes.DIALOG_BODY}>
-          <H3>{collection.name}</H3>
-          <p>{collection.description}</p>
-          {renderCollectionLinks(collection)}
+          <H3>{datasetMetadata.collection_name}</H3>
+          <p>{datasetMetadata.collection_description}</p>
+          {renderCollectionLinks(datasetMetadata)}
           {renderDatasetMetadata(singleValueCategories, { organism })}
         </div>
       </div>

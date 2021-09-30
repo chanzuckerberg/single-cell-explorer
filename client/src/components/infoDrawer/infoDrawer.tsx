@@ -7,7 +7,7 @@ import { Drawer, Position } from "@blueprintjs/core";
 import InfoFormat, { SingleValueCategories } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
-import { Collection, DataPortalProps } from "../../common/types/entities";
+import { DatasetMetadata, DataPortalProps } from "../../common/types/entities";
 
 /*
  Actions dispatched by info drawer.
@@ -27,7 +27,7 @@ interface OwnProps {
  Props selected from store.
  */
 interface StateProps {
-  collection: Collection;
+  datasetMetadata: DatasetMetadata;
   dataPortalProps: DataPortalProps;
   isOpen: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -40,7 +40,7 @@ type Props = DispatchProps & OwnProps & StateProps;
  Map values selected from store to props.
  */
 const mapStateToProps = (state: RootState): StateProps => ({
-  collection: state.collections?.collection,
+  datasetMetadata: state.datasetMetadata?.datasetMetadata,
   dataPortalProps: state.config?.corpora_props,
   isOpen: state.controls.datasetDrawer,
   schema: state.annoMatrix.schema,
@@ -60,7 +60,7 @@ class InfoDrawer extends PureComponent<Props> {
   };
 
   render(): JSX.Element {
-    const { collection, position, schema, isOpen, dataPortalProps } =
+    const { datasetMetadata, position, schema, isOpen, dataPortalProps } =
       this.props;
 
     const allCategoryNames = selectableCategoryNames(schema).sort();
@@ -78,7 +78,7 @@ class InfoDrawer extends PureComponent<Props> {
       <Drawer size={480} onClose={this.handleClose} {...{ isOpen, position }}>
         <InfoFormat
           {...{
-            collection,
+            datasetMetadata,
             singleValueCategories,
             dataPortalProps: dataPortalProps ?? {},
           }}
