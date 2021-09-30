@@ -15,7 +15,7 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import { Collection, Dataset } from "../common/types/entities";
+import { DatasetMetadata, Dataset } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -68,41 +68,22 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
 }
 
 /*
- Fetch collection and save collection to store.
+ Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
  @param dispatch Function facilitating update of store.
  @param config Response from config endpoint containing collection ID for the current dataset.
  */
-async function collectionFetch(
+async function datasetMetadataFetch(
   dispatch: AppDispatch,
   config: Config
 ): Promise<void> {
-  if (window.origin.indexOf("localhost")) {
-    config.dataset_identification = {
-      collection_id: "169b39dd-c166-4177-b610-c5970a526b74",
-      collection_visibility: "PUBLIC",
-      dataset_id: "4dee4aec-405f-4627-96fb-cafd994c58bf",
-    };
-  }
-  const {
-    dataset_identification: {
-      collection_id: collectionId,
-      dataset_id: selectedDatasetId,
-    },
-  } = config;
-  if (!collectionId || !selectedDatasetId) {
-    dispatchNetworkErrorMessageToUser(
-      "Dataset identification not found for current dataset"
-    );
-    return;
-  }
-  const collection = await fetchPortalJson<Collection>(
-    `collections/${collectionId}`
+  const { links } = config;
+  const datasetMetadata = await fetchJson<{ metadata: DatasetMetadata }>(
+    "dataset-metadata"
   );
   dispatch({
-    type: "collection load complete",
-    collection,
-    portalUrl: "https://cellxgene.staging.single-cell.czi.technology/", // TODO pull from config once 70 is completed.
-    selectedDatasetId,
+    type: "dataset metadata load complete",
+    datasetMetadata,
+    portalUrl: links["collections-home-page"],
   });
 }
 
@@ -157,7 +138,7 @@ const doInitialDataLoad = (): ((
         userColorsFetchAndLoad(dispatch),
       ]);
 
-      collectionFetch(dispatch, config);
+      datasetMetadataFetch(dispatch, config);
 
       genesetsFetch(dispatch, config);
 
@@ -371,16 +352,6 @@ function fetchJson<T>(pathAndQuery: string): Promise<T> {
   return doJsonRequest<T>(
     `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
   ) as Promise<T>;
-}
-
-/* 
- Fetch JSON from Portal API.
- TODO(cc) revisit - remove once #59 is completed. 
- */
-function fetchPortalJson<T>(url: string): Promise<T> {
-  return doJsonRequest(
-    `https://api.cellxgene.staging.single-cell.czi.technology/dp/v1/${url}`
-  );
 }
 
 export default {

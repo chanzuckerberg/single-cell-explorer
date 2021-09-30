@@ -1,16 +1,18 @@
 // If a globally shared type or interface doesn't have a clear owner, put it here
 
 /*
- Set of datasets and corresponding meta.
+ Collection and dataset information for the selected dataset. 
  */
-export interface Collection {
-  contact_email: string;
-  contact_name: string;
-  datasets: Dataset[];
-  description: string;
-  id: string;
-  links: Link[];
-  name: string;
+export interface DatasetMetadata {
+  collection_contact_email: string;
+  collection_contact_name: string;
+  collection_datasets: Dataset[];
+  collection_description: string;
+  collection_links: Link[];
+  collection_name: string;
+  collection_url: string;
+  dataset_id: string;
+  dataset_name: string;
 }
 
 /*
