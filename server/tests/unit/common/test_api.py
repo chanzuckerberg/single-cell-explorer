@@ -765,7 +765,6 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(good_response.status_code, 200)
         self.assertEqual(mock_dp.call_count, 2)
 
-
 class TestDatasetMetadata(BaseTest):
     @classmethod
     def setUpClass(cls):
@@ -834,6 +833,7 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["dataset_name"], "Test Dataset")
 
         expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}"
+        self.assertEqual(response_obj["dataset_id"], response_body["datasets"][0]["id"])
         self.assertEqual(response_obj["collection_url"], expected_url)
         self.assertEqual(response_obj["collection_name"], response_body["name"])
         self.assertEqual(response_obj["collection_contact_email"], response_body["contact_email"])
@@ -871,6 +871,43 @@ class TestDatasetMetadata(BaseTest):
         result = self.client.get(url)
 
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+
+class TestConfigEndpoint(BaseTest):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
+        cls.app__web_base_url = "https://cellxgene.staging.single-cell.czi.technology/"
+        cls.config = AppConfig()
+        cls.config.update_server_config(
+            data_locator__api_base=cls.data_locator_api_base,
+            app__web_base_url=cls.app__web_base_url,
+            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            app__flask_secret_key="testing",
+            app__debug=True,
+            data_locator__s3__region_name="us-east-1",
+        )
+        super().setUpClass(cls.config)
+
+        cls.app.testing = True
+        cls.client = cls.app.test_client()
+
+
+    def test_config_has_collections_home_page(self):
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+
+        endpoint = "config"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        # print(f"SDFSDF SDJFSF D {url}")
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+        result_data = json.loads(result.data)
+        self.assertEqual(
+            result_data["config"]["links"]["collections-home-page"], 
+            self.app__web_base_url[:-1]
+        )
 
 
 class MockResponse:

@@ -27,7 +27,10 @@ def get_client_config(app_config, data_adaptor, current_app):
     library_versions["cellxgene"] = cellxgene_display_version
 
     # links
-    links = {"about-dataset": about}
+    links = {
+        "collections-home-page": server_config.get_web_base_url(),
+        "about-dataset": about,
+    }
 
     # parameters
     parameters = {
