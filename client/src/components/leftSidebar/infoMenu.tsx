@@ -4,29 +4,20 @@ import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 /* App dependencies */
-import { LibraryVersions } from "../../globals";
 import { IconNames as CXGIconNames } from "../icon";
 import Icon from "../icon/icon";
 
 interface Props {
-  libraryVersions: LibraryVersions;
   privacyURL?: string;
   tosURL?: string;
 }
 
 const InformationMenu = React.memo<Props>((props): JSX.Element => {
-  const { libraryVersions, tosURL, privacyURL } = props;
+  const { tosURL, privacyURL } = props;
   return (
     <Popover
       content={
         <Menu>
-          <MenuItem
-            href="https://chanzuckerberg.github.io/cellxgene/"
-            icon={<Icon icon={CXGIconNames.DOCUMENT} />}
-            rel="noopener"
-            target="_blank"
-            text="Documentation"
-          />
           <MenuItem
             href="https://join-cellxgene-users.herokuapp.com/"
             icon={<Icon icon={CXGIconNames.SLACK} />}
@@ -46,8 +37,6 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
             popoverProps={{ openOnTargetFocus: false }}
             text="About cellxgene"
           >
-            <MenuItem text={libraryVersions?.cellxgene || null} />
-            <MenuItem text="MIT License" />
             {tosURL && (
               <MenuItem
                 href={tosURL}
