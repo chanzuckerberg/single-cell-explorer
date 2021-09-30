@@ -120,6 +120,11 @@ class TestDatasetConfig(ConfigTests):
 
     def test_multi_dataset(self):
         config = AppConfig()
+        try:
+            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set2")
+            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set3")
+        except FileExistsError:
+            pass
         # test for illegal url_dataroots
         for illegal in ("../b", "!$*", "\\n", "", "(bad)"):
             config.update_server_config(
@@ -142,8 +147,8 @@ class TestDatasetConfig(ConfigTests):
             app__flask_secret_key="secret",
             multi_dataset__dataroot=dict(
                 s1=dict(dataroot=f"{PROJECT_ROOT}/example-dataset", base_url="set1/1/2"),
-                s2=dict(dataroot=f"{FIXTURES_ROOT}", base_url="set2"),
-                s3=dict(dataroot=f"{FIXTURES_ROOT}", base_url="set3"),
+                s2=dict(dataroot=f"{FIXTURES_ROOT}/set2", base_url="set2"),
+                s3=dict(dataroot=f"{FIXTURES_ROOT}/set3", base_url="set3"),
             ),
         )
 
@@ -194,7 +199,9 @@ class TestDatasetConfig(ConfigTests):
 
         response = session.get("/health")
         self.assertEqual(json.loads(response.data)["status"], "pass")
-
+        # cleanup
+        os.unlink(f"{FIXTURES_ROOT}/set2")
+        os.unlink(f"{FIXTURES_ROOT}/set3")
     def test_configfile_with_specialization(self):
         # test that per_dataset_config config load the default config, then the specialized config
 

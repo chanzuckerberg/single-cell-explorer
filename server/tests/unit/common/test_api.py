@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import requests
 
+from server.app.app import evict_dataset_from_metadata_cache
 from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
@@ -615,9 +616,9 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v0.cxg/",  # noqa E501
+            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v0.cxg/",
+            # noqa E501
         )
-
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
@@ -633,7 +634,8 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/',  # noqa E501
+            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/',
+            # noqa E501
         )
 
         # check schema loads correctly even with metadata api exception
@@ -715,7 +717,6 @@ class TestDataLocatorMockApi(BaseTest):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
         response_body = json.dumps({
@@ -731,11 +732,40 @@ class TestDataLocatorMockApi(BaseTest):
         url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
         result = self.client.get(url)
         self.assertEqual(result.status_code, 302)
-        self.assertEqual(result.headers['Location'], "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939") # noqa E501
+        self.assertEqual(result.headers['Location'],
+                         "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939")  # noqa E501
 
+    @patch("server.app.app.evict_dataset_from_metadata_cache")
+    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
+    def test_metadata_cache_item_invalidated_on_errors(self, mock_dp, mock_expire):
+        mock_expire.side_effect = evict_dataset_from_metadata_cache
+        response_body_bad = {
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": f"BAD_PATH_TO_DATASET/pbmc3k.cxg",
+            "tombstoned": False,
+        }
+        mock_dp.return_value = response_body_bad
+        TEST_DATASET_URL_BASE = "/e/pbmc3k_v3.cxg"
+        url = f"{TEST_DATASET_URL_BASE}/api/v0.2/config"
+        bad_response = self.client.get(url)
+        self.assertEqual(bad_response.status_code, 404)
+        self.assertEqual(mock_expire.call_count, 1)
+        response_body_good = {
+            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "collection_visibility": "PUBLIC",
+            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
+            "tombstoned": False,
+        }
+        mock_dp.return_value = response_body_good
+        good_response = self.client.get(url)
+
+        self.assertEqual(good_response.status_code, 200)
+        self.assertEqual(mock_dp.call_count, 2)
 
 class TestDatasetMetadata(BaseTest):
-
     @classmethod
     def setUpClass(cls):
         cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
@@ -768,21 +798,21 @@ class TestDatasetMetadata(BaseTest):
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
 
         response_body = {
-            "contact_email": "test_email", 
-            "contact_name": "test_user", 
+            "contact_email": "test_email",
+            "contact_name": "test_user",
             "datasets": [
                 {
-                    "collection_visibility": "PUBLIC", 
-                    "id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939", 
-                    "name": "Test Dataset", 
-                }, 
-            ], 
-            "description": "test_description", 
-            "id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6", 
+                    "collection_visibility": "PUBLIC",
+                    "id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+                    "name": "Test Dataset",
+                },
+            ],
+            "description": "test_description",
+            "id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
             "links": [
                 "http://test.link",
-            ], 
-            "name": "Test Collection", 
+            ],
+            "name": "Test Collection",
             "visibility": "PUBLIC",
         }
 
