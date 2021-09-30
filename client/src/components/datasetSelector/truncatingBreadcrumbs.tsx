@@ -5,7 +5,7 @@ import {
   MenuItemProps,
   ResizeSensor,
 } from "@blueprintjs/core";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { ResizeEntry } from "@blueprintjs/core/src/components/resize-sensor/resizeObserverTypes";
 
 interface Props {
@@ -344,7 +344,7 @@ const updateBreadcrumbConfigs = (
 
 const TruncatingBreadcrumbs = React.memo<Props>(
   ({ breadcrumbRenderer, currentBreadcrumbRenderer, items: rawItems }) => {
-    const [items, setItems] = useState<BreadcrumbConfig[]>([]);
+    const [items, setItems] = useState<BreadcrumbConfig[]>(initItems(rawItems));
 
     /*
      On resize callback from ResizeSensor, save the current width of the breadcrumbs.
@@ -382,13 +382,6 @@ const TruncatingBreadcrumbs = React.memo<Props>(
           </li>
         );
       });
-
-    /*
-     Init/update breadcrumb config from the set of raw breadcrumb props.
-     */
-    useEffect(() => {
-      setItems(initItems(rawItems));
-    }, [rawItems]);
 
     return (
       <ResizeSensor onResize={onResize}>

@@ -16,13 +16,12 @@ import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
 import { Collection, Dataset } from "../common/types/entities";
-import {
-  KEYS,
-  storageGet,
-  storageSet,
-  WORK_IN_PROGRESS_WARN_STATE,
-} from "../components/util/localStorage";
 import { postExplainNewTab } from "../components/framework/toasters";
+import { KEYS } from "../components/util/localStorage";
+import {
+  storageGetWithExpiry,
+  storageSetWithExpiry,
+} from "../components/util/transientLocalStorage";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -307,21 +306,20 @@ const requestDifferentialExpression =
     }
   };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export const checkExplainNewTab = () => (dispatch: any) => {
-  /*
-  Opens toast "work in progress" warning.
-   */
-  if (
-    storageGet(KEYS.WORK_IN_PROGRESS_WARN) === WORK_IN_PROGRESS_WARN_STATE.ON
-  ) {
-    dispatch({ type: "work in progress warning displayed" });
-    postExplainNewTab(
-      "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
-    );
-    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.OFF);
-  }
-};
+/*
+ Check local storage for flag indicating that the work in progress toast should be displayed.
+ */
+export const checkExplainNewTab =
+  () =>
+  (dispatch: AppDispatch): void => {
+    const workInProgressWarn = storageGetWithExpiry(KEYS.WORK_IN_PROGRESS_WARN);
+    if (workInProgressWarn) {
+      dispatch({ type: "work in progress warning displayed" });
+      postExplainNewTab(
+        "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
+      );
+    }
+  };
 
 /*
  Open selected dataset in a new tab.
@@ -337,7 +335,7 @@ export const openDataset =
     }
 
     dispatch({ type: "dataset opened" });
-    storageSet(KEYS.WORK_IN_PROGRESS_WARN, WORK_IN_PROGRESS_WARN_STATE.ON);
+    storageSetWithExpiry(KEYS.WORK_IN_PROGRESS_WARN, 5000);
     window.open(deploymentUrl, "_blank");
   };
 
