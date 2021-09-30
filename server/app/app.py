@@ -409,12 +409,36 @@ class Server:
                 dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
                 self.app.register_blueprint(dataroot_resources.blueprint)
 
-                self.app.add_url_rule(
-                    f"/{url_dataroot}/<string:dataset>",
-                    f"dataset_index_{url_dataroot}",
-                    lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                    methods=["GET"],
-                )
+                # TODO: after migrating the test suit to the multi dataset mode, the commented-out rule below that is
+                #  added via self.app.add_url_rule for the for the leaf endpoint ".../<dataset>" (no trailing "/")
+                #  stopped working; the name of the dataset ("pbmc3k.h5ad") gets spliced out of the subsequent calls for
+                #  static assets, yielding 404 errors:
+
+                # "GET /d/pbmc3k.h5ad HTTP/1.1" 200 -
+                # "GET /d/static/main-6bba7b8203c999fe8040.js HTTP/1.1" 404 -
+
+                # TODO (cont.): after commenting out this rule, calls to the leaf endpoint are redirected to the branch
+                #  endpoint (".../<dataset>/") and subsequent calls for static assets have the dataset included in the
+                #  route, as desired:
+
+                # "GET /d/pbmc3k.h5ad HTTP/1.1" 308 -
+                # "GET /d/pbmc3k.h5ad/ HTTP/1.1" 200 -
+                # "GET /d/pbmc3k.h5ad/static/main-6bba7b8203c999fe8040.js HTTP/1.1" 200 -
+
+                # TODO (cont.): This is accomplished by the enabled default `strict_slashes` in Flask's Werkzeug
+                #  routing, which redirects leaf calls to the corresponding branch if present. Read more about this
+                #  at https://werkzeug.palletsprojects.com/en/2.0.x/routing/#rule-format.
+                #
+                # TODO (cont.): It is unclear to me why keeping the leaf endpoint in causes the dataset name, meaning
+                #  the "<dataset>" (or in this case: "pbmc3k.h5ad") portion of the url, to get spliced out. Would be
+                #  good to pinpoint the cause so that we don't run into this issue in the future. - @danieljhegeman
+
+                # self.app.add_url_rule(
+                #     f"/{url_dataroot}/<string:dataset>",
+                #     f"dataset_index_{url_dataroot}",
+                #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                #     methods=["GET"],
+                # )
                 self.app.add_url_rule(
                     f"/{url_dataroot}/<string:dataset>/",
                     f"dataset_index_{url_dataroot}/",
