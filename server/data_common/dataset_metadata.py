@@ -126,6 +126,7 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
 
             metadata = {
                 "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+                "dataset_id": dataset_id,
                 "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
                 "collection_name": res["name"],
                 "collection_description": res["description"],

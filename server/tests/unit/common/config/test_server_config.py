@@ -213,13 +213,19 @@ class TestServerConfig(ConfigTests):
 
     @patch("server.app.app.render_template")
     def test_mulitdatasets_work_e2e(self, mock_render_template):
+        try:
+            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set2")
+            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set3")
+        except FileExistsError:
+            pass
+
         mock_render_template.return_value = "something"
         # test that multi dataroots work end to end
         self.config.update_server_config(
             multi_dataset__dataroot=dict(
                 s1=dict(dataroot=f"{PROJECT_ROOT}/example-dataset", base_url="set1/1/2"),
-                s2=dict(dataroot=f"{FIXTURES_ROOT}", base_url="set2"),
-                s3=dict(dataroot=f"{FIXTURES_ROOT}", base_url="set3"),
+                s2=dict(dataroot=f"{FIXTURES_ROOT}/set2", base_url="set2"),
+                s3=dict(dataroot=f"{FIXTURES_ROOT}/set3", base_url="set3"),
             )
         )
 
@@ -278,6 +284,10 @@ class TestServerConfig(ConfigTests):
         with self.subTest("access a dataset with a slash"):
             response = session.get("/set2/pbmc3k.cxg/")
             self.assertEqual(response.status_code, 200)
+
+        # cleanup
+        os.unlink(f"{FIXTURES_ROOT}/set2")
+        os.unlink(f"{FIXTURES_ROOT}/set3")
 
     @patch("server.common.config.server_config.diffexp_tiledb.set_config")
     def test_handle_diffexp(self, mock_tiledb_config):
