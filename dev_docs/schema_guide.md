@@ -1,7 +1,7 @@
 # Cellxgene Schema Guide
 
 Datasets included in the [data portal](https://cellxgene.cziscience.com/) and hosted cellxgene need to follow the schema
-described [here](https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md). That
+described [here](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md). That
 schema defines some required fields, requirements about feature labels, and some optional fields that mostly help with
 presentation.
 
