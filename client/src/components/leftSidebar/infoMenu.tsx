@@ -26,13 +26,6 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
             rel="noopener"
           />
           <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene"
-            icon={<Icon icon={CXGIconNames.GITHUB} />}
-            target="_blank"
-            text="Github"
-            rel="noopener"
-          />
-          <MenuItem
             icon={<Icon icon={CXGIconNames.ABOUT} />}
             popoverProps={{ openOnTargetFocus: false }}
             text="About cellxgene"
