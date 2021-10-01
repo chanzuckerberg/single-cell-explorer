@@ -150,7 +150,7 @@ try:
         # config file: second, use the CXG_CONFIG_FILE
         config_file = os.getenv("CXG_CONFIG_FILE")
         if config_file:
-            region_name = discover_s3_region_name(config_file)
+            region_name = "us-west-2" #discover_s3_region_name(config_file)
             config_location = DataLocator(config_file, region_name)
             if config_location.exists():
                 with config_location.local_handle() as lh:
@@ -182,7 +182,8 @@ try:
     debug = False
     application = server.app
 
-except Exception:
+except Exception as e:
+    print(e)
     logging.critical("Caught exception during initialization", exc_info=True)
     sys.exit(1)
 
