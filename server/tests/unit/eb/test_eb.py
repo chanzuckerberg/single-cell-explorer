@@ -63,6 +63,7 @@ class Elastic_Beanstalk_Test(unittest.TestCase):
             # test failure mode (flask_secret_key not set)
             env = os.environ.copy()
             env.pop("CXG_SECRET_KEY", None)
+            env["PYTHONPATH"] = PROJECT_ROOT
             with self.assertRaises(subprocess.CalledProcessError) as exception_context:
                 subprocess.check_output(command, env=env)
             output = str(exception_context.exception.stdout, "utf-8")
@@ -75,7 +76,6 @@ class Elastic_Beanstalk_Test(unittest.TestCase):
             self.assertEqual(exception_context.exception.returncode, 1)
 
             # test passing case
-            env = os.environ.copy()
             env["CXG_SECRET_KEY"] = "secret"
             output = subprocess.check_output(command, env=env)
             output = str(output, "utf-8")
