@@ -45,14 +45,12 @@ type Props = StateProps & DispatchProps;
 /*
  Map slice selected from store to props.
  */
-const mapStateToProps = (state: RootState): StateProps => {
-  return {
-    datasetMetadata: state.datasetMetadata?.datasetMetadata,
-    portalUrl: state.datasetMetadata?.portalUrl,
-    seamlessEnabled: selectIsSeamlessEnabled(state),
-    workInProgress: selectIsUserStateDirty(state),
-  };
-};
+const mapStateToProps = (state: RootState): StateProps => ({
+  datasetMetadata: state.datasetMetadata?.datasetMetadata,
+  portalUrl: state.datasetMetadata?.portalUrl,
+  seamlessEnabled: selectIsSeamlessEnabled(state),
+  workInProgress: selectIsUserStateDirty(state),
+});
 
 /*
  Map actions dispatched by dataset selector to props.
@@ -80,7 +78,7 @@ class DatasetSelector extends PureComponent<Props> {
    - when selected dataset is to be opened in a new tab.
    @param selectedDataset - selected dataset to be viewed.
    */
-  onDatasetSelected(selectedDataset: Dataset) {
+  onDatasetSelected = (selectedDataset: Dataset) => {
     const {
       openDataset: openFn,
       switchDataset: switchFn,
@@ -92,7 +90,16 @@ class DatasetSelector extends PureComponent<Props> {
     } else {
       switchFn(selectedDataset);
     }
-  }
+  };
+
+  /*
+   Determine if given props are props for a menu item.
+   @param {TruncatingBreadcrumbProps} props
+   @returns True if props are TruncatingBreadcrumbMenuProps.
+   */
+  isMenu = (
+    props: TruncatingBreadcrumbProps
+  ): props is TruncatingBreadcrumbMenuProps => "items" in props;
 
   /*
    Sort datasets by cell count, descending.
@@ -141,9 +148,9 @@ class DatasetSelector extends PureComponent<Props> {
    @param datasetMetadata - Dataset metadata containing selected dataset.
    @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
   */
-  buildDatasetBreadcrumbProps(
+  buildDatasetBreadcrumbProps = (
     datasetMetadata: DatasetMetadata
-  ): TruncatingBreadcrumbMenuProps {
+  ): TruncatingBreadcrumbMenuProps => {
     const { dataset_id: selectedDatasetId } = datasetMetadata;
     const selectedDataset = this.findDatasetById(
       selectedDatasetId,
@@ -153,47 +160,52 @@ class DatasetSelector extends PureComponent<Props> {
       datasetMetadata,
       selectedDatasetId
     );
+    const unique = datasetMenuItems.length === 0;
     return {
       ...this.defaultBreadcrumbProps,
-      disabled: datasetMenuItems.length === 0,
+      disabled: unique,
+      icon: unique ? null : (
+        <Icon
+          icon={IconNames.CHEVRON_DOWN}
+          style={{ marginLeft: "5px", marginRight: 0 }}
+        />
+      ),
       items: datasetMenuItems,
       key: `bc-dataset-${selectedDatasetId}`,
       shortText: "Dataset",
       text: selectedDataset ? selectedDataset.name : "Dataset",
     };
-  }
+  };
 
   /*
    Build "collection" breadcrumb props, links to Portal's collection detail page. 
    @param datasetMetadata - Dataset metadata containing collection information.
    @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
   */
-  buildCollectionBreadcrumbProps(
+  buildCollectionBreadcrumbProps = (
     datasetMetadata: DatasetMetadata
-  ): TruncatingBreadcrumbProps {
-    return {
-      ...this.defaultBreadcrumbProps,
-      href: datasetMetadata.collection_url,
-      key: `bc-collection`,
-      shortText: "Collection",
-      text: datasetMetadata.collection_name,
-    };
-  }
+  ): TruncatingBreadcrumbProps => ({
+    ...this.defaultBreadcrumbProps,
+    href: datasetMetadata.collection_url,
+    key: `bc-collection`,
+    shortText: "Collection",
+    text: datasetMetadata.collection_name,
+  });
 
   /*
    Build "home" breadcrumb props, links to Portal's collection index page.
    @param portalUrl - URL to Portal's collection index page. 
    @returns Returns breadcrumbs props for rendering the "home" breadcrumb.
   */
-  buildHomeBreadcrumbProps(portalUrl: string): TruncatingBreadcrumbProps {
-    return {
-      ...this.defaultBreadcrumbProps,
-      href: portalUrl,
-      key: "bc-home",
-      shortText: "Home",
-      text: "Home",
-    };
-  }
+  buildHomeBreadcrumbProps = (
+    portalUrl: string
+  ): TruncatingBreadcrumbProps => ({
+    ...this.defaultBreadcrumbProps,
+    href: portalUrl,
+    key: "bc-home",
+    shortText: "Home",
+    text: "Home",
+  });
 
   /*
    Build Blueprint Breadcrumb element, adding menu-specific styles and elements if necessary.
@@ -201,7 +213,9 @@ class DatasetSelector extends PureComponent<Props> {
    @returns Breadcrumb element generated from given breadcrumb props. 
   */
   renderBreadcrumb = (item: TruncatingBreadcrumbProps): JSX.Element => (
-    <TruncatingBreadcrumb item={item} />
+    <TruncatingBreadcrumb item={item}>
+      {item.icon ? item.icon : null}
+    </TruncatingBreadcrumb>
   );
 
   /*
@@ -211,28 +225,19 @@ class DatasetSelector extends PureComponent<Props> {
    @returns DatasetMenu element generated from given breadcrumb props. 
   */
   renderBreadcrumbMenu = (item: TruncatingBreadcrumbMenuProps): JSX.Element => (
-    <DatasetMenu items={item.items}>
-      <TruncatingBreadcrumb item={item}>
-        <Icon
-          icon={IconNames.CHEVRON_DOWN}
-          style={{ marginLeft: "5px", marginRight: 0 }}
-        />
-      </TruncatingBreadcrumb>
-    </DatasetMenu>
+    <DatasetMenu items={item.items}>{this.renderBreadcrumb(item)}</DatasetMenu>
   );
 
   /*
    Renders the final dataset breadcrumb where sibling datasets are selectable by a breadcrumb menu.
-   @param item - Breadcrumb props to be rendered as a breadcrumb element with menu.
+   @param props - Breadcrumb props to be rendered as a breadcrumb element with menu.
    @returns If dataset has siblings, returns breadcrumb menu element generated from given breadcrumb props. Otherwise
    returns disabled breadcrumb element.  
    */
-  renderDatasetBreadcrumb = (
-    item: TruncatingBreadcrumbMenuProps
-  ): JSX.Element =>
-    item.items.length
-      ? this.renderBreadcrumbMenu(item)
-      : this.renderBreadcrumb(item);
+  renderCurrentBreadcrumb = (props: TruncatingBreadcrumbProps): JSX.Element =>
+    this.isMenu(props)
+      ? this.renderBreadcrumbMenu(props)
+      : this.renderBreadcrumb(props);
 
   render(): JSX.Element | null {
     const { datasetMetadata, portalUrl, seamlessEnabled } = this.props;
@@ -250,7 +255,7 @@ class DatasetSelector extends PureComponent<Props> {
       >
         <TruncatingBreadcrumbs
           breadcrumbRenderer={this.renderBreadcrumb}
-          currentBreadcrumbRenderer={this.renderDatasetBreadcrumb}
+          currentBreadcrumbRenderer={this.renderCurrentBreadcrumb}
           items={[
             this.buildHomeBreadcrumbProps(portalUrl),
             this.buildCollectionBreadcrumbProps(datasetMetadata),
