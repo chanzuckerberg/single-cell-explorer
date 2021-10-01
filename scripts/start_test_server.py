@@ -30,7 +30,6 @@ try:
         debug=server_config.app__debug,
         port=server_config.app__port,
         threaded=not server_config.app__debug,
-        use_debugger=False,
         use_reloader=False,
     )
 except OSError as e:
