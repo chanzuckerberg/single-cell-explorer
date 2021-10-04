@@ -1,17 +1,12 @@
-:local(.datasetBreadcrumb),
-:local(.datasetDisabledBreadcrumb) {
-  font-size: 14px;
+:local(.datasetSelectorBreadcrumb),
+:local(.datasetSelectorBreadcrumbDisabled) {
+  font-size: 14px; /* Override BP breadcrumb font spec of 16[x */
 }
 
-:local(.datasetBreadcrumb):hover {
-  color: #10161a; /* Colors.BLACK */ /* TODO(cc) revisit variable specification */
+:local(.datasetSelectorBreadcrumb):hover {
+  color: #10161a; /* Equivalent to Colors.BLACK */
 }
 
-:local(.datasetPopoverTarget) {
+:local(.datasetSelectorMenuPopoverTarget) {
   cursor: pointer;
-}
-
-:local(.datasetPopover) {
-  box-shadow: 0 8px 24px 0 rgba(16, 22, 26, 0.2),
-    0 2px 4px 0 rgba(16, 22, 26, 0.2), 0 0 0 0 rgba(16, 22, 26, 0.1);
 }

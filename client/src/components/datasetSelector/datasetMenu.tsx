@@ -3,34 +3,48 @@ import { Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import React from "react";
 
 /* App dependencies */
-import { TruncatingBreadcrumbMenuItemProps } from "./truncatingBreadcrumbs";
+import { Dataset } from "../../common/types/entities";
 
 /* Styles */
 // @ts-expect-error --- TODO fix import
 import styles from "./datasetSelector.css";
 
+/*
+ Function invoked on select of dataset. 
+ */
+export type DatasetSelectedFn = (dataset: Dataset) => void;
+
 interface Props {
   children: React.ReactNode;
-  items: TruncatingBreadcrumbMenuItemProps[];
+  datasets: Dataset[];
+  onDatasetSelected: DatasetSelectedFn;
 }
 
 /*
  Build menu item elements from given array of menu item props.
  @param items - Set of menu item props to display as menu item.
+ @param onDatasetSelected - Function invoked on click of menu item.
  @returns Array of MenuItem elements.
    */
 const buildDatasetMenuItems = (
-  items: TruncatingBreadcrumbMenuItemProps[]
+  datasets: Dataset[],
+  onDatasetSelected: DatasetSelectedFn
 ): JSX.Element[] =>
-  items.map((item) => (
-    <MenuItem key={item.key} onClick={item.onClick} text={item.text} />
+  datasets.map((dataset) => (
+    <MenuItem
+      key={dataset.id}
+      onClick={() => {
+        onDatasetSelected(dataset);
+      }}
+      text={dataset.name}
+    />
   ));
 
 /*
  Dataset menu, toggled from dataset name in app-level breadcrumbs.
  */
 const DatasetMenu = React.memo<Props>(
-  ({ children, items }): JSX.Element => (
+  ({ children, datasets, onDatasetSelected }): JSX.Element => (
     <Popover
       boundary="viewport"
       content={
@@ -42,15 +56,14 @@ const DatasetMenu = React.memo<Props>(
             overflow: "auto",
           }}
         >
-          {buildDatasetMenuItems(items)}
+          {buildDatasetMenuItems(datasets, onDatasetSelected)}
         </Menu>
       }
       hasBackdrop
       minimal
       modifiers={{ offset: { offset: "0, 10" } }}
-      popoverClassName={styles.datasetPopover}
       position={Position.BOTTOM_LEFT}
-      targetClassName={styles.datasetPopoverTarget}
+      targetClassName={styles.datasetSelectorMenuPopoverTarget}
     >
       {children}
     </Popover>

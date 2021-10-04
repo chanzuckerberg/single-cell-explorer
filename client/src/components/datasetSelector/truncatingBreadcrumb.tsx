@@ -18,17 +18,17 @@ interface Props {
  Breadcrumb displayed in truncating breadcrumbs.
  */
 const TruncatingBreadcrumb = React.memo<Props>(
-  ({ children, item }): JSX.Element => (
+  ({ item }): JSX.Element => (
     <Breadcrumb
       href={item.href}
       className={
         item.disabled
-          ? styles.datasetDisabledBreadcrumb
-          : styles.datasetBreadcrumb
+          ? styles.datasetSelectorBreadcrumbDisabled
+          : styles.datasetSelectorBreadcrumb
       }
     >
       {item.text}
-      {children}
+      {item.icon}
     </Breadcrumb>
   )
 );
