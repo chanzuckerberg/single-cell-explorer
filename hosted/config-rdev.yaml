@@ -1,7 +1,7 @@
 server:
   app:
-    verbose: false
-    debug: false
+    verbose: true
+    debug: true
     host: 0.0.0.0
     port: null
     open_browser: false
@@ -20,8 +20,8 @@ server:
         - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
-    api_base_url: https://ebezzi-test-explorer.rdev.single-cell.czi.technology/cellxgene/
-    web_base_url: https://ebezzi-test-explorer.rdev.single-cell.czi.technology/
+    api_base_url: https://ebezzi-test-2-explorer.rdev.single-cell.czi.technology/cellxgene/
+    web_base_url: https://ebezzi-test-2-explorer.rdev.single-cell.czi.technology/
 
   multi_dataset:
     dataroot:
@@ -36,7 +36,7 @@ server:
     #   false or null:  this returns a 404 code
     #   true:  loads a test index page, which links to the datasets that are available in the dataroot
     #   string/URL:  redirect to this URL:  flask.redirect(config.multi_dataset__index)
-    index: https://ebezzi-test-explorer.rdev.single-cell.czi.technology/
+    index: https://ebezzi-test-2-explorer.rdev.single-cell.czi.technology/
 
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
     allowed_matrix_types: []
