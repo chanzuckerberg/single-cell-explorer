@@ -25,18 +25,18 @@ Whether you need to visualize one thousand cells or one million, cellxgene helps
 
 ### Quick start
 
-To install cellxgene you need Python 3.6+. We recommend [installing cellxgene into a conda or virtual environment.](https://chanzuckerberg.github.io/cellxgene/posts/install)
+To run cellxgene locally you need Python 3.6+.
 
-Install the package.
+Launch cellxgene with default sample data and config:
 
 ```bash
-pip install cellxgene
+make start-server
 ```
 
-Launch cellxgene with an example [anndata](https://anndata.readthedocs.io/en/latest/) file
+Launch cellxgene with an example [anndata](https://anndata.readthedocs.io/en/latest/) file:
 
 ```bash
-cellxgene launch https://cellxgene-example-data.czi.technology/pbmc3k.h5ad
+make start-server dataset=local/dataset.cxg config=config.yaml
 ```
 
 To explore more datasets already formatted for cellxgene, check out the [Demo data](https://chanzuckerberg.github.io/cellxgene/posts/demo-data) or

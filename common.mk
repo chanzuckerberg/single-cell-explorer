@@ -22,9 +22,20 @@ export CXG_OPTIONS := $(call env_or_else_default,CXG_OPTIONS)
 export DATASET := $(call full_path,$(call env_or_else_default,DATASET))
 export JEST_ENV := $(call env_or_else_default,JEST_ENV)
 
+# Optional, for development: dataset=<dataset_file> and/or config=<config_file>
+# ex make start-server dataset=./my_local/dataset.cxg config=arbitrary_config.yml
 .PHONY: start-server
 start-server:
-	python -m scripts.start_test_server $(PROJECT_ROOT)
+	@d="$(dataset)"; \
+	args=""; \
+	if [ -n "$$d" ]; then \
+		args+="--dataset $$d "; \
+	fi; \
+	c="$(config)"; \
+	if [ -n "$$c" ]; then \
+		args+="--config $$c"; \
+	fi; \
+	python -m scripts.start_test_server $(PROJECT_ROOT) $$args
 
 # copy the client assets to a location known to the server
 # $(1) is the source of the client assets
