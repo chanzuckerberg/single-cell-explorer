@@ -42,7 +42,7 @@ def extrapolate_dataset_location_from_config(server_config: ServerConfig, datase
         dataset = dataset_explorer_location.pop(-1)
         url_dataroot = "/".join(dataset_explorer_location)
         dataroot = None
-        for _, dataroot_dict in server_config.multi_dataset__dataroot.items():
+        for dataroot_dict in server_config.multi_dataset__dataroot.values():
             if dataroot_dict["base_url"] == url_dataroot:
                 dataroot = dataroot_dict["dataroot"]
                 break
