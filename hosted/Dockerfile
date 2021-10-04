@@ -25,12 +25,13 @@ RUN python3 -m pip install -r requirements.txt
 COPY hosted/config-rdev.yaml /config/config.yaml
 
 RUN make build-client
-# COPY server/eb/artifact.dir/server/common/web server/eb/common
+# TODO: this is copied from the context, rather than the build output. Figure out how this gets generated
 COPY server/eb/artifact.dir/server/common/web server/common/web
 
 WORKDIR server/eb
 ENV CXG_CONFIG_FILE=/config/config.yaml
-
 ENV FLASK_ENV=development
+CMD ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]
 
-CMD ["flask", "run", "--host", "0.0.0.0", "--port", "6000"]
+# WORKDIR server/tmp
+# CMD ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]
