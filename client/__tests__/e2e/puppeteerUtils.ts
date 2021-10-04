@@ -115,13 +115,6 @@ export async function getElementCoordinates(testId: any) {
   });
 }
 
-async function clickTermsOfService() {
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-  if (!(await isElementPresent(getTestId("tos-cookies-accept")))) return;
-
-  await clickOn("tos-cookies-accept");
-}
-
 async function nameNewAnnotation() {
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
   if (await isElementPresent(getTestId("annotation-dialog"))) {
@@ -140,7 +133,6 @@ export async function goToPage(url: any) {
   });
 
   await nameNewAnnotation();
-  await clickTermsOfService();
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.

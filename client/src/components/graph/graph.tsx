@@ -203,10 +203,10 @@ class Graph extends React.Component<{}, GraphState> {
         - isNaN -- the value is a NaN. Only makes sense when we have a colorAccessor
         - isSelected -- the value is selected
         - isHightlighted -- the value is highlighted in the UI (orthogonal from selection highlighting)
-  
+
         Due to constraints in webgl vertex shader attributes, these are encoded in a float, "kinda"
         like bitmasks.
-  
+
         We also have separate code paths for generating flags for categorical and
         continuous metadata, as they rely on different tests, and some of the flags
         (eg, isNaN) are meaningless in the face of categorical metadata.
