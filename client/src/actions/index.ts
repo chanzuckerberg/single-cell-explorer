@@ -84,7 +84,7 @@ async function datasetMetadataFetch(
   dispatch({
     type: "dataset metadata load complete",
     datasetMetadata,
-    portalUrl: links["collections-home-page"] ?? "hi",
+    portalUrl: links["collections-home-page"],
   });
 }
 
@@ -333,7 +333,7 @@ const openDataset =
     }
 
     dispatch({ type: "dataset opened" });
-    storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 5000);
+    storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 10000);
     window.open(deploymentUrl, "_blank");
   };
 

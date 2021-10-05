@@ -21,7 +21,6 @@ interface BreadcrumbConfig {
   item: TruncatingBreadcrumbProps;
   fullWidth: number; // Width of breadcrumb when in F (full text) state
   shortTextWidth: number; // Width of breadcrumb when in S (short text) state
-  state: BreadcrumbState;
   truncatedWidth: number; // Width of breadcrumb when in T (truncated text) state
 }
 
@@ -241,8 +240,8 @@ function buildBreadcrumbConfigs(
   availableWidth: number,
   measureFn: MeasureFn
 ): BreadcrumbConfig[] {
-  // Build default config object for each breadcrumb.
-  const configs = initBreadcrumbConfigs(items, measureFn);
+  // Build default config object for each breadcrumb including measured widths.
+  const configs = buildDefaultBreadcrumbConfigs(items, measureFn);
 
   // Calculate the state of each breadcrumb for the available width. For example, [F, F, F].
   const breadcrumbsState = calculateBreadcrumbsStateForAvailableWidth(
@@ -263,7 +262,6 @@ function buildBreadcrumbConfigs(
       ...configDefaults,
       displayAs,
       hidden: isStateHidden(breadcrumbState),
-      state: breadcrumbState,
     };
   });
 }
@@ -274,7 +272,7 @@ function buildBreadcrumbConfigs(
   @param measureFn - Function called to measure actual rendered pixel width of text. 
   @returns Breadcrumb configs set with actual DOM size calculations and defaults for all configuration values.
  */
-function initBreadcrumbConfigs(
+function buildDefaultBreadcrumbConfigs(
   items: TruncatingBreadcrumbProps[],
   measureFn: MeasureFn
 ): BreadcrumbConfig[] {
@@ -294,7 +292,6 @@ function initBreadcrumbConfigs(
       hidden: false,
       item,
       shortTextWidth: measureFn(item.shortText) + baseWidth,
-      state: BreadcrumbState.FULL,
       truncatedWidth: measureFn(truncatedText) + baseWidth,
     };
   });
@@ -360,7 +357,7 @@ function calculateBreadcrumbsStateForAvailableWidth(
 }
 
 /*
- Calculate the total width required to display the given items with the given states.
+ Calculate the total width required to display the given breadcrumbs in the given breadcrumb states.
  @param breadcrumbsState - State of each breadcrumb that width required to display is being calculated for. For 
  example, [F, F, F].
  @param configs - Set of config objects backing each breadcrumb.

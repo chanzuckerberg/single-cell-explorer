@@ -77,15 +77,10 @@ const DatasetSelector: FC<Props> = ({
     const { collection_datasets: datasets, dataset_id: selectedDatasetId } =
       datasetMetadata;
 
-    // Find the dataset currently being viewed
-    const selectedDataset = datasets.find(
-      (dataset) => dataset.id === selectedDatasetId
-    ) as Dataset;
-
     // Init the sibling datasets
     setSiblingDatasets(
       datasets.filter(
-        (datasetInCollection) => selectedDataset !== datasetInCollection
+        (datasetInCollection) => selectedDatasetId !== datasetInCollection.id
       )
     );
 
@@ -94,7 +89,7 @@ const DatasetSelector: FC<Props> = ({
       buildHomeBreadcrumbProps(portalUrl),
       buildCollectionBreadcrumbProps(datasetMetadata),
       buildDatasetBreadcrumbProps(
-        selectedDataset,
+        datasetMetadata.dataset_name,
         isDatasetSingleton(datasets)
       ),
     ]);
@@ -130,12 +125,12 @@ const DatasetSelector: FC<Props> = ({
 
 /*
  Build "dataset" breadcrumb props for displaying a breadcrumb with a menu.
- @param selectedDataset - Dataset currently being viewed.
+ @param datasetName - Name of dataset currently being viewed.
  @param singletonDataset - True if dataset has no siblings.
  @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
 */
 function buildDatasetBreadcrumbProps(
-  selectedDataset: Dataset,
+  datasetName: string,
   singletonDataset: boolean
 ): TruncatingBreadcrumbProps {
   return {
@@ -144,7 +139,7 @@ function buildDatasetBreadcrumbProps(
       <Icon icon={IconNames.CHEVRON_DOWN} style={STYLE_ICON} />
     ),
     shortText: "Dataset",
-    text: selectedDataset ? selectedDataset.name : "Dataset",
+    text: datasetName,
   };
 }
 
