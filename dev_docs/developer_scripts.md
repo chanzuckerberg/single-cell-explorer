@@ -67,9 +67,8 @@ environment and installs explorer requirements from the current branch.
 * In parallel, you can then launch the node development server to serve the
   current state of the FE with [`start-frontend`](#start-frontend), usually in
   a different terminal tab.
-* You can also select a specific dataset using `DATASET=<dataset path> ./scripts/backend_dev`.
-* You can also use `CXG_OPTIONS` to pass options to the `explorer launch`
-  command, as in `CXG_OPTIONS='--disable-annotations' ./scripts/backend_dev`.
+* You can use a specific dataroot using `./launch_dev_server.sh <custom_dataroot>`.
+* You can also pass (current/desktop/legacy) cli options to the `./launch_dev_server.sh` command.
 
 **Breakdown**
 
@@ -77,7 +76,7 @@ environment and installs explorer requirements from the current branch.
 | ---------------------------------------- | ----------------------------------------------------------- |
 | python3.6 -m venv explorer               | creates explorer virtual environment                        |
 | source explorer/bin/activate             | activates virtual environment                               |
-| make start-server [dataset=] [config=]   | launches api server (can supply arbitrary dataset / config) |
+| ./launch_dev_server.sh [cli options]     | launches api server (can supply arbitrary config)           |
 
 ### Client test scripts
 
