@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
+import FloatingButton from "./floatingButton/floatingButton";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
@@ -79,6 +80,7 @@ class App extends React.Component {
                   <MenuBar />
                 </Controls>
                 <Embedding />
+                <FloatingButton />
                 <Autosave />
                 <TermsOfServicePrompt />
                 {/* @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call. */}
