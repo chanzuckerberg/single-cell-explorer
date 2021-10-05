@@ -1,6 +1,6 @@
 :local(.datasetSelectorBreadcrumb),
 :local(.datasetSelectorBreadcrumbDisabled) {
-  font-size: 14px; /* Override BP breadcrumb font spec of 16[x */
+  font-size: 14px; /* Override BP breadcrumb font spec of 16px */
 }
 
 :local(.datasetSelectorBreadcrumb):hover {
