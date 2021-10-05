@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
+import { IconNames } from "@blueprintjs/icons";
 
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
@@ -8,10 +9,12 @@ import styles from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
+import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
 import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
+import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -68,6 +71,7 @@ type State = any;
     privacyURL: (state as any).config?.parameters?.about_legal_privacy,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: (state as any).categoricalSelection,
+    seamlessEnabled: selectIsSeamlessEnabled(state),
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -263,6 +267,8 @@ class MenuBar extends React.PureComponent<{}, State> {
       subsetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
+      seamlessEnabled,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -277,17 +283,29 @@ class MenuBar extends React.PureComponent<{}, State> {
     return (
       <div
         style={{
-          position: "absolute",
-          right: 8,
-          top: 0,
           display: "flex",
           flexDirection: "row-reverse",
           alignItems: "flex-start",
           flexWrap: "wrap",
+          marginLeft: "auto", // Right-align menubar if dataset selector is not enabled
           justifyContent: "flex-start",
-          zIndex: 3,
         }}
       >
+        {seamlessEnabled ? (
+          <ButtonGroup className={styles.menubarButton}>
+            <AnchorButton
+              type="button"
+              icon={IconNames.INFO_SIGN}
+              onClick={() => {
+                dispatch({ type: "toggle dataset drawer" });
+              }}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid="drawer"
+            />
+          </ButtonGroup>
+        ) : null}
         <UndoRedoReset
           // @ts-expect-error ts-migrate(2322) FIXME: Type '{ dispatch: any; undoDisabled: any; redoDisa... Remove this comment to see the full error message
           dispatch={dispatch}
@@ -374,6 +392,7 @@ class MenuBar extends React.PureComponent<{}, State> {
           handleSubsetReset={this.handleSubsetReset}
         />
         {disableDiffexp ? null : <DiffexpButtons />}
+        <InfoDrawer />
       </div>
     );
   }

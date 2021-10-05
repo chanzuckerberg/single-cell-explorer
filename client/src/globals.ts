@@ -1,6 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
+import { DataPortalProps } from "./common/types/entities";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -8,17 +9,31 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/* Config links types */
+export type ConfigLink = "about-dataset" | "collections-home-page";
+
 /* rough shape of config object */
 export interface Config {
+  corpora_props: DataPortalProps;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
+  library_versions: LibraryVersions;
   parameters: {
+    about_legal_privacy?: string;
+    about_legal_tos?: string;
     "disable-diffexp"?: boolean;
     "diffexp-may-be-slow"?: boolean;
     default_embedding?: string;
     [key: string]: unknown;
   };
-  links: Record<string, unknown>;
+  portalUrl: string;
+  links: Record<ConfigLink, unknown>;
+}
+
+/* shape of config library_versions */
+export interface LibraryVersions {
+  anndata: string;
+  cellxgene: string;
 }
 
 /*
@@ -32,6 +47,7 @@ export const configDefaults: Config = {
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },
+  // @ts-expect-error -- Revisit typings here with respect to CLI defaults
   links: {},
 };
 
@@ -137,3 +153,19 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
 }
 
 export const API = _API;
+
+/*
+ Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
+ between datasets is not enabled for local environments.
+ */
+export function updateApiPrefix(): void {
+  if (typeof window === "undefined") {
+    throw new Error("Unable to set API route.");
+  }
+  const {
+    location: { host, pathname, protocol },
+  } = window;
+  if (!origin.includes("localhost")) {
+    API.prefix = `${protocol}//api.${host}/cellxgene${pathname}api/`;
+  }
+}

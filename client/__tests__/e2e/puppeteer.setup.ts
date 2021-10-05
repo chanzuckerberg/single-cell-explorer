@@ -7,6 +7,7 @@
 import { setDefaultOptions } from "expect-puppeteer";
 import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
+import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
 
 // (thuang): This is the max time a test can take to run.
 // Since when debugging, we run slowMo and !headless, this means
@@ -19,6 +20,20 @@ jest.retryTimes(ENV_DEFAULT.RETRY_ATTEMPTS);
 
 beforeEach(async () => {
   await jestPuppeteer.resetBrowser();
+
+  // Stub dataset-metadata endpoint
+  await page.setRequestInterception(true);
+  page.on("request", (interceptedRequest) => {
+    if (interceptedRequest.url().endsWith("/dataset-metadata")) {
+      interceptedRequest.respond({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(DATASET_METADATA_RESPONSE),
+      });
+      return;
+    }
+    interceptedRequest.continue();
+  });
 
   const userAgent = await browser.userAgent();
   await page.setUserAgent(`${userAgent}bot`);

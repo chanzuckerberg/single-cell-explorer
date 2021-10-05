@@ -1,5 +1,9 @@
 import { Position, Toaster, Intent } from "@blueprintjs/core";
 
+/* styles */
+// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
+import styles from "./toasters.css";
+
 /** Singleton toaster instance. Create separate instances for different options. */
 
 const ToastTopCenter = Toaster.create({
@@ -56,4 +60,17 @@ export const postAsyncFailureToast = (message: any) =>
     message,
     timeout: 10000,
     intent: Intent.WARNING,
+  });
+
+/*
+ Dataset opened in new tab.
+ @param message
+ @returns string
+ */
+export const postExplainNewTab = (message: string): string =>
+  ToastTopCenter.show({
+    className: styles.newTabToast,
+    message,
+    timeout: 5000,
+    intent: Intent.PRIMARY,
   });
