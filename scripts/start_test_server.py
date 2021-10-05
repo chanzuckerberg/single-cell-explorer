@@ -17,9 +17,9 @@ app_config.update_from_config_file(TEST_CONFIG_FILE)
 server_config: ServerConfig = app_config.server_config
 
 app_config.update_server_config(
-                app__flask_secret_key="SparkleAndShine",
-                multi_dataset__dataroot=DATASET_DATAPATH
-            )
+    app__flask_secret_key="SparkleAndShine",
+    multi_dataset__dataroot=DATASET_DIR
+)
 app_config.complete_config()
 
 server: TestServer = TestServer(app_config)
