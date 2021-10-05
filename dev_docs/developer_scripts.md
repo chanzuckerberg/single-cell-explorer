@@ -26,13 +26,6 @@ Deletes generated files.
 * `make clean-lite` cleans built directories
 * `make clean-server` cleans source tree
 
-### Distribution
-
-Creates distribution for python module to upload to pypi.
-
-**Usage:** from the `$PROJECT_ROOT` directory run:
-* `make pydist` builds code and then builds sdist
-
 ### Release
 
 See `release_process.md`.
@@ -42,16 +35,7 @@ See `release_process.md`.
 Installs requirements files.
 
 **Usage:** from the `$PROJECT_ROOT` directory run:
-* `make dev-env` installs requirements and requirments-dev (for building code)
-
-### Installing cellxgene packages
-
-**Usage:** from the `$PROJECT_ROOT` directory:
-* `install-dev` - installs from local source tree
-* `install-release-test` - installs from test pypi
-* `install-release` - installs from pypi
-* `install-dist` - installs from local dist folder
-* `uninstall` - uninstalls cellxgene
+* `make dev-env` installs requirements and requirements-dev (for building code)
 
 ## Client-level scripts
 
@@ -73,7 +57,7 @@ Installs requirements files.
 back the development server for the front end. It is intended to ensure that
 the FE developer gets the current version of the backend with a single command
 and no knowledge of python necessary. It creates and activates a virtual
-environment and installs explorer from the current branch.
+environment and installs explorer requirements from the current branch.
 
 **Requires** `Python3.6+`, `virtual-env`, `pip`
 
@@ -89,13 +73,11 @@ environment and installs explorer from the current branch.
 
 **Breakdown**
 
-| command                                  | purpose                                                    |
-| ---------------------------------------- | ---------------------------------------------------------- |
-| python3.6 -m venv explorer               | creates explorer virtual environment                       |
-| source explorer/bin/activate             | activates virtual environment                              |
-| yes \| pip uninstall explorer  \|\| true | uninstalls explorer (if installed)                         |
-| pip install -e .                         | installs current local version of explorer                |
-| cellxgene launch                         | launches cellxgene (must supply dataset as last parameter) |
+| command                                  | purpose                                                     |
+| ---------------------------------------- | ----------------------------------------------------------- |
+| python3.6 -m venv explorer               | creates explorer virtual environment                        |
+| source explorer/bin/activate             | activates virtual environment                               |
+| make start-server [dataset=] [config=]   | launches api server (can supply arbitrary dataset / config) |
 
 ### Client test scripts
 
@@ -108,7 +90,7 @@ Methods used to test the client javascript code
   tests. This is what travis runs. It depends on the `e2e` and the
   `backend-dev` targets. One starts the server, the other runs the tests. If
   developing a front-end feature and just checking if tests pass, this is
-  probabaly the one you want to run.
+  probably the one you want to run.
 * `npm run e2e` Runs backend tests without starting the server. You will need to
   start the rest api separately with the pbmc3k.h5ad file. Note you can use
   the `JEST_ENV` environment variable to change how JEST runs in the browser.
