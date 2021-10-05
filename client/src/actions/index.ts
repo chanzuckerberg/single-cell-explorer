@@ -334,7 +334,7 @@ const openDataset =
 
     dispatch({ type: "dataset opened" });
     storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 10000);
-    window.open(deploymentUrl, "_blank");
+    window.open(deploymentUrl, "_blank", "noopener");
   };
 
 /*
