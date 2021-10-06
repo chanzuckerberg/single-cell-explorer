@@ -33,6 +33,7 @@ services:
         - HAPPY_COMMIT
         - HAPPY_BRANCH
         - HAPPY_TAG
+        - HAPPY_ENV
     restart: always
     depends_on:
       - localstack
