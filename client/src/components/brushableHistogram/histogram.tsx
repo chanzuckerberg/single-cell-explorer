@@ -22,7 +22,10 @@ const Histogram = ({
   mini, // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 }: any) => {
   const svgRef = useRef(null);
-  const [brush, setBrush] = useState(null);
+  const [brush, setBrush] = useState<{
+    brushX: d3.BrushBehavior<unknown>;
+    brushXselection: d3.Selection<SVGGElement, unknown, null, undefined>;
+  } | null>(null);
 
   useEffect(() => {
     /*
@@ -152,19 +155,29 @@ const Histogram = ({
       svg.selectAll(".axis path").style("stroke", "rgb(230,230,230)");
       svg.selectAll(".axis line").style("stroke", "rgb(230,230,230)");
 
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ brushX: d3.BrushBehavior<unkno... Remove this comment to see the full error message
       setBrush({ brushX, brushXselection });
     }
-  }, [histogram, isColorBy]);
+  }, [
+    histogram,
+    isColorBy,
+    field,
+    height,
+    margin,
+    mini,
+    onBrush,
+    onBrushEnd,
+    width,
+  ]);
 
   useEffect(() => {
     /*
       paint/update selection brush
       */
     if (!brush) return;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'brushX' does not exist on type 'null'.
+
     const { brushX, brushXselection } = brush;
-    const selection = d3.brushSelection(brushXselection.node());
+
+    const selection = d3.brushSelection(brushXselection.node() as SVGGElement);
     if (!selectionRange && selection) {
       /* no active selection - clear brush */
       brushXselection.call(brushX.move, null);
@@ -192,7 +205,7 @@ const Histogram = ({
         }
       }
     }
-  }, [brush, selectionRange]);
+  }, [brush, selectionRange, histogram]);
 
   return (
     <svg

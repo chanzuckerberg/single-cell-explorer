@@ -61,11 +61,6 @@ const DatasetSelector: FC<Props> = ({
   seamlessEnabled,
   selectDataset: selectDatasetFn,
 }) => {
-  // Don't render if seamless features are not available.
-  if (!seamlessEnabled) {
-    return null;
-  }
-
   // Datasets that are siblings of the selected dataset
   const [siblingDatasets, setSiblingDatasets] = useState<Dataset[]>([]);
 
@@ -74,12 +69,14 @@ const DatasetSelector: FC<Props> = ({
 
   // Init state on change of props
   useEffect(() => {
+    if (!datasetMetadata) return;
+
     const { collection_datasets: datasets, dataset_id: selectedDatasetId } =
       datasetMetadata;
 
     // Init the sibling datasets
     setSiblingDatasets(
-      datasets.filter(
+      datasets?.filter(
         (datasetInCollection) => selectedDatasetId !== datasetInCollection.id
       )
     );
@@ -94,6 +91,11 @@ const DatasetSelector: FC<Props> = ({
       ),
     ]);
   }, [datasetMetadata, portalUrl]);
+
+  // Don't render if seamless features are not available.
+  if (!seamlessEnabled) {
+    return null;
+  }
 
   /**
    * Renders the final dataset breadcrumb where any sibling datasets are selectable by a breadcrumb menu.

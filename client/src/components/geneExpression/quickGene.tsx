@@ -41,22 +41,25 @@ function QuickGene() {
 
   const prevProps = usePrevious({ annoMatrix });
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '() => Promise<void>' is not assi... Remove this comment to see the full error message
-  useEffect(async () => {
+  useEffect(() => {
     if (!annoMatrix) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    if (annoMatrix !== (prevProps as any)?.annoMatrix) {
-      const { schema } = annoMatrix;
-      const varIndex = schema.annotations.var.index;
 
-      setStatus("pending");
-      try {
-        const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-        setStatus("success");
-        setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
-      } catch (error) {
-        setStatus("error");
-        throw error;
+    fetch();
+
+    async function fetch() {
+      if (annoMatrix !== (prevProps as any)?.annoMatrix) {
+        const { schema } = annoMatrix;
+        const varIndex = schema.annotations.var.index;
+
+        setStatus("pending");
+        try {
+          const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+          setStatus("success");
+          setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+        } catch (error) {
+          setStatus("error");
+          throw error;
+        }
       }
     }
   }, [annoMatrix, prevProps]);
@@ -113,25 +116,22 @@ function QuickGene() {
       threshold: -10000, // don't return bad results
     });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const removeGene = (gene: any) => () => {
-    dispatch({ type: "clear user defined gene", data: gene });
-  };
+  const QuickGenes = useMemo(() => {
+    const removeGene = (gene: any) => () => {
+      dispatch({ type: "clear user defined gene", data: gene });
+    };
 
-  const QuickGenes = useMemo(
-    () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      userDefinedGenes.map((gene: any) => (
-        <Gene
-          key={`quick=${gene}`}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
-          gene={gene}
-          removeGene={removeGene}
-          quickGene
-        />
-      )),
-    [userDefinedGenes]
-  );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    userDefinedGenes.map((gene: any) => (
+      <Gene
+        key={`quick=${gene}`}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
+        gene={gene}
+        removeGene={removeGene}
+        quickGene
+      />
+    ));
+  }, [userDefinedGenes, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
