@@ -9,8 +9,8 @@ import { Dataset } from "../../common/types/entities";
 // @ts-expect-error --- TODO fix import
 import styles from "./datasetSelector.css";
 
-/*
- Function invoked on select of dataset. 
+/**
+ * Function invoked on select of dataset.
  */
 export type DatasetSelectedFn = (dataset: Dataset) => void;
 
@@ -20,12 +20,12 @@ interface Props {
   onDatasetSelected: DatasetSelectedFn;
 }
 
-/*
- Build menu item elements from given array of menu item props.
- @param items - Set of menu item props to display as menu item.
- @param onDatasetSelected - Function invoked on click of menu item.
- @returns Array of MenuItem elements.
-   */
+/**
+ * Build menu item elements from given array of menu item props.
+ * @param datasets - Set of menu item props to display as menu item.
+ * @param onDatasetSelected - Function invoked on click of menu item.
+ * @returns Array of MenuItem elements.
+ */
 const buildDatasetMenuItems = (
   datasets: Dataset[],
   onDatasetSelected: DatasetSelectedFn
@@ -40,8 +40,8 @@ const buildDatasetMenuItems = (
     />
   ));
 
-/*
- Dataset menu, toggled from dataset name in app-level breadcrumbs.
+/**
+ * Dataset menu, toggled from dataset name in app-level breadcrumbs.
  */
 const DatasetMenu = React.memo<Props>(
   ({ children, datasets, onDatasetSelected }): JSX.Element => (

@@ -5,9 +5,9 @@ import React from "react";
 /* Styles */
 import { STYLE_RIGHT_SIDEBAR } from ".";
 
-/*
- Skeleton of right side bar, to be displayed during data load.
- @returns Markup displaying right side bar skeleton.
+/**
+ * Skeleton of right side bar, to be displayed during data load.
+ * @returns Markup displaying right side bar skeleton.
  */
 function RightSidebarSkeleton(): JSX.Element {
   return (

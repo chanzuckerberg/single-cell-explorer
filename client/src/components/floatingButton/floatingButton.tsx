@@ -6,8 +6,8 @@ import React, { useState } from "react";
 import { IconNames } from "../icon";
 import Icon from "../icon/icon";
 
-/*
- Documentation and roadmap menu, toggled from the FAB.
+/**
+ * Documentation and roadmap menu, toggled from the FAB.
  */
 function FloatingButton(): JSX.Element {
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);

@@ -45,9 +45,9 @@ interface Props {
 
 export type SingleValueCategories = Map<string, Category>;
 
-/*
- Sort collection links by custom sort order, create view-friendly model of link types.
- @returns Array of link objects formatted for display.
+/**
+ * Sort collection links by custom sort order, create view-friendly model of link types.
+ * @returns Array of link objects formatted for display.
  */
 const buildCollectionLinks = (links: Link[]): LinkView[] => {
   const sortedLinks = [...links].sort(sortCollectionLinks);
@@ -61,11 +61,11 @@ const buildCollectionLinks = (links: Link[]): LinkView[] => {
   });
 };
 
-/*
- Transform Corpora metadata and single value categories into sort and render-friendly format.
- @param singleValueCategories - Attributes from categorical fields
- @param corporaMetadata - Meta from Corpora
- @returns Array of metadata key/value pairs.
+/**
+ * Transform Corpora metadata and single value categories into sort and render-friendly format.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Array of metadata key/value pairs.
  */
 const buildDatasetMetadata = (
   singleValueCategories: SingleValueCategories,
@@ -79,12 +79,12 @@ const buildDatasetMetadata = (
   return metadata;
 };
 
-/*
- Determine name to display for collection link.
- @param name - Link display name
- @param type - Link type (e.g. DOI)
- @param url - Link URL
- @returns Pathname if link type is DOI otherwise host.
+/**
+ * Determine name to display for collection link.
+ * @param name - Link display name
+ * @param type - Link type (e.g. DOI)
+ * @param url - Link URL
+ * @returns Pathname if link type is DOI otherwise host.
  */
 const buildLinkName = (name: string, type: string, url: string): string => {
   if (name) {
@@ -102,19 +102,19 @@ const buildLinkName = (name: string, type: string, url: string): string => {
   return validUrl.host;
 };
 
-/*
- Generate inline styles to be applied to collections and meta tables.
- @returns Inline style object.
+/**
+ * Generate inline styles to be applied to collections and meta tables.
+ * @returns Inline style object.
  */
 const getTableStyles = (): CSSProperties => ({
   tableLayout: "fixed",
   width: "100%",
 });
 
-/*
- Render collection contact and links.
- @param datasetMetadata - Dataset metadata containing collection link information to be displayed
- @returns Markup displaying contact and collection-related links.
+/**
+ * Render collection contact and links.
+ * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
+ * @returns Markup displaying contact and collection-related links.
  */
 const renderCollectionLinks = (
   datasetMetadata: DatasetMetadata
@@ -149,11 +149,11 @@ const renderCollectionLinks = (
   );
 };
 
-/*
- Display collection contact's name with a link to their associated email.
- @param name - Collection contact's name
- @param email - Collection contact's email
- @returns Mailto link if possible otherwise the contact's name.  
+/**
+ * Display collection contact's name with a link to their associated email.
+ * @param name - Collection contact's name
+ * @param email - Collection contact's email
+ * @returns Mailto link if possible otherwise the contact's name.
  */
 const renderCollectionContactLink = (
   name: string,
@@ -168,11 +168,11 @@ const renderCollectionContactLink = (
   return name;
 };
 
-/*
- Render dataset metadata, mix of meta from Corpora and attributes found in categorical field.
- @param singleValueCategories - Attributes from categorical fields
- @param corporaMetadata - Meta from Corpora
- @returns Markup for displaying meta in table format. 
+/**
+ * Render dataset metadata, mix of meta from Corpora and attributes found in categorical field.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Markup for displaying meta in table format.
  */
 const renderDatasetMetadata = (
   singleValueCategories: SingleValueCategories,
@@ -213,9 +213,9 @@ const renderDatasetMetadata = (
 };
 
 /**
- Create DOM elements for displaying section title.
- @param title - Section title to display
- @returns Styled markup representation displaying section title. 
+ * Create DOM elements for displaying section title.
+ * @param title - Section title to display
+ * @returns Styled markup representation displaying section title.
  */
 const renderSectionTitle = (title: string): JSX.Element => (
   <p style={{ margin: "24px 0 8px" }}>
@@ -223,21 +223,21 @@ const renderSectionTitle = (title: string): JSX.Element => (
   </p>
 );
 
-/*
- Compare function for sorting collection links by custom link type order.
- @param link0 - First link to compare
- @param link1 - Second link value to compare
- @returns Number indicating sort precedence of link0 vs link1.
+/**
+ * Compare function for sorting collection links by custom link type order.
+ * @param link0 - First link to compare
+ * @param link1 - Second link value to compare
+ * @returns Number indicating sort precedence of link0 vs link1.
  */
 const sortCollectionLinks = (link0: Link, link1: Link): number =>
   COLLECTION_LINK_ORDER_BY.indexOf(link1.link_type) -
   COLLECTION_LINK_ORDER_BY.indexOf(link0.link_type);
 
-/*
- Compare function for metadata key value pairs by key - alpha, ascending.
- @param m0 - First metadata value to compare
- @param m1 - Second metadata value to compare
- @returns Number indicating sort precedence of m0 vs m1.
+/**
+ * Compare function for metadata key value pairs by key - alpha, ascending.
+ * @param m0 - First metadata value to compare
+ * @param m1 - Second metadata value to compare
+ * @returns Number indicating sort precedence of m0 vs m1.
  */
 const sortDatasetMetadata = (m0: MetadataView, m1: MetadataView) => {
   if (m0.key < m1.key) {
@@ -249,11 +249,11 @@ const sortDatasetMetadata = (m0: MetadataView, m1: MetadataView) => {
   return 0;
 };
 
-/*
-  Build array of view model objects from given Corpora metadata object.
-  @param corporaMetadata - Meta from Corpora 
-  @returns Array of metadata key/value pairs.
-  */
+/**
+ * Build array of view model objects from given Corpora metadata object.
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Array of metadata key/value pairs.
+ */
 const transformCorporaMetadata = (
   corporaMetadata: CorporaMetadata
 ): MetadataView[] =>
@@ -264,11 +264,11 @@ const transformCorporaMetadata = (
       value,
     }));
 
-/*
- Convert link type from upper snake case to title case.
- @param type - Link type to transform.
- @returns Transformed link type ready for display. 
-*/
+/**
+ * Convert link type from upper snake case to title case.
+ * @param type - Link type to transform.
+ * @returns Transformed link type ready for display.
+ */
 const transformLinkTypeToDisplay = (type: string): string => {
   const tokens = type.split("_");
   return tokens
@@ -276,12 +276,12 @@ const transformLinkTypeToDisplay = (type: string): string => {
     .join(" ");
 };
 
-/*
- Build array of view model objects from given single value categories map, ignoring ontology terms or metadata
- without values. Add ontology terms as tooltips of their corresponding values.
- @param singleValueCategories - Attributes from categorical fields
- @returns  Array of metadata key/value pairs.
-*/
+/**
+ * Build array of view model objects from given single value categories map, ignoring ontology terms or metadata
+ * without values. Add ontology terms as tooltips of their corresponding values.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @returns  Array of metadata key/value pairs.
+ */
 const transformSingleValueCategoriesMetadata = (
   singleValueCategories: SingleValueCategories
 ): MetadataView[] =>

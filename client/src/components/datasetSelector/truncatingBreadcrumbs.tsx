@@ -12,8 +12,8 @@ interface Props {
   items: TruncatingBreadcrumbProps[];
 }
 
-/*
- Internal representation of breadcrumb props, with additional config to help calculate truncated state, if any.
+/**
+ * Internal representation of breadcrumb props, with additional config to help calculate truncated state, if any.
  */
 interface BreadcrumbConfig {
   displayAs: React.ReactNode;
@@ -24,13 +24,13 @@ interface BreadcrumbConfig {
   truncatedWidth: number; // Width of breadcrumb when in T (truncated text) state
 }
 
-/*
- Function used to determine actual rendered widths of text.  
+/**
+ * Function used to determine actual rendered widths of text.
  */
 type MeasureFn = (text: string) => number;
 
-/*
- Standard breadcrumb link. 
+/**
+ * Standard breadcrumb link.
  */
 export interface TruncatingBreadcrumbProps extends BreadcrumbProps {
   shortText: string;
@@ -71,13 +71,13 @@ const STYLE_WRAPPER = {
   overflow: "scroll",
 };
 
-/*
- Individual Breadcrumb States
- ----------------------------
- F - full text
- T - truncated text
- S - indicates use of short text (eg "Collection" for collection name or "Dataset" for dataset name)
- H - hidden
+/**
+ * Individual Breadcrumb States
+ * ----------------------------
+ * F - full text
+ * T - truncated text
+ * S - indicates use of short text (eg "Collection" for collection name or "Dataset" for dataset name)
+ * H - hidden
  */
 enum BreadcrumbState {
   "FULL" = "F", // eg "Tabula Muris Senis"
@@ -86,14 +86,14 @@ enum BreadcrumbState {
   "HIDDEN" = "H", // --
 }
 
-/*
- Breadcrumbs State
- -----------------
- FFF - full, full, full
- FTF - full, truncated, full
- HSF - hidden, short text, full
- HST - hidden, short text, truncated
- HHS - hidden, hidden, short text
+/**
+ * Breadcrumbs State
+ * -----------------
+ * FFF - full, full, full
+ * FTF - full, truncated, full
+ * HSF - hidden, short text, full
+ * HST - hidden, short text, truncated
+ * HHS - hidden, hidden, short text
  */
 type BreadcrumbsState = [BreadcrumbState, BreadcrumbState, BreadcrumbState];
 const STATES_FFF: BreadcrumbsState = [
@@ -122,10 +122,10 @@ const STATES_HHS: BreadcrumbsState = [
   BreadcrumbState.SHORT_TEXT,
 ];
 
-/*
- Breadcrumb Transitions
- ----------------------
- Breadcrumbs can transition bidirectionally through states in the following order, and can also repeat individual states.
+/**
+ * Breadcrumb Transitions
+ * ----------------------
+ * Breadcrumbs can transition bidirectionally through states in the following order, and can also repeat individual states.
  */
 const BreadcrumbsStateTransitions: BreadcrumbsState[] = [
   STATES_FFF,
@@ -135,6 +135,9 @@ const BreadcrumbsStateTransitions: BreadcrumbsState[] = [
   STATES_HHS,
 ];
 
+/**
+ * Tuple of links rendered with cellxgene-specific truncating functionality.
+ */
 const TruncatingBreadcrumbs = React.memo<Props>(
   ({ breadcrumbRenderer, currentBreadcrumbRenderer, items }) => {
     // Total width available to truncating breadcrumbs, set from ResizeSensor's resize event.
@@ -181,19 +184,19 @@ const TruncatingBreadcrumbs = React.memo<Props>(
       }
     }, [availableWidth, fontLoaded, items, measureEl]);
 
-    /*
-     On resize callback from ResizeSensor, save the current width of the breadcrumbs.
-     @param entries - Array of elements being observed for resize events.
-    */
+    /**
+     * On resize callback from ResizeSensor, save the current width of the breadcrumbs.
+     * @param entries - Array of elements being observed for resize events.
+     */
     const onResize = (entries: ResizeEntry[]) => {
       setAvailableWidth(Math.floor(entries[0].contentRect.width));
     };
 
-    /*
-     Build list elements for each breadcrumb config.
-     @param configs - The set of config objects backing each breadcrumb.
-     @returns List elements for each breadcrumb config.
-    */
+    /**
+     * Build list elements for each breadcrumb config.
+     * @param configs - The set of config objects backing each breadcrumb.
+     * @returns List elements for each breadcrumb config.
+     */
     const renderBreadcrumbs = (
       configs: BreadcrumbConfig[]
     ): (JSX.Element | null)[] =>
@@ -228,12 +231,12 @@ const TruncatingBreadcrumbs = React.memo<Props>(
   }
 );
 
-/*
- Build breadcrumb view models to fit the given available width.
- @param items - Set of breadcrumb props passed in via props.
- @param availableWidth - Full width available to breadcrumbs. 
- @param measureFn - Function called to measure actual rendered pixel width of text.
- @returns The state for each breadcrumb given the width available. For example, [F, F, F].
+/**
+ * Build breadcrumb view models to fit the given available width.
+ * @param items - Set of breadcrumb props passed in via props.
+ * @param availableWidth - Full width available to breadcrumbs.
+ * @param measureFn - Function called to measure actual rendered pixel width of text.
+ * @returns The state for each breadcrumb given the width available. For example, [F, F, F].
  */
 function buildBreadcrumbConfigs(
   items: TruncatingBreadcrumbProps[],
@@ -266,11 +269,11 @@ function buildBreadcrumbConfigs(
   });
 }
 
-/*
-  Build initial view model for each breadcrumb. 
-  @param items - Set of breadcrumb props passed in via props.
-  @param measureFn - Function called to measure actual rendered pixel width of text. 
-  @returns Breadcrumb configs set with actual DOM size calculations and defaults for all configuration values.
+/**
+ * Build initial view model for each breadcrumb.
+ * @param items - Set of breadcrumb props passed in via props.
+ * @param measureFn - Function called to measure actual rendered pixel width of text.
+ * @returns Breadcrumb configs set with actual DOM size calculations and defaults for all configuration values.
  */
 function buildDefaultBreadcrumbConfigs(
   items: TruncatingBreadcrumbProps[],
@@ -297,14 +300,14 @@ function buildDefaultBreadcrumbConfigs(
   });
 }
 
-/*
- Return the width that the truncated item has available for display. That is, the available width minus the widths
- required by the other, non-truncated, items.
- @param configs - Set of config objects backing each breadcrumb.
- @param truncatedIndex - Index of breadcrumb currently being truncated.
- @param breadcrumbsState - State of each breadcrumb. For example, [F, F, F].
- @param availableWidth - Full width available to breadcrumbs.
- @returns Width that truncated breadcrumb has available for display.
+/**
+ * Return the width that the truncated item has available for display. That is, the available width minus the widths
+ * required by the other, non-truncated, items.
+ * @param configs - Set of config objects backing each breadcrumb.
+ * @param truncatedIndex - Index of breadcrumb currently being truncated.
+ * @param breadcrumbsState - State of each breadcrumb. For example, [F, F, F].
+ * @param availableWidth - Full width available to breadcrumbs.
+ * @returns Width that truncated breadcrumb has available for display.
  */
 function calculateAvailableTruncatedWidth(
   configs: BreadcrumbConfig[],
@@ -336,11 +339,11 @@ function calculateAvailableTruncatedWidth(
   return availableWidth - otherItemsRequiredWidth - iconWidth - paddingWidth;
 }
 
-/*
- Determine the current items state (eg FFF, FTF etc) for the given available width and set of items.
- @param configs - Set of config objects backing each breadcrumb.
- @param availableWidth - Full width available to breadcrumbs. 
- @returns The ideal state for each breadcrumb given the width available. For example, [F, F, F].
+/**
+ * Determine the current items state (eg FFF, FTF etc) for the given available width and set of items.
+ * @param configs - Set of config objects backing each breadcrumb.
+ * @param availableWidth - Full width available to breadcrumbs.
+ * @returns The ideal state for each breadcrumb given the width available. For example, [F, F, F].
  */
 function calculateBreadcrumbsStateForAvailableWidth(
   configs: BreadcrumbConfig[],
@@ -356,12 +359,12 @@ function calculateBreadcrumbsStateForAvailableWidth(
   return BreadcrumbsStateTransitions[BreadcrumbsStateTransitions.length - 1]; // There's a problem, default to smallest state.
 }
 
-/*
- Calculate the total width required to display the given breadcrumbs in the given breadcrumb states.
- @param breadcrumbsState - State of each breadcrumb that width required to display is being calculated for. For 
- example, [F, F, F].
- @param configs - Set of config objects backing each breadcrumb.
- @returns Number presenting the total number of pixels required to display the items in their current states.
+/**
+ * Calculate the total width required to display the given breadcrumbs in the given breadcrumb states.
+ * @param breadcrumbsState - State of each breadcrumb that width required to display is being calculated for. For
+ * example, [F, F, F].
+ * @param configs - Set of config objects backing each breadcrumb.
+ * @returns Number presenting the total number of pixels required to display the items in their current states.
  */
 function calculateRequiredWidth(
   breadcrumbsState: BreadcrumbState[],
@@ -389,9 +392,9 @@ function calculateRequiredWidth(
   );
 }
 
-/*
- Return the display for the given breadcrumb in the given state. 
- @returns Short text or full text if breadcrumb is in corresponding short text/full text mode, otherwise truncate component
+/**
+ * Return the display for the given breadcrumb in the given state.
+ * @returns Short text or full text if breadcrumb is in corresponding short text/full text mode, otherwise truncate component
  */
 function getBreadcrumbDisplayAs(
   configs: BreadcrumbConfig[],
@@ -427,11 +430,11 @@ function getBreadcrumbDisplayAs(
   return config.item.text as string;
 }
 
-/*
- Determine if breadcrumb is the current breadcrumb.
- @param items - Set of objects backing each breadcrumb.
- @param index - Position of breadcrumb in set.
- @returns True if breadcrumb is the last breadcrumb in the set of breadcrumbs.
+/**
+ * Determine if breadcrumb is the current breadcrumb.
+ * @param items - Set of objects backing each breadcrumb.
+ * @param index - Position of breadcrumb in set.
+ * @returns True if breadcrumb is the last breadcrumb in the set of breadcrumbs.
  */
 function isCurrentBreadcrumb(
   items: BreadcrumbConfig[] | TruncatingBreadcrumbProps[],
@@ -440,46 +443,46 @@ function isCurrentBreadcrumb(
   return index === items.length - 1;
 }
 
-/*
- Returns true if state is full.
- @param state - Name of state to check.
- @returns True if given state is full.  
+/**
+ * Returns true if state is full.
+ * @param state - Name of state to check.
+ * @returns True if given state is full.
  */
 function isStateFull(state: BreadcrumbState): boolean {
   return state === BreadcrumbState.FULL;
 }
 
-/*
- Returns true if state is hidden.
- @param state - Name of state to check.
- @returns True if given state is hidden.  
+/**
+ * Returns true if state is hidden.
+ * @param state - Name of state to check.
+ * @returns True if given state is hidden.
  */
 function isStateHidden(state: BreadcrumbState): boolean {
   return state === BreadcrumbState.HIDDEN;
 }
 
-/*
- Returns true if state is short text.
- @param state - Name of state to check.
- @returns True if given state is short text.  
+/**
+ * Returns true if state is short text.
+ * @param state - Name of state to check.
+ * @returns True if given state is short text.
  */
 function isStateShortText(state: BreadcrumbState): boolean {
   return state === BreadcrumbState.SHORT_TEXT;
 }
 
-/*
- Returns true if state is truncated.
- @param state - Name of state to check.
- @returns True if given state is truncated.  
+/**
+ * Returns true if state is truncated.
+ * @param state - Name of state to check.
+ * @returns True if given state is truncated.
  */
 function isStateTruncated(state: BreadcrumbState): boolean {
   return state === BreadcrumbState.TRUNCATED;
 }
 
-/*
- Create function that returns actual rendered pixel width of given text.
- @param measureEl - Rendered, hidden, element to update and measure.
- @returns Function that returns the rendered pixel width of its given text.
+/**
+ * Create function that returns actual rendered pixel width of given text.
+ * @param measureEl - Rendered, hidden, element to update and measure.
+ * @returns Function that returns the rendered pixel width of its given text.
  */
 function measureTextWidth(measureEl: HTMLSpanElement): MeasureFn {
   return (text: string) => {
@@ -488,11 +491,11 @@ function measureTextWidth(measureEl: HTMLSpanElement): MeasureFn {
   };
 }
 
-/*
- Return text truncated from center with ellipsis added.
- @param text - Text to truncate
- @param length - Length to truncate text to.
- @returns Truncated text in format "start...end".
+/**
+ * Return text truncated from center with ellipsis added.
+ * @param text - Text to truncate
+ * @param length - Length to truncate text to.
+ * @returns Truncated text in format "start...end".
  */
 function truncateToLength(text: string, length: number): string {
   if (text.length <= length) {

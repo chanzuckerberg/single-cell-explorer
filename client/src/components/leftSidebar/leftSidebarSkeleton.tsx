@@ -10,9 +10,9 @@ import Title from "../framework/title";
 import { STYLE_LEFT_SIDEBAR } from ".";
 import { STYLE_TOP_LEFT_LOGO_AND_TITLE } from "./topLeftLogoAndTitle";
 
-/*
- Skeleton of left side bar, to be displayed during data load.
- @returns Markup displaying left side bar skeleton.
+/**
+ * Skeleton of left side bar, to be displayed during data load.
+ * @returns Markup displaying left side bar skeleton.
  */
 function LeftSidebarSkeleton(): JSX.Element {
   return (

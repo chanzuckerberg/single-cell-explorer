@@ -14,9 +14,9 @@ const PADDING_CONTROLS = 10;
 /* Width of menubar */
 const WIDTH_MENUBAR = 482;
 
-/*
- Skeleton layout component displayed when in loading state.
- @returns Markup displaying skeleton.
+/**
+ * Skeleton layout component displayed when in loading state.
+ * @returns Markup displaying skeleton.
  */
 function LayoutSkeleton(): JSX.Element {
   return (

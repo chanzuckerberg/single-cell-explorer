@@ -15,15 +15,15 @@ import TruncatingBreadcrumbs, {
   TruncatingBreadcrumbProps,
 } from "./truncatingBreadcrumbs";
 
-/*
- Actions dispatched by dataset selector.
+/**
+ * Actions dispatched by dataset selector.
  */
 interface DispatchProps {
   selectDataset: DatasetSelectedFn;
 }
 
-/*
- Props selected from store.
+/**
+ * Props selected from store.
  */
 interface StateProps {
   datasetMetadata: DatasetMetadata;
@@ -33,8 +33,8 @@ interface StateProps {
 
 type Props = StateProps & DispatchProps;
 
-/*
- Map slice selected from store to props.
+/**
+ * Map slice selected from store to props.
  */
 const mapStateToProps = (state: RootState): StateProps => ({
   datasetMetadata: state.datasetMetadata?.datasetMetadata,
@@ -42,8 +42,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
   seamlessEnabled: selectIsSeamlessEnabled(state),
 });
 
-/*
- Map actions dispatched by dataset selector to props.
+/**
+ * Map actions dispatched by dataset selector to props.
  */
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
   selectDataset: (dataset: Dataset) => dispatch(selectDataset(dataset)),
@@ -52,8 +52,8 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
 // Inline styles for icons
 const STYLE_ICON = { marginLeft: "5px", marginRight: 0 };
 
-/*
- App-level collection and dataset breadcrumbs.
+/**
+ * App-level collection and dataset breadcrumbs.
  */
 const DatasetSelector: FC<Props> = ({
   datasetMetadata,
@@ -95,10 +95,10 @@ const DatasetSelector: FC<Props> = ({
     ]);
   }, [datasetMetadata, portalUrl]);
 
-  /*
-   Renders the final dataset breadcrumb where any sibling datasets are selectable by a breadcrumb menu.
-   @param props - Breadcrumb props backing current breadcrumb.
-   @returns If dataset has siblings, returns breadcrumb menu element generated from given breadcrumb props. Otherwise
+  /**
+   * Renders the final dataset breadcrumb where any sibling datasets are selectable by a breadcrumb menu.
+   * @param truncatingBreadcrumbProps - Breadcrumb props backing current breadcrumb.
+   * @returns If dataset has siblings, returns breadcrumb menu element generated from given breadcrumb props. Otherwise
    returns disabled breadcrumb element.
    */
   const renderCurrentBreadcrumb = (
@@ -123,12 +123,12 @@ const DatasetSelector: FC<Props> = ({
   );
 };
 
-/*
- Build "dataset" breadcrumb props for displaying a breadcrumb with a menu.
- @param datasetName - Name of dataset currently being viewed.
- @param singletonDataset - True if dataset has no siblings.
- @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
-*/
+/**
+ * Build "dataset" breadcrumb props for displaying a breadcrumb with a menu.
+ * @param datasetName - Name of dataset currently being viewed.
+ * @param singletonDataset - True if dataset has no siblings.
+ * @returns Returns breadcrumbs props for rendering the "dataset" breadcrumb.
+ */
 function buildDatasetBreadcrumbProps(
   datasetName: string,
   singletonDataset: boolean
@@ -143,11 +143,11 @@ function buildDatasetBreadcrumbProps(
   };
 }
 
-/*
- Build "collection" breadcrumb props, links to Portal's collection detail page.
- @param datasetMetadata - Dataset metadata containing collection information.
- @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
-*/
+/**
+ * Build "collection" breadcrumb props, links to Portal's collection detail page.
+ * @param datasetMetadata - Dataset metadata containing collection information.
+ * @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
+ */
 function buildCollectionBreadcrumbProps(
   datasetMetadata: DatasetMetadata
 ): TruncatingBreadcrumbProps {
@@ -158,11 +158,11 @@ function buildCollectionBreadcrumbProps(
   };
 }
 
-/*
- Build "home" breadcrumb props, links to Portal's collection index page.
- @param portalUrl - URL to Portal's collection index page.
- @returns Returns breadcrumbs props for rendering the "home" breadcrumb.
-*/
+/**
+ * Build "home" breadcrumb props, links to Portal's collection index page.
+ * @param portalUrl - URL to Portal's collection index page.
+ * @returns Returns breadcrumbs props for rendering the "home" breadcrumb.
+ */
 function buildHomeBreadcrumbProps(
   portalUrl: string
 ): TruncatingBreadcrumbProps {
@@ -173,31 +173,31 @@ function buildHomeBreadcrumbProps(
   };
 }
 
-/*
- Determine if selected dataset has any sibling datasets.
- @param datasets - All datasets in the collection of the current dataset.
- @returns True if is more than one dataset.  
+/**
+ * Determine if selected dataset has any sibling datasets.
+ * @param datasets - All datasets in the collection of the current dataset.
+ * @returns True if is more than one dataset.
  */
 function isDatasetSingleton(datasets: Dataset[]): boolean {
   return datasets.length === 1;
 }
 
-/*
- Build Blueprint Breadcrumb element.
- @param item - Breadcrumb props to be rendered as a breadcrumb element.
- @returns Breadcrumb element generated from given breadcrumb props.
-*/
+/**
+ * Build Blueprint Breadcrumb element.
+ * @param item - Breadcrumb props to be rendered as a breadcrumb element.
+ * @returns Breadcrumb element generated from given breadcrumb props.
+ */
 function renderBreadcrumb(item: TruncatingBreadcrumbProps): JSX.Element {
   return <TruncatingBreadcrumb item={item} />;
 }
 
-/*
- Clicking on dataset name opens menu containing all dataset names except the current dataset name for the current
+/**
+ * Clicking on dataset name opens menu containing all dataset names except the current dataset name for the current
  collection.
- @param item - Breadcrumb props to be rendered as a breadcrumb element with menu.
- @param siblingDatasets - Datasets in the collection of the current dataset, except the selected dataset itself.
- @param onDatasetSelectedFn - Function invoked on click of dataset menu item.
- @returns DatasetMenu element generated from given breadcrumb props and state.
+ * @param item - Breadcrumb props to be rendered as a breadcrumb element with menu.
+ * @param siblingDatasets - Datasets in the collection of the current dataset, except the selected dataset itself.
+ * @param selectDatasetFn - Function invoked on click of dataset menu item.
+ * @returns DatasetMenu element generated from given breadcrumb props and state.
 */
 function renderBreadcrumbMenu(
   item: TruncatingBreadcrumbProps,

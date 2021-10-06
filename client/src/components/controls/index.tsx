@@ -5,9 +5,9 @@ interface Props {
   children: React.ReactNode;
 }
 
-/*
- Controls component for positioning graph controls.
- @returns Markup displaying children positioned within the graph grid template area.
+/**
+ * Controls component for positioning graph controls.
+ * @returns Markup displaying children positioned within the graph grid template area.
  */
 function Controls(props: Props): JSX.Element {
   const { children } = props;

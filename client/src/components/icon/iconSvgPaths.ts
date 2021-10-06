@@ -1,16 +1,16 @@
 /* app dependencies */
 import { IconName } from "./iconName";
 
-/*
- Set of SVG path attributes that are currently supported.
+/**
+ * Set of SVG path attributes that are currently supported.
  */
 interface SvgPathAttribute {
   d: string;
   fill: string;
 }
 
-/*
- Path attributes specs for every supported icon.
+/**
+ * Path attributes specs for every supported icon.
  */
 export const IconSvgPaths: Record<IconName, SvgPathAttribute[]> = {
   about: [

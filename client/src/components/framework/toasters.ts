@@ -62,10 +62,10 @@ export const postAsyncFailureToast = (message: any) =>
     intent: Intent.WARNING,
   });
 
-/*
- Dataset opened in new tab.
- @param message
- @returns string
+/**
+ * Dataset opened in new tab.
+ * @param message
+ * @returns string
  */
 export const postExplainNewTab = (message: string): string =>
   ToastTopCenter.show({

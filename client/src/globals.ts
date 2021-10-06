@@ -154,9 +154,9 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
 
 export const API = _API;
 
-/*
- Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
- between datasets is not enabled for local environments.
+/**
+ * Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
+ * between datasets is not enabled for local environments.
  */
 export function updateApiPrefix(): void {
   if (typeof window === "undefined") {

@@ -68,10 +68,10 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
   return config;
 }
 
-/*
- Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
- @param dispatch Function facilitating update of store.
- @param config Response from config endpoint containing collection ID for the current dataset.
+/**
+ * Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
+ * @param dispatch Function facilitating update of store.
+ * @param config Response from config endpoint containing collection ID for the current dataset.
  */
 async function datasetMetadataFetch(
   dispatch: AppDispatch,
@@ -288,8 +288,8 @@ const requestDifferentialExpression =
     }
   };
 
-/*
- Check local storage for flag indicating that the work in progress toast should be displayed.
+/**
+ * Check local storage for flag indicating that the work in progress toast should be displayed.
  */
 export const checkExplainNewTab =
   () =>
@@ -303,10 +303,10 @@ export const checkExplainNewTab =
     }
   };
 
-/*
- Handle select of dataset from dataset selector: determine whether to display dataset in current browser tab or open 
- dataset in new tab if user currently has work in progress.
- @param dataset Dataset to switch to and load in the current tab.
+/**
+ * Handle select of dataset from dataset selector: determine whether to display dataset in current browser tab or open
+ * dataset in new tab if user currently has work in progress.
+ * @param dataset Dataset to switch to and load in the current tab.
  */
 export const selectDataset =
   (dataset: Dataset): ((dispatch: AppDispatch, getState: GetState) => void) =>
@@ -319,14 +319,14 @@ export const selectDataset =
     }
   };
 
-/*
- Open selected dataset in a new tab. Create local storage with expiry to pop toast once dataset is opened.
- @param dataset Dataset to open in new tab.
+/**
+ * Open selected dataset in a new tab. Create local storage with expiry to pop toast once dataset is opened.
+ * @param dataset Dataset to open in new tab.
  */
 const openDataset =
   (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
   (dispatch: AppDispatch) => {
-    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    const deploymentUrl = dataset.dataset_deployments?.[0].url;
     if (!deploymentUrl) {
       dispatchNetworkErrorMessageToUser("Unable to open dataset.");
       return;
@@ -337,9 +337,9 @@ const openDataset =
     window.open(deploymentUrl, "_blank", "noopener");
   };
 
-/*
- Open selected dataset in a new tab.
- @param dataset Dataset to open in new tab.
+/**
+ * Open selected dataset in a new tab.
+ * @param dataset Dataset to open in new tab.
  */
 const switchDataset =
   (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
@@ -357,9 +357,9 @@ const switchDataset =
     dispatch(doInitialDataLoad());
   };
 
-/*
- Update browser location by adding corresponding entry to the session's history stack.
- @param url - URL to update browser location to. 
+/**
+ * Update browser location by adding corresponding entry to the session's history stack.
+ * @param url - URL to update browser location to.
  */
 const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   dispatch({ type: "location update" });

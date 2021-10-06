@@ -10,8 +10,8 @@ interface Props {
   icon: IconName;
 }
 
-/*
- Renders custom icons outside of standard Blueprint icon set. Implementation based on Blueprint's Icon component.
+/**
+ * Renders custom icons outside of standard Blueprint icon set. Implementation based on Blueprint's Icon component.
  */
 function Icon(props: Props): JSX.Element | null {
   const { icon } = props;

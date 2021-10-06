@@ -1,7 +1,7 @@
 // If a globally shared type or interface doesn't have a clear owner, put it here
 
-/*
- Collection and dataset information for the selected dataset. 
+/**
+ * Collection and dataset information for the selected dataset.
  */
 export interface DatasetMetadata {
   collection_contact_email: string;
@@ -15,16 +15,16 @@ export interface DatasetMetadata {
   dataset_name: string;
 }
 
-/*
- Corpora encoding and schema versioning.
+/**
+ * Corpora encoding and schema versioning.
  */
 interface CorporaVersion {
   corpora_encoding_version: string;
   corpora_schema_version: string;
 }
 
-/*
- Basic dataset model.
+/**
+ * Basic dataset model.
  */
 export interface Dataset {
   id: string;
@@ -33,8 +33,8 @@ export interface Dataset {
   name: string;
 }
 
-/*
- Deployment location of dataset.
+/**
+ * Deployment location of dataset.
  */
 export interface DatasetDeployment {
   url: string;
@@ -47,8 +47,8 @@ export interface GCHints {
   isHot: boolean;
 }
 
-/*
- Rough Data Portal values returned in config.
+/**
+ * Rough Data Portal values returned in config.
  */
 export interface DataPortalProps {
   version: CorporaVersion;
@@ -66,8 +66,8 @@ export interface DataPortalProps {
   schema_version: string;
 }
 
-/*
- Type and location of a related resource.
+/**
+ * Type and location of a related resource.
  */
 export interface Link {
   link_name: string;

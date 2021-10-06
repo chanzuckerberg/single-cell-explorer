@@ -9,22 +9,22 @@ import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
 import { DatasetMetadata, DataPortalProps } from "../../common/types/entities";
 
-/*
- Actions dispatched by info drawer.
+/**
+ * Actions dispatched by info drawer.
  */
 interface DispatchProps {
   toggleDrawer: () => void;
 }
 
-/*
- Props passed in from parent.
+/**
+ * Props passed in from parent.
  */
 interface OwnProps {
   position?: Position;
 }
 
-/*
- Props selected from store.
+/**
+ * Props selected from store.
  */
 interface StateProps {
   datasetMetadata: DatasetMetadata;
@@ -36,8 +36,8 @@ interface StateProps {
 
 type Props = DispatchProps & OwnProps & StateProps;
 
-/*
- Map values selected from store to props.
+/**
+ * Map values selected from store to props.
  */
 const mapStateToProps = (state: RootState): StateProps => ({
   datasetMetadata: state.datasetMetadata?.datasetMetadata,
@@ -46,8 +46,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
   schema: state.annoMatrix.schema,
 });
 
-/*
- Map actions dispatched by info drawer to props.
+/**
+ * Map actions dispatched by info drawer to props.
  */
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
   toggleDrawer: () => dispatch({ type: "toggle dataset drawer" }),

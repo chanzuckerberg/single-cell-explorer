@@ -14,8 +14,8 @@ interface Props {
   item: TruncatingBreadcrumbProps;
 }
 
-/*
- Breadcrumb displayed in truncating breadcrumbs.
+/**
+ * Breadcrumb displayed in truncating breadcrumbs.
  */
 const TruncatingBreadcrumb = React.memo<Props>(
   ({ item }): JSX.Element => (
