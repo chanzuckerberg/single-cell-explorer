@@ -251,6 +251,22 @@ class Dataframe {
     const { length } = column;
     const __id = __getMemoId();
     const isContinuous = isTypedArray(column);
+    const memoHistogramContinuous = memoize(
+      _histogramContinuous,
+      hashContinuous
+    );
+    const memoHistogramContinuousBy = memoize(
+      _histogramContinuousBy,
+      hashContinuousBy
+    );
+    const memoHistogramCategorical = memoize(
+      _histogramCategorical,
+      hashCategorical
+    );
+    const memoHistogramCategoricalBy = memoize(
+      _histogramCategoricalBy,
+      hashCategoricalBy
+    );
 
     /* get value by row label */
     const get = function get(rlabel: LabelType): DataframeValue | undefined {
@@ -311,7 +327,7 @@ class Dataframe {
     */
     get.histogramContinuous = isContinuous
       ? (bins: number, domain: [number, number]): ContinuousHistogram =>
-          memoize(_histogramContinuous, hashContinuous)(get, bins, domain)
+          memoHistogramContinuous(get, bins, domain)
       : raiseIsNotContinuous;
     get.histogramContinuousBy = isContinuous
       ? (
@@ -319,17 +335,11 @@ class Dataframe {
           domain: [number, number],
           by: DataframeColumn
         ): ContinuousHistogramBy =>
-          memoize(_histogramContinuousBy, hashContinuousBy)(
-            get,
-            bins,
-            domain,
-            by
-          )
+          memoHistogramContinuousBy(get, bins, domain, by)
       : raiseIsNotContinuous;
-    get.histogramCategorical = () =>
-      memoize(_histogramCategorical, hashCategorical)(get);
+    get.histogramCategorical = () => memoHistogramCategorical(get);
     get.histogramCategoricalBy = (by: DataframeColumn) =>
-      memoize(_histogramCategoricalBy, hashCategoricalBy)(get, by);
+      memoHistogramCategoricalBy(get, by);
 
     get.asArray = asArray;
     get.has = has;
