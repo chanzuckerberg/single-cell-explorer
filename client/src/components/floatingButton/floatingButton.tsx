@@ -23,7 +23,13 @@ function FloatingButton(): JSX.Element {
             text="Documentation"
           />
           <MenuItem
-            href="https://docs.cellxgene.cziscience.com/explore-data/the-exploration-interface"
+            href="https://docs.cellxgene.cziscience.com/explore-data/explorer-tutorials"
+            rel="noopener"
+            target="_blank"
+            text="Tutorials"
+          />
+          <MenuItem
+            href="https://docs.cellxgene.cziscience.com/roadmap"
             rel="noopener"
             target="_blank"
             text="Our Roadmap"
