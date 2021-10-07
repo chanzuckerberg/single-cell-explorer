@@ -510,6 +510,10 @@ class Graph extends React.Component<{}, GraphState> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   setReglCanvas = (canvas: any) => {
+    // Ignore null canvas on unmount
+    if (!canvas) {
+      return;
+    }
     this.reglCanvas = canvas;
     this.setState({
       ...Graph.createReglState(canvas),

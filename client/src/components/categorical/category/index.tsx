@@ -214,7 +214,7 @@ class Category extends React.PureComponent {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- - FIXME: disabled temporarily on migrate to TS.
-  updateColorTable(colorData: Dataframe|null) {
+  updateColorTable(colorData: Dataframe | null) {
     // color table, which may be null
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
     const { schema, colors, metadataField } = this.props;
@@ -453,7 +453,7 @@ const CategoryHeader = React.memo(
     useEffect(() => {
       // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
       checkboxRef.current.indeterminate = selectionState === "some";
-    }, [checkboxRef.current, selectionState]);
+    }, [selectionState]);
 
     return (
       <>

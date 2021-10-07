@@ -58,6 +58,9 @@ const skipOnActions = new Set<string>([
   "geneset: disable add new genes mode",
   "geneset: activate rename geneset mode",
   "geneset: disable rename geneset mode",
+
+  /* dataset metadata */
+  "dataset metadata load complete",
 ]);
 
 /*
