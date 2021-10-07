@@ -132,8 +132,8 @@ These Corpora metadata properties WILL exist in the CXG `cxg_group_metadata` fie
 * `X_normalization`
 
 These Corpora metadata properties MAY exist:
-* `default_embedding`
-* `X_approximate_distribution`
+* `default_embedding` (v1.1.0+)
+* `X_approximate_distribution` (v2.0.0+)
 * `batch_condition` (v2.0.0+)
 * `contributors` (v1.1.0 only)
 * `preprint_doi` (v1.1.0 only)
