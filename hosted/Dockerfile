@@ -8,6 +8,7 @@ ENV HAPPY_ENV=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
+ADD hosted/requirements server/eb/customize/requirements.txt
 ADD hosted/create_rdev_config.py .
 
 ADD server/ server/
@@ -27,14 +28,12 @@ RUN python3 -m pip install -r requirements.txt
 
 RUN python3 create_rdev_config.py
 
-# COPY hosted/config.yaml /config/config.yaml
-
 RUN make build-client
 # TODO: this is copied from the context, rather than the build output. Figure out how this gets generated
-COPY server/eb/artifact.dir/server/common/web server/common/web
+# COPY server/eb/artifact.dir/server/common/web server/common/web
 
 WORKDIR server/eb
-# RUN make build
+RUN make build
 
 ENV CXG_CONFIG_FILE=/config/config.yaml
 ENV FLASK_ENV=development
