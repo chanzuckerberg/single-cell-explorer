@@ -7,11 +7,11 @@ import {
   DatasetMetadata,
   DataPortalProps,
   Link,
+  ONTOLOGY_KEY,
 } from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
 import { checkValidVersion } from "../util/version";
 
-const ONTOLOGY_KEY = "ontology_term_id";
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
   "DATA_SOURCE",
