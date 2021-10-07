@@ -81,9 +81,10 @@ async function datasetMetadataFetch(
   const datasetMetadata = await fetchJson<{ metadata: DatasetMetadata }>(
     "dataset-metadata"
   );
+
   dispatch({
     type: "dataset metadata load complete",
-    datasetMetadata,
+    datasetMetadata: datasetMetadata.metadata,
     portalUrl: links["collections-home-page"],
   });
 }

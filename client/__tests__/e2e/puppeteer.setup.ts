@@ -29,6 +29,11 @@ beforeEach(async () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(DATASET_METADATA_RESPONSE),
+        // (thuang): Add headers so FE@localhost:3000 can access API@localhost:5000
+        headers: {
+          "Access-Control-Allow-Origin": "http://localhost:3000",
+          "Access-Control-Allow-Credentials": "true",
+        },
       });
       return;
     }
