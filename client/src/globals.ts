@@ -9,6 +9,12 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/**
+ * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
+ * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
+ */
+const REGEX_PATHNAME = /(?<=\/)\w+\/[^/]+\/(?=api)/;
+
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
 
@@ -155,17 +161,16 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
 export const API = _API;
 
 /**
- * Update the base API URL for the current dataset using the current origin and pathname. Noop for localhost as switching
- * between datasets is not enabled for local environments.
+ * Update the base API URL for the current dataset using the current origin and pathname.
  */
 export function updateApiPrefix(): void {
   if (typeof window === "undefined") {
     throw new Error("Unable to set API route.");
   }
-  const {
-    location: { host, pathname, protocol },
-  } = window;
-  if (!origin.includes("localhost")) {
-    API.prefix = `${protocol}//api.${host}/cellxgene${pathname}api/`;
-  }
+  const { location } = window;
+  // Remove leading slash as regex uses leading slash in lookbehind and is therefore not replaced.
+  const pathname = location.pathname.substring(1);
+  // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
+  // path segments taken from the pathname.
+  API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
 }
