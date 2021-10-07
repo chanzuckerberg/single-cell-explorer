@@ -1,6 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
+import { CXG_BASE_URL } from "../../.test_base_url.json";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -131,7 +132,7 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
     // prefix: "http://api.clustering.czi.technology/api/",
     // prefix: "http://tabulamuris.cxg.czi.technology/api/",
     // prefix: "http://api-staging.clustering.czi.technology/api/",
-    prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
+    prefix: `http://localhost:${CXG_SERVER_PORT}/${CXG_BASE_URL}/api/`,
     version: "v0.2/",
   };
 }

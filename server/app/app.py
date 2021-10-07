@@ -414,7 +414,7 @@ class Server:
                 bp_dataroot = Blueprint(
                     f"api_dataset_{url_dataroot}",
                     __name__,
-                    url_prefix=f"{api_path}/{url_dataroot}/<dataset>" + api_version,
+                    url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
                 )
                 dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
                 self.app.register_blueprint(dataroot_resources.blueprint)

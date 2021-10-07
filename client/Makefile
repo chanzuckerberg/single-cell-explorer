@@ -32,7 +32,7 @@ build:
 start-frontend:
 	node server/development.js
 
-# start an instance of cellxgene and run the end-to-end tests
+# start an instance of the Explorer server and run the end-to-end tests
 .PHONY: smoke-test
 smoke-test:
 	start_server_and_test \
@@ -40,7 +40,7 @@ smoke-test:
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --verbose --no-cache false'
 
-# start an instance of cellxgene and run the end-to-end annotations tests
+# start an instance of the Explorer server and run the end-to-end annotations tests
 .PHONY: smoke-test-annotations
 smoke-test-annotations:
 	$(eval TMP_DIR := $(shell  mktemp -d /tmp/cellxgene_XXXXXX))
