@@ -14,7 +14,7 @@ from server.tests.unit import TestServer
 from typing import List
 
 
-
+log: Logger = getLogger("werkzeug")
 DEFAULT_CONFIG = AppConfig()
 
 
@@ -275,6 +275,10 @@ def launch(
     dataroot: str = dataroot if dataroot else test_dataset_dir
     config_file: str = config_file if config_file else test_config_file
 
+    if not os.path.isdir(dataroot):
+        log.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
+        sys.exit(1)
+
     if dump_default_config:
         print(default_config)
         sys.exit(0)
@@ -343,8 +347,6 @@ def launch(
     server: TestServer = TestServer(app_config)
 
     if not server_config.app__verbose:
-        print("setting log to error")
-        log: Logger = getLogger("werkzeug")
         log.setLevel(ERROR)
 
     cellxgene_url: str = f"http://{app_config.server_config.app__host}:{app_config.server_config.app__port}"

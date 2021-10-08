@@ -51,6 +51,10 @@ Installs requirements files.
 
 **Usage:** from the `$PROJECT_ROOT/client` directory run `make start-frontend`
 
+NB: the frontend server reads in the desired base_url and dataset name to form the complete url base for API calls. *In 
+order to use an arbitrary dataset successfully, the frontend server must be started **after** the backend server*, which 
+writes out the given base_url and dataset anew each time.
+
 #### backend_dev
 
 **About** This script enables FE developers to run the REST API necessary to

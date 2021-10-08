@@ -167,7 +167,7 @@ class TestServer(Server):
                 logging.warning(f"Using first: {path.join(dataroot, files[0])}")
             with open(".test_base_url.json", "w") as f:
                 print(base_url)
-                f.write(json.dumps({"CXG_BASE_URL": path.join(base_url, files[0])}))
+                f.write(json.dumps({"BASE_URL": base_url, "DATASET": files[0]}))
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 

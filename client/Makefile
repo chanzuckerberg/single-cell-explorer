@@ -27,7 +27,8 @@ WEBPACK_CONFIG ?= configuration/webpack/webpack.config.prod.js
 build:
 	npm run build $(WEBPACK_CONFIG)
 
-# Development convenience methods
+# start local frontend server
+# nb: if using a new/updated dataset, must first start local backend/API server (`launch_dev_server.sh <dataset_path>`)
 .PHONY: start-frontend
 start-frontend:
 	node server/development.js
