@@ -115,7 +115,7 @@ export function createCategorySummaryFromDfCol(
  */
 type SelectionState = Map<string, boolean>;
 
-interface CategoricalSelection {
+export interface CategoricalSelection {
   // Categorical annotation name
   [key: string]: SelectionState;
 }

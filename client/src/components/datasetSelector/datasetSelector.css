@@ -1,0 +1,12 @@
+:local(.datasetSelectorBreadcrumb),
+:local(.datasetSelectorBreadcrumbDisabled) {
+  font-size: 14px; /* Override BP breadcrumb font spec of 16px */
+}
+
+:local(.datasetSelectorBreadcrumb):hover {
+  color: #10161a; /* Equivalent to Colors.BLACK */
+}
+
+:local(.datasetSelectorMenuPopoverTarget) {
+  cursor: pointer;
+}
