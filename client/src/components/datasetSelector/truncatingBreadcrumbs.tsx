@@ -94,6 +94,7 @@ enum BreadcrumbState {
  * HSF - hidden, short text, full
  * HST - hidden, short text, truncated
  * HHS - hidden, hidden, short text
+ * HHH - hidden, hidden, hidden
  */
 type BreadcrumbsState = [BreadcrumbState, BreadcrumbState, BreadcrumbState];
 const STATES_FFF: BreadcrumbsState = [
@@ -121,6 +122,11 @@ const STATES_HHS: BreadcrumbsState = [
   BreadcrumbState.HIDDEN,
   BreadcrumbState.SHORT_TEXT,
 ];
+const STATES_HHH: BreadcrumbsState = [
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.HIDDEN,
+  BreadcrumbState.HIDDEN,
+];
 
 /**
  * Breadcrumb Transitions
@@ -133,6 +139,7 @@ const BreadcrumbsStateTransitions: BreadcrumbsState[] = [
   STATES_HSF,
   STATES_HST,
   STATES_HHS,
+  STATES_HHH,
 ];
 
 /**
