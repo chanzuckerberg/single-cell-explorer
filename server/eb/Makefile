@@ -56,3 +56,7 @@ build: clean
 	  zip -r ../artifact.zip . --exclude server/tests/\* server/eb/\* ; ); \
 	if ! grep artifact.zip .elasticbeanstalk/config.yml ; then \
 	    mkdir -p .elasticbeanstalk ; cat config_deploy.yaml >> .elasticbeanstalk/config.yml ; fi
+
+.PHONY: build-ecs
+build-ecs: clean
+	$(call copy_client_assets,../../client/build,server) ; \
