@@ -15,6 +15,14 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
+import { DatasetMetadata, Dataset } from "../common/types/entities";
+import { postExplainNewTab } from "../components/framework/toasters";
+import { KEYS } from "../components/util/localStorage";
+import {
+  storageGetTransient,
+  storageSetTransient,
+} from "../components/util/transientLocalStorage";
+import { selectIsUserStateDirty } from "../selectors/global";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -58,6 +66,27 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
     config,
   });
   return config;
+}
+
+/**
+ * Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
+ * @param dispatch Function facilitating update of store.
+ * @param config Response from config endpoint containing collection ID for the current dataset.
+ */
+async function datasetMetadataFetch(
+  dispatch: AppDispatch,
+  config: Config
+): Promise<void> {
+  const { links } = config;
+  const datasetMetadata = await fetchJson<{ metadata: DatasetMetadata }>(
+    "dataset-metadata"
+  );
+
+  dispatch({
+    type: "dataset metadata load complete",
+    datasetMetadata: datasetMetadata.metadata,
+    portalUrl: links["collections-home-page"],
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -110,6 +139,8 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
+
+      datasetMetadataFetch(dispatch, config);
 
       genesetsFetch(dispatch, config);
 
@@ -258,6 +289,84 @@ const requestDifferentialExpression =
     }
   };
 
+/**
+ * Check local storage for flag indicating that the work in progress toast should be displayed.
+ */
+export const checkExplainNewTab =
+  () =>
+  (dispatch: AppDispatch): void => {
+    const workInProgressWarn = storageGetTransient(KEYS.WORK_IN_PROGRESS_WARN);
+    if (workInProgressWarn) {
+      dispatch({ type: "work in progress warning displayed" });
+      postExplainNewTab(
+        "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
+      );
+    }
+  };
+
+/**
+ * Handle select of dataset from dataset selector: determine whether to display dataset in current browser tab or open
+ * dataset in new tab if user currently has work in progress.
+ * @param dataset Dataset to switch to and load in the current tab.
+ */
+export const selectDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch, getState: GetState) => void) =>
+  (dispatch: AppDispatch, getState: GetState) => {
+    const workInProgress = selectIsUserStateDirty(getState());
+    if (workInProgress) {
+      dispatch(openDataset(dataset));
+    } else {
+      dispatch(switchDataset(dataset));
+    }
+  };
+
+/**
+ * Open selected dataset in a new tab. Create local storage with expiry to pop toast once dataset is opened.
+ * @param dataset Dataset to open in new tab.
+ */
+const openDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    const deploymentUrl = dataset.dataset_deployments?.[0].url;
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to open dataset.");
+      return;
+    }
+
+    dispatch({ type: "dataset opened" });
+    storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 10000);
+    window.open(deploymentUrl, "_blank", "noopener");
+  };
+
+/**
+ * Open selected dataset in a new tab.
+ * @param dataset Dataset to open in new tab.
+ */
+const switchDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    dispatch({ type: "reset" });
+    dispatch({ type: "dataset switch" });
+
+    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to switch datasets.");
+      return;
+    }
+    dispatch(updateLocation(deploymentUrl));
+    globals.updateApiPrefix();
+    dispatch(doInitialDataLoad());
+  };
+
+/**
+ * Update browser location by adding corresponding entry to the session's history stack.
+ * @param url - URL to update browser location to.
+ */
+const updateLocation = (url: string) => (dispatch: AppDispatch) => {
+  dispatch({ type: "location update" });
+  window.history.pushState(null, "", url);
+};
+
 function fetchJson<T>(pathAndQuery: string): Promise<T> {
   return doJsonRequest<T>(
     `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
@@ -269,6 +378,8 @@ export default {
   requestDifferentialExpression,
   requestSingleGeneExpressionCountsForColoringPOST,
   requestUserDefinedGene,
+  checkExplainNewTab,
+  selectDataset,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:

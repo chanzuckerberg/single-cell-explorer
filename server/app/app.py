@@ -27,7 +27,7 @@ from server.common.errors import (
     RequestException,
     DatasetNotFoundError,
     TombstoneError,
-    DatasetMetadataError
+    DatasetMetadataError,
 )
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
@@ -127,12 +127,19 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
     matrix_cache_manager = current_app.matrix_data_cache_manager
     with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
         return matrix_cache_manager.get(
-            cache_key=f"{url_dataroot}/{dataset}",
+            cache_key=dataset_metadata["s3_uri"],
             create_data_function=MatrixDataLoader(
                 location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
             ).validate_and_open,
             create_data_args={},
         )
+
+
+def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
+    try:
+        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
+    except Exception as e:
+        logging.error(e)
 
 
 def rest_get_data_adaptor(func):
@@ -143,6 +150,9 @@ def rest_get_data_adaptor(func):
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
+            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
+            # it from the cache
+            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )

@@ -74,7 +74,7 @@ from server.converters.h5ad_data_file import H5ADDataFile
 @click.option(
     "--disable-corpora-schema",
     help="When set, conversion process will neither extract nor store Corpora schema information. See "
-    "https://github.com/chanzuckerberg/corpora-data-portal/blob/main/backend/schema/corpora_schema.md for more "
+    "https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md for more "
     "information.",
     default=False,
     show_default=True,

@@ -120,12 +120,13 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
             dataset_id = base_metadata["dataset_id"]
             collection_visibility = base_metadata["collection_visibility"]
 
-            suffix = "/private" if collection_visibility == "PRIVATE" else ""
+            suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
 
             res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
             metadata = {
                 "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+                "dataset_id": dataset_id,
                 "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
                 "collection_name": res["name"],
                 "collection_description": res["description"],

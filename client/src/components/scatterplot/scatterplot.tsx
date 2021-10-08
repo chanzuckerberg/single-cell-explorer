@@ -676,7 +676,13 @@ const ScatterplotAxis = React.memo(
         .attr("class", "label")
         .style("font-style", "italic")
         .text(scatterplotXXaccessor);
-    }, [scatterplotXXaccessor, scatterplotYYaccessor, xScale, yScale]);
+    }, [
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
+      xScale,
+      yScale,
+      minimized,
+    ]);
 
     return (
       <svg

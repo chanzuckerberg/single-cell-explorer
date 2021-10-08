@@ -9,6 +9,7 @@ module.exports = {
     "plugin:@blueprintjs/recommended",
     "plugin:compat/recommended",
     "plugin:jsx-a11y/recommended",
+    "plugin:react-hooks/recommended",
     // (thuang) disable eslint formatting rules, so prettier can do its job
     // Do not use `plugin:prettier/recommended` per doc below:
     // https://prettier.io/docs/en/integrating-with-linters.html
@@ -106,6 +107,13 @@ module.exports = {
     ],
   },
   overrides: [
+    // Override some TypeScript rules just for .js files
+    {
+      files: ["*.js"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+      },
+    },
     {
       files: ["**/*.test.ts"],
       env: {

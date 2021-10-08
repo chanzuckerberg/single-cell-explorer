@@ -1,6 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
+import { DataPortalProps } from "./common/types/entities";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -8,17 +9,37 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/**
+ * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
+ * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
+ */
+const REGEX_PATHNAME = /(?<=\/)\w+\/[^/]+\/(?=api)/;
+
+/* Config links types */
+export type ConfigLink = "about-dataset" | "collections-home-page";
+
 /* rough shape of config object */
 export interface Config {
+  corpora_props: DataPortalProps;
   features: Record<string, unknown>;
   displayNames: Record<string, unknown>;
+  library_versions: LibraryVersions;
   parameters: {
+    about_legal_privacy?: string;
+    about_legal_tos?: string;
     "disable-diffexp"?: boolean;
     "diffexp-may-be-slow"?: boolean;
     default_embedding?: string;
     [key: string]: unknown;
   };
-  links: Record<string, unknown>;
+  portalUrl: string;
+  links: Record<ConfigLink, unknown>;
+}
+
+/* shape of config library_versions */
+export interface LibraryVersions {
+  anndata: string;
+  cellxgene: string;
 }
 
 /*
@@ -32,6 +53,7 @@ export const configDefaults: Config = {
     "disable-diffexp": false,
     "diffexp-may-be-slow": false,
   },
+  // @ts-expect-error -- Revisit typings here with respect to CLI defaults
   links: {},
 };
 
@@ -70,6 +92,7 @@ export const logoColor = "black"; /* logo pink: "#E9429A" */
 export const tiniestFontSize = 12;
 export const largestFontSize = 24;
 export const uppercaseLetterSpacing = "0.04em";
+export const bold = 600;
 export const bolder = 700;
 export const accentFont = "Georgia,Times,Times New Roman,serif";
 export const maxParagraphWidth = 600;
@@ -137,3 +160,18 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
 }
 
 export const API = _API;
+
+/**
+ * Update the base API URL for the current dataset using the current origin and pathname.
+ */
+export function updateApiPrefix(): void {
+  if (typeof window === "undefined") {
+    throw new Error("Unable to set API route.");
+  }
+  const { location } = window;
+  // Remove leading slash as regex uses leading slash in lookbehind and is therefore not replaced.
+  const pathname = location.pathname.substring(1);
+  // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
+  // path segments taken from the pathname.
+  API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
+}

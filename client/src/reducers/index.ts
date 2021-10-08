@@ -1,8 +1,15 @@
-import { createStore, applyMiddleware, AnyAction } from "redux";
+import {
+  createStore,
+  applyMiddleware,
+  AnyAction,
+  Action,
+  Reducer,
+} from "redux";
 import thunk, { ThunkDispatch } from "redux-thunk";
 
 import cascadeReducers from "./cascade";
 import undoable from "./undoable";
+import datasetMetadata from "./datasetMetadata";
 import config from "./config";
 import annoMatrix from "./annoMatrix";
 import obsCrossfilter from "./obsCrossfilter";
@@ -23,7 +30,7 @@ import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
 import undoableConfig from "./undoableConfig";
 
-const Reducer = undoable(
+const AppReducer = undoable(
   cascadeReducers([
     ["config", config],
     ["annoMatrix", annoMatrix],
@@ -41,6 +48,7 @@ const Reducer = undoable(
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDialation],
     ["autosave", autosave],
+    ["datasetMetadata", datasetMetadata],
   ]),
   [
     "annoMatrix",
@@ -59,7 +67,16 @@ const Reducer = undoable(
   undoableConfig
 );
 
-const store = createStore(Reducer, applyMiddleware(thunk, annoMatrixGC));
+const RootReducer: Reducer = (state: RootState, action: Action) => {
+  // when a logout action is dispatched it will reset redux state
+  if (action.type === "reset") {
+    state = undefined;
+  }
+
+  return AppReducer(state, action);
+};
+
+const store = createStore(RootReducer, applyMiddleware(thunk, annoMatrixGC));
 
 export type RootState = ReturnType<typeof store.getState>;
 

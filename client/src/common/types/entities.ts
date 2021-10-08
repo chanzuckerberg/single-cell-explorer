@@ -1,17 +1,86 @@
 // If a globally shared type or interface doesn't have a clear owner, put it here
 
 /**
+ * Category name suffix used to determine if category name is ontology term id.
+ */
+export const ONTOLOGY_KEY = "ontology_term_id";
+
+/**
+ * Complete list of standard cellxgene column names.
+ * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#obs-cell-metadata
+ */
+export const STANDARD_CATEGORY_NAMES = [
+  "assay",
+  "assay_ontology_term_id",
+  "cell_type",
+  "cell_type_ontology_term_id",
+  "development_stage",
+  "development_stage_ontology_term_id",
+  "disease",
+  "disease_ontology_term_id",
+  "ethnicity",
+  "ethnicity_ontology_term_id",
+  "is_primary_data",
+  "organism",
+  "organism_ontology_term_id",
+  "sex_ontology_term_id",
+  "sex",
+  "tissue_ontology_term_id",
+  "tissue",
+];
+
+/**
+ * Collection and dataset information for the selected dataset.
+ */
+export interface DatasetMetadata {
+  collection_contact_email: string;
+  collection_contact_name: string;
+  collection_datasets: Dataset[];
+  collection_description: string;
+  collection_links: Link[];
+  collection_name: string;
+  collection_url: string;
+  dataset_id: string;
+  dataset_name: string;
+}
+
+/**
+ * Corpora encoding and schema versioning.
+ */
+interface CorporaVersion {
+  corpora_encoding_version: string;
+  corpora_schema_version: string;
+}
+
+/**
+ * Basic dataset model.
+ */
+export interface Dataset {
+  id: string;
+  cell_count: number;
+  dataset_deployments: DatasetDeployment[];
+  name: string;
+}
+
+/**
+ * Deployment location of dataset.
+ */
+export interface DatasetDeployment {
+  url: string;
+}
+
+/**
  * Flags informing garbage collection-related logic.
  */
 export interface GCHints {
   isHot: boolean;
 }
 
+/**
+ * Rough Data Portal values returned in config.
+ */
 export interface DataPortalProps {
-  version: {
-    corpora_schema_version: string;
-    corpora_encoding_version: string;
-  };
+  version: CorporaVersion;
   title: string;
   contributors: { name: string; institution: string }[];
   layer_descriptions: { X: string };
@@ -24,4 +93,13 @@ export interface DataPortalProps {
   preprint_doi: string;
   publication_doi: string;
   schema_version: string;
+}
+
+/**
+ * Type and location of a related resource.
+ */
+export interface Link {
+  link_name: string;
+  link_type: string;
+  link_url: string;
 }

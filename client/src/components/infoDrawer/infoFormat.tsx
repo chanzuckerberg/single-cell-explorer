@@ -1,229 +1,323 @@
-import { H3, H1, UL, HTMLTable, Classes } from "@blueprintjs/core";
-import React from "react";
-import { DataPortalProps } from "../../common/types/entities";
-import Category from "../categorical/category";
+// Core dependencies
+import { H3, HTMLTable, Classes, Tooltip, Position } from "@blueprintjs/core";
+import React, { CSSProperties } from "react";
+
+// App dependencies
+import {
+  DatasetMetadata,
+  DataPortalProps,
+  Link,
+  ONTOLOGY_KEY,
+} from "../../common/types/entities";
+import { Category } from "../../common/types/schema";
 import { checkValidVersion } from "../util/version";
 
-const renderContributors = (
-  contributors: DataPortalProps["contributors"],
-  affiliations: string[]
-) => {
-  // eslint-disable-next-line no-constant-condition --  Temp removed contributor section to avoid publishing PII
-  if (!contributors || contributors.length === 0 || true) return null;
+const COLLECTION_LINK_ORDER_BY = [
+  "DOI",
+  "DATA_SOURCE",
+  "RAW_DATA",
+  "PROTOCOL",
+  "LAB_WEBSITE",
+  "OTHER",
+];
 
-  return (
-    <>
-      <H3>Contributors</H3>
-      <p>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
-        {contributors.map((contributor: any) => {
-          const { email, name, institution } = contributor;
+interface CorporaMetadata {
+  organism?: string;
+}
 
-          return (
-            <span key={name}>
-              {name}
-              {email && `(${email})`}
-              <sup>{affiliations.indexOf(institution) + 1}</sup>
-            </span>
-          );
-        })}
-      </p>
-      {renderAffiliations(affiliations)}
-    </>
-  );
-};
+interface LinkView {
+  name: string;
+  type: string;
+  url: string;
+}
 
-// generates a list of unique institutions by order of appearance in contributors
-const buildAffiliations = (
-  contributors: { name: string; institution: string }[] = []
-) => {
-  const affiliations: string[] = [];
+interface MetadataView {
+  key: string;
+  value: string;
+  tip?: Category;
+}
 
-  contributors.forEach((contributor) => {
-    const { institution } = contributor;
-    if (affiliations.indexOf(institution) === -1) {
-      affiliations.push(institution);
-    }
+interface Props {
+  datasetMetadata: DatasetMetadata;
+  dataPortalProps: DataPortalProps;
+  singleValueCategories: SingleValueCategories;
+}
+
+export type SingleValueCategories = Map<string, Category>;
+
+/**
+ * Sort collection links by custom sort order, create view-friendly model of link types.
+ * @returns Array of link objects formatted for display.
+ */
+const buildCollectionLinks = (links: Link[]): LinkView[] => {
+  const sortedLinks = [...links].sort(sortCollectionLinks);
+  return sortedLinks.map((link) => {
+    const { link_name: name, link_type: type, link_url: url } = link;
+    return {
+      name: buildLinkName(name, type, url),
+      type: transformLinkTypeToDisplay(type),
+      url,
+    };
   });
-
-  return affiliations;
 };
 
-const renderAffiliations = (affiliations: string[]) => {
-  if (affiliations.length === 0) return null;
-  return (
-    <>
-      <H3>Affiliations</H3>
-      <UL>
-        {affiliations.map((item, index) => (
-          <div key={item}>
-            <sup>{index + 1}</sup>
-            {"  "}
-            {item}
-          </div>
-        ))}
-      </UL>
-    </>
-  );
-};
-
-const renderDOILink = (type: string, doi: string) => {
-  if (!doi) return null;
-
-  return (
-    <>
-      <H3>{type}</H3>
-      <p>
-        <a href={doi} target="_blank" rel="noopener">
-          {doi}
-        </a>
-      </p>
-    </>
-  );
-};
-
-const ONTOLOGY_KEY = "ontology_term_id";
-// Render list of metadata attributes found in categorical field
-const renderDatasetMetadata = (
+/**
+ * Transform Corpora metadata and single value categories into sort and render-friendly format.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Array of metadata key/value pairs.
+ */
+const buildDatasetMetadata = (
   singleValueCategories: SingleValueCategories,
-  corporaMetadata: Partial<DataPortalProps>
+  corporaMetadata: CorporaMetadata
 ) => {
-  if (singleValueCategories.size === 0) return null;
+  const metadata = [
+    ...transformCorporaMetadata(corporaMetadata),
+    ...transformSingleValueCategoriesMetadata(singleValueCategories),
+  ];
+  metadata.sort(sortDatasetMetadata);
+  return metadata;
+};
+
+/**
+ * Determine name to display for collection link.
+ * @param name - Link display name
+ * @param type - Link type (e.g. DOI)
+ * @param url - Link URL
+ * @returns Pathname if link type is DOI otherwise host.
+ */
+const buildLinkName = (name: string, type: string, url: string): string => {
+  if (name) {
+    return name;
+  }
+  let validUrl;
+  try {
+    validUrl = new URL(url);
+  } catch (e) {
+    return url;
+  }
+  if (type === "DOI") {
+    return validUrl.pathname.substring(1);
+  }
+  return validUrl.host;
+};
+
+/**
+ * Generate inline styles to be applied to collections and meta tables.
+ * @returns Inline style object.
+ */
+const getTableStyles = (): CSSProperties => ({
+  tableLayout: "fixed",
+  width: "100%",
+});
+
+/**
+ * Render collection contact and links.
+ * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
+ * @returns Markup displaying contact and collection-related links.
+ */
+const renderCollectionLinks = (
+  datasetMetadata: DatasetMetadata
+): JSX.Element => {
+  const links = buildCollectionLinks(datasetMetadata.collection_links);
+  const {
+    collection_contact_name: contactName,
+    collection_contact_email: contactEmail,
+  } = datasetMetadata;
   return (
     <>
-      <H3>Dataset Metadata</H3>
-      <HTMLTable
-        striped
-        condensed
-        style={{ display: "block", width: "100%", overflowX: "auto" }}
-      >
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Label</th>
-            <th>Ontology ID</th>
-          </tr>
-        </thead>
+      {renderSectionTitle("Collection")}
+      <HTMLTable style={getTableStyles()}>
         <tbody>
-          {Object.entries(corporaMetadata).map(([key, value]) => (
-            <tr {...{ key }}>
-              <td>{`${key}:`}</td>
-              <td>{value}</td>
-              <td />
+          <tr>
+            <td>Contact</td>
+            <td>{renderCollectionContactLink(contactName, contactEmail)}</td>
+          </tr>
+          {links.map(({ name, type, url }, i) => (
+            <tr {...{ key: i }}>
+              <td>{type}</td>
+              <td>
+                <a href={url} rel="noopener" target="_blank">
+                  {name}
+                </a>
+              </td>
             </tr>
           ))}
-          {Array.from(singleValueCategories).reduce((elems, pair) => {
-            const [category, value] = pair;
-            // If the value is empty skip it
-            if (!value) return elems;
-
-            // If this category is a ontology term, let's add its value to the previous node
-            if (String(category).includes(ONTOLOGY_KEY)) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-              const prevElem = (elems as any).pop();
-              const newChildren = [...prevElem.props.children];
-              newChildren.splice(2, 1, [<td key="ontology">{value}</td>]);
-              // Props aren't extensible so we must clone and alter the component to append the new child
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-              (elems as any).push(
-                React.cloneElement(prevElem, prevElem.props, newChildren)
-              );
-            } else {
-              // Create the list item
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-              (elems as any).push(
-                <tr key={category}>
-                  <td>{`${category}:`}</td>
-                  <td>{value}</td>
-                  <td />
-                </tr>
-              );
-            }
-            return elems;
-          }, [])}
         </tbody>
       </HTMLTable>
     </>
   );
 };
 
-// Renders any links found in the config where link_type is not "SUMMARY"
-// If there are no links in the config, render the aboutURL
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const renderLinks = (projectLinks: any, aboutURL: any) => {
-  if (!projectLinks && !aboutURL) return null;
-  if (projectLinks)
-    return (
-      <>
-        <H3>Project Links</H3>
-        <UL>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
-          {projectLinks.map((link: any) => {
-            if (link.link_type === "SUMMARY") return null;
-            return (
-              <li key={link.link_name}>
-                <a href={link.link_url} target="_blank" rel="noopener">
-                  {link.link_name}
-                </a>
-              </li>
-            );
-          })}
-        </UL>
-      </>
-    );
+/**
+ * Display collection contact's name with a link to their associated email.
+ * @param name - Collection contact's name
+ * @param email - Collection contact's email
+ * @returns Mailto link if possible otherwise the contact's name.
+ */
+const renderCollectionContactLink = (
+  name: string,
+  email: string
+): JSX.Element | string | null => {
+  if (!name && !email) {
+    return null;
+  }
+  if (email) {
+    return <a href={`mailto:${email}`}>{name}</a>;
+  }
+  return name;
+};
 
+/**
+ * Render dataset metadata, mix of meta from Corpora and attributes found in categorical field.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Markup for displaying meta in table format.
+ */
+const renderDatasetMetadata = (
+  singleValueCategories: SingleValueCategories,
+  corporaMetadata: CorporaMetadata
+): JSX.Element | null => {
+  if (
+    singleValueCategories.size === 0 &&
+    Object.entries(corporaMetadata).length === 0
+  ) {
+    return null;
+  }
+  const metadata = buildDatasetMetadata(singleValueCategories, corporaMetadata);
   return (
     <>
-      <H3>More Info</H3>
-      <p>
-        <a href={aboutURL} target="_blank" rel="noopener">
-          {aboutURL}
-        </a>
-      </p>
+      {renderSectionTitle("Dataset")}
+      <HTMLTable style={getTableStyles()}>
+        <tbody>
+          {metadata.map(({ key, value, tip }) => (
+            <tr {...{ key }}>
+              <td>{key}</td>
+              <td>
+                <Tooltip
+                  content={String(tip)}
+                  disabled={!tip}
+                  minimal
+                  modifiers={{ flip: { enabled: false } }}
+                  position={Position.TOP}
+                >
+                  {value}
+                </Tooltip>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </HTMLTable>
     </>
   );
 };
 
-export type SingleValueCategories = Map<string, Category>;
+/**
+ * Create DOM elements for displaying section title.
+ * @param title - Section title to display
+ * @returns Styled markup representation displaying section title.
+ */
+const renderSectionTitle = (title: string): JSX.Element => (
+  <p style={{ margin: "24px 0 8px" }}>
+    <strong>{title}</strong>
+  </p>
+);
 
-interface Props {
-  datasetTitle: string;
-  singleValueCategories: SingleValueCategories;
-  aboutURL: string;
-  dataPortalProps: DataPortalProps;
-}
+/**
+ * Compare function for sorting collection links by custom link type order.
+ * @param link0 - First link to compare
+ * @param link1 - Second link value to compare
+ * @returns Number indicating sort precedence of link0 vs link1.
+ */
+const sortCollectionLinks = (link0: Link, link1: Link): number =>
+  COLLECTION_LINK_ORDER_BY.indexOf(link1.link_type) -
+  COLLECTION_LINK_ORDER_BY.indexOf(link0.link_type);
 
-const InfoFormat = React.memo(
-  ({
-    datasetTitle,
-    singleValueCategories,
-    aboutURL,
-    dataPortalProps = {} as DataPortalProps,
-  }: Props) => {
-    if (checkValidVersion(dataPortalProps)) {
-      dataPortalProps = {} as DataPortalProps;
+/**
+ * Compare function for metadata key value pairs by key - alpha, ascending.
+ * @param m0 - First metadata value to compare
+ * @param m1 - Second metadata value to compare
+ * @returns Number indicating sort precedence of m0 vs m1.
+ */
+const sortDatasetMetadata = (m0: MetadataView, m1: MetadataView) => {
+  if (m0.key < m1.key) {
+    return -1;
+  }
+  if (m0.key > m1.key) {
+    return 1;
+  }
+  return 0;
+};
+
+/**
+ * Build array of view model objects from given Corpora metadata object.
+ * @param corporaMetadata - Meta from Corpora
+ * @returns Array of metadata key/value pairs.
+ */
+const transformCorporaMetadata = (
+  corporaMetadata: CorporaMetadata
+): MetadataView[] =>
+  Object.entries(corporaMetadata)
+    .filter(([, value]) => value)
+    .map(([key, value]) => ({
+      key,
+      value,
+    }));
+
+/**
+ * Convert link type from upper snake case to title case.
+ * @param type - Link type to transform.
+ * @returns Transformed link type ready for display.
+ */
+const transformLinkTypeToDisplay = (type: string): string => {
+  const tokens = type.split("_");
+  return tokens
+    .map((token) => token.charAt(0) + token.slice(1).toLowerCase())
+    .join(" ");
+};
+
+/**
+ * Build array of view model objects from given single value categories map, ignoring ontology terms or metadata
+ * without values. Add ontology terms as tooltips of their corresponding values.
+ * @param singleValueCategories - Attributes from categorical fields
+ * @returns  Array of metadata key/value pairs.
+ */
+const transformSingleValueCategoriesMetadata = (
+  singleValueCategories: SingleValueCategories
+): MetadataView[] =>
+  Array.from(singleValueCategories.entries())
+    .filter(([key, value]) => {
+      if (key.indexOf(ONTOLOGY_KEY) >= 0) {
+        // skip ontology terms
+        return false;
+      }
+      // skip metadata without values
+      return value;
+    })
+    .map(([key, value]) => {
+      const viewModel: MetadataView = { key, value: String(value) };
+      // add ontology term as tool tip if specified
+      const tip = singleValueCategories.get(`${key}_${ONTOLOGY_KEY}`);
+      if (tip) {
+        viewModel.tip = tip;
+      }
+      return viewModel;
+    });
+
+const InfoFormat = React.memo<Props>(
+  ({ datasetMetadata, singleValueCategories, dataPortalProps = {} }) => {
+    if (checkValidVersion(dataPortalProps as DataPortalProps)) {
+      dataPortalProps = {};
     }
-
-    const {
-      title,
-      publication_doi: doi,
-      preprint_doi: preprintDOI,
-      organism,
-      contributors,
-      project_links: projectLinks,
-    } = dataPortalProps;
-
-    const affiliations = buildAffiliations(contributors);
+    const { organism } = dataPortalProps;
 
     return (
-      <div className={Classes.DIALOG_BODY}>
+      <div className={Classes.DRAWER_BODY}>
         <div className={Classes.DIALOG_BODY}>
-          <H1>{title ?? datasetTitle}</H1>
-          {renderContributors(contributors, affiliations)}
+          <H3>{datasetMetadata.collection_name}</H3>
+          <p>{datasetMetadata.collection_description}</p>
+          {renderCollectionLinks(datasetMetadata)}
           {renderDatasetMetadata(singleValueCategories, { organism })}
-          {renderLinks(projectLinks, aboutURL)}
-          {renderDOILink("DOI", doi)}
-          {renderDOILink("Preprint DOI", preprintDOI)}
         </div>
       </div>
     );

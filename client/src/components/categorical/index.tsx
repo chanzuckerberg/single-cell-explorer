@@ -3,6 +3,11 @@ import { AnchorButton, Tooltip, Position } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
+import {
+  ONTOLOGY_KEY,
+  STANDARD_CATEGORY_NAMES,
+} from "../../common/types/entities";
+import Collapse from "../../util/collapse";
 import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
 import AnnoDialog from "../annoDialog";
 import AnnoSelect from "./annoSelect";
@@ -144,10 +149,23 @@ class Categories extends React.Component<{}, State> {
     /* all names, sorted in display order.  Will be rendered in this order */
     const allCategoryNames =
       ControlsHelpers.selectableCategoryNames(schema).sort();
+    const authorCategoryNames = allCategoryNames.filter(
+      (catName: string) =>
+        !STANDARD_CATEGORY_NAMES.includes(catName) &&
+        !catName.includes(ONTOLOGY_KEY)
+    );
+    const standardCategoryNames = allCategoryNames.filter(
+      (catName: string) =>
+        STANDARD_CATEGORY_NAMES.includes(catName) &&
+        !catName.includes(ONTOLOGY_KEY) &&
+        (schema.annotations.obsByName[catName].categories?.length > 1 ||
+          !schema.annotations.obsByName[catName].categories)
+    );
     return (
       <div
         style={{
           padding: globals.leftSidebarSectionPadding,
+          paddingBottom: 0,
         }}
       >
         <AnnoDialog
@@ -211,13 +229,11 @@ class Categories extends React.Component<{}, State> {
             </Tooltip>
           </div>
         ) : null}
-        {/* READ ONLY CATEGORICAL FIELDS */}
+        {/* STANDARD FIELDS */}
         {/* this is duplicative but flat, could be abstracted */}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS */}
-        {allCategoryNames.map((catName: any) =>
-          !schema.annotations.obsByName[catName].writable &&
-          (schema.annotations.obsByName[catName].categories?.length > 1 ||
-            !schema.annotations.obsByName[catName].categories) ? (
+        <Collapse>
+          <span>Standard Categories</span>
+          {standardCategoryNames.map((catName: string) => (
             <Category
               key={catName}
               // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
@@ -226,22 +242,24 @@ class Categories extends React.Component<{}, State> {
               isExpanded={expandedCats.has(catName)}
               createAnnoModeActive={createAnnoModeActive}
             />
-          ) : null
-        )}
-        {/* WRITEABLE FIELDS */}
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS */}
-        {allCategoryNames.map((catName: any) =>
-          schema.annotations.obsByName[catName].writable ? (
-            <Category
-              key={catName}
-              // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-              metadataField={catName}
-              onExpansionChange={this.onExpansionChange}
-              isExpanded={expandedCats.has(catName)}
-              createAnnoModeActive={createAnnoModeActive}
-            />
-          ) : null
-        )}
+          ))}
+        </Collapse>
+        {/* AUTHOR FIELDS */}
+        {authorCategoryNames.length ? (
+          <Collapse>
+            <span>Author Categories</span>
+            {authorCategoryNames.map((catName: string) => (
+              <Category
+                key={catName}
+                // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
+                metadataField={catName}
+                onExpansionChange={this.onExpansionChange}
+                isExpanded={expandedCats.has(catName)}
+                createAnnoModeActive={createAnnoModeActive}
+              />
+            ))}
+          </Collapse>
+        ) : null}
       </div>
     );
   }

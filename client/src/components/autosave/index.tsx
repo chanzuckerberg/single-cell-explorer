@@ -143,10 +143,12 @@ class Autosave extends React.Component<{}, State> {
             : "autosave-complete"
         }
         style={{
-          position: "absolute",
-          display: "inherit",
-          right: 8,
           bottom: 8,
+          display: "inherit",
+          left: "50%",
+          position: "absolute",
+          textAlign: "center",
+          transform: "translateX(-50%)",
           zIndex: 1,
         }}
       >

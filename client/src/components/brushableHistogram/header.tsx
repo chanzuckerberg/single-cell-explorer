@@ -34,13 +34,13 @@ const HistogramHeader = React.memo(
           * isScatterPlotY - optional, true/false if currently the Y scatterplot field
           * onScatterPlotXClick - optional, handler for scatterPlot X button.
           * onScatterPlotYClick - optional, handler for scatterPlot X button.
-  
+
         Scatterplot controls will not render if either handler unspecified.
       */
 
     const memoizedColorByCallback = useCallback(
       () => onColorByClick(fieldId, isObs),
-      [fieldId, isObs]
+      [fieldId, isObs, onColorByClick]
     );
 
     return (
