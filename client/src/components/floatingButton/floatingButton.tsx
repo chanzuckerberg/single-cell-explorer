@@ -64,7 +64,7 @@ function FloatingButton(): JSX.Element {
       }
       targetProps={{
         style: {
-          bottom: 32,
+          bottom: 8,
           position: "absolute",
           right: 8,
           zIndex: 3, // Similar to datasetSelector
