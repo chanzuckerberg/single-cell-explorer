@@ -92,6 +92,7 @@ export const logoColor = "black"; /* logo pink: "#E9429A" */
 export const tiniestFontSize = 12;
 export const largestFontSize = 24;
 export const uppercaseLetterSpacing = "0.04em";
+export const bold = 600;
 export const bolder = 700;
 export const accentFont = "Georgia,Times,Times New Roman,serif";
 export const maxParagraphWidth = 600;
