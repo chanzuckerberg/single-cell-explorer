@@ -5,12 +5,10 @@ import React, { CSSProperties } from "react";
 // App dependencies
 import {
   DatasetMetadata,
-  DataPortalProps,
   Link,
   ONTOLOGY_KEY,
 } from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
-import { checkValidVersion } from "../util/version";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
@@ -20,10 +18,6 @@ const COLLECTION_LINK_ORDER_BY = [
   "LAB_WEBSITE",
   "OTHER",
 ];
-
-interface CorporaMetadata {
-  organism?: string;
-}
 
 interface LinkView {
   name: string;
@@ -39,7 +33,6 @@ interface MetadataView {
 
 interface Props {
   datasetMetadata: DatasetMetadata;
-  dataPortalProps: DataPortalProps;
   singleValueCategories: SingleValueCategories;
 }
 
@@ -59,24 +52,6 @@ const buildCollectionLinks = (links: Link[]): LinkView[] => {
       url,
     };
   });
-};
-
-/**
- * Transform Corpora metadata and single value categories into sort and render-friendly format.
- * @param singleValueCategories - Attributes from categorical fields
- * @param corporaMetadata - Meta from Corpora
- * @returns Array of metadata key/value pairs.
- */
-const buildDatasetMetadata = (
-  singleValueCategories: SingleValueCategories,
-  corporaMetadata: CorporaMetadata
-) => {
-  const metadata = [
-    ...transformCorporaMetadata(corporaMetadata),
-    ...transformSingleValueCategoriesMetadata(singleValueCategories),
-  ];
-  metadata.sort(sortDatasetMetadata);
-  return metadata;
 };
 
 /**
@@ -169,28 +144,24 @@ const renderCollectionContactLink = (
 };
 
 /**
- * Render dataset metadata, mix of meta from Corpora and attributes found in categorical field.
+ * Render dataset metadata. That is, attributes found in categorical fields.
  * @param singleValueCategories - Attributes from categorical fields
- * @param corporaMetadata - Meta from Corpora
  * @returns Markup for displaying meta in table format.
  */
 const renderDatasetMetadata = (
-  singleValueCategories: SingleValueCategories,
-  corporaMetadata: CorporaMetadata
+  singleValueCategories: SingleValueCategories
 ): JSX.Element | null => {
-  if (
-    singleValueCategories.size === 0 &&
-    Object.entries(corporaMetadata).length === 0
-  ) {
+  if (singleValueCategories.size === 0) {
     return null;
   }
-  const metadata = buildDatasetMetadata(singleValueCategories, corporaMetadata);
+  const metadataViews = buildDatasetMetadataViews(singleValueCategories);
+  metadataViews.sort(sortDatasetMetadata);
   return (
     <>
       {renderSectionTitle("Dataset")}
       <HTMLTable style={getTableStyles()}>
         <tbody>
-          {metadata.map(({ key, value, tip }) => (
+          {metadataViews.map(({ key, value, tip }) => (
             <tr {...{ key }}>
               <td>{key}</td>
               <td>
@@ -230,8 +201,8 @@ const renderSectionTitle = (title: string): JSX.Element => (
  * @returns Number indicating sort precedence of link0 vs link1.
  */
 const sortCollectionLinks = (link0: Link, link1: Link): number =>
-  COLLECTION_LINK_ORDER_BY.indexOf(link1.link_type) -
-  COLLECTION_LINK_ORDER_BY.indexOf(link0.link_type);
+  COLLECTION_LINK_ORDER_BY.indexOf(link0.link_type) -
+  COLLECTION_LINK_ORDER_BY.indexOf(link1.link_type);
 
 /**
  * Compare function for metadata key value pairs by key - alpha, ascending.
@@ -248,21 +219,6 @@ const sortDatasetMetadata = (m0: MetadataView, m1: MetadataView) => {
   }
   return 0;
 };
-
-/**
- * Build array of view model objects from given Corpora metadata object.
- * @param corporaMetadata - Meta from Corpora
- * @returns Array of metadata key/value pairs.
- */
-const transformCorporaMetadata = (
-  corporaMetadata: CorporaMetadata
-): MetadataView[] =>
-  Object.entries(corporaMetadata)
-    .filter(([, value]) => value)
-    .map(([key, value]) => ({
-      key,
-      value,
-    }));
 
 /**
  * Convert link type from upper snake case to title case.
@@ -282,7 +238,7 @@ const transformLinkTypeToDisplay = (type: string): string => {
  * @param singleValueCategories - Attributes from categorical fields
  * @returns  Array of metadata key/value pairs.
  */
-const transformSingleValueCategoriesMetadata = (
+const buildDatasetMetadataViews = (
   singleValueCategories: SingleValueCategories
 ): MetadataView[] =>
   Array.from(singleValueCategories.entries())
@@ -305,23 +261,16 @@ const transformSingleValueCategoriesMetadata = (
     });
 
 const InfoFormat = React.memo<Props>(
-  ({ datasetMetadata, singleValueCategories, dataPortalProps = {} }) => {
-    if (checkValidVersion(dataPortalProps as DataPortalProps)) {
-      dataPortalProps = {};
-    }
-    const { organism } = dataPortalProps;
-
-    return (
-      <div className={Classes.DRAWER_BODY}>
-        <div className={Classes.DIALOG_BODY}>
-          <H3>{datasetMetadata.collection_name}</H3>
-          <p>{datasetMetadata.collection_description}</p>
-          {renderCollectionLinks(datasetMetadata)}
-          {renderDatasetMetadata(singleValueCategories, { organism })}
-        </div>
+  ({ datasetMetadata, singleValueCategories }) => (
+    <div className={Classes.DRAWER_BODY}>
+      <div className={Classes.DIALOG_BODY}>
+        <H3>{datasetMetadata.collection_name}</H3>
+        <p>{datasetMetadata.collection_description}</p>
+        {renderCollectionLinks(datasetMetadata)}
+        {renderDatasetMetadata(singleValueCategories)}
       </div>
-    );
-  }
+    </div>
+  )
 );
 
 export default InfoFormat;
