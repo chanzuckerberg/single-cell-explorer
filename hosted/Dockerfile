@@ -8,7 +8,7 @@ ENV HAPPY_ENV=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
-ADD hosted/requirements server/eb/customize/requirements.txt
+# ADD hosted/requirements.txt server/eb/customize/requirements.txt
 ADD hosted/create_rdev_config.py .
 
 ADD server/ server/
@@ -18,7 +18,7 @@ ADD common.mk common.mk
 ADD environment.default.json environment.default.json
 
 RUN apt-get update && \
-    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git && \
+    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip && \
     rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
