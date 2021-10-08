@@ -33,7 +33,7 @@ RUN make build-client
 # COPY server/eb/artifact.dir/server/common/web server/common/web
 
 WORKDIR server/eb
-RUN make build
+RUN make build-ecs
 
 ENV CXG_CONFIG_FILE=/config/config.yaml
 ENV FLASK_ENV=development
