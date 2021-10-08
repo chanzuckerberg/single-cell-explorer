@@ -385,8 +385,6 @@ class Server:
         if server_config.app__server_timing_headers:
             ServerTiming(self.app, force_debug=True)
 
-        print("INIT")
-
         # enable session data
         self.app.permanent_session_lifetime = datetime.timedelta(days=50 * 365)
 
@@ -405,10 +403,7 @@ class Server:
 
 
         bp_base = Blueprint("bp_base", __name__, url_prefix=api_path)
-        print(f"API PATH {api_path}")
-        print(f"bp_base PATH {bp_base}")
         base_resources = get_api_base_resources(bp_base)
-        print(f"base_resources PATH {base_resources.blueprint}")
         self.app.register_blueprint(base_resources.blueprint)
 
         if app_config.is_multi_dataset():
