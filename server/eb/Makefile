@@ -59,4 +59,4 @@ build: clean
 
 .PHONY: build-ecs
 build-ecs: clean
-	$(call copy_client_assets,../../client/build,server) ; \
+	$(call copy_client_assets,../../client/build,../../server/common/web) ; \
