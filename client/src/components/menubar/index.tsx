@@ -280,9 +280,6 @@ class MenuBar extends React.PureComponent<{}, State> {
         ? ["Brush selection", "Lasso selection"]
         : ["select", "polygon-filter"];
 
-    // Temporarily disable dataset drawer (#132). Re-enable once #89 is completed.
-    const drawerEnabled = false;
-
     return (
       <div
         style={{
@@ -294,7 +291,7 @@ class MenuBar extends React.PureComponent<{}, State> {
           justifyContent: "flex-start",
         }}
       >
-        {seamlessEnabled && drawerEnabled ? (
+        {seamlessEnabled ? (
           <ButtonGroup className={styles.menubarButton}>
             <AnchorButton
               type="button"
