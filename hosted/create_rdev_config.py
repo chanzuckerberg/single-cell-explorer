@@ -110,9 +110,9 @@ dataset:
         crossorigin: "anonymous"
 
     # Inline scripts are a list of file names, where the contents of the file will be injected into the index.
-    inline_scripts:
-      - staging-ga.js
-      - staging-sentry.js
+    # inline_scripts:
+    #  - rdev-ga.js
+    #  - staging-sentry.js
 
     about_legal_tos: /tos/
     about_legal_privacy: /privacy/
