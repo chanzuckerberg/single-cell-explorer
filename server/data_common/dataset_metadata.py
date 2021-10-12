@@ -72,6 +72,8 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
 
+        print(f"######### {dataset_metadata}")
+
         if dataset_metadata:
             if dataset_metadata["tombstoned"]:
                 dataset_id = dataset_metadata["dataset_id"]
@@ -119,6 +121,8 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
 
             dataset_id = base_metadata["dataset_id"]
             collection_visibility = base_metadata["collection_visibility"]
+
+            print(f"%%%%%%%%%% {collection_visibility}")
 
             suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
             suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
