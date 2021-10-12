@@ -60,3 +60,5 @@ build: clean
 .PHONY: build-ecs
 build-ecs: clean
 	$(call copy_client_assets,../../client/build,../../server/common/web) ; \
+	cp ../../client/build/index.html ../../server/common/web/templates/index.html ; \
+	cp -r ../../client/build/* ../../server/common/web/. ; \
