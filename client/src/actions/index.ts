@@ -324,7 +324,7 @@ const navigateCheckUserState =
   (_dispatch: AppDispatch, getState: GetState) => {
     const workInProgress = selectIsUserStateDirty(getState());
     if (workInProgress) {
-      openTab(url);
+      openTab(`${url}?${globals.QUERY_PARAM_EXPLAIN_NEW_TAB}`);
     } else {
       window.location.href = url;
     }
