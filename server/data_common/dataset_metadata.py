@@ -76,8 +76,10 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
             if dataset_metadata["tombstoned"]:
                 dataset_id = dataset_metadata["dataset_id"]
                 collection_id = dataset_metadata["collection_id"]
-                msg = f"Dataset {dataset_id} from collection {collection_id} has been tombstoned and is no " \
-                      "longer available"
+                msg = (
+                    f"Dataset {dataset_id} from collection {collection_id} has been tombstoned and is no "
+                    "longer available"
+                )
 
                 current_app.logger.log(logging.INFO, msg)
                 raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
@@ -121,13 +123,14 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
             collection_visibility = base_metadata["collection_visibility"]
 
             suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
+            suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
 
             res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
             metadata = {
                 "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
                 "dataset_id": dataset_id,
-                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix}",
+                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
                 "collection_name": res["name"],
                 "collection_description": res["description"],
                 "collection_contact_email": res["contact_email"],
