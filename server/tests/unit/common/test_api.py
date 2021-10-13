@@ -793,8 +793,8 @@ class TestDatasetMetadata(BaseTest):
 
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     @patch("server.data_common.dataset_metadata.requests.get")
-    def test_dataset_metadata_api_called(self, mock_get, mock_dp):
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
+    def test_dataset_metadata_api_called_for_public_collection(self, mock_get, mock_dp):
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_public.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
 
         response_body = {
@@ -833,6 +833,59 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["dataset_name"], "Test Dataset")
 
         expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}"
+        self.assertEqual(response_obj["dataset_id"], response_body["datasets"][0]["id"])
+        self.assertEqual(response_obj["collection_url"], expected_url)
+        self.assertEqual(response_obj["collection_name"], response_body["name"])
+        self.assertEqual(response_obj["collection_contact_email"], response_body["contact_email"])
+        self.assertEqual(response_obj["collection_contact_name"], response_body["contact_name"])
+        self.assertEqual(response_obj["collection_description"], response_body["description"])
+        self.assertEqual(response_obj["collection_links"], response_body["links"])
+        self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
+
+    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.data_common.dataset_metadata.requests.get")
+    def test_dataset_metadata_api_called_for_private_collection(self, mock_get, mock_dp):
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_private.cxg"
+        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
+
+        response_body = {
+            "contact_email": "test_email",
+            "contact_name": "test_user",
+            "datasets": [
+                {
+                    "collection_visibility": "PRIVATE",
+                    "id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+                    "name": "Test Dataset",
+                },
+            ],
+            "description": "test_description",
+            "id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+            "links": [
+                "http://test.link",
+            ],
+            "name": "Test Collection",
+            "visibility": "PRIVATE",
+        }
+
+        mock_get.return_value = MockResponse(body=json.dumps(response_body), status_code=200)
+        meta_response_body_private = self.meta_response_body.copy()
+        meta_response_body_private["collection_visibility"] = "PRIVATE"
+        mock_dp.return_value = meta_response_body_private
+
+        endpoint = "dataset-metadata"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        result = self.client.get(url)
+
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+
+        self.assertEqual(mock_get.call_count, 1)
+
+        response_obj = json.loads(result.data)["metadata"]
+
+        self.assertEqual(response_obj["dataset_name"], "Test Dataset")
+
+        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}/private"
         self.assertEqual(response_obj["dataset_id"], response_body["datasets"][0]["id"])
         self.assertEqual(response_obj["collection_url"], expected_url)
         self.assertEqual(response_obj["collection_name"], response_body["name"])
