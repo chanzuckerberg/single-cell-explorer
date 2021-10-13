@@ -7,6 +7,7 @@ import {
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
+import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
 import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
@@ -77,14 +78,24 @@ async function datasetMetadataFetch(
   dispatch: AppDispatch,
   config: Config
 ): Promise<void> {
-  const { links } = config;
-  const datasetMetadata = await fetchJson<{ metadata: DatasetMetadata }>(
-    "dataset-metadata"
+  const datasetMetadataResponse = await fetchJson<{
+    metadata: DatasetMetadata;
+  }>("dataset-metadata");
+
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
   );
 
+  const { links } = config;
   dispatch({
     type: "dataset metadata load complete",
-    datasetMetadata: datasetMetadata.metadata,
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
     portalUrl: links["collections-home-page"],
   });
 }
