@@ -10,7 +10,7 @@ export const overflowCategoryLabel = ": all other labels";
 export const unassignedCategoryLabel = "unassigned";
 
 /** Maximum number of cells a dataset can have in order to be included for display. */
-export const DATASET_MAX_CELL_COUNT = 200000;
+export const DATASET_MAX_CELL_COUNT = 2_000_000;
 
 /**
  * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
