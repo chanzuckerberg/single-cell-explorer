@@ -76,7 +76,7 @@ server:
       target_workunit: 16_000_000
 
   data_locator:
-    api_base: https://{env}-backend.rdev.single-cell.czi.technology/dp/v1
+    api_base: http://{env}-backend.internal.rdev.single-cell.czi.technology/dp/v1
     s3:
       # s3 region name.
       #   if true, then the s3 location is automatically determined from the datapath or dataroot.
