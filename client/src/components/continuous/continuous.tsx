@@ -3,6 +3,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import HistogramBrush from "../brushableHistogram";
+import Collapse from "../../util/collapse";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -28,11 +29,19 @@ class Continuous extends React.PureComponent {
       .map((col: any) => col.name);
     return (
       <div>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
-        {allContinuousNames.map((key: any, zebra: any) => (
-          // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-          <HistogramBrush key={key} field={key} isObs zebra={zebra % 2 === 0} />
-        ))}
+        <Collapse>
+          <span style={{ paddingLeft: 10 }}>Continuous</span>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
+          {allContinuousNames.map((key: any, zebra: any) => (
+            <HistogramBrush
+              key={key}
+              // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
+              field={key}
+              isObs
+              zebra={zebra % 2 === 0}
+            />
+          ))}
+        </Collapse>
       </div>
     );
   }

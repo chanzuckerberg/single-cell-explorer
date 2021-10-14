@@ -38,7 +38,7 @@ interface Geneset {
 
 export type Genesets = Map<Geneset["genesetName"], Geneset>;
 
-interface State {
+export interface State {
   initialized: boolean;
   lastTid?: number;
   genesets: Genesets;

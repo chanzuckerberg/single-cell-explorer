@@ -2,8 +2,12 @@ import React, { RefObject } from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
 
+import Controls from "./controls";
+import DatasetSelector from "./datasetSelector/datasetSelector";
+import FloatingButton from "./floatingButton/floatingButton";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
+import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
@@ -29,6 +33,7 @@ class App extends React.Component<Props> {
     window.addEventListener("popstate", this._onURLChanged);
     this._onURLChanged();
     dispatch(actions.doInitialDataLoad());
+    dispatch(actions.checkExplainNewTab());
     this.forceUpdate();
   }
 
@@ -43,18 +48,7 @@ class App extends React.Component<Props> {
     return (
       <Container>
         <Helmet title="cellxgene" />
-        {loading ? (
-          <div
-            style={{
-              position: "fixed",
-              fontWeight: 500,
-              top: window.innerHeight / 2,
-              left: window.innerWidth / 2 - 50,
-            }}
-          >
-            loading cellxgene
-          </div>
-        ) : null}
+        {loading ? <LayoutSkeleton /> : null}
         {error ? (
           <div
             style={{
@@ -72,8 +66,12 @@ class App extends React.Component<Props> {
             <LeftSideBar />
             {(viewportRef: RefObject<HTMLDivElement>) => (
               <>
-                <MenuBar />
+                <Controls>
+                  <DatasetSelector />
+                  <MenuBar />
+                </Controls>
                 <Embedding />
+                <FloatingButton />
                 <Autosave />
                 <Legend />
                 {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message */}

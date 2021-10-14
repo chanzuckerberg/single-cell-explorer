@@ -7,6 +7,7 @@ import {
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
+import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
 import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
@@ -15,6 +16,14 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
+import { DatasetMetadata, Dataset } from "../common/types/entities";
+import { postExplainNewTab } from "../components/framework/toasters";
+import { KEYS } from "../components/util/localStorage";
+import {
+  storageGetTransient,
+  storageSetTransient,
+} from "../components/util/transientLocalStorage";
+import { selectIsUserStateDirty } from "../selectors/global";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function setGlobalConfig(config: any) {
@@ -58,6 +67,37 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
     config,
   });
   return config;
+}
+
+/**
+ * Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
+ * @param dispatch Function facilitating update of store.
+ * @param config Response from config endpoint containing collection ID for the current dataset.
+ */
+async function datasetMetadataFetch(
+  dispatch: AppDispatch,
+  config: Config
+): Promise<void> {
+  const datasetMetadataResponse = await fetchJson<{
+    metadata: DatasetMetadata;
+  }>("dataset-metadata");
+
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
+  );
+
+  const { links } = config;
+  dispatch({
+    type: "dataset metadata load complete",
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
+    portalUrl: links["collections-home-page"],
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -110,6 +150,8 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
+
+      datasetMetadataFetch(dispatch, config);
 
       genesetsFetch(dispatch, config);
 
@@ -258,6 +300,107 @@ const requestDifferentialExpression =
     }
   };
 
+/**
+ * Check local storage for flag indicating that the work in progress toast should be displayed.
+ */
+const checkExplainNewTab =
+  () =>
+  (dispatch: AppDispatch): void => {
+    const workInProgressWarn = storageGetTransient(KEYS.WORK_IN_PROGRESS_WARN);
+    if (workInProgressWarn) {
+      dispatch({ type: "work in progress warning displayed" });
+      postExplainNewTab(
+        "To maintain your in-progress work on the previous dataset, we opened this dataset in a new tab."
+      );
+    }
+  };
+
+/**
+ * Navigate to URL in the same browser tab if there is no work in progress, otherwise open URL in new tab.
+ * @param url - URL to navigate to.
+ */
+const navigateCheckUserState =
+  (url: string): ((dispatch: AppDispatch, getState: GetState) => void) =>
+  (_dispatch: AppDispatch, getState: GetState) => {
+    const workInProgress = selectIsUserStateDirty(getState());
+    if (workInProgress) {
+      openTab(url);
+    } else {
+      window.location.href = url;
+    }
+  };
+
+/**
+ * Handle select of dataset from dataset selector: determine whether to display dataset in current browser tab or open
+ * dataset in new tab if user currently has work in progress.
+ * @param dataset Dataset to switch to and load in the current tab.
+ */
+const selectDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch, getState: GetState) => void) =>
+  (dispatch: AppDispatch, getState: GetState) => {
+    const workInProgress = selectIsUserStateDirty(getState());
+    if (workInProgress) {
+      dispatch(openDataset(dataset));
+    } else {
+      dispatch(switchDataset(dataset));
+    }
+  };
+
+/**
+ * Open selected dataset in a new tab. Create local storage with expiry to pop toast once dataset is opened.
+ * @param dataset Dataset to open in new tab.
+ */
+const openDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    const deploymentUrl = dataset.dataset_deployments?.[0].url;
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to open dataset.");
+      return;
+    }
+
+    dispatch({ type: "dataset opened" });
+    storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 10000);
+    openTab(deploymentUrl);
+  };
+
+/**
+ * Open new tab and navigate to the given URL.
+ * @param url - URL to navigate to.
+ */
+const openTab = (url: string) => {
+  window.open(url, "_blank", "noopener");
+};
+
+/**
+ * Open selected dataset in a new tab.
+ * @param dataset Dataset to open in new tab.
+ */
+const switchDataset =
+  (dataset: Dataset): ((dispatch: AppDispatch) => void) =>
+  (dispatch: AppDispatch) => {
+    dispatch({ type: "reset" });
+    dispatch({ type: "dataset switch" });
+
+    const deploymentUrl = dataset.dataset_deployments?.[0].url;
+    if (!deploymentUrl) {
+      dispatchNetworkErrorMessageToUser("Unable to switch datasets.");
+      return;
+    }
+    dispatch(updateLocation(deploymentUrl));
+    globals.updateApiPrefix();
+    dispatch(doInitialDataLoad());
+  };
+
+/**
+ * Update browser location by adding corresponding entry to the session's history stack.
+ * @param url - URL to update browser location to.
+ */
+const updateLocation = (url: string) => (dispatch: AppDispatch) => {
+  dispatch({ type: "location update" });
+  window.history.pushState(null, "", url);
+};
+
 function fetchJson<T>(pathAndQuery: string): Promise<T> {
   return doJsonRequest<T>(
     `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
@@ -269,6 +412,9 @@ export default {
   requestDifferentialExpression,
   requestSingleGeneExpressionCountsForColoringPOST,
   requestUserDefinedGene,
+  checkExplainNewTab,
+  navigateCheckUserState,
+  selectDataset,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:

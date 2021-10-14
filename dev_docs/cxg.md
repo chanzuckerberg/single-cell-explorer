@@ -132,15 +132,16 @@ These Corpora metadata properties WILL exist in the CXG `cxg_group_metadata` fie
 * `X_normalization`
 
 These Corpora metadata properties MAY exist:
-* `contributors`
-* `preprint_doi`
-* `publication_doi`
-* `default_embedding`
-* `default_field`
-* `tags `
-* `project_name`
-* `project_description`
-* `X_approximate_distribution`
+* `default_embedding` (v1.1.0+)
+* `X_approximate_distribution` (v2.0.0+)
+* `batch_condition` (v2.0.0+)
+* `contributors` (v1.1.0 only)
+* `preprint_doi` (v1.1.0 only)
+* `publication_doi` (v1.1.0 only)
+* `default_field` (v1.1.0 only)
+* `tags ` (v1.1.0 only)
+* `project_name` (v1.1.0 only)
+* `project_description` (v1.1.0 only)
 
 
 For example:
