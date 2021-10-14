@@ -83,11 +83,13 @@ class WSGIServer(Server):
         if web_base_url:
             web_base_url_parse = urlparse(web_base_url)
             allowed_origins = [f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"]
-            if os.getenv('DEPLOYMENT_STAGE') in ["Staging", "staging"]:
-                allowed_origins.extend([
-                    "https://canary-cellxgene.dev.single-cell.czi.technology/",
-                    r"^http://localhost:\d+",
-                ])
+            if os.getenv("DEPLOYMENT_STAGE") in ["Staging", "staging"]:
+                allowed_origins.extend(
+                    [
+                        "https://canary-cellxgene.dev.single-cell.czi.technology/",
+                        r"^http://localhost:\d+",
+                    ]
+                )
             CORS(app, supports_credentials=True, origins=allowed_origins)
 
         Talisman(

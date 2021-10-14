@@ -108,7 +108,9 @@ def dataset_index(url_dataroot=None, dataset=None):
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
     except TombstoneError as e:
-        parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        parent_collection_url = (
+            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
@@ -157,7 +159,9 @@ def rest_get_data_adaptor(func):
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
         except TombstoneError as e:
-            parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            parent_collection_url = (
+                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
@@ -400,7 +404,6 @@ class Server:
         if api_base_url:
             parse = urlparse(api_base_url)
             api_path = parse.path
-
 
         bp_base = Blueprint("bp_base", __name__, url_prefix=api_path)
         base_resources = get_api_base_resources(bp_base)
