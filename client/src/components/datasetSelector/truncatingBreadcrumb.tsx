@@ -21,6 +21,7 @@ const TruncatingBreadcrumb = React.memo<Props>(
   ({ item }): JSX.Element => (
     <Breadcrumb
       href={item.href}
+      onClick={item.disabled ? undefined : item.onClick}
       className={
         item.disabled
           ? styles.datasetSelectorBreadcrumbDisabled
