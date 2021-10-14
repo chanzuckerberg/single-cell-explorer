@@ -23,10 +23,10 @@ class CacheItem(object):
         self.data = None
 
     def get(
-            self,
-            cache_key: str,
-            create_data_function: typing.Optional[typing.Callable[[str], object]] = None,
-            create_data_args: object = {},
+        self,
+        cache_key: str,
+        create_data_function: typing.Optional[typing.Callable[[str], object]] = None,
+        create_data_args: object = {},
     ):
         self.data_lock.r_acquire()
         if self.data:

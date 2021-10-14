@@ -202,6 +202,7 @@ class TestDatasetConfig(ConfigTests):
         # cleanup
         os.unlink(f"{FIXTURES_ROOT}/set2")
         os.unlink(f"{FIXTURES_ROOT}/set3")
+
     def test_configfile_with_specialization(self):
         # test that per_dataset_config config load the default config, then the specialized config
 
