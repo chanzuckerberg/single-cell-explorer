@@ -5,7 +5,7 @@ import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 
 /* App dependencies */
-import { selectDataset } from "../../actions";
+import actions from "../../actions";
 import { DatasetMetadata, Dataset } from "../../common/types/entities";
 import DatasetMenu, { DatasetSelectedFn } from "./datasetMenu";
 import { AppDispatch, RootState } from "../../reducers";
@@ -19,8 +19,14 @@ import TruncatingBreadcrumbs, {
  * Actions dispatched by dataset selector.
  */
 interface DispatchProps {
+  navigateCheckUserState: NavigateCheckUserState;
   selectDataset: DatasetSelectedFn;
 }
+
+/**
+ * Function called on click of home and collection links.
+ */
+export type NavigateCheckUserState = (url: string) => void;
 
 /**
  * Props selected from store.
@@ -46,7 +52,9 @@ const mapStateToProps = (state: RootState): StateProps => ({
  * Map actions dispatched by dataset selector to props.
  */
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
-  selectDataset: (dataset: Dataset) => dispatch(selectDataset(dataset)),
+  selectDataset: (dataset: Dataset) => dispatch(actions.selectDataset(dataset)),
+  navigateCheckUserState: (url: string) =>
+    dispatch(actions.navigateCheckUserState(url)),
 });
 
 // Inline styles for icons
@@ -60,6 +68,7 @@ const DatasetSelector: FC<Props> = ({
   portalUrl,
   seamlessEnabled,
   selectDataset: selectDatasetFn,
+  navigateCheckUserState: navigateCheckUserStateFn,
 }) => {
   // Datasets that are siblings of the selected dataset
   const [siblingDatasets, setSiblingDatasets] = useState<Dataset[]>([]);
@@ -83,8 +92,8 @@ const DatasetSelector: FC<Props> = ({
 
     // Build props backing breadcrumbs
     setItems([
-      buildHomeBreadcrumbProps(portalUrl),
-      buildCollectionBreadcrumbProps(datasetMetadata),
+      buildHomeBreadcrumbProps(portalUrl, navigateCheckUserStateFn),
+      buildCollectionBreadcrumbProps(datasetMetadata, navigateCheckUserStateFn),
       buildDatasetBreadcrumbProps(
         datasetMetadata.dataset_name,
         isDatasetSingleton(datasets)
@@ -148,13 +157,15 @@ function buildDatasetBreadcrumbProps(
 /**
  * Build "collection" breadcrumb props, links to Portal's collection detail page.
  * @param datasetMetadata - Dataset metadata containing collection information.
+ * @param navigateCheckUserStateFn - Function called on click of collection breadcrumb.
  * @returns Returns breadcrumbs props for rendering the "collection" breadcrumb.
  */
 function buildCollectionBreadcrumbProps(
-  datasetMetadata: DatasetMetadata
+  datasetMetadata: DatasetMetadata,
+  navigateCheckUserStateFn: NavigateCheckUserState
 ): TruncatingBreadcrumbProps {
   return {
-    href: datasetMetadata.collection_url,
+    onClick: () => navigateCheckUserStateFn(datasetMetadata.collection_url),
     shortText: "Collection",
     text: datasetMetadata.collection_name,
   };
@@ -163,13 +174,15 @@ function buildCollectionBreadcrumbProps(
 /**
  * Build "home" breadcrumb props, links to Portal's collection index page.
  * @param portalUrl - URL to Portal's collection index page.
+ * @param navigateCheckUserStateFn - Function called on click of home breadcrumb.
  * @returns Returns breadcrumbs props for rendering the "home" breadcrumb.
  */
 function buildHomeBreadcrumbProps(
-  portalUrl: string
+  portalUrl: string,
+  navigateCheckUserStateFn: NavigateCheckUserState
 ): TruncatingBreadcrumbProps {
   return {
-    href: portalUrl,
+    onClick: () => navigateCheckUserStateFn(portalUrl),
     shortText: "Home",
     text: "Home",
   };
@@ -195,12 +208,12 @@ function renderBreadcrumb(item: TruncatingBreadcrumbProps): JSX.Element {
 
 /**
  * Clicking on dataset name opens menu containing all dataset names except the current dataset name for the current
- collection.
+ * collection.
  * @param item - Breadcrumb props to be rendered as a breadcrumb element with menu.
  * @param siblingDatasets - Datasets in the collection of the current dataset, except the selected dataset itself.
  * @param selectDatasetFn - Function invoked on click of dataset menu item.
  * @returns DatasetMenu element generated from given breadcrumb props and state.
-*/
+ */
 function renderBreadcrumbMenu(
   item: TruncatingBreadcrumbProps,
   siblingDatasets: Dataset[],

@@ -16,7 +16,7 @@ import MenuBar from "./menubar";
 import Autosave from "./autosave";
 import Embedding from "./embedding";
 
-import actions, { checkExplainNewTab } from "../actions";
+import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 
 interface Props {
@@ -33,7 +33,7 @@ class App extends React.Component<Props> {
     window.addEventListener("popstate", this._onURLChanged);
     this._onURLChanged();
     dispatch(actions.doInitialDataLoad());
-    dispatch(checkExplainNewTab());
+    dispatch(actions.checkExplainNewTab());
     this.forceUpdate();
   }
 

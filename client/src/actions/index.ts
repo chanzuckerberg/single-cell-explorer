@@ -7,6 +7,7 @@ import {
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
+import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
 import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
@@ -77,14 +78,24 @@ async function datasetMetadataFetch(
   dispatch: AppDispatch,
   config: Config
 ): Promise<void> {
-  const { links } = config;
-  const datasetMetadata = await fetchJson<{ metadata: DatasetMetadata }>(
-    "dataset-metadata"
+  const datasetMetadataResponse = await fetchJson<{
+    metadata: DatasetMetadata;
+  }>("dataset-metadata");
+
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
   );
 
+  const { links } = config;
   dispatch({
     type: "dataset metadata load complete",
-    datasetMetadata: datasetMetadata.metadata,
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
     portalUrl: links["collections-home-page"],
   });
 }
@@ -292,7 +303,7 @@ const requestDifferentialExpression =
 /**
  * Check local storage for flag indicating that the work in progress toast should be displayed.
  */
-export const checkExplainNewTab =
+const checkExplainNewTab =
   () =>
   (dispatch: AppDispatch): void => {
     const workInProgressWarn = storageGetTransient(KEYS.WORK_IN_PROGRESS_WARN);
@@ -305,11 +316,26 @@ export const checkExplainNewTab =
   };
 
 /**
+ * Navigate to URL in the same browser tab if there is no work in progress, otherwise open URL in new tab.
+ * @param url - URL to navigate to.
+ */
+const navigateCheckUserState =
+  (url: string): ((dispatch: AppDispatch, getState: GetState) => void) =>
+  (_dispatch: AppDispatch, getState: GetState) => {
+    const workInProgress = selectIsUserStateDirty(getState());
+    if (workInProgress) {
+      openTab(url);
+    } else {
+      window.location.href = url;
+    }
+  };
+
+/**
  * Handle select of dataset from dataset selector: determine whether to display dataset in current browser tab or open
  * dataset in new tab if user currently has work in progress.
  * @param dataset Dataset to switch to and load in the current tab.
  */
-export const selectDataset =
+const selectDataset =
   (dataset: Dataset): ((dispatch: AppDispatch, getState: GetState) => void) =>
   (dispatch: AppDispatch, getState: GetState) => {
     const workInProgress = selectIsUserStateDirty(getState());
@@ -335,8 +361,16 @@ const openDataset =
 
     dispatch({ type: "dataset opened" });
     storageSetTransient(KEYS.WORK_IN_PROGRESS_WARN, 10000);
-    window.open(deploymentUrl, "_blank", "noopener");
+    openTab(deploymentUrl);
   };
+
+/**
+ * Open new tab and navigate to the given URL.
+ * @param url - URL to navigate to.
+ */
+const openTab = (url: string) => {
+  window.open(url, "_blank", "noopener");
+};
 
 /**
  * Open selected dataset in a new tab.
@@ -348,7 +382,7 @@ const switchDataset =
     dispatch({ type: "reset" });
     dispatch({ type: "dataset switch" });
 
-    const deploymentUrl = dataset.dataset_deployments?.[0].url ?? "";
+    const deploymentUrl = dataset.dataset_deployments?.[0].url;
     if (!deploymentUrl) {
       dispatchNetworkErrorMessageToUser("Unable to switch datasets.");
       return;
@@ -379,6 +413,7 @@ export default {
   requestSingleGeneExpressionCountsForColoringPOST,
   requestUserDefinedGene,
   checkExplainNewTab,
+  navigateCheckUserState,
   selectDataset,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,

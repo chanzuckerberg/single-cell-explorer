@@ -9,6 +9,9 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/** Maximum number of cells a dataset can have in order to be included for display. */
+export const DATASET_MAX_CELL_COUNT = 2_000_000;
+
 /**
  * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
  * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
