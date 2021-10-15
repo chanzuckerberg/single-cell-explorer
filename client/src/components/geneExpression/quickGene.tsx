@@ -116,25 +116,22 @@ function QuickGene() {
       threshold: -10000, // don't return bad results
     });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const removeGene = (gene: any) => () => {
-    dispatch({ type: "clear user defined gene", data: gene });
-  };
+  const QuickGenes = useMemo((): JSX.Element => {
+    const removeGene = (gene: any) => () => {
+      dispatch({ type: "clear user defined gene", data: gene });
+    };
 
-  const QuickGenes = useMemo(
-    () =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      userDefinedGenes.map((gene: any) => (
-        <Gene
-          key={`quick=${gene}`}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
-          gene={gene}
-          removeGene={removeGene}
-          quickGene
-        />
-      )),
-    [userDefinedGenes]
-  );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    return userDefinedGenes.map((gene: any) => (
+      <Gene
+        key={`quick=${gene}`}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
+        gene={gene}
+        removeGene={removeGene}
+        quickGene
+      />
+    ));
+  }, [userDefinedGenes, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
