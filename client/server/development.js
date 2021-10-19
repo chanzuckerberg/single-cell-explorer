@@ -3,6 +3,7 @@ const express = require("express");
 const favicon = require("serve-favicon");
 const webpack = require("webpack");
 const devMiddleware = require("webpack-dev-middleware");
+const path = require("path");
 const config = require("../configuration/webpack/webpack.config.dev");
 const utils = require("./utils");
 
@@ -34,8 +35,16 @@ app.use(
   devMiddleware(compiler, {
     publicPath: config.output.publicPath,
     index: true,
+    writeToDisk: true
   })
 );
+
+// Serve the built index file from url that allows extraction of the base_url and dataset for api calls
+app.get("/:baseUrl/:dataset", (_, res) => {
+  res.sendFile(path.join(path.dirname(__dirname), "build/index.html"));
+});
+
+app.use(express.static("/build"));
 
 app.use(favicon("./favicon.png"));
 

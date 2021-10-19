@@ -31,6 +31,7 @@ build:
 # nb: if using a new/updated dataset, must first start local backend/API server (`launch_dev_server.sh <dataset_path>`)
 .PHONY: start-frontend
 start-frontend:
+	@-pbcopy < ../.test_base_url.txt
 	node server/development.js
 
 # start an instance of the Explorer server and run the end-to-end tests

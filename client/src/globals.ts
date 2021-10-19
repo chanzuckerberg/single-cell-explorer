@@ -2,7 +2,6 @@ import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
 import { DataPortalProps } from "./common/types/entities";
-import API_CONFIG from "../../.test_base_url.json";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -147,21 +146,11 @@ let _API;
 if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   _API = (window as any).CELLXGENE.API;
-} else {
-  if (CXG_SERVER_PORT === undefined) {
+} else if (CXG_SERVER_PORT === undefined) {
     const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
     dispatchNetworkErrorMessageToUser(errorMessage);
     throw new Error(errorMessage);
   }
-
-  _API = {
-    // prefix: "http://api.clustering.czi.technology/api/",
-    // prefix: "http://tabulamuris.cxg.czi.technology/api/",
-    // prefix: "http://api-staging.clustering.czi.technology/api/",
-    prefix: `http://localhost:${CXG_SERVER_PORT}/${API_CONFIG.BASE_URL}/${API_CONFIG.DATASET}/api/`,
-    version: "v0.2/",
-  };
-}
 
 export const API = _API;
 

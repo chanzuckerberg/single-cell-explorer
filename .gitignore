@@ -54,4 +54,4 @@ client/.eslintcache
 
 # E2E Testing
 ignoreE2E*
-.test_base_url.json
+.test_base_url.txt

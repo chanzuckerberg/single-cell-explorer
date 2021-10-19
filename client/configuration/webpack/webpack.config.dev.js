@@ -29,6 +29,7 @@ const devConfig = {
   output: {
     pathinfo: true,
     filename: "static/js/bundle.js",
+    publicPath: "/", // ensures the static asset calls use "/" as the root and not "/<base_url>/<dataset>"
   },
   module: {
     rules: [

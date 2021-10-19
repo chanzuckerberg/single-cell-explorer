@@ -165,9 +165,9 @@ class TestServer(Server):
             if len(files) > 1:
                 logging.warning(f"Found more than one dataset in {dataroot}")
                 logging.warning(f"Using first: {path.join(dataroot, files[0])}")
-            with open(".test_base_url.json", "w") as f:
-                print(base_url)
-                f.write(json.dumps({"BASE_URL": base_url, "DATASET": files[0]}))
+            with open(".test_base_url.txt", "a") as f:
+                f.write(f"{base_url}/{files[0]}")
+                # f.write(json.dumps({"BASE_URL": base_url, "DATASET": files[0]}))
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
