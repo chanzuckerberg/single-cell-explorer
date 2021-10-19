@@ -153,6 +153,12 @@ class TestServer(Server):
 
     @staticmethod
     def _extract_base_url_and_dataset_for_api_calls(app_config: AppConfig):
+        """
+        Convenience method for generating the url for the developer to use to access the front end, which is
+        dependent on the name of the dataset being used (and the CXG_CLIENT_PORT, if set): .../<base_url>/<dataset>
+        @param app_config: the AppConfig
+        @return: None
+        """
         dataroot_and_base_url_pairs: list = list(app_config.server_config.multi_dataset__dataroot.values())
         if len(dataroot_and_base_url_pairs) > 1:
             logging.warning("Found more than one dataroot -- will use first")
