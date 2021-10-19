@@ -52,7 +52,7 @@ To run E2E tests, run `make smoke-test`
 
 1. The Explorer requirements should be installed as [specified in client dev](#install)
 
-1. Follow [launch](#launch) instructions for client dev (defaults to `example-dataset/pbmc3k` dataset unless otherwise specified)
+1. Follow [launch](#launch) instructions for client dev (defaults to `example-dataset/pbmc3k.h5ad` dataset unless otherwise specified)
 
 1. Run `npm run e2e` from the `client` directory
 
@@ -78,7 +78,7 @@ Build the client and put static files in place
 
 ### Launch
 
-```make start-server [dataset=] [config=]```
+```./launch_dev_server.sh [dataset] [options]```
 
 ### Linter
 
@@ -108,9 +108,12 @@ If you would like to run the server tests individually, follow the steps below
 
 To launch with hot reloading, you need to launch the server and the client separately. Node's hot reloading starts the client on its own node server and auto-refreshes when changes are made to source files.
 
-1. Launch server (the client relies on the REST API being available): `make start-server [dataset=] [config=]`
+1. Launch server (the client relies on the REST API being available): `./launch_dev_server.sh [dataset] [options]`
 2. Launch client: in `client/` directory run `make start-frontend`
-3. Client will be served on `localhost:3000`
+3. Client will be served on `localhost:3000/d/<dataset>`
+   - Default base_url of `d` is hard-coded.
+   - The `dataset` will be the argument passed to the server launch script OR will default to example dataset
+   - The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar
 
 ### Build
 
@@ -129,7 +132,7 @@ If you would like to run the client tests individually, follow the steps below i
 
 If you would like to run the smoke tests against a hot-reloaded version of the client:
 
-1. Start the hot-reloading servers as described in the [Client dev section](#client-dev). If you plan to run the standard test suite (without annotations), you'll have to start the backend server with annotations disabled (e.g. `CXG_OPTIONS='--debug --disable-annotations' make start-server`).
+1. Start the hot-reloading servers as described in the [Client dev section](#client-dev). If you plan to run the standard test suite (without annotations), you'll have to start the backend server with annotations disabled (e.g. `./launch_dev_server.sh --debug --disable-annotations`).
 1. From the project root, `cd client`
 1. Run either the standard E2E test suite with `npm run e2e` or the annotations test suite with `npm run e2e-annotations`
 

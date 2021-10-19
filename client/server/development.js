@@ -35,13 +35,13 @@ app.use(
   devMiddleware(compiler, {
     publicPath: config.output.publicPath,
     index: true,
-    writeToDisk: true
+    writeToDisk: true // write files compiled by webpack -- do not just keep in memory
   })
 );
 
 // Serve the built index file from url that allows extraction of the base_url and dataset for api calls
 app.get("/:baseUrl/:dataset", (_, res) => {
-  res.sendFile(path.join(path.dirname(__dirname), "build/index.html"));
+  res.sendFile(path.join(path.dirname(__dirname), "build/index.html")); // same location as prod index
 });
 
 app.use(express.static("/build"));

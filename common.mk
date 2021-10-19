@@ -24,7 +24,7 @@ export JEST_ENV := $(call env_or_else_default,JEST_ENV)
 
 .PHONY: start-server
 start-server:
-	PROJECT_ROOT=$(PROJECT_ROOT) python -m server.cli.launch
+	PROJECT_ROOT=$(PROJECT_ROOT) ./launch_dev_server.sh
 
 # copy the client assets to a location known to the server
 # $(1) is the source of the client assets

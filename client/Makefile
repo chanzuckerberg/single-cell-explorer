@@ -38,7 +38,7 @@ start-frontend:
 .PHONY: smoke-test
 smoke-test:
 	start_server_and_test \
-		'CXG_OPTIONS="--config-file $(CXG_CONFIG)" $(MAKE) start-server' \
+		'../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --verbose --no-cache false'
 
