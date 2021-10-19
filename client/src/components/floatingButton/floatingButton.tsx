@@ -17,19 +17,19 @@ function FloatingButton(): JSX.Element {
       content={
         <Menu>
           <MenuItem
-            href="https://docs.cellxgene.cziscience.com/"
+            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/README.md"
             rel="noopener"
             target="_blank"
             text="Documentation"
           />
           <MenuItem
-            href="https://docs.cellxgene.cziscience.com/explore-data/explorer-tutorials"
+            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/explore-data/explorer-tutorials.md"
             rel="noopener"
             target="_blank"
             text="Tutorials"
           />
           <MenuItem
-            href="https://docs.cellxgene.cziscience.com/roadmap"
+            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md"
             rel="noopener"
             target="_blank"
             text="Our Roadmap"
