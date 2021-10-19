@@ -34,6 +34,9 @@ app.use(
   devMiddleware(compiler, {
     publicPath: config.output.publicPath,
     index: true,
+    // (thuang): This is needed to ensure obsoleteBrowsers.js
+    // is copied to the build/static directory
+    writeToDisk: true,
   })
 );
 

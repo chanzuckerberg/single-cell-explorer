@@ -2,9 +2,9 @@
 const path = require("path");
 const fs = require("fs");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const ObsoleteWebpackPlugin = require("obsolete-webpack-plugin");
-const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
 const webpack = require("webpack");
+const CopyPlugin = require("copy-webpack-plugin");
+const SUPPORTED_BROWSERS_REGEX = require("./SUPPORTED_BROWSERS_REGEX");
 
 const src = path.resolve("src");
 const nodeModules = path.resolve("node_modules");
@@ -16,7 +16,7 @@ const rawObsoleteHTMLTemplate = fs.readFileSync(
   "utf8"
 );
 
-const obsoleteHTMLTemplate = rawObsoleteHTMLTemplate.replace(/'/g, '"');
+const obsoleteHTMLTemplate = rawObsoleteHTMLTemplate.replace(/"/g, "'");
 
 const deploymentStage = process.env.DEPLOYMENT_STAGE || "test";
 
@@ -68,20 +68,22 @@ module.exports = {
     ],
   },
   plugins: [
-    new ObsoleteWebpackPlugin({
-      name: "obsolete",
-      template: obsoleteHTMLTemplate,
-      promptOnNonTargetBrowser: false,
-    }),
-    new ScriptExtHtmlWebpackPlugin({
-      async: "obsolete",
-    }),
     new webpack.DefinePlugin({
+      OBSOLETE_TEMPLATE: JSON.stringify(obsoleteHTMLTemplate),
+      OBSOLETE_REGEX: JSON.stringify(String(SUPPORTED_BROWSERS_REGEX)),
       PLAUSIBLE_DATA_DOMAIN: JSON.stringify(
         deploymentStage === "prod"
           ? "cellxgene.cziscience.com"
           : "cellxgene.staging.single-cell.czi.technology"
       ),
+    }),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: "configuration/webpack/obsoleteBrowsers.js",
+          to: "static/obsoleteBrowsers.js",
+        },
+      ],
     }),
   ],
 };
