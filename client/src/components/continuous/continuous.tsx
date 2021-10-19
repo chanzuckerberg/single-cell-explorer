@@ -27,7 +27,7 @@ class Continuous extends React.PureComponent {
       .filter((col: any) => !col.writable) // skip user annotations - they will be treated as categorical
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       .map((col: any) => col.name);
-    return (
+    return allContinuousNames.length ? (
       <div>
         <Collapse>
           <span style={{ paddingLeft: 10 }}>Continuous</span>
@@ -43,7 +43,7 @@ class Continuous extends React.PureComponent {
           ))}
         </Collapse>
       </div>
-    );
+    ) : null;
   }
 }
 
