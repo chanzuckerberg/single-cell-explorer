@@ -64,6 +64,8 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: make dev-env-server
       - name: Unit tests
         run: |
           make unit-test-server
@@ -93,6 +95,8 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
+      - name: Install dependencies
+        run: make dev-env-server build-for-server-dev
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test
