@@ -231,19 +231,21 @@ class Categories extends React.Component<{}, State> {
         ) : null}
         {/* STANDARD FIELDS */}
         {/* this is duplicative but flat, could be abstracted */}
-        <Collapse>
-          <span>Standard Categories</span>
-          {standardCategoryNames.map((catName: string) => (
-            <Category
-              key={catName}
-              // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-              metadataField={catName}
-              onExpansionChange={this.onExpansionChange}
-              isExpanded={expandedCats.has(catName)}
-              createAnnoModeActive={createAnnoModeActive}
-            />
-          ))}
-        </Collapse>
+        {standardCategoryNames.length ? (
+          <Collapse>
+            <span>Standard Categories</span>
+            {standardCategoryNames.map((catName: string) => (
+              <Category
+                key={catName}
+                // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
+                metadataField={catName}
+                onExpansionChange={this.onExpansionChange}
+                isExpanded={expandedCats.has(catName)}
+                createAnnoModeActive={createAnnoModeActive}
+              />
+            ))}
+          </Collapse>
+        ) : null}
         {/* AUTHOR FIELDS */}
         {authorCategoryNames.length ? (
           <Collapse>
