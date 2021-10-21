@@ -1,11 +1,6 @@
 // If a globally shared type or interface doesn't have a clear owner, put it here
 
 /**
- * Category name suffix used to determine if category name is ontology term id.
- */
-export const ONTOLOGY_KEY = "ontology_term_id";
-
-/**
  * Complete list of standard cellxgene column names.
  * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#obs-cell-metadata
  */

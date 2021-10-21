@@ -1,14 +1,11 @@
 // Core dependencies
-import { H3, HTMLTable, Classes, Tooltip, Position } from "@blueprintjs/core";
+import { H3, HTMLTable, Classes } from "@blueprintjs/core";
 import React, { CSSProperties } from "react";
 
 // App dependencies
-import {
-  DatasetMetadata,
-  Link,
-  ONTOLOGY_KEY,
-} from "../../common/types/entities";
+import { DatasetMetadata, Link } from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
+import * as globals from "../../globals";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
@@ -28,7 +25,6 @@ interface LinkView {
 interface MetadataView {
   key: string;
   value: string;
-  tip?: Category;
 }
 
 interface Props {
@@ -161,20 +157,10 @@ const renderDatasetMetadata = (
       {renderSectionTitle("Dataset")}
       <HTMLTable style={getTableStyles()}>
         <tbody>
-          {metadataViews.map(({ key, value, tip }) => (
+          {metadataViews.map(({ key, value }) => (
             <tr {...{ key }}>
               <td>{key}</td>
-              <td>
-                <Tooltip
-                  content={String(tip)}
-                  disabled={!tip}
-                  minimal
-                  modifiers={{ flip: { enabled: false } }}
-                  position={Position.TOP}
-                >
-                  {value}
-                </Tooltip>
-              </td>
+              <td>{value}</td>
             </tr>
           ))}
         </tbody>
@@ -243,22 +229,14 @@ const buildDatasetMetadataViews = (
 ): MetadataView[] =>
   Array.from(singleValueCategories.entries())
     .filter(([key, value]) => {
-      if (key.indexOf(ONTOLOGY_KEY) >= 0) {
+      if (key.indexOf(globals.ONTOLOGY_KEY) >= 0) {
         // skip ontology terms
         return false;
       }
       // skip metadata without values
       return value;
     })
-    .map(([key, value]) => {
-      const viewModel: MetadataView = { key, value: String(value) };
-      // add ontology term as tool tip if specified
-      const tip = singleValueCategories.get(`${key}_${ONTOLOGY_KEY}`);
-      if (tip) {
-        viewModel.tip = tip;
-      }
-      return viewModel;
-    });
+    .map(([key, value]) => ({ key, value: String(value) }));
 
 const InfoFormat = React.memo<Props>(
   ({ datasetMetadata, singleValueCategories }) => (
