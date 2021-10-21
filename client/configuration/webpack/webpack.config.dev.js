@@ -8,8 +8,6 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
-const ScriptExtHtmlWebpackPlugin = require("script-ext-html-webpack-plugin");
-// eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
@@ -82,9 +80,6 @@ const devConfig = {
         NODE_ENV: process.env.NODE_ENV || "development",
         CXG_SERVER_PORT: process.env.CXG_SERVER_PORT || "5005",
       }),
-    }),
-    new ScriptExtHtmlWebpackPlugin({
-      async: "obsolete",
     }),
   ],
   infrastructureLogging: {
