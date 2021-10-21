@@ -12,6 +12,9 @@ export const unassignedCategoryLabel = "unassigned";
 /** Maximum number of cells a dataset can have in order to be included for display. */
 export const DATASET_MAX_CELL_COUNT = 2_000_000;
 
+/* Category name suffix used to determine if category name is ontology term id. */
+export const ONTOLOGY_KEY = "ontology_term_id";
+
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
