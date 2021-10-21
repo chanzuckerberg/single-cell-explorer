@@ -38,7 +38,7 @@ build-server: clean build-client
 	cp -r server/common $(BUILDDIR)/server/common
 	cp server/__init__.py $(BUILDDIR)
 	cp server/__init__.py $(BUILDDIR)/server
-	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
+	cp MANIFEST.in README.md setup.cfg $(BUILDDIR)
 
 # If you are actively developing in the server folder use this, dirties the source tree
 .PHONY: build-for-server-dev
