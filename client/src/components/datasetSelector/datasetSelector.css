@@ -1,12 +1,23 @@
+/* Equivalent to BP's Colors.BLACK */
+@value bp-black: #10161a;
+
 :local(.datasetSelectorBreadcrumb),
 :local(.datasetSelectorBreadcrumbDisabled) {
   font-size: 14px; /* Override BP breadcrumb font spec of 16px */
 }
 
 :local(.datasetSelectorBreadcrumb):hover {
-  color: #10161a; /* Equivalent to Colors.BLACK */
+  color: bp-black;
 }
 
 :local(.datasetSelectorMenuPopoverTarget) {
-  cursor: pointer;
+  cursor: pointer; /* Indicate menu target is clickable */
+}
+
+/* Selected dataset menu item */
+:local(.datasetSelectorMenuItem):local(.datasetSelectorMenuItemActive),
+:local(.datasetSelectorMenuItem):local(.datasetSelectorMenuItemActive):hover {
+  color: bp-black !important; /* Override BP's gray text when disabled */
+  cursor: default !important; /* Override BP's "not allowed" cursor */
+  font-weight: 600;
 }
