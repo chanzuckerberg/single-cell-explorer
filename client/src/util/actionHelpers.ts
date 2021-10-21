@@ -3,18 +3,42 @@ import sortBy from "lodash.sortby";
 import { postNetworkErrorToast } from "../components/framework/toasters";
 import type { AppDispatch, GetState } from "../reducers";
 
-/*
-dispatch an action error to the user.   Currently we use
-async toasts.
-*/
 let networkErrorToastKey: string | null = null;
-export const dispatchNetworkErrorMessageToUser = (message: string): void => {
+
+/**
+ * Dispatch an action error to the user. Currently we use async toasts.
+ * @param message - Text to display in toast.
+ * @param res - Fetch response object: used to determine if toast should be popped for the corresponding request URL and
+ * response code.
+ */
+export const dispatchNetworkErrorMessageToUser = (
+  message: string,
+  res?: Response
+): void => {
+  // Prevent toast from popping for certain URL/response code combinations.
+  if (res && !isPostNetworkErrorToastEnabled(res.url, res.status)) {
+    return;
+  }
   if (!networkErrorToastKey) {
     networkErrorToastKey = postNetworkErrorToast(message);
   } else {
     postNetworkErrorToast(message, networkErrorToastKey);
   }
 };
+
+/**
+ * Determine if error toast should be popped for the given URL and HTTP response code. This is currently specific to
+ * 404's returned from the /dataset-metadata endpoint but can be generalised at a later point when we have other
+ * example cases.
+ * @param requestUrl - API endpoint URL.
+ * @param responseStatus - HTTP response code.
+ * @returns True if error toast can be popped for the given request URL and HTTP response code.
+ */
+const isPostNetworkErrorToastEnabled = (
+  requestUrl: string,
+  responseStatus: number
+): boolean =>
+  !(/\/dataset-metadata$/.test(requestUrl) && responseStatus === 404);
 
 /*
 Catch unexpected errors and make sure we don't lose them!
@@ -42,6 +66,7 @@ export const doFetch = async (
   url: string,
   init?: RequestInit
 ): Promise<Response> => {
+  let res;
   try {
     // add defaults to the fetch init param.
     init = {
@@ -50,7 +75,7 @@ export const doFetch = async (
       ...init,
     };
     const acceptType = (init.headers as Headers)?.get("Accept");
-    const res = await fetch(url, init);
+    res = await fetch(url, init);
     if (
       res.ok &&
       (!acceptType || res.headers?.get("Content-Type")?.includes(acceptType))
@@ -60,12 +85,11 @@ export const doFetch = async (
 
     // else an error
     const msg = `Unexpected HTTP response ${res.status}, ${res.statusText}`;
-    dispatchNetworkErrorMessageToUser(msg);
     throw new Error(msg);
   } catch (e) {
     // network error
     const msg = "Unexpected HTTP error";
-    dispatchNetworkErrorMessageToUser(msg);
+    dispatchNetworkErrorMessageToUser(msg, res);
     throw e;
   }
 };
