@@ -83,6 +83,7 @@ const devConfig = {
         NODE_ENV: process.env.NODE_ENV || "development",
         CXG_SERVER_PORT: process.env.CXG_SERVER_PORT || "5005",
       }),
+      CXG_SERVER_PORT: process.env.CXG_SERVER_PORT,
     }),
     new ScriptExtHtmlWebpackPlugin({
       async: "obsolete",

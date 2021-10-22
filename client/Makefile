@@ -6,7 +6,7 @@ ANNOTATIONS_FILENAME := $(shell basename $(ANNOTATIONS))
 GENE_SETS_FILENAME := $(shell basename $(GENE_SETS))
 
 CXG_CONFIG := $(if $(CXG_CONFIG),$(CXG_CONFIG),./__tests__/e2e/test_config.yaml)
-
+SERVER_PORT_FILE := ../.test_server_port.txt
 
 # Packaging
 .PHONY: clean
@@ -31,7 +31,11 @@ build:
 # nb: if using a new/updated dataset, must first start local backend/API server (`launch_dev_server.sh <dataset_path>`)
 .PHONY: start-frontend
 start-frontend:
-	@-pbcopy < ../.test_base_url.txt
+	@-pbcopy < ../.test_base_url.txt;
+	@if [ -e $(SERVER_PORT_FILE) ]; then \
+		port=$$(cat $(SERVER_PORT_FILE)); \
+	fi; \
+	export CXG_SERVER_PORT=$${port:-$$CXG_SERVER_PORT}; \
 	node server/development.js
 
 # start an instance of the Explorer server and run the end-to-end tests

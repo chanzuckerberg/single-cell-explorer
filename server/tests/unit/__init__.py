@@ -173,7 +173,8 @@ class TestServer(Server):
                 logging.warning(f"Using first: {path.join(dataroot, files[0])}")
             with open(".test_base_url.txt", "a") as f:
                 f.write(f"{base_url}/{files[0]}")
-                # f.write(json.dumps({"BASE_URL": base_url, "DATASET": files[0]}))
+            with open(".test_server_port.txt", "w") as f:
+                f.write(f"{app_config.server_config.app__port}")
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
