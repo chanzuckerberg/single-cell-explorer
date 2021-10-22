@@ -10,11 +10,6 @@ const utils = require("./utils");
 process.env.NODE_ENV = "development";
 
 const CLIENT_PORT = process.env.CXG_CLIENT_PORT;
-const { CXG_SERVER_PORT } = process.env;
-
-const API = {
-  prefix: `http://localhost:${CXG_SERVER_PORT}/`,
-};
 
 // Set up compiler
 const compiler = webpack(config);
