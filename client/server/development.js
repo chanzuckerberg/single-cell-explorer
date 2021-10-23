@@ -12,6 +12,29 @@ process.env.NODE_ENV = "development";
 
 const CLIENT_PORT = process.env.CXG_CLIENT_PORT;
 
+// Set up compiler
+const compiler = webpack(config);
+
+compiler.hooks.invalid.tap("invalid", () => {
+  utils.clearConsole();
+  console.log("Compiling...");
+});
+
+compiler.hooks.done.tap("done", (stats) => {
+  utils.formatStats(stats, CLIENT_PORT);
+});
+
+// Launch server
+const app = express();
+
+const mw = devMiddleware(compiler, {
+  publicPath: config.output.publicPath,
+  index: true,
+  // (thuang): This is needed to ensure obsoleteBrowsers.js
+  // is copied to the build/static directory
+  writeToDisk: true,
+});
+
 // Configure visitUrlMessage
 const localUrl = "http://" + fs.readFileSync("../.test_base_url.txt");
 const fingerPointingRightEmoji = String.fromCodePoint(0x1F449);
@@ -24,36 +47,12 @@ const isCopiedMessage =
     : "";
 const visitUrlMessage = `\n\n${fingerPointingRightEmoji} Visit ${localUrl}${isCopiedMessage}\n`;
 
-const displayLocalUrl = () => {
-  // Hack to log *after* webpack's asset and module logs -- 'done' hook fires too early
-  setTimeout(() => console.log(chalk.magenta.bold(visitUrlMessage)), 750)
-};
-
-// Set up compiler
-const compiler = webpack(config);
-
-compiler.hooks.invalid.tap("invalid", () => {
-  utils.clearConsole();
-  console.log("Compiling...");
+// Print url message after a recompile finishes
+mw.waitUntilValid(() => {
+  console.log(chalk.magenta.bold(visitUrlMessage));
 });
 
-compiler.hooks.done.tap("done", (stats) => {
-  utils.formatStats(stats, CLIENT_PORT);
-  displayLocalUrl();
-});
-
-// Launch server
-const app = express();
-
-app.use(
-  devMiddleware(compiler, {
-    publicPath: config.output.publicPath,
-    index: true,
-    // (thuang): This is needed to ensure obsoleteBrowsers.js
-    // is copied to the build/static directory
-    writeToDisk: true,
-  })
-);
+app.use(mw);
 
 // Serve the built index file from url that allows extraction of the base_url and dataset for api calls
 app.get("/:baseUrl/:dataset", (_, res) => {
