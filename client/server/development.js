@@ -1,4 +1,5 @@
 const chalk = require("chalk");
+const fs = require("fs");
 const express = require("express");
 const favicon = require("serve-favicon");
 const webpack = require("webpack");
@@ -11,6 +12,23 @@ process.env.NODE_ENV = "development";
 
 const CLIENT_PORT = process.env.CXG_CLIENT_PORT;
 
+// Configure visitUrlMessage
+const localUrl = "http://" + fs.readFileSync("../.test_base_url.txt");
+const fingerPointingRightEmoji = String.fromCodePoint(0x1F449);
+const starEmoji = String.fromCodePoint(0x2B50);
+const clipboardEmoji = String.fromCodePoint(0x1F4CB);
+// pbcopy only works on MacOS ("darwin")
+const isCopiedMessage = 
+  process.platform == "darwin"
+    ? `  ${starEmoji} copied to clipboard! ${clipboardEmoji}`
+    : "";
+const visitUrlMessage = `\n\n${fingerPointingRightEmoji} Visit ${localUrl}${isCopiedMessage}\n`;
+
+const displayLocalUrl = () => {
+  // Hack to log *after* webpack's asset and module logs -- 'done' hook fires too early
+  setTimeout(() => console.log(chalk.magenta.bold(visitUrlMessage)), 750)
+};
+
 // Set up compiler
 const compiler = webpack(config);
 
@@ -21,6 +39,7 @@ compiler.hooks.invalid.tap("invalid", () => {
 
 compiler.hooks.done.tap("done", (stats) => {
   utils.formatStats(stats, CLIENT_PORT);
+  displayLocalUrl();
 });
 
 // Launch server
