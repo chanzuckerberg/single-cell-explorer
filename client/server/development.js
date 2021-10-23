@@ -49,7 +49,9 @@ app.use(
   devMiddleware(compiler, {
     publicPath: config.output.publicPath,
     index: true,
-    writeToDisk: true // write files compiled by webpack -- do not just keep in memory
+    // (thuang): This is needed to ensure obsoleteBrowsers.js
+    // is copied to the build/static directory
+    writeToDisk: true,
   })
 );
 
