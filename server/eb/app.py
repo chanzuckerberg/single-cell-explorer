@@ -47,21 +47,12 @@ class WSGIServer(Server):
             parse_api_base_url = urlparse(api_base_url)
             extra_connect_src = [f"{parse_api_base_url.scheme}://{parse_api_base_url.netloc}"]
 
-        # This hash should be in sync with the script within
-        # `client/configuration/webpack/obsoleteHTMLTemplate.html`
-
-        # It is _very_ difficult to generate the correct hash manually,
-        # consider forcing CSP to fail on the local server by intercepting the response via Requestly
-        # this should print the failing script's hash to console.
-        # See more here: https://github.com/chanzuckerberg/cellxgene/pull/1745
-        obsolete_browser_script_hash = ["'sha256-/rmgOi/skq9MpiZxPv6lPb1PNSN+Uf4NaUHO/IjyfwM='"]
-
         PLAUSIBLE_URL = "https://plausible.io"
 
         csp = {
             "default-src": ["'self'"],
             "connect-src": ["'self'", PLAUSIBLE_URL] + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL] + obsolete_browser_script_hash + script_hashes,
+            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
             "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:"],
             "object-src": ["'none'"],

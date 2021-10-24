@@ -68,7 +68,7 @@ const STYLE_WRAPPER = {
   flex: 1,
   flexGrow: 1,
   marginTop: "8px", // Match margin on sibling menu buttons (TODO move to controls container and remove from here and menu)
-  overflow: "scroll",
+  overflow: "hidden",
 };
 
 /**

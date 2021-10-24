@@ -55,6 +55,13 @@
     </noscript>
 
     <div id="root"></div>
+    <script
+      async
+      src="static/obsoleteBrowsers.js"
+      id="obsolete-browsers"
+      data-template="<%= OBSOLETE_TEMPLATE %>"
+      data-regex="<%= OBSOLETE_REGEX %>"
+    ></script>
     {% for script in SCRIPTS -%}
     <script type="text/javascript"
       {{ ('integrity="%s"' % script.integrity) | safe if script.integrity }}

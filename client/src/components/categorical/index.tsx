@@ -3,10 +3,7 @@ import { AnchorButton, Tooltip, Position } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
-import {
-  ONTOLOGY_KEY,
-  STANDARD_CATEGORY_NAMES,
-} from "../../common/types/entities";
+import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
 import Collapse from "../../util/collapse";
 import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
 import AnnoDialog from "../annoDialog";
@@ -152,12 +149,12 @@ class Categories extends React.Component<{}, State> {
     const authorCategoryNames = allCategoryNames.filter(
       (catName: string) =>
         !STANDARD_CATEGORY_NAMES.includes(catName) &&
-        !catName.includes(ONTOLOGY_KEY)
+        !catName.includes(globals.ONTOLOGY_KEY)
     );
     const standardCategoryNames = allCategoryNames.filter(
       (catName: string) =>
         STANDARD_CATEGORY_NAMES.includes(catName) &&
-        !catName.includes(ONTOLOGY_KEY) &&
+        !catName.includes(globals.ONTOLOGY_KEY) &&
         (schema.annotations.obsByName[catName].categories?.length > 1 ||
           !schema.annotations.obsByName[catName].categories)
     );
