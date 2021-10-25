@@ -27,6 +27,7 @@ const devConfig = {
   output: {
     pathinfo: true,
     filename: "static/js/bundle.js",
+    publicPath: "/", // ensures the static asset calls use "/" as the root and not "/<base_url>/<dataset>"
   },
   module: {
     rules: [
@@ -80,6 +81,7 @@ const devConfig = {
         NODE_ENV: process.env.NODE_ENV || "development",
         CXG_SERVER_PORT: process.env.CXG_SERVER_PORT || "5005",
       }),
+      CXG_SERVER_PORT: process.env.CXG_SERVER_PORT,
     }),
   ],
   infrastructureLogging: {

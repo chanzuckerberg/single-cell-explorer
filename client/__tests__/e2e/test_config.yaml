@@ -2,6 +2,8 @@ server:
   app:
     force_https: true
     port: 5005
+    debug: true
+    verbose: true
 
 dataset:
   presentation:

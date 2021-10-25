@@ -414,25 +414,28 @@ class Server:
                 bp_dataroot = Blueprint(
                     f"api_dataset_{url_dataroot}",
                     __name__,
-                    url_prefix=f"{api_path}/{url_dataroot}/<dataset>" + api_version,
+                    url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
                 )
                 dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
                 self.app.register_blueprint(dataroot_resources.blueprint)
 
+                # TODO: see the following issue regarding the commented-out url rule immediately below:
+                # https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell-explorer/110
+
+                # self.app.add_url_rule(
+                #     f"/{url_dataroot}/<string:dataset>",
+                #     f"dataset_index_{url_dataroot}",
+                #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                #     methods=["GET"],
+                # )
                 self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>",
-                    f"dataset_index_{url_dataroot}",
-                    lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                    methods=["GET"],
-                )
-                self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>/",
+                    f"/{url_dataroot}/<string:dataset>/",
                     f"dataset_index_{url_dataroot}/",
                     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
                     methods=["GET"],
                 )
                 self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>/static/<path:filename>",
+                    f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
                     f"static_assets_{url_dataroot}",
                     view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
                     methods=["GET"],
