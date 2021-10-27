@@ -4,6 +4,7 @@ import React from "react";
 
 /* App dependencies */
 import { Dataset } from "../../common/types/entities";
+import { maxMenuItemCount } from "../../globals";
 
 /* Styles */
 // @ts-expect-error --- TODO fix import
@@ -70,33 +71,45 @@ const DatasetMenu = React.memo<Props>(
     datasets,
     onDatasetSelected,
     selectedDatasetId,
-  }): JSX.Element => (
-    <Popover
-      boundary="viewport"
-      content={
-        <Menu
-          style={{
-            maxHeight:
-              "290px" /* show 9.5 datasets at 30px height each, plus top padding of 5px */,
-            maxWidth: "680px",
-            overflow: "auto",
-          }}
-        >
-          {buildDatasetMenuItems(
-            datasets,
-            selectedDatasetId,
-            onDatasetSelected
-          )}
-        </Menu>
-      }
-      hasBackdrop
-      minimal
-      modifiers={{ offset: { offset: "0, 10" } }}
-      position={Position.BOTTOM_LEFT}
-      targetClassName={styles.datasetSelectorMenuPopoverTarget}
-    >
-      {children}
-    </Popover>
-  )
+  }): JSX.Element => {
+    const menuMaxHeight =
+      (maxMenuItemCount + 0.5) * 30 +
+      5; /* show 9.5 datasets at 30px height each, plus top padding of 5px */
+    const menuScrollable = datasets.length > maxMenuItemCount;
+    return (
+      <Popover
+        boundary="viewport"
+        content={
+          <Menu
+            className={
+              menuScrollable ? styles.datasetMenuScrollable : undefined
+            }
+            style={{
+              maxHeight: menuMaxHeight,
+              maxWidth: 680,
+              overflow: "auto",
+              paddingRight: menuScrollable
+                ? 0 /* override bp-menu default padding to accommodate scrollbar */
+                : undefined /* no need to override bp-menu default padding when menu is not scrollable */,
+            }}
+          >
+            {buildDatasetMenuItems(
+              datasets,
+              selectedDatasetId,
+              onDatasetSelected
+            )}
+          </Menu>
+        }
+        hasBackdrop
+        minimal
+        modifiers={{ offset: { offset: "0, 10" } }}
+        position={Position.BOTTOM_LEFT}
+        targetClassName={styles.datasetSelectorMenuPopoverTarget}
+      >
+        {children}
+      </Popover>
+    );
+  }
 );
+
 export default DatasetMenu;
