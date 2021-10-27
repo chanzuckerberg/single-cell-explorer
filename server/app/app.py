@@ -2,7 +2,6 @@ import datetime
 import logging
 from functools import wraps
 from http import HTTPStatus
-from urllib.parse import urlparse
 import hashlib
 import os
 
@@ -11,16 +10,14 @@ from flask import (
     redirect,
     current_app,
     make_response,
-    render_template,
-    abort,
-    Blueprint,
-    request,
-    send_from_directory,
+    abort, render_template,
 )
-from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
+from server.app.api import webbp, cache_control_always
+from server.app.api.v2 import register_api_v2
+from server.app.api.v3 import register_api_v3
 from server.common.utils.data_locator import DataLocator
 from server.common.errors import (
     DatasetAccessError,
@@ -33,45 +30,6 @@ from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
-
-webbp = Blueprint("webapp", "server.common.web", template_folder="templates")
-
-ONE_WEEK = 7 * 24 * 60 * 60
-
-
-def _cache_control(always, **cache_kwargs):
-    """
-    Used to easily manage cache control headers on responses.
-    See Werkzeug for attributes that can be set, eg, no_cache, private, max_age, etc.
-    https://werkzeug.palletsprojects.com/en/1.0.x/datastructures/#werkzeug.datastructures.ResponseCacheControl
-    """
-
-    def inner_cache_control(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            response = make_response(f(*args, **kwargs))
-            if not always and not current_app.app_config.server_config.app__generate_cache_control_headers:
-                return response
-            if response.status_code >= 400:
-                return response
-            for k, v in cache_kwargs.items():
-                setattr(response.cache_control, k, v)
-            return response
-
-        return wrapper
-
-    return inner_cache_control
-
-
-def cache_control(**cache_kwargs):
-    """config driven"""
-    return _cache_control(False, **cache_kwargs)
-
-
-def cache_control_always(**cache_kwargs):
-    """always generate headers, regardless of the config"""
-    return _cache_control(True, **cache_kwargs)
-
 
 @webbp.errorhandler(RequestException)
 def handle_request_exception(error):
@@ -112,7 +70,6 @@ def dataset_index(url_dataroot=None, dataset=None):
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
-
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
@@ -212,149 +169,6 @@ def dataroot_index():
         return redirect(config.server_config.multi_dataset__index)
 
 
-class HealthAPI(Resource):
-    @cache_control(no_store=True)
-    def get(self):
-        config = current_app.app_config
-        return health_check(config)
-
-
-class DatasetResource(Resource):
-    """Base class for all Resources that act on datasets."""
-
-    def __init__(self, url_dataroot):
-        super().__init__()
-        self.url_dataroot = url_dataroot
-
-
-class SchemaAPI(DatasetResource):
-    # TODO @mdunitz separate dataset schema and user schema
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.schema_get(data_adaptor)
-
-
-class DatasetMetadataAPI(DatasetResource):
-    @cache_control(public=True,  no_store=True, max_age=0)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
-
-
-class ConfigAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.config_get(current_app.app_config, data_adaptor)
-
-
-class AnnotationsObsAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.annotations_obs_get(request, data_adaptor)
-
-    @cache_control(no_store=True)
-    @rest_get_data_adaptor
-    def put(self, data_adaptor):
-        return common_rest.annotations_obs_put(request, data_adaptor)
-
-
-class AnnotationsVarAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.annotations_var_get(request, data_adaptor)
-
-
-class DataVarAPI(DatasetResource):
-    @cache_control(no_store=True)
-    @rest_get_data_adaptor
-    def put(self, data_adaptor):
-        return common_rest.data_var_put(request, data_adaptor)
-
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.data_var_get(request, data_adaptor)
-
-
-class ColorsAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.colors_get(data_adaptor)
-
-
-class DiffExpObsAPI(DatasetResource):
-    @cache_control(no_store=True)
-    @rest_get_data_adaptor
-    def post(self, data_adaptor):
-        return common_rest.diffexp_obs_post(request, data_adaptor)
-
-
-class LayoutObsAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.layout_obs_get(request, data_adaptor)
-
-
-class GenesetsAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.genesets_get(request, data_adaptor)
-
-
-class SummarizeVarAPI(DatasetResource):
-    @rest_get_data_adaptor
-    @cache_control(public=True, max_age=ONE_WEEK)
-    def get(self, data_adaptor):
-        return common_rest.summarize_var_get(request, data_adaptor)
-
-    @rest_get_data_adaptor
-    @cache_control(no_store=True)
-    def post(self, data_adaptor):
-        return common_rest.summarize_var_post(request, data_adaptor)
-
-
-def get_api_base_resources(bp_base):
-    """Add resources that are accessed from the api_base_url"""
-    api = Api(bp_base)
-
-    # Diagnostics routes
-    api.add_resource(HealthAPI, "/health")
-    return api
-
-
-def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
-    """Add resources that refer to a dataset"""
-    api = Api(bp_dataroot)
-
-    def add_resource(resource, url):
-        """convenience function to make the outer function less verbose"""
-        api.add_resource(resource, url, resource_class_args=(url_dataroot,))
-
-    # Initialization routes
-    add_resource(SchemaAPI, "/schema")
-    add_resource(DatasetMetadataAPI, "/dataset-metadata")
-    add_resource(ConfigAPI, "/config")
-    # Data routes
-    add_resource(AnnotationsObsAPI, "/annotations/obs")
-    add_resource(AnnotationsVarAPI, "/annotations/var")
-    add_resource(DataVarAPI, "/data/var")
-    add_resource(GenesetsAPI, "/genesets")
-    add_resource(SummarizeVarAPI, "/summarize/var")
-    # Display routes
-    add_resource(ColorsAPI, "/colors")
-    # Computation routes
-    add_resource(DiffExpObsAPI, "/diffexp/obs")
-    add_resource(LayoutObsAPI, "/layout/obs")
-    return api
-
-
 def handle_api_base_url(app, app_config):
     """If an api_base_url is provided, then an inline script is generated to
     handle the new API prefix"""
@@ -398,16 +212,8 @@ class Server:
 
         self.app.register_blueprint(webbp)
 
-        api_version = "/api/v0.2"
-        api_base_url = server_config.get_api_base_url()
-        api_path = "/"
-        if api_base_url:
-            parse = urlparse(api_base_url)
-            api_path = parse.path
-
-        bp_base = Blueprint("bp_base", __name__, url_prefix=api_path)
-        base_resources = get_api_base_resources(bp_base)
-        self.app.register_blueprint(base_resources.blueprint)
+        register_api_v2(app=self.app, app_config=app_config, server_config=server_config)
+        register_api_v3(app=self.app, app_config=app_config, server_config=server_config)
 
         if app_config.is_multi_dataset():
             # NOTE:  These routes only allow the dataset to be in the directory
@@ -415,46 +221,12 @@ class Server:
             # the route format at some point
             for dataroot_dict in server_config.multi_dataset__dataroot.values():
                 url_dataroot = dataroot_dict["base_url"]
-                bp_dataroot = Blueprint(
-                    f"api_dataset_{url_dataroot}",
-                    __name__,
-                    url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
-                )
-                dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
-                self.app.register_blueprint(dataroot_resources.blueprint)
-
-                # TODO: see the following issue regarding the commented-out url rule immediately below:
-                # https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell-explorer/110
-
-                # self.app.add_url_rule(
-                #     f"/{url_dataroot}/<string:dataset>",
-                #     f"dataset_index_{url_dataroot}",
-                #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                #     methods=["GET"],
-                # )
                 self.app.add_url_rule(
                     f"/{url_dataroot}/<string:dataset>/",
                     f"dataset_index_{url_dataroot}/",
                     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
                     methods=["GET"],
                 )
-                self.app.add_url_rule(
-                    f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
-                    f"static_assets_{url_dataroot}",
-                    view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
-                    methods=["GET"],
-                )
-
-        else:
-            bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")
-            resources = get_api_dataroot_resources(bp_api)
-            self.app.register_blueprint(resources.blueprint)
-            self.app.add_url_rule(
-                "/static/<path:filename>",
-                "static_assets",
-                view_func=lambda filename: send_from_directory("../common/web/static", filename),
-                methods=["GET"],
-            )
 
         self.app.matrix_data_cache_manager = server_config.matrix_data_cache_manager
         self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
