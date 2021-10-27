@@ -1,20 +1,20 @@
 import errno
 import functools
-import logging
 import sys
 import webbrowser
 import os
 import click
-from flask_compress import Compress
-from flask_cors import CORS
 
+from logging import Logger, getLogger, ERROR
 from server.default_config import default_config
-from server.app.app import Server
-from server.common.config.app_config import AppConfig
+from server.common.config.app_config import AppConfig, ServerConfig
 from server.common.errors import DatasetAccessError, ConfigurationError
 from server.common.utils.utils import sort_options
+from server.tests.unit import TestServer
+from typing import List
 
 
+log: Logger = getLogger("werkzeug")
 DEFAULT_CONFIG = AppConfig()
 
 
@@ -99,39 +99,12 @@ def config_args(func):
 
 def dataset_args(func):
     @click.option(
-        "--obs-names",
-        "-obs",
-        default=DEFAULT_CONFIG.server_config.single_dataset__obs_names,
-        metavar="<text>",
-        help="Name of annotation field to use for observations. If not specified cellxgene will use the the obs index.",
-    )
-    @click.option(
-        "--var-names",
-        "-var",
-        default=DEFAULT_CONFIG.server_config.single_dataset__var_names,
-        metavar="<text>",
-        help="Name of annotation to use for variables. If not specified cellxgene will use the the var index.",
-    )
-    @click.option(
         "--backed",
         "-b",
         is_flag=True,
         default=DEFAULT_CONFIG.server_config.adaptor__anndata_adaptor__backed,
         show_default=False,
         help="Load anndata in file-backed mode. " "This may save memory, but may result in slower overall performance.",
-    )
-    @click.option(
-        "--title",
-        "-t",
-        default=DEFAULT_CONFIG.server_config.single_dataset__title,
-        metavar="<text>",
-        help="Title to display. If omitted will use file name.",
-    )
-    @click.option(
-        "--about",
-        default=DEFAULT_CONFIG.server_config.single_dataset__about,
-        metavar="<URL>",
-        help="URL providing more information about the dataset (hint: must be a fully specified absolute URL).",
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -204,7 +177,7 @@ def launch_args(func):
         " to folder containing H5AD and/or CXG datasets.",
         hidden=True,
     )  # TODO, unhide when dataroot is supported)
-    @click.argument("datapath", required=False, metavar="<path to data file>")
+    @click.argument("dataroot", required=False, metavar="<path to data file>")
     @click.option(
         "--open",
         "-o",
@@ -255,29 +228,6 @@ def handle_scripts(scripts):
         click.confirm(f"Are you sure you want to inject these scripts: {scripts_pretty}?", abort=True)
 
 
-class CliLaunchServer(Server):
-    """
-    the CLI runs a local web server, and needs to enable a few more features.
-    """
-
-    def __init__(self, app_config):
-        super().__init__(app_config)
-
-    @staticmethod
-    def _before_adding_routes(app, app_config):
-        app.config["COMPRESS_MIMETYPES"] = [
-            "text/html",
-            "text/css",
-            "text/xml",
-            "application/json",
-            "application/javascript",
-            "application/octet-stream",
-        ]
-        Compress(app)
-        if app_config.server_config.app__debug:
-            CORS(app, supports_credentials=True)
-
-
 @sort_options
 @click.command(
     short_help="Launch the cellxgene data viewer. " "Run `cellxgene launch --help` for more information.",
@@ -285,7 +235,6 @@ class CliLaunchServer(Server):
 )
 @launch_args
 def launch(
-    datapath,
     dataroot,
     verbose,
     debug,
@@ -293,14 +242,10 @@ def launch(
     port,
     host,
     embedding,
-    obs_names,
-    var_names,
     max_category_items,
     disable_custom_colors,
     diffexp_lfc_cutoff,
-    title,
     scripts,
-    about,
     disable_annotations,
     annotations_file,
     annotations_dir,
@@ -312,31 +257,37 @@ def launch(
     """Launch the cellxgene data viewer.
     This web app lets you explore single-cell expression data.
     Data must be in a format that cellxgene expects.
-    Read the "getting started" guide to learn more:
-    https://chanzuckerberg.github.io/cellxgene/getting-started.html
 
     Examples:
 
-    > cellxgene launch example-dataset/pbmc3k.h5ad --title pbmc3k
+    Use default dataroot with specific config file via config option:
+    > python -m server.cli.launch -c config/config_file.yaml
 
-    > cellxgene launch <your data file> --title <your title>
+    Specify dataroot via argument:
+    > python -m server.cli.launch data/other_data_root/
 
-    > cellxgene launch <url>"""
+    """
 
-    # TODO Examples to provide when "--dataroot" is unhidden
-    # > cellxgene launch --dataroot example-dataset/
-    #
-    # > cellxgene launch --dataroot <url>
+    project_root = os.getenv("PROJECT_ROOT") or os.getcwd()
+    test_dataset_dir: str = os.path.join(project_root, "example-dataset/")
+    test_config_file: str = os.path.join(project_root, "client/__tests__/e2e/test_config.yaml")
+
+    dataroot: str = dataroot if dataroot else test_dataset_dir
+    config_file: str = config_file if config_file else test_config_file
+
+    if not os.path.isdir(dataroot):
+        log.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
+        sys.exit(1)
 
     if dump_default_config:
         print(default_config)
         sys.exit(0)
     # Startup message
-    click.echo("[cellxgene] Starting the CLI...")
+    click.echo("[cellxgene] Starting the development server...")
 
     # app config
-    app_config = AppConfig()
-    server_config = app_config.server_config
+    app_config: AppConfig = AppConfig()
+    server_config: ServerConfig = app_config.server_config
 
     try:
         if config_file:
@@ -344,18 +295,13 @@ def launch(
 
         # Determine which config options were give on the command line.
         # Those will override the ones provided in the config file (if provided).
-        cli_config = AppConfig()
+        cli_config: AppConfig = AppConfig()
         cli_config.update_server_config(
             app__verbose=verbose,
             app__debug=debug,
             app__host=host,
             app__port=port,
             app__open_browser=open_browser,
-            single_dataset__datapath=datapath,
-            single_dataset__title=title,
-            single_dataset__about=about,
-            single_dataset__obs_names=obs_names,
-            single_dataset__var_names=var_names,
             multi_dataset__dataroot=dataroot,
             adaptor__anndata_adaptor__backed=backed,
         )
@@ -371,11 +317,11 @@ def launch(
             diffexp__lfc_cutoff=diffexp_lfc_cutoff,
         )
 
-        diff = cli_config.server_config.changes_from_default()
+        diff: List[tuple] = cli_config.server_config.changes_from_default()
         changes = {key: val for key, val, _ in diff}
         app_config.update_server_config(**changes)
 
-        diff = cli_config.default_dataset_config.changes_from_default()
+        diff: List[tuple] = cli_config.default_dataset_config.changes_from_default()
         changes = {key: val for key, val, _ in diff}
         app_config.update_default_dataset_config(**changes)
 
@@ -398,13 +344,12 @@ def launch(
     handle_scripts(scripts)
 
     # create the server
-    server = CliLaunchServer(app_config)
+    server: TestServer = TestServer(app_config)
 
     if not server_config.app__verbose:
-        log = logging.getLogger("werkzeug")
-        log.setLevel(logging.ERROR)
+        log.setLevel(ERROR)
 
-    cellxgene_url = f"http://{app_config.server_config.app__host}:{app_config.server_config.app__port}"
+    cellxgene_url: str = f"http://{app_config.server_config.app__host}:{app_config.server_config.app__port}"
     if server_config.app__open_browser:
         click.echo(f"[cellxgene] Launching! Opening your browser to {cellxgene_url} now.")
         webbrowser.open(cellxgene_url)
@@ -430,3 +375,7 @@ def launch(
         if e.errno == errno.EADDRINUSE:
             raise click.ClickException("Port is in use, please specify an open port using the --port flag.") from e
         raise
+
+
+if __name__ == "__main__":
+    launch()

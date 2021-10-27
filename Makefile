@@ -38,7 +38,7 @@ build-server: clean build-client
 	cp -r server/common $(BUILDDIR)/server/common
 	cp server/__init__.py $(BUILDDIR)
 	cp server/__init__.py $(BUILDDIR)/server
-	cp MANIFEST.in README.md setup.cfg setup.py $(BUILDDIR)
+	cp MANIFEST.in README.md setup.cfg $(BUILDDIR)
 
 # If you are actively developing in the server folder use this, dirties the source tree
 .PHONY: build-for-server-dev
@@ -92,12 +92,6 @@ lint-server:
 lint-client:
 	cd client && $(MAKE) lint
 
-# CREATING DISTRIBUTION RELEASE
-
-.PHONY: pydist-server
-pydist-server: build-server
-	cd $(BUILDDIR); python setup.py sdist -d ../dist
-	@echo "done"
 
 .PHONY: dev-env
 dev-env: dev-env-client dev-env-server
@@ -115,19 +109,3 @@ dev-env-server:
 .PHONY: gen-package-lock
 gen-package-lock:
 	cd client && $(MAKE) install
-
-# INSTALL
-
-# install from source tree for development
-.PHONY: install-dev
-install-dev: uninstall
-	pip install -e .
-
-# install from dist
-.PHONY: install-dist
-install-dist: uninstall
-	pip install dist/cellxgene*.tar.gz
-
-.PHONY: uninstall
-uninstall:
-	pip uninstall -y cellxgene || :

@@ -12,6 +12,9 @@ export const unassignedCategoryLabel = "unassigned";
 /** Maximum number of cells a dataset can have in order to be included for display. */
 export const DATASET_MAX_CELL_COUNT = 2_000_000;
 
+/* Category name suffix used to determine if category name is ontology term id. */
+export const ONTOLOGY_KEY = "ontology_term_id";
+
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
@@ -149,21 +152,11 @@ let _API;
 if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   _API = (window as any).CELLXGENE.API;
-} else {
-  if (CXG_SERVER_PORT === undefined) {
+} else if (CXG_SERVER_PORT === undefined) {
     const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
     dispatchNetworkErrorMessageToUser(errorMessage);
     throw new Error(errorMessage);
   }
-
-  _API = {
-    // prefix: "http://api.clustering.czi.technology/api/",
-    // prefix: "http://tabulamuris.cxg.czi.technology/api/",
-    // prefix: "http://api-staging.clustering.czi.technology/api/",
-    prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
-    version: "v0.2/",
-  };
-}
 
 export const API = _API;
 

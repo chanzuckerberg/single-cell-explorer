@@ -1,9 +1,10 @@
+import json
 import logging
 import shutil
 import tempfile
 import unittest
 
-from os import path
+from os import listdir, path
 
 import pandas as pd
 from flask_compress import Compress
@@ -132,8 +133,9 @@ def app_config(data_locator, backed=False, extra_server_config={}, extra_dataset
 
 
 class TestServer(Server):
-    def __init__(self, app_config):
+    def __init__(self, app_config: AppConfig):
         super().__init__(app_config)
+        self._extract_base_url_and_dataset_for_api_calls(app_config)
 
     @staticmethod
     def _before_adding_routes(app, app_config):
@@ -148,6 +150,33 @@ class TestServer(Server):
         Compress(app)
         if app_config.server_config.app__debug:
             CORS(app, supports_credentials=True)
+
+    @staticmethod
+    def _extract_base_url_and_dataset_for_api_calls(app_config: AppConfig):
+        """
+        Convenience method for generating the url for the developer to use to access the front end, which is
+        dependent on the name of the dataset being used (and the CXG_CLIENT_PORT, if set): .../<base_url>/<dataset>
+        @param app_config: the AppConfig
+        @return: None
+        """
+        dataroot_and_base_url_pairs: list = list(app_config.server_config.multi_dataset__dataroot.values())
+        if len(dataroot_and_base_url_pairs) > 1:
+            logging.warning("Found more than one dataroot -- will use first")
+        first_pair: dict = dataroot_and_base_url_pairs[0]
+        base_url: str = first_pair["base_url"]
+        dataroot: str = first_pair["dataroot"]
+        logging.info(f"Using base_url {base_url} and dataroot {dataroot}")
+        try:
+            files: list = listdir(dataroot)
+            if len(files) > 1:
+                logging.warning(f"Found more than one dataset in {dataroot}")
+                logging.warning(f"Using first: {path.join(dataroot, files[0])}")
+            with open(".test_base_url.txt", "a") as f:
+                f.write(f"{base_url}/{files[0]}")
+            with open(".test_server_port.txt", "w") as f:
+                f.write(f"{app_config.server_config.app__port}")
+        except FileNotFoundError:
+            logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
 
 class BaseTest(unittest.TestCase):

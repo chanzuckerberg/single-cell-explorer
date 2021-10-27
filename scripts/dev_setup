@@ -9,4 +9,4 @@ virtualenv -p python3 venv
 
 source venv/bin/activate
 
-make uninstall dev-env-server build-for-server-dev install-dev
+make dev-env-server build-for-server-dev

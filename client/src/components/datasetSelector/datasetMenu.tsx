@@ -18,33 +18,59 @@ interface Props {
   children: React.ReactNode;
   datasets: Dataset[];
   onDatasetSelected: DatasetSelectedFn;
+  selectedDatasetId: string;
 }
 
 /**
  * Build menu item elements from given array of menu item props.
  * @param datasets - Set of menu item props to display as menu item.
+ * @param selectedDatasetId - ID of the dataset currently being explored.
  * @param onDatasetSelected - Function invoked on click of menu item.
  * @returns Array of MenuItem elements.
  */
 const buildDatasetMenuItems = (
   datasets: Dataset[],
+  selectedDatasetId: string,
   onDatasetSelected: DatasetSelectedFn
 ): JSX.Element[] =>
-  datasets.map((dataset) => (
-    <MenuItem
-      key={dataset.id}
-      onClick={() => {
-        onDatasetSelected(dataset);
-      }}
-      text={dataset.name}
-    />
-  ));
+  datasets.sort(sortDatasets).map((dataset) => {
+    const active = dataset.id === selectedDatasetId;
+    const classNames = active
+      ? `${styles.datasetSelectorMenuItem} ${styles.datasetSelectorMenuItemActive}`
+      : undefined;
+    return (
+      <MenuItem
+        className={classNames}
+        disabled={active}
+        key={dataset.id}
+        onClick={() => {
+          onDatasetSelected(dataset);
+        }}
+        text={dataset.name}
+      />
+    );
+  });
+
+/**
+ * Sort datasets by cell count, descending.
+ * @param {Dataset} d0 - First dataset to compare.
+ * @param {Dataset} d1 - Second dataset to compare.
+ * @returns Number indicating sort precedence of d0 vs d1.
+ */
+export function sortDatasets(d0: Dataset, d1: Dataset): number {
+  return (d1.cell_count ?? 0) - (d0.cell_count ?? 0);
+}
 
 /**
  * Dataset menu, toggled from dataset name in app-level breadcrumbs.
  */
 const DatasetMenu = React.memo<Props>(
-  ({ children, datasets, onDatasetSelected }): JSX.Element => (
+  ({
+    children,
+    datasets,
+    onDatasetSelected,
+    selectedDatasetId,
+  }): JSX.Element => (
     <Popover
       boundary="viewport"
       content={
@@ -56,7 +82,11 @@ const DatasetMenu = React.memo<Props>(
             overflow: "auto",
           }}
         >
-          {buildDatasetMenuItems(datasets, onDatasetSelected)}
+          {buildDatasetMenuItems(
+            datasets,
+            selectedDatasetId,
+            onDatasetSelected
+          )}
         </Menu>
       }
       hasBackdrop
