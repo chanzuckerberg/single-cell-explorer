@@ -103,6 +103,14 @@ class DatasetResource(Resource):
         self.url_dataroot = url_dataroot
 
 
+class S3URIAPI(DatasetResource):
+    @cache_control(public=True, no_store=True, max_age=0)
+    # @rest_get_data_adaptor
+    def get(self, dataset):
+        app_config = current_app.app_config
+        return common_rest.s3_uri_get(app_config, self.url_dataroot, dataset)
+
+
 class SchemaAPI(DatasetResource):
     # TODO @mdunitz separate dataset schema and user schema
     @cache_control(public=True, max_age=ONE_WEEK)
@@ -215,6 +223,7 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
+    add_resource(S3URIAPI, "/s3_uri")
     add_resource(DatasetMetadataAPI, "/dataset-metadata")
     add_resource(ConfigAPI, "/config")
     # Data routes

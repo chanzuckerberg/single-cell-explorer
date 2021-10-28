@@ -25,6 +25,7 @@ from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
 
 from server.data_common import dataset_metadata
+from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -128,6 +129,11 @@ def dataset_metadata_get(app_config, data_adaptor):
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
     else:
         return abort(HTTPStatus.NOT_FOUND)
+
+
+def s3_uri_get(app_config, url_dataroot, dataset):
+    dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)
+    return make_response(jsonify(dataset_metadata["s3_uri"]), HTTPStatus.OK)
 
 
 def config_get(app_config, data_adaptor):
