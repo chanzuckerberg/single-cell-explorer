@@ -25,42 +25,27 @@ from server.common.health import health_check
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
 
-
-def request_dataset_cxg_uri(url_dataroot: str = None, dataset: str = None):
+def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    with dataset_metadata_manager.get(
+    return dataset_metadata_manager.get(
         cache_key=f"{url_dataroot}/{dataset}",
         create_data_function=get_dataset_metadata_for_explorer_location,
         create_data_args={"app_config": app_config},
-    ) as dataset_metadata:
-        return dataset_metadata["s3_uri"]
-
-
-def get_data_adaptor(url_dataroot: str = None, s3_uri: str = None):
-    app_config = current_app.app_config
-    matrix_cache_manager = current_app.matrix_data_cache_manager
-    return matrix_cache_manager.get(
-        cache_key=s3_uri,
-        create_data_function=MatrixDataLoader(
-            location=s3_uri, url_dataroot=url_dataroot, app_config=app_config
-        ).validate_and_open,
-        create_data_args={},
     )
 
 
-
-def get_metadata_adaptor(url_dataroot: str = None, dataset: str = None):
+def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    s3_uri = request_dataset_cxg_uri(url_dataroot=url_dataroot, dataset=dataset)
-    return matrix_cache_manager.get(
-        cache_key=s3_uri,
-        create_data_function=MatrixDataLoader(
-            location=s3_uri, url_dataroot=url_dataroot, app_config=app_config
-        ).validate_and_open,
-        create_data_args={},
-    )
+    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
+        return matrix_cache_manager.get(
+            cache_key=dataset_metadata["s3_uri"],
+            create_data_function=MatrixDataLoader(
+                location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
+            ).validate_and_open,
+            create_data_args={},
+        )
 
 
 def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
@@ -72,29 +57,9 @@ def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = N
 
 def rest_get_data_adaptor(func):
     @wraps(func)
-    def wrapped_function(self, s3_uri=None):
-        try:
-            with get_data_adaptor(s3_uri) as data_adaptor:
-                data_adaptor.set_uri_path(s3_uri)
-                return func(self, data_adaptor)
-        except (DatasetAccessError, DatasetNotFoundError) as e:
-            return common_rest.abort_and_log(
-                e.status_code, f"Invalid dataset {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
-            )
-        except TombstoneError as e:
-            parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
-            )
-            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
-
-    return wrapped_function
-
-
-def rest_get_metadata_adaptor(func):
-    @wraps(func)
     def wrapped_function(self, dataset=None):
         try:
-            with get_metadata_adaptor(self.url_dataroot, dataset) as data_adaptor:
+            with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
@@ -138,14 +103,6 @@ class DatasetResource(Resource):
         self.url_dataroot = url_dataroot
 
 
-class DatasetMetadataResource(Resource):
-    """Base class for all Resources that act on datasets."""
-
-    def __init__(self, url_dataroot):
-        super().__init__()
-        self.url_dataroot = url_dataroot
-
-
 class SchemaAPI(DatasetResource):
     # TODO @mdunitz separate dataset schema and user schema
     @cache_control(public=True, max_age=ONE_WEEK)
@@ -154,9 +111,9 @@ class SchemaAPI(DatasetResource):
         return common_rest.schema_get(data_adaptor)
 
 
-class DatasetMetadataAPI(DatasetMetadataResource):
+class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
-    @rest_get_metadata_adaptor
+    @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
 
