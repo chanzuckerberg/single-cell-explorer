@@ -285,7 +285,7 @@ def register_api_v3(app, app_config, server_config):
         for dataroot_dict in server_config.multi_dataset__dataroot.values():
             url_dataroot = dataroot_dict["base_url"]
             bp_dataroot = Blueprint(
-                f"api_dataset_{url_dataroot}",
+                f"api_dataset_{url_dataroot}_{api_version}",
                 __name__,
                 url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
             )
@@ -307,12 +307,7 @@ def register_api_v3(app, app_config, server_config):
             #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
             #     methods=["GET"],
             # )
-            app.add_url_rule(
-                f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
-                f"static_assets_{url_dataroot}",
-                view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
-                methods=["GET"],
-            )
+
 
     else:
         bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")

@@ -756,7 +756,7 @@ class TestDataLocatorMockApi(BaseTest):
         }
         mock_dp.return_value = response_body_bad
         TEST_DATASET_URL_BASE = "/e/pbmc3k_v3.cxg"
-        url = f"{TEST_DATASET_URL_BASE}/api/v0.2/config"
+        url = f"{TEST_DATASET_URL_BASE}/api/v0.3/config"
         bad_response = self.client.get(url)
         self.assertEqual(bad_response.status_code, 404)
         self.assertEqual(mock_expire.call_count, 1)
