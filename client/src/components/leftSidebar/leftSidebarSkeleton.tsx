@@ -53,7 +53,7 @@ function LeftSidebarSkeleton(): JSX.Element {
           style={{ ...STYLE_SUPER_CATEGORY, marginLeft: 10 }}
           className={SKELETON}
         />
-        {[...Array(2).keys()].map((i) => (
+        {[...Array(2)].map((_, i) => (
           <StillLoading key={i} />
         ))}
       </div>
