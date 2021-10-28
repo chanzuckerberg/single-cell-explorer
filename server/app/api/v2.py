@@ -292,22 +292,6 @@ def register_api_v2(app, app_config, server_config):
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
             app.register_blueprint(dataroot_resources.blueprint)
-
-            # TODO: see the following issue regarding the commented-out url rule immediately below:
-            # https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell-explorer/110
-
-            # self.app.add_url_rule(
-            #     f"/{url_dataroot}/<string:dataset>",
-            #     f"dataset_index_{url_dataroot}",
-            #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-            #     methods=["GET"],
-            # )
-            # app.add_url_rule(
-            #     f"/{url_dataroot}/<string:dataset>/",
-            #     f"dataset_index_{url_dataroot}/",
-            #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-            #     methods=["GET"],
-            # )
             app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
                 f"static_assets_{url_dataroot}",
