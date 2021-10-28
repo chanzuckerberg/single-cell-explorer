@@ -30,7 +30,9 @@ import {
 const data = datasets[DATASET];
 
 const defaultBaseUrl = "d";
-const pageUrl = [appUrlBase, defaultBaseUrl, DATASET].join("/");
+const pageUrl = appUrlBase.includes("localhost")
+  ? [appUrlBase, defaultBaseUrl, DATASET].join("/")
+  : appUrlBase;
 
 describe("did launch", () => {
   test("page launched", async () => {
