@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import requests
 
-from server.app.app import evict_dataset_from_metadata_cache
+from server.app.api.v3 import evict_dataset_from_metadata_cache
 from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
@@ -743,7 +743,7 @@ class TestDataLocatorMockApi(BaseTest):
         )  # noqa E501
 
 
-    @patch("server.app.app.evict_dataset_from_metadata_cache")
+    @patch("server.app.api.v3.evict_dataset_from_metadata_cache")
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_metadata_cache_item_invalidated_on_errors(self, mock_dp, mock_expire):
         mock_expire.side_effect = evict_dataset_from_metadata_cache
@@ -960,7 +960,6 @@ class TestConfigEndpoint(BaseTest):
 
         endpoint = "config"
         url = f"{self.TEST_URL_BASE}{endpoint}"
-        # print(f"SDFSDF SDJFSF D {url}")
         result = self.client.get(url)
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")

@@ -94,36 +94,6 @@ def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
         )
 
 
-def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
-    try:
-        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
-    except Exception as e:
-        logging.error(e)
-
-
-def rest_get_data_adaptor(func):
-    @wraps(func)
-    def wrapped_function(self, dataset=None):
-        try:
-            with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
-                data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
-                return func(self, data_adaptor)
-        except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
-            # it from the cache
-            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
-            return common_rest.abort_and_log(
-                e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
-            )
-        except TombstoneError as e:
-            parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
-            )
-            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
-
-    return wrapped_function
-
-
 def dataroot_test_index():
     # the following index page is meant for testing/debugging purposes
     data = '<!doctype html><html lang="en">'
@@ -211,7 +181,6 @@ class Server:
         self.app.config.update(SECRET_KEY=secret_key)
 
         self.app.register_blueprint(webbp)
-
         register_api_v2(app=self.app, app_config=app_config, server_config=server_config)
         register_api_v3(app=self.app, app_config=app_config, server_config=server_config)
 
