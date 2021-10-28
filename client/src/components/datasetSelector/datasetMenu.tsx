@@ -15,6 +15,11 @@ import styles from "./datasetSelector.css";
  */
 export type DatasetSelectedFn = (dataset: Dataset) => void;
 
+/* Maximum pixel height of dataset menu required to display 9.5 menu items */
+const MENU_MAX_HEIGHT =
+  (maxMenuItemCount + 0.5) * 30 +
+  5; /* show 9.5 datasets at 30px height each, plus top padding of 5px */
+
 interface Props {
   children: React.ReactNode;
   datasets: Dataset[];
@@ -72,9 +77,6 @@ const DatasetMenu = React.memo<Props>(
     onDatasetSelected,
     selectedDatasetId,
   }): JSX.Element => {
-    const menuMaxHeight =
-      (maxMenuItemCount + 0.5) * 30 +
-      5; /* show 9.5 datasets at 30px height each, plus top padding of 5px */
     const menuScrollable = datasets.length > maxMenuItemCount;
     return (
       <Popover
@@ -85,7 +87,7 @@ const DatasetMenu = React.memo<Props>(
               menuScrollable ? styles.datasetMenuScrollable : undefined
             }
             style={{
-              maxHeight: menuMaxHeight,
+              maxHeight: MENU_MAX_HEIGHT,
               maxWidth: 680,
               overflow: "auto",
               paddingRight: menuScrollable
