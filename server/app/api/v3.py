@@ -105,7 +105,6 @@ class DatasetResource(Resource):
 
 class S3URIAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
-    # @rest_get_data_adaptor
     def get(self, dataset):
         app_config = current_app.app_config
         return common_rest.s3_uri_get(app_config, self.url_dataroot, dataset)

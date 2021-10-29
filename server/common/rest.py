@@ -5,7 +5,7 @@ from http import HTTPStatus
 import zlib
 import json
 
-from flask import make_response, jsonify, current_app, abort
+from flask import make_response, jsonify, current_app, abort, redirect
 from werkzeug.urls import url_unquote
 
 from server.common.config.client_config import get_client_config
@@ -20,6 +20,7 @@ from server.common.errors import (
     ColorFormatException,
     AnnotationsError,
     UnsupportedSummaryMethod,
+    TombstoneError
 )
 from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
@@ -123,8 +124,8 @@ def schema_get(data_adaptor):
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
-def dataset_metadata_get(app_config, data_adaptor):
-    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config, current_app)
+def dataset_metadata_get(app_config, url_dataroot, dataset):
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(f"{url_dataroot}/{dataset}", app_config, current_app)
     if metadata is not None:
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
     else:
@@ -132,8 +133,15 @@ def dataset_metadata_get(app_config, data_adaptor):
 
 
 def s3_uri_get(app_config, url_dataroot, dataset):
-    dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)
-    return make_response(jsonify(dataset_metadata["s3_uri"]), HTTPStatus.OK)
+    try:
+        dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)
+    except TombstoneError as e:
+        parent_collection_url = (
+            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        )
+        return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
+    else:
+        return make_response(jsonify(dataset_metadata["s3_uri"]), HTTPStatus.OK)
 
 
 def config_get(app_config, data_adaptor):

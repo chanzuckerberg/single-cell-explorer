@@ -112,7 +112,7 @@ def rest_get_data_adaptor(func):
 #
 #     return make_response(data)
 
-
+# TODO delete once tests pass.
 def dataroot_index():
     # Handle the base url for the cellxgene server when running in multi dataset mode
     config = current_app.app_config
