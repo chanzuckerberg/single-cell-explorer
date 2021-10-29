@@ -43,7 +43,8 @@ function LeftSidebarSkeleton(): JSX.Element {
       {/* Categorical */}
       <div style={{ padding: 10 }}>
         <div style={STYLE_SUPER_CATEGORY} className={SKELETON} />
-        {[...Array(10).keys()].map((i) => (
+        {[...Array(10)].map((_, i) => (
+          /* eslint-disable-next-line react/no-array-index-key -- array order won't change */
           <CategoryLoading key={i} />
         ))}
       </div>
@@ -54,6 +55,7 @@ function LeftSidebarSkeleton(): JSX.Element {
           className={SKELETON}
         />
         {[...Array(2)].map((_, i) => (
+          /* eslint-disable-next-line react/no-array-index-key -- array order won't change */
           <StillLoading key={i} />
         ))}
       </div>
