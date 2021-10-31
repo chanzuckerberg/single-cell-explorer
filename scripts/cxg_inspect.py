@@ -17,7 +17,7 @@ import click
 
 from server.common.config.app_config import AppConfig
 from server.common.utils.data_locator import DataLocator
-from server.data_cxg.cxg_adaptor import CxgAdaptor
+from server.dataset.cxg_dataset import CxgDataset
 
 
 @click.command()
@@ -68,7 +68,7 @@ def _inspect_cxg(dataset_url: str) -> Optional[dict]:
 
     try:
         sys.stderr.write(f"Inspecting {dataset_url}\n")
-        cxg = CxgAdaptor(dl, app_config=AppConfig())
+        cxg = CxgDataset(dl, app_config=AppConfig())
         metadata = cxg.open_array('cxg_group_metadata').meta
         return dict(url=dataset_url,
                     **_flatten_dict(metadata))
@@ -80,5 +80,5 @@ def _inspect_cxg(dataset_url: str) -> Optional[dict]:
 # For S3 URLs, these env vars must be set appropriately: AWS_PROFILE, DEPLOYMENT_STAGE, AWS_REGION
 if __name__ == '__main__':
     pp = pprint.PrettyPrinter(width=120, sort_dicts=False)
-    CxgAdaptor.set_tiledb_context({"vfs.s3.region": os.getenv('AWS_REGION', "us-west-2")})
+    CxgDataset.set_tiledb_context({"vfs.s3.region": os.getenv('AWS_REGION', "us-west-2")})
     inspect_cxg()

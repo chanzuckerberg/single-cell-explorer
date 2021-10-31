@@ -54,7 +54,6 @@ class TestExternalConfig(ConfigTests):
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertTrue(data_config["config"]["parameters"]["disable-diffexp"])
 
-        # os.environ["DATAPATH"] = f"{FIXTURES_ROOT}/a95c59b4-7f5d-4b80-ad53-a694834ca18b.h5ad"
         os.environ["DIFFEXP"] = "True"
 
         config = AppConfig()
@@ -68,7 +67,8 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get("/d/a95c59b4-7f5d-4b80-ad53-a694834ca18b.h5ad/api/v0.2/config")
+        # TODO: create CXG test file
+        response = session.get("/d/a95c59b4-7f5d-4b80-ad53-a694834ca18b.cxg/api/v0.2/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "a95c59b4-7f5d-4b80-ad53-a694834ca18b")
         self.assertFalse(data_config["config"]["parameters"]["disable-diffexp"])
@@ -120,7 +120,7 @@ class TestExternalConfig(ConfigTests):
                         dict(key="flask_secret_key", path=["server", "app", "flask_secret_key"], required=False),
                         dict(
                             key="db_uri",
-                            path=["dataset", "user_annotations", "hosted_tiledb_array", "db_uri"],
+                            path=["server", "diffexp", "alg_cxg", "max_workers", "63"],
                             required=True,
                         ),
                     ],
@@ -133,12 +133,11 @@ class TestExternalConfig(ConfigTests):
         app_config.update_from_config_file(configfile)
         app_config.server_config.single_dataset__datapath = f"{FIXTURES_ROOT}/pbmc3k.cxg"
         app_config.server_config.app__flask_secret_key = "original"
-        app_config.server_config.single_dataset__datapath = f"{FIXTURES_ROOT}/pbmc3k.cxg"
 
         app_config.complete_config()
 
         self.assertEqual(app_config.server_config.app__flask_secret_key, "original")
-        self.assertEqual(app_config.default_dataset_config.user_annotations__hosted_tiledb_array__db_uri, "mock_db_uri")
+        self.assertEqual(app_config.server_config.diffexp__alg_cxg__max_workers, "63")
 
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):

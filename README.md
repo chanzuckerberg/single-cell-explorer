@@ -18,7 +18,6 @@ Whether you need to visualize one thousand cells or one million, cellxgene helps
 [The cellxgene documentation is your one-stop-shop for information about cellxgene](https://chanzuckerberg.github.io/cellxgene/)! You may be particularly interested in:
 
 - Seeing [what cellxgene can do](https://chanzuckerberg.github.io/cellxgene/posts/gallery)
-- [Preparing your own data](https://chanzuckerberg.github.io/cellxgene/posts/prepare) for use in cellxgene
 - Checking out [our roadmap](https://chanzuckerberg.github.io/cellxgene/posts/roadmap) for future development
 - [Contributing](https://chanzuckerberg.github.io/cellxgene/posts/contribute) to cellxgene
 

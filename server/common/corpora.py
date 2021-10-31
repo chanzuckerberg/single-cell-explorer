@@ -43,36 +43,3 @@ def corpora_is_version_supported(corpora_schema_version, corpora_encoding_versio
         and corpora_schema_version.startswith("1.")
         and corpora_encoding_version.startswith("0.1.")
     )
-
-
-def corpora_get_props_from_anndata(adata):
-    """
-    Get Corpora dataset properties from an AnnData
-    """
-    versions = corpora_get_versions_from_anndata(adata)
-    if versions is None:
-        return None
-    [corpora_schema_version, corpora_encoding_version] = versions
-    version_is_supported = corpora_is_version_supported(corpora_schema_version, corpora_encoding_version)
-    if not version_is_supported:
-        raise ValueError("Unsupported Corpora schema version")
-
-    corpora_props = {}
-    for key in CorporaConstants.REQUIRED_SIMPLE_METADATA_FIELDS:
-        if key not in adata.uns:
-            raise KeyError(f"missing Corpora schema field {key}")
-        corpora_props[key] = adata.uns[key]
-
-    for key in CorporaConstants.OPTIONAL_JSON_ENCODED_METADATA_FIELD:
-        if key not in adata.uns:
-            continue
-        try:
-            corpora_props[key] = json.loads(adata.uns[key])
-        except json.JSONDecodeError:
-            raise json.JSONDecodeError(f"Corpora schema field {key} is expected to be a valid JSON string")
-
-    for key in CorporaConstants.OPTIONAL_SIMPLE_METADATA_FIELDS:
-        if key in adata.uns:
-            corpora_props[key] = adata.uns[key]
-
-    return corpora_props

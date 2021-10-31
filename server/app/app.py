@@ -23,7 +23,7 @@ from server.common.errors import (
 from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
-from server.data_common.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import MatrixDataLoader
 
 
 @webbp.errorhandler(RequestException)

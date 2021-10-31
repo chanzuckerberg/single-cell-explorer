@@ -1,54 +1,21 @@
 import errno
 import functools
+import os
 import sys
 import webbrowser
-import os
+from logging import Logger, getLogger, ERROR
+from typing import List
+
 import click
 
-from logging import Logger, getLogger, ERROR
-from server.default_config import default_config
 from server.common.config.app_config import AppConfig, ServerConfig
 from server.common.errors import DatasetAccessError, ConfigurationError
 from server.common.utils.utils import sort_options
+from server.default_config import default_config
 from server.tests.unit import TestServer
-from typing import List
-
 
 log: Logger = getLogger("werkzeug")
 DEFAULT_CONFIG = AppConfig()
-
-
-def annotation_args(func):
-    @click.option(
-        "--disable-annotations",
-        is_flag=True,
-        default=not DEFAULT_CONFIG.default_dataset_config.user_annotations__enable,
-        show_default=True,
-        help="Disable user annotation of data.",
-    )
-    @click.option(
-        "--annotations-file",
-        default=DEFAULT_CONFIG.default_dataset_config.user_annotations__local_file_csv__file,
-        show_default=True,
-        multiple=False,
-        metavar="<path>",
-        help="CSV file to initialize editing of existing annotations; will be altered in-place. "
-        "Incompatible with --annotations-dir.",
-    )
-    @click.option(
-        "--annotations-dir",
-        default=DEFAULT_CONFIG.default_dataset_config.user_annotations__local_file_csv__directory,
-        show_default=False,
-        multiple=False,
-        metavar="<directory path>",
-        help="Directory of where to save output annotations; filename will be specified in the application. "
-        "Incompatible with --annotations-file.",
-    )
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
 
 
 def config_args(func):
@@ -89,22 +56,6 @@ def config_args(func):
         show_default=False,
         metavar="<text>",
         help="Embedding name, eg, 'umap'. Repeat option for multiple embeddings. Defaults to all.",
-    )
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
-def dataset_args(func):
-    @click.option(
-        "--backed",
-        "-b",
-        is_flag=True,
-        default=DEFAULT_CONFIG.server_config.adaptor__anndata_adaptor__backed,
-        show_default=False,
-        help="Load anndata in file-backed mode. " "This may save memory, but may result in slower overall performance.",
     )
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -165,16 +116,14 @@ def server_args(func):
 
 
 def launch_args(func):
-    @annotation_args
     @config_args
-    @dataset_args
     @server_args
     @click.option(
         "--dataroot",
         default=DEFAULT_CONFIG.server_config.multi_dataset__dataroot,
         metavar="<data directory>",
         help="Enable cellxgene to serve multiple files. Supply path (local directory or URL)"
-        " to folder containing H5AD and/or CXG datasets.",
+        " to folder containing CXG datasets.",
         hidden=True,
     )  # TODO, unhide when dataroot is supported)
     @click.argument("dataroot", required=False, metavar="<path to data file>")
@@ -246,10 +195,6 @@ def launch(
     disable_custom_colors,
     diffexp_lfc_cutoff,
     scripts,
-    disable_annotations,
-    annotations_file,
-    annotations_dir,
-    backed,
     disable_diffexp,
     config_file,
     dump_default_config,
@@ -303,13 +248,9 @@ def launch(
             app__port=port,
             app__open_browser=open_browser,
             multi_dataset__dataroot=dataroot,
-            adaptor__anndata_adaptor__backed=backed,
         )
         cli_config.update_default_dataset_config(
             app__scripts=scripts,
-            user_annotations__enable=not disable_annotations,
-            user_annotations__local_file_csv__file=annotations_file,
-            user_annotations__local_file_csv__directory=annotations_dir,
             presentation__max_categories=max_category_items,
             presentation__custom_colors=not disable_custom_colors,
             embeddings__names=embedding,

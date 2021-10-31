@@ -26,7 +26,7 @@ You need:
 ### Single dataset mode
 
 - Edit config.py and set `DataSets=[""]`
-- in a shell, run `cellxgene launch somefile.h5ad`
+- in a shell, run `cellxgene launch somefile.cxg`
 - launch locust in another shell, `locust --host http://localhost:5005/` (or wherever you are running cellxgene)
 - point a browser to the locust port, usually http://localhost:8089/
 - run test

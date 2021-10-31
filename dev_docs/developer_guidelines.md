@@ -52,7 +52,7 @@ To run E2E tests, run `make smoke-test`
 
 1. The Explorer requirements should be installed as [specified in client dev](#install)
 
-1. Follow [launch](#launch) instructions for client dev (defaults to `example-dataset/pbmc3k.h5ad` dataset unless otherwise specified)
+1. Follow [launch](#launch) instructions for client dev (defaults to `example-dataset/pbmc3k.cxg` dataset unless otherwise specified)
 
 1. Run `npm run e2e` from the `client` directory
 

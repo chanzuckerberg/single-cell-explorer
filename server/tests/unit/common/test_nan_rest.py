@@ -18,9 +18,10 @@ class WithNaNs(BaseTest):
     def setUpClass(cls):
         app_config = AppConfig()
         app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="secret")
-        app_config.update_default_dataset_config(user_annotations__enable=True)
+        app_config.update_default_dataset_config()
         super().setUpClass(app_config)
-        cls.TEST_URL_BASE = "/d/nan.h5ad/api/v0.2/"
+        # TODO: Create this test file
+        cls.TEST_URL_BASE = "/d/nan.cxg/api/v0.2/"
         cls.app.testing = True
         cls.client = cls.app.test_client()
 

@@ -119,7 +119,8 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}",
             config_file_name="two_data_roots.yml",
-            dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k-CSC-gz.h5ad",
+                # TODO: create CXG test file
+                dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k-CSC-gz.cxg",
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -237,7 +238,7 @@ class TestServerConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get(f"/set1/1/2/pbmc3k.h5ad/api/v0.2/config")
+        response = session.get(f"/set1/1/2/pbmc3k.cxg/api/v0.2/config")
 
         data_config = json.loads(response.data)
         assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
@@ -283,7 +284,7 @@ class TestServerConfig(ConfigTests):
         # called with the min of diffexp_max_workers and cpus*cpu_multiplier
         mock_tiledb_config.assert_called_once_with(1, 4)
 
-    @patch("server.data_cxg.cxg_adaptor.CxgAdaptor.set_tiledb_context")
+    @patch("server.dataset.cxg_dataset.CxgDataset.set_tiledb_context")
     def test_handle_adaptor(self, mock_tiledb_context):
         custom_config = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", cxg_tile_cache_size=10, cxg_num_reader_threads=2

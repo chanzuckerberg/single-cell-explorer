@@ -114,9 +114,6 @@ server:
         sm.tile_cache_size:  8589934592
         sm.num_reader_threads:  32
 
-    anndata_adaptor:
-      backed: false
-
   limits:
     column_request_max: 32
     diffexp_cellcount_max: null
@@ -136,16 +133,6 @@ dataset:
   presentation:
     max_categories: 1000
     custom_colors: true
-
-  user_annotations:
-    enable: true
-    type: local_file_csv
-    hosted_tiledb_array:
-        db_uri: null
-        hosted_file_directory: null
-    local_file_csv:
-      directory: null
-      file: null
 
   embeddings:
     names : []

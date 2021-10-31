@@ -1,18 +1,13 @@
 import json
 import os
 import tempfile
-
 import unittest
-from time import sleep
 from unittest.mock import patch
 
-from server.common.annotations.hosted_tiledb import AnnotationsHostedTileDB
-from server.common.annotations.local_file_csv import AnnotationsLocalFile
 from server.common.config.app_config import AppConfig
 from server.common.config.base_config import BaseConfig
-from server.tests import PROJECT_ROOT, FIXTURES_ROOT
-
 from server.common.errors import ConfigurationError
+from server.tests import PROJECT_ROOT, FIXTURES_ROOT
 from server.tests.unit.common.config import ConfigTests
 
 
@@ -43,7 +38,6 @@ class TestDatasetConfig(ConfigTests):
     def test_init_datatset_config_sets_vars_from_default_config(self):
         config = AppConfig()
         self.assertEqual(config.default_dataset_config.presentation__max_categories, 1000)
-        self.assertEqual(config.default_dataset_config.user_annotations__type, "local_file_csv")
         self.assertEqual(config.default_dataset_config.diffexp__lfc_cutoff, 0.01)
 
     @patch("server.common.config.dataset_config.BaseConfig.validate_correct_type_of_configuration_attribute")
@@ -74,43 +68,6 @@ class TestDatasetConfig(ConfigTests):
         config = self.get_config(scripts=[{"more": "different/script/path"}])
         with self.assertRaises(ConfigurationError):
             config.default_dataset_config.handle_app()
-
-    def test_handle_user_annotations__adds_warning_message_if_annotation_vars_set_when_annotations_disabled(self):
-        config = self.get_config(enable_users_annotations="false", db_uri="shouldnt/be/set")
-        config.default_dataset_config.handle_user_annotations(self.context)
-
-        self.assertEqual(self.context["messages"], ["Warning: db_uri ignored as annotations are disabled."])
-
-    @patch("server.common.config.dataset_config.DbUtils")
-    def test_handle_user_annotations__instantiates_user_annotations_class_correctly(self, mock_db_utils):
-        mock_db_utils.return_value = "123"
-        config = self.get_config(enable_users_annotations="true", annotation_type="local_file_csv")
-        config.server_config.complete_config(self.context)
-        config.default_dataset_config.handle_user_annotations(self.context)
-        self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsLocalFile)
-
-        config = self.get_config(
-            enable_users_annotations="true",
-            annotation_type="hosted_tiledb_array",
-            db_uri="gotta/set/this",
-            hosted_file_directory="and/this",
-        )
-        config.server_config.complete_config(self.context)
-        config.default_dataset_config.handle_user_annotations(self.context)
-        self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsHostedTileDB)
-
-        config = self.get_config(enable_users_annotations="true", annotation_type="NOT_REAL")
-        config.server_config.complete_config(self.context)
-        with self.assertRaises(ConfigurationError):
-            config.default_dataset_config.handle_user_annotations(self.context)
-
-    def test_handle_local_file_csv_annotations__sets_dir_if_not_passed_in(self):
-        config = self.get_config(enable_users_annotations="true", annotation_type="local_file_csv")
-        config.server_config.complete_config(self.context)
-        config.default_dataset_config.handle_local_file_csv_annotations()
-        self.assertIsInstance(config.default_dataset_config.user_annotations, AnnotationsLocalFile)
-        cwd = os.getcwd()
-        self.assertEqual(config.default_dataset_config.user_annotations._get_output_dir(), cwd)
 
     def test_handle_diffexp__raises_warning_for_large_datasets(self):
         config = self.get_config(lfc_cutoff=0.02, enable_difexp="true", top_n=15)
@@ -163,7 +120,7 @@ class TestDatasetConfig(ConfigTests):
         session = server.test_client()
 
         with self.subTest("Test config for dataroot /set1/1/2/ returns the s1 config"):
-            response1 = session.get("/set1/1/2/pbmc3k.h5ad/api/v0.2/config")
+            response1 = session.get("/set1/1/2/pbmc3k.cxg/api/v0.2/config")
             data_config_set_1 = json.loads(response1.data)
 
             self.assertEqual(data_config_set_1["config"]["displayNames"]["dataset"], "pbmc3k")
@@ -185,6 +142,7 @@ class TestDatasetConfig(ConfigTests):
         os.unlink(f"{FIXTURES_ROOT}/set2")
         os.unlink(f"{FIXTURES_ROOT}/set3")
 
+    # TODO: test with something other than user_annotations, which is now obsolete
     def test_configfile_with_specialization(self):
         # test that per_dataset_config config load the default config, then the specialized config
 
@@ -199,29 +157,18 @@ class TestDatasetConfig(ConfigTests):
                                 base_url: test
                                 dataroot: fake_dataroot
 
-                dataset:
-                    user_annotations:
-                        enable: false
-                        type: hosted_tiledb_array
-                        hosted_tiledb_array:
-                            db_uri: fake_db_uri
-                            hosted_file_directory: fake_dir
-
-                per_dataset_config:
-                    test:
-                        user_annotations:
-                            enable: true
                 """
                 fconfig.write(config)
 
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
 
-            test_config = app_config.dataroot_config["test"]
-
             # test config from default
-            self.assertEqual(test_config.user_annotations__type, "hosted_tiledb_array")
-            self.assertEqual(test_config.user_annotations__hosted_tiledb_array__db_uri, "fake_db_uri")
+            # TODO: Figure out what this should be asserting
+            # self.assertEqual(test_config.user_annotations__type, "hosted_tiledb_array")
+            # self.assertEqual(test_config.user_annotations__hosted_tiledb_array__db_uri, "fake_db_uri")
 
+            test_config = app_config.dataroot_config["test"]
             # test config from specialization
-            self.assertTrue(test_config.user_annotations__enable)
+            self.assertEqual(app_config.server_config.multi_dataset__dataroot['test']['base_url'], 'test')
+

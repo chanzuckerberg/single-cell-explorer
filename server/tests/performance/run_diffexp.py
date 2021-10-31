@@ -7,8 +7,8 @@ import numpy as np
 from server.common.config.app_config import AppConfig
 from server.compute import diffexp_cxg
 from server.common.compute import diffexp_generic
-from server.data_common.matrix_loader import MatrixDataLoader
-from server.data_cxg.cxg_adaptor import CxgAdaptor
+from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.cxg_dataset import CxgDataset
 
 
 def main():
@@ -39,7 +39,7 @@ def main():
     adaptor = loader.open(app_config)
 
     if args.show:
-        if isinstance(adaptor, CxgAdaptor):
+        if isinstance(adaptor, CxgDataset):
             adaptor.open_array("X").schema.dump()
 
     random.seed(args.seed)
@@ -82,8 +82,8 @@ def main():
         elif args.alg == "generic":
             results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB)
         elif args.alg == "cxg":
-            if not isinstance(adaptor, CxgAdaptor):
-                print("cxg only works with CxgAdaptor")
+            if not isinstance(adaptor, CxgDataset):
+                print("cxg only works with CxgDataset")
                 sys.exit(1)
             results = diffexp_cxg.diffexp_ttest(adaptor, maskA, maskB)
 
