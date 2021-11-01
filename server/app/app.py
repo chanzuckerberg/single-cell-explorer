@@ -113,33 +113,20 @@ def dataset_index(url_dataroot=None, dataset=None):
 
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
-    app_config = current_app.app_config
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    return dataset_metadata_manager.get(
-        cache_key=f"{url_dataroot}/{dataset}",
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    )
+    return
 
 
 def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
-        return matrix_cache_manager.get(
-            cache_key=dataset_metadata["s3_uri"],
-            create_data_function=MatrixDataLoader(
-                location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
-            ).validate_and_open,
-            create_data_args={},
-        )
-
-
-def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
-    try:
-        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
-    except Exception as e:
-        logging.error(e)
+    dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", current_app.app_config)
+    return matrix_cache_manager.get(
+        cache_key=dataset_metadata["s3_uri"],
+        create_data_function=MatrixDataLoader(
+            location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
+        ).validate_and_open,
+        create_data_args={},
+    )
 
 
 def rest_get_data_adaptor(func):
@@ -150,9 +137,6 @@ def rest_get_data_adaptor(func):
                 data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
-            # it from the cache
-            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
@@ -453,6 +437,5 @@ class Server:
             )
 
         self.app.matrix_data_cache_manager = server_config.matrix_data_cache_manager
-        self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
 
         self.app.app_config = app_config

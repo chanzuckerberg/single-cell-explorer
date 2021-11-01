@@ -48,12 +48,6 @@ class ServerConfig(BaseConfig):
             self.multi_dataset__matrix_cache__timelimit_s = default_config["multi_dataset"]["matrix_cache"][
                 "timelimit_s"
             ]
-            self.multi_dataset__metadata_cache__max_datasets = default_config["multi_dataset"]["metadata_cache"][
-                "max_datasets"
-            ]
-            self.multi_dataset__metadata_cache__timelimit_s = default_config["multi_dataset"]["metadata_cache"][
-                "timelimit_s"
-            ]
 
             self.single_dataset__datapath = default_config["single_dataset"]["datapath"]
             self.single_dataset__obs_names = default_config["single_dataset"]["obs_names"]
@@ -78,9 +72,6 @@ class ServerConfig(BaseConfig):
 
         # The matrix data cache manager is created during the complete_config and stored here.
         self.matrix_data_cache_manager = None
-
-        # The dataset location cache manager is created during the complete_config and stored here.
-        self.dataset_metadata_cache_manager = None
 
     def complete_config(self, context):
         self.handle_app(context)
@@ -200,10 +191,6 @@ class ServerConfig(BaseConfig):
         if self.matrix_data_cache_manager is None:
             self.matrix_data_cache_manager = CacheManager(max_cached=1, timelimit_s=None)
 
-        # DatasetLocation cache is not necessary with a single dataset but using for code consistency
-        if self.dataset_metadata_cache_manager is None:
-            self.dataset_metadata_cache_manager = CacheManager(max_cached=1, timelimit_s=None)
-
         # preload this data set
         matrix_data_loader = MatrixDataLoader(location=self.single_dataset__datapath, app_config=self.app_config)
 
@@ -241,13 +228,9 @@ class ServerConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("multi_dataset__index", (type(None), bool, str))
         self.validate_correct_type_of_configuration_attribute("multi_dataset__allowed_matrix_types", list)
         self.validate_correct_type_of_configuration_attribute("multi_dataset__matrix_cache__max_datasets", int)
-        self.validate_correct_type_of_configuration_attribute("multi_dataset__metadata_cache__max_datasets", int)
 
         self.validate_correct_type_of_configuration_attribute(
             "multi_dataset__matrix_cache__timelimit_s", (type(None), int, float)
-        )
-        self.validate_correct_type_of_configuration_attribute(
-            "multi_dataset__metadata_cache__timelimit_s", (type(None), int, float)
         )
 
         if self.multi_dataset__dataroot is None:
@@ -297,12 +280,6 @@ class ServerConfig(BaseConfig):
             self.matrix_data_cache_manager = CacheManager(
                 max_cached=self.multi_dataset__matrix_cache__max_datasets,
                 timelimit_s=self.multi_dataset__matrix_cache__timelimit_s,
-            )
-        # create the dataset location data cache manager:
-        if self.dataset_metadata_cache_manager is None:
-            self.dataset_metadata_cache_manager = CacheManager(
-                max_cached=self.multi_dataset__matrix_cache__max_datasets,
-                timelimit_s=self.multi_dataset__metadata_cache__timelimit_s,
             )
 
     def handle_diffexp(self):
