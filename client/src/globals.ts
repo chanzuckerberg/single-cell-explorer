@@ -139,6 +139,9 @@ export const maxGenes = 100;
 export const diffexpPopNamePrefix1 = "Pop1 high";
 export const diffexpPopNamePrefix2 = "Pop2 high";
 
+/* Maximum number of menu items displayable in menu before scroll is enabled */
+export const maxMenuItemCount = 9;
+
 /* various timing-related behaviors */
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
