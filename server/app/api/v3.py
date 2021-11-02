@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 from http import HTTPStatus
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from flask import (
     redirect,
@@ -38,14 +38,14 @@ def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
 def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
-        return matrix_cache_manager.get(
-            cache_key=dataset_metadata["s3_uri"],
-            create_data_function=MatrixDataLoader(
-                location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
-            ).validate_and_open,
-            create_data_args={},
-        )
+    s3_uri = dataset
+    return matrix_cache_manager.get(
+        cache_key=s3_uri,
+        create_data_function=MatrixDataLoader(
+            location=s3_uri, app_config=app_config
+        ).validate_and_open,
+        create_data_args={},
+    )
 
 
 def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
@@ -59,33 +59,14 @@ def rest_get_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
         try:
+            dataset = unquote(dataset) if dataset else dataset
             with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
-                data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
-            # it from the cache
-            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
-        except TombstoneError as e:
-            parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
-            )
-            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
-
     return wrapped_function
-
-
-
-def dataroot_index():
-    # Handle the base url for the cellxgene server when running in multi dataset mode
-    config = current_app.app_config
-    if not config.server_config.multi_dataset__index:
-        abort(HTTPStatus.NOT_FOUND)
-    else:
-        return redirect(config.server_config.multi_dataset__index)
 
 
 class HealthAPI(Resource):
@@ -120,9 +101,8 @@ class SchemaAPI(DatasetResource):
 
 class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
+    def get(self, dataset):
+        return common_rest.dataset_metadata_get(current_app.app_config, self.url_dataroot, dataset)
 
 
 class ConfigAPI(DatasetResource):
@@ -260,7 +240,7 @@ def register_api_v3(app, app_config, server_config):
             bp_dataroot = Blueprint(
                 f"api_dataset_{url_dataroot}_{api_version}",
                 __name__,
-                url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
+                url_prefix=(f"{api_path}/{url_dataroot}/<s3_uri>" + api_version).replace("//", "/"),
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
             app.register_blueprint(dataroot_resources.blueprint)

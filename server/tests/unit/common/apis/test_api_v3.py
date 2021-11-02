@@ -16,6 +16,9 @@ from server.tests.unit import BaseTest, skip_if
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
 
+from urllib.parse import quote
+
+
 
 class EndPoints(BaseTest):
     @classmethod
@@ -720,29 +723,6 @@ class TestDataLocatorMockApi(BaseTest):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    @patch("server.data_common.dataset_metadata.requests.get")
-    def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
-        response_body = json.dumps(
-            {
-                "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
-                "collection_visibility": "PUBLIC",
-                "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-                "s3_uri": None,
-                "tombstoned": True,
-            }
-        )
-        mock_get.return_value = MockResponse(body=response_body, status_code=200)
-        endpoint = "config"
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
-        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/{endpoint}"
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, 302)
-        self.assertEqual(
-            result.headers["Location"],
-            "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-        )  # noqa E501
-
-
     @patch("server.app.api.v3.evict_dataset_from_metadata_cache")
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_metadata_cache_item_invalidated_on_errors(self, mock_dp, mock_expire):
@@ -854,7 +834,8 @@ class TestDatasetMetadata(BaseTest):
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_private_collection(self, mock_get, mock_dp):
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_private.cxg"
+        s3_uri = quote(quote(f"{FIXTURES_ROOT}/pbmc3k.cxg", safe=''))
+        self.TEST_DATASET_URL_BASE = f'/e/{s3_uri}'
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/"
 
         response_body = {
@@ -955,8 +936,8 @@ class TestConfigEndpoint(BaseTest):
         cls.client = cls.app.test_client()
 
     def test_config_has_collections_home_page(self):
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
-        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/"
+        self.TEST_DATASET_URL_BASE =quote(quote("s3://hosted-cellxgene-prod/047d57f2-4d14-45de-aa98-336c6f583750.cxg/", safe=""))
+        self.TEST_URL_BASE = f"/d/{self.TEST_DATASET_URL_BASE}/api/v0.3/"
 
         endpoint = "config"
         url = f"{self.TEST_URL_BASE}{endpoint}"
@@ -1016,6 +997,27 @@ class TestS3URI(BaseTest):
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertIsNotNone(json.loads(result.data))
 
+    @patch("server.data_common.dataset_metadata.requests.get")
+    def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
+        response_body = json.dumps(
+            {
+                "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+                "collection_visibility": "PUBLIC",
+                "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+                "s3_uri": None,
+                "tombstoned": True,
+            }
+        )
+        mock_get.return_value = MockResponse(body=response_body, status_code=200)
+        endpoint = "s3_uri"
+        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
+        url = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, 302)
+        self.assertEqual(
+            result.headers["Location"],
+            "https://cellxgene.staging.single-cell.czi.technology/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+        )  # noqa E501
 
 class MockResponse:
     def __init__(self, body, status_code):
