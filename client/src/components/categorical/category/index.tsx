@@ -1,13 +1,8 @@
+import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React, { useRef, useEffect } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
-import {
-  AnchorButton,
-  Button,
-  Classes,
-  Position,
-  Tooltip,
-} from "@blueprintjs/core";
+import { AnchorButton, Classes, Position, Tooltip } from "@blueprintjs/core";
 import { Flipper, Flipped } from "react-flip-toolkit";
 import Async from "react-async";
 import memoize from "memoize-one";
@@ -295,10 +290,7 @@ class Category extends React.PureComponent {
           }}
         >
           <Async.Pending initial>
-            <StillLoading
-              metadataField={metadataField}
-              checkboxID={checkboxID}
-            />
+            <StillLoading />
           </Async.Pending>
           <Async.Rejected>
             {(error) => (
@@ -354,55 +346,15 @@ class Category extends React.PureComponent {
 
 export default Category;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const StillLoading = ({ metadataField, checkboxID }: any) => (
-  /*
-  We are still loading this category, so render a "busy" signal.
-  */
-  <div
-    style={{
-      maxWidth: globals.maxControlsWidth,
-    }}
-  >
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "baseline",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-start",
-          alignItems: "flex-start",
-        }}
-      >
-        <label
-          htmlFor={checkboxID}
-          className={`${Classes.CONTROL} ${Classes.CHECKBOX}`}
-        >
-          <input disabled id={checkboxID} checked type="checkbox" />
-          <span className={Classes.CONTROL_INDICATOR} />
-        </label>
-        <Truncate>
-          <span
-            style={{
-              cursor: "pointer",
-              display: "inline-block",
-              width: LABEL_WIDTH,
-            }}
-          >
-            {metadataField}
-          </span>
-        </Truncate>
-      </div>
-      <div>
-        <Button minimal loading intent="primary" />
-      </div>
-    </div>
+/**
+ * We are still loading this category, so render a "busy" signal.
+ */
+export const StillLoading = (): JSX.Element => (
+  <div style={{ paddingBottom: 2.7 }}>
+    <div className={SKELETON} style={{ height: 30 }} />
   </div>
 );
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const ErrorLoading = ({ metadataField, error }: any) => {
   console.error(error); // log error to console as it is unexpected.

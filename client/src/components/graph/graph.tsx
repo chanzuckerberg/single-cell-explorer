@@ -5,7 +5,6 @@ import { mat3, vec2 } from "gl-matrix";
 import _regl from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
-import { Button } from "@blueprintjs/core";
 
 import setupSVGandBrushElements from "./setupSVGandBrush";
 import _camera from "../../util/camera";
@@ -1061,7 +1060,6 @@ const StillLoading = ({ displayName, width, height }: any) => (
         alignItems: "center",
       }}
     >
-      <Button minimal loading intent="primary" />
       <span style={{ fontStyle: "italic" }}>Loading {displayName}</span>
     </div>
   </div>

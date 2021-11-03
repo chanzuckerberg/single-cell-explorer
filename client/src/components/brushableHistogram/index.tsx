@@ -458,7 +458,7 @@ class HistogramBrush extends React.PureComponent {
         watchProps={{ annoMatrix, setGenes }}
       >
         <Async.Pending initial>
-          <StillLoading displayName={field} zebra={zebra} />
+          <StillLoading />
         </Async.Pending>
         <Async.Rejected>
           {(error) => (
