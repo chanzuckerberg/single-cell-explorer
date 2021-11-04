@@ -7,7 +7,7 @@ import { Drawer, Position } from "@blueprintjs/core";
 import InfoFormat, { SingleValueCategories } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
-import { DatasetMetadata, DataPortalProps } from "../../common/types/entities";
+import { DatasetMetadata } from "../../common/types/entities";
 
 /**
  * Actions dispatched by info drawer.
@@ -28,7 +28,6 @@ interface OwnProps {
  */
 interface StateProps {
   datasetMetadata: DatasetMetadata;
-  dataPortalProps: DataPortalProps;
   isOpen: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   schema: any;
@@ -41,7 +40,6 @@ type Props = DispatchProps & OwnProps & StateProps;
  */
 const mapStateToProps = (state: RootState): StateProps => ({
   datasetMetadata: state.datasetMetadata?.datasetMetadata,
-  dataPortalProps: state.config?.corpora_props,
   isOpen: state.controls.datasetDrawer,
   schema: state.annoMatrix.schema,
 });
@@ -60,8 +58,7 @@ class InfoDrawer extends PureComponent<Props> {
   };
 
   render(): JSX.Element {
-    const { datasetMetadata, position, schema, isOpen, dataPortalProps } =
-      this.props;
+    const { datasetMetadata, position, schema, isOpen } = this.props;
 
     const allCategoryNames = selectableCategoryNames(schema).sort();
     const singleValueCategories: SingleValueCategories = new Map();
@@ -80,7 +77,6 @@ class InfoDrawer extends PureComponent<Props> {
           {...{
             datasetMetadata,
             singleValueCategories,
-            dataPortalProps: dataPortalProps ?? {},
           }}
         />
       </Drawer>

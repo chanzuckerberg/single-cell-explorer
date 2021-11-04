@@ -1,0 +1,67 @@
+version: "3.8"
+
+services:
+
+  localstack:
+    image: localstack/localstack@sha256:7c6635493185d25165979995fb073fd789c72b6d8b17ef3a70b798d55576732f
+    ports:
+      - "4566:4566"
+    environment:
+      - HOSTNAME_EXTERNAL=localstack
+      - SERVICES=s3,secretsmanager,stepfunctions,iam,lambda
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - PORT_WEB_UI=${PORT_WEB_UI- }
+      - HOST_TMP_FOLDER=${TMPDIR}
+      - DEFAULT_REGION=us-west-2
+    volumes:
+      - localstack:/tmp/localstack
+    networks:
+       corporanet:
+          aliases:
+            - localstack.corporanet.local
+
+  explorer:
+    image: "${DOCKER_REPO}corpora-explorer"
+    build:
+      context: .
+      dockerfile: hosted/Dockerfile
+      cache_from:
+        - "${DOCKER_REPO}corpora-explorer:branch-main"
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - HAPPY_COMMIT
+        - HAPPY_BRANCH
+        - HAPPY_TAG
+        - HAPPY_ENV
+    restart: always
+    depends_on:
+      - localstack
+    ports:
+      - "6000:6000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CORPORA_LOCAL_DEV=true
+      - AWS_REGION=us-west-2
+      - AWS_DEFAULT_REGION=us-west-2
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - BOTO_ENDPOINT_URL=http://localstack:4566
+      - DEPLOYMENT_STAGE=test
+      - RESTART_ON_FAILURE=yes
+      - DEV_MODE_COOKIES=1
+      - IS_DOCKER_DEV=yes # This skips some unit tests.
+    volumes:
+      # Mount dirs in a layout suitable for running tests.
+      - .:/corpora-data-portal
+      # SecretsManager population relies on oauth json
+      - ./oauth/users.json:/oauth/users.json
+    networks:
+       corporanet:
+          aliases:
+            - backend.corporanet.local
+networks:
+  corporanet:
+volumes:
+  database:
+  localstack:

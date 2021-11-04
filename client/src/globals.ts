@@ -9,6 +9,15 @@ export const overflowCategoryLabel = ": all other labels";
 /* default "unassigned" value for user-created categorical metadata */
 export const unassignedCategoryLabel = "unassigned";
 
+/** Maximum number of cells a dataset can have in order to be included for display. */
+export const DATASET_MAX_CELL_COUNT = 2_000_000;
+
+/* Category name suffix used to determine if category name is ontology term id. */
+export const ONTOLOGY_KEY = "ontology_term_id";
+
+/* Added to Portal links from breadcrumbs if there is work in progress */
+export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
+
 /**
  * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
  * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
@@ -130,6 +139,9 @@ export const maxGenes = 100;
 export const diffexpPopNamePrefix1 = "Pop1 high";
 export const diffexpPopNamePrefix2 = "Pop2 high";
 
+/* Maximum number of menu items displayable in menu before scroll is enabled */
+export const maxMenuItemCount = 9;
+
 /* various timing-related behaviors */
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
@@ -143,21 +155,11 @@ let _API;
 if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   _API = (window as any).CELLXGENE.API;
-} else {
-  if (CXG_SERVER_PORT === undefined) {
+} else if (CXG_SERVER_PORT === undefined) {
     const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
     dispatchNetworkErrorMessageToUser(errorMessage);
     throw new Error(errorMessage);
   }
-
-  _API = {
-    // prefix: "http://api.clustering.czi.technology/api/",
-    // prefix: "http://tabulamuris.cxg.czi.technology/api/",
-    // prefix: "http://api-staging.clustering.czi.technology/api/",
-    prefix: `http://localhost:${CXG_SERVER_PORT}/api/`,
-    version: "v0.2/",
-  };
-}
 
 export const API = _API;
 

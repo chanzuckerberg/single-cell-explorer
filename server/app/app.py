@@ -108,7 +108,9 @@ def dataset_index(url_dataroot=None, dataset=None):
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
     except TombstoneError as e:
-        parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        parent_collection_url = (
+            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
@@ -157,7 +159,9 @@ def rest_get_data_adaptor(func):
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
         except TombstoneError as e:
-            parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            parent_collection_url = (
+                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
@@ -232,7 +236,7 @@ class SchemaAPI(DatasetResource):
 
 
 class DatasetMetadataAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
+    @cache_control(no_store=True, max_age=0)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
@@ -414,25 +418,28 @@ class Server:
                 bp_dataroot = Blueprint(
                     f"api_dataset_{url_dataroot}",
                     __name__,
-                    url_prefix=f"{api_path}/{url_dataroot}/<dataset>" + api_version,
+                    url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
                 )
                 dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
                 self.app.register_blueprint(dataroot_resources.blueprint)
 
+                # TODO: see the following issue regarding the commented-out url rule immediately below:
+                # https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/single-cell-explorer/110
+
+                # self.app.add_url_rule(
+                #     f"/{url_dataroot}/<string:dataset>",
+                #     f"dataset_index_{url_dataroot}",
+                #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                #     methods=["GET"],
+                # )
                 self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>",
-                    f"dataset_index_{url_dataroot}",
-                    lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                    methods=["GET"],
-                )
-                self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>/",
+                    f"/{url_dataroot}/<string:dataset>/",
                     f"dataset_index_{url_dataroot}/",
                     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
                     methods=["GET"],
                 )
                 self.app.add_url_rule(
-                    f"/{url_dataroot}/<dataset>/static/<path:filename>",
+                    f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
                     f"static_assets_{url_dataroot}",
                     view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
                     methods=["GET"],

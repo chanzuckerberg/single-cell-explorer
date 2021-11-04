@@ -29,9 +29,14 @@ import {
 
 const data = datasets[DATASET];
 
+const defaultBaseUrl = "d";
+const pageUrl = appUrlBase.includes("localhost")
+  ? [appUrlBase, defaultBaseUrl, DATASET].join("/")
+  : appUrlBase;
+
 describe("did launch", () => {
   test("page launched", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const element = await getOneElementInnerHTML(getTestId("header"));
 
@@ -41,7 +46,7 @@ describe("did launch", () => {
 
 describe("metadata loads", () => {
   test("categories and values from dataset appear", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const label of Object.keys(data.categorical)) {
       const element = await getOneElementInnerHTML(
@@ -67,7 +72,7 @@ describe("metadata loads", () => {
   });
 
   test("continuous data appears", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const label of Object.keys(data.continuous)) {
       await waitByID(`histogram-${label}`);
@@ -77,21 +82,21 @@ describe("metadata loads", () => {
 
 describe("cell selection", () => {
   test("selects all cells cellset 1", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const cellCount = await getCellSetCount(1);
     expect(cellCount).toBe(data.dataframe.nObs);
   });
 
   test("selects all cells cellset 2", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const cellCount = await getCellSetCount(2);
     expect(cellCount).toBe(data.dataframe.nObs);
   });
 
   test("selects cells via lasso", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const cellset of data.cellsets.lasso) {
       const cellset1 = await calcDragCoordinates(
@@ -106,7 +111,7 @@ describe("cell selection", () => {
   });
 
   test("selects cells via categorical", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const cellset of data.cellsets.categorical) {
       await clickOn(`${cellset.metadata}:category-expand`);
@@ -123,7 +128,7 @@ describe("cell selection", () => {
   });
 
   test("selects cells via continuous", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const cellset of data.cellsets.continuous) {
       const histBrushableAreaId = `histogram-${cellset.metadata}-plot-brushable-area`;
@@ -144,7 +149,7 @@ describe("cell selection", () => {
 
 describe("subset", () => {
   test("subset - cell count matches", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const select of data.subset.cellset1) {
       if (select.kind === "categorical") {
@@ -170,7 +175,7 @@ describe("subset", () => {
   });
 
   test("lasso after subset", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     for (const select of data.subset.cellset1) {
       if (select.kind === "categorical") {
@@ -194,7 +199,7 @@ describe("subset", () => {
 
 describe("clipping", () => {
   test("clip continuous", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     await clip(data.clip.min, data.clip.max);
     const histBrushableAreaId = `histogram-${data.clip.metadata}-plot-brushable-area`;
@@ -211,7 +216,7 @@ describe("clipping", () => {
 // interact with UI elements just that they do not break
 describe("ui elements don't error", () => {
   test("color by", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const allLabels = [
       ...Object.keys(data.categorical),
@@ -224,7 +229,7 @@ describe("ui elements don't error", () => {
   });
 
   test("pan and zoom", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     await clickOn("mode-pan-zoom");
     const panCoords = await calcDragCoordinates(
@@ -240,7 +245,7 @@ describe("ui elements don't error", () => {
 
 describe("centroid labels", () => {
   test("labels are created", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const labels = Object.keys(data.categorical);
 
@@ -264,7 +269,7 @@ describe("centroid labels", () => {
 
 describe("graph overlay", () => {
   test("transform centroids correctly", async () => {
-    await goToPage(appUrlBase);
+    await goToPage(pageUrl);
 
     const category = Object.keys(data.categorical)[0];
 
@@ -298,7 +303,7 @@ describe("graph overlay", () => {
 });
 
 test("pan zoom mode resets lasso selection", async () => {
-  await goToPage(appUrlBase);
+  await goToPage(pageUrl);
 
   const panzoomLasso = data.features.panzoom.lasso;
 
@@ -323,7 +328,7 @@ test("pan zoom mode resets lasso selection", async () => {
 });
 
 test("lasso moves after pan", async () => {
-  await goToPage(appUrlBase);
+  await goToPage(pageUrl);
 
   const panzoomLasso = data.features.panzoom.lasso;
   const coordinatesAsPercent = panzoomLasso["coordinates-as-percent"];
