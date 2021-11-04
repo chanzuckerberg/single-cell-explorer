@@ -11,11 +11,13 @@ from flask import (
     current_app,
     make_response,
     abort, render_template,
+    Blueprint
 )
+from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
-from server.app.api import webbp, cache_control_always
+from server.app.api import webbp, cache_control_always, cache_control
 from server.app.api.v2 import register_api_v2
 from server.app.api.v3 import register_api_v3
 from server.common.utils.data_locator import DataLocator
@@ -139,6 +141,22 @@ def dataroot_index():
         return redirect(config.server_config.multi_dataset__index)
 
 
+class HealthAPI(Resource):
+    @cache_control(no_store=True)
+    def get(self):
+        config = current_app.app_config
+        return health_check(config)
+
+
+def get_api_base_resources(bp_base):
+    """Add resources that are accessed from the api_base_url"""
+    api = Api(bp_base)
+
+    # Diagnostics routes
+    api.add_resource(HealthAPI, "/health")
+    return api
+
+
 def handle_api_base_url(app, app_config):
     """If an api_base_url is provided, then an inline script is generated to
     handle the new API prefix"""
@@ -181,8 +199,13 @@ class Server:
         self.app.config.update(SECRET_KEY=secret_key)
 
         self.app.register_blueprint(webbp)
-        register_api_v2(app=self.app, app_config=app_config, server_config=server_config)
-        register_api_v3(app=self.app, app_config=app_config, server_config=server_config)
+        api_path = "/"
+        bp_base = Blueprint("bp_base", __name__, url_prefix=api_path)
+        base_resources = get_api_base_resources(bp_base)
+        self.app.register_blueprint(base_resources.blueprint)
+
+        register_api_v2(app=self.app, app_config=app_config, server_config=server_config, api_path=api_path)
+        register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_path=api_path)
 
         if app_config.is_multi_dataset():
             # NOTE:  These routes only allow the dataset to be in the directory

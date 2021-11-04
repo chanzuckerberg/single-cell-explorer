@@ -1,8 +1,7 @@
 import logging
 from functools import wraps
 from http import HTTPStatus
-from urllib.parse import urlparse
-
+from urllib.parse import urlparse, unquote
 
 from flask import (
     redirect,
@@ -10,7 +9,8 @@ from flask import (
     abort,
     Blueprint,
     request,
-    send_from_directory, )
+    send_from_directory,
+)
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
@@ -267,18 +267,8 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     return api
 
 
-def register_api_v2(app, app_config, server_config):
+def register_api_v2(app, app_config, server_config, api_path):
     api_version = "/api/v0.2"
-    api_base_url = server_config.get_api_base_url()
-    api_path = "/"
-    if api_base_url:
-        parse = urlparse(api_base_url)
-        api_path = parse.path
-
-    bp_base_v2 = Blueprint("bp_base_v2", __name__, url_prefix=api_path)
-    base_resources = get_api_base_resources(bp_base_v2)
-    app.register_blueprint(base_resources.blueprint)
-
     if app_config.is_multi_dataset():
         # NOTE:  These routes only allow the dataset to be in the directory
         # of the dataroot, and not a subdirectory.  We may want to change
@@ -286,7 +276,7 @@ def register_api_v2(app, app_config, server_config):
         for dataroot_dict in server_config.multi_dataset__dataroot.values():
             url_dataroot = dataroot_dict["base_url"]
             bp_dataroot = Blueprint(
-                f"api_dataset_{url_dataroot}",
+                f"api_dataset_{url_dataroot}_{api_version}",
                 __name__,
                 url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
             )
@@ -298,7 +288,6 @@ def register_api_v2(app, app_config, server_config):
                 view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
                 methods=["GET"],
             )
-
     else:
         bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")
         resources = get_api_dataroot_resources(bp_api)
