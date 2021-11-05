@@ -24,12 +24,7 @@ from server.data_common.matrix_loader import MatrixDataLoader
 
 def get_data_adaptor(s3_uri: str = None):
     app_config = current_app.app_config
-    matrix_cache_manager = current_app.matrix_data_cache_manager
-    return matrix_cache_manager.get(
-        cache_key=s3_uri,
-        create_data_function=MatrixDataLoader(location=s3_uri, app_config=app_config).validate_and_open,
-        create_data_args={},
-    )
+    return MatrixDataLoader(location=s3_uri, app_config=app_config).validate_and_open()
 
 
 def rest_get_data_adaptor(func):
@@ -37,8 +32,8 @@ def rest_get_data_adaptor(func):
     def wrapped_function(self, s3_uri=None):
         try:
             s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            with get_data_adaptor(s3_uri) as data_adaptor:
-                return func(self, data_adaptor)
+            data_adaptor = get_data_adaptor(s3_uri)
+            return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
                 e.status_code, f"Invalid s3_uri {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
@@ -160,14 +155,18 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     """Add resources that refer to a dataset"""
     api = Api(bp_dataroot)
 
+    def add_resource(resource, url):
+        """convenience function to make the outer function less verbose"""
+        api.add_resource(resource, url, resource_class_args=(url_dataroot,))
+
     # Initialization routes
-    api.add_resource(S3URIAPI, "/s3_uri", resource_class_args=(url_dataroot,))
-    api.add_resource(DatasetMetadataAPI, "/dataset-metadata", resource_class_args=(url_dataroot,))
+    add_resource(S3URIAPI, "/s3_uri")
+    add_resource(DatasetMetadataAPI, "/dataset-metadata")
     return api
 
 
 def get_api_s3uri_resources(bp_dataroot, s3uri_path):
-    """Add resources that refer to a dataset"""
+    """Add resources that refer to a S3 URIs"""
     api = Api(bp_dataroot)
 
     def add_resource(resource, url):
