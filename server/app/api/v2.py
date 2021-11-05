@@ -1,12 +1,9 @@
 import logging
 from functools import wraps
-from http import HTTPStatus
-from urllib.parse import urlparse, unquote
 
 from flask import (
     redirect,
     current_app,
-    abort,
     Blueprint,
     request,
     send_from_directory,
@@ -21,7 +18,6 @@ from server.common.errors import (
     TombstoneError,
     DatasetMetadataError,
 )
-from server.common.health import health_check
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
 
@@ -77,58 +73,6 @@ def rest_get_data_adaptor(func):
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
-
-
-# def dataroot_test_index():
-#     # the following index page is meant for testing/debugging purposes
-#     data = '<!doctype html><html lang="en">'
-#     data += "<head><title>Hosted Cellxgene</title></head>"
-#     data += "<body><H1>Welcome to cellxgene</H1>"
-#
-#     config = current_app.app_config
-#     server_config = config.server_config
-#
-#     datasets = []
-#     for dataroot_dict in server_config.multi_dataset__dataroot.values():
-#         dataroot = dataroot_dict["dataroot"]
-#         url_dataroot = dataroot_dict["base_url"]
-#         locator = DataLocator(dataroot, region_name=server_config.data_locator__s3__region_name)
-#         for fname in locator.ls():
-#             location = path_join(dataroot, fname)
-#             try:
-#                 MatrixDataLoader(location, url_dataroot=url_dataroot, app_config=config)
-#                 datasets.append((url_dataroot, fname))
-#             except DatasetAccessError:
-#                 # skip over invalid datasets
-#                 pass
-#
-#     data += "<br/>Select one of these datasets...<br/>"
-#     data += "<ul>"
-#     datasets.sort()
-#     for url_dataroot, dataset in datasets:
-#         data += f"<li><a href={url_dataroot}/{dataset}/>{dataset}</a></li>"
-#     data += "</ul>"
-#     data += "</body></html>"
-#
-#     return make_response(data)
-
-# TODO delete once tests pass.
-def dataroot_index():
-    # Handle the base url for the cellxgene server when running in multi dataset mode
-    config = current_app.app_config
-    if not config.server_config.multi_dataset__index:
-        abort(HTTPStatus.NOT_FOUND)
-    # elif config.server_config.multi_dataset__index is True:
-    #     return dataroot_test_index()
-    else:
-        return redirect(config.server_config.multi_dataset__index)
-
-
-class HealthAPI(Resource):
-    @cache_control(no_store=True)
-    def get(self):
-        config = current_app.app_config
-        return health_check(config)
 
 
 class DatasetResource(Resource):
@@ -230,15 +174,6 @@ class SummarizeVarAPI(DatasetResource):
     @cache_control(no_store=True)
     def post(self, data_adaptor):
         return common_rest.summarize_var_post(request, data_adaptor)
-
-
-def get_api_base_resources(bp_base):
-    """Add resources that are accessed from the api_base_url"""
-    api = Api(bp_base)
-
-    # Diagnostics routes
-    api.add_resource(HealthAPI, "/health")
-    return api
 
 
 def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):

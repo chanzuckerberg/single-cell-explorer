@@ -20,7 +20,7 @@ from server.common.errors import (
     ColorFormatException,
     AnnotationsError,
     UnsupportedSummaryMethod,
-    TombstoneError
+    TombstoneError,
 )
 from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs

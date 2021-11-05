@@ -1,12 +1,9 @@
 import logging
 from functools import wraps
-from http import HTTPStatus
-from urllib.parse import urlparse, unquote
+from urllib.parse import unquote
 
 from flask import (
-    redirect,
     current_app,
-    abort,
     Blueprint,
     request,
     send_from_directory,
@@ -15,65 +12,39 @@ from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
 from server.app.api import ONE_WEEK, cache_control
+from server.app.api.v2 import DatasetMetadataAPI
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
     TombstoneError,
     DatasetMetadataError,
 )
-from server.common.health import health_check
-from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
 
-def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
-    app_config = current_app.app_config
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    return dataset_metadata_manager.get(
-        cache_key=f"{url_dataroot}/{dataset}",
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    )
 
-
-def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+def get_data_adaptor(s3_uri: str = None):
     app_config = current_app.app_config
     matrix_cache_manager = current_app.matrix_data_cache_manager
-    s3_uri = dataset
     return matrix_cache_manager.get(
         cache_key=s3_uri,
-        create_data_function=MatrixDataLoader(
-            location=s3_uri, app_config=app_config
-        ).validate_and_open,
+        create_data_function=MatrixDataLoader(location=s3_uri, app_config=app_config).validate_and_open,
         create_data_args={},
     )
 
 
-def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
-    try:
-        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
-    except Exception as e:
-        logging.error(e)
-
-
 def rest_get_data_adaptor(func):
     @wraps(func)
-    def wrapped_function(self, dataset=None):
+    def wrapped_function(self, s3_uri=None):
         try:
-            dataset = unquote(dataset) if dataset else dataset
-            with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
+            s3_uri = unquote(s3_uri) if s3_uri else s3_uri
+            with get_data_adaptor(s3_uri) as data_adaptor:
                 return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
-                e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
+                e.status_code, f"Invalid s3_uri {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
+
     return wrapped_function
-
-
-class HealthAPI(Resource):
-    @cache_control(no_store=True)
-    def get(self):
-        config = current_app.app_config
-        return health_check(config)
 
 
 class DatasetResource(Resource):
@@ -91,7 +62,15 @@ class S3URIAPI(DatasetResource):
         return common_rest.s3_uri_get(app_config, self.url_dataroot, dataset)
 
 
-class SchemaAPI(DatasetResource):
+class S3URIResource(Resource):
+    """Base class for all Resources that act on S3 URIs."""
+
+    def __init__(self, s3_uri_root):
+        super().__init__()
+        self.s3_uri_root = s3_uri_root
+
+
+class SchemaAPI(S3URIResource):
     # TODO @mdunitz separate dataset schema and user schema
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
@@ -99,20 +78,14 @@ class SchemaAPI(DatasetResource):
         return common_rest.schema_get(data_adaptor)
 
 
-class DatasetMetadataAPI(DatasetResource):
-    @cache_control(public=True, no_store=True, max_age=0)
-    def get(self, dataset):
-        return common_rest.dataset_metadata_get(current_app.app_config, self.url_dataroot, dataset)
-
-
-class ConfigAPI(DatasetResource):
+class ConfigAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.config_get(current_app.app_config, data_adaptor)
 
 
-class AnnotationsObsAPI(DatasetResource):
+class AnnotationsObsAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
@@ -124,14 +97,14 @@ class AnnotationsObsAPI(DatasetResource):
         return common_rest.annotations_obs_put(request, data_adaptor)
 
 
-class AnnotationsVarAPI(DatasetResource):
+class AnnotationsVarAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.annotations_var_get(request, data_adaptor)
 
 
-class DataVarAPI(DatasetResource):
+class DataVarAPI(S3URIResource):
     @cache_control(no_store=True)
     @rest_get_data_adaptor
     def put(self, data_adaptor):
@@ -143,7 +116,7 @@ class DataVarAPI(DatasetResource):
         return common_rest.data_var_get(request, data_adaptor)
 
 
-class ColorsAPI(DatasetResource):
+class ColorsAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
@@ -157,21 +130,21 @@ class DiffExpObsAPI(DatasetResource):
         return common_rest.diffexp_obs_post(request, data_adaptor)
 
 
-class LayoutObsAPI(DatasetResource):
+class LayoutObsAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.layout_obs_get(request, data_adaptor)
 
 
-class GenesetsAPI(DatasetResource):
+class GenesetsAPI(S3URIResource):
     @cache_control(public=True, max_age=ONE_WEEK)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.genesets_get(request, data_adaptor)
 
 
-class SummarizeVarAPI(DatasetResource):
+class SummarizeVarAPI(S3URIResource):
     @rest_get_data_adaptor
     @cache_control(public=True, max_age=ONE_WEEK)
     def get(self, data_adaptor):
@@ -183,27 +156,26 @@ class SummarizeVarAPI(DatasetResource):
         return common_rest.summarize_var_post(request, data_adaptor)
 
 
-def get_api_base_resources(bp_base):
-    """Add resources that are accessed from the api_base_url"""
-    api = Api(bp_base)
+def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
+    """Add resources that refer to a dataset"""
+    api = Api(bp_dataroot)
 
-    # Diagnostics routes
-    api.add_resource(HealthAPI, "/health")
+    # Initialization routes
+    api.add_resource(S3URIAPI, "/s3_uri", resource_class_args=(url_dataroot,))
+    api.add_resource(DatasetMetadataAPI, "/dataset-metadata", resource_class_args=(url_dataroot,))
     return api
 
 
-def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
+def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     """Add resources that refer to a dataset"""
     api = Api(bp_dataroot)
 
     def add_resource(resource, url):
         """convenience function to make the outer function less verbose"""
-        api.add_resource(resource, url, resource_class_args=(url_dataroot,))
+        api.add_resource(resource, url, resource_class_args=(s3uri_path,))
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
-    add_resource(S3URIAPI, "/s3_uri")
-    add_resource(DatasetMetadataAPI, "/dataset-metadata")
     add_resource(ConfigAPI, "/config")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")
@@ -219,17 +191,17 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     return api
 
 
-def register_api_v3(app, app_config, server_config):
+def register_api_v3(app, app_config, server_config, api_path):
     api_version = "/api/v0.3"
-    api_base_url = server_config.get_api_base_url()
-    api_path = "/"
-    if api_base_url:
-        parse = urlparse(api_base_url)
-        api_path = parse.path
 
-    bp_base_v3 = Blueprint("bp_base_v3", __name__, url_prefix=api_path)
-    base_resources = get_api_base_resources(bp_base_v3)
-    app.register_blueprint(base_resources.blueprint)
+    s3uri_api_path = "s3_uri"
+    bp_s3uri = Blueprint(
+        f"api_dataset_{s3uri_api_path}_{api_version}",
+        __name__,
+        url_prefix=(f"{api_path}/{s3uri_api_path}/<s3_uri>" + api_version).replace("//", "/"),
+    )
+    s3uri_resources = get_api_s3uri_resources(bp_s3uri, s3uri_api_path)
+    app.register_blueprint(s3uri_resources.blueprint)
 
     if app_config.is_multi_dataset():
         # NOTE:  These routes only allow the dataset to be in the directory
@@ -240,7 +212,7 @@ def register_api_v3(app, app_config, server_config):
             bp_dataroot = Blueprint(
                 f"api_dataset_{url_dataroot}_{api_version}",
                 __name__,
-                url_prefix=(f"{api_path}/{url_dataroot}/<s3_uri>" + api_version).replace("//", "/"),
+                url_prefix=(f"{api_path}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
             app.register_blueprint(dataroot_resources.blueprint)
@@ -260,8 +232,6 @@ def register_api_v3(app, app_config, server_config):
             #     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
             #     methods=["GET"],
             # )
-
-
     else:
         bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")
         resources = get_api_dataroot_resources(bp_api)

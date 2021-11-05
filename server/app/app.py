@@ -5,14 +5,7 @@ from http import HTTPStatus
 import hashlib
 import os
 
-from flask import (
-    Flask,
-    redirect,
-    current_app,
-    make_response,
-    abort, render_template,
-    Blueprint
-)
+from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
@@ -32,6 +25,7 @@ from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
+
 
 @webbp.errorhandler(RequestException)
 def handle_request_exception(error):
@@ -72,6 +66,7 @@ def dataset_index(url_dataroot=None, dataset=None):
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
+
 
 def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
     app_config = current_app.app_config
