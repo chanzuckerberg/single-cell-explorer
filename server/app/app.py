@@ -98,11 +98,10 @@ def dataset_index(url_dataroot=None, dataset=None):
     inline_scripts = dataset_config.app__inline_scripts
 
     try:
-        with get_data_adaptor(url_dataroot=url_dataroot, dataset=dataset) as data_adaptor:
+        with get_data_adaptor(url_dataroot=url_dataroot, dataset_id=dataset) as data_adaptor:
             data_adaptor.set_uri_path(f"{url_dataroot}/{dataset}")
             args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
             return render_template("index.html", **args)
-
     except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
@@ -114,21 +113,15 @@ def dataset_index(url_dataroot=None, dataset=None):
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
-def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
-    return
-
-
-def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
+def get_data_adaptor(url_dataroot: str = None, dataset_id: str = None):
     app_config = current_app.app_config
-    matrix_cache_manager = current_app.matrix_data_cache_manager
-    dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", current_app.app_config)
-    return matrix_cache_manager.get(
-        cache_key=dataset_metadata["s3_uri"],
-        create_data_function=MatrixDataLoader(
-            location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
-        ).validate_and_open,
-        create_data_args={},
-    )
+    dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset_id}",
+                                                                         current_app.app_config)["s3_uri"]
+    return MatrixDataLoader(
+            location=dataset_artifact_s3_uri,
+            url_dataroot=url_dataroot,
+            app_config=app_config
+    ).validate_and_open()
 
 
 def rest_get_data_adaptor(func):
@@ -439,7 +432,5 @@ class Server:
                 view_func=lambda filename: send_from_directory("../common/web/static", filename),
                 methods=["GET"],
             )
-
-        self.app.matrix_data_cache_manager = server_config.matrix_data_cache_manager
 
         self.app.app_config = app_config

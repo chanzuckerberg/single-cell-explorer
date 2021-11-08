@@ -17,9 +17,6 @@ f"""server:
     dataroot: {dataroot}
     index: {index}
     allowed_matrix_types: {allowed_matrix_types}
-    matrix_cache:
-      max_datasets: {max_cached_datasets}
-      timelimit_s: {timelimit_s}
 
   single_dataset:
     datapath: {dataset_datapath}
