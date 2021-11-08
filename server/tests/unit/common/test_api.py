@@ -8,7 +8,6 @@ from unittest.mock import patch
 
 import requests
 
-from server.app.app import evict_dataset_from_metadata_cache
 from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
@@ -540,6 +539,8 @@ class TestDataLocatorMockApi(BaseTest):
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_adaptor_uses_corpora_api(self, mock_get):
+        mock_get.return_value = MockResponse(body=self.response_body, status_code=200)
+
         endpoint = "schema"
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url)
@@ -547,8 +548,10 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")
 
-        # check that the dataset was cached correctly and the metadata api was not called
-        self.assertEqual(mock_get.call_count, 0)
+        mock_get.assert_called_once_with(
+            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+
         # Check mocked MatrixDataLoader correctly loads schema
         result_data = json.loads(result.data)
         self.assertEqual(result_data["schema"]["dataframe"]["nObs"], 2638)
@@ -567,8 +570,9 @@ class TestDataLocatorMockApi(BaseTest):
         result_data = json.loads(result.data)
         self.assertIsNotNone(result_data["config"])
 
-        # check that the dataset was cached correctly and the metadata api was not called
-        self.assertEqual(mock_get.call_count, 0)
+        mock_get.assert_called_once_with(
+            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_get_annotations_obs_fbs(self, mock_get):
@@ -578,8 +582,10 @@ class TestDataLocatorMockApi(BaseTest):
         header = {"Accept": "application/octet-stream"}
         result = self.client.get(url, headers=header)
 
-        # check that the dataset was cached correctly and the metadata api was not called
-        self.assertEqual(mock_get.call_count, 0)
+        # check that the metadata api was called
+        mock_get.assert_called_once_with(
+            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
+            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
 
         # check response
         self.assertEqual(result.status_code, HTTPStatus.OK)
@@ -612,7 +618,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")
 
-        # check that the metadata api was correctly called for the new (uncached) dataset
+        # check that the metadata api was correctly called for the new dataset
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
@@ -630,7 +636,7 @@ class TestDataLocatorMockApi(BaseTest):
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url)
 
-        # check that the metadata api was correctly called for the new (uncached) dataset
+        # check that the metadata api was correctly called for the new dataset
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
@@ -689,26 +695,6 @@ class TestDataLocatorMockApi(BaseTest):
         }
         self.assertEqual(json.loads(result.data), expected_response_body)
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.extrapolate_dataset_location_from_config")
-    def test_metadata_manager_caches_missing_dataset(self, mock_extrapolate, mock_request):
-        mock_request.return_value = None
-        mock_extrapolate.return_value = None
-        self.TEST_DATASET_URL_BASE = "/e/no_dataset.cxg"
-        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
-        endpoint = "schema"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 400)
-
-        endpoint = "config"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 400)
-
-        self.assertEqual(mock_request.call_count, 1)
-        self.assertEqual(mock_request.call_count, 1)
-
     def test_dataset_does_not_exist(self):
         self.TEST_DATASET_URL_BASE = "/e/no_dataset.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -735,35 +721,6 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.headers['Location'],
                          "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939")  # noqa E501
 
-    @patch("server.app.app.evict_dataset_from_metadata_cache")
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    def test_metadata_cache_item_invalidated_on_errors(self, mock_dp, mock_expire):
-        mock_expire.side_effect = evict_dataset_from_metadata_cache
-        response_body_bad = {
-            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
-            "collection_visibility": "PUBLIC",
-            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-            "s3_uri": f"BAD_PATH_TO_DATASET/pbmc3k.cxg",
-            "tombstoned": False,
-        }
-        mock_dp.return_value = response_body_bad
-        TEST_DATASET_URL_BASE = "/e/pbmc3k_v3.cxg"
-        url = f"{TEST_DATASET_URL_BASE}/api/v0.2/config"
-        bad_response = self.client.get(url)
-        self.assertEqual(bad_response.status_code, 404)
-        self.assertEqual(mock_expire.call_count, 1)
-        response_body_good = {
-            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
-            "collection_visibility": "PUBLIC",
-            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-            "s3_uri": f"{FIXTURES_ROOT}/pbmc3k.cxg",
-            "tombstoned": False,
-        }
-        mock_dp.return_value = response_body_good
-        good_response = self.client.get(url)
-
-        self.assertEqual(good_response.status_code, 200)
-        self.assertEqual(mock_dp.call_count, 2)
 
 class TestDatasetMetadata(BaseTest):
     @classmethod
@@ -897,10 +854,6 @@ class TestDatasetMetadata(BaseTest):
 
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_dataset_metadata_api_fails_gracefully_on_dataset_not_found(self, mock_dp):
-        # Force a new dataset name, otherwise a cache entry will be found and the mock will not be applied
-        self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_2.cxg"
-        self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
-
         # If request_dataset_metadata_from_data_portal, it always returns None
         mock_dp.return_value = None
 
@@ -913,6 +866,7 @@ class TestDatasetMetadata(BaseTest):
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_dataset_metadata_api_fails_gracefully_on_connection_failure(self, mock_get, mock_dp):
+        # TODO: Shouldn't matter what we request if the request's connection fails altogether
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
 
@@ -923,6 +877,7 @@ class TestDatasetMetadata(BaseTest):
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url)
 
+        # TODO: This doesn't seem like a valid test for connection failure. There should be *no* response at all instead of a 400 status
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
 class TestConfigEndpoint(BaseTest):
