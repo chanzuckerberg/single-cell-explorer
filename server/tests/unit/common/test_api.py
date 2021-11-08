@@ -535,7 +535,10 @@ class TestDataLocatorMockApi(BaseTest):
         cls.schema = json.loads(result.data)
 
         assert mock_get.call_count == 1
-        assert f"http://{mock_get._mock_call_args[1]['url']}" == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"  # noqa E501
+        assert (
+            f"http://{mock_get._mock_call_args[1]['url']}"
+            == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"
+        )  # noqa E501
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_data_adaptor_uses_corpora_api(self, mock_get):
@@ -640,7 +643,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(mock_get.call_count, 1)
         self.assertEqual(
             f"http://{mock_get._mock_call_args[1]['url']}",
-            'http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/',
+            "http://api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k.cxg/",
             # noqa E501
         )
 
@@ -705,21 +708,26 @@ class TestDataLocatorMockApi(BaseTest):
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
-        response_body = json.dumps({
-            "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
-            "collection_visibility": "PUBLIC",
-            "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
-            "s3_uri": None,
-            "tombstoned": True,
-        })
+        response_body = json.dumps(
+            {
+                "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+                "collection_visibility": "PUBLIC",
+                "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+                "s3_uri": None,
+                "tombstoned": True,
+            }
+        )
         mock_get.return_value = MockResponse(body=response_body, status_code=200)
         endpoint = "config"
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v2.cxg"
         url = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/{endpoint}"
         result = self.client.get(url)
         self.assertEqual(result.status_code, 302)
-        self.assertEqual(result.headers['Location'],
-                         "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939")  # noqa E501
+        self.assertEqual(
+            result.headers["Location"],
+            "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+        )  # noqa E501
+
 
 
 class TestDatasetMetadata(BaseTest):
@@ -880,8 +888,8 @@ class TestDatasetMetadata(BaseTest):
         # TODO: This doesn't seem like a valid test for connection failure. There should be *no* response at all instead of a 400 status
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
-class TestConfigEndpoint(BaseTest):
 
+class TestConfigEndpoint(BaseTest):
     @classmethod
     def setUpClass(cls):
         cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
@@ -900,7 +908,6 @@ class TestConfigEndpoint(BaseTest):
         cls.app.testing = True
         cls.client = cls.app.test_client()
 
-
     def test_config_has_collections_home_page(self):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -912,10 +919,7 @@ class TestConfigEndpoint(BaseTest):
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")
         result_data = json.loads(result.data)
-        self.assertEqual(
-            result_data["config"]["links"]["collections-home-page"], 
-            self.app__web_base_url[:-1]
-        )
+        self.assertEqual(result_data["config"]["links"]["collections-home-page"], self.app__web_base_url[:-1])
 
 
 class MockResponse:

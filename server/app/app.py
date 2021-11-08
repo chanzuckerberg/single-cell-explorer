@@ -108,7 +108,9 @@ def dataset_index(url_dataroot=None, dataset=None):
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
     except TombstoneError as e:
-        parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        parent_collection_url = (
+            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
 
@@ -141,7 +143,9 @@ def rest_get_data_adaptor(func):
                 e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
         except TombstoneError as e:
-            parent_collection_url = f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            parent_collection_url = (
+                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
@@ -216,7 +220,7 @@ class SchemaAPI(DatasetResource):
 
 
 class DatasetMetadataAPI(DatasetResource):
-    @cache_control(public=True, max_age=ONE_WEEK)
+    @cache_control(no_store=True, max_age=0)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
