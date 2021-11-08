@@ -11,12 +11,11 @@ from flask import (
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
-from server.app.api import ONE_WEEK, cache_control
+from server.app.api import cache_control
 from server.app.api.v2 import DatasetMetadataAPI
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
-    TombstoneError,
     DatasetMetadataError,
 )
 from server.data_common.matrix_loader import MatrixDataLoader

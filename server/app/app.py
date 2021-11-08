@@ -1,6 +1,5 @@
 import datetime
 import logging
-from functools import wraps
 from http import HTTPStatus
 import hashlib
 import os
@@ -19,7 +18,6 @@ from server.common.errors import (
     RequestException,
     DatasetNotFoundError,
     TombstoneError,
-    DatasetMetadataError,
 )
 from server.common.health import health_check
 from server.common.utils.utils import path_join, Float32JSONEncoder
