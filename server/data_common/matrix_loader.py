@@ -11,6 +11,7 @@ class MatrixDataType(Enum):
     UNKNOWN = "unknown"
 
 
+# TODO: rename to DatasetLoader
 class MatrixDataLoader(object):
     def __init__(self, location, app_config=None, url_dataroot=None, matrix_data_type=None):
         """location can be a string or DataLocator"""
@@ -93,10 +94,9 @@ class MatrixDataLoader(object):
 
     def open(self):
         # create and return a DataAdaptor object
-
         return self.matrix_type.open(self.location, self.app_config, self.dataset_config)
 
-    def validate_and_open(self, dataset_location=None, **kwargs):
+    def validate_and_open(self):
         # create and return a DataAdaptor object
         self.pre_load_validation()
         return self.open()

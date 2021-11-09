@@ -1,8 +1,8 @@
 import logging
 from functools import wraps
+from urllib.parse import unquote
 
 from flask import (
-    redirect,
     current_app,
     Blueprint,
     request,
@@ -12,65 +12,32 @@ from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
 from server.app.api import ONE_WEEK, cache_control
-from server.common.errors import (
-    DatasetAccessError,
-    DatasetNotFoundError,
-    TombstoneError,
-    DatasetMetadataError,
-)
 from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
 
 
-def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
+def get_data_adaptor(url_dataroot: str = None, dataset_id: str = None):
     app_config = current_app.app_config
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    return dataset_metadata_manager.get(
-        cache_key=f"{url_dataroot}/{dataset}",
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    )
-
-
-def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
-    app_config = current_app.app_config
-    matrix_cache_manager = current_app.matrix_data_cache_manager
-    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
-        return matrix_cache_manager.get(
-            cache_key=dataset_metadata["s3_uri"],
-            create_data_function=MatrixDataLoader(
-                location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
-            ).validate_and_open,
-            create_data_args={},
-        )
-
-
-def evict_dataset_from_metadata_cache(url_dataroot: str = None, dataset: str = None):
-    try:
-        current_app.dataset_metadata_cache_manager.evict_by_key(f"{url_dataroot}/{dataset}")
-    except Exception as e:
-        logging.error(e)
+    dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset_id}",
+                                                                         current_app.app_config)["s3_uri"]
+    return MatrixDataLoader(
+            location=dataset_artifact_s3_uri,
+            url_dataroot=url_dataroot,
+            app_config=app_config
+    ).validate_and_open()
 
 
 def rest_get_data_adaptor(func):
     @wraps(func)
-    def wrapped_function(self, dataset=None):
+    def wrapped_function(self, s3_uri=None):
         try:
-            with get_data_adaptor(self.url_dataroot, dataset) as data_adaptor:
-                data_adaptor.set_uri_path(f"{self.url_dataroot}/{dataset}")
-                return func(self, data_adaptor)
+            s3_uri = unquote(s3_uri) if s3_uri else s3_uri
+            data_adaptor = get_data_adaptor(s3_uri)
+            return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            # if the dataset can not be found or accessed assume there is an issue with the stored metadata and remove
-            # it from the cache
-            evict_dataset_from_metadata_cache(self.url_dataroot, dataset)
             return common_rest.abort_and_log(
-                e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
+                e.status_code, f"Invalid s3_uri {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
-        except TombstoneError as e:
-            parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
-            )
-            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
 

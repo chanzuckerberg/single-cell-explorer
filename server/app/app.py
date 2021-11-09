@@ -1,8 +1,10 @@
 import datetime
 import logging
+from functools import wraps
 from http import HTTPStatus
 import hashlib
 import os
+from urllib.parse import unquote
 
 from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint
 from flask_restful import Api, Resource
@@ -64,29 +66,6 @@ def dataset_index(url_dataroot=None, dataset=None):
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
-
-
-def get_dataset_metadata(url_dataroot: str = None, dataset: str = None):
-    app_config = current_app.app_config
-    dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-    return dataset_metadata_manager.get(
-        cache_key=f"{url_dataroot}/{dataset}",
-        create_data_function=get_dataset_metadata_for_explorer_location,
-        create_data_args={"app_config": app_config},
-    )
-
-
-def get_data_adaptor(url_dataroot: str = None, dataset: str = None):
-    app_config = current_app.app_config
-    matrix_cache_manager = current_app.matrix_data_cache_manager
-    with get_dataset_metadata(url_dataroot=url_dataroot, dataset=dataset) as dataset_metadata:
-        return matrix_cache_manager.get(
-            cache_key=dataset_metadata["s3_uri"],
-            create_data_function=MatrixDataLoader(
-                location=dataset_metadata["s3_uri"], url_dataroot=url_dataroot, app_config=app_config
-            ).validate_and_open,
-            create_data_args={},
-        )
 
 
 def dataroot_test_index():
@@ -212,8 +191,5 @@ class Server:
                     lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
                     methods=["GET"],
                 )
-
-        self.app.matrix_data_cache_manager = server_config.matrix_data_cache_manager
-        self.app.dataset_metadata_cache_manager = server_config.dataset_metadata_cache_manager
 
         self.app.app_config = app_config
