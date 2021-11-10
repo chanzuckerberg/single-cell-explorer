@@ -1,18 +1,20 @@
-def get_data_adaptor(s3_uri: str = None):
-    app_config = current_app.app_config
-    return MatrixDataLoader(location=s3_uri, app_config=app_config).validate_and_open()
+from flask import current_app
+
+from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
+from server.data_common.matrix_loader import MatrixDataLoader
 
 
-def rest_get_data_adaptor(func):
-    @wraps(func)
-    def wrapped_function(self, s3_uri=None):
-        try:
-            s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            data_adaptor = get_data_adaptor(s3_uri)
-            return func(self, data_adaptor)
-        except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
-            return common_rest.abort_and_log(
-                e.status_code, f"Invalid s3_uri {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
-            )
+def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None):
+    dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset_id}",
+                                                                         current_app.app_config)["s3_uri"]
+    return dataset_artifact_s3_uri
 
-    return wrapped_function
+
+def get_data_adaptor(dataset_artifact_s3_uri: str, app_config, url_dataroot: str = None):
+    return MatrixDataLoader(
+            location=dataset_artifact_s3_uri,
+            url_dataroot=url_dataroot,
+            app_config=app_config
+    ).validate_and_open()
+
+

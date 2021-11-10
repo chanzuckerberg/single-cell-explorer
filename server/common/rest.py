@@ -134,14 +134,14 @@ def dataset_metadata_get(app_config, data_adaptor):
 
 def s3_uri_get(app_config, url_dataroot, dataset):
     try:
-        dataset_metadata = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)
+        dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)["s3_uri"]
     except TombstoneError as e:
         parent_collection_url = (
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
     else:
-        return make_response(jsonify(dataset_metadata["s3_uri"]), HTTPStatus.OK)
+        return make_response(jsonify(dataset_artifact_s3_uri), HTTPStatus.OK)
 
 
 def config_get(app_config, data_adaptor):

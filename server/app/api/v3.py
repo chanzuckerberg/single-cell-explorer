@@ -12,18 +12,13 @@ from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
 from server.app.api import cache_control
+from server.app.api.util import get_data_adaptor
 from server.app.api.v2 import DatasetMetadataAPI
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
     DatasetMetadataError,
 )
-from server.data_common.matrix_loader import MatrixDataLoader
-
-
-def get_data_adaptor(s3_uri: str = None):
-    app_config = current_app.app_config
-    return MatrixDataLoader(location=s3_uri, app_config=app_config).validate_and_open()
 
 
 def rest_get_data_adaptor(func):
@@ -31,7 +26,7 @@ def rest_get_data_adaptor(func):
     def wrapped_function(self, s3_uri=None):
         try:
             s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            data_adaptor = get_data_adaptor(s3_uri)
+            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(

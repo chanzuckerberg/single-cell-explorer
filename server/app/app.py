@@ -1,10 +1,8 @@
 import datetime
-import logging
-from functools import wraps
-from http import HTTPStatus
 import hashlib
+import logging
 import os
-from urllib.parse import unquote
+from http import HTTPStatus
 
 from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint
 from flask_restful import Api, Resource
@@ -12,9 +10,9 @@ from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
 from server.app.api import webbp, cache_control_always, cache_control
+from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
 from server.app.api.v2 import register_api_v2
 from server.app.api.v3 import register_api_v3
-from server.common.utils.data_locator import DataLocator
 from server.common.errors import (
     DatasetAccessError,
     RequestException,
@@ -22,8 +20,8 @@ from server.common.errors import (
     TombstoneError,
 )
 from server.common.health import health_check
+from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
-from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
 from server.data_common.matrix_loader import MatrixDataLoader
 
 
@@ -51,12 +49,11 @@ def dataset_index(url_dataroot=None, dataset=None):
     scripts = dataset_config.app__scripts
     inline_scripts = dataset_config.app__inline_scripts
 
+    # TODO: Confirm we do not need to check existence of dataset artifact now
     try:
-        with get_data_adaptor(url_dataroot=url_dataroot, dataset=dataset) as data_adaptor:
-            data_adaptor.set_uri_path(f"{url_dataroot}/{dataset}")
-            args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
-            return render_template("index.html", **args)
-
+        dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
+        # Attempt to load the dataset to see if it exists at all
+        get_data_adaptor(url_dataroot=url_dataroot, dataset_artifact_s3_uri=dataset_artifact_s3_uri)
     except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
@@ -66,6 +63,10 @@ def dataset_index(url_dataroot=None, dataset=None):
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
+
+    args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
+    return render_template("index.html", **args)
+
 
 
 def dataroot_test_index():

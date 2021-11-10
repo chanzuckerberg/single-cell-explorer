@@ -6,38 +6,38 @@ from flask import (
     current_app,
     Blueprint,
     request,
-    send_from_directory,
+    send_from_directory, redirect,
 )
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
 from server.app.api import ONE_WEEK, cache_control
-from server.data_common.dataset_metadata import get_dataset_metadata_for_explorer_location
-from server.data_common.matrix_loader import MatrixDataLoader
-
-
-def get_data_adaptor(url_dataroot: str = None, dataset_id: str = None):
-    app_config = current_app.app_config
-    dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset_id}",
-                                                                         current_app.app_config)["s3_uri"]
-    return MatrixDataLoader(
-            location=dataset_artifact_s3_uri,
-            url_dataroot=url_dataroot,
-            app_config=app_config
-    ).validate_and_open()
+from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
+from server.common.errors import (
+    DatasetAccessError,
+    DatasetNotFoundError,
+    DatasetMetadataError,
+    TombstoneError,
+)
 
 
 def rest_get_data_adaptor(func):
     @wraps(func)
-    def wrapped_function(self, s3_uri=None):
+    def wrapped_function(self, dataset=None):
         try:
-            s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            data_adaptor = get_data_adaptor(s3_uri)
+            dataset = unquote(dataset) if dataset else dataset
+            s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
+            data_adaptor = get_data_adaptor(s3_uri, url_dataroot=self.url_dataroot, app_config=current_app.app_config)  #TODO: do we actually need to pass url_dataroot?
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
-                e.status_code, f"Invalid s3_uri {s3_uri}: {e.message}", loglevel=logging.INFO, include_exc_info=True
+                e.status_code, f"Invalid s3_uri {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
             )
+        except TombstoneError as e:
+            parent_collection_url = (
+                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            )
+            return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
 
@@ -178,8 +178,8 @@ def register_api_v2(app, app_config, server_config, api_path):
         for dataroot_dict in server_config.multi_dataset__dataroot.values():
             url_dataroot = dataroot_dict["base_url"]
             bp_dataroot = Blueprint(
-                f"api_dataset_{url_dataroot}_{api_version}",
-                __name__,
+                name=f"api_dataset_{url_dataroot}_{api_version}",
+                import_name=__name__,
                 url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
