@@ -29,6 +29,8 @@ RUN python3 create_rdev_config.py
 
 RUN make build-client
 
+RUN mkdir -p /server/common/web/templates/
+
 WORKDIR server/eb
 RUN make build-ecs
 
