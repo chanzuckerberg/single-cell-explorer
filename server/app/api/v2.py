@@ -27,7 +27,7 @@ def rest_get_data_adaptor(func):
         try:
             dataset = unquote(dataset) if dataset else dataset
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
-            data_adaptor = get_data_adaptor(s3_uri, url_dataroot=self.url_dataroot, app_config=current_app.app_config)  #TODO: do we actually need to pass url_dataroot?
+            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(

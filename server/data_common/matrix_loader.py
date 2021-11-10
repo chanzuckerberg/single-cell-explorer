@@ -13,10 +13,10 @@ class MatrixDataType(Enum):
 
 # TODO: rename to DatasetLoader
 class MatrixDataLoader(object):
-    def __init__(self, location, app_config=None, url_dataroot=None, matrix_data_type=None):
+    def __init__(self, location, app_config=None, matrix_data_type=None):
         """location can be a string or DataLocator"""
         self.app_config = app_config
-        self.dataset_config = self.__resolve_dataset_config(url_dataroot)
+        self.dataset_config = self.__resolve_dataset_config()
         region_name = None if app_config is None else app_config.server_config.data_locator__s3__region_name
         self.location = DataLocator(location, region_name=region_name)
         if not self.location.exists():
@@ -40,16 +40,8 @@ class MatrixDataLoader(object):
 
             self.matrix_type = CxgAdaptor
 
-    def __resolve_dataset_config(self, url_dataroot):
+    def __resolve_dataset_config(self):
         dataset_config = self.app_config.default_dataset_config
-        if url_dataroot:
-            dataroot = None
-            for key, dataroot_dict in self.app_config.server_config.multi_dataset__dataroot.items():
-                if dataroot_dict["base_url"] == url_dataroot:
-                    dataroot = key
-                    break
-            if dataroot:
-                dataset_config = self.app_config.get_dataset_config(dataroot)
         if dataset_config is None:
             raise DatasetAccessError("Missing dataset config", HTTPStatus.NOT_FOUND)
         return dataset_config
@@ -97,7 +89,7 @@ class MatrixDataLoader(object):
 
     def open(self):
         # create and return a DataAdaptor object
-        return self.matrix_type.open(self.location, self.app_config, self.dataset_config)
+        return self.matrix_type.open(self.location, self.app_config)
 
     def validate_and_open(self):
         # create and return a DataAdaptor object

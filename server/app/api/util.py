@@ -10,11 +10,7 @@ def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None
     return dataset_artifact_s3_uri
 
 
-def get_data_adaptor(dataset_artifact_s3_uri: str, app_config, url_dataroot: str = None):
-    return MatrixDataLoader(
-            location=dataset_artifact_s3_uri,
-            url_dataroot=url_dataroot,
-            app_config=app_config
-    ).validate_and_open()
+def get_data_adaptor(dataset_artifact_s3_uri: str, app_config):
+    return MatrixDataLoader(location=dataset_artifact_s3_uri, app_config=app_config).validate_and_open()
 
 
