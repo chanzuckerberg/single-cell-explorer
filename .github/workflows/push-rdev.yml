@@ -41,8 +41,8 @@ jobs:
         shell: bash
         run: |
           pip install -r .happy/requirements.txt
-          BRANCH=${GITHUB_REF#refs/heads/}
-          scripts/happy --profile="" push --extra-tag ${BRANCH} --extra-tag sha-${GITHUB_SHA:0:8} --extra-tag build-${GITHUB_RUN_NUMBER} ${{ matrix.component }}
+          TAG=${GITHUB_REF#refs/heads/}
+          scripts/happy --profile="" push --extra-tag ${TAG} --extra-tag sha-${GITHUB_SHA:0:8} --extra-tag build-${GITHUB_RUN_NUMBER} ${{ matrix.component }}
 
 #  create-update-rdev:
 #    runs-on: ubuntu-20.04
