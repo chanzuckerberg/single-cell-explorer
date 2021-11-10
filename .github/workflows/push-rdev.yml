@@ -2,6 +2,8 @@ name: Push Remote Dev
 
 on:
   push:
+    tags:
+      - 'rdev-*'
     branches:
       - 'rdev-*'
 
