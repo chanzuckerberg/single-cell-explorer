@@ -9,6 +9,6 @@
             "aws_profile": "single-cell-dev",
             "secret_arn": "happy/env-rdev-config",
             "log_group_prefix": "/dp/rdev"
-        },
+        }
     }
 }
