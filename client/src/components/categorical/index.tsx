@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
 import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
+import { Schema } from "../../common/types/schema";
 import Collapse from "../../util/collapse";
 import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
 import AnnoDialog from "../annoDialog";
@@ -148,10 +149,15 @@ class Categories extends React.Component<{}, State> {
    * @param catName - Name of category.
    * @returns True if category has more than one category value or categories are not defined.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types -- update on typing of component
-  isCategoryDisplayable = (schema: any, catName: string): boolean =>
-    schema.annotations.obsByName[catName].categories?.length > 1 ||
-    !schema.annotations.obsByName[catName].categories;
+  isCategoryDisplayable = (schema: Schema, catName: string): boolean => {
+    const columnSchema = schema.annotations.obsByName[catName];
+    // Always display string and boolean types.
+    if (!("categories" in columnSchema)) {
+      return true;
+    }
+    // Only display categoricals if they have more than one value.
+    return columnSchema.categories.length > 1;
+  };
 
   /**
    * Determine if category is standard.
@@ -163,9 +169,11 @@ class Categories extends React.Component<{}, State> {
 
   /**
    * Returns true if category is writable.
+   * @param schema - Matrix schema.
+   * @param catName - Name of category.
+   * @returns True if category is marked as writable.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types -- update on typing of component
-  isCategoryWritable = (schema: any, catName: string): boolean =>
+  isCategoryWritable = (schema: Schema, catName: string): boolean =>
     schema.annotations.obsByName[catName].writable;
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
