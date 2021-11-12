@@ -46,5 +46,4 @@ jobs:
           TAG=${GITHUB_REF#refs/heads/}
           # replace `/` with `_`
           TAG=${TAG//\//-}
-          export HAPPY_ENV=${TAG}
           scripts/happy --profile="" push --extra-tag ${TAG} --extra-tag sha-${GITHUB_SHA:0:8} --extra-tag build-${GITHUB_RUN_NUMBER} ${{ matrix.component }}
