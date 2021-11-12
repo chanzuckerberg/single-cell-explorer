@@ -817,6 +817,7 @@ class ArtifactBuilder:
     def build(self, artifacts=None):
         env = self.get_env()
         compose_args = ["--file", self.config["compose_file"]]
+        print(f"env in config: {self.config['env']}")
         if self.config["env"]:
             compose_args += ["--env", self.config["env"]]
         cmd = ["docker-compose"] + compose_args + ["build"]
