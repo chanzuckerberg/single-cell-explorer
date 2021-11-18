@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 from http import HTTPStatus
+from urllib.parse import urlparse
 
 from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint
 from flask_restful import Api, Resource
@@ -173,13 +174,20 @@ class Server:
         self.app.config.update(SECRET_KEY=secret_key)
 
         self.app.register_blueprint(webbp)
-        api_path = "/"
-        bp_base = Blueprint("bp_base", __name__, url_prefix=api_path)
+
+        api_base_url = server_config.get_api_base_url()
+        if api_base_url:
+            api_url_prefix = urlparse(api_base_url).path
+        else:
+            api_url_prefix = "/"
+        print(f'api_url_prefix={api_url_prefix}')
+
+        bp_base = Blueprint("bp_base", __name__, url_prefix=api_url_prefix)
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
-        register_api_v2(app=self.app, app_config=app_config, server_config=server_config, api_path=api_path)
-        register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_path=api_path)
+        register_api_v2(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
+        register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
 
         if app_config.is_multi_dataset():
             # NOTE:  These routes only allow the dataset to be in the directory

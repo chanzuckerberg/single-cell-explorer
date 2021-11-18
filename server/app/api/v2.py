@@ -168,7 +168,7 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     return api
 
 
-def register_api_v2(app, app_config, server_config, api_path):
+def register_api_v2(app, app_config, server_config, api_url_prefix):
     api_version = "/api/v0.2"
     if app_config.is_multi_dataset():
         # NOTE:  These routes only allow the dataset to be in the directory
@@ -179,7 +179,7 @@ def register_api_v2(app, app_config, server_config, api_path):
             bp_dataroot = Blueprint(
                 name=f"api_dataset_{url_dataroot}_{api_version}",
                 import_name=__name__,
-                url_prefix=(f"{api_path}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
+                url_prefix=(f"{api_url_prefix}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
             app.register_blueprint(dataroot_resources.blueprint)
@@ -190,7 +190,7 @@ def register_api_v2(app, app_config, server_config, api_path):
                 methods=["GET"],
             )
     else:
-        bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")
+        bp_api = Blueprint("api", __name__, url_prefix=f"{api_url_prefix}{api_version}")
         resources = get_api_dataroot_resources(bp_api)
         app.register_blueprint(resources.blueprint)
         app.add_url_rule(

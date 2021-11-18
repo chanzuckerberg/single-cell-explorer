@@ -184,14 +184,14 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     return api
 
 
-def register_api_v3(app, app_config, server_config, api_path):
+def register_api_v3(app, app_config, server_config, api_url_prefix):
     api_version = "/api/v0.3"
 
     s3uri_api_path = "s3_uri"
     bp_s3uri = Blueprint(
         f"api_dataset_{s3uri_api_path}_{api_version}",
         __name__,
-        url_prefix=(f"{api_path}/{s3uri_api_path}/<s3_uri>" + api_version).replace("//", "/"),
+        url_prefix=(f"{api_url_prefix}/{s3uri_api_path}/<s3_uri>" + api_version).replace("//", "/"),
     )
     s3uri_resources = get_api_s3uri_resources(bp_s3uri, s3uri_api_path)
     app.register_blueprint(s3uri_resources.blueprint)
@@ -205,7 +205,7 @@ def register_api_v3(app, app_config, server_config, api_path):
             bp_dataroot = Blueprint(
                 f"api_dataset_{url_dataroot}_{api_version}",
                 __name__,
-                url_prefix=(f"{api_path}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
+                url_prefix=(f"{api_url_prefix}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
             )
             dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
             app.register_blueprint(dataroot_resources.blueprint)
@@ -226,7 +226,7 @@ def register_api_v3(app, app_config, server_config, api_path):
             #     methods=["GET"],
             # )
     else:
-        bp_api = Blueprint("api", __name__, url_prefix=f"{api_path}{api_version}")
+        bp_api = Blueprint("api", __name__, url_prefix=f"{api_url_prefix}{api_version}")
         resources = get_api_dataroot_resources(bp_api)
         app.register_blueprint(resources.blueprint)
         app.add_url_rule(
