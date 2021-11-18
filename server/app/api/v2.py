@@ -1,4 +1,5 @@
 import logging
+import os
 from functools import wraps
 from urllib.parse import unquote
 
@@ -27,6 +28,8 @@ def rest_get_data_adaptor(func):
         try:
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
             data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
+            # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_metadata()
+            data_adaptor.dataset_explorer_location = f'{self.url_dataroot}/dataset'
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
@@ -57,6 +60,7 @@ class SchemaAPI(DatasetResource):
         return common_rest.schema_get(data_adaptor)
 
 
+# TODO: This is being used by v3 API as well. Is must always be provided the dataset_explorer_location, and never the dataset s3_uri. Move to app/app.py?
 class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
     @rest_get_data_adaptor

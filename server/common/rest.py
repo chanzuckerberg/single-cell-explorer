@@ -125,7 +125,8 @@ def schema_get(data_adaptor):
 
 
 def dataset_metadata_get(app_config, data_adaptor):
-    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config, current_app)
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.dataset_explorer_location,
+                                                                    app_config, current_app)
     if metadata is not None:
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
     else:

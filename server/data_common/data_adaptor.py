@@ -35,7 +35,9 @@ class DataAdaptor(metaclass=ABCMeta):
 
         # parameters set by this data adaptor based on the data.
         self.parameters = {}
-        self.uri_path = data_locator.uri_or_path
+
+        # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_metadata()
+        self.dataset_explorer_location = None
 
     @staticmethod
     @abstractmethod
