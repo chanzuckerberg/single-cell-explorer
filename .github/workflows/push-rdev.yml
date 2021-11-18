@@ -1,0 +1,49 @@
+name: Push Remote Dev
+
+on:
+  push:
+    tags:
+      - '*rdev'
+      - 'rdev*'
+    branches:
+      - 'rdev-*'
+      - '**/rdev-*'
+      - '**-rdev'
+
+env:
+  DEPLOYMENT_STAGE: test
+  # Force using BuildKit instead of normal Docker, required so that metadata
+  # is written/read to allow us to use layers of previous builds as cache.
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_REPO: ${{ secrets.ECR_REPO }}/
+
+jobs:
+  build-push-images:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        component: ['explorer']
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 900
+      - name: Login to ECR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.ECR_REPO }}
+      - uses: actions/checkout@v2
+      - name: Build component
+        shell: bash
+        run: |
+          pip install -r .happy/requirements.txt
+          # set tag from GITHUB_REF, but removing `refs/heads/` prefix
+          TAG=${GITHUB_REF#refs/heads/}
+          # replace `/` with `_`
+          TAG=${TAG//\//-}
+          scripts/happy --profile="" push --extra-tag ${TAG} --extra-tag sha-${GITHUB_SHA:0:8} --extra-tag build-${GITHUB_RUN_NUMBER} ${{ matrix.component }}
