@@ -108,38 +108,33 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
     web_base_url = app_config.server_config.get_web_base_url()
 
     try:
-        dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-        with dataset_metadata_manager.get(
-            cache_key=dataset_explorer_location,
-            create_data_function=get_dataset_metadata_for_explorer_location,
-            create_data_args={"app_config": app_config},
-        ) as base_metadata:
+        base_metadata = get_dataset_metadata_for_explorer_location(dataset_explorer_location, app_config)
 
-            collection_id = base_metadata.get("collection_id")
-            if collection_id is None:
-                return None
+        collection_id = base_metadata.get("collection_id")
+        if collection_id is None:
+            return None
 
-            dataset_id = base_metadata["dataset_id"]
-            collection_visibility = base_metadata["collection_visibility"]
+        dataset_id = base_metadata["dataset_id"]
+        collection_visibility = base_metadata["collection_visibility"]
 
-            suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
-            suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
+        suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
+        suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
 
-            res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
-            metadata = {
-                "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
-                "dataset_id": dataset_id,
-                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
-                "collection_name": res["name"],
-                "collection_description": res["description"],
-                "collection_contact_email": res["contact_email"],
-                "collection_contact_name": res["contact_name"],
-                "collection_links": res["links"],
-                "collection_datasets": res["datasets"],
-            }
+        metadata = {
+            "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+            "dataset_id": dataset_id,
+            "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
+            "collection_name": res["name"],
+            "collection_description": res["description"],
+            "collection_contact_email": res["contact_email"],
+            "collection_contact_name": res["contact_name"],
+            "collection_links": res["links"],
+            "collection_datasets": res["datasets"],
+        }
 
-            return metadata
+        return metadata
 
     except Exception:
         raise DatasetMetadataError("Error retrieving dataset metadata")
