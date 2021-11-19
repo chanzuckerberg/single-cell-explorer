@@ -124,9 +124,8 @@ def schema_get(data_adaptor):
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
-def dataset_metadata_get(app_config, data_adaptor):
-    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.dataset_explorer_location,
-                                                                    app_config, current_app)
+def dataset_metadata_get(app_config, uri_path):
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(uri_path, app_config, current_app)
     if metadata is not None:
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
     else:
@@ -135,7 +134,9 @@ def dataset_metadata_get(app_config, data_adaptor):
 
 def s3_uri_get(app_config, url_dataroot, dataset):
     try:
-        dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)["s3_uri"]
+        dataset_artifact_s3_uri = get_dataset_metadata_for_explorer_location(f"{url_dataroot}/{dataset}", app_config)[
+            "s3_uri"
+        ]
     except TombstoneError as e:
         parent_collection_url = (
             f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501

@@ -1,13 +1,13 @@
 import logging
 import os
 from functools import wraps
-from urllib.parse import unquote
 
 from flask import (
     current_app,
     Blueprint,
     request,
-    send_from_directory, redirect,
+    send_from_directory,
+    redirect,
 )
 from flask_restful import Api, Resource
 
@@ -29,7 +29,7 @@ def rest_get_data_adaptor(func):
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
             data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
             # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_metadata()
-            data_adaptor.dataset_explorer_location = f'{self.url_dataroot}/dataset'
+            data_adaptor.dataset_id = dataset
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
@@ -65,7 +65,9 @@ class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.dataset_metadata_get(current_app.app_config, data_adaptor)
+        return common_rest.dataset_metadata_get(
+            current_app.app_config, f"{self.url_dataroot}/{data_adaptor.dataset_id}"
+        )
 
 
 class ConfigAPI(DatasetResource):

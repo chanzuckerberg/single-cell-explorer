@@ -136,5 +136,5 @@ def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_conf
 
         return metadata
 
-    except Exception:
-        raise DatasetMetadataError("Error retrieving dataset metadata")
+    except Exception as ex:
+        raise DatasetMetadataError("Error retrieving dataset metadata") from ex
