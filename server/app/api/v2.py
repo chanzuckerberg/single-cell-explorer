@@ -66,7 +66,7 @@ class DatasetMetadataAPI(DatasetResource):
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.dataset_metadata_get(
-            current_app.app_config, f"{self.url_dataroot}/{data_adaptor.dataset_id}"
+            current_app.app_config, self.url_dataroot, data_adaptor.dataset_id
         )
 
 

@@ -50,7 +50,6 @@ def dataset_index(url_dataroot=None, dataset=None):
     scripts = dataset_config.app__scripts
     inline_scripts = dataset_config.app__inline_scripts
 
-    # TODO: Confirm we do not need to check existence of dataset artifact now
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
         # Attempt to load the dataset to see if it exists at all
