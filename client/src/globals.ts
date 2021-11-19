@@ -179,7 +179,8 @@ export function updateApiPrefix(): void {
 }
 
 export function updateAPIWithS3(s3URI: S3URI): void {
-  const URISafeS3URI = encodeURI(s3URI);
-  const flaskSafeS3URI = encodeURI(URISafeS3URI);
+  const URISafeS3URI = encodeURIComponent(s3URI);
+  console.log(URISafeS3URI);
+  const flaskSafeS3URI = `${encodeURIComponent(URISafeS3URI)}/`;
   API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
 }

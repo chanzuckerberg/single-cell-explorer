@@ -52,8 +52,8 @@ async function userColorsFetchAndLoad(
   );
 }
 
-async function s3URIFetch(): Promise<{ s3_uri: S3URI }> {
-  return fetchJson<{ s3_uri: S3URI }>("s3_uri");
+async function s3URIFetch(): Promise<S3URI> {
+  return fetchJson<S3URI>("s3_uri");
 }
 
 async function schemaFetch(): Promise<{ schema: Schema }> {
@@ -149,7 +149,8 @@ const doInitialDataLoad = (): ((
     dispatch({ type: "initial data load start" });
 
     try {
-      const { s3_uri: s3URI } = await s3URIFetch();
+      const s3URI = await s3URIFetch();
+      console.log("s3_uri", s3URI);
       globals.updateAPIWithS3(s3URI);
       const [config, schema] = await Promise.all([
         configFetch(dispatch),
