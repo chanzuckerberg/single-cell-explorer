@@ -16,7 +16,7 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import { DatasetMetadata, Dataset } from "../common/types/entities";
+import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -50,6 +50,10 @@ async function userColorsFetchAndLoad(
       userColors: loadUserColorConfig(response),
     })
   );
+}
+
+async function s3URIFetch(): Promise<{ s3_uri: S3URI }> {
+  return fetchJson<{ s3_uri: S3URI }>("s3_uri");
 }
 
 async function schemaFetch(): Promise<{ schema: Schema }> {
@@ -145,6 +149,8 @@ const doInitialDataLoad = (): ((
     dispatch({ type: "initial data load start" });
 
     try {
+      const { s3_uri: s3URI } = await s3URIFetch();
+      globals.updateAPIWithS3(s3URI);
       const [config, schema] = await Promise.all([
         configFetch(dispatch),
         schemaFetch(),

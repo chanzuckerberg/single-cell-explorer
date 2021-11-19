@@ -1,7 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
-import { DataPortalProps } from "./common/types/entities";
+import { DataPortalProps, S3URI } from "./common/types/entities";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -156,10 +156,10 @@ if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   _API = (window as any).CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
-    const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
-    dispatchNetworkErrorMessageToUser(errorMessage);
-    throw new Error(errorMessage);
-  }
+  const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
+  dispatchNetworkErrorMessageToUser(errorMessage);
+  throw new Error(errorMessage);
+}
 
 export const API = _API;
 
@@ -176,4 +176,10 @@ export function updateApiPrefix(): void {
   // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
   // path segments taken from the pathname.
   API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
+}
+
+export function updateAPIWithS3(s3URI: S3URI): void {
+  const URISafeS3URI = encodeURI(s3URI);
+  const flaskSafeS3URI = encodeURI(URISafeS3URI);
+  API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
 }

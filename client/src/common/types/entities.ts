@@ -37,7 +37,10 @@ export interface DatasetMetadata {
   collection_url: string;
   dataset_id: string;
   dataset_name: string;
+  s3_URI: S3URI;
 }
+
+export type S3URI = string;
 
 /**
  * Corpora encoding and schema versioning.
