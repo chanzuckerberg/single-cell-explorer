@@ -53,8 +53,7 @@ def dataset_index(url_dataroot=None, dataset=None):
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
         # Attempt to load the dataset to see if it exists at all
-        get_data_adaptor(app_config=app_config,
-                         dataset_artifact_s3_uri=dataset_artifact_s3_uri)
+        get_data_adaptor(app_config=app_config, dataset_artifact_s3_uri=dataset_artifact_s3_uri)
     except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
@@ -67,7 +66,6 @@ def dataset_index(url_dataroot=None, dataset=None):
 
     args = {"SCRIPTS": scripts, "INLINE_SCRIPTS": inline_scripts}
     return render_template("index.html", **args)
-
 
 
 def dataroot_test_index():

@@ -5,7 +5,8 @@ from flask import (
     current_app,
     Blueprint,
     request,
-    send_from_directory, redirect,
+    send_from_directory,
+    redirect,
 )
 from flask_restful import Api, Resource
 
@@ -61,7 +62,9 @@ class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.dataset_metadata_get(current_app.app_config, f"{self.url_dataroot}/{data_adaptor.dataset_id}")
+        return common_rest.dataset_metadata_get(
+            current_app.app_config, f"{self.url_dataroot}/{data_adaptor.dataset_id}"
+        )
 
 
 class ConfigAPI(DatasetResource):
