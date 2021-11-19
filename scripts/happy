@@ -812,6 +812,7 @@ class ArtifactBuilder:
         env["HAPPY_COMMIT"] = subprocess_output_with_default(["git", "rev-parse", "--verify", "HEAD"])
         env["HAPPY_BRANCH"] = subprocess_output_with_default(["git", "branch", "--show-current"])
         env["HAPPY_TAG"] = subprocess_output_with_default(["git", "describe"])
+        env["HAPPY_ENV"] = self.config["happy_env"]
         return env
 
     def build(self, artifacts=None):
@@ -1159,6 +1160,10 @@ def push(ctx, images, tag, extra_tag, compose_env):
     # images to the right places with some re-tagging.
     first_registry = get_ecr_repo(config)
     builder_config["ecr_repo"] = first_registry  # TODO this is a leak in our abstraction, need to fix.
+    # HACK: Sets happy env name to the first extra tag; we need to know the happy env name at docker image build time, unfortunately, since it's not parameterized in the Docker image env
+    rdev_stack_name = extra_tag[0]
+    print(f"Setting happy_env (rdev stack name) to {rdev_stack_name}")
+    builder_config["happy_env"] = rdev_stack_name
 
     builder = ArtifactBuilder(builder_config)
     artifacts = builder.build(images)
