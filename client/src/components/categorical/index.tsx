@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
 import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
+import { Schema } from "../../common/types/schema";
 import Collapse from "../../util/collapse";
 import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
 import AnnoDialog from "../annoDialog";
@@ -133,6 +134,48 @@ class Categories extends React.Component<{}, State> {
     }
   };
 
+  /**
+   * Determine if category name is an ontology key.
+   * @param catName - Name of category.
+   * @returns True if category name includes ontology key.
+   */
+  isCategoryNameOntologyKey = (catName: string): boolean =>
+    catName.includes(globals.ONTOLOGY_KEY);
+
+  /**
+   * Categories are included for display if category has more than one category value or categories are not defined
+   * (for the case where category is a string or boolean type).
+   * @param schema - Matrix schema.
+   * @param catName - Name of category.
+   * @returns True if category has more than one category value or categories are not defined.
+   */
+  isCategoryDisplayable = (schema: Schema, catName: string): boolean => {
+    const columnSchema = schema.annotations.obsByName[catName];
+    // Always display string and boolean types.
+    if (!("categories" in columnSchema)) {
+      return true;
+    }
+    // Only display categoricals if they have more than one value.
+    return columnSchema.categories.length > 1;
+  };
+
+  /**
+   * Determine if category is standard.
+   * @param catName - Name of category.
+   * @returns True if given category name is in the set of standard category names.
+   */
+  isCategoryNameStandard = (catName: string): boolean =>
+    STANDARD_CATEGORY_NAMES.includes(catName);
+
+  /**
+   * Returns true if category is writable.
+   * @param schema - Matrix schema.
+   * @param catName - Name of category.
+   * @returns True if category is marked as writable.
+   */
+  isCategoryWritable = (schema: Schema, catName: string): boolean =>
+    schema.annotations.obsByName[catName].writable;
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
@@ -143,20 +186,26 @@ class Categories extends React.Component<{}, State> {
     } = this.state;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'writableCategoriesEnabled' does not exis... Remove this comment to see the full error message
     const { writableCategoriesEnabled, schema } = this.props;
-    /* all names, sorted in display order.  Will be rendered in this order */
-    const allCategoryNames =
-      ControlsHelpers.selectableCategoryNames(schema).sort();
-    const authorCategoryNames = allCategoryNames.filter(
-      (catName: string) =>
-        !STANDARD_CATEGORY_NAMES.includes(catName) &&
-        !catName.includes(globals.ONTOLOGY_KEY)
+    /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
+    const selectableCategoryNames = ControlsHelpers.selectableCategoryNames(
+      schema
+    )
+      .filter((catName) => !this.isCategoryNameOntologyKey(catName)) // Ontology keys are not selectable
+      .sort();
+
+    // Filter author categories for display; must be non-standard category name, selectable or writable.
+    const authorCategoryNames = selectableCategoryNames.filter(
+      (catName) =>
+        !this.isCategoryNameStandard(catName) &&
+        (this.isCategoryDisplayable(schema, catName) ||
+          this.isCategoryWritable(schema, catName))
     );
-    const standardCategoryNames = allCategoryNames.filter(
-      (catName: string) =>
-        STANDARD_CATEGORY_NAMES.includes(catName) &&
-        !catName.includes(globals.ONTOLOGY_KEY) &&
-        (schema.annotations.obsByName[catName].categories?.length > 1 ||
-          !schema.annotations.obsByName[catName].categories)
+
+    // Filter standard categories for display; must be standard name and selectable.
+    const standardCategoryNames = selectableCategoryNames.filter(
+      (catName) =>
+        this.isCategoryNameStandard(catName) &&
+        this.isCategoryDisplayable(schema, catName)
     );
     return (
       <div
@@ -199,7 +248,7 @@ class Categories extends React.Component<{}, State> {
                 this.handleModalDuplicateCategorySelection
               }
               categoryToDuplicate={categoryToDuplicate}
-              allCategoryNames={allCategoryNames}
+              allCategoryNames={selectableCategoryNames}
             />
           }
         />
