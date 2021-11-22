@@ -4,8 +4,9 @@ on:
   push:
     branches:
     - main
+    - epic/*
   pull_request:
-    branches: *
+    branches: "*"
 
 env:
   JEST_ENV: prod
