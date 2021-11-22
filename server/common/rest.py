@@ -27,7 +27,6 @@ from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
 
 from server.data_common import dataset_metadata
-from server.data_common.dataset_metadata import get_dataset_metadata
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):

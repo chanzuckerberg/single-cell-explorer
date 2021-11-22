@@ -177,7 +177,6 @@ class Server:
             api_url_prefix = urlparse(api_base_url).path
         else:
             api_url_prefix = "/"
-        print(f'api_url_prefix={api_url_prefix}')
 
         bp_base = Blueprint("bp_base", __name__, url_prefix=api_url_prefix)
         base_resources = get_api_base_resources(bp_base)
