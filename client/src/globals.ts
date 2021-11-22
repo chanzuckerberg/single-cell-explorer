@@ -151,13 +151,23 @@ const CXG_SERVER_PORT =
 
 let _API;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  _API = (window as any).CELLXGENE.API;
+declare global {
+  interface Window {
+    CELLXGENE: {
+      API: {
+        prefix: string;
+        version: string;
+      };
+    };
+  }
+}
+
+if (window.CELLXGENE && window.CELLXGENE.API) {
+  _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
   dispatchNetworkErrorMessageToUser(errorMessage);
+  _API = {};
   throw new Error(errorMessage);
 }
 
@@ -167,7 +177,7 @@ export const API = _API;
  * Update the base API URL for the current dataset using the current origin and pathname.
  */
 export function updateApiPrefix(): void {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || !API) {
     throw new Error("Unable to set API route.");
   }
   const { location } = window;
@@ -178,9 +188,18 @@ export function updateApiPrefix(): void {
   API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
 }
 
-export function updateAPIWithS3(s3URI: S3URI): void {
+/**
+ * Update the base API URL for the current dataset using the S3 URI of the current dataset.
+ * @param s3Uri S3 URI of the current dataset.
+ * @returns The old API prefix.
+ */
+export function updateAPIWithS3(s3URI: S3URI): string {
+  if (!API) {
+    throw new Error("Unable to set API route.");
+  }
+  const oldAPI = API.prefix;
   const URISafeS3URI = encodeURIComponent(s3URI);
-  console.log(URISafeS3URI);
-  const flaskSafeS3URI = `${encodeURIComponent(URISafeS3URI)}/`;
+  const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
   API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
+  return oldAPI;
 }

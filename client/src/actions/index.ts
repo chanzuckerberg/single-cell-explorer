@@ -60,7 +60,7 @@ async function schemaFetch(): Promise<{ schema: Schema }> {
   return fetchJson<{ schema: Schema }>("schema");
 }
 
-async function configFetch(dispatch: AppDispatch): Promise<Config> {
+async function configFetchAndLoad(dispatch: AppDispatch): Promise<Config> {
   const response = await fetchJson<{ config: globals.Config }>("config");
   const config = { ...globals.configDefaults, ...response.config };
 
@@ -76,15 +76,17 @@ async function configFetch(dispatch: AppDispatch): Promise<Config> {
 /**
  * Fetch dataset metadata and dispatch save to store, including portal URL returned in /config.
  * @param dispatch Function facilitating update of store.
+ * @param oldPrefix API prefix with dataset path that dataset metadata lives on. (Not S3 URI)
  * @param config Response from config endpoint containing collection ID for the current dataset.
  */
-async function datasetMetadataFetch(
+async function datasetMetadataFetchAndLoad(
   dispatch: AppDispatch,
+  oldPrefix: string,
   config: Config
 ): Promise<void> {
   const datasetMetadataResponse = await fetchJson<{
     metadata: DatasetMetadata;
-  }>("dataset-metadata");
+  }>("dataset-metadata", oldPrefix);
 
   // Create new dataset array with large datasets removed
   const { metadata: datasetMetadata } = datasetMetadataResponse;
@@ -103,9 +105,15 @@ async function datasetMetadataFetch(
     portalUrl: links["collections-home-page"],
   });
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-async function genesetsFetch(dispatch: any, config: any) {
+/**
+ *
+ * @param dispatch Function facilitating update of store.
+ * @param config Config object returned from config endpoint, notifies if genesets is enabled.
+ */
+async function genesetsFetchAndLoad(
+  dispatch: AppDispatch,
+  config: Config
+): Promise<void> {
   /* request genesets ONLY if the backend supports the feature */
   const defaultResponse = {
     genesets: [],
@@ -150,17 +158,16 @@ const doInitialDataLoad = (): ((
 
     try {
       const s3URI = await s3URIFetch();
-      console.log("s3_uri", s3URI);
-      globals.updateAPIWithS3(s3URI);
+      const oldPrefix = globals.updateAPIWithS3(s3URI);
       const [config, schema] = await Promise.all([
-        configFetch(dispatch),
+        configFetchAndLoad(dispatch),
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
 
-      datasetMetadataFetch(dispatch, config);
+      datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
 
-      genesetsFetch(dispatch, config);
+      genesetsFetchAndLoad(dispatch, config);
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
@@ -408,9 +415,12 @@ const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   window.history.pushState(null, "", url);
 };
 
-function fetchJson<T>(pathAndQuery: string): Promise<T> {
+function fetchJson<T>(
+  pathAndQuery: string,
+  apiPrefix = globals.API.prefix
+): Promise<T> {
   return doJsonRequest<T>(
-    `${globals.API.prefix}${globals.API.version}${pathAndQuery}`
+    `${apiPrefix}${globals.API.version}${pathAndQuery}`
   ) as Promise<T>;
 }
 
