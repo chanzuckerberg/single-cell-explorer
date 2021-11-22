@@ -1,5 +1,4 @@
 import logging
-import os
 from functools import wraps
 
 from flask import (
@@ -28,7 +27,8 @@ def rest_get_data_adaptor(func):
         try:
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
             data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
-            # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_metadata()
+            # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_
+            # metadata()
             data_adaptor.dataset_id = dataset
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
@@ -60,14 +60,13 @@ class SchemaAPI(DatasetResource):
         return common_rest.schema_get(data_adaptor)
 
 
-# TODO: This is being used by v3 API as well. Is must always be provided the dataset_explorer_location, and never the dataset s3_uri. Move to app/app.py?
+# TODO: This is being used by v3 API as well. Is must always be provided the dataset_explorer_location, and never the
+# dataset s3_uri. Move to app/app.py?
 class DatasetMetadataAPI(DatasetResource):
     @cache_control(public=True, no_store=True, max_age=0)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.dataset_metadata_get(
-            current_app.app_config, self.url_dataroot, data_adaptor.dataset_id
-        )
+        return common_rest.dataset_metadata_get(current_app.app_config, self.url_dataroot, data_adaptor.dataset_id)
 
 
 class ConfigAPI(DatasetResource):

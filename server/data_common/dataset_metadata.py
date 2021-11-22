@@ -4,7 +4,7 @@ import requests
 from flask import current_app
 
 from server.common.utils.utils import path_join
-from server.common.errors import DatasetNotFoundError, DatasetAccessError, DatasetMetadataError, TombstoneError
+from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
 from server.common.config.app_config import AppConfig
 from server.common.config.server_config import ServerConfig
 
@@ -86,11 +86,15 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
                 raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
             return dataset_metadata
 
-    current_app.logger.log(logging.INFO, f"Dataset not found by Data Portal: {explorer_url_path}. "
-                                         "Falling back to deriving S3 location from request URL.")
+    current_app.logger.log(
+        logging.INFO,
+        f"Dataset not found by Data Portal: {explorer_url_path}. "
+        "Falling back to deriving S3 location from request URL.",
+    )
 
     s3_uri = infer_dataset_s3_uri(
-        server_config=app_config.server_config, dataset_root=dataset_root, dataset_id=dataset_id)
+        server_config=app_config.server_config, dataset_root=dataset_root, dataset_id=dataset_id
+    )
 
     return {
         "collection_id": None,
