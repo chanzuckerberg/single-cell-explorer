@@ -66,8 +66,9 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
+    explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
+
     if app_config.server_config.data_locator__api_base:
-        explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
@@ -84,7 +85,6 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
                 current_app.logger.log(logging.INFO, msg)
                 raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
             return dataset_metadata
-
 
     current_app.logger.log(logging.INFO, f"Dataset not found by Data Portal: {explorer_url_path}. "
                                          "Falling back to deriving S3 location from request URL.")
