@@ -39,6 +39,7 @@ export interface Config {
     "disable-diffexp"?: boolean;
     "diffexp-may-be-slow"?: boolean;
     default_embedding?: string;
+    "max-category-items"?: number;
     [key: string]: unknown;
   };
   portalUrl: string;

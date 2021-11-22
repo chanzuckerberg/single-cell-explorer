@@ -1,3 +1,4 @@
+import { AnyAction } from "redux";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
@@ -14,7 +15,7 @@ import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
-import { EmbeddingSchema, Schema } from "../common/types/schema";
+import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
 import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
@@ -24,9 +25,10 @@ import {
   storageSetTransient,
 } from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
+import AnnoMatrix from "../annoMatrix/annoMatrix";
+import { LabelArray, LabelIndex } from "../util/dataframe";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function setGlobalConfig(config: any) {
+function setGlobalConfig(config: Config) {
   /**
    * Set any global run-time config not _exclusively_ managed by the config reducer.
    * This should only set fields defined in globals.globalConfig.
@@ -134,16 +136,15 @@ async function genesetsFetchAndLoad(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function prefetchEmbeddings(annoMatrix: any) {
+function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   /*
   prefetch requests for all embeddings
   */
   const { schema } = annoMatrix;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const available = schema.layout.obs.map((v: any) => v.name);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  available.forEach((embName: any) => annoMatrix.prefetch("emb", embName));
+  const available = schema.layout.obs.map((v: EmbeddingSchema) => v.name);
+  available.forEach((embName: EmbeddingSchema["name"]) =>
+    annoMatrix.prefetch(Field.emb, embName)
+  );
 }
 
 /*
@@ -155,6 +156,7 @@ const doInitialDataLoad = (): ((
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
+    if (!globals.API) throw new Error("API not set");
 
     try {
       const s3URI = await s3URIFetch();
@@ -194,16 +196,16 @@ const doInitialDataLoad = (): ((
     }
   }, true);
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-function requestSingleGeneExpressionCountsForColoringPOST(gene: any) {
+function requestSingleGeneExpressionCountsForColoringPOST(
+  gene: string
+): AnyAction {
   return {
     type: "color by expression",
     gene,
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-const requestUserDefinedGene = (gene: any) => ({
+const requestUserDefinedGene = (gene: string): AnyAction => ({
   type: "request user defined gene success",
 
   data: {
@@ -211,8 +213,10 @@ const requestUserDefinedGene = (gene: any) => ({
   },
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const dispatchDiffExpErrors = (dispatch: any, response: any) => {
+const dispatchDiffExpErrors = (
+  dispatch: AppDispatch,
+  response: Response
+): void => {
   switch (response.status) {
     case 403:
       dispatchNetworkErrorMessageToUser(
@@ -236,18 +240,12 @@ const dispatchDiffExpErrors = (dispatch: any, response: any) => {
 };
 
 const requestDifferentialExpression =
-  (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    set1: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    set2: any,
-    num_genes = 50
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  ) =>
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async (dispatch: any, getState: any) => {
+  (set1: LabelArray, set2: LabelArray, num_genes = 50) =>
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- TODO: type diff exp data in genesets reducer (client/src/reducers/genesets.ts)
+  async (dispatch: AppDispatch, getState: GetState) => {
     dispatch({ type: "request differential expression started" });
     try {
+      if (!globals.API) throw new Error("API not set");
       /*
     Steps:
     1. get the most differentially expressed genes
@@ -292,13 +290,16 @@ const requestDifferentialExpression =
       const response = await res.json();
       const varIndex = await annoMatrix.fetch("var", varIndexName);
       const diffexpLists = { negative: [], positive: [] };
-      for (const polarity of Object.keys(diffexpLists)) {
-        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        diffexpLists[polarity] = response[polarity].map((v: any) => [
-          varIndex.at(v[0], varIndexName),
-          ...v.slice(1),
-        ]);
+      for (const polarity of Object.keys(
+        diffexpLists
+      ) as (keyof typeof diffexpLists)[]) {
+        diffexpLists[polarity] = response[polarity].map(
+          // TODO: swap out with type defined at genesets reducer when made
+          (v: [LabelIndex, number, number, number]) => [
+            varIndex.at(v[0], varIndexName),
+            ...v.slice(1),
+          ]
+        );
       }
 
       /* then send the success case action through */
@@ -415,10 +416,9 @@ const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   window.history.pushState(null, "", url);
 };
 
-function fetchJson<T>(
-  pathAndQuery: string,
-  apiPrefix = globals.API.prefix
-): Promise<T> {
+function fetchJson<T>(pathAndQuery: string, apiPrefix?: string): Promise<T> {
+  if (!globals.API) throw new Error("API not initialized");
+  if (!apiPrefix) apiPrefix = globals.API.prefix;
   return doJsonRequest<T>(
     `${apiPrefix}${globals.API.version}${pathAndQuery}`
   ) as Promise<T>;

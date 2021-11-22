@@ -320,6 +320,7 @@ export const needToSaveObsAnnotations = (
 export const saveObsAnnotationsAction =
   () =>
   async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    if (!globals.API) throw new Error("API not set");
     const state = getState();
     const { annotations, autosave } = state;
     const { dataCollectionNameIsReadOnly, dataCollectionName } = annotations;
@@ -377,17 +378,19 @@ export const saveObsAnnotationsAction =
         });
       }
     } catch (error) {
-      dispatch({
-        type: "writable obs annotations - save error",
-        message: error.toString(),
-        error,
-      });
+      if (error instanceof Error)
+        dispatch({
+          type: "writable obs annotations - save error",
+          message: error.toString(),
+          error,
+        });
     }
   };
 
 export const saveGenesetsAction =
   () =>
   async (dispatch: AppDispatch, getState: GetState): Promise<unknown> => {
+    if (!globals.API) throw new Error("API not set");
     const state = getState();
 
     // bail if gene sets not available, or in readonly mode.
@@ -475,7 +478,7 @@ export const saveGenesetsAction =
     } catch (error) {
       return dispatch({
         type: "autosave: genesets error",
-        message: error.toString(),
+        message: (error as Error).toString(),
         error,
       });
     }
