@@ -3,10 +3,10 @@ name: Push Tests
 on:
   push:
     branches:
-    - main
-    - epic/*
+      - main
   pull_request:
-    branches: "*"
+    branches:
+      - "**"
 
 env:
   JEST_ENV: prod
