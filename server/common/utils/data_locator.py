@@ -93,7 +93,9 @@ class DataLocator:
         return self.fs.isfile(self.cname)
 
     def open(self, *args):
-        return self.fs.open(self.uri_or_path, *args)
+        return self.fs.open(
+            self.uri_or_path,
+        )
 
     def islocal(self):
         return self.protocol is None or self.protocol == "file"

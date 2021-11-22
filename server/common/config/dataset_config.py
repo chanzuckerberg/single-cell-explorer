@@ -140,8 +140,8 @@ class DatasetConfig(BaseConfig):
         server_config = self.app_config.server_config
         if server_config.single_dataset__datapath and self.user_annotations__local_file_csv__file:
             data_adaptor = MatrixDataLoader(
-                    location=server_config.single_dataset__datapath, app_config=self.app_config
-                ).validate_and_open()
+                location=server_config.single_dataset__datapath, app_config=self.app_config
+            ).validate_and_open()
             data_adaptor.check_new_labels(self.user_annotations.read_labels(data_adaptor))
 
     def handle_hosted_tiledb_annotations(self):

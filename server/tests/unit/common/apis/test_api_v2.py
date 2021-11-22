@@ -552,8 +552,9 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(result.headers["Content-Type"], "application/json")
 
         mock_get.assert_called_once_with(
-            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
-            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+            url="api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/",
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+        )
 
         # Check mocked MatrixDataLoader correctly loads schema
         result_data = json.loads(result.data)
@@ -574,8 +575,9 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertIsNotNone(result_data["config"])
 
         mock_get.assert_called_once_with(
-            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
-            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+            url="api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/",
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+        )
 
     @patch("server.data_common.dataset_metadata.requests.get")
     def test_get_annotations_obs_fbs(self, mock_get):
@@ -587,8 +589,9 @@ class TestDataLocatorMockApi(BaseTest):
 
         # check that the metadata api was called
         mock_get.assert_called_once_with(
-            url='api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/',
-            headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+            url="api.cellxgene.staging.single-cell.czi.technology/dp/v1/datasets/meta?url=https://cellxgene.staging.single-cell.czi.technology.com/e/pbmc3k_v1.cxg/",
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+        )
 
         # check response
         self.assertEqual(result.status_code, HTTPStatus.OK)
@@ -727,7 +730,6 @@ class TestDataLocatorMockApi(BaseTest):
             result.headers["Location"],
             "https://cellxgene.staging.single-cell.czi.technology.com/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
         )  # noqa E501
-
 
 
 class TestDatasetMetadata(BaseTest):
