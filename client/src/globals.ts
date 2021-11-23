@@ -199,6 +199,7 @@ export function updateAPIWithS3(s3URI: S3URI): string {
     throw new Error("Unable to set API route.");
   }
   const oldAPI = API.prefix;
+  // must be double quoted so slashes are not decoded early by flask WSGI.
   const URISafeS3URI = encodeURIComponent(s3URI);
   const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
   API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
