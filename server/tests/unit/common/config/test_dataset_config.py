@@ -155,17 +155,6 @@ class TestDatasetConfig(ConfigTests):
         # Change this default to test if the dataroot overrides below work.
         config.update_default_dataset_config(app__about_legal_tos="tos_default.html")
 
-        # specialize the configs for set1
-        config.add_dataroot_config(
-            "s1", user_annotations__enable=False, diffexp__enable=True, app__about_legal_tos="tos_set1.html"
-        )
-
-        # specialize the configs for set2
-        config.add_dataroot_config(
-            "s2", user_annotations__enable=True, diffexp__enable=False, app__about_legal_tos="tos_set2.html"
-        )
-
-        # no specializations for set3 (they get the default dataset config)
         config.complete_config()
 
         server = self.create_app(config)
@@ -178,23 +167,16 @@ class TestDatasetConfig(ConfigTests):
             data_config_set_1 = json.loads(response1.data)
 
             self.assertEqual(data_config_set_1["config"]["displayNames"]["dataset"], "pbmc3k")
-            self.assertFalse(data_config_set_1["config"]["parameters"]["annotations"])
-            self.assertFalse(data_config_set_1["config"]["parameters"]["disable-diffexp"])
-            self.assertEqual(data_config_set_1["config"]["parameters"]["about_legal_tos"], "tos_set1.html")
 
         with self.subTest("Test config for dataroot /set2 returns the s2 config"):
             response2 = session.get("/set2/pbmc3k.cxg/api/v0.2/config")
             data_config_set_2 = json.loads(response2.data)
             self.assertEqual(data_config_set_2["config"]["displayNames"]["dataset"], "pbmc3k")
-            self.assertTrue(data_config_set_2["config"]["parameters"]["annotations"])
-            self.assertEqual(data_config_set_2["config"]["parameters"]["about_legal_tos"], "tos_set2.html")
 
         with self.subTest("Test config for dataroot /set3/ returns the default dataset config"):
             response3 = session.get("/set3/pbmc3k.cxg/api/v0.2/config")
             data_config_set_3 = json.loads(response3.data)
             self.assertEqual(data_config_set_3["config"]["displayNames"]["dataset"], "pbmc3k")
-            self.assertTrue(data_config_set_3["config"]["parameters"]["annotations"])
-            self.assertFalse(data_config_set_3["config"]["parameters"]["disable-diffexp"])
             self.assertEqual(data_config_set_3["config"]["parameters"]["about_legal_tos"], "tos_default.html")
 
         response = session.get("/health")

@@ -5,9 +5,10 @@ from http import HTTPStatus
 import zlib
 import json
 
-from flask import make_response, jsonify, current_app, abort
+from flask import make_response, jsonify, current_app, abort, redirect
 from werkzeug.urls import url_unquote
 
+from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.errors import (
@@ -20,6 +21,7 @@ from server.common.errors import (
     ColorFormatException,
     AnnotationsError,
     UnsupportedSummaryMethod,
+    TombstoneError,
 )
 from server.common.genesets import summarizeQueryHash
 from server.common.fbs.matrix import decode_matrix_fbs
@@ -122,12 +124,24 @@ def schema_get(data_adaptor):
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
-def dataset_metadata_get(app_config, data_adaptor):
-    metadata = dataset_metadata.get_dataset_and_collection_metadata(data_adaptor.uri_path, app_config, current_app)
+def dataset_metadata_get(app_config, url_dataroot, dataset_id):
+    metadata = dataset_metadata.get_dataset_and_collection_metadata(url_dataroot, dataset_id, app_config)
     if metadata is not None:
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
     else:
         return abort(HTTPStatus.NOT_FOUND)
+
+
+def s3_uri_get(app_config, url_dataroot_id, dataset_id):
+    try:
+        dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
+    except TombstoneError as e:
+        parent_collection_url = (
+            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+        )
+        return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
+    else:
+        return make_response(jsonify(dataset_artifact_s3_uri), HTTPStatus.OK)
 
 
 def config_get(app_config, data_adaptor):

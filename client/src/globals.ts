@@ -1,7 +1,7 @@
 import { Colors } from "@blueprintjs/core";
 import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
-import { DataPortalProps } from "./common/types/entities";
+import { DataPortalProps, S3URI } from "./common/types/entities";
 
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
@@ -39,6 +39,7 @@ export interface Config {
     "disable-diffexp"?: boolean;
     "diffexp-may-be-slow"?: boolean;
     default_embedding?: string;
+    "max-category-items"?: number;
     [key: string]: unknown;
   };
   portalUrl: string;
@@ -151,15 +152,25 @@ const CXG_SERVER_PORT =
 
 let _API;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-if ((window as any).CELLXGENE && (window as any).CELLXGENE.API) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  _API = (window as any).CELLXGENE.API;
-} else if (CXG_SERVER_PORT === undefined) {
-    const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
-    dispatchNetworkErrorMessageToUser(errorMessage);
-    throw new Error(errorMessage);
+declare global {
+  interface Window {
+    CELLXGENE: {
+      API: {
+        prefix: string;
+        version: string;
+      };
+    };
   }
+}
+
+if (window?.CELLXGENE?.API) {
+  _API = window.CELLXGENE.API;
+} else if (CXG_SERVER_PORT === undefined) {
+  const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
+  dispatchNetworkErrorMessageToUser(errorMessage);
+  _API = {};
+  throw new Error(errorMessage);
+}
 
 export const API = _API;
 
@@ -167,7 +178,7 @@ export const API = _API;
  * Update the base API URL for the current dataset using the current origin and pathname.
  */
 export function updateApiPrefix(): void {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || !API) {
     throw new Error("Unable to set API route.");
   }
   const { location } = window;
@@ -176,4 +187,21 @@ export function updateApiPrefix(): void {
   // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
   // path segments taken from the pathname.
   API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
+}
+
+/**
+ * Update the base API URL for the current dataset using the S3 URI of the current dataset.
+ * @param s3Uri S3 URI of the current dataset.
+ * @returns The old API prefix.
+ */
+export function updateAPIWithS3(s3URI: S3URI): string {
+  if (!API) {
+    throw new Error("Unable to set API route.");
+  }
+  const oldAPI = API.prefix;
+  // must be double quoted so slashes are not decoded early by flask WSGI.
+  const URISafeS3URI = encodeURIComponent(s3URI);
+  const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
+  API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
+  return oldAPI;
 }

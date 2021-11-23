@@ -11,22 +11,12 @@ class MatrixDataType(Enum):
     UNKNOWN = "unknown"
 
 
+# TODO: rename to DatasetLoader
 class MatrixDataLoader(object):
-    def __init__(self, location, app_config=None, url_dataroot=None, matrix_data_type=None):
+    def __init__(self, location, app_config=None, matrix_data_type=None):
         """location can be a string or DataLocator"""
         self.app_config = app_config
-        self.url_dataroot = url_dataroot
-        self.dataset_config = self.app_config.default_dataset_config
-        if self.url_dataroot:
-            dataroot = None
-            for key, dataroot_dict in self.app_config.server_config.multi_dataset__dataroot.items():
-                if dataroot_dict["base_url"] == self.url_dataroot:
-                    dataroot = key
-                    break
-            if dataroot:
-                self.dataset_config = self.app_config.get_dataset_config(dataroot)
-        if self.dataset_config is None:
-            raise DatasetAccessError("Missing dataset config", HTTPStatus.NOT_FOUND)
+        self.dataset_config = self.__resolve_dataset_config()
         region_name = None if app_config is None else app_config.server_config.data_locator__s3__region_name
         self.location = DataLocator(location, region_name=region_name)
         if not self.location.exists():
@@ -49,6 +39,12 @@ class MatrixDataLoader(object):
             from server.data_cxg.cxg_adaptor import CxgAdaptor
 
             self.matrix_type = CxgAdaptor
+
+    def __resolve_dataset_config(self):
+        dataset_config = self.app_config.default_dataset_config
+        if dataset_config is None:
+            raise DatasetAccessError("Missing dataset config", HTTPStatus.NOT_FOUND)
+        return dataset_config
 
     # TODO @mdunitz remove when removing conversion code, also remove server_config.multi_dataset__allowed_matrix_types
     # https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/corpora-data-portal/1277 # noqa
@@ -93,10 +89,9 @@ class MatrixDataLoader(object):
 
     def open(self):
         # create and return a DataAdaptor object
+        return self.matrix_type.open(self.location, self.app_config)
 
-        return self.matrix_type.open(self.location, self.app_config, self.dataset_config)
-
-    def validate_and_open(self, dataset_location=None, **kwargs):
+    def validate_and_open(self):
         # create and return a DataAdaptor object
         self.pre_load_validation()
         return self.open()

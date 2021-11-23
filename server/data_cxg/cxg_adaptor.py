@@ -25,8 +25,8 @@ class CxgAdaptor(DataAdaptor):
         {"sm.tile_cache_size": 8 * 1024 * 1024 * 1024, "sm.num_reader_threads": 32, "vfs.s3.region": "us-east-1"}
     )
 
-    def __init__(self, data_locator, app_config=None, dataset_config=None):
-        super().__init__(data_locator, app_config, dataset_config)
+    def __init__(self, data_locator, app_config=None):
+        super().__init__(data_locator, app_config)
         self.lock = threading.Lock()
 
         self.url = data_locator.uri_or_path
@@ -73,8 +73,8 @@ class CxgAdaptor(DataAdaptor):
         return 0
 
     @staticmethod
-    def open(data_locator, app_config, dataset_config=None):
-        return CxgAdaptor(data_locator, app_config, dataset_config)
+    def open(data_locator, app_config):
+        return CxgAdaptor(data_locator, app_config)
 
     def get_about(self):
         return self.about if self.about else super().get_about()
