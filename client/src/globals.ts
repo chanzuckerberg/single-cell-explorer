@@ -163,7 +163,7 @@ declare global {
   }
 }
 
-if (window.CELLXGENE && window.CELLXGENE.API) {
+if (window?.CELLXGENE?.API) {
   _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
@@ -199,6 +199,7 @@ export function updateAPIWithS3(s3URI: S3URI): string {
     throw new Error("Unable to set API route.");
   }
   const oldAPI = API.prefix;
+  // must be double quoted so slashes are not decoded early by flask WSGI.
   const URISafeS3URI = encodeURIComponent(s3URI);
   const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
   API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
