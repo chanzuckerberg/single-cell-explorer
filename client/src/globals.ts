@@ -163,7 +163,7 @@ declare global {
   }
 }
 
-if (window.CELLXGENE && window.CELLXGENE.API) {
+if (window?.CELLXGENE?.API) {
   _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
