@@ -476,9 +476,14 @@ export const saveGenesetsAction =
         }),
       ]);
     } catch (error) {
+      if (error instanceof Error)
+        return dispatch({
+          type: "autosave: genesets error",
+          message: error.toString(),
+          error,
+        });
       return dispatch({
         type: "autosave: genesets error",
-        message: (error as Error).toString(),
         error,
       });
     }
