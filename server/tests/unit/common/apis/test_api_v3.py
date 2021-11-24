@@ -748,6 +748,24 @@ class TestS3URI(BaseTest):
         self.assertEqual(json.loads(result.data), s3_uri)
 
     @patch("server.data_common.dataset_metadata.requests.get")
+    def test_get_S3_URI_in_data_portal_format(self, mock_get):
+        s3_uri = f"{FIXTURES_ROOT}/pbmc3k.cxg/"
+        response_body = json.dumps(
+            {
+                "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
+                "collection_visibility": "PUBLIC",
+                "dataset_id": "2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
+                "s3_uri": s3_uri,
+                "tombstoned": False,
+            }
+        )
+        mock_get.return_value = MockResponse(body=response_body, status_code=200)
+
+        result = self.client.get(self.url)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(json.loads(result.data), s3_uri[:-1])
+
+    @patch("server.data_common.dataset_metadata.requests.get")
     def test_get_S3_URI_not_in_data_portal(self, mock_get):
         mock_get.return_value = MockResponse(body="", status_code=404)
         result = self.client.get(self.url)
