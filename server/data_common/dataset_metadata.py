@@ -1,5 +1,7 @@
 import json
 import logging
+from typing import Union
+
 import requests
 from flask import current_app
 
@@ -27,7 +29,7 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
         return None
 
 
-def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset_id: str):
+def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset_id: str) -> Union[str, None]:
     """
     Use the dataset_root, dataset_id, and the server config to infer the physical S3 URI for an Explorer dataset
     artifact
@@ -56,7 +58,7 @@ def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset
     return s3_uri
 
 
-def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
+def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig) -> dict:
     """
     Given the dataset root and dataset_id and the explorer web base url (from the app_config), returns the metadata for
     the dataset, including the s3 URI of the dataset artifact.

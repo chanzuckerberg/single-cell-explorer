@@ -6,7 +6,8 @@ from server.data_common.matrix_loader import MatrixDataLoader
 
 def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None):
     dataset_artifact_s3_uri = get_dataset_metadata(url_dataroot, dataset_id, current_app.app_config)["s3_uri"]
-    dataset_artifact_s3_uri = dataset_artifact_s3_uri.rstrip("/")  # remove trailing slash for cloudfront caching.
+    if dataset_artifact_s3_uri:
+        dataset_artifact_s3_uri = dataset_artifact_s3_uri.rstrip("/")  # remove trailing slash for cloudfront caching.
     return dataset_artifact_s3_uri
 
 
