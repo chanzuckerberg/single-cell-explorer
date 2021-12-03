@@ -22,7 +22,7 @@ def _cache_control(always, **cache_kwargs):
             if response.status_code >= 400:
                 return response
             for k, v in cache_kwargs.items():
-                setattr(cache_control, k, v)
+                setattr(response.cache_control, k, v)
             return response
 
         return wrapper
