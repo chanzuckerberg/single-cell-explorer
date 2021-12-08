@@ -28,7 +28,7 @@ test-annotations-scale:
 
 .PHONY: e2e
 e2e:
-		python -m unittest discover \
-		--start-directory tests/e2e \
-		--top-level-directory .. \
-		--verbose; test_result=$$?; \
+	python -m unittest discover \
+	--start-directory tests/e2e \
+	--top-level-directory .. \
+	--verbose; test_result=$$?; \
