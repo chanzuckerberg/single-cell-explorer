@@ -54,6 +54,7 @@ class TestAPICache(unittest.TestCase):
                     msg=self.generate_error_msg(response, error_message),
                 )
 
+                # Call the request twice to make sure the cache wasn't cold.
                 response = requests.head(url)
                 verify_cache_control(response)
                 self.assertEqual(
@@ -78,11 +79,12 @@ class TestAPICache(unittest.TestCase):
                 # Test
                 url = "/".join([url_base, endpoint])
                 response = requests.head(url)
-                "https://api.cellxgene.dev.single-cell.czi.technology/cellxgene/e/276f87b0-5ed9-42bb-b751-d6cf85500a99.cxg"
+
                 # Verify
                 response.raise_for_status()
                 self.assertIn(response.headers["x-cache"], [self.cloudfront_miss, self.cloudfront_hit])
 
+                # Call the request twice to make sure the cache wasn't cold.
                 response = requests.head(url)
                 response.raise_for_status()
                 self.assertEqual(
