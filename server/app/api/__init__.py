@@ -4,6 +4,7 @@ from flask import Blueprint, make_response, current_app
 
 webbp = Blueprint("webapp", "server.common.web", template_folder="templates")
 ONE_WEEK = 7 * 24 * 60 * 60
+ONE_YEAR = 365 * 24 * 60 * 60
 
 
 def _cache_control(always, **cache_kwargs):

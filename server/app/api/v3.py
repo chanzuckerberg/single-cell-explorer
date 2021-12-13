@@ -11,7 +11,7 @@ from flask import (
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
-from server.app.api import cache_control
+from server.app.api import ONE_YEAR, cache_control
 from server.app.api.util import get_data_adaptor
 from server.app.api.v2 import DatasetMetadataAPI
 from server.common.errors import (
@@ -61,21 +61,21 @@ class S3URIResource(Resource):
 
 class SchemaAPI(S3URIResource):
     # TODO @mdunitz separate dataset schema and user schema
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
 
 
 class ConfigAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.config_get(current_app.app_config, data_adaptor)
 
 
 class AnnotationsObsAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.annotations_obs_get(request, data_adaptor)
@@ -87,7 +87,7 @@ class AnnotationsObsAPI(S3URIResource):
 
 
 class AnnotationsVarAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.annotations_var_get(request, data_adaptor)
@@ -99,14 +99,14 @@ class DataVarAPI(S3URIResource):
     def put(self, data_adaptor):
         return common_rest.data_var_put(request, data_adaptor)
 
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.data_var_get(request, data_adaptor)
 
 
 class ColorsAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.colors_get(data_adaptor)
@@ -120,14 +120,14 @@ class DiffExpObsAPI(DatasetResource):
 
 
 class LayoutObsAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.layout_obs_get(request, data_adaptor)
 
 
 class GenesetsAPI(S3URIResource):
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
         return common_rest.genesets_get(request, data_adaptor)
@@ -135,7 +135,7 @@ class GenesetsAPI(S3URIResource):
 
 class SummarizeVarAPI(S3URIResource):
     @rest_get_data_adaptor
-    @cache_control(immutable=True)
+    @cache_control(immutable=True, max_age=ONE_YEAR)
     def get(self, data_adaptor):
         return common_rest.summarize_var_get(request, data_adaptor)
 
