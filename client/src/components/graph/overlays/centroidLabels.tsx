@@ -71,7 +71,7 @@ export default class CentroidLabels extends PureComponent {
     dispatch({
       type: "category value mouse hover start",
       metadataField: colorAccessor,
-      categoryField: label,
+      label,
     });
   };
 
@@ -83,7 +83,7 @@ export default class CentroidLabels extends PureComponent {
     dispatch({
       type: "category value mouse hover end",
       metadataField: colorAccessor,
-      categoryField: label,
+      label,
     });
   };
 
