@@ -1,10 +1,12 @@
 import json
 import logging
+from typing import Union
+
 import requests
 from flask import current_app
 
 from server.common.utils.utils import path_join
-from server.common.errors import DatasetNotFoundError, DatasetAccessError, DatasetMetadataError, TombstoneError
+from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
 from server.common.config.app_config import AppConfig
 from server.common.config.server_config import ServerConfig
 
@@ -27,47 +29,48 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
         return None
 
 
-def extrapolate_dataset_location_from_config(server_config: ServerConfig, dataset_explorer_location: str):
+def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset_id: str) -> Union[str, None]:
     """
-    Use the dataset_explorer_location and the server config to determine where the dataset is stored
+    Use the dataset_root, dataset_id, and the server config to infer the physical S3 URI for an Explorer dataset
+    artifact
     """
     # TODO @mdunitz remove after fork, update config to remove single_dataset option, the multiroot lookup will need to
     #  remain while we support covid 19 cell atlas.
     #   See ticket https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/corpora-data-portal/1281 # noqa
     if server_config.single_dataset__datapath:
-        datapath = server_config.single_dataset__datapath
-        return datapath
-    else:
-        dataset_explorer_location = dataset_explorer_location.split("/")
-        dataset = dataset_explorer_location.pop(-1)
-        url_dataroot = "/".join(dataset_explorer_location)
-        dataroot = None
-        for key, dataroot_dict in server_config.multi_dataset__dataroot.items():
-            if dataroot_dict["base_url"] == url_dataroot:
-                dataroot = dataroot_dict["dataroot"]
-                break
-        if dataroot is None:
-            raise DatasetAccessError(f"Invalid dataset {url_dataroot}/{dataset}")
-        datapath = path_join(dataroot, dataset)
-        # path_join returns a normalized path.  Therefore it is
-        # sufficient to check that the datapath starts with the
-        # dataroot to determine that the datapath is under the dataroot.
-        if not datapath.startswith(dataroot):
-            raise DatasetAccessError(f"Invalid dataset {url_dataroot}/{dataset}")
-        return datapath
+        return server_config.single_dataset__datapath
+
+    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+        if dataroot_dict["base_url"] == dataset_root:
+            dataroot = dataroot_dict["dataroot"]
+            break
+    if dataroot is None:
+        raise DatasetAccessError(f"Invalid dataset root {dataset_root}")
+
+    s3_uri = path_join(dataroot, dataset_id)
+
+    # TODO: Is the check still necessary?
+    # path_join returns a normalized path.  Therefore it is
+    # sufficient to check that the datapath starts with the
+    # dataroot to determine that the datapath is under the dataroot.
+    if not s3_uri.startswith(dataroot):
+        raise DatasetAccessError(f"Invalid dataset {s3_uri}")
+    return s3_uri
 
 
-def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, app_config: AppConfig):
+def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig) -> dict:
     """
-    Given the dataset access location(the path to view the dataset in the explorer including the dataset root,
-    also used as the cache key) and the explorer web base url (from the app_config) this function returns the location
-    of the dataset, along with additional metadata.
-    The dataset location is is either retrieved from the data portal, or built based on the dataroot information stored
-    in the server config.
+    Given the dataset root and dataset_id and the explorer web base url (from the app_config), returns the metadata for
+    the dataset, including the s3 URI of the dataset artifact.
+
+    The dataset location is is either retrieved from the data portal, or inferred from the dataset_root, dataset_id,
+    and the server config.
+
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
+    explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
+
     if app_config.server_config.data_locator__api_base:
-        explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_explorer_location}"
         dataset_metadata = request_dataset_metadata_from_data_portal(
             data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
         )
@@ -85,61 +88,57 @@ def get_dataset_metadata_for_explorer_location(dataset_explorer_location: str, a
                 raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
             return dataset_metadata
 
-    server_config = app_config.server_config
-    dataset_metadata = {
+    current_app.logger.log(
+        logging.INFO,
+        f"Dataset not found by Data Portal: {explorer_url_path}. "
+        "Falling back to deriving S3 location from request URL.",
+    )
+
+    s3_uri = infer_dataset_s3_uri(
+        server_config=app_config.server_config, dataset_root=dataset_root, dataset_id=dataset_id
+    )
+
+    return {
         "collection_id": None,
         "collection_visibility": None,
         "dataset_id": None,
-        "s3_uri": None,
+        "s3_uri": s3_uri,
         "tombstoned": False,
     }
-    dataset_metadata["s3_uri"] = extrapolate_dataset_location_from_config(
-        server_config=server_config, dataset_explorer_location=dataset_explorer_location
-    )
-    if dataset_metadata["s3_uri"] is None:
-        current_app.logger.log(logging.INFO, f"Dataset not found: {dataset_explorer_location}")
-        raise DatasetNotFoundError(f"Dataset location not found for {dataset_explorer_location}")
-
-    return dataset_metadata
 
 
-def get_dataset_and_collection_metadata(dataset_explorer_location: str, app_config: AppConfig, current_app):
+def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
     data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
-    web_base_url = app_config.server_config.get_web_base_url()
 
     try:
-        dataset_metadata_manager = current_app.dataset_metadata_cache_manager
-        with dataset_metadata_manager.get(
-            cache_key=dataset_explorer_location,
-            create_data_function=get_dataset_metadata_for_explorer_location,
-            create_data_args={"app_config": app_config},
-        ) as base_metadata:
+        base_metadata = get_dataset_metadata(dataset_root, dataset_id, app_config)
 
-            collection_id = base_metadata.get("collection_id")
-            if collection_id is None:
-                return None
+        collection_id = base_metadata.get("collection_id")
+        if collection_id is None:
+            return None
 
-            dataset_id = base_metadata["dataset_id"]
-            collection_visibility = base_metadata["collection_visibility"]
+        dataset_id = base_metadata["dataset_id"]
+        collection_visibility = base_metadata["collection_visibility"]
 
-            suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
-            suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
+        suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
+        suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
 
-            res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
-            metadata = {
-                "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
-                "dataset_id": dataset_id,
-                "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
-                "collection_name": res["name"],
-                "collection_description": res["description"],
-                "collection_contact_email": res["contact_email"],
-                "collection_contact_name": res["contact_name"],
-                "collection_links": res["links"],
-                "collection_datasets": res["datasets"],
-            }
+        web_base_url = app_config.server_config.get_web_base_url()
+        metadata = {
+            "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+            "dataset_id": dataset_id,
+            "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
+            "collection_name": res["name"],
+            "collection_description": res["description"],
+            "collection_contact_email": res["contact_email"],
+            "collection_contact_name": res["contact_name"],
+            "collection_links": res["links"],
+            "collection_datasets": res["datasets"],
+        }
 
-            return metadata
+        return metadata
 
-    except Exception:
-        raise DatasetMetadataError("Error retrieving dataset metadata")
+    except Exception as ex:
+        raise DatasetMetadataError("Error retrieving dataset metadata") from ex

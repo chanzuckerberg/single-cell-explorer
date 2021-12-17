@@ -35,6 +35,13 @@
     </style>
   </head>
   <body>
+    <script type="text/javascript">
+      window.CELLXGENE = {};
+      window.CELLXGENE.API = {
+        prefix: `http://localhost:<%= CXG_SERVER_PORT %>${location.pathname}/api/`,
+        version: "v0.3/",
+      };
+    </script>
     <noscript
       >If you're seeing this message, that means
       <strong>JavaScript has been disabled on your browser</strong>, please

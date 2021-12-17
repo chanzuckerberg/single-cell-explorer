@@ -25,8 +25,8 @@ def anndata_version_is_pre_070():
 
 
 class AnndataAdaptor(DataAdaptor):
-    def __init__(self, data_locator, app_config=None, dataset_config=None):
-        super().__init__(data_locator, app_config, dataset_config)
+    def __init__(self, data_locator, app_config=None):
+        super().__init__(data_locator, app_config)
         self.data = None
         self.X_approximate_distribution = None
         self._load_data(data_locator)
@@ -52,8 +52,8 @@ class AnndataAdaptor(DataAdaptor):
         return data_locator.size() if data_locator.islocal() else 0
 
     @staticmethod
-    def open(data_locator, app_config, dataset_config=None):
-        return AnndataAdaptor(data_locator, app_config, dataset_config)
+    def open(data_locator, app_config):
+        return AnndataAdaptor(data_locator, app_config)
 
     def get_corpora_props(self):
         return corpora_get_props_from_anndata(self.data)

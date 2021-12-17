@@ -2,9 +2,11 @@ name: Push Tests
 
 on:
   push:
-    branches: main
+    branches:
+      - main
   pull_request:
-    branches: "*"
+    branches:
+      - "**"
 
 env:
   JEST_ENV: prod
@@ -65,7 +67,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: make pydist-server install-dist dev-env-server
+        run: make dev-env-server build-for-server-dev
       - name: Unit tests
         run: |
           make unit-test-server
@@ -96,7 +98,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: make pydist-server install-dist
+        run: make dev-env-server build-for-server-dev
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test

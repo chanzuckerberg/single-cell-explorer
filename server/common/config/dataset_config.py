@@ -139,14 +139,10 @@ class DatasetConfig(BaseConfig):
         # so that we can remove errors early in the process.
         server_config = self.app_config.server_config
         if server_config.single_dataset__datapath and self.user_annotations__local_file_csv__file:
-            with server_config.matrix_data_cache_manager.get(
-                cache_key=server_config.single_dataset__datapath,
-                create_data_function=MatrixDataLoader(
-                    location=server_config.single_dataset__datapath, app_config=self.app_config
-                ).validate_and_open,
-                create_data_args={"dataset_config": self},
-            ) as data_adaptor:
-                data_adaptor.check_new_labels(self.user_annotations.read_labels(data_adaptor))
+            data_adaptor = MatrixDataLoader(
+                location=server_config.single_dataset__datapath, app_config=self.app_config
+            ).validate_and_open()
+            data_adaptor.check_new_labels(self.user_annotations.read_labels(data_adaptor))
 
     def handle_hosted_tiledb_annotations(self):
         self.validate_correct_type_of_configuration_attribute("user_annotations__hosted_tiledb_array__db_uri", str)

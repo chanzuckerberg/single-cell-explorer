@@ -18,30 +18,9 @@ Whether you need to visualize one thousand cells or one million, cellxgene helps
 [The cellxgene documentation is your one-stop-shop for information about cellxgene](https://chanzuckerberg.github.io/cellxgene/)! You may be particularly interested in:
 
 - Seeing [what cellxgene can do](https://chanzuckerberg.github.io/cellxgene/posts/gallery)
-- Learning more about cellxgene [installation](https://chanzuckerberg.github.io/cellxgene/posts/install) and [usage](https://chanzuckerberg.github.io/cellxgene/posts/launch)
 - [Preparing your own data](https://chanzuckerberg.github.io/cellxgene/posts/prepare) for use in cellxgene
 - Checking out [our roadmap](https://chanzuckerberg.github.io/cellxgene/posts/roadmap) for future development
 - [Contributing](https://chanzuckerberg.github.io/cellxgene/posts/contribute) to cellxgene
-
-### Quick start
-
-To install cellxgene you need Python 3.6+. We recommend [installing cellxgene into a conda or virtual environment.](https://chanzuckerberg.github.io/cellxgene/posts/install)
-
-Install the package.
-
-```bash
-pip install cellxgene
-```
-
-Launch cellxgene with an example [anndata](https://anndata.readthedocs.io/en/latest/) file
-
-```bash
-cellxgene launch https://cellxgene-example-data.czi.technology/pbmc3k.h5ad
-```
-
-To explore more datasets already formatted for cellxgene, check out the [Demo data](https://chanzuckerberg.github.io/cellxgene/posts/demo-data) or
-see [Preparing your data](https://chanzuckerberg.github.io/cellxgene/posts/prepare) to learn more about formatting your own
-data for cellxgene.
 
 ### Supported browsers
 

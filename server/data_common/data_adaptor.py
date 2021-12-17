@@ -22,7 +22,7 @@ from server.common.fbs.matrix import encode_matrix_fbs
 class DataAdaptor(metaclass=ABCMeta):
     """Base class for loading and accessing matrix data"""
 
-    def __init__(self, data_locator, app_config, dataset_config=None):
+    def __init__(self, data_locator, app_config):
         if type(app_config) != AppConfig:
             raise TypeError("config expected to be of type AppConfig")
 
@@ -30,17 +30,11 @@ class DataAdaptor(metaclass=ABCMeta):
         self.data_locator = data_locator
 
         # config is the application configuration
-        self.app_config = app_config
-        self.server_config = self.app_config.server_config
-        self.dataset_config = dataset_config or app_config.default_dataset_config
+        self.server_config = app_config.server_config
+        self.dataset_config = app_config.default_dataset_config
 
         # parameters set by this data adaptor based on the data.
         self.parameters = {}
-        self.uri_path = None
-
-    def set_uri_path(self, path):
-        # uri path to the dataset, e.g. /d/<datasetname>
-        self.uri_path = path
 
     @staticmethod
     @abstractmethod
@@ -49,7 +43,7 @@ class DataAdaptor(metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def open(data_locator, app_config, dataset_config):
+    def open(data_locator, app_config):
         pass
 
     @staticmethod
@@ -121,6 +115,12 @@ class DataAdaptor(metaclass=ABCMeta):
     def get_var_keys(self):
         # return list of keys
         pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.cleanup()
 
     @abstractmethod
     def cleanup(self):

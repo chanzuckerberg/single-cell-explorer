@@ -34,7 +34,7 @@ To run unit tests for the `client` code only:
 
 ### End to end tests
 
-To run E2E tests, run `cd client` and `make smoke-test`
+To run E2E tests, run `make smoke-test`
 
 #### Flags
 
@@ -50,9 +50,9 @@ To run E2E tests, run `cd client` and `make smoke-test`
 
 #### Run end to end tests interactively during development
 
-1. explorer should be installed as [specified in client dev](#install)
+1. The Explorer requirements should be installed as [specified in client dev](#install)
 
-1. Follow [launch](#launch) instructions for client dev with dataset `example-dataset/pbmc3k`
+1. Follow [launch](#launch) instructions for client dev (defaults to `example-dataset/pbmc3k.h5ad` dataset unless otherwise specified)
 
 1. Run `npm run e2e` from the `client` directory
 
@@ -65,30 +65,20 @@ To run E2E tests, run `cd client` and `make smoke-test`
 #### To run end to end tests _exactly_ as they will be run on CI use the following command
 
 ```shell
-JEST_ENV=prod make pydist install-dist dev-env smoke-test
+JEST_ENV=prod make dev-env smoke-test
 ```
 
 ## Server dev
 
-### Install
+### Build
 
-To install from the source tree
+Build the client and put static files in place
 
-- Build the client and put static files in place: `make build-for-server-dev`
-- Install from local files: `make install-dev`
-
-To install from a candidate python distribution
-
-- Make the distribution: `make pydist`
-- Install it: `make install-dist`
+```make build-for-server-dev```
 
 ### Launch
 
-- `cellxgene launch [options] <datafile>` or `make start-server`
-
-### Reloading
-
-If you install explorer using `make install-dev` the server will be restarted every time you make changes on the server code. If changes affects the client, the browser must be reloaded.
+```./launch_dev_server.sh [dataset] [options]```
 
 ### Linter
 
@@ -101,7 +91,7 @@ To auto-format code run `make fmt`. To run lint checks on the code run `make lin
 If you would like to run the server tests individually, follow the steps below
 
 1. Install development requirements `make dev-env`
-1. Run `make unit-test` in the `server` directory or `make unit-test-server` in the root directory.
+1. Run `make unit-test` in the `server/` directory or `make unit-test-server` in the root directory.
 
 ### Tips
 
@@ -113,15 +103,17 @@ If you would like to run the server tests individually, follow the steps below
 ### Install
 
 1. Install prereqs for client: `make dev-env`
-2. Install explorer server as described in the [server install](#install) instructions above.
 
 ### Launch
 
 To launch with hot reloading, you need to launch the server and the client separately. Node's hot reloading starts the client on its own node server and auto-refreshes when changes are made to source files.
 
-1. Launch server (the client relies on the REST API being available): `cellxgene launch --debug [other_options] <datafile>` or `make start-server`
+1. Launch server (the client relies on the REST API being available): `./launch_dev_server.sh [dataset] [options]`
 2. Launch client: in `client/` directory run `make start-frontend`
-3. Client will be served on `localhost:3000`
+3. Client will be served on `localhost:3000/d/<dataset>`
+   - Default base_url of `d` is hard-coded.
+   - The `dataset` will be the argument passed to the server launch script OR will default to example dataset
+   - The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar
 
 ### Build
 
@@ -140,12 +132,12 @@ If you would like to run the client tests individually, follow the steps below i
 
 If you would like to run the smoke tests against a hot-reloaded version of the client:
 
-1. Start the hot-reloading servers as described in the [Client dev section](#client-dev). If you plan to run the standard test suite (without annotations), you'll have to start the backend server with annotations disabled (e.g. `CXG_OPTIONS='--debug --disable-annotations' make start-server`).
+1. Start the hot-reloading servers as described in the [Client dev section](#client-dev). If you plan to run the standard test suite (without annotations), you'll have to start the backend server with annotations disabled (e.g. `./launch_dev_server.sh --debug --disable-annotations`).
 1. From the project root, `cd client`
 1. Run either the standard E2E test suite with `npm run e2e` or the annotations test suite with `npm run e2e-annotations`
 
 ### Tips
 
-- You can also install/launch the server side code from npm scrips (requires python3.6 with virtualenv) with the `scripts/backend_dev` script.
+- You can also launch the server side code from npm scrips (requires python3.6 with virtualenv) with the `scripts/backend_dev` script.
 
 - Check out [e2e Tests](e2e_tests.md) for more details

@@ -29,10 +29,7 @@ var formatStats = (stats, port) => {
   var hasErrors = stats.hasErrors();
   var hasWarnings = stats.hasWarnings();
   if (!hasErrors && !hasWarnings) {
-    console.log(chalk.green("Compiled successfully!"));
-    console.log();
-    console.log("The app is running at http://localhost:" + port + "/");
-    console.log();
+    console.log(chalk.green("\nCompiled successfully!\n"));
     return;
   }
 
