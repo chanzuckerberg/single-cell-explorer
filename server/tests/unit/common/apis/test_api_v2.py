@@ -745,6 +745,7 @@ class TestDatasetMetadata(BaseTest):
             app__flask_secret_key="testing",
             app__debug=True,
             data_locator__s3__region_name="us-east-1",
+            app__generate_cache_control_headers=True,
         )
         cls.meta_response_body = {
             "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
@@ -757,6 +758,12 @@ class TestDatasetMetadata(BaseTest):
 
         cls.app.testing = True
         cls.client = cls.app.test_client()
+
+    def verify_response(self, result):
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+        self.assertTrue(result.cache_control.no_store)
+        self.assertEqual(result.cache_control.max_age, 0)
 
     @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
     @patch("server.data_common.dataset_metadata.requests.get")
@@ -790,8 +797,7 @@ class TestDatasetMetadata(BaseTest):
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url)
 
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
+        self.verify_response(result)
 
         self.assertEqual(mock_get.call_count, 1)
 
@@ -843,8 +849,7 @@ class TestDatasetMetadata(BaseTest):
         url = f"{self.TEST_URL_BASE}{endpoint}"
         result = self.client.get(url)
 
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
+        self.verify_response(result)
 
         self.assertEqual(mock_get.call_count, 1)
 
