@@ -662,8 +662,8 @@ class TestDatasetMetadata(BaseTest):
         self.assertTrue(result.cache_control.no_store)
         self.assertEqual(result.cache_control.max_age, 0)
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_public_collection(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_public.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"

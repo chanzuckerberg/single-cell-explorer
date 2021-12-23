@@ -540,8 +540,8 @@ class TestDatasetMetadata(BaseTest):
         cls.app.testing = True
         cls.client = cls.app.test_client()
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_public_collection(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_public.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/"
@@ -591,8 +591,8 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_private_collection(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_private.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/"
@@ -644,7 +644,7 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_dataset_metadata_api_fails_gracefully_on_dataset_not_found(self, mock_dp):
         # Force a new dataset name, otherwise a cache entry will be found and the mock will not be applied
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_2.cxg"
@@ -659,8 +659,8 @@ class TestDatasetMetadata(BaseTest):
 
         self.assertEqual(result.status_code, HTTPStatus.NOT_FOUND)
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_fails_gracefully_on_connection_failure(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.3/"
@@ -729,7 +729,7 @@ class TestS3URI(BaseTest):
 
         cls.url = f"{test_url_base}{endpoint}"
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_get_S3_URI_in_data_portal(self, mock_get):
         test_s3_uris = [
             (f"{FIXTURES_ROOT}/pbmc3k.cxg", f"{FIXTURES_ROOT}/pbmc3k.cxg"),
@@ -752,14 +752,14 @@ class TestS3URI(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.OK)
                 self.assertEqual(json.loads(result.data), expected)
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_get_S3_URI_not_in_data_portal(self, mock_get):
         mock_get.return_value = MockResponse(body="", status_code=404)
         result = self.client.get(self.url)
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertIsNotNone(json.loads(result.data))
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
         response_body = json.dumps(
             {
