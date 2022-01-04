@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from server.common.config.app_config import AppConfig
 from server.tests import FIXTURES_ROOT
-from server.tests.unit import BaseTest
+from server.tests.unit.common.apis.test_api_v3 import BaseTest
 
 VERSION = "v0.2"
 
@@ -16,30 +16,25 @@ class CorporaRESTAPITest(BaseTest):
     def setUpClass(cls, app_config=None):
         if not app_config:
             app_config = AppConfig()
-        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
+        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT,
+                                        app__flask_secret_key="test")
 
         super().setUpClass(app_config)
         cls.app.testing = True
         cls.client = cls.app.test_client()
 
-    def setUp(self):
-        self.session = self.client
-        # TODO: Does this CXG test fixture contain corpora props?
-        self.url_base = "/d/corpora-pbmc3k.cxg/api/v0.2/"
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        os.remove(cls.dst)
-
     # TODO: This test fails when run on its own, and succeeds when run with `make unit-test`.
     # Because app_config is being instantiated in our setupClass() and passed to the super.setupClass(), the required
-    # config is not set by the parent class and config validation fails. For some reason this is _not_ happening when
-    # the full test suite is run. Perhaps the test server is already running and the new configuration is ignored?
+    # config (i.e., setting `app__flask_secret_key`) is not set by the parent class and config validation fails. For
+    # some reason this is _not_ happening when the full test suite is run. Perhaps the test server is already running
+    # and the new configuration is ignored?
     def test_config(self):
         endpoint = "config"
-        url = f"{self.url_base}{endpoint}"
+
+        test_s3_uri_encoded = self.encode_s3_uri(f"{FIXTURES_ROOT}/schema_2_0_0.cxg")
+        url = f"/s3_uri/{test_s3_uri_encoded}/api/v0.3/config"
         header = {"Content-Type": "application/json"}
-        result = self.session.get(url, headers=header)
+        result = self.client.get(url, headers=header)
         self.assertEqual(result.status_code, HTTPStatus.OK)
         self.assertEqual(result.headers["Content-Type"], "application/json")
 
@@ -50,7 +45,9 @@ class CorporaRESTAPITest(BaseTest):
         corpora_props = result_data["config"]["corpora_props"]
         parameters = result_data["config"]["parameters"]
 
-        self.assertEqual(corpora_props["version"]["corpora_schema_version"], "1.0.0")
+        self.assertEqual(corpora_props["schema_version"], "2.0.0")
 
-        self.assertEqual(corpora_props["organism"], "human")
-        self.assertEqual(parameters["default_embedding"], "tsne")
+        self.assertEqual(corpora_props["title"],
+                         "Spatiotemporal analysis of human intestinal development at single-cell resolution: Fetal A7")
+        # TODO: reinstate? would need to add `default_embedding` to test.cxg file
+        # self.assertEqual(parameters["default_embedding"], "tsne")

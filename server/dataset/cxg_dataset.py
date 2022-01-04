@@ -404,12 +404,10 @@ class CxgDataset(Dataset):
             A = self.open_array(str(axis))
 
             # may raise if fields contains unknown key
-            if fields is None:
+            if not fields:
                 data = A[:]
-            elif fields:
-                data = A.query(attrs=fields)[:]
             else:
-                data = {}
+                data = A.query(attrs=fields)[:]
 
             df = pd.DataFrame.from_dict(data)
 

@@ -5,6 +5,7 @@ import zlib
 from http import HTTPStatus
 
 from flask import make_response, jsonify, current_app, abort, redirect
+from tiledb import TileDBError
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
@@ -151,7 +152,8 @@ def annotations_obs_get(request, data_adaptor):
     try:
         fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields)
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
-    except KeyError as e:
+    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version is upgraded in requirements.txt
+    except (KeyError, TileDBError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
@@ -174,7 +176,8 @@ def annotations_var_get(request, data_adaptor):
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
-    except KeyError as e:
+    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version is upgraded in requirements.txt
+    except (KeyError, TileDBError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
