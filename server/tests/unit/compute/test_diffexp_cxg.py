@@ -1,16 +1,15 @@
-import os
 import tempfile
 import unittest
 
 import numpy as np
 
-from server.compute import diffexp_cxg
 from server.common.compute import diffexp_generic
-from server.compute.diffexp_cxg import diffexp_ttest
 from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
+from server.compute import diffexp_cxg
+from server.compute.diffexp_cxg import diffexp_ttest
 from server.dataset.matrix_loader import MatrixDataLoader
+from server.tests import FIXTURES_ROOT
 from server.tests.unit import app_config
-from server.tests import PROJECT_ROOT, FIXTURES_ROOT
 
 
 class DiffExpTest(unittest.TestCase):
@@ -76,14 +75,6 @@ class DiffExpTest(unittest.TestCase):
         varmask[cols] = True
         return adaptor.get_X_array(None, varmask)
 
-    def test_anndata_default(self):
-        """Test an anndata adaptor with its default diffexp algorithm (diffexp_generic)"""
-        adaptor = self.load_dataset(f"{PROJECT_ROOT}/example-dataset/pbmc3k.h5ad")
-        maskA = self.get_mask(adaptor, 1, 10)
-        maskB = self.get_mask(adaptor, 2, 10)
-        results = adaptor.compute_diffexp_ttest(maskA, maskB, 10)
-        self.check_1_10_2_10(results)
-
     def test_cxg_default(self):
         """Test a cxg adaptor with its default diffexp algorithm (diffexp_cxg)"""
         adaptor = self.load_dataset(f"{FIXTURES_ROOT}/pbmc3k.cxg")
@@ -109,75 +100,55 @@ class DiffExpTest(unittest.TestCase):
         self.check_1_10_2_10(results)
 
     def test_cxg_sparse(self):
-        self.sparse_diffexp(False)
+        adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg", )
+        adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_no_col_shift.cxg")
+        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
+        assert not adaptor_sparse.has_array('X_col_shift')  # sanity check
+
+        self.sparse_diffexp(adaptor_dense, adaptor_sparse)
 
     def test_cxg_sparse_col_shift(self):
-        self.sparse_diffexp(True)
+        adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_col_shift.cxg", )
+        adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_col_shift.cxg")
+        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
+        assert adaptor_sparse.has_array('X_col_shift')  # sanity check
 
-    # TODO: Update to use CXG instead of H5AD
-    # def sparse_diffexp(self, apply_col_shift):
-    #     with tempfile.TemporaryDirectory() as dirname:
-    #         # create a sparse matrix
-    #         h5adfile_path = os.path.join(dirname, "sparse.h5ad")
-    #         create_test_h5ad(h5adfile_path, 2000, 2000, 10, apply_col_shift)
-    #
-    #         h5ad_file_to_convert = H5ADDataFile(h5adfile_path, use_corpora_schema=False)
-    #
-    #         sparsename = os.path.join(dirname, "sparse.cxg")
-    #         h5ad_file_to_convert.to_cxg(sparsename, 11, True)
-    #
-    #         adaptor_anndata = self.load_dataset(h5adfile_path, extra_dataset_config=dict(embeddings__names=[]))
-    #
-    #         adaptor_sparse = self.load_dataset(sparsename)
-    #         assert adaptor_sparse.open_array("X").schema.sparse
-    #         assert adaptor_sparse.has_array("X_col_shift") == apply_col_shift
-    #
-    #         densename = os.path.join(dirname, "dense.cxg")
-    #         h5ad_file_to_convert.to_cxg(densename, True, 0)
-    #         adaptor_dense = self.load_dataset(densename)
-    #         assert not adaptor_dense.open_array("X").schema.sparse
-    #         assert not adaptor_dense.has_array("X_col_shift")
-    #
-    #         maskA = self.get_mask(adaptor_anndata, 1, 10)
-    #         maskB = self.get_mask(adaptor_anndata, 2, 10)
-    #
-    #         diffexp_results_anndata = diffexp_generic.diffexp_ttest(adaptor_anndata, maskA, maskB, 10)
-    #         diffexp_results_sparse = diffexp_cxg.diffexp_ttest(adaptor_sparse, maskA, maskB, 10)
-    #         diffexp_results_dense = diffexp_cxg.diffexp_ttest(adaptor_dense, maskA, maskB, 10)
-    #
-    #         self.compare_diffexp_results(diffexp_results_anndata["positive"], diffexp_results_sparse["positive"])
-    #         self.compare_diffexp_results(diffexp_results_anndata["negative"], diffexp_results_sparse["negative"])
-    #
-    #         self.compare_diffexp_results(diffexp_results_anndata["positive"], diffexp_results_dense["positive"])
-    #         self.compare_diffexp_results(diffexp_results_anndata["negative"], diffexp_results_dense["negative"])
-    #
-    #         topcols_pos = np.array([x[0] for x in diffexp_results_anndata["positive"]])
-    #         topcols_neg = np.array([x[0] for x in diffexp_results_anndata["negative"]])
-    #         topcols = np.concatenate((topcols_pos, topcols_neg))
-    #
-    #         cols_anndata = self.get_X_col(adaptor_anndata, topcols)
-    #         cols_sparse = self.get_X_col(adaptor_sparse, topcols)
-    #         cols_dense = self.get_X_col(adaptor_dense, topcols)
-    #
-    #         assert cols_anndata.shape[0] == adaptor_sparse.get_shape()[0]
-    #         assert cols_anndata.shape[1] == len(diffexp_results_anndata["positive"]) + len(
-    #             diffexp_results_anndata["negative"]
-    #         )
-    #
-    #         def convert(mat, cols):
-    #             return decode_matrix_fbs(encode_matrix_fbs(mat, col_idx=cols)).to_numpy()
-    #
-    #         cols_anndata = convert(cols_anndata, topcols)
-    #         cols_sparse = convert(cols_sparse, topcols)
-    #         cols_dense = convert(cols_dense, topcols)
-    #
-    #         x = adaptor_sparse.get_X_array()
-    #         assert x.shape == adaptor_sparse.get_shape()
-    #
-    #         for row in range(cols_anndata.shape[0]):
-    #             for col in range(cols_anndata.shape[1]):
-    #                 vanndata = cols_anndata[row][col]
-    #                 vsparse = cols_sparse[row][col]
-    #                 vdense = cols_dense[row][col]
-    #                 self.assertTrue(np.isclose(vanndata, vsparse, 1e-6, 1e-6))
-    #                 self.assertTrue(np.isclose(vanndata, vdense, 1e-6, 1e-6))
+        self.sparse_diffexp(adaptor_dense, adaptor_sparse)
+
+    def sparse_diffexp(self, adaptor_dense, adaptor_sparse):
+        with tempfile.TemporaryDirectory() as dirname:
+            maskA = self.get_mask(adaptor_dense, 1, 10)
+            maskB = self.get_mask(adaptor_dense, 2, 10)
+
+            diffexp_results_sparse = diffexp_cxg.diffexp_ttest(adaptor_sparse, maskA, maskB, 10)
+            diffexp_results_dense = diffexp_cxg.diffexp_ttest(adaptor_dense, maskA, maskB, 10)
+
+            self.compare_diffexp_results(diffexp_results_dense["positive"], diffexp_results_sparse["positive"])
+            self.compare_diffexp_results(diffexp_results_dense["negative"], diffexp_results_sparse["negative"])
+
+            topcols_pos = np.array([x[0] for x in diffexp_results_dense["positive"]])
+            topcols_neg = np.array([x[0] for x in diffexp_results_dense["negative"]])
+            topcols = np.concatenate((topcols_pos, topcols_neg))
+
+            cols_sparse = self.get_X_col(adaptor_sparse, topcols)
+            cols_dense = self.get_X_col(adaptor_dense, topcols)
+
+            assert cols_dense.shape[0] == adaptor_sparse.get_shape()[0]
+            assert cols_dense.shape[1] == len(diffexp_results_dense["positive"]) + len(
+                diffexp_results_dense["negative"]
+            )
+
+            def convert(mat, cols):
+                return decode_matrix_fbs(encode_matrix_fbs(mat, col_idx=cols)).to_numpy()
+
+            cols_sparse = convert(cols_sparse, topcols)
+            cols_dense = convert(cols_dense, topcols)
+
+            x = adaptor_sparse.get_X_array()
+            assert x.shape == adaptor_sparse.get_shape()
+
+            for row in range(cols_dense.shape[0]):
+                for col in range(cols_dense.shape[1]):
+                    vsparse = cols_sparse[row][col]
+                    vdense = cols_dense[row][col]
+                    self.assertTrue(np.isclose(vdense, vsparse, 1e-6, 1e-6))
