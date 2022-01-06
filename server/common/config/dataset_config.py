@@ -28,7 +28,6 @@ class DatasetConfig(BaseConfig):
         except KeyError as e:
             raise ConfigurationError(f"Unexpected config: {str(e)}")
 
-
     def complete_config(self, context):
         self.handle_app()
         self.handle_presentation()

@@ -152,7 +152,8 @@ def annotations_obs_get(request, data_adaptor):
     try:
         fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields)
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
-    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version is upgraded in requirements.txt
+    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version
+    # is upgraded in requirements.txt
     except (KeyError, TileDBError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
@@ -176,7 +177,8 @@ def annotations_var_get(request, data_adaptor):
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
-    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version is upgraded in requirements.txt
+    # TODO: TileDBError is now being thrown by later version of the library. Remove KeyError once TileDB library version
+    # is upgraded in requirements.txt
     except (KeyError, TileDBError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 

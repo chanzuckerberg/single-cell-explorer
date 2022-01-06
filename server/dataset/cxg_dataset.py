@@ -8,15 +8,15 @@ import pandas as pd
 import tiledb
 from server_timing import Timing as ServerTiming
 
-from server.common.constants import Axis, XApproximateDistribution
+from server.common.constants import XApproximateDistribution
 from server.common.errors import DatasetAccessError, ConfigurationError
+from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
 from server.common.utils.type_conversion_utils import get_schema_type_hint_from_dtype
 from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
-from server.dataset.dataset import Dataset
-from server.common.fbs.matrix import encode_matrix_fbs
 from server.dataset.cxg_util import pack_selector_from_mask
+from server.dataset.dataset import Dataset
 
 
 class CxgDataset(Dataset):

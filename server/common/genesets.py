@@ -2,9 +2,8 @@
 Utility code for gene sets handling
 """
 
-import re
-import csv
 import hashlib
+import re
 
 
 def summarizeQueryHash(raw_query):
