@@ -88,11 +88,16 @@ class TestServer(Server):
             files: list = listdir(dataroot)
             if len(files) > 1:
                 logging.warning(f"Found more than one dataset in {dataroot}")
-                logging.warning(f"Using first: {path.join(dataroot, files[0])}")
-            with open(".test_base_url.txt", "a") as f:
-                f.write(f"{base_url}/{files[0]}")
-            with open(".test_server_port.txt", "w") as f:
-                f.write(f"{app_config.server_config.app__port}")
+            for dataroot_file in files:
+                if dataroot_file.endswith('.cxg'):
+                    cxg_file = dataroot_file
+                    logging.info(f"Explorer will load dataset: {path.join(dataroot, cxg_file)}")
+                    with open(".test_base_url.txt", "a") as test_base_url_file:
+                        test_base_url_file.write(f"{base_url}/{cxg_file}")
+                    break
+
+            with open(".test_server_port.txt", "w") as dataroot_file:
+                dataroot_file.write(f"{app_config.server_config.app__port}")
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
