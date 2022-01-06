@@ -27,6 +27,7 @@ class EndPoints(BaseTest):
             try:
                 result = cls.client.get(f"{cls.TEST_URL_BASE}schema")
                 cls.schema = json.loads(result.data)
+                break
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
 
@@ -367,33 +368,6 @@ class EndPoints(BaseTest):
         self.assertEqual(df["col_idx"], [query_hash])
         self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
 
-
-class EndPointsCxg(EndPoints):
-    """Test Case for endpoints"""
-
-    @classmethod
-    def setUpClass(cls):
-        app_config = AppConfig()
-        app_config.update_default_dataset_config()
-        super().setUpClass(app_config)
-
-    def test_get_genesets_json(self):
-        endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url, headers={"Accept": "application/json"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertIsNotNone(result_data["genesets"])
-        self.assertIsNotNone(result_data["tid"])
-
-        self.assertEqual(
-            result_data,
-            {
-                "genesets": [],
-                "tid": 0,
-            },
-        )
 
 class TestDataLocatorMockApi(BaseTest):
     @classmethod
