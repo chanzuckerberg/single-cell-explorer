@@ -59,7 +59,6 @@ class TestExternalConfig(ConfigTests):
         config = AppConfig()
         config.update_from_config_file(configfile)
 
-        # config.update_from_config_file(configfile)
         config.update_server_config(app__flask_secret_key="123 magic")
 
         server = self.create_app(config)
@@ -67,10 +66,9 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        # TODO: create CXG test file
-        response = session.get("/d/a95c59b4-7f5d-4b80-ad53-a694834ca18b.cxg/api/v0.2/config")
+        response = session.get("/d/pbmc3k.cxg/api/v0.2/config")
         data_config = json.loads(response.data)
-        self.assertEqual(data_config["config"]["displayNames"]["dataset"], "a95c59b4-7f5d-4b80-ad53-a694834ca18b")
+        self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertFalse(data_config["config"]["parameters"]["disable-diffexp"])
 
     def test_environment_variable_errors(self):
@@ -109,7 +107,7 @@ class TestExternalConfig(ConfigTests):
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager(self, mock_get_secret_key):
         mock_get_secret_key.return_value = {
-            "db_uri": "mock_db_uri",
+            "some_aws_secret_key": "a_secret_value",
         }
         configfile = self.custom_external_config(
             aws_secrets_manager_region="us-west-2",
@@ -119,8 +117,10 @@ class TestExternalConfig(ConfigTests):
                     values=[
                         dict(key="flask_secret_key", path=["server", "app", "flask_secret_key"], required=False),
                         dict(
-                            key="db_uri",
-                            path=["server", "diffexp", "alg_cxg", "max_workers", "63"],
+                            key="some_aws_secret_key",
+                            # this config path is not really something that needs to be set by a secret, but using this
+                            # for our testing purposes
+                            path=["server", "single_dataset", "title"],
                             required=True,
                         ),
                     ],
@@ -137,7 +137,7 @@ class TestExternalConfig(ConfigTests):
         app_config.complete_config()
 
         self.assertEqual(app_config.server_config.app__flask_secret_key, "original")
-        self.assertEqual(app_config.server_config.diffexp__alg_cxg__max_workers, "63")
+        self.assertEqual(app_config.server_config.single_dataset__title, "a_secret_value")
 
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):

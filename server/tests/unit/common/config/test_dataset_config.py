@@ -44,7 +44,7 @@ class TestDatasetConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.dataset_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 18)
+        self.assertEqual(mock_check_attrs.call_count, 12)
 
     def test_app_sets_script_vars(self):
         config = self.get_config(scripts=["path/to/script"])
@@ -142,7 +142,6 @@ class TestDatasetConfig(ConfigTests):
         os.unlink(f"{FIXTURES_ROOT}/set2")
         os.unlink(f"{FIXTURES_ROOT}/set3")
 
-    # TODO: test with something other than user_annotations, which is now obsolete
     def test_configfile_with_specialization(self):
         # test that per_dataset_config config load the default config, then the specialized config
 
@@ -163,12 +162,6 @@ class TestDatasetConfig(ConfigTests):
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
 
-            # test config from default
-            # TODO: Figure out what this should be asserting
-            # self.assertEqual(test_config.user_annotations__type, "hosted_tiledb_array")
-            # self.assertEqual(test_config.user_annotations__hosted_tiledb_array__db_uri, "fake_db_uri")
-
-            test_config = app_config.dataroot_config["test"]
             # test config from specialization
             self.assertEqual(app_config.server_config.multi_dataset__dataroot['test']['base_url'], 'test')
 
