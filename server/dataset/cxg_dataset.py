@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import tiledb
 from server_timing import Timing as ServerTiming
+from tiledb import TileDBError
 
 from server.common.constants import XApproximateDistribution
 from server.common.errors import DatasetAccessError, ConfigurationError
@@ -403,16 +404,18 @@ class CxgDataset(Dataset):
         with ServerTiming.time(f"annotations.{axis}.query"):
             A = self.open_array(str(axis))
 
-            # may raise if fields contains unknown key
-            if not fields:
-                data = A[:]
-            else:
-                data = A.query(attrs=fields)[:]
+            try:
+                if not fields:
+                    data = A[:]
+                else:
+                    data = A.query(attrs=fields)[:]
 
-            df = pd.DataFrame.from_dict(data)
+                df = pd.DataFrame.from_dict(data)
 
-            if fields:
-                df = df[fields]
+                if fields:
+                    df = df[fields]
+            except TileDBError as e:
+                raise KeyError(e)
 
         with ServerTiming.time(f"annotations.{axis}.encode"):
             fbs = encode_matrix_fbs(df, col_idx=df.columns)

@@ -52,8 +52,7 @@ class AppConfigTest(ConfigTests):
         self.assertDictEqual(dataset_config, expected_dataset_config)
 
     def test_get_dataset_config_returns_default_dataset_config_for_single_datasets(self):
-        # TODO: create CXG test file
-        datapath = f"{FIXTURES_ROOT}/1e4dfec4-c0b2-46ad-a04e-ff3ffb3c0a8f.cxg"
+        datapath = f"{FIXTURES_ROOT}/some_dataset.cxg"
         file_name = self.custom_app_config(dataset_datapath=datapath, config_file_name=self.config_file_name)
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -126,26 +125,23 @@ class AppConfigTest(ConfigTests):
             )
             self.assertEqual(dataset_changes, [])
 
-    # TODO: I think a server config section must always exist in hosted explorer
-    # def test_configfile_no_server_section(self):
-    #     # test a config file without a dataset section
-    #
-    #     with tempfile.TemporaryDirectory() as tempdir:
-    #         configfile = os.path.join(tempdir, "config.yaml")
-    #         with open(configfile, "w") as fconfig:
-    #             config = """
-    #             dataset:
-    #                 user_annotations:
-    #                     enable: false
-    #             """
-    #             fconfig.write(config)
-    #
-    #         app_config = AppConfig()
-    #         app_config.update_from_config_file(configfile)
-    #         server_changes = app_config.server_config.changes_from_default()
-    #         dataset_changes = app_config.default_dataset_config.changes_from_default()
-    #         self.assertEqual(server_changes, [])
-    #         self.assertEqual(dataset_changes, [("user_annotations__enable", False, True)])
+    def test_configfile_no_server_section(self):
+        with tempfile.TemporaryDirectory() as tempdir:
+            configfile = os.path.join(tempdir, "config.yaml")
+            with open(configfile, "w") as fconfig:
+                config = """
+                dataset:
+                  app:
+                    about_legal_tos: expected_value
+                """
+                fconfig.write(config)
+
+            app_config = AppConfig()
+            app_config.update_from_config_file(configfile)
+            server_changes = app_config.server_config.changes_from_default()
+            self.assertEqual(server_changes, [])
+            single_dataset_changes = app_config.default_dataset_config.changes_from_default()
+            self.assertEqual(single_dataset_changes, [("app__about_legal_tos", "expected_value", None)])
 
     def test_simple_update_single_config_from_path_and_value(self):
         """Update a simple config parameter"""
@@ -163,22 +159,21 @@ class AppConfigTest(ConfigTests):
         self.assertEqual(config.server_config.app__flask_secret_key, "mysecret")
 
         # test simple value in default dataset
-        # TODO: test with something other than user_annotations, which is obsolete
-        # config.update_single_config_from_path_and_value(
-        #     ["dataset", "user_annotations", "hosted_tiledb_array", "db_uri"],
-        #     "mydburi",
-        # )
-        # self.assertEqual(config.default_dataset_config.user_annotations__hosted_tiledb_array__db_uri, "mydburi")
-        # self.assertEqual(config.dataroot_config["s1"].user_annotations__hosted_tiledb_array__db_uri, "mydburi")
-        # self.assertEqual(config.dataroot_config["s2"].user_annotations__hosted_tiledb_array__db_uri, "mydburi")
-        #
-        # # test simple value in specific dataset
-        # config.update_single_config_from_path_and_value(
-        #     ["per_dataset_config", "s1", "user_annotations", "hosted_tiledb_array", "db_uri"], "s1dburi"
-        # )
-        # self.assertEqual(config.default_dataset_config.user_annotations__hosted_tiledb_array__db_uri, "mydburi")
-        # self.assertEqual(config.dataroot_config["s1"].user_annotations__hosted_tiledb_array__db_uri, "s1dburi")
-        # self.assertEqual(config.dataroot_config["s2"].user_annotations__hosted_tiledb_array__db_uri, "mydburi")
+        config.update_single_config_from_path_and_value(
+            ["dataset", "app", "about_legal_tos"],
+            "expected_value",
+        )
+        self.assertEqual(config.default_dataset_config.app__about_legal_tos, "expected_value")
+        self.assertEqual(config.dataroot_config["s1"].app__about_legal_tos, "expected_value")
+        self.assertEqual(config.dataroot_config["s2"].app__about_legal_tos, "expected_value")
+
+        # test simple value in specific dataset
+        config.update_single_config_from_path_and_value(
+            ["per_dataset_config", "s1", "app", "about_legal_tos"], "expected_value_s1"
+        )
+        self.assertEqual(config.default_dataset_config.app__about_legal_tos, "expected_value")
+        self.assertEqual(config.dataroot_config["s1"].app__about_legal_tos, "expected_value_s1")
+        self.assertEqual(config.dataroot_config["s2"].app__about_legal_tos, "expected_value")
 
         # error checking
         bad_paths = [

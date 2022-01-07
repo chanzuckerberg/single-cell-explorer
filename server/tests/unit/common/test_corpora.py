@@ -23,11 +23,6 @@ class CorporaRESTAPITest(BaseTest):
         cls.app.testing = True
         cls.client = cls.app.test_client()
 
-    # TODO: This test fails when run on its own, and succeeds when run with `make unit-test`.
-    # Because app_config is being instantiated in our setupClass() and passed to the super.setupClass(), the required
-    # config (i.e., setting `app__flask_secret_key`) is not set by the parent class and config validation fails. For
-    # some reason this is _not_ happening when the full test suite is run. Perhaps the test server is already running
-    # and the new configuration is ignored?
     def test_config(self):
         endpoint = "config"
 

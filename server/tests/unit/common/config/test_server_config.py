@@ -119,8 +119,7 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}",
             config_file_name="two_data_roots.yml",
-                # TODO: create CXG test file
-                dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k-CSC-gz.cxg",
+                dataset_datapath=f"{FIXTURES_ROOT}/some_dataset.cxg",
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -149,7 +148,7 @@ class TestServerConfig(ConfigTests):
         server = self.create_app(config)
         server.testing = True
         session = server.test_client()
-        response = session.get(f"/additional/path/d/pbmc3k.h5ad/api/v0.2/config")
+        response = session.get(f"/additional/path/d/pbmc3k.cxg/api/v0.2/config")
 
         self.assertEqual(response.status_code, 200)
         data_config = json.loads(response.data)
