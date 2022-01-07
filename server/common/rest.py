@@ -5,7 +5,6 @@ import zlib
 from http import HTTPStatus
 
 from flask import make_response, jsonify, current_app, abort, redirect
-from tiledb import TileDBError
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
