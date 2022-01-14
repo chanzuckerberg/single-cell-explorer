@@ -11,8 +11,7 @@ const TerserJSPlugin = require("terser-webpack-plugin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const CleanCss = require("clean-css");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
-// const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
@@ -40,8 +39,12 @@ const prodConfig = {
     filename: "static/[name]-[contenthash].js",
   },
   optimization: {
+    minimize: true,
     minimizer: [
-      new CssMinimizerPlugin(),
+      new TerserJSPlugin({}),
+      new OptimizeCSSAssetsPlugin({
+        cssProcessor: CleanCss,
+      }),
     ],
   },
   devtool: "source-map",
