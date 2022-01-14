@@ -103,7 +103,9 @@ dev-env-client:
 
 .PHONY: dev-env-server
 dev-env-server:
+	./server/install-mac-m1-reqs.sh
 	pip install -r server/requirements-dev.txt
+
 
 # quicker than re-building client
 .PHONY: gen-package-lock
