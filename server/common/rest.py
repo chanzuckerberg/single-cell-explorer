@@ -334,4 +334,4 @@ def summarize_var_post(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     key = request.args.get("key", default=None)
-    return summarize_var_helper(request, data_adaptor, key, request.load_cxg_tar_fixture())
+    return summarize_var_helper(request, data_adaptor, key, request.get_data())
