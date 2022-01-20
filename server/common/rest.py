@@ -21,7 +21,6 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
     TombstoneError,
 )
-from server.common.genesets import summarizeQueryHash
 from server.dataset import dataset_metadata
 
 
@@ -302,6 +301,11 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     summary_method = request.values.get("method", default="mean")
+
+    def summarizeQueryHash(raw_query):
+        """generate a cache key (hash) from the raw query string"""
+        return hashlib.sha1(raw_query).hexdigest()
+
     query_hash = summarizeQueryHash(raw_query)
     if key and query_hash != key:
         return abort(HTTPStatus.BAD_REQUEST, description="query key did not match")
