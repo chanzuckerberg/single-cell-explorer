@@ -76,9 +76,6 @@ server:
         sm.tile_cache_size: 60129542144 # 56 GB
         sm.num_reader_threads: 32
 
-    anndata_adaptor:
-      backed: false
-
   limits:
     column_request_max: 32
     diffexp_cellcount_max: 50000
@@ -104,16 +101,6 @@ dataset:
   presentation:
     max_categories: 1000
     custom_colors: true
-
-  user_annotations:
-    enable: false
-    type: hosted_tiledb_array
-    hosted_tiledb_array:
-      db_uri: null
-      hosted_file_directory: s3://hosted-cellxgene-dev/user_annotations/
-    local_file_csv:
-      directory: null
-      file: null
 
   embeddings:
     names: []
