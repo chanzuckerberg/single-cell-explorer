@@ -17,7 +17,7 @@ class DataLocator:
     https://filesystem-spec.readthedocs.io/en/latest/index.html
 
     Example:
-        dl = DataLocator("/tmp/foo.h5ad")
+        dl = DataLocator("/tmp/foo.cxg")
         if dl.exists():
             print(dl.size())
             with dl.open() as f:
@@ -52,8 +52,8 @@ class DataLocator:
             self.fs = fsspec.filesystem(self.protocol)
 
     def __repr__(self):
-        return f"DataLocator(protocol={self.protocol}, cname={self.cname}, "
-        f"path={self.path}, uri_or_path={self.uri_or_path})"
+        return f"DataLocator(protocol={self.protocol}, cname={self.cname}, " \
+               f"path={self.path}, uri_or_path={self.uri_or_path})"
 
     @staticmethod
     def _get_protocol_and_path(uri_or_path):

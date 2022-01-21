@@ -42,9 +42,6 @@ f"""server:
         sm.tile_cache_size:  {cxg_tile_cache_size}
         sm.num_reader_threads:  {cxg_num_reader_threads}
 
-    anndata_adaptor:
-      backed: {anndata_backed}
-
   limits:
     column_request_max: {column_request_max}
     diffexp_cellcount_max: {diffexp_cellcount_max}

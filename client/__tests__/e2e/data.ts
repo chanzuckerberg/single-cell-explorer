@@ -1,6 +1,6 @@
 export const datasets = {
-  "pbmc3k.h5ad": {
-    title: "pbmc3k.h5ad",
+  "pbmc3k.cxg": {
+    title: "pbmc3k.cxg",
     dataframe: {
       nObs: "2638",
       nVar: "1838",

@@ -8,16 +8,6 @@ dataset:
     max_categories: {max_categories}
     custom_colors: {custom_colors}
 
-  user_annotations:
-    enable: {enable_users_annotations}
-    type: {annotation_type}
-    local_file_csv:
-      directory: {local_file_csv_directory}
-      file: {local_file_csv_file}
-      gene_sets_file: {local_file_csv_gene_sets_file}
-    gene_sets:
-      readonly: {gene_sets_readonly}
-
   embeddings:
     names: {embedding_names}
 

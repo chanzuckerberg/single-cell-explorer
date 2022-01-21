@@ -3,7 +3,7 @@ import numpy as np
 
 from numba import jit
 
-from server.data_cxg.cxg_util import pack_selector_from_indices
+from server.dataset.cxg_util import pack_selector_from_indices
 from server.common.compute.diffexp_generic import diffexp_ttest_from_mean_var, mean_var_n
 from server.common.errors import ComputeError
 

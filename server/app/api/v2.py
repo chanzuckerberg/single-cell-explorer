@@ -82,11 +82,6 @@ class AnnotationsObsAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.annotations_obs_get(request, data_adaptor)
 
-    @cache_control(no_store=True)
-    @rest_get_data_adaptor
-    def put(self, data_adaptor):
-        return common_rest.annotations_obs_put(request, data_adaptor)
-
 
 class AnnotationsVarAPI(DatasetResource):
     @cache_control(public=True, max_age=ONE_WEEK)

@@ -27,6 +27,7 @@ class EndPoints(BaseTest):
             try:
                 result = cls.client.get(f"{cls.TEST_URL_BASE}schema")
                 cls.schema = json.loads(result.data)
+                break
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
 
@@ -297,26 +298,6 @@ class EndPoints(BaseTest):
         result = self.client.get(url)
         self.assertEqual(result.status_code, HTTPStatus.OK)
 
-    def test_genesets_config(self):
-        result = self.client.get(f"{self.TEST_URL_BASE}config")
-        config_data = json.loads(result.data)
-        params = config_data["config"]["parameters"]
-        annotations_genesets = params["annotations_genesets"]
-        annotations_genesets_readonly = params["annotations_genesets_readonly"]
-        annotations_genesets_summary_methods = params["annotations_genesets_summary_methods"]
-        self.assertTrue(annotations_genesets)
-        self.assertTrue(annotations_genesets_readonly)
-        self.assertEqual(annotations_genesets_summary_methods, ["mean"])
-
-    def test_get_genesets(self):
-        endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url, headers={"Accept": "application/json"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertIsNotNone(result_data["genesets"])
-
     def test_get_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
         endpoint = "summarize/var"
@@ -388,119 +369,9 @@ class EndPoints(BaseTest):
         self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
 
 
-class EndPointsCxg(EndPoints):
-    """Test Case for endpoints"""
-
-    @classmethod
-    def setUpClass(cls):
-        app_config = AppConfig()
-        app_config.update_default_dataset_config(user_annotations__enable=False)
-
-    def test_get_genesets_json(self):
-        endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url, headers={"Accept": "application/json"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertIsNotNone(result_data["genesets"])
-        self.assertIsNotNone(result_data["tid"])
-
-        self.assertEqual(
-            result_data,
-            {
-                "genesets": [
-                    {
-                        "genes": [
-                            {"gene_description": " a gene_description", "gene_symbol": "F5"},
-                            {"gene_description": "", "gene_symbol": "SUMO3"},
-                            {"gene_description": "", "gene_symbol": "SRM"},
-                        ],
-                        "geneset_description": "a description",
-                        "geneset_name": "first gene set name",
-                    },
-                    {
-                        "genes": [
-                            {"gene_description": "", "gene_symbol": "RER1"},
-                            {"gene_description": "", "gene_symbol": "SIK1"},
-                        ],
-                        "geneset_description": "",
-                        "geneset_name": "second_gene_set",
-                    },
-                    {"genes": [], "geneset_description": "", "geneset_name": "third gene set"},
-                    {"genes": [], "geneset_description": "fourth description", "geneset_name": "fourth_gene_set"},
-                    {"genes": [], "geneset_description": "", "geneset_name": "fifth_dataset"},
-                    {
-                        "genes": [
-                            {"gene_description": "", "gene_symbol": "ACD"},
-                            {"gene_description": "", "gene_symbol": "AATF"},
-                            {"gene_description": "", "gene_symbol": "F5"},
-                            {"gene_description": "", "gene_symbol": "PIGU"},
-                        ],
-                        "geneset_description": "",
-                        "geneset_name": "summary test",
-                    },
-                    {"genes": [], "geneset_description": "", "geneset_name": "geneset_to_delete"},
-                    {"genes": [], "geneset_description": "", "geneset_name": "geneset_to_edit"},
-                    {"genes": [], "geneset_description": "", "geneset_name": "fill_this_geneset"},
-                    {
-                        "genes": [{"gene_description": "", "gene_symbol": "SIK1"}],
-                        "geneset_description": "",
-                        "geneset_name": "empty_this_geneset",
-                    },
-                    {
-                        "genes": [{"gene_description": "", "gene_symbol": "SIK1"}],
-                        "geneset_description": "",
-                        "geneset_name": "brush_this_gene",
-                    },
-                ],
-                "tid": 0,
-            },
-        )
-
-    def test_get_genesets_csv(self):
-        endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url, headers={"Accept": "text/csv"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "text/csv")
-        expected_data = """gene_set_name,gene_set_description,gene_symbol,gene_description\r
-first gene set name,a description,F5, a gene_description\r
-first gene set name,a description,SUMO3,\r
-first gene set name,a description,SRM,\r
-second_gene_set,,RER1,\r
-second_gene_set,,SIK1,\r
-third gene set,,,\r
-fourth_gene_set,fourth description,,\r
-fifth_dataset,,,\r
-summary test,,ACD,\r
-summary test,,AATF,\r
-summary test,,F5,\r
-summary test,,PIGU,\r
-geneset_to_delete,,,\r
-geneset_to_edit,,,\r
-fill_this_geneset,,,\r
-empty_this_geneset,,SIK1,\r
-brush_this_gene,,SIK1,\r
-"""
-        self.assertEqual(result.data.decode("utf-8"), expected_data)
-
-    def test_put_genesets(self):
-        endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-
-        result = self.client.get(url, headers={"Accept": "application/json"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-
-        test1 = {"tid": 3, "genesets": []}
-        result = self.client.put(url, json=test1)
-
-        self.assertEqual(result.status_code, HTTPStatus.METHOD_NOT_ALLOWED)
-
-
 class TestDataLocatorMockApi(BaseTest):
     @classmethod
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def setUpClass(cls, mock_get):
         cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
         cls.config = AppConfig()
@@ -540,7 +411,7 @@ class TestDataLocatorMockApi(BaseTest):
             == f"http://{cls.data_locator_api_base}/datasets/meta?url={cls.config.server_config.get_web_base_url()}{cls.TEST_DATASET_URL_BASE}/"
         )  # noqa E501
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_data_adaptor_uses_corpora_api(self, mock_get):
         mock_get.return_value = MockResponse(body=self.response_body, status_code=200)
 
@@ -562,7 +433,7 @@ class TestDataLocatorMockApi(BaseTest):
         self.assertEqual(len(result_data["schema"]["annotations"]["obs"]), 2)
         self.assertEqual(len(result_data["schema"]["annotations"]["obs"]["columns"]), 5)
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_config(self, mock_get):
         mock_get.return_value = MockResponse(body=self.response_body, status_code=200)
         endpoint = "config"
@@ -579,7 +450,7 @@ class TestDataLocatorMockApi(BaseTest):
             headers={"Content-Type": "application/json", "Accept": "application/json"},
         )
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_get_annotations_obs_fbs(self, mock_get):
         mock_get.return_value = MockResponse(body=self.response_body, status_code=200)
         endpoint = "annotations/obs"
@@ -602,7 +473,7 @@ class TestDataLocatorMockApi(BaseTest):
         df = decode_fbs.decode_matrix_FBS(result.data)
         self.assertEqual(df["n_rows"], 2638)
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_metadata_api_called_for_new_dataset(self, mock_get):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -632,7 +503,7 @@ class TestDataLocatorMockApi(BaseTest):
             # noqa E501
         )
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_data_locator_defaults_to_name_based_lookup_if_metadata_api_throws_error(self, mock_get):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -709,7 +580,7 @@ class TestDataLocatorMockApi(BaseTest):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_tombstoned_datasets_redirect_to_data_portal(self, mock_get):
         response_body = json.dumps(
             {
@@ -765,8 +636,8 @@ class TestDatasetMetadata(BaseTest):
         self.assertTrue(result.cache_control.no_store)
         self.assertEqual(result.cache_control.max_age, 0)
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_public_collection(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_public.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -815,8 +686,8 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_called_for_private_collection(self, mock_get, mock_dp):
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0_private.cxg"
         self.TEST_URL_BASE = f"{self.TEST_DATASET_URL_BASE}/api/v0.2/"
@@ -867,7 +738,7 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
     def test_dataset_metadata_api_fails_gracefully_on_dataset_not_found(self, mock_dp):
         # If request_dataset_metadata_from_data_portal, it always returns None
         mock_dp.return_value = None
@@ -878,8 +749,8 @@ class TestDatasetMetadata(BaseTest):
 
         self.assertEqual(result.status_code, HTTPStatus.NOT_FOUND)
 
-    @patch("server.data_common.dataset_metadata.request_dataset_metadata_from_data_portal")
-    @patch("server.data_common.dataset_metadata.requests.get")
+    @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
+    @patch("server.dataset.dataset_metadata.requests.get")
     def test_dataset_metadata_api_fails_gracefully_on_connection_failure(self, mock_get, mock_dp):
         # TODO: Shouldn't matter what we request if the request's connection fails altogether
         self.TEST_DATASET_URL_BASE = "/e/pbmc3k_v0.cxg"

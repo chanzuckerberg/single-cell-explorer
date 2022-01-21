@@ -10,7 +10,7 @@ from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
 from server.compute import diffexp_cxg as diffexp_tiledb
-from server.data_common.matrix_loader import MatrixDataLoader, MatrixDataType
+from server.dataset.matrix_loader import MatrixDataLoader, MatrixDataType
 
 
 class ServerConfig(BaseConfig):
@@ -55,7 +55,6 @@ class ServerConfig(BaseConfig):
             self.data_locator__s3__region_name = default_config["data_locator"]["s3"]["region_name"]
             self.data_locator__api_base = default_config["data_locator"]["api_base"]
             self.adaptor__cxg_adaptor__tiledb_ctx = default_config["adaptor"]["cxg_adaptor"]["tiledb_ctx"]
-            self.adaptor__anndata_adaptor__backed = default_config["adaptor"]["anndata_adaptor"]["backed"]
 
             self.limits__diffexp_cellcount_max = default_config["limits"]["diffexp_cellcount_max"]
             self.limits__column_request_max = default_config["limits"]["column_request_max"]
@@ -275,12 +274,9 @@ class ServerConfig(BaseConfig):
             if type(self.data_locator__s3__region_name) == str:
                 self.adaptor__cxg_adaptor__tiledb_ctx[regionkey] = self.data_locator__s3__region_name
 
-        from server.data_cxg.cxg_adaptor import CxgAdaptor
+        from server.dataset.cxg_dataset import CxgDataset
 
-        CxgAdaptor.set_tiledb_context(self.adaptor__cxg_adaptor__tiledb_ctx)
-
-        # anndata
-        self.validate_correct_type_of_configuration_attribute("adaptor__anndata_adaptor__backed", bool)
+        CxgDataset.set_tiledb_context(self.adaptor__cxg_adaptor__tiledb_ctx)
 
     def handle_limits(self):
         self.validate_correct_type_of_configuration_attribute("limits__diffexp_cellcount_max", (type(None), int))

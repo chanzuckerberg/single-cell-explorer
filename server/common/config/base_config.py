@@ -1,6 +1,7 @@
 import copy
 
 from flatten_dict import flatten
+
 from server.common.errors import ConfigurationError
 
 

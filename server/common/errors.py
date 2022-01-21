@@ -46,7 +46,7 @@ def define_tombstone_exception(name, doc, default_status_code=HTTPStatus.FOUND):
 
 # Define CellxgeneException Errors
 define_exception("ConfigurationError", "Raised when checking configuration errors")
-define_exception("PrepareError", "Raised when data is misprepared")
+define_exception("InvalidCxgDatasetError", "Raised when dataset does not comply with CXG schema")
 define_exception("SecretKeyRetrievalError", "Raised when get_secret_key from AWS fails")
 define_exception("ObsoleteRequest", "Raised when the request is no longer valid.")
 define_exception("UnsupportedSummaryMethod", "Raised when a gene set summary method is unknown or unsupported.")
@@ -61,7 +61,6 @@ define_request_exception(
 )
 define_request_exception("DatasetMetadataError", "Raised when dataset metadata cannot be retrieved")
 define_request_exception("DisabledFeatureError", "Raised when an attempt to use a disabled feature occurs")
-define_request_exception("AnnotationsError", "Raised when an attempt to use the annotations feature fails")
 define_request_exception(
     "ComputeError",
     "Raised when an error occurs during a compute algorithm (such as diffexp)",

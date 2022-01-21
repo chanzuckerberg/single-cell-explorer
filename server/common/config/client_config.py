@@ -7,7 +7,6 @@ def get_client_config(app_config, data_adaptor, current_app):
     """
     server_config = app_config.server_config
     dataset_config = data_adaptor.dataset_config
-    annotation = dataset_config.user_annotations
 
     # FIXME The current set of config is not consistently presented:
     # we have camalCase, hyphen-text, and underscore_text
@@ -39,11 +38,7 @@ def get_client_config(app_config, data_adaptor, current_app):
         "obs_names": server_config.single_dataset__obs_names,
         "var_names": server_config.single_dataset__var_names,
         "diffexp_lfc_cutoff": dataset_config.diffexp__lfc_cutoff,
-        "backed": server_config.adaptor__anndata_adaptor__backed,
         "disable-diffexp": not dataset_config.diffexp__enable,
-        "annotations": False,
-        "annotations_file": None,
-        "annotations_dir": None,
         "annotations_genesets": True,  # feature flag
         "annotations_genesets_readonly": True,
         "annotations_genesets_summary_methods": ["mean"],
@@ -66,8 +61,6 @@ def get_client_config(app_config, data_adaptor, current_app):
             parameters["default_embedding"] = default_embedding
 
     data_adaptor.update_parameters(parameters)
-    if annotation:
-        annotation.update_parameters(parameters, data_adaptor)
 
     # gather it all together
     client_config = {}

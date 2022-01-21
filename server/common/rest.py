@@ -1,9 +1,9 @@
 import copy
+import hashlib
 import logging
 import sys
-from http import HTTPStatus
 import zlib
-import json
+from http import HTTPStatus
 
 from flask import make_response, jsonify, current_app, abort, redirect
 from werkzeug.urls import url_unquote
@@ -14,19 +14,15 @@ from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_m
 from server.common.errors import (
     FilterError,
     JSONEncodingValueError,
-    PrepareError,
+    InvalidCxgDatasetError,
     DisabledFeatureError,
     ExceedsLimitError,
     DatasetAccessError,
     ColorFormatException,
-    AnnotationsError,
     UnsupportedSummaryMethod,
     TombstoneError,
 )
-from server.common.genesets import summarizeQueryHash
-from server.common.fbs.matrix import decode_matrix_fbs
-
-from server.data_common import dataset_metadata
+from server.dataset import dataset_metadata
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -110,12 +106,6 @@ def schema_get_helper(data_adaptor):
     schema = data_adaptor.get_schema()
     schema = copy.deepcopy(schema)
 
-    # add label obs annotations as needed
-    annotations = data_adaptor.dataset_config.user_annotations
-    if annotations.user_annotations_enabled():
-        label_schema = annotations.get_schema(data_adaptor)
-        schema["annotations"]["obs"]["columns"].extend(label_schema)
-
     return schema
 
 
@@ -159,51 +149,14 @@ def annotations_obs_get(request, data_adaptor):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        labels = None
-        annotations = data_adaptor.dataset_config.user_annotations
-        if annotations.user_annotations_enabled():
-            labels = annotations.read_labels(data_adaptor)
-        fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields, labels)
+        fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields)
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
     except KeyError as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
-def annotations_put_fbs_helper(data_adaptor, fbs):
-    """helper function to write annotations from fbs"""
-    annotations = data_adaptor.dataset_config.user_annotations
-    if not annotations.user_annotations_enabled():
-        raise DisabledFeatureError("Writable annotations are not enabled")
-
-    new_label_df = decode_matrix_fbs(fbs)
-    if not new_label_df.empty:
-        new_label_df = data_adaptor.check_new_labels(new_label_df)
-    annotations.write_labels(new_label_df, data_adaptor)
-
-
 def inflate(data):
     return zlib.decompress(data)
-
-
-def annotations_obs_put(request, data_adaptor):
-    annotations = data_adaptor.dataset_config.user_annotations
-    if not annotations.user_annotations_enabled():
-        return abort(HTTPStatus.NOT_IMPLEMENTED)
-
-    anno_collection = request.args.get("annotation-collection-name", default=None)
-    fbs = inflate(request.get_data())
-
-    if anno_collection is not None:
-        if not annotations.is_safe_collection_name(anno_collection):
-            return abort(HTTPStatus.BAD_REQUEST, "Bad annotation collection name")
-        annotations.set_collection(anno_collection)
-
-    try:
-        annotations_put_fbs_helper(data_adaptor, fbs)
-        res = json.dumps({"status": "OK"})
-        return make_response(res, HTTPStatus.OK, {"Content-Type": "application/json"})
-    except (ValueError, DisabledFeatureError, KeyError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
 def annotations_var_get(request, data_adaptor):
@@ -216,12 +169,8 @@ def annotations_var_get(request, data_adaptor):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        labels = None
-        annotations = data_adaptor.dataset_config.user_annotations
-        if annotations.user_annotations_enabled():
-            labels = annotations.read_labels(data_adaptor)
         return make_response(
-            data_adaptor.annotation_to_fbs_matrix(Axis.VAR, fields, labels),
+            data_adaptor.annotation_to_fbs_matrix(Axis.VAR, fields),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
@@ -324,7 +273,7 @@ def layout_obs_get(request, data_adaptor):
         )
     except (KeyError, DatasetAccessError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
-    except PrepareError:
+    except InvalidCxgDatasetError:
         return abort_and_log(
             HTTPStatus.NOT_IMPLEMENTED,
             f"No embedding available {request.path}",
@@ -333,29 +282,17 @@ def layout_obs_get(request, data_adaptor):
         )
 
 
+# TODO: I think this is no longer useful, but it is called. So just returning an effectively empty response for now
 def genesets_get(request, data_adaptor):
     preferred_mimetype = request.accept_mimetypes.best_match(["application/json", "text/csv"])
-    if preferred_mimetype not in ("application/json", "text/csv"):
+    if preferred_mimetype not in ("application/json"):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        annotations = data_adaptor.dataset_config.user_annotations
-        (genesets, tid) = annotations.read_gene_sets(data_adaptor)
-
-        if preferred_mimetype == "text/csv":
-            return make_response(
-                annotations.gene_sets_to_csv(genesets),
-                HTTPStatus.OK,
-                {
-                    "Content-Type": "text/csv",
-                    "Content-Disposition": "attachment; filename=genesets.csv",
-                },
-            )
-        else:
-            return make_response(
-                jsonify({"genesets": annotations.gene_sets_to_response(genesets), "tid": tid}), HTTPStatus.OK
-            )
-    except (ValueError, KeyError, AnnotationsError) as e:
+        return make_response(
+            jsonify({"genesets": [], "tid": 0}), HTTPStatus.OK
+        )
+    except (ValueError, KeyError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e))
 
 
@@ -365,6 +302,11 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     summary_method = request.values.get("method", default="mean")
+
+    def summarizeQueryHash(raw_query):
+        """generate a cache key (hash) from the raw query string"""
+        return hashlib.sha1(raw_query).hexdigest()
+
     query_hash = summarizeQueryHash(raw_query)
     if key and query_hash != key:
         return abort(HTTPStatus.BAD_REQUEST, description="query key did not match")

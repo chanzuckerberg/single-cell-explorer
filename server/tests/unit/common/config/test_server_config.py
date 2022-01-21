@@ -47,7 +47,7 @@ class TestServerConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.server_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 32)
+        self.assertEqual(mock_check_attrs.call_count, 31)
 
     def test_handle_app__throws_error_if_port_doesnt_exist(self):
         config = self.get_config(port=99999999)
@@ -119,7 +119,7 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}",
             config_file_name="two_data_roots.yml",
-            dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k-CSC-gz.h5ad",
+                dataset_datapath=f"{FIXTURES_ROOT}/some_dataset.cxg",
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -148,7 +148,7 @@ class TestServerConfig(ConfigTests):
         server = self.create_app(config)
         server.testing = True
         session = server.test_client()
-        response = session.get(f"/additional/path/d/pbmc3k.h5ad/api/v0.2/config")
+        response = session.get(f"/additional/path/d/pbmc3k.cxg/api/v0.2/config")
 
         self.assertEqual(response.status_code, 200)
         data_config = json.loads(response.data)
@@ -237,7 +237,7 @@ class TestServerConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get(f"/set1/1/2/pbmc3k.h5ad/api/v0.2/config")
+        response = session.get(f"/set1/1/2/pbmc3k.cxg/api/v0.2/config")
 
         data_config = json.loads(response.data)
         assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
@@ -283,7 +283,7 @@ class TestServerConfig(ConfigTests):
         # called with the min of diffexp_max_workers and cpus*cpu_multiplier
         mock_tiledb_config.assert_called_once_with(1, 4)
 
-    @patch("server.data_cxg.cxg_adaptor.CxgAdaptor.set_tiledb_context")
+    @patch("server.dataset.cxg_dataset.CxgDataset.set_tiledb_context")
     def test_handle_adaptor(self, mock_tiledb_context):
         custom_config = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", cxg_tile_cache_size=10, cxg_num_reader_threads=2

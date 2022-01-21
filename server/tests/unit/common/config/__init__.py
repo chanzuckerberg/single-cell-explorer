@@ -16,7 +16,7 @@ class ConfigTests(BaseTest):
 
     @classmethod
     def setUpClass(cls) -> None:
-        os.makedirs(cls.tmp_fixtures_directory)
+        os.makedirs(cls.tmp_fixtures_directory, exist_ok=True)
 
     def custom_server_config(
         self,
@@ -53,7 +53,6 @@ class ConfigTests(BaseTest):
         data_locator_api_base="null",
         cxg_tile_cache_size=8589934592,
         cxg_num_reader_threads=32,
-        anndata_backed="false",
         column_request_max=32,
         diffexp_cellcount_max="null",
         config_file_name="server_config.yaml",
@@ -101,7 +100,6 @@ class ConfigTests(BaseTest):
         data_locator_api_base="null",
         cxg_tile_cache_size=8589934592,
         cxg_num_reader_threads=32,
-        anndata_backed="false",
         column_request_max=32,
         diffexp_cellcount_max="null",
         scripts=[],
@@ -161,7 +159,6 @@ class ConfigTests(BaseTest):
             data_locator_api_base=data_locator_api_base,
             cxg_tile_cache_size=cxg_tile_cache_size,
             cxg_num_reader_threads=cxg_num_reader_threads,
-            anndata_backed=anndata_backed,
             column_request_max=column_request_max,
             diffexp_cellcount_max=diffexp_cellcount_max,
             config_file_name=f"temp_server_config_{random_num}.yml",
