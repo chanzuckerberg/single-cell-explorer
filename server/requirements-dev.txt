@@ -1,6 +1,6 @@
 -r requirements.txt
 Authlib>=0.14.3
-black
+black==21.12b0
 bumpversion>=0.5
 codecov>=2.0.15
 parameterized>=0.7.0
