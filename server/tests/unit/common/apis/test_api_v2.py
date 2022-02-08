@@ -658,6 +658,9 @@ class TestDatasetMetadata(BaseTest):
                 "http://test.link",
             ],
             "name": "Test Collection",
+            "publisher_metadata": {
+                "journal": "Nature",
+            },
             "visibility": "PUBLIC",
         }
 
@@ -685,6 +688,7 @@ class TestDatasetMetadata(BaseTest):
         self.assertEqual(response_obj["collection_description"], response_body["description"])
         self.assertEqual(response_obj["collection_links"], response_body["links"])
         self.assertEqual(response_obj["collection_datasets"], response_body["datasets"])
+        self.assertDictEqual(response_obj["collection_publisher_metadata"], response_body["publisher_metadata"])
 
     @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
     @patch("server.dataset.dataset_metadata.requests.get")
