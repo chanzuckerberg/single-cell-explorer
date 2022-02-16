@@ -3,7 +3,13 @@ import { H3, HTMLTable, Classes } from "@blueprintjs/core";
 import React, { CSSProperties } from "react";
 
 // App dependencies
-import { DatasetMetadata, Link } from "../../common/types/entities";
+import {
+  Author,
+  Consortium,
+  DatasetMetadata,
+  Link,
+  PublisherMetadata,
+} from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
 import * as globals from "../../globals";
 
@@ -36,9 +42,62 @@ export type SingleValueCategories = Map<string, Category>;
 
 /**
  * Sort collection links by custom sort order, create view-friendly model of link types.
+ * @param links - Links associated with a collection.
+ * @param contactName - Contact name associated with a collection.
+ * @param contactEmail - Contact email associated with a collection.
+ * @param publisherMetadata - Publication metadata associated with a collection.
  * @returns Array of link objects formatted for display.
  */
-const buildCollectionLinks = (links: Link[]): LinkView[] => {
+const buildCollectionLinks = (
+  links: Link[],
+  contactName: string,
+  contactEmail: string,
+  publisherMetadata?: PublisherMetadata
+): LinkView[] => {
+  const collectionMetadataLinks = [];
+
+  // Clone the links so we can safely remove the DOI link type if present and display it separately from the other link
+  // types at the top of the metadata links list.
+  const linksClone = [...links];
+
+  // If collection has an associated DOI, display either the summary citation or the DOI itself.
+  const doiLink = links.find((link: Link) => link.link_type === "DOI");
+  if (doiLink) {
+    const doiMetadataLink = buildDoiMetadataLink(doiLink, publisherMetadata);
+    collectionMetadataLinks.push(doiMetadataLink);
+
+    // Remove the DOI from links so we don't display it again in the links section below contact.
+    linksClone.splice(linksClone.indexOf(doiLink), 1);
+  }
+
+  // Add contact name and email to the top of collection metadata list.
+  if (contactName && contactEmail) {
+    collectionMetadataLinks.push({
+      type: "Contact",
+      url: `mailto:${contactEmail}`,
+      name: contactName,
+    });
+  }
+
+  const sortedLinks = [...linksClone].sort(sortCollectionLinks);
+  sortedLinks.forEach((link) => {
+    const { link_name: name, link_type: type, link_url: url } = link;
+    collectionMetadataLinks.push({
+      name: buildLinkName(name, type, url),
+      type: transformLinkTypeToDisplay(type),
+      url,
+    });
+  });
+
+  return collectionMetadataLinks;
+};
+
+/**
+ * @deprecated - Remove once filter feature flag is removed.
+ * Sort collection links by custom sort order, create view-friendly model of link types.
+ * @returns Array of link objects formatted for display.
+ */
+const buildCollectionLinksDeprecated = (links: Link[]): LinkView[] => {
   const sortedLinks = [...links].sort(sortCollectionLinks);
   return sortedLinks.map((link) => {
     const { link_name: name, link_type: type, link_url: url } = link;
@@ -48,6 +107,39 @@ const buildCollectionLinks = (links: Link[]): LinkView[] => {
       url,
     };
   });
+};
+
+/**
+ * Build display model of DOI link associated with a collection, if any. Display publication metadata if it has been
+ * retrieved for the DOI, otherwise display the DOI link as is.
+ * @param doiLink - Link with type DOI, associated with a collection.
+ * @param publisherMetadata - Publication metadata associated with collection.
+ * @returns Display model of DOI link.
+ */
+const buildDoiMetadataLink = (
+  doiLink: Link,
+  publisherMetadata?: PublisherMetadata
+): LinkView => {
+  // Build display model of DOI link.
+  const { link_name: name, link_type: type, link_url: url } = doiLink;
+  const doiMetadataLink = {
+    name: buildLinkName(name, type, url),
+    type: transformLinkTypeToDisplay(type),
+    url,
+  };
+
+  // If there's no summary citation for the collection, return the DOI link as is.
+  const summaryCitation = buildSummaryCitation(publisherMetadata);
+  if (!summaryCitation) {
+    return doiMetadataLink;
+  }
+
+  // There's a summary citation link for the collection; update DOI link display.
+  return {
+    ...doiMetadataLink,
+    type: "Publication",
+    name: summaryCitation,
+  };
 };
 
 /**
@@ -74,6 +166,42 @@ const buildLinkName = (name: string, type: string, url: string): string => {
 };
 
 /**
+ * Build summary citation format from given publisher metadata:
+ * Last name of first author (publication year) journal abbreviation such as Ren et al. (2021) Cell.
+ * @param publisherMetadata - Publication metadata of a collection.
+ */
+const buildSummaryCitation = (
+  publisherMetadata?: PublisherMetadata
+): string => {
+  if (!publisherMetadata) {
+    return "";
+  }
+
+  const citationTokens = [];
+
+  // Add author to citation - family name if first author is a person, name if first author is a consortium.
+  const { authors, journal, published_year: publishedYear } = publisherMetadata;
+  const [firstAuthor] = authors;
+  if (firstAuthor) {
+    if (isAuthorPerson(firstAuthor)) {
+      citationTokens.push(firstAuthor.family);
+    } else {
+      citationTokens.push(firstAuthor.name);
+    }
+
+    if (authors.length > 1) {
+      citationTokens.push("et al.");
+    }
+  }
+
+  // Add year and journal.
+  citationTokens.push(`(${publishedYear})`);
+  citationTokens.push(journal);
+
+  return citationTokens.join(" ");
+};
+
+/**
  * Generate inline styles to be applied to collections and meta tables.
  * @returns Inline style object.
  */
@@ -83,6 +211,15 @@ const getTableStyles = (): CSSProperties => ({
 });
 
 /**
+ * Publication authors can be a person or a consortium; determine if the given author is in fact a person (and not a
+ * consortium).
+ * @param author - Person or consortium associated with a publication.
+ * @returns True if author is a person and not a consortium.
+ */
+const isAuthorPerson = (author: Author | Consortium): author is Author =>
+  (author as Author).given !== undefined;
+
+/**
  * Render collection contact and links.
  * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
  * @returns Markup displaying contact and collection-related links.
@@ -90,7 +227,50 @@ const getTableStyles = (): CSSProperties => ({
 const renderCollectionLinks = (
   datasetMetadata: DatasetMetadata
 ): JSX.Element => {
-  const links = buildCollectionLinks(datasetMetadata.collection_links);
+  const {
+    collection_contact_name: contactName,
+    collection_contact_email: contactEmail,
+  } = datasetMetadata;
+  const links = buildCollectionLinks(
+    datasetMetadata.collection_links,
+    contactName,
+    contactEmail,
+    datasetMetadata.collection_publisher_metadata
+  );
+
+  return (
+    <>
+      {renderSectionTitle("Collection")}
+      <HTMLTable style={getTableStyles()}>
+        <tbody>
+          {links.map(({ name, type, url }, i) => (
+            <tr {...{ key: i }}>
+              <td>{type}</td>
+              <td>
+                <a href={url} rel="noopener" target="_blank">
+                  {name}
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </HTMLTable>
+    </>
+  );
+};
+
+/**
+ * @deprecated - Remove once filter feature flag is removed.
+ * Render collection contact and links.
+ * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
+ * @returns Markup displaying contact and collection-related links.
+ */
+const renderCollectionLinksDeprecated = (
+  datasetMetadata: DatasetMetadata
+): JSX.Element => {
+  const links = buildCollectionLinksDeprecated(
+    datasetMetadata.collection_links
+  );
   const {
     collection_contact_name: contactName,
     collection_contact_email: contactEmail,
@@ -239,16 +419,24 @@ const buildDatasetMetadataViews = (
     .map(([key, value]) => ({ key, value: String(value) }));
 
 const InfoFormat = React.memo<Props>(
-  ({ datasetMetadata, singleValueCategories }) => (
-    <div className={Classes.DRAWER_BODY}>
-      <div className={Classes.DIALOG_BODY}>
-        <H3>{datasetMetadata.collection_name}</H3>
-        <p>{datasetMetadata.collection_description}</p>
-        {renderCollectionLinks(datasetMetadata)}
-        {renderDatasetMetadata(singleValueCategories)}
+  ({ datasetMetadata, singleValueCategories }) => {
+    // Determine if filter feature is enabled. TODO remove with SCDP #1718
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get("filter");
+    const isFilterEnabled = filterParam === "true";
+    return (
+      <div className={Classes.DRAWER_BODY}>
+        <div className={Classes.DIALOG_BODY}>
+          <H3>{datasetMetadata.collection_name}</H3>
+          <p>{datasetMetadata.collection_description}</p>
+          {isFilterEnabled
+            ? renderCollectionLinks(datasetMetadata)
+            : renderCollectionLinksDeprecated(datasetMetadata)}
+          {renderDatasetMetadata(singleValueCategories)}
+        </div>
       </div>
-    </div>
-  )
+    );
+  }
 );
 
 export default InfoFormat;
