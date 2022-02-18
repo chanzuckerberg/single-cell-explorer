@@ -82,7 +82,7 @@ def packed_length(buf: Union[bytes, bytearray, memoryview], offset=0) -> int:
     int
         Length of deflated posting list in bytes.
     """
-    buf = memoryview(buf).toreadonly()
+    buf = memoryview(buf)
     if offset > 0:
         buf = buf[offset:]
 
@@ -236,7 +236,7 @@ def inflate_postings_lists(buf: Union[bytes, bytearray, memoryview], offset=0) -
     """
     Decode a serialized postings list, returning the original list as a ``numpy.ndarray``.
     """
-    buf = memoryview(buf).toreadonly()
+    buf = memoryview(buf)
     n_lists, block_descriptions = _decode_header(buf[offset:])
     n_blocks = len(block_descriptions)
     offset += headerPacker.size + n_blocks * _BlockDescription.packed_length
