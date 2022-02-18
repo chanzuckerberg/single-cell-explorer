@@ -33,9 +33,9 @@ describe("diffexpdu", () => {
 
       for (const set2Density of densityChoices) {
         const nElem2 = Math.floor(nobs * set2Density);
-        const arr = randomIntArray(0, nElem1 + nElem2, 1);
+        const arr = shuffledIntArray(0, nobs, 1);
         const set1 = arr.subarray(0, nElem1);
-        const set2 = arr.subarray(nElem1);
+        const set2 = arr.subarray(nElem1, nElem1 + nElem2);
         set1.sort();
         set2.sort();
 
@@ -57,7 +57,7 @@ describe("diffexpdu", () => {
 // Fisher-Yates shuffled array.  Returns a shuffled array
 // from start to stop, by step.
 //
-function randomIntArray(
+function shuffledIntArray(
   start: number,
   stop: number,
   step: number
@@ -79,22 +79,3 @@ function randomIntArray(
   }
   return arr;
 }
-
-// function shuffle(array) {
-//   var m = array.length,
-//     t,
-//     i;
-
-//   // While there remain elements to shuffle…
-//   while (m) {
-//     // Pick a remaining element…
-//     i = Math.floor(Math.random() * m--);
-
-//     // And swap it with the current element.
-//     t = array[m];
-//     array[m] = array[i];
-//     array[i] = t;
-//   }
-
-//   return array;
-// }
