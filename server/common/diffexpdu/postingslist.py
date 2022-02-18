@@ -253,7 +253,7 @@ def inflate_postings_lists(buf: Union[bytes, bytearray, memoryview], offset=0) -
     return concat_lists
 
 
-def _decode_header(buf: memoryview) -> Tuple[int, list[_BlockDescription]]:
+def _decode_header(buf: memoryview) -> Tuple[int, List[_BlockDescription]]:
     magic, n_lists, n_blocks = headerPacker.unpack_from(buf)
     offset = headerPacker.size
     n_blocks += 1
