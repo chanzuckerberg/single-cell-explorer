@@ -5,11 +5,19 @@ import { packPostingsLists, unpackPostingsLists } from "./postingslist";
 format is documented in dev_docs/diffexpdu.md
 */
 
+/**
+ * The diffex mode. Currently, only TopN is implemented.
+ */
 export enum DiffExMode {
   TopN = 0,
   VarFilter = 1,
 }
 
+/**
+ * The diffex arguments. IMPORTANT:
+ *  - set1 and set2 must be monotonically increasing (sorted, unique)
+ *  - set1 and set2 must be disjoint (no elements in common)
+ */
 export interface DiffExArguments {
   mode: DiffExMode;
   params: {
@@ -19,6 +27,12 @@ export interface DiffExArguments {
   set2: Uint32Array;
 }
 
+/**
+ * Encode (pack) differential expression arguments into a (smaller) binary buffer.
+ *
+ * @param {DiffExArguments} args - the differential expression arguments
+ * @returns {Uint8Array} the binary encoded buffer
+ */
 export function packDiffExPdu(args: DiffExArguments): Uint8Array {
   if (args.mode !== DiffExMode.TopN)
     throw new Error("Modes other than TopN are unsupported.");
@@ -36,12 +50,12 @@ export function packDiffExPdu(args: DiffExArguments): Uint8Array {
   return pdu.asUint8Array();
 }
 
-function packDiffExHeader(pdu: PduBuffer, mode: number, N: number): void {
-  pdu.addUint8(mode); // 0:1 - mode
-  pdu.addUint8(0); // 1:2 - unused
-  pdu.addUint16(N); // 2:4 - N
-}
-
+/**
+ * Unpack a buffer containing binary encoded differential expression arguments.
+ *
+ * @param {Uint8Array} buf - the buffer containing the encoded arguments.
+ * @returns the decoded arguments
+ */
 export function unpackDiffExPdu(buf: Uint8Array): DiffExArguments {
   const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
   const { mode, N } = unpackDiffExHeader(dv);
@@ -54,6 +68,12 @@ export function unpackDiffExPdu(buf: Uint8Array): DiffExArguments {
     set1,
     set2,
   };
+}
+
+function packDiffExHeader(pdu: PduBuffer, mode: number, N: number): void {
+  pdu.addUint8(mode);
+  pdu.addUint8(0);
+  pdu.addUint16(N);
 }
 
 function unpackDiffExHeader(dv: DataView): { mode: number; N: number } {
