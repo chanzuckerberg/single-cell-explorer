@@ -275,7 +275,7 @@ def _decode_header(buf: memoryview) -> Tuple[int, List[_BlockDescription]]:
     return n_lists, block_descriptions
 
 
-def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[tuple[ListId, np.ndarray]]:
+def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[Tuple[ListId, np.ndarray]]:
     block_type = desc.block_type
     n_elem = desc.n_elem
     buf = _blockDecompress(buf)
