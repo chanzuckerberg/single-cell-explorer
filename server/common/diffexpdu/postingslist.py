@@ -5,7 +5,8 @@ import struct
 import itertools
 
 import numpy as np
-import bitarray, bitarray.util  # https://github.com/ilanschnell/bitarray
+import bitarray  # https://github.com/ilanschnell/bitarray
+import bitarray.util
 import numba as nb
 
 from .utils import _nonzero_bits
