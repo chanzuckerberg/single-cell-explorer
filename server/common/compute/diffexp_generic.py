@@ -1,50 +1,12 @@
 import numpy as np
-from scipy import sparse, stats
-from server.common.constants import XApproximateDistribution
+from scipy import stats
 
 
-def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01):
-    """
-    Return differential expression statistics for top N variables.
-
-    Algorithm:
-    - compute fold change
-    - compute Welch's t-test statistic and pvalue (w/ Bonferroni correction)
-    - return top N abs(logfoldchange) where lfc > diffexp_lfc_cutoff
-
-    If there are not N which meet criteria, augment by removing the logfoldchange
-    threshold requirement.
-
-    Notes on alogrithm:
-    - Welch's ttest provides basic statistics test.
-      https://en.wikipedia.org/wiki/Welch%27s_t-test
-    - p-values adjusted with Bonferroni correction.
-      https://en.wikipedia.org/wiki/Bonferroni_correction
-
-    :param adaptor: DataAdaptor instance
-    :param maskA: observation selection mask for set 1
-    :param maskB: observation selection mask for set 2
-    :param top_n: number of variables to return stats for
-    :param diffexp_lfc_cutoff: minimum
-    absolute value returning [ varindex, logfoldchange, pval, pval_adj ] for top N genes
-    :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
-              "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
-    """
-
-    X_approximate_distribution = adaptor.get_X_approximate_distribution()
-    dataA = adaptor.get_X_array(maskA, None)
-    dataB = adaptor.get_X_array(maskB, None)
-
-    # mean, variance, N - calculate for both selections
-    meanA, vA, nA = mean_var_n(dataA, X_approximate_distribution)
-    meanB, vB, nB = mean_var_n(dataB, X_approximate_distribution)
-    res = diffexp_ttest_from_mean_var(meanA, vA, nA, meanB, vB, nB, top_n, diffexp_lfc_cutoff)
-
-    return res
-
-
+# TODO: move this into diffexp_cxg and rename to just diffex
 def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp_lfc_cutoff):
     # IMPORTANT NOTE: this code assumes the data is normally distributed and/or already logged.
+    # print((nA, nB, meanA.shape, meanB.shape, varA.shape, varB.shape))
+    # print(meanA[-3:], varA[-3:], None, meanB[-3:], varB[-3:])
 
     n_var = meanA.shape[0]
     top_n = min(top_n, n_var)
@@ -111,53 +73,3 @@ def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp
     }
 
     return result
-
-
-# Convenience function which handles sparse data
-def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):
-    """
-    Two-pass variance calculation.  Numerically (more) stable
-    than naive methods (and same method used by numpy.var())
-    https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Two-pass
-    """
-    # fp_err_occurred is a flag indicating that a floating point error
-    # occured somewhere in our compute.  Used to trigger non-finite
-    # number handling.
-    fp_err_occurred = False
-
-    def fp_err_set(err, flag):
-        nonlocal fp_err_occurred
-        fp_err_occurred = True
-
-    with np.errstate(divide="call", invalid="call", call=fp_err_set):
-        n = X.shape[0]
-        if sparse.issparse(X):
-            if X_approximate_distribution == XApproximateDistribution.COUNT:
-                X = X.log1p()
-            mean = X.mean(axis=0).A1
-            dfm = X - mean
-            sumsq = np.sum(np.multiply(dfm, dfm), axis=0).A1
-            v = sumsq / (n - 1)
-        else:
-            if X_approximate_distribution == XApproximateDistribution.COUNT:
-                X = np.log1p(X)
-            mean = X.mean(axis=0)
-            dfm = X - mean
-            sumsq = np.sum(np.multiply(dfm, dfm), axis=0)
-            v = sumsq / (n - 1)
-
-    # AnnData does not guarantee that operations on a view of X will
-    # return an ndarray, so force the cast if it wasn't done for us.
-    if type(mean) is not np.ndarray:
-        mean = mean.toarray()
-    if type(v) is not np.ndarray:
-        v = v.toarray()
-
-    if fp_err_occurred:
-        mean[np.isfinite(mean) == False] = 0  # noqa: E712
-        v[np.isfinite(v) == False] = 0  # noqa: E712
-    else:
-        mean[np.isnan(mean)] = 0
-        v[np.isnan(v)] = 0
-
-    return mean, v, n

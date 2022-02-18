@@ -18,33 +18,38 @@ def main():
     parser.add_argument("-nb", "--numB", type=int, help="number of rows in group B")
     parser.add_argument("-va", "--varA", help="obs variable:value to use for group A")
     parser.add_argument("-vb", "--varB", help="obs variable:value to use for group B")
-    parser.add_argument("-t", "--trials", default=1, type=int, help="number of trials")
+    parser.add_argument("-t", "--trials", default=4, type=int, help="number of trials")
     parser.add_argument(
-        "-a", "--alg", choices=("default", "generic", "cxg"), default="default", help="algorithm to use"
+        "-a", "--alg", choices=("default", "generic", "cxg", "new", "old", "new2"), default="new", help="algorithm to use"
     )
     parser.add_argument("-s", "--show", default=False, action="store_true", help="show the results")
     parser.add_argument(
-        "-n", "--new-selection", default=False, action="store_true", help="change the selection between each trial"
+        "-n", "--new-selection", default=True, action="store_true", help="change the selection between each trial"
     )
-    parser.add_argument("--seed", default=1, type=int, help="set the random seed")
+    parser.add_argument("--seed", default=4, type=int, help="set the random seed")
+    parser.add_argument("--arr", default="X", type=str, help="tdb array to use")
 
     args = parser.parse_args()
 
     app_config = AppConfig()
     app_config.update_server_config(single_dataset__datapath=args.dataset)
     app_config.update_server_config(app__verbose=True)
+    app_config.update_server_config(app__flask_secret_key="howdy")
     app_config.complete_config()
 
     loader = MatrixDataLoader(location=args.dataset, app_config=app_config)
-    adaptor = loader.open(app_config)
+    adaptor = loader.open()
+    np.set_printoptions(edgeitems=10, linewidth=180)
 
-    if args.show:
-        if isinstance(adaptor, CxgDataset):
-            adaptor.open_array("X").schema.dump()
+    # if args.show:
+    #     if isinstance(adaptor, CxgDataset):
+    #         adaptor.open_array(args.arr).schema.dump()
 
     random.seed(args.seed)
     np.random.seed(args.seed)
     rows = adaptor.get_shape()[0]
+    print(f"Dataset shape: {adaptor.get_shape()}")
+    print(f"Sparse: {adaptor.open_array(args.arr).schema.sparse}")
 
     if args.numA:
         filterA = random.sample(range(rows), args.numA)
@@ -70,6 +75,11 @@ def main():
                 filterA = random.sample(range(rows), args.numA)
             if args.numB:
                 filterB = random.sample(range(rows), args.numB)
+        with open("filt_a.npy", "wb") as f:
+            np.save(f, filterA)
+        # if args.show:
+        #     print(filterA)
+        #     print(filterB)
 
         maskA = np.zeros(rows, dtype=bool)
         maskA[filterA] = True
@@ -77,22 +87,20 @@ def main():
         maskB[filterB] = True
 
         t1 = time.time()
-        if args.alg == "default":
-            results = adaptor.compute_diffexp_ttest(maskA, maskB)
+        if args.alg in ("default", "old"):
+            results = adaptor.compute_diffexp_ttest(maskA, maskB, arr=args.arr)
+        if args.alg == "new":
+            results = adaptor.compute_diffexp_new(maskA, maskB, arr=args.arr)
+        if args.alg == "new2":
+            results = adaptor.compute_diffexp_new2(maskA, maskB, arr=args.arr)
         elif args.alg == "generic":
             results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB)
-        elif args.alg == "cxg":
-            if not isinstance(adaptor, CxgDataset):
-                print("cxg only works with CxgDataset")
-                sys.exit(1)
-            results = diffexp_cxg.diffexp_ttest(adaptor, maskA, maskB)
 
         t2 = time.time()
         print("TIME=", t2 - t1)
 
     if args.show:
-        for res in results:
-            print(res)
+        print(results.get("positive", [])[:3])
 
 
 def get_filter_from_obs(adaptor, obsname, obsval):

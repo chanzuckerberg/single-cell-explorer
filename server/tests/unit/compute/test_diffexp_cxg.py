@@ -3,7 +3,6 @@ import unittest
 
 import numpy as np
 
-from server.common.compute import diffexp_generic
 from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
 from server.compute import diffexp_cxg
 from server.compute.diffexp_cxg import diffexp_ttest
@@ -88,15 +87,6 @@ class DiffExpTest(unittest.TestCase):
         # run it directly
 
         results = diffexp_ttest(adaptor, maskA, maskB, 10)
-        self.check_1_10_2_10(results)
-
-    def test_cxg_generic(self):
-        """Test a cxg adaptor with the generic adaptor"""
-        adaptor = self.load_dataset(f"{FIXTURES_ROOT}/pbmc3k.cxg")
-        maskA = self.get_mask(adaptor, 1, 10)
-        maskB = self.get_mask(adaptor, 2, 10)
-        # run it directly
-        results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB, 10)
         self.check_1_10_2_10(results)
 
     def test_cxg_sparse(self):
