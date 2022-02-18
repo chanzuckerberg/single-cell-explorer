@@ -6,10 +6,12 @@ import itertools
 
 import numpy as np
 import bitarray, bitarray.util  # https://github.com/ilanschnell/bitarray
-import zlib
 import numba as nb
 
-from .utils import _nonzero_bits, _blockCompress, _blockDecompress, pairwise
+from .utils import _nonzero_bits
+from .utils import _blockCompress
+from .utils import _blockDecompress
+from .utils import pairwise
 
 
 # The format is documented in `dev_docs/diffexpdu.md`
