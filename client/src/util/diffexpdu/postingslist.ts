@@ -27,7 +27,7 @@ const MAGIC_NUMBER = 0xce;
 enum BlockType {
   BitArray = 0,
   Uint16Array = 1,
-  Uint16ArrayInverted = 0x81,
+  Uint16ArrayInverted = 2,
 }
 
 interface BlockDescription {

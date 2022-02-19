@@ -58,15 +58,19 @@ Each BlockDescription is encoded as:
 | key            | Uint16 | Most significant 16 bits for elements encoded in this block.                       |
 | n_bytes        | Uint16 | Length of block, in bytes.                                                         |
 
-Block type bytes are:
+Current block types are (name, binary code):
 
 - BitArray = 0
 - Uint16 list = 1
-- Inverted Uint16 list = 129 (0x80 | 1)
+- Inverted Uint16 list = 2
 
-Blocks are encoded in a block*type-specific format. \_All* blocks are deflate-compressed
+Blocks are encoded in a block*type-specific format. *All* blocks are deflate-compressed
 
-### Delta coding
+### Sub-block encoding formats
+
+Multiple block types utilize common sub-block encoding formats.
+
+#### Delta coding
 
 The term is used to signify encoding a monotonically increasing list of integers as the difference
 between subsequent integers, prefaced by the value of the first element. This operation is the inverse
@@ -74,13 +78,13 @@ of a cumulative sum operation.
 
 For example, the list `[1, 8, 99]` would be delta coded as `[1, 7, 91]`.
 
-### Byteshuffle
+#### Byteshuffle
 
 The byteshuffle operation signifies reorganizing a list of multi-byte integers such that the
 least signficant bytes _of all values_ are stored first, following by the next most significant byte of all values,
 until all bytes are so stored.
 
-For example, the list of Uint16 `[0x0001, 0x0x02, 0x0300]` would be stored as the byte sequence `[0x01, 0x02, 0x00, 0x00, 0x00, 0x03]`
+For example, the list of Uint16 `[0x0001, 0x0002, 0x0300]` would be stored as the byte sequence `[0x01, 0x02, 0x00, 0x00, 0x00, 0x03]`
 
 ### Bitarray block type
 

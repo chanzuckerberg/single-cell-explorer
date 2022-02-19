@@ -21,7 +21,7 @@ T = TypeVar("T")
 class DiffExArguments:
     """
     Encode arguments for the differential expression (/diffex) REST API in a binary format. PDU format is documented
-    in `format.md`, and is shared by the Typescript implementation.
+    in `dev_docs/diffexpdu.md`, and is shared by the Typescript implementation.
 
     IMPORTANT: the two cell sets *MUST* be disjoint and sorted (increasing).
 

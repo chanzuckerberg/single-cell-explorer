@@ -33,8 +33,7 @@ class _BlockDescription:
     class BlockType(IntEnum):
         BitArray = 0
         Uint16Array = 1
-        Ranges = 2
-        Uint16ArrayInverted = Uint16Array | 0x80
+        Uint16ArrayInverted = 2
 
     block_type: BlockType
     list_id_mask: int  # 8 bit bitmask
@@ -97,7 +96,7 @@ def packed_length(buf: Union[bytes, bytearray, memoryview], offset=0) -> int:
 
 def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorted: bool = False) -> bytearray:
     """
-    Efficiently one or more (max 8) monotonically increasing list of unsigned integers into a byte stream.
+    Efficiently pack one or more (max 8) monotonically increasing lists of unsigned integers into a byte stream.
     Lists must be disjoint (the current implementation may not fail if lists are not unique, but future
     changes may enforce/require this)
     """
