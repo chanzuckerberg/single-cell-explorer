@@ -11,13 +11,13 @@ eg, Uint16 is a 2 byte, little endian, unsigned integer.
 
 The request parameters are encoded in the following format:
 
-| Field    | Format      | Notes                                                                                                         |
-| -------- | ----------- | ------------------------------------------------------------------------------------------------------------- |
-| mode     | byte        | Specifies differential expression mode of top N (0) or VarFilter ( 1). Currently, only 0 (TopN) is supported. |
-| _unused_ | byte        | Must be zero.                                                                                                 |
-| params   | ModeParams  | Mode-specific parameters.                                                                                     |
-| set1     | PostingList | first cell set                                                                                                |
-| set2     | PostingList | second cell set                                                                                               |
+| Field  | Format      | Notes                                                                                                         |
+| ------ | ----------- | ------------------------------------------------------------------------------------------------------------- |
+| magic  | byte        | Constant value, currently 0xDE.                                                                               |
+| mode   | byte        | Specifies differential expression mode of top N (0) or VarFilter ( 1). Currently, only 0 (TopN) is supported. |
+| params | ModeParams  | Mode-specific parameters.                                                                                     |
+| set1   | PostingList | first cell set                                                                                                |
+| set2   | PostingList | second cell set                                                                                               |
 
 ModeParams for the TopN mode are encoded as:
 
@@ -42,7 +42,7 @@ The PostingList type is encoded as:
 
 | Field             | Format                     | Notes                                                                                |
 | ----------------- | -------------------------- | ------------------------------------------------------------------------------------ |
-| magic             | byte                       | constant value, currently 0xCE                                                       |
+| magic             | byte                       | Constant value, currently 0xCE.                                                      |
 | N_Lists-1         | byte                       | Number of lists minus one (ie, if N_Lists == 1, encoded as 0x00). 1 <= N_Lists <= 8. |
 | N_blocks-1        | Uint16                     | Number of blocks minus one (ie, if n_blocks == 1, encoded as 0)                      |
 | BlockDescriptions | BlockDescription[N_blocks] | Array of block descriptions [0..N_blocks-1].                                         |
@@ -64,7 +64,7 @@ Current block types are (name, binary code):
 - Uint16 list = 1
 - Inverted Uint16 list = 2
 
-Blocks are encoded in a block*type-specific format. *All* blocks are deflate-compressed
+Blocks are encoded in a block*type-specific format. *All\* blocks are deflate-compressed
 
 ### Sub-block encoding formats
 

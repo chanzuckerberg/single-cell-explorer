@@ -258,7 +258,7 @@ def _decode_header(buf: memoryview) -> Tuple[int, List[_BlockDescription]]:
     offset = headerPacker.size
     n_blocks += 1
     n_lists += 1
-    assert magic == MAGIC_NUMBER  # TODO: convert most asserts to exceptions
+    assert magic == MAGIC_NUMBER
     assert n_blocks > 0
     assert n_lists > 0
 

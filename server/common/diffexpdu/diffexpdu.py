@@ -1,3 +1,4 @@
+from sre_constants import MAGIC
 from typing import Union, TypeVar, Type, ClassVar
 import struct
 from enum import IntEnum
@@ -11,10 +12,11 @@ __all__ = ["DiffExArguments"]
 
 # Pack/unpack support for various types
 # The format is documented in `dev_docs/diffexpdu.md`
-headerPacker = struct.Struct("<Bx")
+headerPacker = struct.Struct("<BB")
 topNParamsPacker = struct.Struct("<H")
 
 T = TypeVar("T")
+MAGIC_NUMBER = 0xDE
 
 
 @dataclass
@@ -71,7 +73,8 @@ class DiffExArguments:
         """
         Given a buffer containing encoded parameters, unpack and return an instance of DiffExArguments.
         """
-        (mode,) = headerPacker.unpack_from(buf, offset)
+        (magic, mode) = headerPacker.unpack_from(buf, offset)
+        assert magic == MAGIC_NUMBER
         assert mode == DiffExArguments.DiffExMode.TopN
         offset += headerPacker.size
 
@@ -84,7 +87,7 @@ class DiffExArguments:
     def pack(self):
         """Pack the instance of DiffExArguments into a buffer."""
         assert self.mode == DiffExArguments.DiffExMode.TopN
-        return headerPacker.pack(self.mode) + self.params.pack() + deflate_postings_lists((self.set1, self.set2))
+        return headerPacker.pack(MAGIC_NUMBER, self.mode) + self.params.pack() + deflate_postings_lists((self.set1, self.set2))
 
     def __eq__(self, other) -> bool:
         return (

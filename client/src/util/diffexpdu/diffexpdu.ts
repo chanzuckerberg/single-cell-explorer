@@ -4,6 +4,7 @@ import { packPostingsLists, unpackPostingsLists } from "./postingslist";
 /*
 format is documented in dev_docs/diffexpdu.md
 */
+const MAGIC_NUMBER = 0xde;
 
 /**
  * The diffex mode. Currently, only TopN is implemented.
@@ -71,13 +72,16 @@ export function unpackDiffExPdu(buf: Uint8Array): DiffExArguments {
 }
 
 function packDiffExHeader(pdu: PduBuffer, mode: number, N: number): void {
+  pdu.addUint8(MAGIC_NUMBER);
   pdu.addUint8(mode);
-  pdu.addUint8(0);
   pdu.addUint16(N);
 }
 
 function unpackDiffExHeader(dv: DataView): { mode: number; N: number } {
-  const mode = dv.getUint8(0);
+  const magic = dv.getUint8(0);
+  if (magic !== MAGIC_NUMBER)
+    throw new Error("Malformed diffexpdu - incorrect magic number");
+  const mode = dv.getUint8(1);
   const N = dv.getUint16(2, true);
   return { mode, N };
 }
