@@ -1,4 +1,3 @@
-from sre_constants import MAGIC
 from typing import Union, TypeVar, Type, ClassVar
 import struct
 from enum import IntEnum
@@ -87,7 +86,11 @@ class DiffExArguments:
     def pack(self):
         """Pack the instance of DiffExArguments into a buffer."""
         assert self.mode == DiffExArguments.DiffExMode.TopN
-        return headerPacker.pack(MAGIC_NUMBER, self.mode) + self.params.pack() + deflate_postings_lists((self.set1, self.set2))
+        return (
+            headerPacker.pack(MAGIC_NUMBER, self.mode)
+            + self.params.pack()
+            + deflate_postings_lists((self.set1, self.set2))
+        )
 
     def __eq__(self, other) -> bool:
         return (
