@@ -64,7 +64,11 @@ Current block types are (name, binary code):
 - Uint16 list = 1
 - Inverted Uint16 list = 2
 
-Blocks are encoded in a block*type-specific format. *All\* blocks are deflate-compressed
+The lists in any given block are encoded in the `list_id_mask` field. Currently, all block types
+support a *single* list, and therefore this mask will have a single bit set. A mask was selected
+to enable future addition of multi-list blocks, should they become useful.
+
+Blocks are encoded in a block*type-specific format. *All\* blocks are deflate-compressed.
 
 ### Sub-block encoding formats
 
@@ -117,3 +121,32 @@ For example, the list partition `[1, 3, 4, 6]` would be encoded in the following
 3. Missing elements are delta coded ([2, 3]), eg, `delta([2, 5])` -> `[0x0002, 0x0003]`
 4. `byteshuffle([0x0002, 0x0003])` -> `[0x02, 0x03, 0x00, 0x00]`
 5. And the results of steps 1 and 4 are concatenated, resulting in: `[0x01, 0x00, 0x07, 0x00, 0x02, 0x03, 0x00, 0x00]`
+
+## Choosing a block type
+
+During the process of encoding a postings list block, a block type must be selected. The block type
+is commonly selected to (approximately) minimize the size of the final encoded block.
+Because there are multiple formats (bitarray, list, and inverted list), _and_ `deflate` is applied post-encoding, it
+is challenging to predict which block type will be optimal.
+
+The amount of compression is highly dependent on the information content of the list, and short of
+prospectively trying all block types (which is computationally expensive), the current implementation
+applies a heuristic to select a block type.
+
+The heuristic uses a set of thresholds to determine block type. The thresholds were empirically tuned on
+a very large set of test cases, using real data, to determine reasonably optimal cutoffs. The primary
+heuristic is the number of elements in the list, and largely conforms to expected first principles:
+
+- small sets are best encoded with a discrete list
+- very large sets are best encoded with an inverted discrete list
+- others with bitarray
+
+This is augmented with a density clamp which controls for a very rough correlate of entropy, refining the
+heuristic guess of how well `deflate` will work.
+
+The actual cutoffs for both heuristics were validated empirically to work well across a wide range of
+actual data.
+
+Note that the computational cost of applying the heuristics also need to be traded against the
+cost of various `deflate` compression levels. The current configuration (both heuristic thresholds
+and deflate level) where evaluated empirically, and with the goal of keeping computational cost low.

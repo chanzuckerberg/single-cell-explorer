@@ -1,7 +1,8 @@
 /* eslint-disable no-bitwise -- relies on bitwise ops */
 
 /*
-format is documented in dev_docs/diffexpdu.md
+The format is documented in `dev_docs/diffexpdu.md`. It is implemented in both Python
+and Typescript.  Implementations must maintain compatibility.
 */
 
 import { PduBuffer } from "./pdubuffer";
@@ -101,6 +102,16 @@ function packBlock(pdu: PduBuffer, block: Uint8Array): void {
   pdu.add(block);
 }
 
+/**
+ * Given a partition, choose a block type which is likely near-optimal for
+ * encoding.  Heuristics live here.
+ *
+ * A description of the heuristics and their rationale is documented
+ * in the format description (`dev_docs/diffexpdu.md`)
+ *
+ * @param partition
+ * @returns the type of block
+ */
 function chooseBlockType(partition: ListPartition): BlockType {
   const nElem = partition.endIdx - partition.startIdx;
   const interval =

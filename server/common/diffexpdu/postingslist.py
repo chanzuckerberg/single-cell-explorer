@@ -14,8 +14,11 @@ from .utils import _blockCompress
 from .utils import _blockDecompress
 from .utils import pairwise
 
+"""
+The format is documented in `dev_docs/diffexpdu.md`. It is implemented in both Python
+and Typescript.  Implementations must maintain compatibility.
+"""
 
-# The format is documented in `dev_docs/diffexpdu.md`
 PostingsList = Union[np.ndarray, List[int]]
 DisjointPostingsLists = Tuple[PostingsList]
 ListId = int
@@ -142,14 +145,17 @@ def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorte
 
 def _choose_block_type(part: _ListPartition) -> _BlockDescription.BlockType:
     """
-    Given a partition, choose a block encoding.  Heuristics live here.
+    Given a partition, choose a block type which is likely near-optimal for
+    encoding.  Heuristics live here.
+
+    A description of the heuristics and their rationale is documented
+    in the format description (`dev_docs/diffexpdu.md`)
     """
     n_elem = part.end_idx - part.start_idx
     assert 0 < n_elem <= 2 ** 16
     assert (part.arr[part.start_idx] >> 16) == (part.arr[part.end_idx - 1] >> 16)
 
     interval = (part.arr[part.end_idx - 1] & 0xFFFF) + 1 - (part.arr[part.start_idx] & 0xFFFF)
-    # inv_n_elem = interval - n_elem
     density = n_elem / interval
 
     minBitArrayThreshold = 2 ** 11
