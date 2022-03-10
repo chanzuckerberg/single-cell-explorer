@@ -25,7 +25,7 @@ class CxgDataset(Dataset):
     tiledb_ctx = tiledb.Ctx(
         {
             "sm.tile_cache_size": 16 * 1024 ** 3,
-            "sm.num_reader_threads": 64,
+            "sm.num_reader_threads": 16,
             "py.init_buffer_bytes": 32 * 1024 ** 3,
             "py.exact_init_buffer_bytes": "true",
             "vfs.s3.region": "us-west-2"
@@ -216,23 +216,6 @@ class CxgDataset(Dataset):
         if lfc_cutoff is None:
             lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
         return diffexp_cxg.diffexp_ttest(
-            adaptor=self, maskA=maskA, maskB=maskB, top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff, arr=arr
-        )
-
-    def compute_diffexp_new(self, maskA, maskB, top_n=None, lfc_cutoff=None, arr="X"):
-        if top_n is None:
-            top_n = self.dataset_config.diffexp__top_n
-        if lfc_cutoff is None:
-            lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
-        return diffexp_cxg.diffexp_new(
-            adaptor=self, maskA=maskA, maskB=maskB, top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff, arr=arr
-        )
-    def compute_diffexp_new2(self, maskA, maskB, top_n=None, lfc_cutoff=None, arr="X"):
-        if top_n is None:
-            top_n = self.dataset_config.diffexp__top_n
-        if lfc_cutoff is None:
-            lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
-        return diffexp_cxg.diffexp_new_v2(
             adaptor=self, maskA=maskA, maskB=maskB, top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff, arr=arr
         )
 

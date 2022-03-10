@@ -5,8 +5,6 @@ from scipy import stats
 # TODO: move this into diffexp_cxg and rename to just diffex
 def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp_lfc_cutoff):
     # IMPORTANT NOTE: this code assumes the data is normally distributed and/or already logged.
-    # print((nA, nB, meanA.shape, meanB.shape, varA.shape, varB.shape))
-    # print(meanA[-3:], varA[-3:], None, meanB[-3:], varB[-3:])
 
     n_var = meanA.shape[0]
     top_n = min(top_n, n_var)

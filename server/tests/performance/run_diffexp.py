@@ -1,14 +1,13 @@
-import sys
 import argparse
 import random
+import sys
 import time
+
 import numpy as np
 
-from server.common.config.app_config import AppConfig
-from server.compute import diffexp_cxg
 from server.common.compute import diffexp_generic
+from server.common.config.app_config import AppConfig
 from server.dataset.matrix_loader import MatrixDataLoader
-from server.dataset.cxg_dataset import CxgDataset
 
 
 def main():
@@ -20,7 +19,7 @@ def main():
     parser.add_argument("-vb", "--varB", help="obs variable:value to use for group B")
     parser.add_argument("-t", "--trials", default=4, type=int, help="number of trials")
     parser.add_argument(
-        "-a", "--alg", choices=("default", "generic", "cxg", "new", "old", "new2"), default="new", help="algorithm to use"
+        "-a", "--alg", choices=("default", "generic", "cxg"), default="default", help="algorithm to use"
     )
     parser.add_argument("-s", "--show", default=False, action="store_true", help="show the results")
     parser.add_argument(
@@ -87,12 +86,8 @@ def main():
         maskB[filterB] = True
 
         t1 = time.time()
-        if args.alg in ("default", "old"):
+        if args.alg == "default":
             results = adaptor.compute_diffexp_ttest(maskA, maskB, arr=args.arr)
-        if args.alg == "new":
-            results = adaptor.compute_diffexp_new(maskA, maskB, arr=args.arr)
-        if args.alg == "new2":
-            results = adaptor.compute_diffexp_new2(maskA, maskB, arr=args.arr)
         elif args.alg == "generic":
             results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB)
 

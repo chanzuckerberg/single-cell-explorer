@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--cell-order", choices=["row", "col"], type=str, default="row")
     parser.add_argument("--tile-order", choices=["row", "col"], type=str, default="col")
     parser.add_argument("--capacity", type=int, default=128000)
-    parser.add_argument("--compression", type=int, default=-1)
+    parser.add_argument("--compression", type=int, default=22)
     parser.add_argument("--name", type=str, default="X_new")
     parser.add_argument("--arr", type=str, default="X")
     args = parser.parse_args()
@@ -102,7 +102,7 @@ def create_new_X(args, old_schema):
                         domain=old_dims[0].domain,
                         tile=X_extent[0],
                         dtype=old_dims[0].dtype,
-                        filters=[tiledb.ZstdFilter(level=-1)],
+                        filters=[tiledb.ZstdFilter(level=args.compression)],
                     ),
                     tiledb.Dim(
                         name="var",
