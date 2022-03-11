@@ -5,7 +5,6 @@ import time
 
 import numpy as np
 
-from server.common.compute import diffexp_generic
 from server.common.config.app_config import AppConfig
 from server.dataset.matrix_loader import MatrixDataLoader
 
@@ -17,15 +16,15 @@ def main():
     parser.add_argument("-nb", "--numB", type=int, help="number of rows in group B")
     parser.add_argument("-va", "--varA", help="obs variable:value to use for group A")
     parser.add_argument("-vb", "--varB", help="obs variable:value to use for group B")
-    parser.add_argument("-t", "--trials", default=4, type=int, help="number of trials")
+    parser.add_argument("-t", "--trials", default=1, type=int, help="number of trials")
     parser.add_argument(
-        "-a", "--alg", choices=("default", "generic", "cxg"), default="default", help="algorithm to use"
+        "-a", "--alg", choices=("cxg",), default="cxg", help="algorithm to use"
     )
     parser.add_argument("-s", "--show", default=False, action="store_true", help="show the results")
     parser.add_argument(
-        "-n", "--new-selection", default=True, action="store_true", help="change the selection between each trial"
+        "-n", "--new-selection", default=False, action="store_true", help="change the selection between each trial"
     )
-    parser.add_argument("--seed", default=4, type=int, help="set the random seed")
+    parser.add_argument("--seed", default=1, type=int, help="set the random seed")
     parser.add_argument("--arr", default="X", type=str, help="tdb array to use")
 
     args = parser.parse_args()
@@ -40,9 +39,8 @@ def main():
     adaptor = loader.open()
     np.set_printoptions(edgeitems=10, linewidth=180)
 
-    # if args.show:
-    #     if isinstance(adaptor, CxgDataset):
-    #         adaptor.open_array(args.arr).schema.dump()
+    if args.show:
+        adaptor.open_array(args.arr).schema.dump()
 
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -74,11 +72,6 @@ def main():
                 filterA = random.sample(range(rows), args.numA)
             if args.numB:
                 filterB = random.sample(range(rows), args.numB)
-        with open("filt_a.npy", "wb") as f:
-            np.save(f, filterA)
-        # if args.show:
-        #     print(filterA)
-        #     print(filterB)
 
         maskA = np.zeros(rows, dtype=bool)
         maskA[filterA] = True
@@ -86,10 +79,10 @@ def main():
         maskB[filterB] = True
 
         t1 = time.time()
-        if args.alg == "default":
+        if args.alg == "cxg":
             results = adaptor.compute_diffexp_ttest(maskA, maskB, arr=args.arr)
-        elif args.alg == "generic":
-            results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB)
+        else:
+            raise ValueError(f"Unsupported algo {args.alg}")
 
         t2 = time.time()
         print("TIME=", t2 - t1)

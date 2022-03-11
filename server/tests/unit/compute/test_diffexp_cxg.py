@@ -92,16 +92,6 @@ class DiffExpTest(unittest.TestCase):
     def test_cxg_sparse(self):
         adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg", )
         adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_no_col_shift.cxg")
-        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
-        assert not adaptor_sparse.has_array('X_col_shift')  # sanity check
-
-        self.sparse_diffexp(adaptor_dense, adaptor_sparse)
-
-    def test_cxg_sparse_col_shift(self):
-        adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_col_shift.cxg", )
-        adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_col_shift.cxg")
-        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
-        assert adaptor_sparse.has_array('X_col_shift')  # sanity check
 
         self.sparse_diffexp(adaptor_dense, adaptor_sparse)
 

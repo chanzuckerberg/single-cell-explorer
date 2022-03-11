@@ -25,8 +25,7 @@ class CxgDataset(Dataset):
     tiledb_ctx = tiledb.Ctx(
         {
             "sm.tile_cache_size": 16 * 1024 ** 3,
-            "sm.num_reader_threads": 16,
-            "py.init_buffer_bytes": 32 * 1024 ** 3,
+            "py.init_buffer_bytes": 16 * 1024 ** 3,
             "py.exact_init_buffer_bytes": "true",
             "vfs.s3.region": "us-west-2"
         }
@@ -271,18 +270,12 @@ class CxgDataset(Dataset):
             if obs_items == slice(None) and var_items == slice(None):
                 data = X[:, :]
             else:
-                data = X.multi_index[obs_items, var_items]
+                data = X.query(order="U").multi_index[obs_items, var_items]
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
-            if self.has_array("X_col_shift"):
-                X_col_shift = self.open_array("X_col_shift")
-                if var_items == slice(None):
-                    densedata += X_col_shift[:]
-                else:
-                    densedata += X_col_shift.multi_index[var_items][""]
 
             return densedata
 

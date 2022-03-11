@@ -78,7 +78,7 @@ server:
 
   limits:
     column_request_max: 32
-    diffexp_cellcount_max: 50000
+    diffexp_cellcount_max: 1500000
 
 dataset:
   app:
