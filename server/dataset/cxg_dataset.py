@@ -270,7 +270,7 @@ class CxgDataset(Dataset):
             if obs_items == slice(None) and var_items == slice(None):
                 data = X[:, :]
             else:
-                data = X.multi_index[obs_items, var_items]
+                data = X.query(order="U").multi_index[obs_items, var_items]
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
