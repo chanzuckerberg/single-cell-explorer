@@ -57,7 +57,7 @@ class CxgDataset(Dataset):
             for use of the legacy reader, which works correctly. It can be removed when the
             test case `test_tdb_bug` in server/tests/unit/dataest/test_cxg_dataset.py passes
             """
-            context_params |= {"sm.query.dense.reader": "legacy"}
+            context_params["sm.query.dense.reader"] = "legacy"
 
             CxgDataset.tiledb_ctx = tiledb.Ctx(context_params)
             tiledb.default_ctx(context_params)
