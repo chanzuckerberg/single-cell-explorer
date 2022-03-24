@@ -19,6 +19,6 @@ pandas>=1.0,!=1.1  # pandas 1.1 breaks tests, https://github.com/pandas-dev/pand
 PyYAML>=5.4  # CVE-2020-14343
 scipy>=1.4
 requests>=2.22.0
-tiledb==0.10.4
+tiledb==0.13.1
 s3fs==0.4.2
 MarkupSafe==1.1.1
