@@ -199,11 +199,7 @@ class CxgDataset(Dataset):
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
-        with tiledb.Array(uri, mode="r", ctx=tiledb_ctx) as array:
-            if array.schema.sparse:
-                return tiledb.SparseArray(uri, mode="r", ctx=tiledb_ctx)
-            else:
-                return tiledb.DenseArray(uri, mode="r", ctx=tiledb_ctx)
+        return tiledb.open(uri, mode="r", ctx=tiledb_ctx)
 
     def open_array(self, name):
         try:
