@@ -25,12 +25,6 @@ f"""server:
     about: {about}
     title: {title}
 
-  diffexp:
-    alg_cxg: # number of threads to use is computed from: min(max_workers, cpu_multipler * cpu_count)
-      max_workers: {diffexp_max_workers}
-      cpu_multiplier: {cpu_multiplier}
-      target_workunit: {target_workunit}  # The target number of matrix elements that are evaluated in one thread.
-
   data_locator:
     api_base: {data_locator_api_base}
     s3:

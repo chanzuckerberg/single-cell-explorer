@@ -8,11 +8,6 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ComputeError
 
 
-def set_config(*args, **kwargs):
-    # TODO: find callers and eliminate calls
-    pass
-
-
 def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"):
     """
     Return differential expression statistics for top N variables.

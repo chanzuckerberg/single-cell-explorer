@@ -47,17 +47,6 @@ server:
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
     allowed_matrix_types: []
 
-  diffexp:
-    alg_cxg:
-      # The number of threads to use is computed from: min(max_workers, cpu_multipler * cpu_count).
-      # Where cpu_count is determined at runtime.
-      max_workers: 64
-      cpu_multiplier: 4
-
-      # The target number of matrix elements that are evaluated
-      # together in one thread.
-      target_workunit: 16_000_000
-
   data_locator:
     api_base: http://{env}-backend.internal.rdev.single-cell.czi.technology/dp/v1
     s3:
