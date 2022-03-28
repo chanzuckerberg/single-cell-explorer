@@ -31,7 +31,6 @@ class TestCxgDataset(unittest.TestCase):
         This gives different results on 0.12.4 vs 0.13.1. Reported to TileDB.
         Work-around present in server/dataset/cxg_dataset.py:set_tiledb_context()
         """
-        print(tiledb.__version__)
         data = self.get_data("pbmc3k.cxg")
         filt = _query_parameter_to_filter(
             MultiDict(
