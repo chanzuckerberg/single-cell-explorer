@@ -208,5 +208,8 @@ def mean_var_cnt_sparse(matrix, n_var, rows):
 
 def mean_var_cnt_dense(matrix, _, rows):
     # TODO: why is the list cast still necessary? Tdb is throwing an error
+    # Update: this is a bug in recent TileDB-Py versions. In the queue
+    # for a fix in TileDB 0.13.2, at which point multi_index should again
+    # support either list or ndarray.
     xslc = matrix.multi_index[list(rows), :]
     return mean_var_n(xslc[""])
