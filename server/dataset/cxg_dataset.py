@@ -274,10 +274,7 @@ class CxgDataset(Dataset):
         X = self.open_array("X")
 
         if X.schema.sparse:
-            if obs_items == slice(None) and var_items == slice(None):
-                data = X[:, :]
-            else:
-                data = X.query(order="U").multi_index[obs_items, var_items]
+            data = X.query(order="U").multi_index[obs_items, var_items]
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
@@ -287,10 +284,7 @@ class CxgDataset(Dataset):
             return densedata
 
         else:
-            if obs_items == slice(None) and var_items == slice(None):
-                data = X[:, :]
-            else:
-                data = X.multi_index[obs_items, var_items][""]
+            data = X.multi_index[obs_items, var_items][""]
             return data
 
     def get_X_approximate_distribution(self) -> XApproximateDistribution:
