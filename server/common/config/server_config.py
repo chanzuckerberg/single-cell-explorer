@@ -9,7 +9,6 @@ from server.common.config.base_config import BaseConfig
 from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
-from server.compute import diffexp_cxg as diffexp_tiledb
 from server.dataset.matrix_loader import MatrixDataLoader, MatrixDataType
 
 
