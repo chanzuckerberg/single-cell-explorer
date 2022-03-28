@@ -37,8 +37,8 @@ def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
     matrix = adaptor.open_array(arr)
-    row_selector_A = np.where(maskA)[0]
-    row_selector_B = np.where(maskB)[0]
+    row_selector_A = maskA.nonzero()[0]
+    row_selector_B = maskB.nonzero()[0]
 
     dtype = matrix.dtype
     cols = matrix.shape[1]

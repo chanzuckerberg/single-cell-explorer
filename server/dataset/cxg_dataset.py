@@ -253,7 +253,7 @@ class CxgDataset(Dataset):
         if coord_mask is None:
             return coord_range, coord_data
 
-        indices = np.where(coord_mask)[0]
+        indices = coord_mask.nonzero()[0]
         ncoord = indices.shape[0]
         maprange = np.arange(ncoord)
         mapindex = np.zeros(indices[-1] + 1, dtype=int)
