@@ -4,6 +4,7 @@ services:
 
   localstack:
     image: localstack/localstack@sha256:7c6635493185d25165979995fb073fd789c72b6d8b17ef3a70b798d55576732f
+    platform: linux/amd64
     ports:
       - "4566:4566"
     environment:
@@ -17,12 +18,13 @@ services:
     volumes:
       - localstack:/tmp/localstack
     networks:
-       corporanet:
-          aliases:
-            - localstack.corporanet.local
+      corporanet:
+        aliases:
+          - localstack.corporanet.local
 
   explorer:
     image: "${DOCKER_REPO}corpora-explorer"
+    platform: linux/amd64
     build:
       context: .
       dockerfile: hosted/Dockerfile
@@ -57,9 +59,9 @@ services:
       # SecretsManager population relies on oauth json
       - ./oauth/users.json:/oauth/users.json
     networks:
-       corporanet:
-          aliases:
-            - backend.corporanet.local
+      corporanet:
+        aliases:
+          - backend.corporanet.local
 networks:
   corporanet:
 volumes:
