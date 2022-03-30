@@ -4,6 +4,7 @@
     "default_env": "rdev",
     "app": "hosted-cellxgene",
     "default_compose_env_file": ".env.ecr",
+    "default_compose_env": ".env.ecr",
     "environments": {
         "rdev": {
             "aws_profile": "single-cell-dev",
