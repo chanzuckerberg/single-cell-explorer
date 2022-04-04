@@ -48,7 +48,7 @@ class BaseConfigTest(ConfigTests):
             [
                 (
                     "adaptor__cxg_adaptor__tiledb_ctx",
-                    {"py.init_buffer_bytes": 1073741824, "sm.tile_cache_size": 8589934592},
+                    {"py.init_buffer_bytes": 10485760, "sm.tile_cache_size": 8589934592},
                     {"py.init_buffer_bytes": 17179869184, "sm.tile_cache_size": 8589934592},
                 ),
                 ("app__verbose", True, False),
