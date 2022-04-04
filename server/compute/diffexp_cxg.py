@@ -37,8 +37,6 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
-    import datetime
-
     matrix = adaptor.open_array(arr)
     dtype = matrix.dtype
     n_obs = matrix.shape[0]
