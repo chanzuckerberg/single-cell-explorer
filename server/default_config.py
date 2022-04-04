@@ -101,7 +101,7 @@ server:
       # data_locator / s3 / region_name.
       tiledb_ctx:
         sm.tile_cache_size:  8589934592  # 8GiB
-        py.init_buffer_bytes: 17179869184  # 16GiB
+        py.init_buffer_bytes: 1073741824  # 1GiB
 
   limits:
     column_request_max: 32

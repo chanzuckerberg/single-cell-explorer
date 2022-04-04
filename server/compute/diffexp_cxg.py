@@ -212,16 +212,11 @@ def _mean_var_sparse_numba(x, var, nrows, ncols):
 
 
 def mean_var_cnt_sparse(matrix, n_var, rows):
-    rows.sort()
     xslc = matrix.query(dims=["var"], attrs=[""], order="U").multi_index[rows, :]
     mean, var = _mean_var_sparse_numba(xslc[""], xslc["var"], len(rows), n_var)
     return mean, var, len(rows)
 
 
 def mean_var_cnt_dense(matrix, _, rows):
-    # TODO: why is the list cast still necessary? Tdb is throwing an error
-    # Update: this is a bug in recent TileDB-Py versions. In the queue
-    # for a fix in TileDB 0.13.2, at which point multi_index should again
-    # support either list or ndarray.
-    xslc = matrix.multi_index[list(rows), :]
+    xslc = matrix.multi_index[rows, :]
     return mean_var_n(xslc[""])

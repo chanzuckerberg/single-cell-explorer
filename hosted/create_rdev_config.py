@@ -64,7 +64,6 @@ server:
       tiledb_ctx:
         sm.tile_cache_size: 60129542144 # 56 GB
         py.init_buffer_bytes: 17179869184  # 16GiB
-        vfs.s3.region: us-west-2
 
   limits:
     column_request_max: 32

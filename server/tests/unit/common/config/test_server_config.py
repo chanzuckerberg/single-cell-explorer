@@ -119,7 +119,7 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}",
             config_file_name="two_data_roots.yml",
-                dataset_datapath=f"{FIXTURES_ROOT}/some_dataset.cxg",
+            dataset_datapath=f"{FIXTURES_ROOT}/some_dataset.cxg",
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -271,11 +271,17 @@ class TestServerConfig(ConfigTests):
     @patch("server.dataset.cxg_dataset.CxgDataset.set_tiledb_context")
     def test_handle_adaptor(self, mock_tiledb_context):
         custom_config = self.custom_app_config(
-            dataroot=f"{FIXTURES_ROOT}", cxg_tile_cache_size=10, cxg_num_reader_threads=2
+            dataroot=f"{FIXTURES_ROOT}",
+            cxg_tile_cache_size=10,
+            cxg_tiledb_py_init_buffer_size=10,
         )
         config = AppConfig()
         config.update_from_config_file(custom_config)
         config.server_config.handle_adaptor()
         mock_tiledb_context.assert_called_once_with(
-            {"sm.tile_cache_size": 10, "sm.num_reader_threads": 2, "vfs.s3.region": "us-east-1"}
+            {
+                "sm.tile_cache_size": 10,
+                "py.init_buffer_bytes": 10,
+                "vfs.s3.region": "us-east-1",
+            }
         )
