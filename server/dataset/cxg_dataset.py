@@ -23,7 +23,11 @@ from server.dataset.dataset import Dataset
 class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
     tiledb_ctx = tiledb.Ctx(
-        {"sm.tile_cache_size": 8 * 1024 * 1024 * 1024, "sm.num_reader_threads": 32, "vfs.s3.region": "us-east-1"}
+        {
+            "sm.tile_cache_size": 8 * 1024 ** 3,
+            "py.init_buffer_bytes": 16 * 1024 ** 3,
+            "vfs.s3.region": "us-east-1",
+        }
     )
 
     def __init__(self, data_locator, app_config=None):
@@ -53,7 +57,6 @@ class CxgDataset(Dataset):
         """Set the tiledb context.  This should be set before any instances of CxgDataset are created"""
         try:
             CxgDataset.tiledb_ctx = tiledb.Ctx(context_params)
-            tiledb.default_ctx(context_params)
 
         except tiledb.libtiledb.TileDBError as e:
             if e.message == "Global context already initialized!":

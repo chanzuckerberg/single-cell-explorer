@@ -34,7 +34,7 @@ f"""server:
     cxg_adaptor:
       tiledb_ctx:
         sm.tile_cache_size:  {cxg_tile_cache_size}
-        sm.num_reader_threads:  {cxg_num_reader_threads}
+        py.init_buffer_bytes: {cxg_tiledb_py_init_buffer_size}
 
   limits:
     column_request_max: {column_request_max}
