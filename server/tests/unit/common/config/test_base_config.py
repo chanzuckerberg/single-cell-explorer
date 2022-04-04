@@ -46,6 +46,11 @@ class BaseConfigTest(ConfigTests):
         self.assertEqual(
             server_changes,
             [
+                (
+                    "adaptor__cxg_adaptor__tiledb_ctx",
+                    {"py.init_buffer_bytes": 1073741824, "sm.tile_cache_size": 8589934592},
+                    {"py.init_buffer_bytes": 17179869184, "sm.tile_cache_size": 8589934592},
+                ),
                 ("app__verbose", True, False),
                 ("app__flask_secret_key", "secret", None),
                 ("multi_dataset__dataroot", FIXTURES_ROOT, None),
