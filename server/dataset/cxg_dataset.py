@@ -23,12 +23,7 @@ from server.dataset.dataset import Dataset
 class CxgDataset(Dataset):
     # TODO:  The tiledb context parameters should be a configuration option
     tiledb_ctx = tiledb.Ctx(
-        {
-            "sm.tile_cache_size": 16 * 1024 ** 3,
-            "py.init_buffer_bytes": 16 * 1024 ** 3,
-            "py.exact_init_buffer_bytes": "true",
-            "vfs.s3.region": "us-west-2"
-        }
+        {"sm.tile_cache_size": 8 * 1024 * 1024 * 1024, "sm.num_reader_threads": 32, "vfs.s3.region": "us-east-1"}
     )
 
     def __init__(self, data_locator, app_config=None):
@@ -212,13 +207,19 @@ class CxgDataset(Dataset):
         array = self.open_array(f"emb/{ename}")
         return array[:, 0:dims]
 
-    def compute_diffexp_ttest(self, maskA, maskB, top_n=None, lfc_cutoff=None, arr="X"):
+    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, arr="X", selector_lists=False):
         if top_n is None:
             top_n = self.dataset_config.diffexp__top_n
         if lfc_cutoff is None:
             lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
         return diffexp_cxg.diffexp_ttest(
-            adaptor=self, maskA=maskA, maskB=maskB, top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff, arr=arr
+            adaptor=self,
+            setA=setA,
+            setB=setB,
+            top_n=top_n,
+            diffexp_lfc_cutoff=lfc_cutoff,
+            arr=arr,
+            selector_lists=selector_lists,
         )
 
     def get_colors(self):

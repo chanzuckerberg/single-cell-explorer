@@ -100,8 +100,8 @@ server:
       # If 'vfs.s3.region' is not set, then it will automatically use the setting from
       # data_locator / s3 / region_name.
       tiledb_ctx:
-        sm.tile_cache_size:  8589934592
-        sm.num_reader_threads:  32
+        sm.tile_cache_size:  8589934592  # 8GiB
+        py.init_buffer_bytes: 17179869184  # 16GiB
 
   limits:
     column_request_max: 32

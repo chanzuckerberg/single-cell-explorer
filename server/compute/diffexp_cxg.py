@@ -8,7 +8,7 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ComputeError
 
 
-def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"):
+def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X", selector_lists=False):
     """
     Return differential expression statistics for top N variables.
 
@@ -27,18 +27,35 @@ def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="
       https://en.wikipedia.org/wiki/Bonferroni_correction
 
     :param adaptor: DataAdaptor instance
-    :param maskA: observation selection mask for set 1
-    :param maskB: observation selection mask for set 2
+    :param setA: observation selection mask for set 1
+    :param setB: observation selection mask for set 2
     :param top_n: number of variables to return stats for
     :param diffexp_lfc_cutoff: minimum
     :param arr: the tdb array to read
+    :param selector_lists: if True, the selectors are presumed to be masks of length n_obs; else, lists of obs indices
     absolute value returning [ varindex, logfoldchange, pval, pval_adj ] for top N genes
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
+    import datetime
+
     matrix = adaptor.open_array(arr)
-    row_selector_A = maskA.nonzero()[0]
-    row_selector_B = maskB.nonzero()[0]
+    dtype = matrix.dtype
+    n_obs = matrix.shape[0]
+    cols = matrix.shape[1]
+    is_sparse = matrix.schema.sparse
+
+    if selector_lists:
+        assert 0 <= setA[0] < n_obs
+        assert 0 <= setA[-1] < n_obs
+        assert 0 <= setB[0] < n_obs
+        assert 0 <= setB[-1] < n_obs
+        row_selector_A = setA
+        row_selector_B = setB
+    else:
+        assert len(setA) == len(setB) == n_obs
+        row_selector_A = setA.nonzero()[0]
+        row_selector_B = setB.nonzero()[0]
 
     dtype = matrix.dtype
     cols = matrix.shape[1]

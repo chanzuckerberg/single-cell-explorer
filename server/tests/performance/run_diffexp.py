@@ -7,6 +7,7 @@ import numpy as np
 
 from server.common.config.app_config import AppConfig
 from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.cxg_dataset import CxgDataset
 
 
 def main():
@@ -17,9 +18,7 @@ def main():
     parser.add_argument("-va", "--varA", help="obs variable:value to use for group A")
     parser.add_argument("-vb", "--varB", help="obs variable:value to use for group B")
     parser.add_argument("-t", "--trials", default=1, type=int, help="number of trials")
-    parser.add_argument(
-        "-a", "--alg", choices=("cxg",), default="cxg", help="algorithm to use"
-    )
+    parser.add_argument("-a", "--alg", choices=("cxg",), default="cxg", help="algorithm to use")
     parser.add_argument("-s", "--show", default=False, action="store_true", help="show the results")
     parser.add_argument(
         "-n", "--new-selection", default=False, action="store_true", help="change the selection between each trial"
@@ -73,14 +72,14 @@ def main():
             if args.numB:
                 filterB = random.sample(range(rows), args.numB)
 
-        maskA = np.zeros(rows, dtype=bool)
-        maskA[filterA] = True
-        maskB = np.zeros(rows, dtype=bool)
-        maskB[filterB] = True
+        # maskA = np.zeros(rows, dtype=bool)
+        # maskA[filterA] = True
+        # maskB = np.zeros(rows, dtype=bool)
+        # maskB[filterB] = True
 
         t1 = time.time()
         if args.alg == "cxg":
-            results = adaptor.compute_diffexp_ttest(maskA, maskB, arr=args.arr)
+            results = adaptor.compute_diffexp_ttest(filterA, filterB, arr=args.arr, selector_lists=True)
         else:
             raise ValueError(f"Unsupported algo {args.alg}")
 
