@@ -28,8 +28,8 @@ class TestCxgDataset(unittest.TestCase):
 
     def test_tdb_bug(self):
         """
-        This gives different results on 0.12.4 vs 0.13.1. Reported to TileDB.
-        Work-around present in server/dataset/cxg_dataset.py:set_tiledb_context()
+        This gives different results on 0.12.4 vs 0.13.1. Reported to TileDB
+        and fixed in 0.13.2. Test case remains in case of regression.
         """
         data = self.get_data("pbmc3k.cxg")
         filt = _query_parameter_to_filter(
