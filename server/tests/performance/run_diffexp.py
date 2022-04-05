@@ -1,5 +1,4 @@
 import argparse
-import random
 import sys
 import time
 
@@ -13,20 +12,26 @@ from server.dataset.cxg_dataset import CxgDataset
 def main():
     parser = argparse.ArgumentParser("A command to test diffexp")
     parser.add_argument("dataset", help="name of a dataset to load")
-    parser.add_argument("-na", "--numA", type=int, help="number of rows in group A")
-    parser.add_argument("-nb", "--numB", type=int, help="number of rows in group B")
-    parser.add_argument("-va", "--varA", help="obs variable:value to use for group A")
-    parser.add_argument("-vb", "--varB", help="obs variable:value to use for group B")
+    parser.add_argument("-n", "--num", nargs=2, type=int, help="number of rows to draw for set A and B")
+    parser.add_argument("-v", "--var", nargs=2, help="obs variable:value for set A and B")
+    parser.add_argument("-f", "--fraction", nargs=2, type=float, help="fraction (0, 1] of obs to drat for set A and B")
+
     parser.add_argument("-t", "--trials", default=1, type=int, help="number of trials")
     parser.add_argument("-a", "--alg", choices=("cxg",), default="cxg", help="algorithm to use")
     parser.add_argument("-s", "--show", default=False, action="store_true", help="show the results")
     parser.add_argument(
-        "-n", "--new-selection", default=False, action="store_true", help="change the selection between each trial"
+        "--new-selection", default=False, action="store_true", help="change the selection between each trial"
     )
     parser.add_argument("--seed", default=1, type=int, help="set the random seed")
     parser.add_argument("--arr", default="X", type=str, help="tdb array to use")
 
     args = parser.parse_args()
+    if sum([int(bool(arg)) for arg in [args.num, args.var, args.fraction]]) != 1:
+        print("Must supply one and only one of --num, --var or --fraction")
+        return 1
+    if args.var and args.new_selection:
+        print("--new-selection and --var are incompatible.")
+        return 1
 
     app_config = AppConfig()
     app_config.update_server_config(single_dataset__datapath=args.dataset)
@@ -37,46 +42,18 @@ def main():
     loader = MatrixDataLoader(location=args.dataset, app_config=app_config)
     adaptor = loader.open()
     np.set_printoptions(edgeitems=10, linewidth=180)
+    rng = np.random.default_rng(seed=args.seed)
 
     if args.show:
         adaptor.open_array(args.arr).schema.dump()
 
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    rows = adaptor.get_shape()[0]
     print(f"Dataset shape: {adaptor.get_shape()}")
     print(f"Sparse: {adaptor.open_array(args.arr).schema.sparse}")
 
-    if args.numA:
-        filterA = random.sample(range(rows), args.numA)
-    elif args.varA:
-        vname, vval = args.varA.split(":")
-        filterA = get_filter_from_obs(adaptor, vname, vval)
-    else:
-        print("must supply numA or varA")
-        sys.exit(1)
+    filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
-    if args.numB:
-        filterB = random.sample(range(rows), args.numB)
-    elif args.varB:
-        vname, vval = args.varB.split(":")
-        filterB = get_filter_from_obs(adaptor, vname, vval)
-    else:
-        print("must supply numB or varB")
-        sys.exit(1)
-
+    total_time = 0
     for i in range(args.trials):
-        if args.new_selection:
-            if args.numA:
-                filterA = random.sample(range(rows), args.numA)
-            if args.numB:
-                filterB = random.sample(range(rows), args.numB)
-
-        # maskA = np.zeros(rows, dtype=bool)
-        # maskA[filterA] = True
-        # maskB = np.zeros(rows, dtype=bool)
-        # maskB[filterB] = True
-
         t1 = time.time()
         if args.alg == "cxg":
             results = adaptor.compute_diffexp_ttest(filterA, filterB, arr=args.arr, selector_lists=True)
@@ -85,9 +62,42 @@ def main():
 
         t2 = time.time()
         print("TIME=", t2 - t1)
+        total_time += t2 - t1
+
+        if args.new_selection:
+            filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
     if args.show:
         print(results.get("positive", [])[:3])
+
+    print(f"avergage time={total_time / args.trials}, n={len(filterA)+len(filterB)}")
+
+    return 0
+
+
+def draw_cell_sets(args, adaptor, rng):
+    n_obs = adaptor.get_shape()[0]
+
+    if args.num:
+        assert sum(args.num) <= n_obs, "--num exceeds n_obs"
+        draw = rng.choice(n_obs, size=sum(args.num), replace=False)
+        return draw[0 : args.num[0]], draw[args.num[0] :]
+
+    if args.var:
+        vname, vval = args.var[0].split(":")
+        filterA = get_filter_from_obs(adaptor, vname, vval)
+        vname, vval = args.var[1].split(":")
+        filterB = get_filter_from_obs(adaptor, vname, vval)
+        return filterA, filterB
+
+    if args.fraction:
+        assert 0 < sum(args.fraction) <= 1.0, "--fraction not in range (0, 1]"
+        num = [max(1, int(n_obs * f)) for f in args.fraction]
+        draw = rng.choice(n_obs, size=sum(num), replace=False)
+        return draw[0 : num[0]], draw[num[0] :]
+
+    # error
+    assert False, "Unexpected cli arguments"
 
 
 def get_filter_from_obs(adaptor, obsname, obsval):
@@ -108,4 +118,4 @@ def get_filter_from_obs(adaptor, obsname, obsval):
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
