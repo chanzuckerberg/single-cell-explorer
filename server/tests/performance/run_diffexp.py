@@ -1,6 +1,7 @@
 import argparse
 import sys
 import time
+import gc
 
 import numpy as np
 
@@ -37,6 +38,11 @@ def main():
     app_config.update_server_config(single_dataset__datapath=args.dataset)
     app_config.update_server_config(app__verbose=True)
     app_config.update_server_config(app__flask_secret_key="howdy")
+    # CXG Adaptor config - directly influences diffex performance. These numbers are pulled from the rdev config,
+    # which is set up for 64GB hosts.  We can increase for larger instances.
+    app_config.update_server_config(
+        adaptor__cxg_adaptor__tiledb_ctx={"sm.tile_cache_size": "60129542144", "py.init_buffer_bytes": "17179869184"}
+    )
     app_config.complete_config()
 
     loader = MatrixDataLoader(location=args.dataset, app_config=app_config)
@@ -50,10 +56,16 @@ def main():
     print(f"Dataset shape: {adaptor.get_shape()}")
     print(f"Sparse: {adaptor.open_array(args.arr).schema.sparse}")
 
+    # The _first_ call to compute differential expression will compile (numba) various
+    # functions. We want to remove that from the benchmark, as it only happens once
+    # on backend startup.
+    adaptor.compute_diffexp_ttest(np.array([0]), np.array([1]), arr=args.arr, selector_lists=True)
+
     filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
     total_time = 0
     for i in range(args.trials):
+        gc.collect()
         t1 = time.time()
         if args.alg == "cxg":
             results = adaptor.compute_diffexp_ttest(filterA, filterB, arr=args.arr, selector_lists=True)
