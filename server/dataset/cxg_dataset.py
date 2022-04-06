@@ -25,7 +25,7 @@ class CxgDataset(Dataset):
     tiledb_ctx = tiledb.Ctx(
         {
             "sm.tile_cache_size": 8 * 1024 ** 3,
-            "py.init_buffer_bytes": 16 * 1024 ** 3,
+            "py.init_buffer_bytes": 512 * 1024 ** 2,
             "vfs.s3.region": "us-east-1",
         }
     )

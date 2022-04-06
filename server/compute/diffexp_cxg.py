@@ -2,6 +2,7 @@ import concurrent.futures
 
 import numpy as np
 from numba import jit
+from numba.typed import List
 from scipy import stats
 
 from server.common.constants import XApproximateDistribution
@@ -185,15 +186,21 @@ def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):
     return mean, v, n
 
 
+def mean_var_cnt_dense(matrix, _, rows):
+    xslc = matrix.multi_index[rows, :]
+    return mean_var_n(xslc[""])
+
+
 @jit(nopython=True)
-def _mean_var_sparse_numba(x, var, nrows, ncols):
+def _mean_var_sparse_numba(slcs, nrows, ncols):
     """Kernel to compute the mean and variance.  It was not clear if this function
     could be written using numpy, thus avoiding the loops.  Therefore numba is
     used here to speed things up.  With numba, this function takes a negligible amount
     of time compared to reading in the sparse matrix"""
     mean = np.zeros((ncols,), dtype=np.float64)
-    for col, val in zip(var, x):
-        mean[col] += val
+    for slc in slcs:
+        for col, val in zip(*slc):
+            mean[col] += val
     mean /= nrows
 
     # optimize the sumsq computation.
@@ -203,18 +210,17 @@ def _mean_var_sparse_numba(x, var, nrows, ncols):
     # and replace with (val-mean)**2.  Simplifying the expression
     # gives the following code.
     sumsq = nrows * np.multiply(mean, mean)
-    for col, val in zip(var, x):
-        sumsq[col] += val * (val - 2 * mean[col])
+    for slc in slcs:
+        for col, val in zip(*slc):
+            sumsq[col] += val * (val - 2 * mean[col])
     v = sumsq / (nrows - 1)
     return mean, v
 
 
 def mean_var_cnt_sparse(matrix, n_var, rows):
-    xslc = matrix.query(dims=["var"], attrs=[""], order="U").multi_index[rows, :]
-    mean, var = _mean_var_sparse_numba(xslc[""], xslc["var"], len(rows), n_var)
+    query_iterator = matrix.query(dims=["var"], attrs=[""], order="U", return_incomplete=True).multi_index[rows, :]
+    xslc = List()
+    for slc in query_iterator:
+        xslc.append((slc["var"], slc[""]))
+    mean, var = _mean_var_sparse_numba(xslc, len(rows), n_var)
     return mean, var, len(rows)
-
-
-def mean_var_cnt_dense(matrix, _, rows):
-    xslc = matrix.multi_index[rows, :]
-    return mean_var_n(xslc[""])

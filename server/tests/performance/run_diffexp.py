@@ -38,10 +38,14 @@ def main():
     app_config.update_server_config(single_dataset__datapath=args.dataset)
     app_config.update_server_config(app__verbose=True)
     app_config.update_server_config(app__flask_secret_key="howdy")
-    # CXG Adaptor config - directly influences diffex performance. These numbers are pulled from the rdev config,
-    # which is set up for 64GB hosts.  We can increase for larger instances.
+    # CXG Adaptor config - directly influences diffex performance.
+    # Need to ensure these are correctly set in the deployment config.
     app_config.update_server_config(
-        adaptor__cxg_adaptor__tiledb_ctx={"sm.tile_cache_size": "60129542144", "py.init_buffer_bytes": "17179869184"}
+        adaptor__cxg_adaptor__tiledb_ctx={
+            "sm.tile_cache_size": "60129542144",
+            "py.init_buffer_bytes": str(512 * 1024 ** 2),
+            "vfs.s3.region": "us-west-2",
+        }
     )
     app_config.complete_config()
 
