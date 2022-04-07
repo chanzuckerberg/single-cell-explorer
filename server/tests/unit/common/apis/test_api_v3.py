@@ -301,6 +301,16 @@ class EndPoints(BaseTest):
         result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=bytes(20))
         self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
+        # missing content length
+        result = self.client.post(url, content_length=False, headers={"Content-Type": "application/octet-stream"})
+        self.assertEqual(result.status_code, HTTPStatus.LENGTH_REQUIRED)
+
+        # Content-Length too large
+        result = self.client.post(
+            url, content_length=100 * 1024 ** 3, headers={"Content-Type": "application/octet-stream"}
+        )
+        self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+
     def test_get_annotations_var_fbs(self):
         endpoint = "annotations/var"
         url = f"{self.TEST_URL_BASE}{endpoint}"
