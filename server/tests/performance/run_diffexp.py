@@ -67,7 +67,7 @@ def main():
 
     filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
-    total_time = 0
+    times = []
     for i in range(args.trials):
         gc.collect()
         t1 = time.time()
@@ -78,7 +78,7 @@ def main():
 
         t2 = time.time()
         print("TIME=", t2 - t1)
-        total_time += t2 - t1
+        times.append(t2 - t1)
 
         if args.new_selection:
             filterA, filterB = draw_cell_sets(args, adaptor, rng)
@@ -86,7 +86,7 @@ def main():
     if args.show:
         print(results.get("positive", [])[:3])
 
-    print(f"avergage time={total_time / args.trials}, n={len(filterA)+len(filterB)}")
+    print(f"time mean={np.mean(times)}, std={np.std(times)}, n_obs={len(filterA)+len(filterB)}")
 
     return 0
 
