@@ -28,8 +28,8 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
       https://en.wikipedia.org/wiki/Bonferroni_correction
 
     :param adaptor: DataAdaptor instance
-    :param setA: observation selection mask for set 1
-    :param setB: observation selection mask for set 2
+    :param setA: observation selector (mask or list) for set 1
+    :param setB: observation selector (mask or list) for set 2
     :param top_n: number of variables to return stats for
     :param diffexp_lfc_cutoff: minimum
     :param arr: the tdb array to read
