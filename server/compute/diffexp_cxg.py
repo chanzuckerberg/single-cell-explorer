@@ -191,36 +191,48 @@ def mean_var_cnt_dense(matrix, _, rows):
     return mean_var_n(xslc[""])
 
 
-@jit(nopython=True)
-def _mean_var_sparse_numba(slcs, nrows, ncols):
-    """Kernel to compute the mean and variance.  It was not clear if this function
-    could be written using numpy, thus avoiding the loops.  Therefore numba is
-    used here to speed things up.  With numba, this function takes a negligible amount
-    of time compared to reading in the sparse matrix"""
-    mean = np.zeros((ncols,), dtype=np.float64)
-    for slc in slcs:
-        for col, val in zip(*slc):
-            mean[col] += val
-    mean /= nrows
+@jit(nopython=True, nogil=True, fastmath=True)
+def _mean_var_sparse_accumulate(col_arr, val_arr, n, u, M2):
+    """
+    Incrementally accumulate mean and sum of square of distance from mean using
+    Welford's online method.
+    """
+    for col, val in zip(col_arr, val_arr):
+        u_prev = u[col]
+        M2_prev = M2[col]
+        n[col] += 1
+        u[col] = u_prev + (val - u_prev) / n[col]
+        M2[col] = M2_prev + (val - u_prev) * (val - u[col])
 
-    # optimize the sumsq computation.
-    # since most entries in a sparse matrix are 0, then start by assuming
-    # all values are 0, so fill the sumsq array with nrows * (0 - mean)**2.
-    # as non-zero values are encountered, subtract off the (mean*mean) value
-    # and replace with (val-mean)**2.  Simplifying the expression
-    # gives the following code.
-    sumsq = nrows * np.multiply(mean, mean)
-    for slc in slcs:
-        for col, val in zip(*slc):
-            sumsq[col] += val * (val - 2 * mean[col])
-    v = sumsq / (nrows - 1)
-    return mean, v
+
+@jit(nopython=True, nogil=True, fastmath=True)
+def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):
+    """
+    Finalize incremental values, acconting for missing elements (due to sparse input).
+    Non-sparse and sparse combined using Chan's parallel adaptation of Welford's.
+    The code assumes the sparse elements are all zero and ignores those terms.
+    """
+    n_b = n_rows - n_a
+    delta = -u_a  # assumes u_b == 0
+    u = (n_a * u_a) / n_rows
+    M2 = M2_a + delta ** 2 * n_a * n_b / n_rows  # assumes M2_b == 0
+    return u, M2
 
 
 def mean_var_cnt_sparse(matrix, n_var, rows):
     query_iterator = matrix.query(dims=["var"], attrs=[""], order="U", return_incomplete=True).multi_index[rows, :]
-    xslc = List()
+
+    # accumulators, by gene (var) for n, u (mean) and M (sum of squares of difference from mean)
+    n_rows = len(rows)
+    n_a = np.zeros((n_var,), dtype=np.uint32)
+    u_a = np.zeros((n_var,), dtype=np.float64)
+    M2_a = np.zeros((n_var,), dtype=np.float64)
     for slc in query_iterator:
-        xslc.append((slc["var"], slc[""]))
-    mean, var = _mean_var_sparse_numba(xslc, len(rows), n_var)
-    return mean, var, len(rows)
+        _mean_var_sparse_accumulate(slc["var"], slc[""], n_a, u_a, M2_a)
+
+    u, M2 = _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a)
+
+    # compute variance
+    var = M2 / max(1, (n_rows - 1))
+
+    return u, var, n_rows
