@@ -2,7 +2,6 @@ import concurrent.futures
 
 import numpy as np
 from numba import jit
-from numba.typed import List
 from scipy import stats
 
 from server.common.constants import XApproximateDistribution
