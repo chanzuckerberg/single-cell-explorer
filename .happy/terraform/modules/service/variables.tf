@@ -89,20 +89,10 @@ variable "api_url" {
   description = "URL for the backend api."
 }
 
-variable "frontend_url" {
-  type        = string
-  description = "URL for the frontend app."
-}
-
 variable "deployment_stage" {
   type        = string
   description = "The name of the deployment stage of the Application"
   default     = "test"
-}
-
-variable "step_function_arn" {
-  type        = string
-  description = "ARN for the step function called by the uploader"
 }
 
 variable "priority" {

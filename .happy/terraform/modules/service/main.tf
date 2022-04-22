@@ -48,14 +48,6 @@ resource aws_ecs_task_definition task_definition {
         "value": "${data.aws_region.current.name}"
       },
       {
-        "name": "FRONTEND_URL",
-        "value": "${var.frontend_url}"
-      },
-      {
-        "name": "UPLOAD_SFN_ARN",
-        "value": "${var.step_function_arn}"
-      },
-      {
         "name": "API_URL",
         "value": "${var.api_url}"
       },
