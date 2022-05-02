@@ -27,6 +27,7 @@ import {
 import { selectIsUserStateDirty } from "../selectors/global";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { LabelArray, LabelIndex } from "../util/dataframe";
+import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -240,45 +241,44 @@ const dispatchDiffExpErrors = (
 };
 
 const requestDifferentialExpression =
-  (set1: LabelArray, set2: LabelArray, num_genes = 50) =>
+  (set1: LabelArray, set2: LabelArray, num_genes = 15) =>
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- TODO: type diff exp data in genesets reducer (client/src/reducers/genesets.ts)
   async (dispatch: AppDispatch, getState: GetState) => {
     dispatch({ type: "request differential expression started" });
     try {
       if (!globals.API) throw new Error("API not set");
       /*
-    Steps:
-    1. get the most differentially expressed genes
-    2. get expression data for each
-    */
+      Steps:
+      1. get the most differentially expressed genes
+      2. get expression data for each
+      */
       const { annoMatrix } = getState();
       const varIndexName = annoMatrix.schema.annotations.var.index;
 
-      // Legal values are null, Array or TypedArray.  Null is initial state.
-      if (!set1) set1 = [];
-      if (!set2) set2 = [];
+      // // Legal values are null, Array or TypedArray.  Null is initial state.
+      if (!set1) set1 = new Int32Array();
+      if (!set2) set2 = new Int32Array();
 
-      // These lines ensure that we convert any TypedArray to an Array.
-      // This is necessary because JSON.stringify() does some very strange
-      // things with TypedArrays (they are marshalled to JSON objects, rather
-      // than being marshalled as a JSON array).
-      set1 = Array.isArray(set1) ? set1 : Array.from(set1);
-      set2 = Array.isArray(set2) ? set2 : Array.from(set2);
+      // set1/set2 are LabelArray, which may be Array<> or Int32Array.
+      // The API accepts Uint32Array.
+      const set1Uint32 = new Uint32Array(set1 as Int32Array);
+      const set2Uint32 = new Uint32Array(set2 as Int32Array);
+      const deArgs: DiffExArguments = {
+        mode: DiffExMode.TopN,
+        params: { N: num_genes },
+        set1: set1Uint32,
+        set2: set2Uint32,
+      };
 
       const res = await fetch(
-        `${globals.API.prefix}${globals.API.version}diffexp/obs`,
+        `${globals.API.prefix}${globals.API.version}diffexp/obs2`,
         {
           method: "POST",
           headers: new Headers({
             Accept: "application/json",
-            "Content-Type": "application/json",
+            "Content-Type": "application/octet-stream",
           }),
-          body: JSON.stringify({
-            mode: "topN",
-            count: num_genes,
-            set1: { filter: { obs: { index: set1 } } },
-            set2: { filter: { obs: { index: set2 } } },
-          }),
+          body: packDiffExPdu(deArgs),
           credentials: "include",
         }
       );

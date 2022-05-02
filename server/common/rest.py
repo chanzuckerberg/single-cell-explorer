@@ -4,6 +4,7 @@ import logging
 import sys
 import zlib
 from http import HTTPStatus
+import struct
 
 from flask import make_response, jsonify, current_app, abort, redirect
 from werkzeug.urls import url_unquote
@@ -23,6 +24,7 @@ from server.common.errors import (
     TombstoneError,
 )
 from server.dataset import dataset_metadata
+from server.common.diffexpdu import DiffExArguments
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -257,6 +259,36 @@ def diffexp_obs_post(request, data_adaptor):
         raise
 
 
+def diffex_binary_post(request, data_adaptor):
+    MAX_CONTENT_LENGTH = 100 * 1024 ** 2  # perhaps a config variable would be suitable?
+    if not data_adaptor.dataset_config.diffexp__enable:
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+    if not request.content_type or "application/octet-stream" not in request.content_type:
+        return abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+    if not request.content_length:
+        return abort(HTTPStatus.LENGTH_REQUIRED)
+    if request.content_length > MAX_CONTENT_LENGTH:
+        return abort(HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+
+    try:
+        buf = request.get_data()
+        diffex_args = DiffExArguments.unpack_from(buf)
+
+        if diffex_args.mode != DiffExArguments.DiffExMode.TopN:
+            return abort_and_log(HTTPStatus.NOT_IMPLEMENTED, "Unsupported diffex mode")
+
+        result = data_adaptor.diffexp_topN_from_list(diffex_args.set1, diffex_args.set2, diffex_args.params.N)
+        return make_response(result, HTTPStatus.OK, {"Content-Type": "application/json"})
+
+    except (KeyError, TypeError, AssertionError, struct.error) as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+    except JSONEncodingValueError:
+        # JSON encoding failure, usually due to bad data. Just let it ripple up
+        # to default exception handler.
+        current_app.logger.warning(JSON_NaN_to_num_warning_msg)
+        raise
+
+
 def layout_obs_get(request, data_adaptor):
     fields = request.args.getlist("layout-name", None)
     num_columns_requested = len(data_adaptor.get_embedding_names()) if len(fields) == 0 else len(fields)
@@ -289,9 +321,7 @@ def genesets_get(request, data_adaptor):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        return make_response(
-            jsonify({"genesets": [], "tid": 0}), HTTPStatus.OK
-        )
+        return make_response(jsonify({"genesets": [], "tid": 0}), HTTPStatus.OK)
     except (ValueError, KeyError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e))
 

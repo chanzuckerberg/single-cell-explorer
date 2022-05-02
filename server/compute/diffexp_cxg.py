@@ -8,7 +8,7 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ComputeError
 
 
-def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"):
+def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X", selector_lists=False):
     """
     Return differential expression statistics for top N variables.
 
@@ -27,18 +27,33 @@ def diffexp_ttest(adaptor, maskA, maskB, top_n=8, diffexp_lfc_cutoff=0.01, arr="
       https://en.wikipedia.org/wiki/Bonferroni_correction
 
     :param adaptor: DataAdaptor instance
-    :param maskA: observation selection mask for set 1
-    :param maskB: observation selection mask for set 2
+    :param setA: observation selector (mask or list) for set 1
+    :param setB: observation selector (mask or list) for set 2
     :param top_n: number of variables to return stats for
     :param diffexp_lfc_cutoff: minimum
     :param arr: the tdb array to read
+    :param selector_lists: if True, the selectors are presumed to be masks of length n_obs; else, lists of obs indices
     absolute value returning [ varindex, logfoldchange, pval, pval_adj ] for top N genes
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
     matrix = adaptor.open_array(arr)
-    row_selector_A = maskA.nonzero()[0]
-    row_selector_B = maskB.nonzero()[0]
+    dtype = matrix.dtype
+    n_obs = matrix.shape[0]
+    cols = matrix.shape[1]
+    is_sparse = matrix.schema.sparse
+
+    if selector_lists:
+        assert 0 <= setA[0] < n_obs
+        assert 0 <= setA[-1] < n_obs
+        assert 0 <= setB[0] < n_obs
+        assert 0 <= setB[-1] < n_obs
+        row_selector_A = setA
+        row_selector_B = setB
+    else:
+        assert len(setA) == len(setB) == n_obs
+        row_selector_A = setA.nonzero()[0]
+        row_selector_B = setB.nonzero()[0]
 
     dtype = matrix.dtype
     cols = matrix.shape[1]
@@ -170,36 +185,53 @@ def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):
     return mean, v, n
 
 
-@jit(nopython=True)
-def _mean_var_sparse_numba(x, var, nrows, ncols):
-    """Kernel to compute the mean and variance.  It was not clear if this function
-    could be written using numpy, thus avoiding the loops.  Therefore numba is
-    used here to speed things up.  With numba, this function takes a negligible amount
-    of time compared to reading in the sparse matrix"""
-    mean = np.zeros((ncols,), dtype=np.float64)
-    for col, val in zip(var, x):
-        mean[col] += val
-    mean /= nrows
-
-    # optimize the sumsq computation.
-    # since most entries in a sparse matrix are 0, then start by assuming
-    # all values are 0, so fill the sumsq array with nrows * (0 - mean)**2.
-    # as non-zero values are encountered, subtract off the (mean*mean) value
-    # and replace with (val-mean)**2.  Simplifying the expression
-    # gives the following code.
-    sumsq = nrows * np.multiply(mean, mean)
-    for col, val in zip(var, x):
-        sumsq[col] += val * (val - 2 * mean[col])
-    v = sumsq / (nrows - 1)
-    return mean, v
-
-
-def mean_var_cnt_sparse(matrix, n_var, rows):
-    xslc = matrix.query(dims=["var"], attrs=[""], order="U").multi_index[rows, :]
-    mean, var = _mean_var_sparse_numba(xslc[""], xslc["var"], len(rows), n_var)
-    return mean, var, len(rows)
-
-
 def mean_var_cnt_dense(matrix, _, rows):
     xslc = matrix.multi_index[rows, :]
     return mean_var_n(xslc[""])
+
+
+@jit(nopython=True, nogil=True, fastmath=True)
+def _mean_var_sparse_accumulate(col_arr, val_arr, n, u, M2):
+    """
+    Incrementally accumulate mean and sum of square of distance from mean using
+    Welford's online method.
+    """
+    for col, val in zip(col_arr, val_arr):
+        u_prev = u[col]
+        M2_prev = M2[col]
+        n[col] += 1
+        u[col] = u_prev + (val - u_prev) / n[col]
+        M2[col] = M2_prev + (val - u_prev) * (val - u[col])
+
+
+@jit(nopython=True, nogil=True, fastmath=True)
+def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):
+    """
+    Finalize incremental values, acconting for missing elements (due to sparse input).
+    Non-sparse and sparse combined using Chan's parallel adaptation of Welford's.
+    The code assumes the sparse elements are all zero and ignores those terms.
+    """
+    n_b = n_rows - n_a
+    delta = -u_a  # assumes u_b == 0
+    u = (n_a * u_a) / n_rows
+    M2 = M2_a + delta ** 2 * n_a * n_b / n_rows  # assumes M2_b == 0
+    return u, M2
+
+
+def mean_var_cnt_sparse(matrix, n_var, rows):
+    query_iterator = matrix.query(dims=["var"], attrs=[""], order="U", return_incomplete=True).multi_index[rows, :]
+
+    # accumulators, by gene (var) for n, u (mean) and M (sum of squares of difference from mean)
+    n_rows = len(rows)
+    n_a = np.zeros((n_var,), dtype=np.uint32)
+    u_a = np.zeros((n_var,), dtype=np.float64)
+    M2_a = np.zeros((n_var,), dtype=np.float64)
+    for slc in query_iterator:
+        _mean_var_sparse_accumulate(slc["var"], slc[""], n_a, u_a, M2_a)
+
+    u, M2 = _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a)
+
+    # compute variance
+    var = M2 / max(1, (n_rows - 1))
+
+    return u, var, n_rows
