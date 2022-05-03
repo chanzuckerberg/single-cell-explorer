@@ -117,3 +117,8 @@ variable "health_check_path" {
   description = "Path for health checks"
   default     = "/"
 }
+
+variable "frontend_url" {
+  type        = string
+  description = "URL for the frontend app."
+}

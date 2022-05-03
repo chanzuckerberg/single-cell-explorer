@@ -28,9 +28,9 @@ locals {
   explorer_alb_dns      = try(local.secret[local.alb_key]["explorer"]["dns_name"], "")
   explorer_alb_zone     = try(local.secret[local.alb_key]["explorer"]["zone_id"], "")
 
-  explorer_url        = try(join("", [
+  frontend_url        = try(join("", [
     "https://", module.explorer_dns[0].dns_prefix, ".", local.external_dns
-  ]), var.explorer_url)
+  ]), var.frontend_url)
   explorer_image_repo = local.secret["ecrs"]["explorer"]["url"]
   explorer_cmd        = ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]
   # TODO end explorer stuff
@@ -71,7 +71,8 @@ module explorer_service {
   health_check_path = "/cellxgene/health"
   host_match        = try(join(".", [module.explorer_dns[0].dns_prefix, local.external_dns]), "")
   priority          = local.priority
-  api_url           = local.explorer_url
+  api_url           = local.frontend_url
+  frontend_url      = local.frontend_url
   remote_dev_prefix = local.remote_dev_prefix
 
   wait_for_steady_state = local.wait_for_steady_state

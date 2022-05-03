@@ -70,7 +70,7 @@ variable batch_container_memory_limit {
   default     = 28000
 }
 
-variable explorer_url {
+variable frontend_url {
   type        = string
   description = "For non-proxied stacks, send in the canonical front/backend URL's"
   default     = ""
