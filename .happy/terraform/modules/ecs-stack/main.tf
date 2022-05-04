@@ -65,7 +65,7 @@ module explorer_service {
   security_groups   = local.security_groups
   task_role_arn     = local.ecs_role_arn
   service_port      = 5000
-  memory            = 1536
+  memory            = var.memory
   cmd               = local.explorer_cmd
   deployment_stage  = local.deployment_stage
   health_check_path = "/cellxgene/health"

@@ -81,3 +81,9 @@ variable explorer_instance_count {
   description = "How many backend tasks to run"
   default     = 1
 }
+
+variable memory {
+  type        = number
+  description = "Allocated memory"
+  default     = 1536
+}
