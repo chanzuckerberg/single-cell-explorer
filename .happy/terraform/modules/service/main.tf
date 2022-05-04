@@ -24,7 +24,7 @@ resource aws_ecs_service service {
 }
 
 resource aws_ecs_task_definition task_definition {
-  family        = "dp-${var.deployment_stage}-${var.custom_stack_name}-${var.app_name}"
+  family        = "explorer-${var.deployment_stage}-${var.custom_stack_name}-${var.app_name}"
   network_mode  = "awsvpc"
   task_role_arn = var.task_role_arn
   container_definitions = <<EOF
@@ -76,7 +76,7 @@ EOF
 
 resource aws_cloudwatch_log_group cloud_watch_logs_group {
   retention_in_days = 365
-  name              = "/dp/${var.deployment_stage}/${var.custom_stack_name}/${var.app_name}"
+  name              = "/explorer/${var.deployment_stage}/${var.custom_stack_name}/${var.app_name}"
 }
 
 resource aws_lb_target_group target_group {
