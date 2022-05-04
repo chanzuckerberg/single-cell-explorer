@@ -1,4 +1,4 @@
-# This deploys a Data Portal stack.
+# This deploys an Explorer stack.
 #
 
 data aws_secretsmanager_secret_version config {
