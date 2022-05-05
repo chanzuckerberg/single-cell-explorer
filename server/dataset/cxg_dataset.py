@@ -52,6 +52,13 @@ class CxgDataset(Dataset):
     def set_tiledb_context(context_params):
         """Set the tiledb context.  This should be set before any instances of CxgDataset are created"""
         try:
+            """
+            TileDB 0.13.1 has a bug in the new dense reader. This config (workaround) will
+            for use of the legacy reader, which works correctly. It can be removed when the
+            test case `test_tdb_bug` in server/tests/unit/dataest/test_cxg_dataset.py passes
+            """
+            context_params["sm.query.dense.reader"] = "legacy"
+
             CxgDataset.tiledb_ctx = tiledb.Ctx(context_params)
             tiledb.default_ctx(context_params)
 
@@ -187,11 +194,7 @@ class CxgDataset(Dataset):
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
-        with tiledb.Array(uri, mode="r", ctx=tiledb_ctx) as array:
-            if array.schema.sparse:
-                return tiledb.SparseArray(uri, mode="r", ctx=tiledb_ctx)
-            else:
-                return tiledb.DenseArray(uri, mode="r", ctx=tiledb_ctx)
+        return tiledb.open(uri, mode="r", ctx=tiledb_ctx)
 
     def open_array(self, name):
         try:

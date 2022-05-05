@@ -25,6 +25,23 @@ export const STANDARD_CATEGORY_NAMES = [
 ];
 
 /**
+ * Author of publication associated with a collection, populated from Crossref as part of collection publication
+ * metadata.
+ */
+export interface Author {
+  family: string;
+  given: string;
+}
+
+/**
+ * Consortium of publication associated with a collection, populated from Crossref as part of collection publication
+ * metadata.
+ */
+export interface Consortium {
+  name: string;
+}
+
+/**
  * Collection and dataset information for the selected dataset.
  */
 export interface DatasetMetadata {
@@ -34,6 +51,7 @@ export interface DatasetMetadata {
   collection_description: string;
   collection_links: Link[];
   collection_name: string;
+  collection_publisher_metadata: PublisherMetadata;
   collection_url: string;
   dataset_id: string;
   dataset_name: string;
@@ -100,4 +118,15 @@ export interface Link {
   link_name: string;
   link_type: string;
   link_url: string;
+}
+
+/**
+ * Collection publication metadata, populated from Crossref by collection publication DOI.
+ */
+export interface PublisherMetadata {
+  authors: (Author | Consortium)[];
+  journal: string;
+  published_day: number;
+  published_month: number;
+  published_year: number;
 }

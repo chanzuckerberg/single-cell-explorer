@@ -17,12 +17,13 @@ services:
     volumes:
       - localstack:/tmp/localstack
     networks:
-       corporanet:
-          aliases:
-            - localstack.corporanet.local
+      corporanet:
+        aliases:
+          - localstack.corporanet.local
 
   explorer:
     image: "${DOCKER_REPO}corpora-explorer"
+    platform: linux/amd64
     build:
       context: .
       dockerfile: hosted/Dockerfile
@@ -57,9 +58,9 @@ services:
       # SecretsManager population relies on oauth json
       - ./oauth/users.json:/oauth/users.json
     networks:
-       corporanet:
-          aliases:
-            - backend.corporanet.local
+      corporanet:
+        aliases:
+          - backend.corporanet.local
 networks:
   corporanet:
 volumes:

@@ -138,6 +138,9 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
             "collection_datasets": res["datasets"],
         }
 
+        if res.get("publisher_metadata"):
+            metadata["collection_publisher_metadata"] = res["publisher_metadata"]
+
         return metadata
 
     except Exception as ex:
