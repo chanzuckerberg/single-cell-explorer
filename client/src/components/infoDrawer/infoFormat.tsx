@@ -93,23 +93,6 @@ const buildCollectionLinks = (
 };
 
 /**
- * @deprecated - Remove once filter feature flag is removed.
- * Sort collection links by custom sort order, create view-friendly model of link types.
- * @returns Array of link objects formatted for display.
- */
-const buildCollectionLinksDeprecated = (links: Link[]): LinkView[] => {
-  const sortedLinks = [...links].sort(sortCollectionLinks);
-  return sortedLinks.map((link) => {
-    const { link_name: name, link_type: type, link_url: url } = link;
-    return {
-      name: buildLinkName(name, type, url),
-      type: transformLinkTypeToDisplay(type),
-      url,
-    };
-  });
-};
-
-/**
  * Build display model of DOI link associated with a collection, if any. Display publication metadata if it has been
  * retrieved for the DOI, otherwise display the DOI link as is.
  * @param doiLink - Link with type DOI, associated with a collection.
@@ -260,66 +243,6 @@ const renderCollectionLinks = (
 };
 
 /**
- * @deprecated - Remove once filter feature flag is removed.
- * Render collection contact and links.
- * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
- * @returns Markup displaying contact and collection-related links.
- */
-const renderCollectionLinksDeprecated = (
-  datasetMetadata: DatasetMetadata
-): JSX.Element => {
-  const links = buildCollectionLinksDeprecated(
-    datasetMetadata.collection_links
-  );
-  const {
-    collection_contact_name: contactName,
-    collection_contact_email: contactEmail,
-  } = datasetMetadata;
-  return (
-    <>
-      {renderSectionTitle("Collection")}
-      <HTMLTable style={getTableStyles()}>
-        <tbody>
-          <tr>
-            <td>Contact</td>
-            <td>{renderCollectionContactLink(contactName, contactEmail)}</td>
-          </tr>
-          {links.map(({ name, type, url }, i) => (
-            <tr {...{ key: i }}>
-              <td>{type}</td>
-              <td>
-                <a href={url} rel="noopener" target="_blank">
-                  {name}
-                </a>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </HTMLTable>
-    </>
-  );
-};
-
-/**
- * Display collection contact's name with a link to their associated email.
- * @param name - Collection contact's name
- * @param email - Collection contact's email
- * @returns Mailto link if possible otherwise the contact's name.
- */
-const renderCollectionContactLink = (
-  name: string,
-  email: string
-): JSX.Element | string | null => {
-  if (!name && !email) {
-    return null;
-  }
-  if (email) {
-    return <a href={`mailto:${email}`}>{name}</a>;
-  }
-  return name;
-};
-
-/**
  * Render dataset metadata. That is, attributes found in categorical fields.
  * @param singleValueCategories - Attributes from categorical fields
  * @returns Markup for displaying meta in table format.
@@ -419,24 +342,16 @@ const buildDatasetMetadataViews = (
     .map(([key, value]) => ({ key, value: String(value) }));
 
 const InfoFormat = React.memo<Props>(
-  ({ datasetMetadata, singleValueCategories }) => {
-    // Determine if filter feature is enabled. TODO remove with SCDP #1718
-    const urlParams = new URLSearchParams(window.location.search);
-    const filterParam = urlParams.get("filter");
-    const isFilterEnabled = filterParam === "true";
-    return (
+  ({ datasetMetadata, singleValueCategories }) => (
       <div className={Classes.DRAWER_BODY}>
         <div className={Classes.DIALOG_BODY}>
           <H3>{datasetMetadata.collection_name}</H3>
           <p>{datasetMetadata.collection_description}</p>
-          {isFilterEnabled
-            ? renderCollectionLinks(datasetMetadata)
-            : renderCollectionLinksDeprecated(datasetMetadata)}
+          {renderCollectionLinks(datasetMetadata)}
           {renderDatasetMetadata(singleValueCategories)}
         </div>
       </div>
-    );
-  }
+    )
 );
 
 export default InfoFormat;
