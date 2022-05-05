@@ -3,12 +3,13 @@ FROM ubuntu:focal
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ARG HAPPY_ENV
-ENV HAPPY_ENV=$HAPPY_ENV
+# ENV HAPPY_ENV=$HAPPY_ENV
+ENV HAPPY_ENV="dev"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
-ADD hosted/create_rdev_config.py .
+ADD hosted/create_env_config.py .
 
 ADD server/ server/
 ADD client/ client/
@@ -25,7 +26,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN python3 -m pip install psycopg2-binary
 RUN python3 -m pip install -r requirements.txt
 
-RUN python3 create_rdev_config.py
+RUN python3 create_env_config.py
 
 RUN make build-client
 
