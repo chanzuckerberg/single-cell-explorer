@@ -3,7 +3,6 @@ _an interactive explorer for single-cell transcriptomics data_
 
 This repo is for the CZI-hosted version, aka single-cell-explorer, or simply `explorer`. The public 'desktop' version [is here](https://github.com/chanzuckerberg/cellxgene).
 
-[![DOI](https://zenodo.org/badge/105615409.svg)](https://zenodo.org/badge/latestdoi/105615409) [![GitHub last commit](https://img.shields.io/github/last-commit/chanzuckerberg/single-cell-explorer)](https://github.com/chanzuckerberg/single-cell-explorer/pulse)
 [![Push Tests](https://github.com/chanzuckerberg/single-cell-explorer/workflows/Push%20Tests/badge.svg)](https://github.com/chanzuckerberg/single-cell-explorer/actions?query=workflow%3A%22Push+Tests%22)
 ![Code Coverage](https://codecov.io/gh/chanzuckerberg/single-cell-explorer/branch/main/graph/badge.svg)
 
@@ -15,11 +14,7 @@ Whether you need to visualize one thousand cells or one million, cellxgene helps
 
 ### The comprehensive guide to cellxgene
 
-[The cellxgene documentation is your one-stop-shop for information about cellxgene](https://chanzuckerberg.github.io/cellxgene/)! You may be particularly interested in:
-
-- Seeing [what cellxgene can do](https://chanzuckerberg.github.io/cellxgene/posts/gallery)
-- Checking out [our roadmap](https://chanzuckerberg.github.io/cellxgene/posts/roadmap) for future development
-- [Contributing](https://chanzuckerberg.github.io/cellxgene/posts/contribute) to cellxgene
+[The cellxgene documentation is your one-stop-shop for information about cellxgene](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/README.md)!
 
 ### Supported browsers
 
@@ -29,20 +24,20 @@ cellxgene currently supports the following browsers:
 - Edge 15+
 - Firefox 60+
 
-Please [file an issue](https://github.com/chanzuckerberg/cellxgene/issues/new/choose) if you would like us to add support for an unsupported browser.
+Please [file an issue](https://github.com/chanzuckerberg/single-cell-explorer/issues/new/choose) if you would like us to add support for an unsupported browser.
 
 ### Finding help
 
 We'd love to hear from you!
 For questions, suggestions, or accolades, [join the `#cellxgene-users` channel on the CZI Science Slack](https://join-cellxgene-users.herokuapp.com/) and say "hi!".
 
-For any errors, [report bugs on Github](https://github.com/chanzuckerberg/cellxgene/issues).
+For any errors, [report bugs on Github](https://github.com/chanzuckerberg/single-cell-explorer/issues/new/choose).
 
 # Developing with cellxgene
 
 ### Contributing
 
-We warmly welcome contributions from the community! Please see our [contributing guide](https://chanzuckerberg.github.io/cellxgene/posts/contribute) and don't hesitate to open an issue or send a pull request to improve cellxgene. Please see the [dev_docs](https://github.com/chanzuckerberg/cellxgene/tree/main/dev_docs) for pull request suggestions, unit test details, local documentation preview, and other development specifics. 
+Please see our [contributing guide](https://chanzuckerberg.github.io/cellxgene/posts/contribute) and don't hesitate to open an issue or send a pull request to improve cellxgene. Please see the [dev_docs](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs) for pull request suggestions, unit test details, local documentation preview, and other development specifics. 
 
 This project adheres to the Contributor Covenant [code of conduct](https://github.com/chanzuckerberg/.github/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to opensource@chanzuckerberg.com.
 
@@ -55,9 +50,9 @@ this project. All code is freely available for reuse under the [MIT license](htt
 
 Before extending cellxgene, we encourage you to reach out to us with ideas or questions. It might be possible that an 
 extension could be directly contributed, which would make it available for a wider audience, or that it's on our 
-[roadmap](./docs/posts/roadmap.md) and under active development. 
+[roadmap](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md) and under active development. 
 
-See the [cellxgene extensions](./docs/posts/extensions.md) section of our documentation for examples of community use and cellxgene extensions. 
+See the [cellxgene extensions](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/community-extensions.md) section of our documentation for examples of community use and cellxgene extensions. 
 
 ### Security
 
