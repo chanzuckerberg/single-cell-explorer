@@ -14,6 +14,8 @@ import {
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type EmbeddingState = any;
@@ -35,10 +37,17 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
     this.state = {};
   }
 
+  handleLayoutChoiceClick = (): void => {
+    track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
+  };
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleLayoutChoiceChange = (e: any) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
+
+    track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
+
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
   };
 
@@ -73,6 +82,7 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
                 style={{
                   cursor: "pointer",
                 }}
+                onClick={this.handleLayoutChoiceClick}
               >
                 {layoutChoice?.current}: {crossfilter.countSelected()} out of{" "}
                 {crossfilter.size()} cells
