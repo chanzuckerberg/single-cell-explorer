@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Configure AWS Prod Credentials
         uses: aws-actions/configure-aws-credentials@v1
-        if: github.event.deployment.environment == 'prod'
+        if: github.ref == 'refs/heads/prod'
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -30,7 +30,7 @@ jobs:
           role-duration-seconds: 2700
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
-        if: github.event.deployment.environment != 'prod'
+        if: github.ref != 'refs/heads/prod'
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -42,31 +42,20 @@ jobs:
         with:
           registry: ${{ secrets.ECR_REPO }}
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.deployment.sha }}
-      - uses: avakar/set-deployment-status@v1
-        with:
-          state: in_progress
-        env:
-          GITHUB_TOKEN: ${{ secrets.SCI_GITHUB_TOKEN }}
-      - name: Update deployment
+      - name: Set deployment stage variable
+        run : |
+          if [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+            echo "DEPLOYMENT_STAGE=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "DEPLOYMENT_STAGE=stage" >> $GITHUB_ENV
+          else
+            echo "DEPLOYMENT_STAGE=dev" >> $GITHUB_ENV
+          fi
+      - name: Happy deployment
         env:
           TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
         run: |
-          happy --profile="" --env ${{ github.event.deployment.environment }} update explorer-${{ github.event.deployment.environment }}stack --tag ${{ github.event.deployment.payload.tag }}
-      - name: Set deployment status to success if no errors
-        uses: avakar/set-deployment-status@v1
-        with:
-          state: success
-        env:
-          GITHUB_TOKEN: ${{ secrets.SCI_GITHUB_TOKEN }}
-      - name: Set deployment status to failure if errors
-        uses: avakar/set-deployment-status@v1
-        if: failure()
-        with:
-          state: failure
-        env:
-          GITHUB_TOKEN: ${{ secrets.SCI_GITHUB_TOKEN }}
+          happy --profile="" --env ${{ env.DEPLOYMENT_STAGE }} update explorer-${{ env.DEPLOYMENT_STAGE }}stack
       - uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
