@@ -1,12 +1,9 @@
-name: Deploy Happy
-
-# on: deployment
+name: Deploy Explorer (Happy)
 
 on:
   push:
     branches:
       - main
-      - ebezzi/ecs-cicd
   pull_request:
     branches: "*"
 
@@ -27,7 +24,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
           role-to-assume: ${{ secrets.AWS_PROD_ROLE_TO_ASSUME }}
-          role-duration-seconds: 2700
+          role-duration-seconds: 900
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         if: github.ref != 'refs/heads/prod'
@@ -36,7 +33,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          role-duration-seconds: 2700
+          role-duration-seconds: 900
       - name: Login to ECR
         uses: docker/login-action@v1
         with:
@@ -60,12 +57,8 @@ jobs:
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
           happy_version: "0.17.0"
           create-tag: "true"
-          env: ${{ env.DEPLOYMENT_STAGE }}
-      # - name: Happy deployment
-      #   env:
-      #     TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
-      #   run: |
-      #     happy --profile="" --env ${{ env.DEPLOYMENT_STAGE }} update explorer-${{ env.DEPLOYMENT_STAGE }}stack
+          env: ${{ env.DEPLOYMENT_STAGE }} 
+      # TODO: Uncomment if you want Slack notification
       # - uses: 8398a7/action-slack@v3
       #   with:
       #     status: ${{ job.status }}
