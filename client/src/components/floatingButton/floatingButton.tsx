@@ -1,6 +1,8 @@
 /* Core dependencies */
 import { Colors, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
 import React, { useState } from "react";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 /* App dependencies */
 import { IconNames } from "../icon";
@@ -11,6 +13,11 @@ import Icon from "../icon/icon";
  */
 function FloatingButton(): JSX.Element {
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
+
+  function handleHelpMenuClick() {
+    track(EVENTS.EXPLORER_FLOATING_BUTTON_CLICKED);
+    setHelpMenuOpen(true);
+  }
 
   return (
     <Popover
@@ -44,7 +51,7 @@ function FloatingButton(): JSX.Element {
       position={Position.TOP_RIGHT}
       target={
         <button
-          onClick={() => setHelpMenuOpen(true)}
+          onClick={handleHelpMenuClick}
           style={{
             alignItems: "center",
             backgroundColor: Colors.DARK_GRAY1,
@@ -58,6 +65,7 @@ function FloatingButton(): JSX.Element {
             width: 32,
           }}
           type="button"
+          data-testid="floating-button"
         >
           <Icon icon={IconNames.HELP} />
         </button>

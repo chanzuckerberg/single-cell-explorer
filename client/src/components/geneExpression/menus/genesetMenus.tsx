@@ -16,6 +16,8 @@ import {
 import * as globals from "../../../globals";
 import actions from "../../../actions";
 import AddGeneToGenesetDialogue from "./addGeneToGenesetDialogue";
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -35,18 +37,19 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     this.state = {};
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  activateAddGeneToGenesetMode = () => {
+  activateAddGeneToGenesetMode = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, geneset } = this.props;
+
+    track(EVENTS.EXPLORER_HANDLE_ADD_NEW_GENE_TO_GENESET_BUTTON_CLICKED);
+
     dispatch({
       type: "geneset: activate add new genes mode",
       geneset,
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  activateEditGenesetNameMode = () => {
+  activateEditGenesetNameMode = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, geneset } = this.props;
 
@@ -56,8 +59,9 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleColorByEntireGeneset = () => {
+  handleColorByEntireGeneset = (): void => {
+    track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, geneset } = this.props;
 
@@ -67,15 +71,17 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDeleteGeneset = () => {
+  handleDeleteGeneset = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, geneset } = this.props;
     dispatch(actions.genesetDelete(geneset));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
+  handleSeeActionsClick = (): void => {
+    track(EVENTS.EXPLORER_SEE_ACTIONS_BUTTON_CLICKED);
+  };
+
+  render(): JSX.Element {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneset' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { geneset, genesetsEditable, createText, colorAccessor } = this.props;
 
@@ -133,6 +139,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 icon={<Icon icon="more" iconSize={10} />}
                 small
                 minimal
+                onClick={this.handleSeeActionsClick}
               />
             </Popover>
             <Tooltip2

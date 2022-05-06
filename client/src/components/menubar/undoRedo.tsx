@@ -4,6 +4,8 @@ import { IconNames } from "@blueprintjs/icons";
 import { tooltipHoverOpenDelay } from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 const UndoRedo = React.memo((props) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'undoDisabled' does not exist on type '{ ... Remove this comment to see the full error message
@@ -20,6 +22,7 @@ const UndoRedo = React.memo((props) => {
           icon={IconNames.UNDO}
           disabled={undoDisabled}
           onClick={() => {
+            track(EVENTS.EXPLORER_UNDO_BUTTON_CLICKED);
             dispatch({ type: "@@undoable/undo" });
           }}
           style={{
@@ -38,6 +41,7 @@ const UndoRedo = React.memo((props) => {
           icon={IconNames.REDO}
           disabled={redoDisabled}
           onClick={() => {
+            track(EVENTS.EXPLORER_REDO_BUTTON_CLICKED);
             dispatch({ type: "@@undoable/redo" });
           }}
           style={{
