@@ -7,6 +7,9 @@ import HistogramBrush from "../brushableHistogram";
 
 import actions from "../../actions";
 
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
+
 const MINI_HISTOGRAM_WIDTH = 110;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -42,17 +45,24 @@ class Gene extends React.Component<{}, State> {
   onColorChangeClick = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
+
+    track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
+
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleGeneExpandClick = () => {
+    track(EVENTS.EXPLORER_MAXIMIZE_GENE_BUTTON_CLICKED);
+
     const { geneIsExpanded } = this.state;
     this.setState({ geneIsExpanded: !geneIsExpanded });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSetGeneAsScatterplotX = () => {
+    track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
@@ -63,6 +73,8 @@ class Gene extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSetGeneAsScatterplotY = () => {
+    track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
@@ -167,9 +179,15 @@ class Gene extends React.Component<{}, State> {
               minimal
               small
               data-testid={`delete-from-geneset:${gene}`}
-              onClick={
-                quickGene ? removeGene(gene) : this.handleDeleteGeneFromSet
-              }
+              onClick={() => {
+                track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
+
+                if (quickGene) {
+                  removeGene(gene)();
+                } else {
+                  this.handleDeleteGeneFromSet();
+                }
+              }}
               intent="none"
               style={{ fontWeight: 700, marginRight: 2 }}
               icon={<Icon icon="trash" iconSize={10} />}

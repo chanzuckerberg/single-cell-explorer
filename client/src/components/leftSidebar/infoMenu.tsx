@@ -6,6 +6,8 @@ import { IconNames } from "@blueprintjs/icons";
 /* App dependencies */
 import { IconNames as CXGIconNames } from "../icon";
 import Icon from "../icon/icon";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 interface Props {
   privacyURL?: string;
@@ -14,6 +16,11 @@ interface Props {
 
 const InformationMenu = React.memo<Props>((props): JSX.Element => {
   const { tosURL, privacyURL } = props;
+
+  function handleMenuClick() {
+    track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
+  }
+
   return (
     <Popover
       content={
@@ -55,7 +62,13 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
         hide: { enabled: false },
       }}
     >
-      <Button data-testid="menu" icon={IconNames.MENU} minimal type="button" />
+      <Button
+        data-testid="menu"
+        icon={IconNames.MENU}
+        minimal
+        type="button"
+        onClick={handleMenuClick}
+      />
     </Popover>
   );
 });

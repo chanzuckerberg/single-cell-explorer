@@ -4,6 +4,8 @@ import AnnoDialog from "../../annoDialog";
 import LabelInput from "../../labelInput";
 import parseBulkGeneString from "../../../util/parseBulkGeneString";
 import actions from "../../../actions";
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -34,6 +36,8 @@ class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleAddGeneToGeneSet = (e: any) => {
+    track(EVENTS.EXPLORER_SUBMIT_GENE_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneset' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { geneset, dispatch } = this.props;
     const { genesToAdd } = this.state;
@@ -45,6 +49,7 @@ class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
         geneSymbol: _gene,
       });
     });
+
     dispatch(actions.genesetAddGenes(geneset, genesTmpHardcodedFormat));
     dispatch({
       type: "geneset: disable add new genes mode",

@@ -8,6 +8,8 @@ import EditGenesetNameDialogue from "./menus/editGenesetNameDialogue";
 import HistogramBrush from "../brushableHistogram";
 
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "../../globals";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -24,6 +26,8 @@ class GeneSet extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   onGenesetMenuClick = () => {
+    track(EVENTS.EXPLORER_GENESET_EXPAND_BUTTON_CLICKED);
+
     const { isOpen } = this.state;
     this.setState({ isOpen: !isOpen });
   };

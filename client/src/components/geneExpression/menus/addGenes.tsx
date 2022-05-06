@@ -21,6 +21,9 @@ import { memoize } from "../../../util/dataframe/util";
 import parseBulkGeneString from "../../../util/parseBulkGeneString";
 import { Dataframe } from "../../../util/dataframe";
 
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const renderGene = (fuzzySortResult: any, { handleClick, modifiers }: any) => {
   if (!modifiers.matchesPredicate) {
@@ -36,9 +39,10 @@ const renderGene = (fuzzySortResult: any, { handleClick, modifiers }: any) => {
       data-testid={`suggest-menu-item-${geneName}`}
       key={geneName}
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      onClick={(g: any /* this fires when user clicks a menu item */) =>
-        handleClick(g)
-      }
+      onClick={(g: any /* this fires when user clicks a menu item */) => {
+        track(EVENTS.EXPLORER_SUGGEST_MENU_ITEM_CLICKED);
+        handleClick(g);
+      }}
       text={geneName}
     />
   );

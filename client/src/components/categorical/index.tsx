@@ -12,6 +12,8 @@ import AnnoSelect from "./annoSelect";
 import LabelInput from "../labelInput";
 import { labelPrompt } from "./labelUtil";
 import actions from "../../actions";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -58,6 +60,8 @@ class Categories extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleEnableAnnoMode = () => {
+    track(EVENTS.EXPLORER_OPEN_CREATE_GENESET_DIALOG_BUTTON_CLICKED);
+
     this.setState({ createAnnoModeActive: true });
   };
 
