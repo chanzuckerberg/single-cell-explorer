@@ -51,6 +51,8 @@ jobs:
           else
             echo "DEPLOYMENT_STAGE=dev" >> $GITHUB_ENV
           fi
+      - name: Install happy client
+        uses: chanzuckerberg/github-actions/.github/actions/install-happy@v1.2.1
       - name: Happy deployment
         env:
           TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
