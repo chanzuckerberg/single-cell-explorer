@@ -56,11 +56,11 @@ jobs:
           TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
         run: |
           happy --profile="" --env ${{ env.DEPLOYMENT_STAGE }} update explorer-${{ env.DEPLOYMENT_STAGE }}stack
-      - uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          fields: repo,commit,author,eventName,workflow,job,mention
-          mention: 'here'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-        if: failure() && github.ref == 'refs/heads/main'
+      # - uses: 8398a7/action-slack@v3
+      #   with:
+      #     status: ${{ job.status }}
+      #     fields: repo,commit,author,eventName,workflow,job,mention
+      #     mention: 'here'
+      #   env:
+      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      #   if: failure() && github.ref == 'refs/heads/main'
