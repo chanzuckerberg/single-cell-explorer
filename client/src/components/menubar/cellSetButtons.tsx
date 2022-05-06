@@ -3,6 +3,8 @@ import { AnchorButton, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import { tooltipHoverOpenDelay } from "../../globals";
 import actions from "../../actions";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -34,6 +36,8 @@ class CellSetButton extends React.PureComponent {
         <AnchorButton
           type="button"
           onClick={() => {
+            track(EVENTS.EXPLORER_CELLSET_BUTTON_CLICKED);
+
             this.set();
           }}
           data-testid={`cellset-button-${eitherCellSetOneOrTwo}`}

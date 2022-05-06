@@ -15,6 +15,8 @@ import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -218,6 +220,8 @@ class MenuBar extends React.PureComponent<{}, State> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, showCentroidLabels } = this.props;
 
+    track(EVENTS.EXPLORER_CENTROID_LABEL_TOGGLE_BUTTON_CLICKED);
+
     dispatch({
       type: "show centroid labels for category",
       showLabels: !showCentroidLabels,
@@ -228,6 +232,9 @@ class MenuBar extends React.PureComponent<{}, State> {
   handleSubset = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
+
+    track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
+
     dispatch(actions.subsetAction());
   };
 
@@ -235,6 +242,9 @@ class MenuBar extends React.PureComponent<{}, State> {
   handleSubsetReset = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
+
+    track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
+
     dispatch(actions.resetSubsetAction());
   };
 
@@ -358,6 +368,8 @@ class MenuBar extends React.PureComponent<{}, State> {
               icon={selectionButtonIcon}
               active={graphInteractionMode === "select"}
               onClick={() => {
+                track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
+
                 dispatch({
                   type: "change graph interaction mode",
                   data: "select",
@@ -376,6 +388,8 @@ class MenuBar extends React.PureComponent<{}, State> {
               icon="zoom-in"
               active={graphInteractionMode === "zoom"}
               onClick={() => {
+                track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+
                 dispatch({
                   type: "change graph interaction mode",
                   data: "zoom",

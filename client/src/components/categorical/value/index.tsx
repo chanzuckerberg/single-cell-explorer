@@ -26,6 +26,8 @@ import MiniHistogram from "../../miniHistogram";
 import MiniStackedBar from "../../miniStackedBar";
 import { CategoryCrossfilterContext } from "../categoryContext";
 import { Dataframe, ContinuousHistogram } from "../../../util/dataframe";
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -184,6 +186,8 @@ class CategoryValue extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   toggleOff = () => {
+    track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
+
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
@@ -194,6 +198,7 @@ class CategoryValue extends React.Component<{}, State> {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
       categorySummary,
     } = this.props;
+
     const label = categorySummary.categoryValues[categoryIndex];
     dispatch(
       actions.selectCategoricalMetadataAction(
@@ -267,6 +272,8 @@ class CategoryValue extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   toggleOn = () => {
+    track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
+
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
@@ -353,10 +360,10 @@ class CategoryValue extends React.Component<{}, State> {
       50,
       [range.min, range.max],
       groupBy
-    ); 
+    );
 
     const bins = histogramMap.has(categoryValue)
-      ? histogramMap.get(categoryValue) as ContinuousHistogram
+      ? (histogramMap.get(categoryValue) as ContinuousHistogram)
       : new Array<number>(50).fill(0);
 
     const xScale = d3.scaleLinear().domain([0, bins.length]).range([0, width]);

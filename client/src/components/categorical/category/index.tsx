@@ -22,6 +22,8 @@ import {
 } from "../../../util/stateManager/colorHelpers";
 import actions from "../../../actions";
 import { Dataframe } from "../../../util/dataframe";
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 const ANNO_BUTTON_WIDTH = 50;
@@ -103,6 +105,9 @@ class Category extends React.PureComponent {
   handleColorChange = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField } = this.props;
+
+    track(EVENTS.EXPLORER_COLORBY_AUTHOR_CATEGORIES_BUTTON_CLICKED);
+
     dispatch({
       type: "color by categorical metadata",
       colorAccessor: metadataField,
@@ -111,6 +116,8 @@ class Category extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCategoryClick = () => {
+    track(EVENTS.EXPLORER_CATEGORY_EXPAND_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annotations' does not exist on type 'Rea... Remove this comment to see the full error message
     const { annotations, metadataField, onExpansionChange } = this.props;
     const editingCategory =
@@ -130,6 +137,8 @@ class Category extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleToggleAllClick = (categorySummary: any) => {
+    track(EVENTS.EXPLORER_CATEGORY_SELECT_BUTTON_CLICKED);
+
     const isChecked = this.getSelectionState(categorySummary);
     if (isChecked === "all") {
       this.toggleNone(categorySummary);
