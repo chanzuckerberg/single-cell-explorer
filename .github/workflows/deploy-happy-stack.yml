@@ -59,6 +59,8 @@ jobs:
           tfe-token: ${{ secrets.TFE_TOKEN }}
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
           happy_version: "0.17.0"
+          create-tag: "true"
+          env: ${{ env.DEPLOYMENT_STAGE }}
       # - name: Happy deployment
       #   env:
       #     TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
