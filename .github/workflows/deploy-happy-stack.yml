@@ -53,11 +53,17 @@ jobs:
           fi
       - name: Install happy client
         uses: chanzuckerberg/github-actions/.github/actions/install-happy@v1.2.1
-      - name: Happy deployment
-        env:
-          TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
-        run: |
-          happy --profile="" --env ${{ env.DEPLOYMENT_STAGE }} update explorer-${{ env.DEPLOYMENT_STAGE }}stack
+      - name: Update deployment
+        uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@v1.2.1
+        with:
+          tfe-token: ${{ secrets.TFE_TOKEN }}
+          stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
+          happy_version: "0.17.0"
+      # - name: Happy deployment
+      #   env:
+      #     TFE_TOKEN: ${{ secrets.TFE_TOKEN }}
+      #   run: |
+      #     happy --profile="" --env ${{ env.DEPLOYMENT_STAGE }} update explorer-${{ env.DEPLOYMENT_STAGE }}stack
       # - uses: 8398a7/action-slack@v3
       #   with:
       #     status: ${{ job.status }}
