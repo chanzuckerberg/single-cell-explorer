@@ -12,6 +12,8 @@ import HistogramFooter from "./footer";
 import StillLoading from "./loading";
 import ErrorLoading from "./error";
 import { Dataframe } from "../../util/dataframe";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 const MARGIN = {
   LEFT: 10, // Space for 0 tick label on X axis
@@ -197,6 +199,8 @@ class HistogramBrush extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSetGeneAsScatterplotX = () => {
+    track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, field } = this.props;
     dispatch({
@@ -207,6 +211,8 @@ class HistogramBrush extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSetGeneAsScatterplotY = () => {
+    track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, field } = this.props;
     dispatch({

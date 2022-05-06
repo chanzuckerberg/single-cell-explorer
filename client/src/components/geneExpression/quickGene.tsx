@@ -10,6 +10,8 @@ import Gene from "./gene";
 import { postUserErrorToast } from "../framework/toasters";
 import actions from "../../actions";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {
@@ -85,9 +87,10 @@ function QuickGene() {
         data-testid={`suggest-menu-item-${geneName}`}
         key={geneName}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        onClick={(g: any /* this fires when user clicks a menu item */) =>
-          handleClick(g)
-        }
+        onClick={(g: any /* this fires when user clicks a menu item */) => {
+          track(EVENTS.EXPLORER_SUGGEST_MENU_ITEM_CLICKED);
+          handleClick(g);
+        }}
         text={geneName}
       />
     );

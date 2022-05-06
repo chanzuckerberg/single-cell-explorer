@@ -6,6 +6,8 @@ import { Button, Dialog, Classes, Colors } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import LabelInput from "../../labelInput";
 import actions from "../../../actions";
+import { track } from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -55,11 +57,10 @@ class CreateGenesetDialogue extends React.PureComponent<{}, State> {
   createGeneset = (e: any) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
-    const {
-      genesetName,
-      genesToPopulateGeneset,
-      genesetDescription,
-    } = this.state;
+    const { genesetName, genesToPopulateGeneset, genesetDescription } =
+      this.state;
+    track(EVENTS.EXPLORER_SUBMIT_GENESET_BUTTON_CLICKED);
+
     dispatch({
       type: "geneset: create",
       genesetName: genesetName.trim(),
