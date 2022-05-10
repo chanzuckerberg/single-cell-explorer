@@ -49,7 +49,7 @@ this project. All code is freely available for reuse under the [MIT license](htt
 
 
 Before extending cellxgene, we encourage you to reach out to us with ideas or questions. It might be possible that an 
-extension could be directly contributed, which would make it available for a wider audience, or that it's on our 
+extension could be added directly to the explorer repo, which would make it available for a wider audience, or that it's on our 
 [roadmap](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md) and under active development. 
 
 See the [cellxgene extensions](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/community-extensions.md) section of our documentation for examples of community use and cellxgene extensions. 
