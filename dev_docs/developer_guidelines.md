@@ -23,7 +23,7 @@ You can set these environment variables manually with the `export` shell command
 
 1. Run `make build-for-server-dev`. This will build the client and put static files in place.
 1. Run `./launch_dev_server.sh [dataset] [options]`. This will launch at server at http://localhost:5005.
-   1. Note: you will need to ensure that the dataset format is in CXG. A small dataset is included in this repository [here](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg). To use this dataset, you would run `./launch_dev_server.sh example-dataset/ [options]`. Note that the `pbmc3k.cxg` is purposefully missing because the command expects a directory of datasets.
+   1. Note: you will need to ensure that the dataset format is in CXG. A small dataset is included in this repository [here](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg). To use this dataset, you would run `./launch_dev_server.sh example-dataset/ [options]`. Note that the `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets.
 1. You may navigate to http://localhost:5005/d/{dataset_name} to view the dataset. Note that there will not be hot-loading for the frontend if you make changes to the client.
 
 If you make changes to the server, you will need to restart the server in order for the changes to take.
