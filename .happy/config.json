@@ -18,6 +18,14 @@
             "delete_protected": false,
             "auto_run_migrations": true,
             "log_group_prefix": "/explorer/dev"
+        },
+        "stage": {
+            "aws_profile": "single-cell-dev",
+            "secret_arn": "happy/env-explorer-staging-config",
+            "terraform_directory": ".happy/terraform/envs/staging",
+            "delete_protected": false,
+            "auto_run_migrations": true,
+            "log_group_prefix": "/explorer/staging"
         }
     },
     "tasks": {}
