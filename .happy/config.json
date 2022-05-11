@@ -26,6 +26,14 @@
             "delete_protected": false,
             "auto_run_migrations": false,
             "log_group_prefix": "/explorer/staging"
+        },
+        "prod": {
+            "aws_profile": "single-cell-prod",
+            "secret_arn": "happy/env-explorer-prod-config",
+            "terraform_directory": ".happy/terraform/envs/prod",
+            "delete_protected": false,
+            "auto_run_migrations": false,
+            "log_group_prefix": "/explorer/prod"
         }
     },
     "tasks": {}
