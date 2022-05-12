@@ -3,6 +3,15 @@ env = os.getenv("HAPPY_ENV")
 
 assert(env is not None, "No HAPPY_ENV specified")
 
+if env == "prod":
+  api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
+  web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
+  data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
+else:
+  api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
+  web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
+  data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
+
 config = f"""
 server:
   app:
@@ -26,8 +35,8 @@ server:
         - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
-    api_base_url: https://happy-explorer-dev-explorer-671389263.us-west-2.elb.amazonaws.com/cellxgene/
-    web_base_url: https://happy-explorer-dev-explorer-671389263.us-west-2.elb.amazonaws.com/
+    api_base_url: {api_base_url}
+    web_base_url: {web_base_url}
 
   multi_dataset:
     dataroot:
@@ -42,24 +51,13 @@ server:
     #   false or null:  this returns a 404 code
     #   true:  loads a test index page, which links to the datasets that are available in the dataroot
     #   string/URL:  redirect to this URL:  flask.redirect(config.multi_dataset__index)
-    index: https://happy-explorer-dev-explorer-671389263.us-west-2.elb.amazonaws.com/
+    index: {web_base_url}
 
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
     allowed_matrix_types: []
 
-  diffexp:
-    alg_cxg:
-      # The number of threads to use is computed from: min(max_workers, cpu_multipler * cpu_count).
-      # Where cpu_count is determined at runtime.
-      max_workers: 64
-      cpu_multiplier: 4
-
-      # The target number of matrix elements that are evaluated
-      # together in one thread.
-      target_workunit: 16_000_000
-
   data_locator:
-    api_base: https://api.cellxgene.dev.single-cell.czi.technology/dp/v1
+    api_base: {data_locator_url}
     s3:
       # s3 region name.
       #   if true, then the s3 location is automatically determined from the datapath or dataroot.
@@ -74,11 +72,11 @@ server:
       # data_locator / s3 / region_name.
       tiledb_ctx:
         sm.tile_cache_size: 60129542144 # 56 GB
-        sm.num_reader_threads: 32
+        py.init_buffer_bytes: 536870912 # 512MiB
 
   limits:
     column_request_max: 32
-    diffexp_cellcount_max: 50000
+    diffexp_cellcount_max: 1500000
 
 dataset:
   app:
