@@ -6,6 +6,8 @@ import { IconNames } from "@blueprintjs/icons";
 import GeneSet from "./geneSet";
 import QuickGene from "./quickGene";
 import CreateGenesetDialogue from "./menus/createGenesetDialogue";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -45,6 +47,8 @@ class GeneExpression extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleActivateCreateGenesetMode = () => {
+    track(EVENTS.EXPLORER_OPEN_CREATE_GENESET_DIALOG_BUTTON_CLICKED);
+
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
     const { geneSetsExpanded } = this.state;
@@ -57,6 +61,8 @@ class GeneExpression extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleExpandGeneSets = () => {
+    track(EVENTS.EXPLORER_GENESET_HEADING_EXPAND_BUTTON_CLICKED);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     this.setState((state: any) => ({
       ...state,

@@ -3,12 +3,13 @@ FROM ubuntu:focal
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 ARG HAPPY_ENV
-ENV HAPPY_ENV=$HAPPY_ENV
+# ENV HAPPY_ENV=$HAPPY_ENV
+ENV HAPPY_ENV="dev"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
-ADD hosted/create_rdev_config.py .
+ADD hosted/create_env_config.py .
 
 ADD server/ server/
 ADD client/ client/
@@ -25,7 +26,7 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN python3 -m pip install psycopg2-binary
 RUN python3 -m pip install -r requirements.txt
 
-RUN python3 create_rdev_config.py
+RUN python3 create_env_config.py
 
 RUN make build-client
 
@@ -33,7 +34,7 @@ RUN mkdir -p /server/common/web/templates/
 
 WORKDIR server/eb
 RUN make build-ecs
+WORKDIR /
 
 ENV CXG_CONFIG_FILE=/config.yaml
-ENV FLASK_ENV=development
-CMD ["flask", "run", "--host", "0.0.0.0", "--port", "5000"]
+CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]

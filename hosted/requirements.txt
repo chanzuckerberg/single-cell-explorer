@@ -17,7 +17,7 @@ flask-talisman==0.7.0
 flatbuffers==1.12
 flatten-dict==0.3.0
 fsspec==0.7.3
-gunicorn==20.0.4
+gunicorn[gevent]==20.0.4
 h5py==3.3.0
 idna==2.9
 importlib-metadata==1.6.0
