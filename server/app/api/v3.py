@@ -114,6 +114,13 @@ class DiffExpObsAPI(DatasetResource):
         return common_rest.diffexp_obs_post(request, data_adaptor)
 
 
+class DiffExpObs2API(DatasetResource):
+    @cache_control(no_store=True)
+    @rest_get_data_adaptor
+    def post(self, data_adaptor):
+        return common_rest.diffex_binary_post(request, data_adaptor)
+
+
 class LayoutObsAPI(S3URIResource):
     @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
@@ -175,6 +182,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(ColorsAPI, "/colors")
     # Computation routes
     add_resource(DiffExpObsAPI, "/diffexp/obs")
+    add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
     return api
 

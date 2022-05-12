@@ -21,16 +21,16 @@ class TestCxgDataset(unittest.TestCase):
         self.assertDictEqual(data.get_colors(), dict())
 
     def get_data(self, fixture):
+        # FIXTURES_ROOT = "/home/ec2-user/server/tests/fixtures"
         data_locator = f"{FIXTURES_ROOT}/{fixture}"
         config = app_config(data_locator)
         return CxgDataset(DataLocator(data_locator), config)
 
     def test_tdb_bug(self):
         """
-        This gives different results on 0.12.4 vs 0.13.1. Reported to TileDB.
-        Work-around present in server/dataset/cxg_dataset.py:set_tiledb_context()
+        This gives different results on 0.12.4 vs 0.13.1. Reported to TileDB
+        and fixed in 0.13.2. Test case remains in case of regression.
         """
-        print(tiledb.__version__)
         data = self.get_data("pbmc3k.cxg")
         filt = _query_parameter_to_filter(
             MultiDict(

@@ -25,12 +25,6 @@ f"""server:
     about: {about}
     title: {title}
 
-  diffexp:
-    alg_cxg: # number of threads to use is computed from: min(max_workers, cpu_multipler * cpu_count)
-      max_workers: {diffexp_max_workers}
-      cpu_multiplier: {cpu_multiplier}
-      target_workunit: {target_workunit}  # The target number of matrix elements that are evaluated in one thread.
-
   data_locator:
     api_base: {data_locator_api_base}
     s3:
@@ -40,7 +34,7 @@ f"""server:
     cxg_adaptor:
       tiledb_ctx:
         sm.tile_cache_size:  {cxg_tile_cache_size}
-        sm.num_reader_threads:  {cxg_num_reader_threads}
+        py.init_buffer_bytes: {cxg_tiledb_py_init_buffer_size}
 
   limits:
     column_request_max: {column_request_max}

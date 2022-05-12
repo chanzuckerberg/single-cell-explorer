@@ -85,17 +85,6 @@ server:
     about: null
     title: null
 
-  diffexp:
-    alg_cxg:
-      # The number of threads to use is computed from: min(max_workers, cpu_multipler * cpu_count).
-      # Where cpu_count is determined at runtime.
-      max_workers: 64
-      cpu_multiplier: 4
-
-      # The target number of matrix elements that are evaluated
-      # together in one thread.
-      target_workunit: 16_000_000
-
   data_locator:
     api_base: null
     s3:
@@ -111,8 +100,8 @@ server:
       # If 'vfs.s3.region' is not set, then it will automatically use the setting from
       # data_locator / s3 / region_name.
       tiledb_ctx:
-        sm.tile_cache_size:  8589934592
-        sm.num_reader_threads:  32
+        sm.tile_cache_size:  8589934592  # 8GiB
+        py.init_buffer_bytes: 536870912  # 512MiB
 
   limits:
     column_request_max: 32
