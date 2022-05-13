@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - ebezzi/ecs-cicd
   pull_request:
     branches: "*"
 
@@ -58,12 +59,3 @@ jobs:
           happy_version: "0.17.0"
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }} 
-      # TODO: Uncomment if you want Slack notification
-      # - uses: 8398a7/action-slack@v3
-      #   with:
-      #     status: ${{ job.status }}
-      #     fields: repo,commit,author,eventName,workflow,job,mention
-      #     mention: 'here'
-      #   env:
-      #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-      #   if: failure() && github.ref == 'refs/heads/main'
