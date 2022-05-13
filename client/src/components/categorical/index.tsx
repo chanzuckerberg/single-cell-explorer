@@ -292,6 +292,7 @@ class Categories extends React.Component<{}, State> {
                 onExpansionChange={this.onExpansionChange}
                 isExpanded={expandedCats.has(catName)}
                 createAnnoModeActive={createAnnoModeActive}
+                categoryType="standard"
               />
             ))}
           </Collapse>
@@ -308,6 +309,7 @@ class Categories extends React.Component<{}, State> {
                 onExpansionChange={this.onExpansionChange}
                 isExpanded={expandedCats.has(catName)}
                 createAnnoModeActive={createAnnoModeActive}
+                categoryType="author"
               />
             ))}
           </Collapse>

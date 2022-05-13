@@ -6,8 +6,6 @@ import * as globals from "../../globals";
 import styles from "./menubar.css";
 import actions from "../../actions";
 import CellSetButton from "./cellSetButtons";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -25,8 +23,6 @@ class DiffexpButtons extends React.PureComponent {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, differential } = this.props;
     if (differential.celllist1 && differential.celllist2) {
-      track(EVENTS.EXPLORER_DIFF_EXP_BUTTON_CLICKED);
-
       dispatch(
         actions.requestDifferentialExpression(
           differential.celllist1,

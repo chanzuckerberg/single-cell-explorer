@@ -104,9 +104,12 @@ class Category extends React.PureComponent {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleColorChange = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField } = this.props;
+    const { dispatch, metadataField, categoryType } = this.props;
 
-    track(EVENTS.EXPLORER_COLORBY_AUTHOR_CATEGORIES_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_COLORBY_CATEGORIES_BUTTON_CLICKED, {
+      type: categoryType,
+      category: metadataField,
+    });
 
     dispatch({
       type: "color by categorical metadata",
