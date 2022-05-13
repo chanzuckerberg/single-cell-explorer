@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
-      - ebezzi/ecs-cicd
-  pull_request:
-    branches: "*"
+      - staging
+      - prod
 
 env:
   DOCKER_BUILDKIT: 1
