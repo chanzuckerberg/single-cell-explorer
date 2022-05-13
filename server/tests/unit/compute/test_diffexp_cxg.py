@@ -3,7 +3,6 @@ import unittest
 
 import numpy as np
 
-from server.common.compute import diffexp_generic
 from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
 from server.compute import diffexp_cxg
 from server.compute.diffexp_cxg import diffexp_ttest
@@ -85,33 +84,24 @@ class DiffExpTest(unittest.TestCase):
         results = adaptor.compute_diffexp_ttest(maskA, maskB, 10)
         self.check_1_10_2_10(results)
 
+        # check list (not mask) variant
+        results = adaptor.compute_diffexp_ttest(maskA.nonzero()[0], maskB.nonzero()[0], 10, selector_lists=True)
+        self.check_1_10_2_10(results)
+
         # run it directly
 
         results = diffexp_ttest(adaptor, maskA, maskB, 10)
         self.check_1_10_2_10(results)
 
-    def test_cxg_generic(self):
-        """Test a cxg adaptor with the generic adaptor"""
-        adaptor = self.load_dataset(f"{FIXTURES_ROOT}/pbmc3k.cxg")
-        maskA = self.get_mask(adaptor, 1, 10)
-        maskB = self.get_mask(adaptor, 2, 10)
-        # run it directly
-        results = diffexp_generic.diffexp_ttest(adaptor, maskA, maskB, 10)
+        results = diffexp_ttest(adaptor, maskA.nonzero()[0], maskB.nonzero()[0], 10, selector_lists=True)
         self.check_1_10_2_10(results)
 
+
     def test_cxg_sparse(self):
-        adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg", )
+        adaptor_sparse = self.load_dataset(
+            f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg",
+        )
         adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_no_col_shift.cxg")
-        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
-        assert not adaptor_sparse.has_array('X_col_shift')  # sanity check
-
-        self.sparse_diffexp(adaptor_dense, adaptor_sparse)
-
-    def test_cxg_sparse_col_shift(self):
-        adaptor_sparse = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/sparse_col_shift.cxg", )
-        adaptor_dense = self.load_dataset(f"{FIXTURES_ROOT}/diffexp/dense_col_shift.cxg")
-        assert not adaptor_dense.has_array('X_col_shift')  # sanity check
-        assert adaptor_sparse.has_array('X_col_shift')  # sanity check
 
         self.sparse_diffexp(adaptor_dense, adaptor_sparse)
 

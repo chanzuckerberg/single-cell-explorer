@@ -21,9 +21,13 @@ from server.dataset.dataset import Dataset
 
 
 class CxgDataset(Dataset):
-    # TODO:  The tiledb context parameters should be a configuration option
+    # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
     tiledb_ctx = tiledb.Ctx(
-        {"sm.tile_cache_size": 8 * 1024 * 1024 * 1024, "sm.num_reader_threads": 32, "vfs.s3.region": "us-east-1"}
+        {
+            "sm.tile_cache_size": 8 * 1024 ** 3,
+            "py.init_buffer_bytes": 512 * 1024 ** 2,
+            "vfs.s3.region": "us-east-1",
+        }
     )
 
     def __init__(self, data_locator, app_config=None):
@@ -52,15 +56,7 @@ class CxgDataset(Dataset):
     def set_tiledb_context(context_params):
         """Set the tiledb context.  This should be set before any instances of CxgDataset are created"""
         try:
-            """
-            TileDB 0.13.1 has a bug in the new dense reader. This config (workaround) will
-            for use of the legacy reader, which works correctly. It can be removed when the
-            test case `test_tdb_bug` in server/tests/unit/dataest/test_cxg_dataset.py passes
-            """
-            context_params["sm.query.dense.reader"] = "legacy"
-
             CxgDataset.tiledb_ctx = tiledb.Ctx(context_params)
-            tiledb.default_ctx(context_params)
 
         except tiledb.libtiledb.TileDBError as e:
             if e.message == "Global context already initialized!":
@@ -207,13 +203,19 @@ class CxgDataset(Dataset):
         array = self.open_array(f"emb/{ename}")
         return array[:, 0:dims]
 
-    def compute_diffexp_ttest(self, maskA, maskB, top_n=None, lfc_cutoff=None):
+    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, arr="X", selector_lists=False):
         if top_n is None:
             top_n = self.dataset_config.diffexp__top_n
         if lfc_cutoff is None:
             lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
         return diffexp_cxg.diffexp_ttest(
-            adaptor=self, maskA=maskA, maskB=maskB, top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff
+            adaptor=self,
+            setA=setA,
+            setB=setB,
+            top_n=top_n,
+            diffexp_lfc_cutoff=lfc_cutoff,
+            arr=arr,
+            selector_lists=selector_lists,
         )
 
     def get_colors(self):
@@ -244,7 +246,7 @@ class CxgDataset(Dataset):
         if coord_mask is None:
             return coord_range, coord_data
 
-        indices = np.where(coord_mask)[0]
+        indices = coord_mask.nonzero()[0]
         ncoord = indices.shape[0]
         maprange = np.arange(ncoord)
         mapindex = np.zeros(indices[-1] + 1, dtype=int)
@@ -265,29 +267,17 @@ class CxgDataset(Dataset):
         X = self.open_array("X")
 
         if X.schema.sparse:
-            if obs_items == slice(None) and var_items == slice(None):
-                data = X[:, :]
-            else:
-                data = X.multi_index[obs_items, var_items]
+            data = X.query(order="U").multi_index[obs_items, var_items]
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
-            if self.has_array("X_col_shift"):
-                X_col_shift = self.open_array("X_col_shift")
-                if var_items == slice(None):
-                    densedata += X_col_shift[:]
-                else:
-                    densedata += X_col_shift.multi_index[var_items][""]
 
             return densedata
 
         else:
-            if obs_items == slice(None) and var_items == slice(None):
-                data = X[:, :]
-            else:
-                data = X.multi_index[obs_items, var_items][""]
+            data = X.multi_index[obs_items, var_items][""]
             return data
 
     def get_X_approximate_distribution(self) -> XApproximateDistribution:

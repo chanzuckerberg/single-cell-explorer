@@ -4,6 +4,7 @@ import time
 from http import HTTPStatus
 import hashlib
 from unittest.mock import patch
+import numpy as np
 
 import requests
 
@@ -11,6 +12,8 @@ from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
 from server.tests.unit import BaseTest as _BaseTest, skip_if
+from server.common.diffexpdu import DiffExArguments
+
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
 
@@ -169,6 +172,144 @@ class EndPoints(BaseTest):
         result_data = json.loads(result.data)
         self.assertEqual(len(result_data["positive"]), 15)
         self.assertEqual(len(result_data["negative"]), 15)
+        self.assertEqual(
+            [p[0] for p in result_data["positive"]],
+            [
+                533,
+                1685,
+                1119,
+                579,
+                193,
+                1336,
+                960,
+                1042,
+                1354,
+                625,
+                833,
+                1510,
+                1358,
+                304,
+                536,
+            ],
+        )
+        self.assertEqual(
+            [n[0] for n in result_data["negative"]],
+            [
+                1034,
+                1644,
+                1433,
+                1022,
+                699,
+                826,
+                123,
+                1318,
+                994,
+                642,
+                377,
+                816,
+                1390,
+                1239,
+                55,
+            ],
+        )
+
+    def test_diffex2(self):
+        endpoint = "diffexp/obs2"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        de_args = DiffExArguments(
+            mode=DiffExArguments.DiffExMode.TopN,
+            params=DiffExArguments.TopNParams(N=21),
+            set1=np.arange(0, 500, dtype=np.uint32),
+            set2=np.arange(500, 1000, dtype=np.uint32),
+        )
+        result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=de_args.pack())
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+        result_data = json.loads(result.data)
+
+        self.assertEqual(len(result_data["positive"]), 21)
+        self.assertEqual(len(result_data["negative"]), 21)
+
+        self.assertEqual(
+            [p[0] for p in result_data["positive"]],
+            [
+                533,
+                1685,
+                1119,
+                579,
+                193,
+                1336,
+                960,
+                1042,
+                1354,
+                625,
+                833,
+                1510,
+                1358,
+                304,
+                536,
+                850,
+                1273,
+                1670,
+                400,
+                1604,
+                1124,
+            ],
+        )
+        self.assertEqual(
+            [n[0] for n in result_data["negative"]],
+            [
+                1034,
+                1644,
+                1433,
+                1022,
+                699,
+                826,
+                123,
+                1318,
+                994,
+                642,
+                377,
+                816,
+                1390,
+                1239,
+                55,
+                1572,
+                85,
+                234,
+                1567,
+                650,
+                1397,
+            ],
+        )
+
+    def test_diffex2_error_conditions(self):
+        endpoint = "diffexp/obs2"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        de_args = DiffExArguments(
+            mode=DiffExArguments.DiffExMode.TopN,
+            params=DiffExArguments.TopNParams(N=10),
+            set1=np.arange(0, 500, dtype=np.uint32),
+            set2=np.arange(500, 1000, dtype=np.uint32),
+        )
+
+        # without the right MIME type, should give us a 415
+        result = self.client.post(url, data=de_args.pack())
+        self.assertEqual(result.status_code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+
+        # empty or malformed PDU
+        result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=bytes(20))
+        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+
+        # missing content length
+        result = self.client.post(url, content_length=False, headers={"Content-Type": "application/octet-stream"})
+        self.assertEqual(result.status_code, HTTPStatus.LENGTH_REQUIRED)
+
+        # Content-Length too large
+        result = self.client.post(
+            url, content_length=100 * 1024 ** 3, headers={"Content-Type": "application/octet-stream"}
+        )
+        self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
 
     def test_get_annotations_var_fbs(self):
         endpoint = "annotations/var"

@@ -3,6 +3,7 @@ Authlib>=0.14.3
 black==21.12b0
 bumpversion>=0.5
 codecov>=2.0.15
+flake8>=4.0.0
 parameterized>=0.7.0
 psycopg2-binary>=2.8.5
 pytest>=3.6.3

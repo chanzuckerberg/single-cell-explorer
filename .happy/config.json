@@ -16,8 +16,24 @@
             "secret_arn": "happy/env-explorer-dev-config",
             "terraform_directory": ".happy/terraform/envs/dev",
             "delete_protected": false,
-            "auto_run_migrations": true,
+            "auto_run_migrations": false,
             "log_group_prefix": "/explorer/dev"
+        },
+        "stage": {
+            "aws_profile": "single-cell-dev",
+            "secret_arn": "happy/env-explorer-staging-config",
+            "terraform_directory": ".happy/terraform/envs/staging",
+            "delete_protected": false,
+            "auto_run_migrations": false,
+            "log_group_prefix": "/explorer/staging"
+        },
+        "prod": {
+            "aws_profile": "single-cell-prod",
+            "secret_arn": "happy/env-explorer-prod-config",
+            "terraform_directory": ".happy/terraform/envs/prod",
+            "delete_protected": false,
+            "auto_run_migrations": false,
+            "log_group_prefix": "/explorer/prod"
         }
     },
     "tasks": {}
