@@ -7,7 +7,8 @@ CLEANFILES :=  $(BUILDDIR)/ client/build build dist cellxgene.egg-info
 
 PART ?= patch
 
-# CLEANING
+# CLEANING COMMANDS
+
 .PHONY: clean
 clean: clean-lite clean-server clean-client
 
@@ -24,7 +25,7 @@ clean-client:
 clean-server:
 	cd server && $(MAKE) clean
 
-# BUILDING PACKAGE
+# BUILDING PACKAGE COMMANDS
 
 .PHONY: build-client
 build-client:
@@ -68,7 +69,7 @@ smoke-test:
 smoke-test-annotations:
 	cd client && $(MAKE) smoke-test-annotations
 
-# FORMATTING CODE
+# LINTING AND FORMATTING COMMANDS
 
 .PHONY: fmt
 fmt: fmt-client fmt-server
@@ -92,6 +93,7 @@ lint-server:
 lint-client:
 	cd client && $(MAKE) lint
 
+# DEPENDENCY PACKAGE INSTALLATION COMMANDS
 
 .PHONY: dev-env
 dev-env: dev-env-client dev-env-server
