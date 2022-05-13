@@ -1,0 +1,60 @@
+name: Deploy Explorer (Happy)
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - prod
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_REPO: ${{ secrets.ECR_REPO }}/
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Configure AWS Prod Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        if: github.ref == 'refs/heads/prod'
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_PROD_ROLE_TO_ASSUME }}
+          role-duration-seconds: 900
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        if: github.ref != 'refs/heads/prod'
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 900
+      - name: Login to ECR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.ECR_REPO }}
+      - uses: actions/checkout@v2
+      - name: Set deployment stage variable
+        run : |
+          if [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+            echo "DEPLOYMENT_STAGE=prod" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+            echo "DEPLOYMENT_STAGE=stage" >> $GITHUB_ENV
+          else
+            echo "DEPLOYMENT_STAGE=dev" >> $GITHUB_ENV
+          fi
+      - name: Install happy client
+        uses: chanzuckerberg/github-actions/.github/actions/install-happy@v1.2.1
+      - name: Update deployment
+        uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@v1.2.1
+        with:
+          tfe-token: ${{ secrets.TFE_TOKEN }}
+          stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
+          happy_version: "0.17.0"
+          create-tag: "true"
+          env: ${{ env.DEPLOYMENT_STAGE }} 
