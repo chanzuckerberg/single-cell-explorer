@@ -13,6 +13,7 @@ module stack {
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
   memory                       = 50000
+  explorer_instance_count      = 3
 
   wait_for_steady_state        = var.wait_for_steady_state
 }
