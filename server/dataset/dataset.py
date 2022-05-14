@@ -285,7 +285,28 @@ class Dataset(metaclass=ABCMeta):
             raise ExceedsLimitError("Diffexp request exceeds max cell count limit")
 
         result = self.compute_diffexp_ttest(
-            maskA=obs_mask_A, maskB=obs_mask_B, top_n=top_n, lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff
+            obs_mask_A,
+            obs_mask_B,
+            top_n=top_n,
+            lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff,
+            selector_lists=False,
+        )
+
+        try:
+            return jsonify_numpy(result)
+        except ValueError:
+            raise JSONEncodingValueError("Error encoding differential expression to JSON")
+
+    def diffexp_topN_from_list(self, listA: np.ndarray, listB: np.ndarray, top_n: int = None):
+        """
+        Compute differential expression - same as diffexp_topN() - but specifying the
+        two cell sets as lists of obs indices (postings lists).
+        """
+        if top_n is None:
+            top_n = self.dataset_config.diffexp__top_n
+
+        result = self.compute_diffexp_ttest(
+            listA, listB, top_n=top_n, lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff, selector_lists=True
         )
 
         try:
@@ -294,7 +315,7 @@ class Dataset(metaclass=ABCMeta):
             raise JSONEncodingValueError("Error encoding differential expression to JSON")
 
     @abstractmethod
-    def compute_diffexp_ttest(self, maskA, maskB, top_n, lfc_cutoff):
+    def compute_diffexp_ttest(self, maskA, maskB, top_n, lfc_cutoff, selector_lists=False):
         pass
 
     @staticmethod
