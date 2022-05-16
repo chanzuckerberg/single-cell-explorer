@@ -3,6 +3,10 @@ env = os.getenv("HAPPY_ENV")
 
 assert(env is not None, "No HAPPY_ENV specified")
 
+# Happy uses `stage` as the environment, but the application needs `staging`
+if env == "stage":
+  env = "staging"
+
 if env == "prod":
   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
