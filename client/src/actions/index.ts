@@ -28,6 +28,8 @@ import { selectIsUserStateDirty } from "../selectors/global";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
+import { track } from "../analytics";
+import { EVENTS } from "../analytics/events";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -221,7 +223,7 @@ const dispatchDiffExpErrors = (
   switch (response.status) {
     case 403:
       dispatchNetworkErrorMessageToUser(
-        "Too many cells selected for differential experesion calculation - please make a smaller selection."
+        "Too many cells selected for differential expression calculation - please make a smaller selection."
       );
       break;
     case 501:
@@ -244,6 +246,11 @@ const requestDifferentialExpression =
   (set1: LabelArray, set2: LabelArray, num_genes = 15) =>
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- TODO: type diff exp data in genesets reducer (client/src/reducers/genesets.ts)
   async (dispatch: AppDispatch, getState: GetState) => {
+    // (thuang): For measuring performance
+    const startMs = performance.now();
+    const cellCount1 = set1.length;
+    const cellCount2 = set2.length;
+
     dispatch({ type: "request differential expression started" });
     try {
       if (!globals.API) throw new Error("API not set");
@@ -284,6 +291,13 @@ const requestDifferentialExpression =
       );
 
       if (!res.ok || res.headers.get("Content-Type") !== "application/json") {
+        track(EVENTS.EXPLORER_DIFF_EXP_BUTTON_CLICKED, {
+          cellCount1,
+          cellCount2,
+          timeToComplete: performance.now() - startMs,
+          status: "error",
+        });
+
         return dispatchDiffExpErrors(dispatch, res);
       }
 
@@ -302,12 +316,26 @@ const requestDifferentialExpression =
         );
       }
 
+      track(EVENTS.EXPLORER_DIFF_EXP_BUTTON_CLICKED, {
+        cellCount1,
+        cellCount2,
+        timeToComplete: performance.now() - startMs,
+        status: "success",
+      });
+
       /* then send the success case action through */
       return dispatch({
         type: "request differential expression success",
         data: diffexpLists,
       });
     } catch (error) {
+      track(EVENTS.EXPLORER_DIFF_EXP_BUTTON_CLICKED, {
+        cellCount1,
+        cellCount2,
+        timeToComplete: performance.now() - startMs,
+        status: "error",
+      });
+
       return dispatch({
         type: "request differential expression error",
         error,
