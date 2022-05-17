@@ -26,9 +26,12 @@ class GeneSet extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   onGenesetMenuClick = () => {
-    track(EVENTS.EXPLORER_GENESET_EXPAND_BUTTON_CLICKED);
-
     const { isOpen } = this.state;
+
+    if (!isOpen) {
+      track(EVENTS.EXPLORER_GENESET_EXPAND_BUTTON_CLICKED);
+    }
+
     this.setState({ isOpen: !isOpen });
   };
 

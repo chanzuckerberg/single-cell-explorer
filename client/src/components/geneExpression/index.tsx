@@ -61,13 +61,17 @@ class GeneExpression extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleExpandGeneSets = () => {
-    track(EVENTS.EXPLORER_GENESET_HEADING_EXPAND_BUTTON_CLICKED);
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    this.setState((state: any) => ({
-      ...state,
-      geneSetsExpanded: !state.geneSetsExpanded,
-    }));
+    this.setState((state: any) => {
+      if (!state.geneSetsExpanded) {
+        track(EVENTS.EXPLORER_GENESET_HEADING_EXPAND_BUTTON_CLICKED);
+      }
+
+      return {
+        ...state,
+        geneSetsExpanded: !state.geneSetsExpanded,
+      };
+    });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
