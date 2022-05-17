@@ -1,5 +1,3 @@
-"""cellxgene AWS elastic beanstalk application"""
-
 import sys
 import os
 import hashlib
