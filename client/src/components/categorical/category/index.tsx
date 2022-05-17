@@ -119,8 +119,6 @@ class Category extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCategoryClick = () => {
-    track(EVENTS.EXPLORER_CATEGORY_EXPAND_BUTTON_CLICKED);
-
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annotations' does not exist on type 'Rea... Remove this comment to see the full error message
     const { annotations, metadataField, onExpansionChange } = this.props;
     const editingCategory =

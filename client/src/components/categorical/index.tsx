@@ -132,6 +132,7 @@ class Categories extends React.Component<{}, State> {
       _expandedCats.delete(catName);
       this.setState({ expandedCats: _expandedCats });
     } else {
+      track(EVENTS.EXPLORER_CATEGORY_EXPAND_BUTTON_CLICKED);
       const _expandedCats = new Set(expandedCats);
       _expandedCats.add(catName);
       this.setState({ expandedCats: _expandedCats });
