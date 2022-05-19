@@ -7,6 +7,8 @@ from server.common.config.server_config import ServerConfig
 from server.common.errors import ConfigurationError
 from server.default_config import get_default_config
 
+import os
+
 
 class AppConfig(object):
     """
@@ -124,9 +126,15 @@ class AppConfig(object):
                 raise ConfigurationError(f"unknown config parameter at path: '{str(path)}'")
 
     def update_from_config_file(self, config_file):
+        env = os.getenv("DEPLOYMENT_STAGE")
+        domain = os.getenv("DOMAIN")
+        assert env is not None, "Missing DEPLOYMENT_STAGE in environment."
+        assert domain is not None, "Missing DOMAIN in environment."
         try:
             with open(config_file) as yml_file:
-                config = yaml.safe_load(yml_file)
+                yml_string = yml_file.read()
+                yml_string_with_params = yml_string.format(env=env, domain=domain)
+                config = yaml.safe_load(yml_string_with_params)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}")
         except OSError as e:
