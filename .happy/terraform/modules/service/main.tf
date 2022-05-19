@@ -52,6 +52,10 @@ resource aws_ecs_task_definition task_definition {
         "value": "${var.api_url}"
       },
       {
+        "name": "DOMAIN",
+        "value": "${var.domain}"
+      },
+      {
         "name": "AWS_DEFAULT_REGION",
         "value": "${data.aws_region.current.name}"
       }

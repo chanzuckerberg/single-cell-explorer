@@ -89,6 +89,11 @@ variable "api_url" {
   description = "URL for the backend api."
 }
 
+variable "domain" {
+  type        = string
+  description = "Domain where the service will be deployed."
+}
+
 variable "deployment_stage" {
   type        = string
   description = "The name of the deployment stage of the Application"
