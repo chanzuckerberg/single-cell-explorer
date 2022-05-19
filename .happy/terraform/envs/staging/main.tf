@@ -11,6 +11,7 @@ module stack {
   delete_protected             = false
   require_okta                 = false
   stack_prefix                 = "/${var.stack_name}"
+  domain                       = "cellxgene.dev.single-cell.czi.technology"
   batch_container_memory_limit = 28000
   memory                       = 50000
 

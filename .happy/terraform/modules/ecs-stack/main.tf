@@ -73,7 +73,7 @@ module explorer_service {
   priority          = local.priority
   api_url           = local.frontend_url
   frontend_url      = local.frontend_url
-  domain            = module.explorer_dns[0].dns_prefix
+  domain            = var.domain
   remote_dev_prefix = local.remote_dev_prefix
 
   wait_for_steady_state = local.wait_for_steady_state

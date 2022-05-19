@@ -30,6 +30,11 @@ variable stack_name {
   description = "Happy Path stack name"
 }
 
+variable domain {
+  type        = string
+  description = "Deployment domain"
+}
+
 variable happy_config_secret {
   type        = string
   description = "Happy Path configuration secret name"
