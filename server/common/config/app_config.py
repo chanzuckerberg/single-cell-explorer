@@ -128,8 +128,8 @@ class AppConfig(object):
     def update_from_config_file(self, config_file):
         env = os.getenv("DEPLOYMENT_STAGE")
         domain = os.getenv("DOMAIN")
-        assert env is not None, "Missing DEPLOYMENT_STAGE in environment."
-        assert domain is not None, "Missing DOMAIN in environment."
+        assert env, "Missing DEPLOYMENT_STAGE in environment."
+        assert domain, "Missing DOMAIN in environment."
         try:
             with open(config_file) as yml_file:
                 yml_string = yml_file.read()
