@@ -131,8 +131,7 @@ class AppConfig(object):
         try:
             with open(config_file) as yml_file:
                 yml_string = yml_file.read()
-                print(yml_string.format(env=env, domain=domain))
-                yml_string_with_params = yml_string  # .format(env=env, domain=domain)
+                yml_string_with_params = yml_string.format(env=env, domain=domain)
                 config = yaml.safe_load(yml_string_with_params)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}")
