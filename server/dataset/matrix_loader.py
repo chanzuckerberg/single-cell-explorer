@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 class MatrixDataType(Enum):
     CXG = "cxg"
+    SOMA = "soma"
     UNKNOWN = "unknown"
 
 
@@ -32,8 +33,10 @@ class MatrixDataLoader(object):
 
         if self.matrix_data_type == MatrixDataType.CXG:
             from server.dataset.cxg_dataset import CxgDataset
-
             self.matrix_type = CxgDataset
+        elif self.matrix_data_type == MatrixDataType.SOMA:
+            from server.dataset.soma_dataset import SomaDataset
+            self.matrix_type = SomaDataset
 
     def __resolve_dataset_config(self):
         dataset_config = self.app_config.default_dataset_config
@@ -46,6 +49,8 @@ class MatrixDataLoader(object):
     def __matrix_data_type(self):
         if ".cxg" in self.location.path:
             return MatrixDataType.CXG
+        elif ".soma" in self.location.path:
+            return MatrixDataType.SOMA
         else:
             return MatrixDataType.UNKNOWN
 

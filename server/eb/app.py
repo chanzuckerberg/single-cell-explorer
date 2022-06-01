@@ -8,14 +8,11 @@ import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
 
-if os.path.isdir("/opt/python/log"):
-    # This is the standard location where Amazon EC2 instances store the application logs.
-    logging.basicConfig(
-        filename="/opt/python/log/app.log",
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+#     datefmt="%Y-%m-%d %H:%M:%S",
+# )
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
@@ -166,7 +163,7 @@ try:
 
     # overwrite configuration for the eb app
     app_config.update_server_config(
-        multi_dataset__allowed_matrix_types=["cxg"],
+        multi_dataset__allowed_matrix_types=["cxg", "soma"],
     )
 
     # complete config

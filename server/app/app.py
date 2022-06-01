@@ -163,6 +163,9 @@ class Server:
         if server_config.app__server_timing_headers:
             ServerTiming(self.app, force_debug=True)
 
+        # Set app logger level to DEBUG
+        self.app.logger.setLevel(logging.DEBUG)
+
         # enable session data
         self.app.permanent_session_lifetime = datetime.timedelta(days=50 * 365)
 
