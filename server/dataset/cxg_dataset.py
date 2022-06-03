@@ -19,6 +19,14 @@ from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
 
+from server.common.errors import (
+    FilterError,
+    UnsupportedSummaryMethod,
+    DatasetAccessError,
+)
+
+from scipy import sparse
+
 
 class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
@@ -255,6 +263,9 @@ class CxgDataset(Dataset):
         return ncoord, coordindices
 
     def get_X_array(self, obs_mask=None, var_mask=None):
+
+        print("--- var_mask", var_mask)
+
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
         if obs_items is None or var_items is None:
@@ -273,6 +284,8 @@ class CxgDataset(Dataset):
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
+
+            print(densedata.shape)
 
             return densedata
 
@@ -414,3 +427,33 @@ class CxgDataset(Dataset):
             fbs = encode_matrix_fbs(df, col_idx=df.columns)
 
         return fbs
+
+    def summarize_var(self, method, filter, query_hash):
+        if method != "mean":
+            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
+
+        print("--- filter", filter)
+
+        obs_selector, var_selector = self._filter_to_mask(filter)
+        if obs_selector is not None:
+            raise FilterError("filtering on obs unsupported")
+
+        print("--- summarize_var here")
+        print(method, filter, var_selector, np.count_nonzero(var_selector), query_hash)
+
+        # if no filter, just return zeros.  We don't have a use case
+        # for summarizing the entire X without a filter, and it would
+        # potentially be quite compute / memory intensive.
+        if var_selector is None or np.count_nonzero(var_selector) == 0:
+            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
+        else:
+            X = self.get_X_array(obs_selector, var_selector)
+            if sparse.issparse(X):
+                mean = X.mean(axis=1).A
+            else:
+                mean = X.mean(axis=1, keepdims=True)
+
+        print("--- MEAN", mean, len(mean))
+
+        col_idx = pd.Index([query_hash])
+        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)

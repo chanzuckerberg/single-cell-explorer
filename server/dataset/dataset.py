@@ -187,6 +187,7 @@ class Dataset(metaclass=ABCMeta):
         mask = np.ones((count,), dtype=np.bool)
         for v in filter:
             name = v["name"]
+            print("----NAME", name, v)
             if axis == Axis.VAR:
                 anno_data = self.query_var_array(name)
             elif axis == Axis.OBS:
@@ -292,6 +293,8 @@ class Dataset(metaclass=ABCMeta):
             selector_lists=False,
         )
 
+        print(result)
+
         try:
             return jsonify_numpy(result)
         except ValueError:
@@ -308,6 +311,8 @@ class Dataset(metaclass=ABCMeta):
         result = self.compute_diffexp_ttest(
             listA, listB, top_n=top_n, lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff, selector_lists=True
         )
+
+        print(result)
 
         try:
             return jsonify_numpy(result)
@@ -378,25 +383,6 @@ class Dataset(metaclass=ABCMeta):
             lastmod = None
         return lastmod
 
+    @abstractmethod
     def summarize_var(self, method, filter, query_hash):
-        if method != "mean":
-            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
-
-        obs_selector, var_selector = self._filter_to_mask(filter)
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
-
-        # if no filter, just return zeros.  We don't have a use case
-        # for summarizing the entire X without a filter, and it would
-        # potentially be quite compute / memory intensive.
-        if var_selector is None or np.count_nonzero(var_selector) == 0:
-            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
-        else:
-            X = self.get_X_array(obs_selector, var_selector)
-            if sparse.issparse(X):
-                mean = X.mean(axis=1).A
-            else:
-                mean = X.mean(axis=1, keepdims=True)
-
-        col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+        pass

@@ -37,10 +37,11 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
-    matrix = adaptor.open_array(arr).data # this is X
+    matrix = list(adaptor.open_array(arr))[0] # this is X
     dtype = matrix.attr_names_to_types()["value"]
     obs = adaptor.open_array("obs")
     var = adaptor.open_array("var")
+    # Possibly include this in the schema metadata
     n_obs = obs.shape()[0]
     cols = var.shape()[0]
     is_sparse = True # in SOMA, these are all sparse
@@ -229,11 +230,12 @@ def mean_var_cnt_sparse(matrix, obs, var, n_var, rows):
 
     # query_iterator = matrix.query(dims=["var"], attrs=[""], order="U", return_incomplete=True).multi_index[rows, :]
 
-    idx = obs.df().iloc[rows].index
-    query = matrix.dim_select(obs_ids=list(idx), var_ids=None)
+    idx = obs.df().iloc[rows].index # TODO: this should not read all the columns, but just the index. SOMA should be able to do this
+    query = matrix.dim_select(obs_ids=list(idx), var_ids=None) # (rows x n_var)
 
-    var_ids = query["var_id"].tolist()
-    vals = query["value"].tolist()
+    # var_ids = query["var_id"].tolist()
+    # vals = query["value"].tolist()
+
 
     # Mapping var_id -> var_pos
 
@@ -243,10 +245,15 @@ def mean_var_cnt_sparse(matrix, obs, var, n_var, rows):
         m[v] = i
     print("Building map - end")
 
+    # TODO: this is slow. requires a re-optimization (look at DataFrame.apply)
     print("Converting var_ids to var_pos - start")
     var_pos = []
-    for id in var_ids:
-        var_pos.append(m[id])
+    vals = []
+    for x in query.itertuples():
+        var_id = x[0][1]
+        value = x[1]
+        var_pos.append(m[var_id])
+        vals.append(value)
     print("Converting var_ids to var_pos - end")
 
     # accumulators, by gene (var) for n, u (mean) and M (sum of squares of difference from mean)

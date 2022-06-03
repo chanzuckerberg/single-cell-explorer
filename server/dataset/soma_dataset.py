@@ -187,8 +187,9 @@ class SomaDataset(Dataset):
         return getattr(self._soma, name)
 
     def get_embedding_array(self, ename, dims=2):
+        # TODO: force the sorting
         emb = self._soma.obsm[f"X_{ename}"]
-        A = emb.df().iloc[:, 1:1+dims]
+        A = emb.df().iloc[:, 0:dims]
         return A.to_numpy()
 
     def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, arr="X", selector_lists=False):
@@ -241,6 +242,16 @@ class SomaDataset(Dataset):
         return ncoord, coordindices
 
     def get_X_array(self, obs_mask=None, var_mask=None):
+
+        X = self.open_array("X")
+        var = self.open_array("var")
+
+        # TODO: this is only for var for now. extend to obs
+        df = var.df()
+        var_ids = df[df["feature_name"].isin(vars)] # TODO: use the correct filter name
+        var_ids.index.tolist()
+
+        print("---- got here")
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
         if obs_items is None or var_items is None:
@@ -250,10 +261,14 @@ class SomaDataset(Dataset):
             var_size = 0 if var_items is None else shape[1] if var_mask is None else np.count_nonzero(var_mask)
             return np.ndarray((obs_size, var_size))
 
-        X = self.open_array("X")
 
-        if X.schema.sparse:
-            data = X.query(order="U").multi_index[obs_items, var_items]
+
+        var_ids = var.df().iloc[var_items].index.tolist()
+
+        if True: # always a sparse matrix
+            print(obs_items, var_items)
+            # data = X.query(order="U").multi_index[obs_items, var_ids]
+            data = X["data"].dim_select(obs_items, var_ids)
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
@@ -270,21 +285,22 @@ class SomaDataset(Dataset):
         return self.X_approximate_distribution
 
     def get_shape(self):
-        X = self._soma.X
-        return X.shape
+        obs = self._soma.obs
+        var = self._soma.var
+        return (obs.shape()[0], var.shape()[0])
 
     def get_X_array_dtype(self):
         raise NotImplementedError
 
     def query_var_array(self, term_name):
         var = self.open_array("var")
-        data = var.query(attrs=[term_name])[:][term_name]
+        data = var.df()[term_name].to_numpy()
         return data
 
     def query_obs_array(self, term_name):
-        var = self.open_array("obs")
+        obs = self.open_array("obs")
         try:
-            data = var.query(attrs=[term_name])[:][term_name]
+            data = obs.df()[term_name].to_numpy()
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs")
         return data
@@ -385,3 +401,42 @@ class SomaDataset(Dataset):
             fbs = encode_matrix_fbs(df, col_idx=df.columns)
 
         return fbs
+
+    def summarize_var(self, method, filter, query_hash):
+        if method != "mean":
+            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
+
+        print("--- filter", filter)
+        # Example response:
+        # {'var': {'annotation_value': [{'name': 'feature_name', 'values': ['GJA4', 'ADIRF', 'MYL9', 'MYH11', 'TAGLN', 'MT1A', 'ACTA2', 'TINAGL1', 'TPM2', 'ADAMTS4', 'PDK4', 'TPPP3', 'MT1M', 'CALD1', 'DSTN']}]}}
+
+        print("--- summarize_var here")
+        print(method, filter, query_hash)
+
+        # TODO break when filtering by obs
+
+        obs_selector = None # obs_selector = filter.get("obs")
+        var_selector = filter.get("var")["annotation_value"][0]["values"] # TODO
+
+        df = self.open_array("var").df()
+        var_ids = df[df["feature_name"].isin(var_selector)] # TODO
+        var_ids = var_ids.index.tolist()
+
+        obs_ids = None
+
+        print("--- var_ids", var_ids)
+
+        X = self.open_array("X")["data"]
+        obs = self.open_array("obs")
+        var = self.open_array("var")
+
+        df = X.dim_select(None, var_ids)
+        df.reset_index(inplace=True)
+        coo = tiledbsc.util._X_and_ids_to_coo(df, 'obs_id', 'var_id', 'value', obs.ids(), var.ids())
+        mean = coo.mean(axis=1).A
+
+
+        print("--- MEAN", mean, len(mean))
+
+        col_idx = pd.Index([query_hash])
+        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
