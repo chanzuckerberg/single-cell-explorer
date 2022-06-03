@@ -91,6 +91,33 @@ class Gene extends React.Component<{}, State> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  handleGetGeneInfo = () => {
+    // @ts_expect_error?
+    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
+    console.log("props");
+    console.log(this.props);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { dispatch, gene } = this.props; // why are these errors happening?
+    console.log(gene);
+    dispatch({
+      type: "get gene info",
+      data: gene,
+    });
+
+    // where to put api key?
+    const apiKey = "5e1da911c319634a54a4fc5cb89583602e08";
+    // is string interpolation a security issue?
+    fetch(
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}`
+    )
+      .then((response) => response.json())
+      .then((data) => console.log(data));
+    // const apiURL = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&retmode=html&api_key=${apiKey}`
+
+    // console.log()
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type 'Readonly<{... Remove this comment to see the full error message
@@ -163,6 +190,19 @@ class Gene extends React.Component<{}, State> {
                   {gene}
                 </span>
               </Truncate>
+            </div>
+            <div>
+              <Button
+                minimal
+                small
+                data-testid={`get-info-${gene}`}
+                onClick={this.handleGetGeneInfo}
+                // active={isScatterplotYYaccessor}
+                // intent={isScatterplotYYaccessor ? "primary" : "none"}
+                style={{ fontWeight: 700, marginRight: 2 }}
+              >
+                info
+              </Button>
             </div>
             {!geneIsExpanded ? (
               <HistogramBrush
