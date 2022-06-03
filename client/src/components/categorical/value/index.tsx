@@ -101,7 +101,6 @@ class CategoryValue extends React.Component<{}, State> {
   get shouldRenderStackedBarOrHistogram() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
     const { colorAccessor, isColorBy, annotations } = this.props;
-
     return !!colorAccessor && !isColorBy && !annotations.isEditingLabelName;
   }
 
@@ -479,11 +478,14 @@ class CategoryValue extends React.Component<{}, State> {
       schema,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist on type 'Readonly<... Remove this comment to see the full error message
+      colorMode,
     } = this.props;
     const isColorBy = metadataField === colorAccessor;
 
     if (
       !this.shouldRenderStackedBarOrHistogram ||
+      colorMode === "color by expression" ||
       !AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) ||
       isColorBy
     ) {
@@ -539,6 +541,8 @@ class CategoryValue extends React.Component<{}, State> {
       schema,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist on type 'Readonly<... Remove this comment to see the full error message
+      colorMode,
     } = this.props;
     const colorScale = colorTable?.scale;
 
@@ -546,7 +550,9 @@ class CategoryValue extends React.Component<{}, State> {
       !this.shouldRenderStackedBarOrHistogram ||
       // This function returns true on categorical annotations(when stacked bar should not render),
       //  in cases where the colorAccessor is a gene this function will return undefined since genes do not live on the schema
-      AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) === true
+      (AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) ===
+        true &&
+        colorMode !== "color by expression")
     ) {
       return null;
     }

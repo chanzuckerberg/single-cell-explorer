@@ -182,7 +182,8 @@ class Category extends React.PureComponent {
     [
       Dataframe,
       ReturnType<typeof createCategorySummaryFromDfCol>,
-      Dataframe | null
+      Dataframe | null,
+      string | null
     ]
   > {
     /*
@@ -215,7 +216,7 @@ class Category extends React.PureComponent {
       column,
       colSchema
     );
-    return [categoryData, categorySummary, colorData];
+    return [categoryData, categorySummary, colorData, colorMode];
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- - FIXME: disabled temporarily on migrate to TS.
@@ -225,7 +226,9 @@ class Category extends React.PureComponent {
     const { schema, colors, metadataField } = this.props;
     const { colorAccessor, userColors, colorMode } = colors;
     return {
-      isColorAccessor: colorAccessor === metadataField,
+      isColorAccessor:
+        colorAccessor === metadataField &&
+        colorMode === "color by categorical metadata",
       colorAccessor,
       colorMode,
       colorTable: createColorTable(
@@ -324,6 +327,7 @@ class Category extends React.PureComponent {
                 isColorAccessor,
                 // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCategoryToggleAllClick' does not e... Remove this comment to see the full error message
                 handleCategoryToggleAllClick,
+                colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
               return (
@@ -344,6 +348,7 @@ class Category extends React.PureComponent {
                   onCategoryToggleAllClick={handleCategoryToggleAllClick}
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
+                  colorMode={colorMode}
                 />
               );
             }}
@@ -549,6 +554,7 @@ const CategoryRender = React.memo(
     onCategoryMenuKeyPress,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
+    colorMode,
   }) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
@@ -608,6 +614,7 @@ const CategoryRender = React.memo(
                 colorAccessor={colorAccessor}
                 colorData={colorData}
                 colorTable={colorTable}
+                colorMode={colorMode}
               />
             ) : null
           }
@@ -633,6 +640,7 @@ const CategoryValueList = React.memo(
     colorData,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
+    colorMode,
   }) => {
     const tuples = [...categorySummary.categoryValueIndices];
 
@@ -655,6 +663,7 @@ const CategoryValueList = React.memo(
               colorAccessor={colorAccessor}
               colorData={colorData}
               colorTable={colorTable}
+              colorMode={colorMode}
             />
           ))}
         </>
@@ -677,6 +686,7 @@ const CategoryValueList = React.memo(
               colorAccessor={colorAccessor}
               colorData={colorData}
               colorTable={colorTable}
+              colorMode={colorMode}
             />
           </Flipped>
         ))}
