@@ -81,10 +81,12 @@ class CategoryValue extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   componentDidUpdate(prevProps: {}) {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
-    const { metadataField, categoryIndex, categorySummary } = this.props;
+    const { metadataField, categoryIndex, categorySummary, colorMode } =
+      this.props;
     if (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (prevProps as any).metadataField !== metadataField ||
+      (prevProps as any).colorMode !== colorMode ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (prevProps as any).categoryIndex !== categoryIndex || // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (prevProps as any).categorySummary !== categorySummary
@@ -218,6 +220,7 @@ class CategoryValue extends React.Component<{}, State> {
     * the color accessor (what is currently being colored by)
     * if this categorical value's selection status has changed
     * the crossfilter (ie, global selection state)
+    * the color mode (type of coloring occurring)
 
     If and only if true, update the component
     */
@@ -241,6 +244,9 @@ class CategoryValue extends React.Component<{}, State> {
     const annotationsChange =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (props as any).annotations !== nextProps.annotations;
+    const colorModeChange =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+      (props as any).colorMode !== nextProps.colorMode;
     const editingLabel = state.editedLabelText !== nextState.editedLabelText;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     const dilationChange = (props as any).isDilated !== nextProps.isDilated;
@@ -265,7 +271,8 @@ class CategoryValue extends React.Component<{}, State> {
       editingLabel ||
       dilationChange ||
       countChanged ||
-      colorMightHaveChanged
+      colorMightHaveChanged ||
+      colorModeChange
     );
   };
 
@@ -481,7 +488,9 @@ class CategoryValue extends React.Component<{}, State> {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist on type 'Readonly<... Remove this comment to see the full error message
       colorMode,
     } = this.props;
-    const isColorBy = metadataField === colorAccessor;
+    const isColorBy =
+      metadataField === colorAccessor &&
+      colorMode === "color by categorical metadata";
 
     if (
       !this.shouldRenderStackedBarOrHistogram ||
@@ -552,7 +561,8 @@ class CategoryValue extends React.Component<{}, State> {
       //  in cases where the colorAccessor is a gene this function will return undefined since genes do not live on the schema
       (AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) ===
         true &&
-        colorMode !== "color by expression")
+        colorMode !== "color by expression" &&
+        colorMode !== "color by continuous metadata")
     ) {
       return null;
     }
@@ -569,7 +579,6 @@ class CategoryValue extends React.Component<{}, State> {
       ) ?? {}; // if createHistogramBins returns empty object assign null to deconstructed
 
     if (!xScale || !yScale || !bins) return null;
-
     return (
       <MiniHistogram
         {...{
@@ -610,6 +619,8 @@ class CategoryValue extends React.Component<{}, State> {
       categorySummary,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
+      colorMode,
     } = this.props;
     const colorScale = colorTable?.scale;
 
@@ -619,7 +630,9 @@ class CategoryValue extends React.Component<{}, State> {
     const displayString = this.currentLabelAsString();
 
     /* this is the color scale, so add swatches below */
-    const isColorBy = metadataField === colorAccessor;
+    const isColorBy =
+      metadataField === colorAccessor &&
+      colorMode === "color by categorical metadata";
     const { categoryValueIndices } = categorySummary;
 
     const editModeActive =

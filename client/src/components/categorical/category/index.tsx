@@ -327,6 +327,7 @@ class Category extends React.PureComponent {
                 isColorAccessor,
                 // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCategoryToggleAllClick' does not e... Remove this comment to see the full error message
                 handleCategoryToggleAllClick,
+                // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCategoryToggleAllClick' does not e... Remove this comment to see the full error message
                 colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);

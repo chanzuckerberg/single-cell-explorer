@@ -24,7 +24,7 @@ type State = any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     isColorAccessor:
       (state as any).colors.colorAccessor === gene &&
-      (state as any).colors.colorMode === "color by expression",
+      (state as any).colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (state as any).controls.scatterplotXXaccessor === gene,
