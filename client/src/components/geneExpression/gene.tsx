@@ -19,6 +19,7 @@ type State = any;
 @connect((state, ownProps) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
   const { gene } = ownProps;
+  console.log(ownProps);
 
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -107,11 +108,26 @@ class Gene extends React.Component<{}, State> {
     // where to put api key?
     const apiKey = "5e1da911c319634a54a4fc5cb89583602e08";
     // is string interpolation a security issue?
+    // search for gene ID through NCBI Gene
+    let geneId;
     fetch(
-      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}`
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}&retmode=json`
     )
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then((data) => {
+        geneId = data.esearchresult.idlist[0];
+        console.log(geneId);
+
+        fetch(
+          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&api_key=${apiKey}&retmode=json`
+        )
+          .then((resp) => resp.json())
+          .then((geneInfo) => {
+            console.log(geneInfo);
+          });
+      });
+
+    // fetch gene information using gene ID
     // const apiURL = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&retmode=html&api_key=${apiKey}`
 
     // console.log()
