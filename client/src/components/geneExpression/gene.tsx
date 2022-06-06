@@ -19,7 +19,6 @@ type State = any;
 @connect((state, ownProps) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
   const { gene } = ownProps;
-  console.log(ownProps);
 
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -30,6 +29,7 @@ type State = any;
     isScatterplotYYaccessor:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (state as any).controls.scatterplotYYaccessor === gene,
+    schema: (state as any).annoMatrix?.schema,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -93,16 +93,12 @@ class Gene extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleGetGeneInfo = () => {
-    // @ts_expect_error?
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
-    console.log("props");
-    console.log(this.props);
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props; // why are these errors happening?
     console.log(gene);
     dispatch({
-      type: "get gene info",
-      data: gene,
+      type: "open gene info",
     });
 
     // where to put api key?
@@ -111,19 +107,35 @@ class Gene extends React.Component<{}, State> {
     // search for gene ID through NCBI Gene
     let geneId;
     fetch(
-      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}&retmode=json`
+      // `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}&retmode=json`
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=ENSG00000251562&api_key=${apiKey}&retmode=json`
     )
-      .then((response) => response.json())
+      .then((response) => {
+        console.log(response);
+        return response.json();
+      })
       .then((data) => {
         geneId = data.esearchresult.idlist[0];
         console.log(geneId);
 
         fetch(
-          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&api_key=${apiKey}&retmode=json`
+          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&api_key=${apiKey}&retmode=xml`
         )
-          .then((resp) => resp.json())
+          .then((resp) => resp.text())
+          .then((str) =>
+            new window.DOMParser().parseFromString(str, "text/xml")
+          )
           .then((geneInfo) => {
             console.log(geneInfo);
+            console.log(typeof geneInfo);
+            console.log(
+              geneInfo.getElementsByTagName("Entrezgene_summary")[0]
+                .childNodes[0].nodeValue
+            );
+            dispatch({
+              type: "loaded gene info",
+              data: geneInfo,
+            });
           });
       });
 
@@ -132,6 +144,19 @@ class Gene extends React.Component<{}, State> {
 
     // console.log()
   };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  // handleDisplayGeneInfo = () => {
+  //   track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
+  //   // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+  //   const { dispatch, gene } = this.props; // why are these errors happening?
+  //   console.log(gene);
+
+  //   dispatch({
+  //     type: "display gene info",
+  //     data: gene,
+  //   });
+  // };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
@@ -212,7 +237,9 @@ class Gene extends React.Component<{}, State> {
                 minimal
                 small
                 data-testid={`get-info-${gene}`}
+                // onMouseEnter={this.handleGetGeneInfo}
                 onClick={this.handleGetGeneInfo}
+                // onClick={this.handleDisplayGeneInfo}
                 // active={isScatterplotYYaccessor}
                 // intent={isScatterplotYYaccessor ? "primary" : "none"}
                 style={{ fontWeight: 700, marginRight: 2 }}

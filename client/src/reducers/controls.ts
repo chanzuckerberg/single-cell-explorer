@@ -119,6 +119,17 @@ const Controls = (
         graphRenderCounter: c,
       };
     }
+    case "open gene info":
+      console.log(action);
+      return {
+        ...state,
+      };
+    case "loaded gene info":
+      console.log(action.data);
+      return {
+        geneInfo: action.data,
+        ...state,
+      };
 
     /*******************************
               Scatterplot
