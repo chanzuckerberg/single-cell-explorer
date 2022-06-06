@@ -19,6 +19,8 @@ from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
 
+from server.common.constants import Axis, XApproximateDistribution
+
 from server.common.errors import (
     FilterError,
     UnsupportedSummaryMethod,
@@ -457,3 +459,34 @@ class CxgDataset(Dataset):
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+
+    def data_frame_to_fbs_matrix(self, filter, axis):
+        """
+        Retrieves data 'X' and returns in a flatbuffer Matrix.
+        :param filter: filter: dictionary with filter params
+        :param axis: string obs or var
+        :return: flatbuffer Matrix
+
+        Caveats:
+        * currently only supports access on VAR axis
+        * currently only supports filtering on VAR axis
+        """
+        if axis != Axis.VAR:
+            raise ValueError("Only VAR dimension access is supported")
+
+        try:
+            obs_selector, var_selector = self._filter_to_mask(filter)
+        except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
+            raise FilterError("Error parsing filter")
+
+        if obs_selector is not None:
+            raise FilterError("filtering on obs unsupported")
+
+        num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
+        if self.server_config.exceeds_limit("column_request_max", num_columns):
+            raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
+
+        X = self.get_X_array(obs_selector, var_selector)
+        print("--- X", X, X.shape)
+        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)

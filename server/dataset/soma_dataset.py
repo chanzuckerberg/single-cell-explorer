@@ -20,6 +20,29 @@ from server.compute import diffexp_soma
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
 
+
+from abc import ABCMeta, abstractmethod
+from os.path import basename, splitext
+
+import numpy as np
+import pandas as pd
+from scipy import sparse
+from server_timing import Timing as ServerTiming
+
+from server.common.config.app_config import AppConfig
+from server.common.constants import Axis, XApproximateDistribution
+from server.common.errors import (
+    FilterError,
+    JSONEncodingValueError,
+    ExceedsLimitError,
+    UnsupportedSummaryMethod,
+    DatasetAccessError,
+)
+from server.common.utils.utils import jsonify_numpy
+from server.common.fbs.matrix import encode_matrix_fbs
+
+
+
 import tiledbsc
 
 
@@ -440,3 +463,53 @@ class SomaDataset(Dataset):
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+        
+    def data_frame_to_fbs_matrix(self, filter, axis):
+        """
+        Retrieves data 'X' and returns in a flatbuffer Matrix.
+        :param filter: filter: dictionary with filter params
+        :param axis: string obs or var
+        :return: flatbuffer Matrix
+
+        Caveats:
+        * currently only supports access on VAR axis
+        * currently only supports filtering on VAR axis
+        """
+        if axis != Axis.VAR:
+            raise ValueError("Only VAR dimension access is supported")
+
+        print("--- filter2", filter)
+
+        var_selector = filter.get("var")["annotation_value"][0]["values"] # TODO
+
+        df = self.open_array("var").df()
+        var_ids = df[df["feature_name"].isin(var_selector)] # TODO
+        var_ids = var_ids.index.tolist()
+
+        X = self.open_array("X")["data"]
+        obs = self.open_array("obs")
+
+        print("--- var_ids", var_ids)
+
+        df = X.dim_select(None, var_ids)
+        df.reset_index(inplace=True)
+        coo = tiledbsc.util._X_and_ids_to_coo(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
+        mat = coo.todense().A
+        
+
+
+        # try:
+        #     obs_selector, var_selector = self._filter_to_mask(filter)
+        # except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
+        #     raise FilterError("Error parsing filter")
+
+        # if obs_selector is not None:
+        #     raise FilterError("filtering on obs unsupported")
+
+        # num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
+        # if self.server_config.exceeds_limit("column_request_max", num_columns):
+        #     raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
+
+        # X = self.get_X_array(obs_selector, var_selector)
+        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+        return encode_matrix_fbs(mat, col_idx=col_idx, row_idx=None)
