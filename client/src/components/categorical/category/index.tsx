@@ -555,6 +555,7 @@ const CategoryRender = React.memo(
     onCategoryMenuKeyPress,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist... Remove this comment to see the full error message
     colorMode,
   }) => {
     /*
