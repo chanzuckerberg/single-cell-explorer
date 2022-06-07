@@ -39,6 +39,7 @@ class Gene extends React.Component<{}, State> {
     super(props);
     this.state = {
       geneIsExpanded: false,
+      geneInfoButtonVisible: false,
     };
   }
 
@@ -100,6 +101,8 @@ class Gene extends React.Component<{}, State> {
     dispatch({
       type: "open gene info",
     });
+    const { geneInfoButtonVisible } = this.state;
+    this.setState({ geneInfoButtonVisible: !geneInfoButtonVisible });
 
     // where to put api key?
     const apiKey = "5e1da911c319634a54a4fc5cb89583602e08";
@@ -146,17 +149,23 @@ class Gene extends React.Component<{}, State> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  // handleDisplayGeneInfo = () => {
-  //   track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
-  //   // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-  //   const { dispatch, gene } = this.props; // why are these errors happening?
-  //   console.log(gene);
+  handleDisplayGeneInfo = () => {
+    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { dispatch, gene } = this.props; // why are these errors happening?
+    console.log(gene);
 
-  //   dispatch({
-  //     type: "display gene info",
-  //     data: gene,
-  //   });
-  // };
+    dispatch({
+      type: "display gene info",
+      data: gene,
+    });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  handleRemoveGeneInfo = () => {
+    const { geneInfoButtonVisible } = this.state;
+    this.setState({ geneInfoButtonVisible: !geneInfoButtonVisible });
+  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
@@ -176,7 +185,7 @@ class Gene extends React.Component<{}, State> {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'removeGene' does not exist on type 'Read... Remove this comment to see the full error message
       removeGene,
     } = this.props;
-    const { geneIsExpanded } = this.state;
+    const { geneIsExpanded, geneInfoButtonVisible } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
 
     return (
@@ -204,6 +213,8 @@ class Gene extends React.Component<{}, State> {
               justifyContent: "space-between",
               width: "100%",
             }}
+            onMouseEnter={this.handleGetGeneInfo}
+            onMouseLeave={this.handleRemoveGeneInfo}
           >
             <div>
               {!quickGene && (
@@ -233,19 +244,21 @@ class Gene extends React.Component<{}, State> {
               </Truncate>
             </div>
             <div>
-              <Button
-                minimal
-                small
-                data-testid={`get-info-${gene}`}
-                // onMouseEnter={this.handleGetGeneInfo}
-                onClick={this.handleGetGeneInfo}
-                // onClick={this.handleDisplayGeneInfo}
-                // active={isScatterplotYYaccessor}
-                // intent={isScatterplotYYaccessor ? "primary" : "none"}
-                style={{ fontWeight: 700, marginRight: 2 }}
-              >
-                info
-              </Button>
+              {geneInfoButtonVisible && (
+                <Button
+                  minimal
+                  small
+                  data-testid={`get-info-${gene}`}
+                  // onMouseEnter={this.handleGetGeneInfo}
+                  onClick={this.handleDisplayGeneInfo}
+                  // onClick={this.handleDisplayGeneInfo}
+                  // active={isScatterplotYYaccessor}
+                  // intent={isScatterplotYYaccessor ? "primary" : "none"}
+                  style={{ fontWeight: 700, marginRight: 2 }}
+                >
+                  i
+                </Button>
+              )}
             </div>
             {!geneIsExpanded ? (
               <HistogramBrush
