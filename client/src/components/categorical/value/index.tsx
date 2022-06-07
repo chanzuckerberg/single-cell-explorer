@@ -28,6 +28,8 @@ import { CategoryCrossfilterContext } from "../categoryContext";
 import { Dataframe, ContinuousHistogram } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
+import { RootState } from "../../../reducers";
+import { Schema } from "../../../common/types/schema";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -44,11 +46,29 @@ function _currentLabelAsString(ownProps: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
+interface PureCategoryValueProps {
+  metadataField: string;
+  colorMode: string;
+  categoryIndex: string;
+  categorySummary: any;
+}
+
+type CategoryValueProps = PureCategoryValueProps & {
+  annotations: any;
+  schema: Schema;
+  isDilated: boolean;
+  isSelected: boolean;
+  colorAccessor: string;
+  label: string;
+  colorTable: any;
+  isUserAnno: boolean;
+  colorData: any;
+  categoryData: any;
+};
+
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state, ownProps) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'pointDilation' does not exist on type 'D... Remove this comment to see the full error message
+@connect((state: RootState, ownProps: PureCategoryValueProps) => {
   const { pointDilation, categoricalSelection } = state;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
   const { metadataField, categorySummary, categoryIndex } = ownProps;
   const isDilated =
     pointDilation.metadataField === metadataField &&
@@ -59,37 +79,30 @@ type State = any;
   const isSelected = category.get(label) ?? true;
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    annotations: (state as any).annotations,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    schema: (state as any).annoMatrix?.schema,
+    annotations: state.annotations,
+    schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
     label,
   };
 })
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class CategoryValue extends React.Component<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
+// TODO: type categorySummary
+class CategoryValue extends React.Component<CategoryValueProps, State> {
+  constructor(props: CategoryValueProps) {
     super(props);
     this.state = {
       editedLabelText: this.currentLabelAsString(),
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  componentDidUpdate(prevProps: {}) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
+  componentDidUpdate(prevProps: CategoryValueProps): void {
     const { metadataField, categoryIndex, categorySummary, colorMode } =
       this.props;
     if (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (prevProps as any).metadataField !== metadataField ||
-      (prevProps as any).colorMode !== colorMode ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (prevProps as any).categoryIndex !== categoryIndex || // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (prevProps as any).categorySummary !== categorySummary
+      prevProps.metadataField !== metadataField ||
+      prevProps.colorMode !== colorMode ||
+      prevProps.categoryIndex !== categoryIndex ||
+      prevProps.categorySummary !== categorySummary
     ) {
       // eslint-disable-next-line react/no-did-update-set-state --- adequately checked to prevent looping
       this.setState({
@@ -192,11 +205,8 @@ class CategoryValue extends React.Component<{}, State> {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryIndex' does not exist on type 'R... Remove this comment to see the full error message
       categoryIndex,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
       categorySummary,
     } = this.props;
 
@@ -212,8 +222,10 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  shouldComponentUpdate = (nextProps: any, nextState: any) => {
+  shouldComponentUpdate = (
+    nextProps: CategoryValueProps,
+    nextState: any
+  ): boolean => {
     /*
     Checks to see if at least one of the following changed:
     * world state
@@ -225,7 +237,6 @@ class CategoryValue extends React.Component<{}, State> {
     If and only if true, update the component
     */
     const { props, state } = this;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryIndex' does not exist on type 'R... Remove this comment to see the full error message
     const { categoryIndex, categorySummary, isSelected } = props;
     const {
       categoryIndex: newCategoryIndex,
@@ -238,18 +249,11 @@ class CategoryValue extends React.Component<{}, State> {
     const labelChanged = label !== newLabel;
     const valueSelectionChange = isSelected !== newIsSelected;
 
-    const colorAccessorChange =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (props as any).colorAccessor !== nextProps.colorAccessor;
-    const annotationsChange =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (props as any).annotations !== nextProps.annotations;
-    const colorModeChange =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (props as any).colorMode !== nextProps.colorMode;
+    const colorAccessorChange = props.colorAccessor !== nextProps.colorAccessor;
+    const annotationsChange = props.annotations !== nextProps.annotations;
+    const colorModeChange = props.colorMode !== nextProps.colorMode;
     const editingLabel = state.editedLabelText !== nextState.editedLabelText;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const dilationChange = (props as any).isDilated !== nextProps.isDilated;
+    const dilationChange = props.isDilated !== nextProps.isDilated;
 
     const count = categorySummary.categoryValueCounts[categoryIndex];
     const newCount = newCategorySummary.categoryValueCounts[newCategoryIndex];
@@ -260,8 +264,7 @@ class CategoryValue extends React.Component<{}, State> {
     // if any one changes, but only for the currently colored-by category.
     const colorMightHaveChanged =
       nextProps.colorAccessor === nextProps.metadataField &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (props as any).categorySummary !== nextProps.categorySummary;
+      props.categorySummary !== nextProps.categorySummary;
 
     return (
       labelChanged ||
@@ -283,11 +286,8 @@ class CategoryValue extends React.Component<{}, State> {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryIndex' does not exist on type 'R... Remove this comment to see the full error message
       categoryIndex,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
       categorySummary,
     } = this.props;
     const label = categorySummary.categoryValues[categoryIndex];
@@ -450,7 +450,6 @@ class CategoryValue extends React.Component<{}, State> {
     1. no cells are selected
     2. all currently selected cells already have this label, on this category
     */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type 'Re... Remove this comment to see the full error message
     const { categoryData } = this.props;
 
     // 1. no cells selected?
@@ -468,24 +467,15 @@ class CategoryValue extends React.Component<{}, State> {
     return false;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  renderMiniStackedBar = () => {
+  renderMiniStackedBar = (): JSX.Element | null => {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
       colorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type 'Re... Remove this comment to see the full error message
       categoryData,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type 'Reado... Remove this comment to see the full error message
       colorData,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type 'Read... Remove this comment to see the full error message
       colorTable,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
       schema,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist on type 'Readonly<... Remove this comment to see the full error message
       colorMode,
     } = this.props;
     const isColorBy =
@@ -533,24 +523,15 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  renderMiniHistogram = () => {
+  renderMiniHistogram = (): JSX.Element | null => {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
       colorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type 'Reado... Remove this comment to see the full error message
       colorData,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type 'Re... Remove this comment to see the full error message
       categoryData,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type 'Read... Remove this comment to see the full error message
       colorTable,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
       schema,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist on type 'Readonly<... Remove this comment to see the full error message
       colorMode,
     } = this.props;
     const colorScale = colorTable?.scale;
@@ -596,30 +577,18 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
+  render(): JSX.Element {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryIndex' does not exist on type 'R... Remove this comment to see the full error message
       categoryIndex,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
       colorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type 'Read... Remove this comment to see the full error message
       colorTable,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type 'Read... Remove this comment to see the full error message
       isUserAnno,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'annotations' does not exist on type 'Rea... Remove this comment to see the full error message
       annotations,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isDilated' does not exist on type 'Reado... Remove this comment to see the full error message
       isDilated,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSelected' does not exist on type 'Read... Remove this comment to see the full error message
       isSelected,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
       categorySummary,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       label,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'label' does not exist on type 'Readonly<... Remove this comment to see the full error message
       colorMode,
     } = this.props;
     const colorScale = colorTable?.scale;
