@@ -24,40 +24,53 @@ import actions from "../../../actions";
 import { Dataframe } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
+import { Schema } from "../../../common/types/schema";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 const ANNO_BUTTON_WIDTH = 50;
 const LABEL_WIDTH_ANNO = LABEL_WIDTH - ANNO_BUTTON_WIDTH;
 
+interface PureCategoryProps {
+  metadataField: string;
+  colorMode: string;
+  categorySummary: any;
+  colorAccessor: string;
+  colorData: Dataframe | null;
+  categoryData: any;
+  isColorAccessor: boolean;
+  colorTable: any;
+  handleCategoryToggleAllClick: any;
+}
+
+type CategoryProps = PureCategoryProps & {
+  colors: any;
+  categoricalSelection: any;
+  annotations: any;
+  annoMatrix: any;
+  schema: Schema;
+  crossfilter: any;
+  isUserAnno: boolean;
+  genesets: any;
+};
+
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state, ownProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const schema = (state as any).annoMatrix?.schema;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
+@connect((state: RootState, ownProps: PureCategoryProps) => {
+  const schema = state.annoMatrix?.schema;
   const { metadataField } = ownProps;
   const isUserAnno = schema?.annotations?.obsByName[metadataField]?.writable;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const categoricalSelection = (state as any).categoricalSelection?.[
-    metadataField
-  ];
+  const categoricalSelection = state.categoricalSelection?.[metadataField];
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    colors: (state as any).colors,
+    colors: state.colors,
     categoricalSelection,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    annotations: (state as any).annotations,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    annoMatrix: (state as any).annoMatrix,
+    annotations: state.annotations,
+    annoMatrix: state.annoMatrix,
     schema,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    crossfilter: (state as any).obsCrossfilter,
+    crossfilter: state.obsCrossfilter,
     isUserAnno,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    genesets: (state as any).genesets.genesets,
+    genesets: state.genesets.genesets,
   };
 })
 class Category extends React.PureComponent {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
@@ -66,7 +79,7 @@ class Category extends React.PureComponent {
     metadataField: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categorySummary: any
-  ) {
+  ): string {
     // total number of categories in this dimension
     const totalCatCount = categorySummary.numCategoryValues;
     // number of selected options in this category
@@ -182,7 +195,8 @@ class Category extends React.PureComponent {
     [
       Dataframe,
       ReturnType<typeof createCategorySummaryFromDfCol>,
-      Dataframe | null
+      Dataframe | null,
+      string | null
     ]
   > {
     /*
@@ -215,7 +229,7 @@ class Category extends React.PureComponent {
       column,
       colSchema
     );
-    return [categoryData, categorySummary, colorData];
+    return [categoryData, categorySummary, colorData, colorMode];
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- - FIXME: disabled temporarily on migrate to TS.
@@ -225,7 +239,9 @@ class Category extends React.PureComponent {
     const { schema, colors, metadataField } = this.props;
     const { colorAccessor, userColors, colorMode } = colors;
     return {
-      isColorAccessor: colorAccessor === metadataField,
+      isColorAccessor:
+        colorAccessor === metadataField &&
+        colorMode === "color by categorical metadata",
       colorAccessor,
       colorMode,
       colorTable: createColorTable(
@@ -266,8 +282,7 @@ class Category extends React.PureComponent {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
+  render(): JSX.Element {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
@@ -308,22 +323,16 @@ class Category extends React.PureComponent {
             )}
           </Async.Rejected>
           <Async.Fulfilled persist>
-            {(asyncProps) => {
+            {(asyncProps: CategoryProps) => {
               const {
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'u... Remove this comment to see the full error message
                 colorAccessor,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type 'unkn... Remove this comment to see the full error message
                 colorTable,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type 'unkno... Remove this comment to see the full error message
                 colorData,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type 'un... Remove this comment to see the full error message
                 categoryData,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
                 categorySummary,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
                 isColorAccessor,
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCategoryToggleAllClick' does not e... Remove this comment to see the full error message
                 handleCategoryToggleAllClick,
+                colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
               return (
@@ -344,6 +353,7 @@ class Category extends React.PureComponent {
                   onCategoryToggleAllClick={handleCategoryToggleAllClick}
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
+                  colorMode={colorMode}
                 />
               );
             }}
@@ -384,29 +394,32 @@ const ErrorLoading = ({ metadataField, error }: any) => {
   );
 };
 
+interface CategoryHeaderProps {
+  metadataField: any;
+  checkboxID: any;
+  isUserAnno: boolean;
+  isColorAccessor: boolean;
+  isExpanded: boolean;
+  selectionState: any;
+  onColorChangeClick: any;
+  onCategoryMenuClick: any;
+  onCategoryMenuKeyPress: any;
+  onCategoryToggleAllClick: any;
+}
+
 const CategoryHeader = React.memo(
   ({
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
     metadataField,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'checkboxID' does not exist on type '{ ch... Remove this comment to see the full error message
     checkboxID,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type '{ ch... Remove this comment to see the full error message
     isUserAnno,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
     isColorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isExpanded' does not exist on type '{ ch... Remove this comment to see the full error message
     isExpanded,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionState' does not exist on type '... Remove this comment to see the full error message
     selectionState,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onColorChangeClick' does not exist on ty... Remove this comment to see the full error message
     onColorChangeClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuClick' does not exist on t... Remove this comment to see the full error message
     onCategoryMenuClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuKeyPress' does not exist o... Remove this comment to see the full error message
     onCategoryMenuKeyPress,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
-  }) => {
+  }: CategoryHeaderProps) => {
     /*
     Render category name and controls (eg, color-by button).
     */
@@ -549,6 +562,8 @@ const CategoryRender = React.memo(
     onCategoryMenuKeyPress,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist... Remove this comment to see the full error message
+    colorMode,
   }) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
@@ -582,7 +597,6 @@ const CategoryRender = React.memo(
           }}
         >
           <CategoryHeader
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; checkboxID: any; isUse... Remove this comment to see the full error message
             metadataField={metadataField}
             checkboxID={checkboxID}
             isUserAnno={isUserAnno}
@@ -600,7 +614,6 @@ const CategoryRender = React.memo(
             /* values*/
             isExpanded ? (
               <CategoryValueList
-                // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
                 isUserAnno={isUserAnno}
                 metadataField={metadataField}
                 categoryData={categoryData}
@@ -608,6 +621,7 @@ const CategoryRender = React.memo(
                 colorAccessor={colorAccessor}
                 colorData={colorData}
                 colorTable={colorTable}
+                colorMode={colorMode}
               />
             ) : null
           }
@@ -617,23 +631,27 @@ const CategoryRender = React.memo(
   }
 );
 
+interface CategoryValueListProps {
+  isUserAnno: boolean;
+  metadataField: any;
+  categoryData: any;
+  categorySummary: any;
+  colorAccessor: string;
+  colorData: any;
+  colorTable: any;
+  colorMode: string;
+}
 const CategoryValueList = React.memo(
   ({
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type '{ ch... Remove this comment to see the full error message
     isUserAnno,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
     metadataField,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type '{ ... Remove this comment to see the full error message
     categoryData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
     categorySummary,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type '{... Remove this comment to see the full error message
     colorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type '{ chi... Remove this comment to see the full error message
     colorData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
-  }) => {
+    colorMode,
+  }: CategoryValueListProps) => {
     const tuples = [...categorySummary.categoryValueIndices];
 
     /*
@@ -646,7 +664,7 @@ const CategoryValueList = React.memo(
           {tuples.map(([value, index]) => (
             <Value
               key={value}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; isUserAnno: any; metadataField: ... Remove this comment to see the full error message
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}
@@ -655,6 +673,7 @@ const CategoryValueList = React.memo(
               colorAccessor={colorAccessor}
               colorData={colorData}
               colorTable={colorTable}
+              colorMode={colorMode}
             />
           ))}
         </>
@@ -677,6 +696,7 @@ const CategoryValueList = React.memo(
               colorAccessor={colorAccessor}
               colorData={colorData}
               colorTable={colorTable}
+              colorMode={colorMode}
             />
           </Flipped>
         ))}
