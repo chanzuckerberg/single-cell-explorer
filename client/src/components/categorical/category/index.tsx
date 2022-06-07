@@ -614,7 +614,6 @@ const CategoryRender = React.memo(
             /* values*/
             isExpanded ? (
               <CategoryValueList
-                // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
                 isUserAnno={isUserAnno}
                 metadataField={metadataField}
                 categoryData={categoryData}
