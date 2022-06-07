@@ -51,6 +51,11 @@ interface PureCategoryValueProps {
   colorMode: string;
   categoryIndex: string;
   categorySummary: any;
+  colorAccessor: string;
+  colorTable: any;
+  colorData: any;
+  categoryData: any;
+  isUserAnno: boolean;
 }
 
 type CategoryValueProps = PureCategoryValueProps & {
@@ -58,16 +63,11 @@ type CategoryValueProps = PureCategoryValueProps & {
   schema: Schema;
   isDilated: boolean;
   isSelected: boolean;
-  colorAccessor: string;
   label: string;
-  colorTable: any;
-  isUserAnno: boolean;
-  colorData: any;
-  categoryData: any;
 };
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState, ownProps: PureCategoryValueProps) => {
+@connect(((state: RootState, ownProps: PureCategoryValueProps) => {
   const { pointDilation, categoricalSelection } = state;
   const { metadataField, categorySummary, categoryIndex } = ownProps;
   const isDilated =
@@ -85,10 +85,12 @@ type CategoryValueProps = PureCategoryValueProps & {
     isSelected,
     label,
   };
-})
+}) as any)
 // TODO: type categorySummary
-class CategoryValue extends React.Component<CategoryValueProps, State> {
-  constructor(props: CategoryValueProps) {
+// eslint-disable-next-line @typescript-eslint/ban-types --- issue with redux typing
+class CategoryValue extends React.Component<{}, State> {
+  // eslint-disable-next-line @typescript-eslint/ban-types --- issue with redux typing
+  constructor(props: {}) {
     super(props);
     this.state = {
       editedLabelText: this.currentLabelAsString(),
@@ -96,8 +98,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
   }
 
   componentDidUpdate(prevProps: CategoryValueProps): void {
-    const { metadataField, categoryIndex, categorySummary, colorMode } =
-      this.props;
+    const { metadataField, categoryIndex, categorySummary, colorMode } = this
+      .props as CategoryValueProps;
     if (
       prevProps.metadataField !== metadataField ||
       prevProps.colorMode !== colorMode ||
@@ -161,8 +163,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   labelNameError = (name: any) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
-    const { metadataField, schema } = this.props;
+    const { metadataField, schema } = this.props as CategoryValueProps;
     if (name === this.currentLabelAsString()) return false;
     return isLabelErroneous(name, metadataField, schema);
   };
@@ -174,7 +175,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   activateEditLabelMode = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
+    const { dispatch, metadataField, categoryIndex, label } = this
+      .props as CategoryValueProps;
     dispatch({
       type: "annotation: activate edit label mode",
       metadataField,
@@ -186,7 +188,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   cancelEditMode = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
+    const { dispatch, metadataField, categoryIndex, label } = this
+      .props as CategoryValueProps;
     this.setState({
       editedLabelText: this.currentLabelAsString(),
     });
@@ -208,7 +211,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
       metadataField,
       categoryIndex,
       categorySummary,
-    } = this.props;
+    } = this.props as CategoryValueProps;
 
     const label = categorySummary.categoryValues[categoryIndex];
     dispatch(
@@ -236,7 +239,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
 
     If and only if true, update the component
     */
-    const { props, state } = this;
+    const { state } = this;
+    const props = this.props as CategoryValueProps;
     const { categoryIndex, categorySummary, isSelected } = props;
     const {
       categoryIndex: newCategoryIndex,
@@ -289,7 +293,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
       metadataField,
       categoryIndex,
       categorySummary,
-    } = this.props;
+    } = this.props as CategoryValueProps;
     const label = categorySummary.categoryValues[categoryIndex];
     dispatch(
       actions.selectCategoricalMetadataAction(
@@ -305,7 +309,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleMouseEnter = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
+    const { dispatch, metadataField, categoryIndex, label } = this
+      .props as CategoryValueProps;
     dispatch({
       type: "category value mouse hover start",
       metadataField,
@@ -317,7 +322,8 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleMouseExit = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
+    const { dispatch, metadataField, categoryIndex, label } = this
+      .props as CategoryValueProps;
     dispatch({
       type: "category value mouse hover end",
       metadataField,
@@ -450,7 +456,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
     1. no cells are selected
     2. all currently selected cells already have this label, on this category
     */
-    const { categoryData } = this.props;
+    const { categoryData } = this.props as CategoryValueProps;
 
     // 1. no cells selected?
     if (crossfilter.countSelected() === 0) {
@@ -477,7 +483,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
       schema,
       label,
       colorMode,
-    } = this.props;
+    } = this.props as CategoryValueProps;
     const isColorBy =
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
@@ -533,7 +539,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
       schema,
       label,
       colorMode,
-    } = this.props;
+    } = this.props as CategoryValueProps;
     const colorScale = colorTable?.scale;
 
     if (
@@ -590,7 +596,7 @@ class CategoryValue extends React.Component<CategoryValueProps, State> {
       categorySummary,
       label,
       colorMode,
-    } = this.props;
+    } = this.props as CategoryValueProps;
     const colorScale = colorTable?.scale;
 
     const { editedLabelText } = this.state;

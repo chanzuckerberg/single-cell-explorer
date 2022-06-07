@@ -597,7 +597,6 @@ const CategoryRender = React.memo(
           }}
         >
           <CategoryHeader
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; checkboxID: any; isUse... Remove this comment to see the full error message
             metadataField={metadataField}
             checkboxID={checkboxID}
             isUserAnno={isUserAnno}
@@ -633,24 +632,27 @@ const CategoryRender = React.memo(
   }
 );
 
+interface CategoryValueListProps {
+  isUserAnno: boolean;
+  metadataField: any;
+  categoryData: any;
+  categorySummary: any;
+  colorAccessor: string;
+  colorData: any;
+  colorTable: any;
+  colorMode: string;
+}
 const CategoryValueList = React.memo(
   ({
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type '{ ch... Remove this comment to see the full error message
     isUserAnno,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
     metadataField,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type '{ ... Remove this comment to see the full error message
     categoryData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
     categorySummary,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type '{... Remove this comment to see the full error message
     colorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type '{ chi... Remove this comment to see the full error message
     colorData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
     colorMode,
-  }) => {
+  }: CategoryValueListProps) => {
     const tuples = [...categorySummary.categoryValueIndices];
 
     /*
@@ -663,7 +665,7 @@ const CategoryValueList = React.memo(
           {tuples.map(([value, index]) => (
             <Value
               key={value}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; isUserAnno: any; metadataField: ... Remove this comment to see the full error message
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}
