@@ -455,7 +455,7 @@ class SomaDataset(Dataset):
 
         df = X.dim_select(None, var_ids)
         df.reset_index(inplace=True)
-        coo = tiledbsc.util._X_and_ids_to_coo(df, 'obs_id', 'var_id', 'value', obs.ids(), var.ids())
+        coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var.ids())
         mean = coo.mean(axis=1).A
 
 
@@ -493,8 +493,10 @@ class SomaDataset(Dataset):
 
         df = X.dim_select(None, var_ids)
         df.reset_index(inplace=True)
-        coo = tiledbsc.util._X_and_ids_to_coo(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
+        coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
         mat = coo.todense().A
+
+        print(f"--- for {filter} mat is ", mat, mat.shape)
         
 
 

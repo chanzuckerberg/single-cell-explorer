@@ -254,5 +254,6 @@ export function matrixFBSToDataframe(
   const nCols = columns.length;
 
   const df = new Dataframe([nRows, nCols], columns, null, new KeyIndex(colIdx));
+  console.log({ df });
   return df;
 }
