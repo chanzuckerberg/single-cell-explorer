@@ -106,7 +106,9 @@ class Graph extends React.Component<{}, GraphState> {
     const drawPoints = _drawPoints(regl);
     // preallocate webgl buffers
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    const pointBuffer = regl.buffer();
+    const pointBufferStart = regl.buffer();
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
+    const pointBufferEnd = regl.buffer();
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const colorBuffer = regl.buffer();
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
@@ -115,7 +117,8 @@ class Graph extends React.Component<{}, GraphState> {
       camera,
       regl,
       drawPoints,
-      pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
       colorBuffer,
       flagBuffer,
     };
@@ -128,6 +131,9 @@ class Graph extends React.Component<{}, GraphState> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   cachedAsyncProps: any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  duration: any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   reglCanvas: any;
@@ -236,6 +242,7 @@ class Graph extends React.Component<{}, GraphState> {
     const viewport = this.getViewportDimensions();
     this.reglCanvas = null;
     this.cachedAsyncProps = null;
+    this.duration = 0;
     const modelTF = createModelTF();
     this.state = {
       toolSVG: null,
@@ -251,7 +258,8 @@ class Graph extends React.Component<{}, GraphState> {
       // regl state
       regl: null,
       drawPoints: null,
-      pointBuffer: null,
+      pointBufferStart: null,
+      pointBufferEnd: null,
       colorBuffer: null,
       flagBuffer: null,
       // component rendering derived state - these must stay synchronized
@@ -353,6 +361,7 @@ class Graph extends React.Component<{}, GraphState> {
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
     if (camera.handleEvent(e, projectionTF)) {
+      this.duration = 0;
       this.renderCanvas();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       this.setState((state: any) => ({
@@ -621,6 +630,7 @@ class Graph extends React.Component<{}, GraphState> {
       flags,
       width,
       height,
+      layoutChoice,
     };
   };
 
@@ -786,7 +796,8 @@ class Graph extends React.Component<{}, GraphState> {
       regl,
       drawPoints,
       colorBuffer,
-      pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
       flagBuffer,
       camera,
       projectionTF,
@@ -795,7 +806,9 @@ class Graph extends React.Component<{}, GraphState> {
       regl,
       drawPoints,
       colorBuffer,
-      pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
+      this.duration,
       flagBuffer,
       camera,
       projectionTF
@@ -804,15 +817,33 @@ class Graph extends React.Component<{}, GraphState> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   updateReglAndRender(asyncProps: any, prevAsyncProps: any) {
-    const { positions, colors, flags, height, width } = asyncProps;
+    const {
+      positions: positionsEnd,
+      colors,
+      flags,
+      height,
+      width,
+      layoutChoice,
+    } = asyncProps;
+    const positionsStart = prevAsyncProps?.positions ?? positionsEnd;
+    const prevLayoutChoice = prevAsyncProps?.layoutChoice;
+    this.duration =
+      layoutChoice.current !== prevLayoutChoice?.current &&
+      prevAsyncProps?.positions
+        ? globals.animationLength
+        : 0;
+
     this.cachedAsyncProps = asyncProps;
-    const { pointBuffer, colorBuffer, flagBuffer } = this.state;
+    const { pointBufferStart, pointBufferEnd, colorBuffer, flagBuffer } =
+      this.state;
+
     let needToRenderCanvas = false;
     if (height !== prevAsyncProps?.height || width !== prevAsyncProps?.width) {
       needToRenderCanvas = true;
     }
-    if (positions !== prevAsyncProps?.positions) {
-      pointBuffer({ data: positions, dimension: 2 });
+    if (positionsEnd !== prevAsyncProps?.positions) {
+      pointBufferStart({ data: positionsStart, dimension: 2 });
+      pointBufferEnd({ data: positionsEnd, dimension: 2 });
       needToRenderCanvas = true;
     }
     if (colors !== prevAsyncProps?.colors) {
@@ -869,7 +900,11 @@ class Graph extends React.Component<{}, GraphState> {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     colorBuffer: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    pointBuffer: any,
+    pointBufferStart: any,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    pointBufferEnd: any,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    duration: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     flagBuffer: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -884,20 +919,34 @@ class Graph extends React.Component<{}, GraphState> {
     const cameraTF = camera.view();
     const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
     const { width, height } = this.reglCanvas;
-    regl.poll();
-    regl.clear({
-      depth: 1,
-      color: [1, 1, 1, 1],
-    });
-    drawPoints({
-      distance: camera.distance(),
-      color: colorBuffer,
-      position: pointBuffer,
-      flag: flagBuffer,
-      count: annoMatrix.nObs,
-      projView,
-      nPoints: schema.dataframe.nObs,
-      minViewportDimension: Math.min(width, height),
+
+    let startTime: number;
+    const frameLoop = regl.frame(async (props: { time: number }) => {
+      const { time } = props;
+      if (!startTime) {
+        startTime = time;
+      }
+      regl.clear({
+        depth: 1,
+        color: [1, 1, 1, 1],
+      });
+      drawPoints({
+        distance: camera.distance(),
+        color: colorBuffer,
+        positionsStart: pointBufferStart,
+        positionsEnd: pointBufferEnd,
+        flag: flagBuffer,
+        count: annoMatrix.nObs,
+        projView,
+        nPoints: schema.dataframe.nObs,
+        minViewportDimension: Math.min(width, height),
+        duration,
+        startTime,
+      });
+
+      if (time - startTime > duration / 1000) {
+        frameLoop.cancel();
+      }
     });
     regl._gl.flush();
   }

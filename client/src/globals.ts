@@ -15,6 +15,8 @@ export const DATASET_MAX_CELL_COUNT = 2_000_000;
 /* Category name suffix used to determine if category name is ontology term id. */
 export const ONTOLOGY_KEY = "ontology_term_id";
 
+export const animationLength = 750;
+
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 

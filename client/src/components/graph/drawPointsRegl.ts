@@ -4,9 +4,22 @@ import { glPointFlags, glPointSize } from "../../util/glHelpers";
 export default function drawPointsRegl(regl: any) {
   return regl({
     vert: `
+    float easeCubicInOut(float t) {
+      t *= 2.0;
+      t = (t <= 1.0 ? t * t * t : (t -= 2.0) * t * t + 2.0) / 2.0;
+
+      if (t > 1.0) {
+        t = 1.0;
+      }
+
+      return t;
+    }
+
     precision mediump float;
 
-    attribute vec2 position;
+    attribute vec2 positionsStart;
+    attribute vec2 positionsEnd;
+
     attribute vec3 color;
     attribute float flag;
 
@@ -14,6 +27,8 @@ export default function drawPointsRegl(regl: any) {
     uniform mat3 projView;
     uniform float nPoints;
     uniform float minViewportDimension;
+    uniform float duration;
+    uniform float elapsed;    
 
     varying lowp vec4 fragColor;
 
@@ -28,6 +43,14 @@ export default function drawPointsRegl(regl: any) {
     ${glPointSize}
 
     void main() {
+      float t;
+      if (duration == 0.0) {
+        t = 1.0;
+      } else {
+        t = easeCubicInOut(elapsed / duration);
+      }
+
+
       bool isBackground, isSelected, isHighlight;
       getFlags(flag, isBackground, isSelected, isHighlight);
 
@@ -35,6 +58,14 @@ export default function drawPointsRegl(regl: any) {
       gl_PointSize = size * pow(distance, 0.5);
 
       float z = isBackground ? zBottom : (isHighlight ? zTop : zMiddle);
+
+      vec2 position;
+      if (t >= 1.0) {
+        position = positionsEnd;
+      } else {
+        position = mix(positionsStart, positionsEnd, t);        
+      }
+
       vec3 xy = projView * vec3(position, 1.);
       gl_Position = vec4(xy.xy, z, 1.);
 
@@ -53,7 +84,8 @@ export default function drawPointsRegl(regl: any) {
     }`,
 
     attributes: {
-      position: regl.prop("position"),
+      positionsStart: regl.prop("positionsStart"),
+      positionsEnd: regl.prop("positionsEnd"),
       color: regl.prop("color"),
       flag: regl.prop("flag"),
     },
@@ -62,7 +94,10 @@ export default function drawPointsRegl(regl: any) {
       distance: regl.prop("distance"),
       projView: regl.prop("projView"),
       nPoints: regl.prop("nPoints"),
+      duration: regl.prop("duration"),
       minViewportDimension: regl.prop("minViewportDimension"),
+      elapsed: ({ time }: { time: number }, { startTime = 0 }) =>
+        (time - startTime) * 1000,
     },
 
     count: regl.prop("count"),
