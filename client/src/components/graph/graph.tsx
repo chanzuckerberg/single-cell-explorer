@@ -842,7 +842,10 @@ class Graph extends React.Component<{}, GraphState> {
       needToRenderCanvas = true;
     }
     if (positionsEnd !== prevAsyncProps?.positions) {
-      pointBufferStart({ data: positionsStart, dimension: 2 });
+      pointBufferStart({
+        data: this.duration === 0 ? positionsEnd : positionsStart,
+        dimension: 2,
+      });
       pointBufferEnd({ data: positionsEnd, dimension: 2 });
       needToRenderCanvas = true;
     }
