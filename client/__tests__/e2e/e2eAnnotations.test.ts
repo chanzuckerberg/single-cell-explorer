@@ -1,14 +1,12 @@
 /*
 Tests included in this file are specific to annotation features
 */
-import { appUrlBase, DATASET } from "./config";
-import { datasets } from "./data";
+import { appUrlBase } from "./config";
 
 import {
   clickOn,
   goToPage,
   waitByClass,
-  waitByID,
   getTestId,
   getTestClass,
   getAllByClass,
@@ -17,16 +15,11 @@ import {
 } from "./puppeteerUtils";
 
 import {
-  assertCategoryDoesNotExist,
   calcDragCoordinates,
   createCategory,
   createLabel,
-  deleteCategory,
-  deleteLabel,
   drag,
   expandCategory,
-  renameCategory,
-  renameLabel,
   subset,
   duplicateCategory,
   createGeneset,
@@ -45,8 +38,6 @@ import {
   assertColorLegendLabel,
   colorByGene,
 } from "./cellxgeneActions";
-
-const data = datasets[DATASET];
 
 const perTestCategoryName = "TEST-CATEGORY";
 const perTestLabelName = "TEST-LABEL";
@@ -299,65 +290,6 @@ describe.each([
   { withSubset: true, tag: "subset", categoricalAnno: true },
   { withSubset: false, tag: "whole", categoricalAnno: true },
 ])("annotations", (config) => {
-  test("create a category", async () => {
-    await setup(config);
-
-    const categoryName = `category-created-${config.tag}`;
-
-    await assertCategoryDoesNotExist(categoryName);
-
-    await createCategory(categoryName);
-
-    await assertCategoryExists(categoryName);
-  });
-
-  test("delete a category", async () => {
-    await setup(config);
-
-    await deleteCategory(perTestCategoryName);
-    await assertCategoryDoesNotExist(perTestCategoryName);
-  });
-
-  test("rename a category", async () => {
-    await setup(config);
-
-    const newCategoryName = `NEW-${config.tag}`;
-
-    await renameCategory(perTestCategoryName, newCategoryName);
-    await assertCategoryDoesNotExist(perTestCategoryName);
-    await assertCategoryExists(newCategoryName);
-  });
-
-  test("create a label", async () => {
-    await setup(config);
-
-    const labelName = `new-label-${config.tag}`;
-
-    await assertLabelDoesNotExist(perTestCategoryName, labelName);
-
-    await createLabel(perTestCategoryName, labelName);
-
-    await assertLabelExists(perTestCategoryName, labelName);
-  });
-
-  test("delete a label", async () => {
-    await setup(config);
-
-    await deleteLabel(perTestCategoryName, perTestLabelName);
-    await assertLabelDoesNotExist(perTestCategoryName, perTestLabelName);
-  });
-
-  test("rename a label", async () => {
-    await setup(config);
-
-    const newLabelName = "my-cool-new-label";
-
-    await assertLabelDoesNotExist(perTestCategoryName, newLabelName);
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    await assertLabelDoesNotExist(perTestCategoryName, perTestLabelName);
-    await assertLabelExists(perTestCategoryName, newLabelName);
-  });
-
   test("check cell count for a label loaded from file", async () => {
     await setup(config);
 
@@ -415,125 +347,6 @@ describe.each([
     }
   });
 
-  test("assign cells to a label", async () => {
-    await setup(config);
-
-    await expandCategory(perTestCategoryName);
-
-    const lassoSelection = await calcDragCoordinates(
-      "layout-graph",
-      data.categoryLabel.lasso["coordinates-as-percent"]
-    );
-
-    await drag("layout-graph", lassoSelection.start, lassoSelection.end, true);
-    await waitByID("lasso-element", { visible: true });
-    await clickOn(`${perTestCategoryName}:${perTestLabelName}:see-actions`);
-    await clickOn(
-      `${perTestCategoryName}:${perTestLabelName}:add-current-selection-to-this-label`
-    );
-
-    const result = await waitByID(
-      `categorical-value-count-${perTestCategoryName}-${perTestLabelName}`
-    );
-
-    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-    expect(await result.evaluate((node) => node.innerText)).toBe(
-      // @ts-expect-error ts-migrate(2538) FIXME: Type 'boolean' cannot be used as an index type.
-      data.categoryLabel.newCount.bySubsetConfig[config.withSubset]
-    );
-  });
-
-  test("undo/redo category creation", async () => {
-    await setup(config);
-
-    const categoryName = `category-created-undo-${config.tag}`;
-
-    await assertCategoryDoesNotExist(categoryName);
-    await createCategory(categoryName);
-    await assertCategoryExists(categoryName);
-    await clickOn("undo");
-    await assertCategoryDoesNotExist(categoryName);
-    await clickOn("redo");
-    await assertCategoryExists(categoryName);
-  });
-
-  test("undo/redo category deletion", async () => {
-    await setup(config);
-
-    const categoryName = `category-deleted-undo-${config.tag}`;
-
-    await createCategory(categoryName);
-    await assertCategoryExists(categoryName);
-    await deleteCategory(categoryName);
-    await assertCategoryDoesNotExist(categoryName);
-    await clickOn("undo");
-    await assertCategoryExists(categoryName);
-    await clickOn("redo");
-    await assertCategoryDoesNotExist(categoryName);
-  });
-
-  test("undo/redo category rename", async () => {
-    await setup(config);
-
-    const newCategoryName = `category-renamed-undo-${config.tag}`;
-
-    await assertCategoryDoesNotExist(newCategoryName);
-    await renameCategory(perTestCategoryName, newCategoryName);
-    await assertCategoryExists(newCategoryName);
-    await assertCategoryDoesNotExist(perTestCategoryName);
-    await clickOn("undo");
-    await assertCategoryExists(perTestCategoryName);
-    await assertCategoryDoesNotExist(newCategoryName);
-    await clickOn("redo");
-    await assertCategoryExists(newCategoryName);
-    await assertCategoryDoesNotExist(perTestCategoryName);
-  });
-
-  test("undo/redo label creation", async () => {
-    await setup(config);
-
-    const labelName = `label-created-undo-${config.tag}`;
-
-    await assertLabelDoesNotExist(perTestCategoryName, labelName);
-    await createLabel(perTestCategoryName, labelName);
-    await assertLabelExists(perTestCategoryName, labelName);
-    await clickOn("undo");
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-    await assertLabelDoesNotExist(perTestCategoryName);
-    await clickOn("redo");
-    await assertLabelExists(perTestCategoryName, labelName);
-  });
-
-  test("undo/redo label deletion", async () => {
-    await setup(config);
-
-    await deleteLabel(perTestCategoryName, perTestLabelName);
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-    await assertLabelDoesNotExist(perTestCategoryName);
-    await clickOn("undo");
-    await assertLabelExists(perTestCategoryName, perTestLabelName);
-    await clickOn("redo");
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-    await assertLabelDoesNotExist(perTestCategoryName);
-  });
-
-  test("undo/redo label rename", async () => {
-    await setup(config);
-
-    const newLabelName = `label-renamed-undo-${config.tag}`;
-
-    await assertLabelDoesNotExist(perTestCategoryName, newLabelName);
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    await assertLabelExists(perTestCategoryName, newLabelName);
-    await assertLabelDoesNotExist(perTestCategoryName, perTestLabelName);
-    await clickOn("undo");
-    await assertLabelExists(perTestCategoryName, perTestLabelName);
-    await assertLabelDoesNotExist(perTestCategoryName, newLabelName);
-    await clickOn("redo");
-    await assertLabelExists(perTestCategoryName, newLabelName);
-    await assertLabelDoesNotExist(perTestCategoryName, perTestLabelName);
-  });
-
   test("stacked bar graph renders", async () => {
     await setup(config);
 
@@ -551,65 +364,4 @@ describe.each([
 
     expect(result).toMatchSnapshot();
   });
-
-  test("truncate midpoint whitespace", async () => {
-    await setup(config);
-    const newLabelName = "123 456";
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
-    expect(result).toMatchSnapshot();
-  });
-
-  test("truncate single character", async () => {
-    await setup(config);
-    const newLabelName = "T";
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
-    expect(result).toMatchSnapshot();
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertCategoryExists(categoryName: any) {
-    const handle = await waitByID(`${categoryName}:category-label`);
-
-    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-    const result = await handle.evaluate((node) =>
-      node.getAttribute("aria-label")
-    );
-
-    return expect(result).toBe(categoryName);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertLabelExists(categoryName: any, labelName: any) {
-    await expect(page).toMatchElement(
-      getTestId(`${categoryName}:category-expand`)
-    );
-
-    await expandCategory(categoryName);
-
-    const previous = await waitByID(
-      `categorical-value-${categoryName}-${labelName}`
-    );
-
-    expect(
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-      await previous.evaluate((node) => node.getAttribute("aria-label"))
-    ).toBe(labelName);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertLabelDoesNotExist(categoryName: any, labelName: any) {
-    await expandCategory(categoryName);
-    const result = await page.$(
-      `[data-testid='categorical-value-${categoryName}-${labelName}']`
-    );
-    expect(result).toBeNull();
-  }
 });
