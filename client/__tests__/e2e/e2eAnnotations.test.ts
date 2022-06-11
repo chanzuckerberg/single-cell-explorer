@@ -1,8 +1,7 @@
 /*
 Tests included in this file are specific to annotation features
 */
-import { appUrlBase, DATASET } from "./config";
-import { datasets } from "./data";
+import { appUrlBase } from "./config";
 
 import {
   clickOn,
@@ -17,15 +16,11 @@ import {
 } from "./puppeteerUtils";
 
 import {
-  assertCategoryDoesNotExist,
   calcDragCoordinates,
   createCategory,
   createLabel,
-  deleteCategory,
-  deleteLabel,
   drag,
   expandCategory,
-  renameCategory,
   renameLabel,
   subset,
   duplicateCategory,
@@ -45,8 +40,6 @@ import {
   assertColorLegendLabel,
   colorByGene,
 } from "./cellxgeneActions";
-
-const data = datasets[DATASET];
 
 const perTestCategoryName = "TEST-CATEGORY";
 const perTestLabelName = "TEST-LABEL";
@@ -373,65 +366,4 @@ describe.each([
 
     expect(result).toMatchSnapshot();
   });
-
-  test("truncate midpoint whitespace", async () => {
-    await setup(config);
-    const newLabelName = "123 456";
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
-    expect(result).toMatchSnapshot();
-  });
-
-  test("truncate single character", async () => {
-    await setup(config);
-    const newLabelName = "T";
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
-    expect(result).toMatchSnapshot();
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertCategoryExists(categoryName: any) {
-    const handle = await waitByID(`${categoryName}:category-label`);
-
-    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-    const result = await handle.evaluate((node) =>
-      node.getAttribute("aria-label")
-    );
-
-    return expect(result).toBe(categoryName);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertLabelExists(categoryName: any, labelName: any) {
-    await expect(page).toMatchElement(
-      getTestId(`${categoryName}:category-expand`)
-    );
-
-    await expandCategory(categoryName);
-
-    const previous = await waitByID(
-      `categorical-value-${categoryName}-${labelName}`
-    );
-
-    expect(
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-      await previous.evaluate((node) => node.getAttribute("aria-label"))
-    ).toBe(labelName);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  async function assertLabelDoesNotExist(categoryName: any, labelName: any) {
-    await expandCategory(categoryName);
-    const result = await page.$(
-      `[data-testid='categorical-value-${categoryName}-${labelName}']`
-    );
-    expect(result).toBeNull();
-  }
 });
