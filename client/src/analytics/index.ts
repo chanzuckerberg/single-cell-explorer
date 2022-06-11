@@ -15,6 +15,6 @@ export function track(event: EVENTS, props?: Record<string, unknown>): void {
   try {
     window.plausible(event, options);
   } catch (error) {
-    console.error(error);
+    // console.error(error);
   }
 }
