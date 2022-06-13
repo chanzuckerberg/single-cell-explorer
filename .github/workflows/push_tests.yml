@@ -103,7 +103,3 @@ jobs:
         run: |
           cd client && make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
-      - name: Smoke tests (with annotations feature)
-        run: |
-          cd client && make smoke-test-annotations
-          ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
