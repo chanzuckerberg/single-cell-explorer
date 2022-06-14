@@ -31,6 +31,9 @@ type State = any;
     isScatterplotYYaccessor:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (state as any).controls.scatterplotYYaccessor === gene,
+    userDefinedGenes:
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+      (state as any).controls.userDefinedGenes,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -46,9 +49,13 @@ class Gene extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   onColorChangeClick = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene } = this.props;
+    const { dispatch, gene, userDefinedGenes } = this.props;
 
     track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
+
+    if (userDefinedGenes.includes(gene)) {
+      track(EVENTS.EXPLORER_ADD_GENE_AND_COLORBY);
+    }
 
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
   };

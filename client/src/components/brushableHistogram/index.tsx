@@ -55,6 +55,7 @@ const HEIGHT_MINI = 15 - MARGIN_MINI.TOP - MARGIN_MINI.BOTTOM;
     isColorAccessor:
       (state as any).colors.colorAccessor === field &&
       (state as any).colors.colorMode !== "color by categorical metadata",
+    userDefinedGenes: (state as any).controls.userDefinedGenes,
   };
 })
 class HistogramBrush extends React.PureComponent {
@@ -140,6 +141,8 @@ class HistogramBrush extends React.PureComponent {
         isUserDefined,
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
         isGeneSetSummary,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'userDefinedGenes' does not exist on type... Remove this comment to see the full error message
+        userDefinedGenes,
       } = this.props;
       const minAllowedBrushSize = 10;
       const smallAmountToAvoidInfiniteLoop = 0.1;
@@ -197,6 +200,10 @@ class HistogramBrush extends React.PureComponent {
       dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
+      track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
+      if (userDefinedGenes.includes(field)) {
+        track(EVENTS.EXPLORER_ADD_GENE_AND_SELECT_HISTOGRAM);
+      }
     };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
