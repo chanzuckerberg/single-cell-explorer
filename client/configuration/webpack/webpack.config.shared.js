@@ -4,6 +4,7 @@ const fs = require("fs");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require("webpack");
 const CopyPlugin = require("copy-webpack-plugin");
+const regenRuntime = require("regenerator-runtime");
 const SUPPORTED_BROWSERS_REGEX = require("./SUPPORTED_BROWSERS_REGEX");
 
 const src = path.resolve("src");
