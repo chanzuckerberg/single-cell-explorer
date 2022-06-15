@@ -8,8 +8,6 @@ import * as globals from "../../globals";
 import DynamicScatterplot from "../scatterplot/scatterplot";
 import TopLeftLogoAndTitle from "./topLeftLogoAndTitle";
 import Continuous from "../continuous/continuous";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
 
 /* Styles */
 export const STYLE_LEFT_SIDEBAR: CSSProperties = {
@@ -19,11 +17,6 @@ export const STYLE_LEFT_SIDEBAR: CSSProperties = {
   flexDirection: "column",
   height: "100%",
 };
-
-interface LeftSideBarProps {
-  scatterplotXXaccessor: any;
-  scatterplotYYaccessor: any;
-}
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
