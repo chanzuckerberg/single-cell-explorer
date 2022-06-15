@@ -277,13 +277,17 @@ class Scatterplot extends React.PureComponent<{}, State> {
       pointDilation,
     } = props.watchProps;
 
-    const [expressionXDf, expressionYDf, colorDf, pointDilationDf] =
-      await this.fetchData(
-        scatterplotXXaccessor,
-        scatterplotYYaccessor,
-        colorsProp,
-        pointDilation
-      );
+    const [expressionXDf, expressionYDf, colorDf, pointDilationDf]: [
+      Dataframe,
+      Dataframe,
+      Dataframe | null,
+      Dataframe | null
+    ] = await this.fetchData(
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
+      colorsProp,
+      pointDilation
+    );
     const colorTable = this.updateColorTable(colorsProp, colorDf);
 
     const xCol = expressionXDf.icol(0);
@@ -396,12 +400,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
           : Promise.resolve(null),
       ];
 
-    return Promise.all<
-      Dataframe,
-      Dataframe,
-      Dataframe | null,
-      Dataframe | null
-    >(promises);
+    return Promise.all(promises);
   }
 
   renderCanvas = renderThrottle(() => {

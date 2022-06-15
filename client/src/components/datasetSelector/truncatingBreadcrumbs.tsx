@@ -172,7 +172,6 @@ const TruncatingBreadcrumbs = React.memo<Props>(
 
     // Load of breadcrumbs can begin once fonts are loaded.
     useEffect(() => {
-      // @ts-expect-error --- fonts not currently implemented on document.
       document.fonts.ready.then(() => {
         setFontLoaded(true);
       });
