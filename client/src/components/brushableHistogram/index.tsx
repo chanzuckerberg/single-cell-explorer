@@ -88,6 +88,8 @@ class HistogramBrush extends React.PureComponent {
         field,
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type 'Readonly<... Remove this comment to see the full error message
         isObs,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserDefined' does not exist on type 'R... Remove this comment to see the full error message
+        isUserDefined,
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
         isGeneSetSummary,
       } = this.props;
@@ -138,8 +140,6 @@ class HistogramBrush extends React.PureComponent {
         isUserDefined,
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
         isGeneSetSummary,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'userDefinedGenes' does not exist on type... Remove this comment to see the full error message
-        userDefinedGenes,
       } = this.props;
       const minAllowedBrushSize = 10;
       const smallAmountToAvoidInfiniteLoop = 0.1;
