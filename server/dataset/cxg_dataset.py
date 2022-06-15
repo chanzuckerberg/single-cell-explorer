@@ -266,10 +266,13 @@ class CxgDataset(Dataset):
 
     def get_X_array(self, obs_mask=None, var_mask=None):
 
-        print("--- var_mask", var_mask)
+        print("--- var_mask", var_mask, var_mask.nonzero())
 
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
+
+        print("--- obs_items", obs_items)
+        print("--- var_items", var_items)
         if obs_items is None or var_items is None:
             # If either zero rows or zero columns were selected, return an empty 2d array.
             shape = self.get_shape()
@@ -279,8 +282,11 @@ class CxgDataset(Dataset):
 
         X = self.open_array("X")
 
+
         if X.schema.sparse:
             data = X.query(order="U").multi_index[obs_items, var_items]
+
+            print("--- data", data)
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
@@ -489,4 +495,6 @@ class CxgDataset(Dataset):
         X = self.get_X_array(obs_selector, var_selector)
         print("--- X", X, X.shape)
         col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+        print("--- col_idx", col_idx)
+
         return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)

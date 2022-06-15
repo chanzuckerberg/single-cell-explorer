@@ -284,6 +284,9 @@ class SomaDataset(Dataset):
             var_size = 0 if var_items is None else shape[1] if var_mask is None else np.count_nonzero(var_mask)
             return np.ndarray((obs_size, var_size))
 
+        print("--- var_items", var_items)
+        print("--- obs_items", obs_items)
+
 
 
         var_ids = var.df().iloc[var_items].index.tolist()
@@ -425,6 +428,29 @@ class SomaDataset(Dataset):
 
         return fbs
 
+    def ______summarize_var(self, method, filter, query_hash):
+        if method != "mean":
+            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
+
+        obs_selector, var_selector = self._filter_to_mask(filter)
+        if obs_selector is not None:
+            raise FilterError("filtering on obs unsupported")
+
+        # if no filter, just return zeros.  We don't have a use case
+        # for summarizing the entire X without a filter, and it would
+        # potentially be quite compute / memory intensive.
+        if var_selector is None or np.count_nonzero(var_selector) == 0:
+            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
+        else:
+            X = self.get_X_array(obs_selector, var_selector)
+            if sparse.issparse(X):
+                mean = X.mean(axis=1).A
+            else:
+                mean = X.mean(axis=1, keepdims=True)
+
+        col_idx = pd.Index([query_hash])
+        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+
     def summarize_var(self, method, filter, query_hash):
         if method != "mean":
             raise UnsupportedSummaryMethod("Unknown gene set summary method.")
@@ -455,7 +481,7 @@ class SomaDataset(Dataset):
 
         df = X.dim_select(None, var_ids)
         df.reset_index(inplace=True)
-        coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var.ids())
+        coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
         mean = coo.mean(axis=1).A
 
 
@@ -463,6 +489,40 @@ class SomaDataset(Dataset):
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+
+    def ______data_frame_to_fbs_matrix(self, filter, axis):
+        """
+        Retrieves data 'X' and returns in a flatbuffer Matrix.
+        :param filter: filter: dictionary with filter params
+        :param axis: string obs or var
+        :return: flatbuffer Matrix
+        Caveats:
+        * currently only supports access on VAR axis
+        * currently only supports filtering on VAR axis
+        """
+        if axis != Axis.VAR:
+            raise ValueError("Only VAR dimension access is supported")
+
+        try:
+            obs_selector, var_selector = self._filter_to_mask(filter)
+        except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
+            raise FilterError("Error parsing filter")
+
+        if obs_selector is not None:
+            raise FilterError("filtering on obs unsupported")
+
+        num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
+        if self.server_config.exceeds_limit("column_request_max", num_columns):
+            raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
+
+        print("---obs_selector", obs_selector)
+        print("---var_selector", var_selector)
+
+        X = self.get_X_array(obs_selector, var_selector)
+        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+        print("--- X", X, X.shape)
+        print("--- col_idx", col_idx)
+        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)
         
     def data_frame_to_fbs_matrix(self, filter, axis):
         """
@@ -513,5 +573,15 @@ class SomaDataset(Dataset):
         #     raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
 
         # X = self.get_X_array(obs_selector, var_selector)
-        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+
+        tdf = self.open_array("var").df()
+        tdf = tdf.reset_index()
+        z = tdf[tdf["feature_name"].isin(var_selector)] # TODO
+        col_idx = z.index.to_numpy()
+
+
+        print("--- X", mat, mat.shape)
+        print("--- col_idx", col_idx)
+
+
         return encode_matrix_fbs(mat, col_idx=col_idx, row_idx=None)
