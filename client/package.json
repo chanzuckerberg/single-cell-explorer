@@ -2,7 +2,7 @@
   "name": "cellxgene",
   "version": "0.17.0",
   "license": "MIT",
-  "description": "cellxgene is a web application for the interactive exploration of single cell sequence data.",
+  "description": "cellxgene is a web application for the interactive exploration of single cell data.",
   "repository": "https://github.com/chanzuckerberg/cellxgene",
   "scripts": {
     "build": "npm run clean && npm run create-supported-browsers-regex && webpack --config",
