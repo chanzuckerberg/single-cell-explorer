@@ -142,15 +142,19 @@ def discover_s3_region_name(uri):
     if protocol == "s3":
         bucket = urlparse(uri).netloc
         client = boto3.client("s3")
+        print("bucket, client", bucket, client)
         try:
             res = client.head_bucket(Bucket=bucket)
+            print("res", res)
         except botocore.exceptions.ClientError:
+            print('client error')
             return None
 
         region = res.get("ResponseMetadata", {}).get("HTTPHeaders", {}).get("x-amz-bucket-region")
+        print("region", region)
         if region:
             return region
         else:
             return None
-
+    print("protocol", protocol)
     return None
