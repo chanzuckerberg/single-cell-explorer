@@ -27,7 +27,6 @@ from os.path import basename, splitext
 import numpy as np
 import pandas as pd
 from scipy import sparse
-from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig
 from server.common.constants import Axis, XApproximateDistribution
@@ -148,19 +147,8 @@ class SomaDataset(Dataset):
         Return True if this looks like a valid CXG, False if not.  Just a quick/cheap
         test, not to be fully trusted.
         """
-        # TODO: rewrite
+        # TODO: needed?
         return True
-        # if not tiledb.object_type(url, ctx=CxgDataset.tiledb_ctx) == "group":
-        #     return False
-        # if not tiledb.object_type(path_join(url, "obs"), ctx=CxgDataset.tiledb_ctx) == "array":
-        #     return False
-        # if not tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) == "array":
-        #     return False
-        # if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array":
-        #     return False
-        # if not tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) == "group":
-        #     return False
-        # return True
 
     def has_array(self, name):
         a_type = tiledb.object_type(path_join(self.url, name), ctx=self.tiledb_ctx)
@@ -169,34 +157,6 @@ class SomaDataset(Dataset):
     def _validate_and_initialize(self):
         # TODO: any SOMA validations needed?
         pass
-        # title = None
-        # about = None
-        # corpora_props = None
-        # if self.has_array("cxg_group_metadata"):
-        #     # version >0
-        #     gmd = self.open_array("cxg_group_metadata")
-        #     cxg_version = gmd.meta["cxg_version"]
-        #     # version 0.1 used a malformed/shorthand semver string.
-        #     if cxg_version == "0.1" or cxg_version == "0.2.0":
-        #         cxg_properties = json.loads(gmd.meta["cxg_properties"])
-        #         title = cxg_properties.get("title", None)
-        #         about = cxg_properties.get("about", None)
-        #     if cxg_version == "0.2.0":
-        #         corpora_props = json.loads(gmd.meta["corpora"]) if "corpora" in gmd.meta else None
-        # else:
-        #     # version 0
-        #     cxg_version = "0.0"
-
-        # if cxg_version not in ["0.0", "0.1", "0.2.0"]:
-        #     raise DatasetAccessError(f"cxg matrix is not valid: {self.url}")
-        # if self.dataset_config.X_approximate_distribution == "auto":
-        #     raise ConfigurationError("X-approximate-distribution 'auto' mode unsupported.")
-        # self.X_approximate_distribution = self.dataset_config.X_approximate_distribution
-
-        # self.title = title
-        # self.about = about
-        # self.cxg_version = cxg_version
-        # self.corpora_props = corpora_props
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
@@ -262,6 +222,7 @@ class SomaDataset(Dataset):
         return ncoord, coordindices
 
     def get_X_array(self, obs_mask=None, var_mask=None):
+        raise NotImplementedError
 
         X = self.open_array("X")
         var = self.open_array("var")
@@ -284,25 +245,17 @@ class SomaDataset(Dataset):
         print("--- var_items", var_items)
         print("--- obs_items", obs_items)
 
-
-
         var_ids = var.df().iloc[var_items].index.tolist()
 
-        if True: # always a sparse matrix
-            print(obs_items, var_items)
-            # data = X.query(order="U").multi_index[obs_items, var_ids]
-            data = X["data"].dim_select(obs_items, var_ids)
+        print(obs_items, var_items)
+        data = X.data.dim_select(obs_items, var_ids)
 
-            nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
-            ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
-            densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
-            densedata[obsindices, varindices] = data[""]
+        nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
+        ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
+        densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
+        densedata[obsindices, varindices] = data[""]
 
-            return densedata
-
-        else:
-            data = X.multi_index[obs_items, var_items][""]
-            return data
+        return densedata
 
     def get_X_approximate_distribution(self) -> XApproximateDistribution:
         return self.X_approximate_distribution
@@ -329,24 +282,13 @@ class SomaDataset(Dataset):
         return data
 
     def get_obs_names(self):
-        # get the index from the meta data
-        obs = self.open_array("obs")
-        meta = json.loads(obs.meta["cxg_schema"])
-        index_name = meta["index"]
-        return index_name
+        raise NotImplementedError
 
     def get_obs_index(self):
-        obs = self.open_array("obs")
-        meta = json.loads(obs.meta["cxg_schema"])
-        index_name = meta["index"]
-        data = obs.query(attrs=[index_name])[:][index_name]
-        return data
+        raise NotImplementedError
 
     def get_obs_columns(self):
-        obs = self.open_array("obs")
-        schema = obs.schema
-        col_names = [attr.name for attr in schema]
-        return pd.Index(col_names)
+        raise NotImplementedError
 
     def get_obs_keys(self):
         return self._soma.obs.keys()
@@ -359,9 +301,6 @@ class SomaDataset(Dataset):
         return [key[2:] for key in obsm.keys()]
 
     def get_schema(self):
-        if self.schema:
-            return self.schema
-
         shape = self.get_shape()
         dtype = np.float32 # TODO: fix this
 
@@ -419,29 +358,6 @@ class SomaDataset(Dataset):
 
         return fbs
 
-    def ______summarize_var(self, method, filter, query_hash):
-        if method != "mean":
-            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
-
-        obs_selector, var_selector = self._filter_to_mask(filter)
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
-
-        # if no filter, just return zeros.  We don't have a use case
-        # for summarizing the entire X without a filter, and it would
-        # potentially be quite compute / memory intensive.
-        if var_selector is None or np.count_nonzero(var_selector) == 0:
-            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
-        else:
-            X = self.get_X_array(obs_selector, var_selector)
-            if sparse.issparse(X):
-                mean = X.mean(axis=1).A
-            else:
-                mean = X.mean(axis=1, keepdims=True)
-
-        col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
-
     def summarize_var(self, method, filter, query_hash):
         if method != "mean":
             raise UnsupportedSummaryMethod("Unknown gene set summary method.")
@@ -480,40 +396,6 @@ class SomaDataset(Dataset):
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
-
-    def ______data_frame_to_fbs_matrix(self, filter, axis):
-        """
-        Retrieves data 'X' and returns in a flatbuffer Matrix.
-        :param filter: filter: dictionary with filter params
-        :param axis: string obs or var
-        :return: flatbuffer Matrix
-        Caveats:
-        * currently only supports access on VAR axis
-        * currently only supports filtering on VAR axis
-        """
-        if axis != Axis.VAR:
-            raise ValueError("Only VAR dimension access is supported")
-
-        try:
-            obs_selector, var_selector = self._filter_to_mask(filter)
-        except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
-            raise FilterError("Error parsing filter")
-
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
-
-        num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
-        if self.server_config.exceeds_limit("column_request_max", num_columns):
-            raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
-
-        print("---obs_selector", obs_selector)
-        print("---var_selector", var_selector)
-
-        X = self.get_X_array(obs_selector, var_selector)
-        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
-        print("--- X", X, X.shape)
-        print("--- col_idx", col_idx)
-        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)
         
     def data_frame_to_fbs_matrix(self, filter, axis):
         """
