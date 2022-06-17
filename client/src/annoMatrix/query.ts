@@ -139,6 +139,7 @@ export function _urlEncodeComplexQuery(q: ComplexQuery): string {
 }
 
 export function _urlEncodeLabelQuery(colKey: string, q: Query): string {
+  console.log("Validating query", { q });
   if (!colKey) throw new Error("Unsupported query by name");
   if (typeof q !== "string") throw new Error("Query must be a simple label.");
   return `${colKey}=${encodeURIComponent(q)}`;
