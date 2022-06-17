@@ -68,7 +68,7 @@ module explorer_service {
   memory            = var.memory
   cmd               = local.explorer_cmd
   deployment_stage  = local.deployment_stage
-  health_check_path = "/cellxgene/health"
+  health_check_path = "/"
   host_match        = try(join(".", [module.explorer_dns[0].dns_prefix, local.external_dns]), "")
   priority          = local.priority
   api_url           = local.frontend_url
