@@ -362,37 +362,31 @@ class SomaDataset(Dataset):
         if method != "mean":
             raise UnsupportedSummaryMethod("Unknown gene set summary method.")
 
-        print("--- filter", filter)
-        # Example response:
+        if "obs" in filter:
+            raise FilterError("filtering on obs unsupported")
+
+        # TODO: index is another possible filter, but I don't know where it is used
+        var_filter = filter.get("var")
+        if "annotation_value" not in var_filter:
+            raise FilterError("filtering must be done on annotation_value")
+
+        var_selector = var_filter["annotation_value"][0]["values"]
+        col_name = var_filter["annotation_value"][0]["name"]
+
         # {'var': {'annotation_value': [{'name': 'feature_name', 'values': ['GJA4', 'ADIRF', 'MYL9', 'MYH11', 'TAGLN', 'MT1A', 'ACTA2', 'TINAGL1', 'TPM2', 'ADAMTS4', 'PDK4', 'TPPP3', 'MT1M', 'CALD1', 'DSTN']}]}}
 
-        print("--- summarize_var here")
-        print(method, filter, query_hash)
-
-        # TODO break when filtering by obs
-
-        obs_selector = None # obs_selector = filter.get("obs")
-        var_selector = filter.get("var")["annotation_value"][0]["values"] # TODO
-
         df = self.open_array("var").df()
-        var_ids = df[df["feature_name"].isin(var_selector)] # TODO
+        
+        var_ids = df[df[col_name].isin(var_selector)] # TODO: potential performance bottleneck
         var_ids = var_ids.index.tolist()
-
-        obs_ids = None
-
-        print("--- var_ids", var_ids)
 
         X = self.open_array("X")["data"]
         obs = self.open_array("obs")
-        var = self.open_array("var")
 
         df = X.dim_select(None, var_ids)
         df.reset_index(inplace=True)
         coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
         mean = coo.mean(axis=1).A
-
-
-        print("--- MEAN", mean, len(mean))
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
@@ -431,22 +425,6 @@ class SomaDataset(Dataset):
 
         print(f"--- for {filter} mat is ", mat, mat.shape)
         
-
-
-        # try:
-        #     obs_selector, var_selector = self._filter_to_mask(filter)
-        # except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
-        #     raise FilterError("Error parsing filter")
-
-        # if obs_selector is not None:
-        #     raise FilterError("filtering on obs unsupported")
-
-        # num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
-        # if self.server_config.exceeds_limit("column_request_max", num_columns):
-        #     raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
-
-        # X = self.get_X_array(obs_selector, var_selector)
-
         tdf = self.open_array("var").df()
         tdf = tdf.reset_index()
         z = tdf[tdf["feature_name"].isin(var_selector)] # TODO
