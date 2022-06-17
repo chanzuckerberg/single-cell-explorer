@@ -1,6 +1,8 @@
 import os
 env = os.getenv("HAPPY_ENV")
 
+# Unused. We use create_env_config.py instead
+
 assert(env is not None, "No HAPPY_ENV specified")
 
 config = f"""

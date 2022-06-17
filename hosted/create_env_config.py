@@ -7,14 +7,14 @@ assert(env is not None, "No HAPPY_ENV specified")
 if env == "stage":
   env = "staging"
 
-if env == "prod":
+if env == "prod": # TODO: prod is untested
   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
 else:
-  api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
-  web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
-  data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
+  api_base_url = f"https://{env}-explorer.rdev.single-cell.czi.technology/cellxgene/"
+  web_base_url = f"https://{env}-explorer.rdev.single-cell.czi.technology/" # Also used for the multi_dataset index page
+  data_locator_url = f"http://{env}-backend.internal.rdev.single-cell.czi.technology/dp/v1"
 
 config = f"""
 server:
@@ -46,10 +46,10 @@ server:
     dataroot:
       covid19:
         base_url: d
-        dataroot: s3://hosted-cellxgene-{env}
+        dataroot: s3://env-rdev-cellxgene/{env}
       corpora_data_portal:
         base_url: e
-        dataroot: s3://hosted-cellxgene-{env}
+        dataroot: s3://env-rdev-cellxgene/{env}
 
     # The index page when in multi-dataset mode:
     #   false or null:  this returns a 404 code
@@ -67,7 +67,7 @@ server:
       #   if true, then the s3 location is automatically determined from the datapath or dataroot.
       #   if false/null, then do not set.
       #   if a string, then use that value (e.g. us-east-1).
-      region_name: true
+      region_name: "us-west-2"
 
   adaptor:
     cxg_adaptor:
