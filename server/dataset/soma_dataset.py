@@ -405,34 +405,28 @@ class SomaDataset(Dataset):
         if axis != Axis.VAR:
             raise ValueError("Only VAR dimension access is supported")
 
-        print("--- filter2", filter)
+        var_filter = filter.get("var")
+        if "annotation_value" not in var_filter:
+            raise FilterError("filtering must be done on annotation_value")
 
-        var_selector = filter.get("var")["annotation_value"][0]["values"] # TODO
+        var_selector = var_filter["annotation_value"][0]["values"]
+        col_name = var_filter["annotation_value"][0]["name"]
 
         df = self.open_array("var").df()
-        var_ids = df[df["feature_name"].isin(var_selector)] # TODO
+        var_ids = df[df[col_name].isin(var_selector)]
         var_ids = var_ids.index.tolist()
 
         X = self.open_array("X")["data"]
         obs = self.open_array("obs")
-
-        print("--- var_ids", var_ids)
 
         df = X.dim_select(None, var_ids)
         df.reset_index(inplace=True)
         coo = tiledbsc.util.X_and_ids_to_sparse_matrix(df, 'obs_id', 'var_id', 'value', obs.ids(), var_ids)
         mat = coo.todense().A
 
-        print(f"--- for {filter} mat is ", mat, mat.shape)
-        
         tdf = self.open_array("var").df()
         tdf = tdf.reset_index()
-        z = tdf[tdf["feature_name"].isin(var_selector)] # TODO
+        z = tdf[tdf[col_name].isin(var_selector)] # TODO
         col_idx = z.index.to_numpy()
-
-
-        print("--- X", mat, mat.shape)
-        print("--- col_idx", col_idx)
-
 
         return encode_matrix_fbs(mat, col_idx=col_idx, row_idx=None)
