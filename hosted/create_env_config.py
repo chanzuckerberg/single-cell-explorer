@@ -46,10 +46,10 @@ server:
     dataroot:
       covid19:
         base_url: d
-        dataroot: s3://env-rdev-cellxgene/{env}
+        dataroot: s3://env-rdev-cellxgene/{env}-kuni
       corpora_data_portal:
         base_url: e
-        dataroot: s3://env-rdev-cellxgene/{env}
+        dataroot: s3://env-rdev-cellxgene/{env}-kuni
 
     # The index page when in multi-dataset mode:
     #   false or null:  this returns a 404 code

@@ -5,6 +5,7 @@ from datetime import datetime
 import boto3
 import botocore
 from urllib.parse import urlparse
+import warnings
 
 
 class DataLocator:
@@ -66,6 +67,8 @@ class DataLocator:
         return None, uri_or_path
 
     def exists(self):
+        warnings.warn("EXISTS CHECK")
+        warnings.warn(self.cname)
         return self.fs.exists(self.cname)
 
     def size(self):
