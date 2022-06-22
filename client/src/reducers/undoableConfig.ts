@@ -261,10 +261,7 @@ return true if objA and objB are ===, OR if:
   - have same own properties
   - all values are strict equal (===)
 */
-function shallowObjectEq(
-  objA: Record<string | number | symbol, unknown>,
-  objB: Record<string | number | symbol, unknown>
-) {
+function shallowObjectEq(objA: AnyAction, objB: AnyAction) {
   if (objA === objB) return true;
   if (!objA || !objB) return false;
   if (!shallowArrayEq(Object.keys(objA), Object.keys(objB))) return false;

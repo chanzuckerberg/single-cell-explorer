@@ -217,10 +217,11 @@ class Category extends React.PureComponent {
       );
       if (query) colorDataPromise = annoMatrix.fetch(...query);
     }
-    const [categoryData, colorData] = await Promise.all<
-      Dataframe,
-      Dataframe | null
-    >([annoMatrix.fetch("obs", metadataField), colorDataPromise]);
+    const [categoryData, colorData]: [Dataframe, Dataframe | null] =
+      await Promise.all([
+        annoMatrix.fetch("obs", metadataField),
+        colorDataPromise,
+      ]);
 
     // our data
     const column = categoryData.icol(0);
