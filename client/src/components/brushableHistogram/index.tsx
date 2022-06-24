@@ -52,7 +52,9 @@ const HEIGHT_MINI = 15 - MARGIN_MINI.TOP - MARGIN_MINI.BOTTOM;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     continuousSelectionRange: (state as any).continuousSelection[myName],
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    isColorAccessor: (state as any).colors.colorAccessor === field,
+    isColorAccessor:
+      (state as any).colors.colorAccessor === field &&
+      (state as any).colors.colorMode !== "color by categorical metadata",
   };
 })
 class HistogramBrush extends React.PureComponent {
