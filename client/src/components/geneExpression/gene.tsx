@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { Button, Icon } from "@blueprintjs/core";
+import { Icon as InfoCircle } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 
@@ -19,6 +20,9 @@ type State = any;
 @connect((state, ownProps) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
   const { gene } = ownProps;
+  console.log(state.annoMatrix?.fetch("var", "feature_id"));
+  // const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+  // const geneNames = df.col(varIndex).asArray();
 
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -29,6 +33,7 @@ type State = any;
     isScatterplotYYaccessor:
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       (state as any).controls.scatterplotYYaccessor === gene,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     schema: (state as any).annoMatrix?.schema,
   };
 })
@@ -39,7 +44,6 @@ class Gene extends React.Component<{}, State> {
     super(props);
     this.state = {
       geneIsExpanded: false,
-      geneInfoButtonVisible: false,
     };
   }
 
@@ -93,79 +97,121 @@ class Gene extends React.Component<{}, State> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleGetGeneInfo = () => {
+  handleShowInfoButton = () => {};
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  handleDisplayGeneInfo = () => {
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene } = this.props; // why are these errors happening?
-    console.log(gene);
-    dispatch({
-      type: "open gene info",
-    });
-    const { geneInfoButtonVisible } = this.state;
-    this.setState({ geneInfoButtonVisible: !geneInfoButtonVisible });
+    const { dispatch, geneId, gene } = this.props; // why are these errors happening?
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME: disabled temporarily
+    // const response: any = doJsonRequest(
+    //   `https://rdev-siena-geneinfo-backend.rdev.single-cell.czi.technology/geneinfo/v1/geneinfo?geneID=${geneId}`
+    // );
+
+    // fetch(
+    //   `https://rdev-siena-geneinfo-backend.rdev.single-cell.czi.technology/geneinfo/v1/geneinfo?geneID=${geneId}`, {
+    //     method: 'GET',
+    //     mode: 'no-cors',
+    //     headers: {
+    //       'Content-Type': 'application/json'
+    //     },
+    //   }).then((r) => {
+    //     const response = r.json();
+    //     console.log(response);
+    //     dispatch({
+    //       type: "open gene info",
+    //       gene,
+    //       url: response.ncbi_url,
+    //       name: response.name,
+    //       synonyms: response.synonyms,
+    //       summary: response.summary,
+    //     });
+    //   })
+
+    // console.log(response);
+
+    // // console.log(geneInfoCache.key);
+    // // const newGeneInfoCache = geneInfoCache;
+    // // this.setState({
+    //   // geneInfo: response,
+    //   // geneInfoCache: newGeneInfoCache
+    // // });
+
+    // dispatch({
+    //   type: "open gene info",
+    //   gene,
+    //   url: response.ncbi_url,
+    //   name: response.name,
+    //   synonyms: response.synonyms,
+    //   summary: response.summary
+    // });
+
+    let geneUID: number;
 
     // where to put api key?
-    const apiKey = "5e1da911c319634a54a4fc5cb89583602e08";
     // is string interpolation a security issue?
     // search for gene ID through NCBI Gene
-    let geneId;
     fetch(
       // `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}&retmode=json`
-      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=ENSG00000251562&api_key=${apiKey}&retmode=json`
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${geneId}&api_key=${apiKey}&retmode=json`
     )
       .then((response) => {
         console.log(response);
         return response.json();
       })
       .then((data) => {
-        geneId = data.esearchresult.idlist[0];
-        console.log(geneId);
+        geneUID = data.esearchresult.idlist[0];
+        console.log(geneUID);
 
         fetch(
-          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&api_key=${apiKey}&retmode=xml`
+          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneUID}&api_key=${apiKey}&retmode=xml`
         )
           .then((resp) => resp.text())
           .then((str) =>
             new window.DOMParser().parseFromString(str, "text/xml")
           )
-          .then((geneInfo) => {
-            console.log(geneInfo);
-            console.log(typeof geneInfo);
-            console.log(
-              geneInfo.getElementsByTagName("Entrezgene_summary")[0]
-                .childNodes[0].nodeValue
-            );
+          .then((info) => {
+            console.log(info);
+            if (!info) {
+              return;
+            }
+
+            const contents = {
+              url: `https://www.ncbi.nlm.nih.gov/gene/${geneUID}`,
+              name: info.getElementsByTagName("Gene-ref_desc")[0].childNodes[0]
+                .nodeValue,
+              summary:
+                info.getElementsByTagName("Entrezgene_summary")[0].childNodes[0]
+                  .nodeValue,
+              synonyms: ["TEST1", "TEST2", "TEST3"],
+            };
+            console.log(contents);
+
+            // console.log(geneInfoCache.key);
+            // const newGeneInfoCache = geneInfoCache;
+            // this.setState({
+            // geneInfo: contents,
+            // geneInfoCache: newGeneInfoCache
+            // });
+
             dispatch({
-              type: "loaded gene info",
-              data: geneInfo,
+              type: "open gene info",
+              gene,
+              url: contents.url,
+              name: contents.name,
+              synonyms: contents.synonyms,
+              summary: contents.summary,
             });
           });
       });
-
-    // fetch gene information using gene ID
-    // const apiURL = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneId}&retmode=html&api_key=${apiKey}`
-
-    // console.log()
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDisplayGeneInfo = () => {
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene } = this.props; // why are these errors happening?
-    console.log(gene);
-
-    dispatch({
-      type: "display gene info",
-      data: gene,
-    });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleRemoveGeneInfo = () => {
-    const { geneInfoButtonVisible } = this.state;
-    this.setState({ geneInfoButtonVisible: !geneInfoButtonVisible });
-  };
+  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  // handleHideInfoButton = () => {
+  //   this.setState({ geneInfoButtonVisible: false });
+  // };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
@@ -184,8 +230,9 @@ class Gene extends React.Component<{}, State> {
       quickGene,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'removeGene' does not exist on type 'Read... Remove this comment to see the full error message
       removeGene,
+      // geneId
     } = this.props;
-    const { geneIsExpanded, geneInfoButtonVisible } = this.state;
+    const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
 
     return (
@@ -213,8 +260,6 @@ class Gene extends React.Component<{}, State> {
               justifyContent: "space-between",
               width: "100%",
             }}
-            onMouseEnter={this.handleGetGeneInfo}
-            onMouseLeave={this.handleRemoveGeneInfo}
           >
             <div>
               {!quickGene && (
@@ -244,21 +289,21 @@ class Gene extends React.Component<{}, State> {
               </Truncate>
             </div>
             <div>
-              {geneInfoButtonVisible && (
-                <Button
-                  minimal
-                  small
-                  data-testid={`get-info-${gene}`}
-                  // onMouseEnter={this.handleGetGeneInfo}
-                  onClick={this.handleDisplayGeneInfo}
-                  // onClick={this.handleDisplayGeneInfo}
-                  // active={isScatterplotYYaccessor}
-                  // intent={isScatterplotYYaccessor ? "primary" : "none"}
-                  style={{ fontWeight: 700, marginRight: 2 }}
-                >
-                  i
-                </Button>
-              )}
+              <Button
+                minimal
+                small
+                data-testid={`get-info-${gene}`}
+                // onMouseEnter={this.handleGetGeneInfo}
+                onClick={this.handleDisplayGeneInfo}
+                // onClick={this.handleDisplayGeneInfo}
+                // active={isScatterplotYYaccessor}
+                // intent={isScatterplotYYaccessor ? "primary" : "none"}
+                style={{
+                  filter: "grayscale(100%)",
+                }}
+              >
+                <InfoCircle sdsIcon="infoCircle" sdsSize="s" sdsType="static" />
+              </Button>
             </div>
             {!geneIsExpanded ? (
               <HistogramBrush

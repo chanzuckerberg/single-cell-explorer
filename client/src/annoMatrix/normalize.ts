@@ -52,6 +52,7 @@ export function normalizeResponse(
       field,
       colLabel
     ) as AnnotationColumnSchema;
+
     const isIndex = _isIndex(schema, field, colLabel);
     const { type, writable } = colSchema;
 
@@ -68,7 +69,7 @@ export function normalizeResponse(
       type === "string" ||
       type === "categorical" ||
       writable;
-    if (!isIndex && isEnumType) {
+    if (!isIndex && colLabel !== "feature_id" && isEnumType) {
       response = normalizeCategorical(response, colLabel, colSchema);
     }
   }

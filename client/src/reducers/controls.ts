@@ -17,6 +17,7 @@ const Controls = (
     opacityForDeselectedCells: 0.2,
     scatterplotXXaccessor: null, // just easier to read
     scatterplotYYaccessor: null,
+    geneInfoAccessor: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
 
     datasetDrawer: false,
@@ -70,6 +71,7 @@ const Controls = (
       };
     }
     case "request user defined gene success": {
+      console.log(action.data);
       const { userDefinedGenes } = state;
       const _userDefinedGenes = uniq(
         userDefinedGenes.concat(action.data.genes)
@@ -119,18 +121,32 @@ const Controls = (
         graphRenderCounter: c,
       };
     }
+
+    /*******************************
+              Gene Info
+    *******************************/
     case "open gene info":
       console.log(action);
       return {
         ...state,
+        geneIsOpen: true,
+        gene: action.gene,
+        geneUrl: action.url,
+        geneSummary: action.summary,
+        geneSynonyms: action.synonyms,
+        geneName: action.name,
       };
-    case "loaded gene info":
-      console.log(action.data);
+    case "clear gene info":
+      console.log(action);
       return {
-        geneInfo: action.data,
         ...state,
+        geneIsOpen: false,
+        gene: null,
+        geneUrl: null,
+        geneSummary: null,
+        geneSynonyms: null,
+        geneName: null,
       };
-
     /*******************************
               Scatterplot
     *******************************/

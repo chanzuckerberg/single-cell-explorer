@@ -56,6 +56,7 @@ export const genesetAddGenes =
     const { obsCrossfilter: prevObsCrossfilter, annoMatrix } = state;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
+    console.log(varIndex);
     const df: Dataframe = await annoMatrix.fetch("var", varIndex);
     const geneNames = df.col(varIndex).asArray();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
