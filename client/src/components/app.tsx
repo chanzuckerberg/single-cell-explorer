@@ -82,8 +82,8 @@ class App extends React.Component<Props> {
                       <Legend />
                       {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message */}
                       <Graph
-                        key={graphRenderCounter}
                         viewportRef={viewportRef}
+                        key={graphRenderCounter}
                       />
                     </>
                   )}
