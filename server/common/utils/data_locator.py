@@ -5,8 +5,6 @@ from datetime import datetime
 import boto3
 import botocore
 from urllib.parse import urlparse
-import warnings
-
 
 class DataLocator:
     """

@@ -3,7 +3,6 @@ from flask import make_response, jsonify
 
 from server import __version__ as cellxgene_version
 from server.common.utils.data_locator import DataLocator
-import warnings
 
 def _is_accessible(path, config):
     if path is None:
@@ -23,7 +22,7 @@ def health_check(config):
     """
     health = {"status": None, "version": "1", "releaseID": cellxgene_version}
 
-    checks = True
+    checks = False
     server_config = config.server_config
     if config.is_multi_dataset():
         dataroots = [datapath_dict["dataroot"] for datapath_dict in server_config.multi_dataset__dataroot.values()]
