@@ -30,7 +30,6 @@ class GeneExpression extends React.Component<{}, State> {
     const sets = [];
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesets' does not exist on type 'Readon... Remove this comment to see the full error message
     const { genesets } = this.props;
-    console.log("genesets: ", genesets);
 
     for (const [name, geneset] of genesets) {
       console.log(geneset.genes);
@@ -79,7 +78,6 @@ class GeneExpression extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const { geneSetsExpanded } = this.state;
-    console.log("rendering geneExpression index!!");
     return (
       <div>
         <QuickGene />

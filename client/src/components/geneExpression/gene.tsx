@@ -2,9 +2,11 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { Button, Icon } from "@blueprintjs/core";
+// eslint-disable-next-line import/no-extraneous-dependencies -- for post sds migration
 import { Icon as InfoCircle } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
+import { RootState } from "../../reducers";
 
 import actions from "../../actions";
 
@@ -13,30 +15,20 @@ import { EVENTS } from "../../analytics/events";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
 type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state, ownProps) => {
+@connect((state: RootState, ownProps) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
   const { gene } = ownProps;
-  console.log(state.annoMatrix?.fetch("var", "feature_id"));
-  // const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-  // const geneNames = df.col(varIndex).asArray();
-
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     isColorAccessor:
-      (state as any).colors.colorAccessor === gene &&
-      (state as any).colors.colorMode !== "color by categorical metadata",
-    isScatterplotXXaccessor:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).controls.scatterplotXXaccessor === gene,
-    isScatterplotYYaccessor:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).controls.scatterplotYYaccessor === gene,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    schema: (state as any).annoMatrix?.schema,
+      state.colors.colorAccessor === gene &&
+      state.colors.colorMode !== "color by categorical metadata",
+    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
+    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
+    schema: state.annoMatrix?.schema,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -49,8 +41,7 @@ class Gene extends React.Component<{}, State> {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  onColorChangeClick = () => {
+  onColorChangeClick = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
 
@@ -132,15 +123,6 @@ class Gene extends React.Component<{}, State> {
     //     });
     //   })
 
-    // console.log(response);
-
-    // // console.log(geneInfoCache.key);
-    // // const newGeneInfoCache = geneInfoCache;
-    // // this.setState({
-    //   // geneInfo: response,
-    //   // geneInfoCache: newGeneInfoCache
-    // // });
-
     // dispatch({
     //   type: "open gene info",
     //   gene,
@@ -151,13 +133,8 @@ class Gene extends React.Component<{}, State> {
     // });
 
     let geneUID: number;
-
-    // where to put api key?
-    // is string interpolation a security issue?
-    // search for gene ID through NCBI Gene
     fetch(
-      // `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${gene}&api_key=${apiKey}&retmode=json`
-      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${geneId}&api_key=${apiKey}&retmode=json`
+      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${geneId}&retmode=json`
     )
       .then((response) => {
         console.log(response);
@@ -168,7 +145,7 @@ class Gene extends React.Component<{}, State> {
         console.log(geneUID);
 
         fetch(
-          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneUID}&api_key=${apiKey}&retmode=xml`
+          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneUID}&retmode=xml`
         )
           .then((resp) => resp.text())
           .then((str) =>
@@ -191,13 +168,6 @@ class Gene extends React.Component<{}, State> {
             };
             console.log(contents);
 
-            // console.log(geneInfoCache.key);
-            // const newGeneInfoCache = geneInfoCache;
-            // this.setState({
-            // geneInfo: contents,
-            // geneInfoCache: newGeneInfoCache
-            // });
-
             dispatch({
               type: "open gene info",
               gene,
@@ -210,13 +180,7 @@ class Gene extends React.Component<{}, State> {
       });
   };
 
-  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  // handleHideInfoButton = () => {
-  //   this.setState({ geneInfoButtonVisible: false });
-  // };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
+  render(): JSX.Element {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type 'Readonly<{... Remove this comment to see the full error message
       gene,
@@ -232,7 +196,6 @@ class Gene extends React.Component<{}, State> {
       quickGene,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'removeGene' does not exist on type 'Read... Remove this comment to see the full error message
       removeGene,
-      // geneId
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
@@ -295,11 +258,7 @@ class Gene extends React.Component<{}, State> {
                 minimal
                 small
                 data-testid={`get-info-${gene}`}
-                // onMouseEnter={this.handleGetGeneInfo}
                 onClick={this.handleDisplayGeneInfo}
-                // onClick={this.handleDisplayGeneInfo}
-                // active={isScatterplotYYaccessor}
-                // intent={isScatterplotYYaccessor ? "primary" : "none"}
                 style={{
                   filter: "grayscale(100%)",
                 }}

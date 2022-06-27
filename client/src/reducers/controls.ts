@@ -135,6 +135,7 @@ const Controls = (
         geneSummary: action.summary,
         geneSynonyms: action.synonyms,
         geneName: action.name,
+        minimized: false,
       };
     case "clear gene info":
       console.log(action);
@@ -146,7 +147,9 @@ const Controls = (
         geneSummary: null,
         geneSynonyms: null,
         geneName: null,
+        minimized: null,
       };
+
     /*******************************
               Scatterplot
     *******************************/
