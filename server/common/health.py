@@ -4,6 +4,7 @@ from flask import make_response, jsonify
 from server import __version__ as cellxgene_version
 from server.common.utils.data_locator import DataLocator
 
+
 def _is_accessible(path, config):
     if path is None:
         return True

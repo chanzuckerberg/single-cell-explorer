@@ -6,6 +6,7 @@ import boto3
 import botocore
 from urllib.parse import urlparse
 
+
 class DataLocator:
     """
     DataLocator is a simple wrapper around fsspec functionality, and provides a
