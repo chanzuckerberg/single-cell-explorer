@@ -201,7 +201,7 @@ class Server:
 
         self.app.app_config = app_config
 
-@current_app.before_request
-def pre_request_logging():
-    message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
-    current_app.logger.info(message)
+        @self.app.before_request
+        def pre_request_logging():
+            message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
+            self.app.logger.info(message)

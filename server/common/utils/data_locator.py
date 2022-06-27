@@ -67,8 +67,6 @@ class DataLocator:
         return None, uri_or_path
 
     def exists(self):
-        warnings.warn("EXISTS CHECK")
-        warnings.warn(self.cname)
         return self.fs.exists(self.cname)
 
     def size(self):

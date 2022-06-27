@@ -1,5 +1,7 @@
 import os
 env = os.getenv("HAPPY_ENV")
+stack_name = os.getenv("STACK_NAME")
+
 
 assert(env is not None, "No HAPPY_ENV specified")
 
@@ -7,14 +9,18 @@ assert(env is not None, "No HAPPY_ENV specified")
 if env == "stage":
   env = "staging"
 
-if env == "prod": # TODO: prod is untested
+if env == "prod":
   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
+elif env == "rdev": # TODO: does not work
+  api_base_url = f"https://{stack_name}-explorer.rdev.single-cell.czi.technology/cellxgene/" 
+  web_base_url = f"https://{stack_name}-explorer.rdev.single-cell.czi.technology/" # Also used for the multi_dataset index page
+  data_locator_url = f"http://{stack_name}-backend.internal.rdev.single-cell.czi.technology/dp/v1"
 else:
-  api_base_url = f"https://{env}-explorer.rdev.single-cell.czi.technology/cellxgene/"
-  web_base_url = f"https://{env}-explorer.rdev.single-cell.czi.technology/" # Also used for the multi_dataset index page
-  data_locator_url = f"http://{env}-backend.internal.rdev.single-cell.czi.technology/dp/v1"
+  api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
+  web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
+  data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
 
 config = f"""
 server:
