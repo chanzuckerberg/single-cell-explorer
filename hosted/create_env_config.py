@@ -13,7 +13,7 @@ if env == "prod":
   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
-elif env == "rdev": # TODO: does not work
+elif env == "rdev":
   api_base_url = f"https://{stack_name}-explorer.rdev.single-cell.czi.technology/cellxgene/" 
   web_base_url = f"https://{stack_name}-explorer.rdev.single-cell.czi.technology/" # Also used for the multi_dataset index page
   data_locator_url = f"http://{stack_name}-backend.internal.rdev.single-cell.czi.technology/dp/v1"
