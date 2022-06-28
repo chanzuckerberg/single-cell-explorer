@@ -1,6 +1,9 @@
 import React, { RefObject } from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
+import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
+import { StylesProvider, ThemeProvider } from "@material-ui/core/styles";
+import { theme } from "./theme";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
@@ -47,40 +50,50 @@ class App extends React.Component<Props> {
 
     return (
       <Container>
-        <Helmet title="cellxgene" />
-        {loading ? <LayoutSkeleton /> : null}
-        {error ? (
-          <div
-            style={{
-              position: "fixed",
-              fontWeight: 500,
-              top: window.innerHeight / 2,
-              left: window.innerWidth / 2 - 50,
-            }}
-          >
-            error loading cellxgene
-          </div>
-        ) : null}
-        {loading || error ? null : (
-          <Layout>
-            <LeftSideBar />
-            {(viewportRef: RefObject<HTMLDivElement>) => (
-              <>
-                <Controls>
-                  <DatasetSelector />
-                  <MenuBar />
-                </Controls>
-                <Embedding />
-                <FloatingButton />
-                <Autosave />
-                <Legend />
-                {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message */}
-                <Graph key={graphRenderCounter} viewportRef={viewportRef} />
-              </>
-            )}
-            <RightSideBar />
-          </Layout>
-        )}
+        <StylesProvider injectFirst>
+          <EmotionThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
+              <Helmet title="cellxgene" />
+              {loading ? <LayoutSkeleton /> : null}
+              {error ? (
+                <div
+                  style={{
+                    position: "fixed",
+                    fontWeight: 500,
+                    top: window.innerHeight / 2,
+                    left: window.innerWidth / 2 - 50,
+                  }}
+                >
+                  error loading cellxgene
+                </div>
+              ) : null}
+              {loading || error ? null : (
+                <Layout>
+                  <LeftSideBar />
+                  {(viewportRef: RefObject<HTMLDivElement>) => (
+                    <>
+                      <Controls>
+                        <DatasetSelector />
+                        <MenuBar />
+                      </Controls>
+                      <Embedding />
+                      <FloatingButton />
+                      <Autosave />
+                      <Legend />
+                      <Graph
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore
+                        // @ts-ignore FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message
+                        viewportRef={viewportRef}
+                        key={graphRenderCounter}
+                      />
+                    </>
+                  )}
+                  <RightSideBar />
+                </Layout>
+              )}
+            </ThemeProvider>
+          </EmotionThemeProvider>
+        </StylesProvider>
       </Container>
     );
   }
