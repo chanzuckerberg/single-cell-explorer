@@ -28,7 +28,6 @@ function QuickGene() {
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [geneNames, setGeneNames] = useState([] as DataframeValue[]);
-  const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
 
   const { annoMatrix, userDefinedGenes, userDefinedGenesLoading } = useSelector(
@@ -58,15 +57,6 @@ function QuickGene() {
         setStatus("pending");
         try {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-          let dfIds: Dataframe;
-          try {
-            dfIds = await annoMatrix.fetch("var", "feature_id");
-            console.log("id, success");
-            setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
-          } catch {
-            console.log("no feature ids!");
-          }
-
           setStatus("name, success");
           setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
         } catch (error) {
@@ -137,31 +127,18 @@ function QuickGene() {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    return userDefinedGenes.map((gene: any) => {
-      console.log("gene: ", gene);
-      console.log(geneNames.indexOf(gene));
-      console.log(geneNames);
-      console.log(geneIds);
-      // ENSG00000203356
-      console.log(geneNames[999]);
-      console.log(geneIds[geneNames.indexOf(gene)]);
-      console.log(geneIds.includes("ENSG00000184967"));
-      const geneId = geneIds[geneNames.indexOf(gene)];
-      console.log("geneId in quickGene.tsx:", geneId);
-      return (
-        <>
-          <Gene
-            key={`quick=${gene}`}
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
-            gene={gene}
-            removeGene={removeGene}
-            quickGene
-            geneId={geneId}
-          />
-        </>
-      );
-    });
-  }, [userDefinedGenes, geneNames, geneIds, dispatch]);
+    return userDefinedGenes.map((gene: any) => (
+      <>
+        <Gene
+          key={`quick=${gene}`}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
+          gene={gene}
+          removeGene={removeGene}
+          quickGene
+        />
+      </>
+    ));
+  }, [userDefinedGenes, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>

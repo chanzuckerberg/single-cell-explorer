@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import { Button, Icon } from "@blueprintjs/core";
 // eslint-disable-next-line import/no-extraneous-dependencies -- for post sds migration
-import { Icon as InfoCircle } from "czifui";
+// import { Icon as InfoCircle } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 import { RootState } from "../../reducers";
@@ -12,6 +12,7 @@ import actions from "../../actions";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { Dataframe, DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
@@ -23,12 +24,7 @@ type State = any;
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
   const { gene } = ownProps;
   return {
-    isColorAccessor:
-      state.colors.colorAccessor === gene &&
-      state.colors.colorMode !== "color by categorical metadata",
-    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
-    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    schema: state.annoMatrix?.schema,
+    annoMatrix: (state as any).annoMatrix,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -38,7 +34,30 @@ class Gene extends React.Component<{}, State> {
     super(props);
     this.state = {
       geneIsExpanded: false,
+      geneIds: null,
+      geneNames: null,
     };
+  }
+
+  async componentDidMount(): Promise<void> {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { annoMatrix } = this.props;
+    const { schema } = annoMatrix;
+    const varIndex = schema.annotations.var.index;
+    let dfIds: Dataframe;
+    try {
+      const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+      dfIds = await annoMatrix.fetch("var", "feature_id");
+      console.log("here", String(dfIds));
+      this.setState({
+        geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
+      });
+      this.setState({
+        geneNames: df.col(varIndex).asArray() as DataframeValue[],
+      });
+    } catch {
+      console.log("no feature ids!");
+    }
   }
 
   onColorChangeClick = (): void => {
@@ -96,7 +115,16 @@ class Gene extends React.Component<{}, State> {
   handleDisplayGeneInfo = () => {
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, geneId, gene } = this.props; // why are these errors happening?
+    const { dispatch, gene } = this.props; // why are these errors happening?
+    const { geneIds, geneNames } = this.state;
+    const geneId = geneIds[geneNames.indexOf(gene)];
+    console.log("gene id:", String(geneId));
+
+    if (geneId === null) {
+      // error ??
+      console.log("here");
+      return;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME: disabled temporarily
     // const response: any = doJsonRequest(
@@ -133,6 +161,7 @@ class Gene extends React.Component<{}, State> {
     // });
 
     let geneUID: number;
+
     fetch(
       `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${geneId}&retmode=json`
     )
@@ -263,7 +292,8 @@ class Gene extends React.Component<{}, State> {
                   filter: "grayscale(100%)",
                 }}
               >
-                <InfoCircle sdsIcon="infoCircle" sdsSize="s" sdsType="static" />
+                {/* <InfoCircle sdsIcon="infoCircle" sdsSize="s" sdsType="static" /> */}
+                i
               </Button>
             </div>
             {!geneIsExpanded ? (

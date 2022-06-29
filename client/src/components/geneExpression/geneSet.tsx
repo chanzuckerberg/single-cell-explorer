@@ -1,4 +1,5 @@
 import React from "react";
+import { connect } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import Gene from "./gene";
 import Truncate from "../util/truncate";

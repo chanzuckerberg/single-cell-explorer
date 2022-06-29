@@ -48,7 +48,14 @@ export const genesetDelete =
       annoMatrix: obsCrossfilter.annoMatrix,
     });
   };
-
+// let dfIds: Dataframe;
+// try {
+//   dfIds = await annoMatrix.fetch("var", "feature_id");
+//   console.log("id, success");
+//   setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
+// } catch {
+//   console.log("no feature ids!");
+// }
 export const genesetAddGenes =
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   (genesetName: any, genes: any) => async (dispatch: any, getState: any) => {
@@ -56,7 +63,6 @@ export const genesetAddGenes =
     const { obsCrossfilter: prevObsCrossfilter, annoMatrix } = state;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
-    console.log(varIndex);
     const df: Dataframe = await annoMatrix.fetch("var", varIndex);
     const geneNames = df.col(varIndex).asArray();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -65,7 +71,11 @@ export const genesetAddGenes =
         postUserErrorToast(
           `${gene.geneSymbol} doesn't appear to be a valid gene name.`
         );
-      } else acc.push(gene);
+      } else {
+        console.log("here");
+        acc.push(gene);
+        console.log(gene);
+      }
       return acc;
     }, []);
 
