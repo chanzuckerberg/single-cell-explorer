@@ -1,6 +1,3 @@
-import uniq from "lodash.uniq";
-import filter from "lodash.filter";
-
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const Controls = (
   state = {
@@ -9,9 +6,6 @@ const Controls = (
     error: null,
 
     // all of the data + selection state
-    userDefinedGenes: [],
-    userDefinedGenesLoading: false,
-
     resettingInterface: false,
     graphInteractionMode: "select",
     opacityForDeselectedCells: 0.2,
@@ -56,41 +50,6 @@ const Controls = (
         ...state,
         loading: false,
         error: null,
-      };
-    }
-    case "request user defined gene started": {
-      return {
-        ...state,
-        userDefinedGenesLoading: true,
-      };
-    }
-    case "request user defined gene error": {
-      return {
-        ...state,
-        userDefinedGenesLoading: false,
-      };
-    }
-    case "request user defined gene success": {
-      console.log(action.data);
-      const { userDefinedGenes } = state;
-      const _userDefinedGenes = uniq(
-        userDefinedGenes.concat(action.data.genes)
-      );
-      return {
-        ...state,
-        userDefinedGenes: _userDefinedGenes,
-        userDefinedGenesLoading: false,
-      };
-    }
-    case "clear user defined gene": {
-      const { userDefinedGenes } = state;
-      const newUserDefinedGenes = filter(
-        userDefinedGenes,
-        (d) => d !== action.data
-      );
-      return {
-        ...state,
-        userDefinedGenes: newUserDefinedGenes,
       };
     }
     case "initial data load error": {

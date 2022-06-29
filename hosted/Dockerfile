@@ -18,8 +18,12 @@ ADD common.mk common.mk
 ADD environment.default.json environment.default.json
 
 RUN apt-get update && \
-    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip && \
+    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     rm -rf /var/lib/apt/lists/*
+    
+RUN curl -sL https://deb.nodesource.com/setup_15.x  | bash -
+RUN apt-get -y install nodejs
+RUN node -v
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 

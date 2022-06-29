@@ -63,9 +63,7 @@ class Gene extends React.Component<{}, State> {
   onColorChangeClick = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
-
     track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
-
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
   };
 
