@@ -26,7 +26,6 @@ export const STYLE_LEFT_SIDEBAR: CSSProperties = {
   scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
 }))
 class LeftSideBar extends React.Component {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'scatterplotXXaccessor' does not exist on... Remove this comment to see the full error message
     const { scatterplotXXaccessor, scatterplotYYaccessor } = this.props;

@@ -210,10 +210,7 @@ function requestSingleGeneExpressionCountsForColoringPOST(
 
 const requestUserDefinedGene = (gene: string): AnyAction => ({
   type: "request user defined gene success",
-
-  data: {
-    genes: [gene],
-  },
+  gene,
 });
 
 const dispatchDiffExpErrors = (
