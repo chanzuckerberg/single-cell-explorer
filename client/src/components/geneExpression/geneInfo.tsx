@@ -61,7 +61,6 @@ class GeneInfo extends React.PureComponent<{}, State> {
       geneUrl,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneSynonyms' does not exist on type 'Readon... Remove this comment to see the full error message
       geneSynonyms,
-      loading,
     } = this.props;
 
     const { minimized } = this.state;
@@ -142,7 +141,30 @@ class GeneInfo extends React.PureComponent<{}, State> {
             height: minimized ? 0 + styles.margin.bottom : "auto",
           }}
         >
-          {!minimized ? (
+          {/* loading tab */}
+          {geneName === "" ? (
+            <div
+              style={{
+                marginTop: styles.margin.top,
+                marginLeft: styles.margin.left,
+                marginRight: styles.margin.right,
+                marginBottom: styles.margin.bottom,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: styles.largeText,
+                  fontWeight: globals.bolder,
+                }}
+              >
+                {gene}
+              </p>
+              <p style={{ fontSize: styles.smallText, fontWeight: 500 }}>
+                loading...
+              </p>
+            </div>
+          ) : null}
+          {!minimized && geneName !== "" ? (
             <div
               style={{
                 marginTop: styles.margin.top,

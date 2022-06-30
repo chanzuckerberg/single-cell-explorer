@@ -85,7 +85,7 @@ const Controls = (
               Gene Info
     *******************************/
     case "open gene info":
-      console.log(action);
+      // if scatterplot is open, close it
       if (state.scatterplotXXaccessor && state.scatterplotYYaccessor) {
         state.scatterplotXXaccessor = false;
         state.scatterplotYYaccessor = false;
@@ -101,10 +101,14 @@ const Controls = (
         infoLoading: false,
       };
     case "load gene info":
-      console.log(action);
+      // if scatterplot is open, close it
+      if (state.scatterplotXXaccessor && state.scatterplotYYaccessor) {
+        state.scatterplotXXaccessor = false;
+        state.scatterplotYYaccessor = false;
+      }
       return {
         ...state,
-        geneIsOpen: false,
+        geneIsOpen: true,
         gene: action.gene,
         geneUrl: "",
         geneSummary: "",
@@ -124,6 +128,7 @@ const Controls = (
               Scatterplot
     *******************************/
     case "set scatterplot x":
+      // if gene info card is open, close it
       if (state.geneIsOpen && state.scatterplotYYaccessor) {
         state.geneIsOpen = false;
       }
@@ -131,6 +136,7 @@ const Controls = (
         ...state,
         scatterplotXXaccessor: action.data,
       };
+    // if gene info card is open, close it
     case "set scatterplot y":
       if (state.geneIsOpen && state.scatterplotXXaccessor) {
         state.geneIsOpen = false;
