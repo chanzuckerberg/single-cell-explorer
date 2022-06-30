@@ -94,19 +94,26 @@ const Controls = (
         geneSummary: action.summary,
         geneSynonyms: action.synonyms,
         geneName: action.name,
-        minimized: false,
+        infoLoading: false,
+      };
+    case "load gene info":
+      console.log(action);
+      return {
+        ...state,
+        geneIsOpen: false,
+        gene: action.gene,
+        geneUrl: "",
+        geneSummary: "",
+        geneSynonyms: [""],
+        geneName: "",
+        infoLoading: true,
       };
     case "clear gene info":
       console.log(action);
       return {
         ...state,
         geneIsOpen: false,
-        gene: null,
-        geneUrl: null,
-        geneSummary: null,
-        geneSynonyms: null,
-        geneName: null,
-        minimized: null,
+        infoLoading: false,
       };
 
     /*******************************

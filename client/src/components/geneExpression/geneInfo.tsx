@@ -4,13 +4,15 @@ import { Button, ButtonGroup } from "@blueprintjs/core";
 import * as styles from "./util";
 import { RootState } from "../../reducers";
 import * as globals from "../../globals";
+import { Dataframe, DataframeValue } from "../../util/dataframe";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state: RootState) => {
-  const { geneSummary, geneName, gene, geneSynonyms, geneUrl } = state.controls;
+  const { geneSummary, geneName, gene, geneSynonyms, geneUrl, loading } =
+    state.controls;
 
   return {
     geneSummary,
@@ -18,6 +20,7 @@ type State = any;
     gene,
     geneSynonyms,
     geneUrl,
+    loading,
   };
 })
 
@@ -30,15 +33,6 @@ class GeneInfo extends React.PureComponent<{}, State> {
       minimized: null,
     };
   }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  // updateReglAndRender(newRenderCache: any) {
-  //   const { positions, colors, flags } = newRenderCache;
-  //   const { pointBuffer, colorBuffer, flagBuffer } = this.state;
-  //   pointBuffer({ data: positions, dimension: 2 });
-  //   colorBuffer({ data: colors, dimension: 3 });
-  //   flagBuffer({ data: flags, dimension: 1 });
-  // }
 
   // // eslint-disable-next-line @typescript-eslint/ban-types -- FIXME: to fix later
   // componentDidUpdate(prevProps: {}): void {
@@ -67,6 +61,7 @@ class GeneInfo extends React.PureComponent<{}, State> {
       geneUrl,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneSynonyms' does not exist on type 'Readon... Remove this comment to see the full error message
       geneSynonyms,
+      loading,
     } = this.props;
 
     const { minimized } = this.state;
@@ -77,7 +72,12 @@ class GeneInfo extends React.PureComponent<{}, State> {
     // }
 
     const bottomToolbarGutter = 48; // gutter for bottom tool bar
-    const synonymList = geneSynonyms.join(", ");
+    let synonymList;
+    if (geneSynonyms.length > 1) {
+      synonymList = geneSynonyms.join(", ");
+    } else {
+      synonymList = geneSynonyms[0];
+    }
 
     return (
       <div

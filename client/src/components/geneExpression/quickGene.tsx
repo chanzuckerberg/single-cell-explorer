@@ -28,6 +28,7 @@ function QuickGene() {
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [geneNames, setGeneNames] = useState([] as DataframeValue[]);
+  const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
 
   const { annoMatrix, userDefinedGenes, userDefinedGenesLoading } = useSelector(
@@ -58,6 +59,16 @@ function QuickGene() {
         setStatus("pending");
         try {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+          let dfIds: Dataframe;
+
+          try {
+            dfIds = await annoMatrix.fetch("var", "feature_id");
+            console.log("id, success");
+            setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
+          } catch {
+            console.log("no feature ids!");
+          }
+
           setStatus("name, success");
           setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
         } catch (error) {
@@ -128,18 +139,22 @@ function QuickGene() {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    return userDefinedGenes.map((gene: any) => (
-      <>
-        <Gene
-          key={`quick=${gene}`}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
-          gene={gene}
-          removeGene={removeGene}
-          quickGene
-        />
-      </>
-    ));
-  }, [userDefinedGenes, dispatch]);
+    return userDefinedGenes.map((gene: any) => {
+      const geneId = geneIds[geneNames.indexOf(gene)];
+      return (
+        <>
+          <Gene
+            key={`quick=${gene}`}
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
+            gene={gene}
+            removeGene={removeGene}
+            quickGene
+            geneId={geneId}
+          />
+        </>
+      );
+    });
+  }, [userDefinedGenes, geneNames, geneIds, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
