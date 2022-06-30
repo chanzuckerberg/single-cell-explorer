@@ -98,7 +98,6 @@ const Controls = (
         geneSummary: action.summary,
         geneSynonyms: action.synonyms,
         geneName: action.name,
-        infoLoading: false,
       };
     case "load gene info":
       // if scatterplot is open, close it
@@ -114,14 +113,12 @@ const Controls = (
         geneSummary: "",
         geneSynonyms: [""],
         geneName: "",
-        infoLoading: true,
       };
     case "clear gene info":
       console.log(action);
       return {
         ...state,
         geneIsOpen: false,
-        infoLoading: false,
       };
 
     /*******************************

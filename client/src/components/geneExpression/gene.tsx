@@ -11,7 +11,6 @@ import actions from "../../actions";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-// import { Dataframe, DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
@@ -32,28 +31,6 @@ class Gene extends React.Component<{}, State> {
       geneIsExpanded: false,
     };
   }
-
-  // async componentDidMount(): Promise<void> {
-  //   // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Readon... Remove this comment to see the full error message
-  //   const { annoMatrix } = this.props;
-  //   const { schema } = annoMatrix;
-  //   const varIndex = schema.annotations.var.index;
-  //   let dfIds: Dataframe;
-  //   try {
-  //     console.log("before fetch");
-  //     const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-  //     dfIds = await annoMatrix.fetch("var", "feature_id");
-  //     console.log("after fetch", String(dfIds));
-  //     this.setState({
-  //       geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
-  //     });
-  //     this.setState({
-  //       geneNames: df.col(varIndex).asArray() as DataframeValue[],
-  //     });
-  //   } catch {
-  //     console.log("no feature ids!");
-  //   }
-  // }
 
   onColorChangeClick = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message

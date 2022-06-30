@@ -30,7 +30,7 @@ class GeneInfo extends React.PureComponent<{}, State> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      minimized: null,
+      minimized: false,
     };
   }
 
@@ -64,11 +64,11 @@ class GeneInfo extends React.PureComponent<{}, State> {
     } = this.props;
 
     const { minimized } = this.state;
-    // in case an info button is clicked while tab is minimized
-    // use prev state
-    // if (minimized && gene) {
-    //   this.setState({minimized: false})
-    // }
+
+    // hack: if loading, that means that an info button was just recently clicked, so pop-up should reappear
+    if (geneName === "") {
+      this.setState({ minimized: false });
+    }
 
     const bottomToolbarGutter = 48; // gutter for bottom tool bar
     let synonymList;
