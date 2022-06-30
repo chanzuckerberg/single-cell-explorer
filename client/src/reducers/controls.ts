@@ -9,9 +9,9 @@ const Controls = (
     resettingInterface: false,
     graphInteractionMode: "select",
     opacityForDeselectedCells: 0.2,
-    scatterplotXXaccessor: null, // just easier to read
-    scatterplotYYaccessor: null,
-    geneInfoAccessor: null,
+    scatterplotXXaccessor: false, // just easier to read
+    scatterplotYYaccessor: false,
+    geneIsOpen: false,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
 
     datasetDrawer: false,
@@ -86,6 +86,10 @@ const Controls = (
     *******************************/
     case "open gene info":
       console.log(action);
+      if (state.scatterplotXXaccessor && state.scatterplotYYaccessor) {
+        state.scatterplotXXaccessor = false;
+        state.scatterplotYYaccessor = false;
+      }
       return {
         ...state,
         geneIsOpen: true,
@@ -120,11 +124,17 @@ const Controls = (
               Scatterplot
     *******************************/
     case "set scatterplot x":
+      if (state.geneIsOpen && state.scatterplotYYaccessor) {
+        state.geneIsOpen = false;
+      }
       return {
         ...state,
         scatterplotXXaccessor: action.data,
       };
     case "set scatterplot y":
+      if (state.geneIsOpen && state.scatterplotXXaccessor) {
+        state.geneIsOpen = false;
+      }
       return {
         ...state,
         scatterplotYYaccessor: action.data,
