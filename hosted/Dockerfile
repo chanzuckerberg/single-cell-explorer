@@ -1,4 +1,4 @@
-FROM ubuntu:focal as build
+FROM ubuntu:focal
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
@@ -12,9 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip && \
     rm -rf /var/lib/apt/lists/* && \
-    apt-get clean && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1 && \
-    python3 -m pip install psycopg2-binary 
+    apt-get clean
     
 ADD hosted/requirements.txt .
 RUN python3 -m pip install -r requirements.txt
@@ -34,13 +32,6 @@ RUN mkdir -p /server/common/web/templates/
 WORKDIR server/eb
 RUN make build-ecs
 WORKDIR /
-
-# TODO/FIXME: if we move to Alpine, the image size is reduced ~60%, which also speeds up deploy.
-# However, the below lines give the following error after deploy to AWS:
-# "standard_init_linux.go:219: exec user process caused: no such file or directory"
-# # Move to smaller base with only required files
-# FROM alpine:latest as main
-# COPY --from=build /usr/local /usr/local
 
 ENV CXG_CONFIG_FILE=/config.yaml
 CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]
