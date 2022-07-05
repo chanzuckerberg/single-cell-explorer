@@ -197,6 +197,7 @@ class HistogramBrush extends React.PureComponent {
       dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
+      track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
     };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
