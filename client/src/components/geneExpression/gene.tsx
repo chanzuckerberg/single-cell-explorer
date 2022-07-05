@@ -1,8 +1,8 @@
 import React from "react";
-import { connect } from "react-redux";
 
 import { Button, Icon } from "@blueprintjs/core";
 import { Icon as InfoCircle } from "czifui";
+import { connect } from "react-redux";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 import { RootState } from "../../reducers";
@@ -11,21 +11,35 @@ import actions from "../../actions";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
-type State = any;
+type State = RootState;
+
+interface Props {
+  gene: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
+  quickGene: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
+  removeGene: any;
+  geneId: DataframeValue;
+}
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState, ownProps) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type '{}'.
+@connect((state: RootState, ownProps: Props) => {
   const { gene } = ownProps;
+
+  return {
+    isColorAccessor:
+      state.colors.colorAccessor === gene &&
+      state.colors.colorMode !== "color by categorical metadata",
+    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
+    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
+  };
 })
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class Gene extends React.Component<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
+class Gene extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       geneIsExpanded: false,
@@ -39,18 +53,15 @@ class Gene extends React.Component<{}, State> {
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleGeneExpandClick = () => {
+  handleGeneExpandClick = (): void => {
     track(EVENTS.EXPLORER_MAXIMIZE_GENE_BUTTON_CLICKED);
 
     const { geneIsExpanded } = this.state;
     this.setState({ geneIsExpanded: !geneIsExpanded });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleSetGeneAsScatterplotX = () => {
+  handleSetGeneAsScatterplotX = (): void => {
     track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
-
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
@@ -59,10 +70,8 @@ class Gene extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleSetGeneAsScatterplotY = () => {
+  handleSetGeneAsScatterplotY = (): void => {
     track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
-
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
@@ -71,15 +80,13 @@ class Gene extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDeleteGeneFromSet = () => {
+  handleDeleteGeneFromSet = (): void => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene, geneset } = this.props;
     dispatch(actions.genesetDeleteGenes(geneset, [gene]));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDisplayGeneInfo = () => {
+  handleDisplayGeneInfo = (): void => {
     /* Request information about selected gene and trigger the gene info card to display */
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
@@ -186,19 +193,16 @@ class Gene extends React.Component<{}, State> {
 
   render(): JSX.Element {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type 'Readonly<{... Remove this comment to see the full error message
       gene,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneDescription' does not exist on type ... Remove this comment to see the full error message
       geneDescription,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
       isColorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotXXaccessor' does not exist ... Remove this comment to see the full error message
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotXXaccessor' does not exist on type ... Remove this comment to see the full error message
       isScatterplotXXaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist ... Remove this comment to see the full error message
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist on type ... Remove this comment to see the full error message
       isScatterplotYYaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'quickGene' does not exist on type 'Reado... Remove this comment to see the full error message
       quickGene,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'removeGene' does not exist on type 'Read... Remove this comment to see the full error message
       removeGene,
     } = this.props;
     const { geneIsExpanded } = this.state;

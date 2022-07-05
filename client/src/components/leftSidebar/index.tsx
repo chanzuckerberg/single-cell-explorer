@@ -29,7 +29,7 @@ export const STYLE_LEFT_SIDEBAR: CSSProperties = {
   geneIsOpen: (state as any).controls.geneIsOpen,
 }))
 class LeftSideBar extends React.Component {
-  render() {
+  render(): JSX.Element {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'scatterplotXXaccessor' does not exist on... Remove this comment to see the full error message
     const { scatterplotXXaccessor, scatterplotYYaccessor, geneIsOpen } =
       this.props;
@@ -49,7 +49,15 @@ class LeftSideBar extends React.Component {
         {scatterplotXXaccessor && scatterplotYYaccessor ? (
           <DynamicScatterplot />
         ) : null}
-        {geneIsOpen ? <GeneInfo /> : null}
+        {geneIsOpen ? (
+          <GeneInfo
+            geneSummary=""
+            geneName=""
+            gene=""
+            geneUrl=""
+            geneSynonyms={[]}
+          />
+        ) : null}
       </div>
     );
   }

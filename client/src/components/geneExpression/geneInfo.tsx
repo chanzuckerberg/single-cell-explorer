@@ -4,10 +4,16 @@ import { Button, ButtonGroup } from "@blueprintjs/core";
 import * as styles from "./util";
 import { RootState } from "../../reducers";
 import * as globals from "../../globals";
-import { Dataframe, DataframeValue } from "../../util/dataframe";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
+type State = RootState;
+
+interface Props {
+  geneSummary: string;
+  geneName: string;
+  gene: string;
+  geneUrl: string;
+  geneSynonyms: string[];
+}
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state: RootState) => {
@@ -23,49 +29,28 @@ type State = any;
     loading,
   };
 })
-
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class GeneInfo extends React.PureComponent<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on commit
-  constructor(props: {}) {
+class GeneInfo extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       minimized: false,
     };
   }
 
-  // // eslint-disable-next-line @typescript-eslint/ban-types -- FIXME: to fix later
-  // componentDidUpdate(prevProps: {}): void {
-  //   const {
-  //     gene,
-  //   } = this.props;
-  //   const { minimized } = this.state;
-  //   if (gene !== null && prevProps.gene !== gene && minimized) {
-  //     // eslint-disable-next-line react/no-did-update-set-state -- alternative?
-  //     this.setState({ minimized: false });
-  //   }
-  //   // TODO: able to click info button of same gene to open up the gene info box
-  // }
-
   render(): JSX.Element {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type '{ chi... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneSummary' does not exist on type 'Readon... Remove this comment to see the full error message
       geneSummary,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneName' does not exist on type 'Readon... Remove this comment to see the full error message
       geneName,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'gene' does not exist on type 'Readon... Remove this comment to see the full error message
       gene,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneUrl' does not exist on type 'Readon... Remove this comment to see the full error message
       geneUrl,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneSynonyms' does not exist on type 'Readon... Remove this comment to see the full error message
       geneSynonyms,
     } = this.props;
 
     const { minimized } = this.state;
 
-    // hack: if loading, that means that an info button was just recently clicked, so pop-up should reappear
+    // if loading, that means that an info button was just recently clicked, so pop-up should reappear
     if (geneName === "") {
       this.setState({ minimized: false });
     }
@@ -181,9 +166,7 @@ class GeneInfo extends React.PureComponent<{}, State> {
               >
                 {gene}
               </p>
-              <p style={{ fontSize: styles.smallText, fontWeight: 500 }}>
-                {geneName}
-              </p>
+              <p>{geneName}</p>
               <p
                 style={{
                   fontSize: styles.smallText,

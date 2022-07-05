@@ -145,7 +145,6 @@ function QuickGene() {
         <>
           <Gene
             key={`quick=${gene}`}
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
             gene={gene}
             removeGene={removeGene}
             quickGene

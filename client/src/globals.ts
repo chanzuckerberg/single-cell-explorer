@@ -121,7 +121,7 @@ export const graphWidth = 700;
 export const graphHeight = 700;
 export const scatterplotMarginLeft = 11;
 
-export const rightSidebarWidth = 375;
+export const rightSidebarWidth = 380;
 export const leftSidebarWidth = 365;
 export const leftSidebarSectionHeading = {
   fontSize: 18,

@@ -14,10 +14,9 @@ import { Dataframe, DataframeValue } from "../../util/dataframe";
 type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  genesets: (state as any).genesets.genesets,
-  annoMatrix: (state as any).annoMatrix,
+@connect((state: RootState) => ({
+  genesets: state.genesets.genesets,
+  annoMatrix: state.annoMatrix,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneExpression extends React.Component<{}, State> {

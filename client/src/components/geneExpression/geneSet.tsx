@@ -1,5 +1,4 @@
 import React from "react";
-import { connect } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import Gene from "./gene";
 import Truncate from "../util/truncate";
@@ -46,12 +45,11 @@ class GeneSet extends React.Component<{}, State> {
         {setGenesNames.map((gene) => {
           const { geneDescription } = setGenes.get(gene);
           const geneId = geneIds[geneNames.indexOf(gene)];
-          console.log(geneId);
           return (
             <Gene
               key={gene}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; gene: any; geneDescription: any;... Remove this comment to see the full error message
               gene={gene}
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; gene: any; geneDescription: any;... Remove this comment to see the full error message
               geneDescription={geneDescription}
               geneset={setName}
               geneId={geneId}
