@@ -149,7 +149,6 @@ try:
             if config_location.exists():
                 with config_location.local_handle() as lh:
                     logging.info(f"Configuration from {config_file}")
-                    print(lh)
                     app_config.update_from_config_file(lh)
                     has_config = True
             else:
