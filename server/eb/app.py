@@ -149,6 +149,7 @@ try:
             if config_location.exists():
                 with config_location.local_handle() as lh:
                     logging.info(f"Configuration from {config_file}")
+                    print(lh)
                     app_config.update_from_config_file(lh)
                     has_config = True
             else:
@@ -159,12 +160,13 @@ try:
         logging.critical("No config file found")
         sys.exit(1)
 
+    # TODO: looks deprecated - remove
     dataroot = os.getenv("CXG_DATAROOT")
     if dataroot:
         logging.info("Configuration from CXG_DATAROOT")
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
-    # overwrite configuration for the eb app
+    # TODO: this doesn't make sense
     app_config.update_server_config(
         multi_dataset__allowed_matrix_types=["cxg"],
     )

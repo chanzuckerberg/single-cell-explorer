@@ -1,3 +1,7 @@
+locals {
+  domain = "cellxgene.${var.env}.single-cell.czi.technology"
+}
+
 module stack {
   source                       = "./modules/ecs-stack"
   aws_account_id               = var.aws_account_id
@@ -12,6 +16,11 @@ module stack {
   require_okta                 = true
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
+
+  api_domain                   = "${stack_name}-explorer.rdev.single-cell.czi.technology"
+  web_domain                   = "${stack_name}-explorer.rdev.single-cell.czi.technology"
+  data_locator_domain          = "${stack_name}-backend.internal.rdev.single-cell.czi.technology"
+  cxg_bucket_path              = "env-rdev-cellxgene/${var.stack_name}"
 
   wait_for_steady_state        = var.wait_for_steady_state
 }

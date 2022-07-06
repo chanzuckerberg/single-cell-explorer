@@ -9,7 +9,6 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
-ADD hosted/create_env_config.py .
 
 ADD server/ server/
 ADD client/ client/
@@ -29,8 +28,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 
 RUN python3 -m pip install psycopg2-binary
 RUN python3 -m pip install -r requirements.txt
-
-RUN python3 create_env_config.py
 
 RUN make build-client
 

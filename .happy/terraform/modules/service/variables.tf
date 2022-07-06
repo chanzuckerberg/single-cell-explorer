@@ -84,9 +84,24 @@ variable "cmd" {
   default     = []
 }
 
-variable "api_url" {
+variable "api_domain" {
   type        = string
-  description = "URL for the backend api."
+  description = "domain for the backend api"
+}
+
+variable "web_domain" {
+  type        = string
+  description = "domain for the website"
+}
+
+variable "data_locator_domain" {
+  type        = string
+  description = "domain for the data portal"
+}
+
+variable "cxg_bucket_path" {
+  type        = string
+  description = "path to the cxg bucket"
 }
 
 variable "deployment_stage" {
