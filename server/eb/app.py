@@ -159,13 +159,11 @@ try:
         logging.critical("No config file found")
         sys.exit(1)
 
-    # TODO: looks deprecated - remove
     dataroot = os.getenv("CXG_DATAROOT")
     if dataroot:
         logging.info("Configuration from CXG_DATAROOT")
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
-    # TODO: this doesn't make sense
     app_config.update_server_config(
         multi_dataset__allowed_matrix_types=["cxg"],
     )
