@@ -1,9 +1,17 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Button, ButtonGroup } from "@blueprintjs/core";
-import * as styles from "./util";
-import { RootState } from "../../reducers";
-import * as globals from "../../globals";
+import {
+  SynHeader,
+  Synonyms,
+  Link,
+  Content,
+  GeneSymbol,
+  GeneHeader,
+} from "./style";
+import * as styles from "../util";
+import { RootState } from "../../../reducers";
+import * as globals from "../../../globals";
 
 type State = RootState;
 
@@ -77,17 +85,15 @@ class GeneInfo extends React.PureComponent<Props, State> {
         }}
         id="geneinfo_wrapper"
       >
-        <p
+        <GeneHeader
           style={{
             position: "absolute",
             marginLeft: styles.margin.left,
             top: styles.margin.bottom / 2,
-            fontSize: styles.mediumText,
-            color: globals.darkGrey,
           }}
         >
           Gene Info
-        </p>
+        </GeneHeader>
         <ButtonGroup
           style={{
             position: "absolute",
@@ -136,17 +142,8 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 marginBottom: styles.margin.bottom,
               }}
             >
-              <p
-                style={{
-                  fontSize: styles.largeText,
-                  fontWeight: globals.bolder,
-                }}
-              >
-                {gene}
-              </p>
-              <p style={{ fontSize: styles.smallText, fontWeight: 500 }}>
-                loading...
-              </p>
+              <GeneSymbol>{gene}</GeneSymbol>
+              <Content>loading...</Content>
             </div>
           ) : null}
           {!minimized && geneName !== "" ? (
@@ -158,44 +155,25 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 marginBottom: styles.margin.bottom,
               }}
             >
-              <p
+              <GeneSymbol>{gene}</GeneSymbol>
+              <Content>{geneName}</Content>
+              <Content
                 style={{
-                  fontSize: styles.largeText,
-                  fontWeight: globals.bolder,
-                }}
-              >
-                {gene}
-              </p>
-              <p>{geneName}</p>
-              <p
-                style={{
-                  fontSize: styles.smallText,
                   display: "-webkit-box",
-                  WebkitLineClamp: 7,
+                  WebkitLineClamp: "7",
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden",
                 }}
               >
                 {geneSummary}
-              </p>
+              </Content>
               <p>
-                <span style={{ color: globals.mediumGrey }}>Synonyms</span>
-                <span style={{ fontSize: styles.smallText, padding: "5px" }}>
-                  {synonymList}
-                </span>
+                <SynHeader>Synonyms</SynHeader>
+                <Synonyms>{synonymList}</Synonyms>
               </p>
-              <a
-                href={geneUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                style={{
-                  fontSize: styles.mediumText,
-                  color: globals.linkBlue,
-                  fontWeight: 500,
-                }}
-              >
+              <Link href={geneUrl} target="_blank" rel="noreferrer noopener">
                 View on NCBI
-              </a>
+              </Link>
             </div>
           ) : null}
         </div>

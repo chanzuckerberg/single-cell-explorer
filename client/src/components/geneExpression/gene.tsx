@@ -12,6 +12,7 @@ import actions from "../../actions";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { DataframeValue } from "../../util/dataframe";
+import { doJsonRequest } from "../../util/actionHelpers";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
@@ -24,6 +25,13 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
   removeGene: any;
   geneId: DataframeValue;
+}
+
+interface GeneInfoAPI {
+  ncbi_url: string;
+  name: string;
+  synonyms: string[];
+  summary: string;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -86,11 +94,10 @@ class Gene extends React.Component<Props, State> {
     dispatch(actions.genesetDeleteGenes(geneset, [gene]));
   };
 
-  handleDisplayGeneInfo = (): void => {
-    /* Request information about selected gene and trigger the gene info card to display */
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED); // tracking?
+  handleDisplayGeneInfo = async (): Promise<void> => {
+    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED);
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene, geneId } = this.props; // why are these errors happening?
+    const { dispatch, gene, geneId } = this.props;
 
     // Trigger loading gene info card
     dispatch({
@@ -98,97 +105,20 @@ class Gene extends React.Component<Props, State> {
       gene,
     });
 
-    // const { geneIds, geneNames } = this.state;
-    // const geneId = geneIds[geneNames.indexOf(gene)];
-    // console.log("gene id:", String(geneId));
-
-    // if (geneId === null) {
-    //   // error ??
-    //   console.log("here");
-    //   return;
-    // }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME: disabled temporarily
-    // const response: any = doJsonRequest(
-    //   `https://rdev-siena-geneinfo-backend.rdev.single-cell.czi.technology/geneinfo/v1/geneinfo?geneID=${geneId}`
-    // );
-
-    // fetch(
-    //   `https://rdev-siena-geneinfo-backend.rdev.single-cell.czi.technology/geneinfo/v1/geneinfo?geneID=${geneId}`, {
-    //     method: 'GET',
-    //     mode: 'no-cors',
-    //     headers: {
-    //       'Content-Type': 'application/json'
-    //     },
-    //   }).then((r) => {
-    //     const response = r.json();
-    //     console.log(response);
-    //     dispatch({
-    //       type: "open gene info",
-    //       gene,
-    //       url: response.ncbi_url,
-    //       name: response.name,
-    //       synonyms: response.synonyms,
-    //       summary: response.summary,
-    //     });
-    //   })
-
-    // dispatch({
-    //   type: "open gene info",
-    //   gene,
-    //   url: response.ncbi_url,
-    //   name: response.name,
-    //   synonyms: response.synonyms,
-    //   summary: response.summary
-    // });
-
-    let geneUID: number;
-
-    fetch(
-      `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gene&term=${geneId}&retmode=json`
-    )
-      .then((response) => {
-        console.log(response);
-        return response.json();
-      })
-      .then((data) => {
-        geneUID = data.esearchresult.idlist[0];
-        console.log(geneUID);
-
-        fetch(
-          `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=gene&id=${geneUID}&retmode=xml`
-        )
-          .then((resp) => resp.text())
-          .then((str) =>
-            new window.DOMParser().parseFromString(str, "text/xml")
-          )
-          .then((info) => {
-            console.log(info);
-            if (!info) {
-              return;
-            }
-
-            const contents = {
-              url: `https://www.ncbi.nlm.nih.gov/gene/${geneUID}`,
-              name: info.getElementsByTagName("Gene-ref_desc")[0].childNodes[0]
-                .nodeValue,
-              summary:
-                info.getElementsByTagName("Entrezgene_summary")[0].childNodes[0]
-                  .nodeValue,
-              synonyms: ["TEST1", "TEST2", "TEST3"],
-            };
-            console.log(contents);
-
-            dispatch({
-              type: "open gene info",
-              gene,
-              url: contents.url,
-              name: contents.name,
-              synonyms: contents.synonyms,
-              summary: contents.summary,
-            });
-          });
-      });
+    // Call gene info API endpoint and dispatch result
+    const env = "https://api.dev.single-cell.czi.technology";
+    const info = await doJsonRequest<GeneInfoAPI>(
+      `${env}/gene_info/v1/gene_info/geneID=${geneId}`
+    );
+    console.log(info);
+    dispatch({
+      type: "open gene info",
+      gene,
+      url: info.ncbi_url,
+      name: info.name,
+      synonyms: info.synonyms,
+      summary: info.summary,
+    });
   };
 
   render(): JSX.Element {

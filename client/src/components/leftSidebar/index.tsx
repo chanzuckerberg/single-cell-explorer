@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import Categorical from "../categorical";
 import * as globals from "../../globals";
 import DynamicScatterplot from "../scatterplot/scatterplot";
-import GeneInfo from "../geneExpression/geneInfo";
+import GeneInfo from "../geneExpression/geneInfo/geneInfo";
 import TopLeftLogoAndTitle from "./topLeftLogoAndTitle";
 import Continuous from "../continuous/continuous";
 
