@@ -10,12 +10,15 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip && \
+    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
     
+RUN curl -sL https://deb.nodesource.com/setup_15.x  | bash -
+RUN apt-get -y install nodejs
+RUN node -v
+
 ADD hosted/requirements.txt .
-RUN python3 -m pip install -r requirements.txt
 
 ADD hosted/create_env_config.py .
 RUN python3 create_env_config.py
