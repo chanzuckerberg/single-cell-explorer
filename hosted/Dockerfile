@@ -9,7 +9,7 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 ADD hosted/requirements.txt .
-ADD hosted/config.yaml
+ADD hosted/config.yaml config.yaml
 
 ADD server/ server/
 ADD client/ client/
