@@ -18,7 +18,6 @@ RUN apt-get -y install nodejs
 RUN node -v
 
 ADD hosted/requirements.txt .
-ADD hosted/config.yaml config.yaml
 
 RUN python3 -m pip install -r requirements.txt
 
@@ -35,5 +34,6 @@ WORKDIR server/eb
 RUN make build-ecs
 WORKDIR /
 
+ADD hosted/config.yaml config.yaml
 ENV CXG_CONFIG_FILE=/config.yaml
 CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]
