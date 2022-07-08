@@ -3,6 +3,8 @@ import hashlib
 import logging
 import sys
 import zlib
+import json
+import requests
 from http import HTTPStatus
 import struct
 
@@ -198,6 +200,7 @@ def data_var_put(request, data_adaptor):
 
 
 def data_var_get(request, data_adaptor):
+    print(request.args)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -220,6 +223,21 @@ def colors_get(data_adaptor):
         return make_response(jsonify(data_adaptor.get_colors()), HTTPStatus.OK)
     except ColorFormatException as e:
         return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)
+
+def gene_info_get(request, data_adaptor):
+    """
+    Request information about a gene from the data portal gene_info api
+    """
+    """ still needs to be not hardcoded ! TODO siena """
+    # print(current_app.app_config.server_config.app__api_base_url)
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    data_portal_api_base = "https://public-backend.dev.single-cell.czi.technology/"
+    try: 
+        response = requests.get(url=f"{data_portal_api_base}gene_info/v1/gene_info?geneID={request.args['geneID']}", headers=headers)
+        if response.status_code == 200:
+            return json.loads(response.content)
+    except Exception as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
 def diffexp_obs_post(request, data_adaptor):

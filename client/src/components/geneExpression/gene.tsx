@@ -12,7 +12,6 @@ import actions from "../../actions";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { DataframeValue } from "../../util/dataframe";
-import { doJsonRequest } from "../../util/actionHelpers";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
@@ -25,13 +24,6 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
   removeGene: any;
   geneId: DataframeValue;
-}
-
-interface GeneInfoAPI {
-  ncbi_url: string;
-  name: string;
-  synonyms: string[];
-  summary: string;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -98,19 +90,24 @@ class Gene extends React.Component<Props, State> {
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED);
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene, geneId } = this.props;
-
-    // Trigger loading gene info card
     dispatch({
       type: "load gene info",
       gene,
     });
 
-    // Call gene info API endpoint and dispatch result
-    const env = "https://api.dev.single-cell.czi.technology";
-    const info = await doJsonRequest<GeneInfoAPI>(
-      `${env}/gene_info/v1/gene_info/geneID=${geneId}`
-    );
+    const info = await actions.fetchGeneInfo(geneId);
     console.log(info);
+    if (!info) {
+      dispatch({
+        type: "open gene info",
+        gene,
+        url: "",
+        name: "failed",
+        synonyms: [],
+        summary: "",
+      });
+      return;
+    }
     dispatch({
       type: "open gene info",
       gene,

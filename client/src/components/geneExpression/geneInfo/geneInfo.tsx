@@ -67,9 +67,13 @@ class GeneInfo extends React.PureComponent<Props, State> {
     let synonymList;
     if (geneSynonyms.length > 1) {
       synonymList = geneSynonyms.join(", ");
-    } else {
+    } else if (geneSynonyms.length === 1) {
       synonymList = geneSynonyms[0];
+    } else {
+      synonymList = null;
     }
+
+    console.log(geneSummary);
 
     return (
       <div
@@ -146,7 +150,21 @@ class GeneInfo extends React.PureComponent<Props, State> {
               <Content>loading...</Content>
             </div>
           ) : null}
-          {!minimized && geneName !== "" ? (
+          {/* failed gene search */}
+          {geneName === "failed" ? (
+            <div
+              style={{
+                marginTop: styles.margin.top,
+                marginLeft: styles.margin.left,
+                marginRight: styles.margin.right,
+                marginBottom: styles.margin.bottom,
+              }}
+            >
+              <GeneSymbol>{gene}</GeneSymbol>
+              <Content>Sorry we cannot find this gene for you!</Content>
+            </div>
+          ) : null}
+          {!minimized && geneName !== "" && geneName !== "failed" ? (
             <div
               style={{
                 marginTop: styles.margin.top,
@@ -157,23 +175,40 @@ class GeneInfo extends React.PureComponent<Props, State> {
             >
               <GeneSymbol>{gene}</GeneSymbol>
               <Content>{geneName}</Content>
-              <Content
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: "7",
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
-                {geneSummary}
-              </Content>
-              <p>
-                <SynHeader>Synonyms</SynHeader>
-                <Synonyms>{synonymList}</Synonyms>
-              </p>
-              <Link href={geneUrl} target="_blank" rel="noreferrer noopener">
-                View on NCBI
-              </Link>
+              {geneSummary === "" ? (
+                <Content
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: "7",
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  This gene does not currently have summary information in NCBI.
+                </Content>
+              ) : (
+                <Content
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: "7",
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {geneSummary}
+                </Content>
+              )}
+              {synonymList ? (
+                <p>
+                  <SynHeader>Synonyms</SynHeader>
+                  <Synonyms>{synonymList}</Synonyms>
+                </p>
+              ) : null}
+              {geneUrl !== "" ? (
+                <Link href={geneUrl} target="_blank" rel="noreferrer noopener">
+                  View on NCBI
+                </Link>
+              ) : null}
             </div>
           ) : null}
         </div>

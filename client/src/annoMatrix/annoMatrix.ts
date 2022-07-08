@@ -517,6 +517,7 @@ export default abstract class AnnoMatrix {
             query,
             async (_field: Field, _query: Query): Promise<void> => {
               /* fetch, then index.  _doLoad is subclass interface */
+              console.log(_query);
               const [whereCacheUpdate, df] = await this._doLoad(_field, _query);
               this._cache[_field] = this._cache[_field].withColsFrom(df);
               this._whereCache = _whereCacheMerge(

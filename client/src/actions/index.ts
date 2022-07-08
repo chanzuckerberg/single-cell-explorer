@@ -1,4 +1,5 @@
 import { AnyAction } from "redux";
+import { result } from "lodash";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
@@ -26,7 +27,7 @@ import {
 } from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { LabelArray, LabelIndex } from "../util/dataframe";
+import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
@@ -139,6 +140,22 @@ async function genesetsFetchAndLoad(
   }
 }
 
+/**
+ * Fetch gene summary information and dispatch gene information card action
+ * @param dispatch Function facilitating update of store.
+ * @param geneID ensembl ID corresponding to gene to search
+ */
+interface GeneInfoAPI {
+  ncbi_url: string;
+  name: string;
+  synonyms: string[];
+  summary: string;
+}
+async function fetchGeneInfo(geneID: DataframeValue): Promise<GeneInfoAPI> {
+  const response = await fetchJson<GeneInfoAPI>(`geneinfo?geneID=${geneID}`);
+  return response;
+}
+
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   /*
   prefetch requests for all embeddings
@@ -159,6 +176,7 @@ const doInitialDataLoad = (): ((
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
+    console.log("initial data load");
     if (!globals.API) throw new Error("API not set");
 
     try {
@@ -169,8 +187,10 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
+      console.log(oldPrefix);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      console.log("after dataset metadata fetch");
 
       genesetsFetchAndLoad(dispatch, config);
 
@@ -273,6 +293,9 @@ const requestDifferentialExpression =
         set1: set1Uint32,
         set2: set2Uint32,
       };
+
+      console.log(globals.API.prefix);
+      console.log(globals.API.version);
 
       const res = await fetch(
         `${globals.API.prefix}${globals.API.version}diffexp/obs2`,
@@ -457,6 +480,7 @@ export default {
   checkExplainNewTab,
   navigateCheckUserState,
   selectDataset,
+  fetchGeneInfo,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:
