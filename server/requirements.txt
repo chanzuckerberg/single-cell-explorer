@@ -2,6 +2,7 @@ anndata>=0.7.6 # we need to_memory(), added in 0.7.6
 bitarray>=2.3.6
 boto3>=1.12.18
 click<8.0,>=5.1
+envyaml>=1.9
 Flask>=1.0.2,<2.0.0 # Flask 2.0 is not compatible with the latest version of Flask-RESTful (0.3.8)
 Flask-Compress>=1.4.0
 Flask-Cors>=3.0.9  # CVE-2020-25032

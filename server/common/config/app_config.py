@@ -7,6 +7,8 @@ from server.common.config.server_config import ServerConfig
 from server.common.errors import ConfigurationError
 from server.default_config import get_default_config
 
+from envyaml import EnvYAML
+
 
 class AppConfig(object):
     """
@@ -125,8 +127,8 @@ class AppConfig(object):
 
     def update_from_config_file(self, config_file):
         try:
-            with open(config_file) as yml_file:
-                config = yaml.safe_load(yml_file)
+            print("open config")
+            config = EnvYAML(config_file)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}")
         except OSError as e:
