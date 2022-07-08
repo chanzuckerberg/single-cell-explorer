@@ -17,6 +17,8 @@ module stack {
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
   memory                       = 50000
+  explorer_instance_count      = 2
+
 
   api_domain                   = "api.${local.domain}"
   web_domain                   = "${local.domain}"
