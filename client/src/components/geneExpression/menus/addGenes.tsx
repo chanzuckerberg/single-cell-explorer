@@ -64,9 +64,9 @@ type AddGenesState = any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   annoMatrix: (state as any).annoMatrix,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  userDefinedGenes: (state as any).controls.userDefinedGenes,
+  userDefinedGenes: (state as any).quickGenes.userDefinedGenes,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  userDefinedGenesLoading: (state as any).controls.userDefinedGenesLoading,
+  userDefinedGenesLoading: (state as any).quickGenes.userDefinedGenesLoading,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class AddGenes extends React.Component<{}, AddGenesState> {

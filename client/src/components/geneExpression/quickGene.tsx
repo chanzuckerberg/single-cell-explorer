@@ -35,9 +35,10 @@ function QuickGene() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       annoMatrix: (state as any).annoMatrix,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      userDefinedGenes: (state as any).controls.userDefinedGenes,
+      userDefinedGenes: (state as any).quickGenes.userDefinedGenes,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      userDefinedGenesLoading: (state as any).controls.userDefinedGenesLoading,
+      userDefinedGenesLoading: (state as any).quickGenes
+        .userDefinedGenesLoading,
     })
   );
 
@@ -121,7 +122,7 @@ function QuickGene() {
 
   const QuickGenes = useMemo((): JSX.Element => {
     const removeGene = (gene: any) => () => {
-      dispatch({ type: "clear user defined gene", data: gene });
+      dispatch({ type: "clear user defined gene", gene });
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
