@@ -152,5 +152,4 @@ def discover_s3_region_name(uri):
             return region
         else:
             return None
-
     return None

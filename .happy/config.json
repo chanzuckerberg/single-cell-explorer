@@ -36,5 +36,8 @@
             "log_group_prefix": "/explorer/prod"
         }
     },
-    "tasks": {}
+    "tasks": {
+        "migrate": [],
+        "delete": []
+    }
 }
