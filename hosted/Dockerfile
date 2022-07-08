@@ -19,9 +19,9 @@ RUN apt-get -y install nodejs
 RUN node -v
 
 ADD hosted/requirements.txt .
+ADD hosted/config.yaml config.yaml
 
-ADD hosted/create_env_config.py .
-RUN python3 create_env_config.py
+RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile
 ADD common.mk common.mk

@@ -1,3 +1,7 @@
+locals {
+  domain = "cellxgene.staging.single-cell.czi.technology"
+}
+
 module stack {
   source                       = "./modules/ecs-stack"
   aws_account_id               = var.aws_account_id
@@ -13,6 +17,10 @@ module stack {
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
   memory                       = 50000
+
+  api_domain                   = "api.${local.domain}"
+  web_domain                   = "${local.domain}"
+  data_locator_domain          = "api.${local.domain}"
 
   wait_for_steady_state        = var.wait_for_steady_state
 }

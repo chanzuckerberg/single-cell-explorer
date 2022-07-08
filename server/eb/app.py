@@ -164,7 +164,6 @@ try:
         logging.info("Configuration from CXG_DATAROOT")
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
-    # overwrite configuration for the eb app
     app_config.update_server_config(
         multi_dataset__allowed_matrix_types=["cxg"],
     )
