@@ -1,5 +1,5 @@
 locals {
-  domain = "cellxgene.${var.env}.single-cell.czi.technology"
+  domain = "cellxgene.staging.single-cell.czi.technology"
 }
 
 module stack {
