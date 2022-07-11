@@ -36,6 +36,7 @@ interface Props {
       state.colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
+    isGeneInfo: state.controls.gene === gene && state.controls.geneIsOpen,
   };
 })
 class Gene extends React.Component<Props, State> {
@@ -129,6 +130,8 @@ class Gene extends React.Component<Props, State> {
       isScatterplotXXaccessor,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist on type ... Remove this comment to see the full error message
       isScatterplotYYaccessor,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneInfo' does not exist on type ... Remove this comment to see the full error message
+      isGeneInfo,
       quickGene,
       removeGene,
     } = this.props;
@@ -194,9 +197,8 @@ class Gene extends React.Component<Props, State> {
                 small
                 data-testid={`get-info-${gene}`}
                 onClick={this.handleDisplayGeneInfo}
-                style={{
-                  filter: "grayscale(100%)",
-                }}
+                active={isGeneInfo}
+                intent={isGeneInfo ? "primary" : "none"}
               >
                 <InfoCircle sdsIcon="infoCircle" sdsSize="s" sdsType="static" />
               </Button>
