@@ -28,7 +28,7 @@ services:
       context: .
       dockerfile: hosted/Dockerfile
       cache_from:
-        - "${DOCKER_REPO}corpora-explorer:branch-main"
+        - "${DOCKER_REPO}corpora-explorer:latest"
       args:
         - BUILDKIT_INLINE_CACHE=1
         - HAPPY_COMMIT
