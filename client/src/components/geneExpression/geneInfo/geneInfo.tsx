@@ -161,7 +161,14 @@ class GeneInfo extends React.PureComponent<Props, State> {
               }}
             >
               <GeneSymbol>{gene}</GeneSymbol>
-              <Content>Sorry we cannot find this gene for you!</Content>
+              <Content>Sorry, this gene could not be found on NCBI.</Content>
+              <Link
+                href={`https://www.google.com/search?q=${gene}`}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                Search on Google
+              </Link>
             </div>
           ) : null}
           {!minimized && geneName !== "" && geneName !== "failed" ? (
@@ -184,7 +191,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
                     overflow: "hidden",
                   }}
                 >
-                  This gene does not currently have summary information in NCBI.
+                  This gene does not currently have a summary in NCBI.
                 </Content>
               ) : (
                 <Content
