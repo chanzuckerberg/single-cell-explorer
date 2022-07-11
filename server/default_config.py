@@ -85,6 +85,9 @@ server:
     about: null
     title: null
 
+  gene_info:
+    api_base: null
+
   data_locator:
     api_base: null
     s3:
@@ -93,6 +96,9 @@ server:
       #   if false/null, then do not set.
       #   if a string, then use that value (e.g. us-east-1).
       region_name: true
+
+  gene_info:
+    api_base: null
 
   adaptor:
     cxg_adaptor:

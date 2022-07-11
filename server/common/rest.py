@@ -228,12 +228,11 @@ def gene_info_get(request, data_adaptor):
     """
     Request information about a gene from the data portal gene_info api
     """
-    """ still needs to be not hardcoded ! TODO siena """
-    # print(current_app.app_config.server_config.app__api_base_url)
+    api_base_url = current_app.app_config.server_config.get_gene_info_api_base_url()
+    print(api_base_url)
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    data_portal_api_base = "https://public-backend.dev.single-cell.czi.technology/"
     try: 
-        response = requests.get(url=f"{data_portal_api_base}gene_info/v1/gene_info?geneID={request.args['geneID']}", headers=headers)
+        response = requests.get(url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}", headers=headers)
         if response.status_code == 200:
             return json.loads(response.content)
     except Exception as e:

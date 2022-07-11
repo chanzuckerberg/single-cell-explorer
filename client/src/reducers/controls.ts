@@ -1,3 +1,6 @@
+import { StatusTypes } from "react-async";
+import { genesetAddGenes } from "../actions/geneset";
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const Controls = (
   state = {
@@ -12,6 +15,7 @@ const Controls = (
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     geneIsOpen: false,
+    gene: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
 
     datasetDrawer: false,
@@ -90,6 +94,18 @@ const Controls = (
         state.scatterplotXXaccessor = false;
         state.scatterplotYYaccessor = false;
       }
+      // new gene clicked in the span of loading
+      if (state.gene !== action.gene) {
+        return {
+          ...state,
+          geneIsOpen: true,
+          gene: state.gene,
+          geneUrl: "",
+          geneSummary: "",
+          geneSynonyms: [""],
+          geneName: "",
+        };
+      }
       return {
         ...state,
         geneIsOpen: true,
@@ -105,6 +121,7 @@ const Controls = (
         state.scatterplotXXaccessor = false;
         state.scatterplotYYaccessor = false;
       }
+      state.gene = action.gene;
       return {
         ...state,
         geneIsOpen: true,
