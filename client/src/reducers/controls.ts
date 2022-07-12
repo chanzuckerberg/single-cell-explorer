@@ -1,5 +1,42 @@
-import { StatusTypes } from "react-async";
-import { genesetAddGenes } from "../actions/geneset";
+/* logic for minimizing / maximizing pop-ups */
+const minMaxPopUps = (
+  geneLevel: string,
+  geneIsMin: boolean,
+  geneIsOpen: boolean,
+  scatterplotLevel: string,
+  scatterplotIsMin: boolean,
+  scatterplotIsOpen: boolean
+) => {
+  console.log("gene level: ", geneLevel);
+  console.log("gene min: ", geneIsMin);
+  console.log("scatterplot level: ", scatterplotLevel);
+  console.log("scatterplot min: ", scatterplotIsMin);
+  console.log("gene open: ", geneIsOpen);
+  console.log("scatterplot open: ", scatterplotIsOpen);
+
+  if (geneIsMin && geneIsOpen && scatterplotIsMin && scatterplotIsOpen) {
+    return {
+      geneLevel,
+      scatterplotLevel,
+    };
+  }
+  if (!geneIsMin) {
+    return {
+      geneLevel: scatterplotIsMin && scatterplotIsOpen ? "top" : "bottom",
+      scatterplotLevel: scatterplotIsMin && scatterplotIsOpen ? "bottom" : "",
+    };
+  }
+  if (!scatterplotIsMin) {
+    return {
+      scatterplotLevel: geneIsMin && geneIsOpen ? "top" : "bottom",
+      geneLevel: geneIsMin && geneIsOpen ? "bottom" : "",
+    };
+  }
+  return {
+    geneLevel: geneIsMin ? "bottom" : "top",
+    scatterplotLevel: scatterplotIsMin ? "bottom" : "top",
+  };
+};
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const Controls = (
@@ -15,6 +52,11 @@ const Controls = (
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     geneIsOpen: false,
+    scatterplotIsMinimized: false,
+    geneIsMinimized: false,
+    scatterplotLevel: "",
+    scatterplotIsOpen: false,
+    geneLevel: "",
     gene: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
 
@@ -88,83 +130,252 @@ const Controls = (
     /*******************************
               Gene Info
     *******************************/
-    case "open gene info":
-      // if scatterplot is open, close it
-      if (state.scatterplotXXaccessor && state.scatterplotYYaccessor) {
-        state.scatterplotXXaccessor = false;
-        state.scatterplotYYaccessor = false;
+    case "open gene info": {
+      // if scatterplot is already open
+      if (
+        !state.scatterplotIsMinimized &&
+        state.scatterplotXXaccessor &&
+        state.scatterplotYYaccessor
+      ) {
+        state.scatterplotIsMinimized = true;
+        state.geneIsMinimized = false;
       }
+      state.geneIsOpen = true;
+
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
       // new gene clicked in the span of loading
       if (state.gene !== action.gene) {
         return {
           ...state,
-          geneIsOpen: true,
+          geneIsOpen: state.geneIsOpen,
           gene: state.gene,
           geneUrl: "",
           geneSummary: "",
           geneSynonyms: [""],
           geneName: "",
+          geneIsMinimized: state.geneIsMinimized,
+          geneLevel: state.geneLevel,
         };
       }
       return {
         ...state,
-        geneIsOpen: true,
+        geneIsOpen: state.geneIsOpen,
         gene: action.gene,
         geneUrl: action.url,
         geneSummary: action.summary,
         geneSynonyms: action.synonyms,
         geneName: action.name,
+        geneIsMinimized: false,
+        geneLevel: state.geneLevel,
       };
-    case "load gene info":
-      // if scatterplot is open, close it
-      if (state.scatterplotXXaccessor && state.scatterplotYYaccessor) {
-        state.scatterplotXXaccessor = false;
-        state.scatterplotYYaccessor = false;
+    }
+
+    case "load gene info": {
+      // if scatterplot is already open
+      if (
+        !state.scatterplotIsMinimized &&
+        state.scatterplotXXaccessor &&
+        state.scatterplotYYaccessor
+      ) {
+        state.scatterplotIsMinimized = true;
+        state.geneIsMinimized = false;
       }
+      state.geneIsOpen = true;
+
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      console.log(stackLevels);
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
       state.gene = action.gene;
+      console.log(state.gene);
+      console.log(state.geneLevel);
+      console.log(state.scatterplotLevel);
+
       return {
         ...state,
-        geneIsOpen: true,
+        geneIsOpen: state.geneIsOpen,
         gene: action.gene,
         geneUrl: "",
         geneSummary: "",
         geneSynonyms: [""],
         geneName: "",
+        geneIsMinimized: false,
+        geneLevel: state.geneLevel,
       };
-    case "clear gene info":
-      console.log(action);
+    }
+
+    case "minimize/maximize gene info": {
+      state.geneIsMinimized = !state.geneIsMinimized;
+      if (!state.geneIsMinimized) {
+        state.scatterplotIsMinimized = true;
+      }
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
       return {
         ...state,
-        geneIsOpen: false,
+        geneIsMinimized: state.geneIsMinimized,
+        geneLevel: state.geneLevel,
+        scatterplotIsMinimized: state.scatterplotIsMinimized,
       };
+    }
+
+    case "clear gene info": {
+      state.geneIsOpen = false;
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
+      return {
+        ...state,
+        geneIsOpen: state.geneIsOpen,
+        geneIsMinimized: null,
+        geneLevel: state.geneLevel,
+      };
+    }
 
     /*******************************
               Scatterplot
     *******************************/
-    case "set scatterplot x":
-      // if gene info card is open, close it
-      if (state.geneIsOpen && state.scatterplotYYaccessor) {
-        state.geneIsOpen = false;
+    case "set scatterplot x": {
+      // gene info is already open
+      if (
+        !state.geneIsMinimized &&
+        state.geneIsOpen &&
+        state.scatterplotYYaccessor
+      ) {
+        state.geneIsMinimized = true;
+        state.scatterplotIsMinimized = false;
+        state.scatterplotIsOpen = true;
       }
+
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
       return {
         ...state,
         scatterplotXXaccessor: action.data,
+        scatterplotIsMinimized: false,
+        scatterplotLevel: state.scatterplotLevel,
       };
-    // if gene info card is open, close it
-    case "set scatterplot y":
-      if (state.geneIsOpen && state.scatterplotXXaccessor) {
-        state.geneIsOpen = false;
+    }
+
+    case "set scatterplot y": {
+      // gene info is already open
+      if (
+        !state.geneIsMinimized &&
+        state.geneIsOpen &&
+        state.scatterplotXXaccessor
+      ) {
+        state.geneIsMinimized = true;
+        state.scatterplotIsMinimized = false;
+        state.scatterplotIsOpen = true;
       }
+
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+      console.log(state.geneLevel, state.scatterplotLevel);
+
       return {
         ...state,
         scatterplotYYaccessor: action.data,
+        scatterplotIsMinimized: false,
+        scatterplotLevel: state.scatterplotLevel,
       };
-    case "clear scatterplot":
+    }
+
+    case "minimize/maximize scatterplot": {
+      state.scatterplotIsMinimized = !state.scatterplotIsMinimized;
+      if (!state.scatterplotIsMinimized) {
+        state.geneIsMinimized = true;
+      }
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
+      return {
+        ...state,
+        scatterplotIsMinimized: state.scatterplotIsMinimized,
+        scatterplotLevel: state.scatterplotLevel,
+        geneIsMinimized: state.geneIsMinimized,
+      };
+    }
+
+    case "clear scatterplot": {
+      state.scatterplotIsOpen = false;
+      const stackLevels = minMaxPopUps(
+        state.geneLevel,
+        state.geneIsMinimized,
+        state.geneIsOpen,
+        state.scatterplotLevel,
+        state.scatterplotIsMinimized,
+        state.scatterplotIsOpen
+      );
+      state.geneLevel = stackLevels.geneLevel;
+      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
       return {
         ...state,
         scatterplotXXaccessor: null,
         scatterplotYYaccessor: null,
+        scatterplotIsMinimized: null,
+        scatterplotLevel: state.scatterplotLevel,
       };
+    }
 
     /**************************
           Dataset Drawer

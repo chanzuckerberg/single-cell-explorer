@@ -21,12 +21,22 @@ interface Props {
   gene: string;
   geneUrl: string;
   geneSynonyms: string[];
+  geneIsMinimized: boolean;
+  geneLevel: string;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state: RootState) => {
-  const { geneSummary, geneName, gene, geneSynonyms, geneUrl, loading } =
-    state.controls;
+  const {
+    geneSummary,
+    geneName,
+    gene,
+    geneSynonyms,
+    geneUrl,
+    loading,
+    geneIsMinimized,
+    geneLevel,
+  } = state.controls;
 
   return {
     geneSummary,
@@ -35,16 +45,11 @@ interface Props {
     geneSynonyms,
     geneUrl,
     loading,
+    geneIsMinimized,
+    geneLevel,
   };
 })
 class GeneInfo extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      minimized: false,
-    };
-  }
-
   render(): JSX.Element {
     const {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type '{ chi... Remove this comment to see the full error message
@@ -54,16 +59,15 @@ class GeneInfo extends React.PureComponent<Props, State> {
       gene,
       geneUrl,
       geneSynonyms,
+      geneIsMinimized,
+      geneLevel,
     } = this.props;
 
-    const { minimized } = this.state;
+    const minimized = geneIsMinimized;
+    const bottomToolbarGutter = 48;
+    const level = geneLevel;
+    console.log(minimized);
 
-    // if loading, that means that an info button was just recently clicked, so pop-up should reappear
-    if (geneName === "") {
-      this.setState({ minimized: false });
-    }
-
-    const bottomToolbarGutter = 48; // gutter for bottom tool bar
     let synonymList;
     if (geneSynonyms.length > 1) {
       synonymList = geneSynonyms.join(", ");
@@ -73,13 +77,12 @@ class GeneInfo extends React.PureComponent<Props, State> {
       synonymList = null;
     }
 
-    console.log(geneSummary);
-
     return (
       <div
         style={{
           position: "fixed",
-          bottom: bottomToolbarGutter,
+          bottom:
+            level === "top" ? bottomToolbarGutter * 2 : bottomToolbarGutter,
           borderRadius: "3px 3px 0px 0px",
           left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
           padding: "0px 20px 20px 0px",
@@ -109,7 +112,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             type="button"
             minimal
             onClick={() => {
-              this.setState({ minimized: !minimized });
+              dispatch({ type: "minimize/maximize gene info" });
             }}
           >
             {minimized ? "show gene info" : "hide"}
@@ -137,7 +140,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
           }}
         >
           {/* loading tab */}
-          {geneName === "" ? (
+          {!minimized && geneName === "" ? (
             <div
               style={{
                 marginTop: styles.margin.top,
@@ -151,7 +154,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             </div>
           ) : null}
           {/* failed gene search */}
-          {geneName === "failed" ? (
+          {!minimized && geneName === "failed" ? (
             <div
               style={{
                 marginTop: styles.margin.top,
