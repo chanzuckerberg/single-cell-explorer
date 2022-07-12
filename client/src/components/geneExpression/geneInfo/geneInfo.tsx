@@ -21,8 +21,6 @@ interface Props {
   gene: string;
   geneUrl: string;
   geneSynonyms: string[];
-  geneIsMinimized: boolean;
-  geneLevel: string;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -59,7 +57,9 @@ class GeneInfo extends React.PureComponent<Props, State> {
       gene,
       geneUrl,
       geneSynonyms,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneIsMinimized' does not exist on type '{ chi... Remove this comment to see the full error message
       geneIsMinimized,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneLevel' does not exist on type '{ chi... Remove this comment to see the full error message
       geneLevel,
     } = this.props;
 

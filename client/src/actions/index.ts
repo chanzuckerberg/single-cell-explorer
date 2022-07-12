@@ -1,5 +1,4 @@
 import { AnyAction } from "redux";
-import { result } from "lodash";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";

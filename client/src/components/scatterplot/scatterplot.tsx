@@ -568,7 +568,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
             style={{
               marginLeft: margin.left,
               marginTop: margin.top,
-              display: minimized ? "none" : null,
+              display: minimized ? "none" : undefined,
             }}
             ref={this.setReglCanvas}
           />
@@ -700,7 +700,7 @@ const ScatterplotAxis = React.memo(
         height={height + margin.top + margin.bottom}
         data-testid="scatterplot-svg"
         style={{
-          display: minimized ? "none" : null,
+          display: minimized ? "none" : undefined,
         }}
       >
         <g ref={svgRef} transform={`translate(${margin.left},${margin.top})`} />
