@@ -223,13 +223,14 @@ def colors_get(data_adaptor):
     except ColorFormatException as e:
         return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)
 
+
 def gene_info_get(request, data_adaptor):
     """
     Request information about a gene from the data portal gene_info api
     """
     api_base_url = current_app.app_config.server_config.get_gene_info_api_base_url()
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    try: 
+    try:
         response = requests.get(url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}", headers=headers)
         if response.status_code == 200:
             return json.loads(response.content)
