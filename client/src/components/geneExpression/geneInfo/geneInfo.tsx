@@ -66,7 +66,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
     const minimized = geneIsMinimized;
     const bottomToolbarGutter = 48;
     const level = geneLevel;
-    console.log(minimized);
 
     let synonymList;
     if (geneSynonyms.length > 1) {

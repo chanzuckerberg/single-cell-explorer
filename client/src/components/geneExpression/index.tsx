@@ -37,10 +37,8 @@ class GeneExpression extends React.Component<{}, State> {
     const varIndex = schema.annotations.var.index;
     let dfIds: Dataframe;
     try {
-      console.log("before fetch");
       const df: Dataframe = await annoMatrix.fetch("var", varIndex);
       dfIds = await annoMatrix.fetch("var", "feature_id");
-      console.log("after fetch", String(dfIds));
       this.setState({
         geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
       });
@@ -61,13 +59,9 @@ class GeneExpression extends React.Component<{}, State> {
 
     const genesetIds = [];
     const genesetNames = [];
-    console.log(geneIds);
     for (const [name, geneset] of genesets) {
       // find ensembl IDs for each gene in the geneset
-      console.log(geneNames);
-
       for (const gene of geneset.genes) {
-        console.log(gene);
         try {
           genesetIds.push(geneIds[geneNames.indexOf(gene[0])]);
           genesetNames.push(gene[0]);

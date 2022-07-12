@@ -504,7 +504,6 @@ class Scatterplot extends React.PureComponent<{}, State> {
     const { regl, viewport } = this.state;
     const bottomToolbarGutter = 48; // gutter for bottom tool bar
     const level = scatterplotLevel;
-    console.log(level);
     const minimized = scatterplotIsMinimized;
 
     return (

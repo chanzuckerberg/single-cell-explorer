@@ -1,4 +1,4 @@
-/* logic for minimizing / maximizing pop-ups */
+/* logic for minimizing and maximizing pop-ups */
 const minMaxPopUps = (
   geneLevel: string,
   geneIsMin: boolean,
@@ -7,13 +7,6 @@ const minMaxPopUps = (
   scatterplotIsMin: boolean,
   scatterplotIsOpen: boolean
 ) => {
-  console.log("gene level: ", geneLevel);
-  console.log("gene min: ", geneIsMin);
-  console.log("scatterplot level: ", scatterplotLevel);
-  console.log("scatterplot min: ", scatterplotIsMin);
-  console.log("gene open: ", geneIsOpen);
-  console.log("scatterplot open: ", scatterplotIsOpen);
-
   if (geneIsMin && geneIsOpen && scatterplotIsMin && scatterplotIsOpen) {
     return {
       geneLevel,
@@ -200,13 +193,9 @@ const Controls = (
         state.scatterplotIsMinimized,
         state.scatterplotIsOpen
       );
-      console.log(stackLevels);
       state.geneLevel = stackLevels.geneLevel;
       state.scatterplotLevel = stackLevels.scatterplotLevel;
       state.gene = action.gene;
-      console.log(state.gene);
-      console.log(state.geneLevel);
-      console.log(state.scatterplotLevel);
 
       return {
         ...state,
@@ -321,7 +310,6 @@ const Controls = (
       );
       state.geneLevel = stackLevels.geneLevel;
       state.scatterplotLevel = stackLevels.scatterplotLevel;
-      console.log(state.geneLevel, state.scatterplotLevel);
 
       return {
         ...state,

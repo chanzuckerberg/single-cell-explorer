@@ -200,7 +200,6 @@ def data_var_put(request, data_adaptor):
 
 
 def data_var_get(request, data_adaptor):
-    print(request.args)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -229,7 +228,6 @@ def gene_info_get(request, data_adaptor):
     Request information about a gene from the data portal gene_info api
     """
     api_base_url = current_app.app_config.server_config.get_gene_info_api_base_url()
-    print(api_base_url)
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try: 
         response = requests.get(url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}", headers=headers)

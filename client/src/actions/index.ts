@@ -176,7 +176,6 @@ const doInitialDataLoad = (): ((
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
-    console.log("initial data load");
     if (!globals.API) throw new Error("API not set");
 
     try {
@@ -187,10 +186,8 @@ const doInitialDataLoad = (): ((
         schemaFetch(),
         userColorsFetchAndLoad(dispatch),
       ]);
-      console.log(oldPrefix);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      console.log("after dataset metadata fetch");
 
       genesetsFetchAndLoad(dispatch, config);
 
@@ -293,9 +290,6 @@ const requestDifferentialExpression =
         set1: set1Uint32,
         set2: set2Uint32,
       };
-
-      console.log(globals.API.prefix);
-      console.log(globals.API.version);
 
       const res = await fetch(
         `${globals.API.prefix}${globals.API.version}diffexp/obs2`,

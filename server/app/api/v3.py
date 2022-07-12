@@ -97,7 +97,6 @@ class DataVarAPI(S3URIResource):
     @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        print("here")
         return common_rest.data_var_get(request, data_adaptor)
 
 
@@ -150,7 +149,6 @@ class SummarizeVarAPI(S3URIResource):
 class GeneInfoAPI(S3URIResource):
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        print('in geneInfoAPI')
         return common_rest.gene_info_get(request, data_adaptor)
 
 def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
