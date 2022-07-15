@@ -12,6 +12,8 @@ import {
 import * as styles from "../util";
 import { RootState } from "../../../reducers";
 import * as globals from "../../../globals";
+import { IconNames as CXGIconNames } from "../../icon";
+import CustomIcon from "../../icon/icon";
 
 type State = RootState;
 
@@ -98,7 +100,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             top: styles.margin.bottom / 2,
           }}
         >
-          Gene Info
+          <CustomIcon icon={CXGIconNames.ABOUT} /> Gene Info
         </GeneHeader>
         <ButtonGroup
           style={{
