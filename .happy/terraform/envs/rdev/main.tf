@@ -12,6 +12,8 @@ module stack {
   require_okta                 = true
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
+  memory                       = 30720
+  cpu                          = 4096
 
   api_domain                   = "${var.stack_name}-explorer.rdev.single-cell.czi.technology"
   web_domain                   = "${var.stack_name}-explorer.rdev.single-cell.czi.technology"

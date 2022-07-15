@@ -16,7 +16,8 @@ module stack {
   require_okta                 = false
   stack_prefix                 = "/${var.stack_name}"
   batch_container_memory_limit = 28000
-  memory                       = 50000
+  memory                       = 30720
+  cpu                          = 4096
   explorer_instance_count      = 3
 
   api_domain                   = "api.${local.domain}"

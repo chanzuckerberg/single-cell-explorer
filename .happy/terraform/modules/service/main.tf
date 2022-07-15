@@ -7,7 +7,7 @@ resource aws_ecs_service service {
   cluster         = var.cluster
   desired_count   = var.desired_count
   task_definition = aws_ecs_task_definition.task_definition.id
-  launch_type     = "EC2"
+  launch_type     = "FARGATE"
   name            = "${var.custom_stack_name}-${var.app_name}"
   load_balancer {
     container_name   = "web"
@@ -26,7 +26,13 @@ resource aws_ecs_service service {
 resource aws_ecs_task_definition task_definition {
   family        = "explorer-${var.deployment_stage}-${var.custom_stack_name}-${var.app_name}"
   network_mode  = "awsvpc"
-  task_role_arn = var.task_role_arn
+
+  memory                   = var.memory
+  cpu                      = var.cpu
+  task_role_arn            = var.task_role_arn
+  execution_role_arn       = var.execution_role
+  requires_compatibilities = ["FARGATE"]
+
   container_definitions = <<EOF
 [
   {
@@ -76,6 +82,7 @@ resource aws_ecs_task_definition task_definition {
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
+        "awslogs-stream-prefix" : "fargate",
         "awslogs-group": "${aws_cloudwatch_log_group.cloud_watch_logs_group.id}",
         "awslogs-region": "${data.aws_region.current.name}"
       }

@@ -21,6 +21,7 @@ locals {
   security_groups                 = local.secret["security_groups"]
   zone                            = local.secret["zone_id"]
   cluster                         = local.secret["cluster_arn"]
+  ecs_execution_role              = lookup(local.secret, "ecs_execution_role", "")
   external_dns                    = local.secret["external_zone_name"]
   internal_dns                    = local.secret["internal_zone_name"]
 
@@ -66,6 +67,7 @@ module explorer_service {
   task_role_arn         = local.ecs_role_arn
   service_port          = 5000
   memory                = var.memory
+  cpu                   = var.cpu
   cmd                   = local.explorer_cmd
   deployment_stage      = local.deployment_stage
   health_check_path     = "/cellxgene/health"
@@ -77,6 +79,7 @@ module explorer_service {
   cxg_bucket_path       = length(var.cxg_bucket_path) > 0 ? var.cxg_bucket_path : local.cellxgene_bucket
   frontend_url          = local.frontend_url
   remote_dev_prefix     = local.remote_dev_prefix
+  execution_role        = local.ecs_execution_role
 
   wait_for_steady_state = local.wait_for_steady_state
 }

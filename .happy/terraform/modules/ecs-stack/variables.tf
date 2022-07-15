@@ -85,7 +85,13 @@ variable explorer_instance_count {
 variable memory {
   type        = number
   description = "Allocated memory"
-  default     = 1536
+  default     = 2048
+}
+
+variable cpu {
+  type        = number
+  description = "CPU shares (1cpu=1024) per task"
+  default     = 2048
 }
 
 variable "api_domain" {
