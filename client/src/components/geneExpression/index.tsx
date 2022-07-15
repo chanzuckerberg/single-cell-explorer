@@ -36,16 +36,18 @@ class GeneExpression extends React.Component<{}, State> {
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
     let dfIds: Dataframe;
-    try {
+    const geneIdCol = "feature_id";
+
+    if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
       const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-      dfIds = await annoMatrix.fetch("var", "feature_id");
+      dfIds = await annoMatrix.fetch("var", geneIdCol);
       this.setState({
-        geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
+        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
       });
       this.setState({
         geneNames: df.col(varIndex).asArray() as DataframeValue[],
       });
-    } catch {
+    } else {
       console.log("no feature ids!");
     }
   }
