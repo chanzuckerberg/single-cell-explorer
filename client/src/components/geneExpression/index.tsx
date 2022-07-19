@@ -9,7 +9,6 @@ import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
-import { dispatchNetworkErrorMessageToUser } from "../../util/actionHelpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -36,18 +35,24 @@ class GeneExpression extends React.Component<{}, State> {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
-    let dfIds: Dataframe;
-    try {
-      const df: Dataframe = await annoMatrix.fetch("var", varIndex);
-      dfIds = await annoMatrix.fetch("var", "feature_id");
+    let dfIds;
+    const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+    this.setState({
+      geneNames: df.col(varIndex).asArray() as DataframeValue[],
+    });
+
+    const geneIdCol = "feature_id";
+    // if feature id column is available in var
+    if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
+      dfIds = await annoMatrix.fetch("var", geneIdCol);
       this.setState({
         geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
       });
       this.setState({
         geneNames: df.col(varIndex).asArray() as DataframeValue[],
       });
-    } catch {
-      dispatchNetworkErrorMessageToUser("Unable to find gene IDs.");
+    } else {
+      console.error("Could not find feature ids.");
     }
   }
 

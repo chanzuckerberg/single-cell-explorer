@@ -292,8 +292,18 @@ class CxgDataset(Dataset):
         return X.dtype
 
     def query_var_array(self, term_name):
+        print("name = ", term_name)
         var = self.open_array("var")
+        print(var)
         data = var.query(attrs=[term_name])[:][term_name]
+        print(var.query(attrs=["feature_name"])[:])
+        print(var.query(attrs=["feature_reference"])[:])
+        print(var.query(attrs=["feature_biotype"])[:])
+        print(var.query(attrs=["feature_is_filtered"])[:])
+        meta = json.loads(var.meta["cxg_schema"])
+        print(meta.keys())
+        index_name = meta["index"]
+        print("meta['index']: ", index_name)
         return data
 
     def query_obs_array(self, term_name):

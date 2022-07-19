@@ -24,6 +24,7 @@ from server.common.errors import (
     TombstoneError,
 )
 from server.dataset import dataset_metadata
+from server.common.feature_ids import GeneChecker
 from server.common.diffexpdu import DiffExArguments
 
 

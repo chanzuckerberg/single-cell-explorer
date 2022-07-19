@@ -162,6 +162,18 @@ async function fetchGeneInfo(
   return response;
 }
 
+/**
+ * Fetch gene ENSEMBL ids from list of human-readable gene names
+ * @param gene human-readable gene name
+ */
+interface EnsemblIdAPI {
+  geneID: string[];
+}
+async function fetchEnsemblIds(genes: string[]): Promise<EnsemblIdAPI> {
+  const response = await fetchJson<EnsemblIdAPI>(`ensemblid?gene=${genes}`);
+  return response;
+}
+
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   /*
   prefetch requests for all embeddings
@@ -481,6 +493,7 @@ export default {
   navigateCheckUserState,
   selectDataset,
   fetchGeneInfo,
+  fetchEnsemblIds,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:
