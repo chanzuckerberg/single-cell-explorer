@@ -48,9 +48,6 @@ class GeneExpression extends React.Component<{}, State> {
       this.setState({
         geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
       });
-      this.setState({
-        geneNames: df.col(varIndex).asArray() as DataframeValue[],
-      });
     } else {
       console.error("Could not find feature ids.");
     }
