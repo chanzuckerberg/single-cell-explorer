@@ -12,6 +12,7 @@ import actions from "../../actions";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { dispatchNetworkErrorMessageToUser } from "../../util/actionHelpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {
@@ -66,7 +67,7 @@ function QuickGene() {
             console.log("id, success");
             setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
           } catch {
-            console.log("no feature ids!");
+            console.error("Could not find feature IDs.");
           }
 
           setStatus("name, success");

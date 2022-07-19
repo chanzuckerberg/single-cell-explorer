@@ -9,6 +9,7 @@ import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
+import { dispatchNetworkErrorMessageToUser } from "../../util/actionHelpers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -46,7 +47,7 @@ class GeneExpression extends React.Component<{}, State> {
         geneNames: df.col(varIndex).asArray() as DataframeValue[],
       });
     } catch {
-      console.log("no feature ids!");
+      dispatchNetworkErrorMessageToUser("Unable to find gene IDs.");
     }
   }
 
