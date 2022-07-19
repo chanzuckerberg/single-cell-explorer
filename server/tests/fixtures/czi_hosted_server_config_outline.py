@@ -30,9 +30,6 @@ f"""server:
     s3:
       region_name: {data_locator_region_name}
 
-  gene_info:
-    api_base: {gene_info_api_base}
-
   adaptor:
     cxg_adaptor:
       tiledb_ctx:

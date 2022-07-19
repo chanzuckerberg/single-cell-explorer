@@ -147,12 +147,6 @@ class SummarizeVarAPI(S3URIResource):
         return common_rest.summarize_var_post(request, data_adaptor)
 
 
-class GeneInfoAPI(S3URIResource):
-    @rest_get_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.gene_info_get(request, data_adaptor)
-
-
 def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
     """Add resources that refer to a dataset"""
     api = Api(bp_dataroot)
@@ -184,7 +178,6 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DataVarAPI, "/data/var")
     add_resource(GenesetsAPI, "/genesets")
     add_resource(SummarizeVarAPI, "/summarize/var")
-    add_resource(GeneInfoAPI, "/geneinfo")
     # Display routes
     add_resource(ColorsAPI, "/colors")
     # Computation routes
