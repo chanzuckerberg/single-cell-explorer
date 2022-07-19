@@ -3,7 +3,6 @@ import hashlib
 import logging
 import sys
 import zlib
-import json
 import requests
 from http import HTTPStatus
 import struct
@@ -233,7 +232,9 @@ def gene_info_get(request, data_adaptor):
     try:
         response = requests.get(url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}", headers=headers)
         if response.status_code == 200:
-            return json.loads(response.content)
+            return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
+        else:
+            raise Exception
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
