@@ -72,7 +72,7 @@ class GeneExpression extends React.Component<{}, State> {
           genesetIds.push(geneIds[geneNames.indexOf(gene[0])]);
           genesetNames.push(gene[0]);
         } catch {
-          console.log("failed to access ensembl ID");
+          console.error("failed to access ensembl ID");
         }
       }
 
