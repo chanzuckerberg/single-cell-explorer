@@ -53,27 +53,30 @@ module explorer_dns {
 }
 
 module explorer_service {
-  source            = "../service"
-  custom_stack_name = local.custom_stack_name
-  app_name          = "explorer"
-  vpc               = local.vpc_id
-  image             = "${local.explorer_image_repo}:${local.image_tag}"
-  cluster           = local.cluster
-  desired_count     = var.explorer_instance_count
-  listener          = local.explorer_listener_arn
-  subnets           = local.subnets
-  security_groups   = local.security_groups
-  task_role_arn     = local.ecs_role_arn
-  service_port      = 5000
-  memory            = var.memory
-  cmd               = local.explorer_cmd
-  deployment_stage  = local.deployment_stage
-  health_check_path = "/cellxgene/health"
-  host_match        = try(join(".", [module.explorer_dns[0].dns_prefix, local.external_dns]), "")
-  priority          = local.priority
-  api_url           = local.frontend_url
-  frontend_url      = local.frontend_url
-  remote_dev_prefix = local.remote_dev_prefix
+  source                = "../service"
+  custom_stack_name     = local.custom_stack_name
+  app_name              = "explorer"
+  vpc                   = local.vpc_id
+  image                 = "${local.explorer_image_repo}:${local.image_tag}"
+  cluster               = local.cluster
+  desired_count         = var.explorer_instance_count
+  listener              = local.explorer_listener_arn
+  subnets               = local.subnets
+  security_groups       = local.security_groups
+  task_role_arn         = local.ecs_role_arn
+  service_port          = 5000
+  memory                = var.memory
+  cmd                   = local.explorer_cmd
+  deployment_stage      = local.deployment_stage
+  health_check_path     = "/cellxgene/health"
+  host_match            = try(join(".", [module.explorer_dns[0].dns_prefix, local.external_dns]), "")
+  priority              = local.priority
+  api_domain            = var.api_domain
+  web_domain            = var.web_domain
+  data_locator_domain   = var.data_locator_domain
+  cxg_bucket_path       = length(var.cxg_bucket_path) > 0 ? var.cxg_bucket_path : local.cellxgene_bucket
+  frontend_url          = local.frontend_url
+  remote_dev_prefix     = local.remote_dev_prefix
 
   wait_for_steady_state = local.wait_for_steady_state
 }

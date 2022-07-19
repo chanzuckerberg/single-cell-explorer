@@ -48,8 +48,20 @@ resource aws_ecs_task_definition task_definition {
         "value": "${data.aws_region.current.name}"
       },
       {
-        "name": "API_URL",
-        "value": "${var.api_url}"
+        "name": "API_DOMAIN",
+        "value": "${var.api_domain}"
+      },
+      {
+        "name": "WEB_DOMAIN",
+        "value": "${var.web_domain}"
+      },
+      {
+        "name": "DATA_LOCATOR_DOMAIN",
+        "value": "${var.data_locator_domain}"
+      },
+      {
+        "name": "CXG_BUCKET_PATH",
+        "value": "${var.cxg_bucket_path}"
       },
       {
         "name": "AWS_DEFAULT_REGION",
