@@ -149,7 +149,6 @@ class ServerConfig(BaseConfig):
                 region_name = None
             self.data_locator__s3__region_name = region_name
 
-
     def handle_data_source(self):
         self.validate_correct_type_of_configuration_attribute("single_dataset__datapath", (str, type(None)))
         self.validate_correct_type_of_configuration_attribute("multi_dataset__dataroot", (type(None), dict, str))
