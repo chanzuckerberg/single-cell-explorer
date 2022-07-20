@@ -453,7 +453,7 @@ class EndPoints(BaseTest):
     @patch("server.common.rest.requests.get")
     def test_gene_info_success(self, mock_request):
         # successfully returns a json object
-        endpoint = "geneinfo?geneID=ENSG00000130203"
+        endpoint = "geneinfo?geneID=ENSG00000130203&gene=APOE"
         url = f"{self.TEST_URL_BASE}{endpoint}"
         mock_request.return_value = MockResponse(body="", status_code=200)
         result = self.client.get(url)

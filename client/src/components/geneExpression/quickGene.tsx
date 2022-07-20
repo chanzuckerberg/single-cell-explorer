@@ -141,9 +141,9 @@ function QuickGene() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     return userDefinedGenes.map((gene: any) => {
       let geneId;
-      if (geneNames.includes(gene)) {
+      try {
         geneId = geneIds[geneNames.indexOf(gene)];
-      } else {
+      } catch {
         geneId = "";
       }
       return (

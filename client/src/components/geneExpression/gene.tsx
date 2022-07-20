@@ -96,7 +96,7 @@ class Gene extends React.Component<Props, State> {
       gene,
     });
 
-    const info = await actions.fetchGeneInfo(geneId);
+    const info = await actions.fetchGeneInfo(geneId, gene);
     if (!info) {
       dispatch({
         type: "open gene info",
