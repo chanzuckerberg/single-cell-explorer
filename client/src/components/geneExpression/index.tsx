@@ -46,10 +46,8 @@ class GeneExpression extends React.Component<{}, State> {
     if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
       dfIds = await annoMatrix.fetch("var", geneIdCol);
       this.setState({
-        geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
+        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
       });
-    } else {
-      console.error("Could not find feature ids.");
     }
   }
 
@@ -65,12 +63,12 @@ class GeneExpression extends React.Component<{}, State> {
     for (const [name, geneset] of genesets) {
       // find ensembl IDs for each gene in the geneset
       for (const gene of geneset.genes) {
-        try {
+        if (geneNames.includes(gene[0])) {
           genesetIds.push(geneIds[geneNames.indexOf(gene[0])]);
-          genesetNames.push(gene[0]);
-        } catch {
-          console.error("failed to access ensembl ID");
+        } else {
+          genesetIds.push(geneIds[""]);
         }
+        genesetNames.push(gene[0]);
       }
 
       sets.push(
