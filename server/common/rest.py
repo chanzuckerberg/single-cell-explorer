@@ -223,7 +223,7 @@ def colors_get(data_adaptor):
         return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)
 
 
-def gene_info_get(request, data_adaptor):
+def gene_info_get(request):
     """
     Request information about a gene from the data portal gene_info api
     """
