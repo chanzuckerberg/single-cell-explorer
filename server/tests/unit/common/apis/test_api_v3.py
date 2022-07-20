@@ -39,6 +39,9 @@ class EndPoints(BaseTest):
     @classmethod
     def setUpClass(cls, app_config=None):
         super().setUpClass(app_config)
+        cls.TEST_S3_URI = f"{FIXTURES_ROOT}/pbmc3k.cxg"
+        cls.TEST_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_S3_URI)
+        cls.TEST_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED}"
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
@@ -446,6 +449,26 @@ class EndPoints(BaseTest):
         self.assertEqual(result.headers["Content-Type"], "application/json")
         result_data = json.loads(result.data)
         self.assertEqual(result_data, pbmc3k_colors)
+
+    @patch("server.common.rest.requests.get")
+    def test_gene_info_success(self, mock_request):
+        # successfully returns a json object
+        endpoint = "geneinfo?geneID=ENSG00000130203"
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        mock_request.return_value = MockResponse(body="", status_code=200)
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
+
+    @patch("server.common.rest.requests.get")
+    def test_gene_info_failure(self, mock_request):
+        # successfully aborts on bad request
+        endpoint = "geneinfo?geneID="
+        url = f"{self.TEST_URL_BASE}{endpoint}"
+        mock_request.return_value = MockResponse(body="", status_code=400)
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        self.assertEqual(result.headers["Content-Type"], "application/json")
 
     @skip_if(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):

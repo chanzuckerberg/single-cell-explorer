@@ -502,7 +502,6 @@ class Scatterplot extends React.PureComponent<{}, State> {
       scatterplotLevel,
     } = this.props;
     const { regl, viewport } = this.state;
-    const bottomToolbarGutter = 48; // gutter for bottom tool bar
     const level = scatterplotLevel;
     const minimized = scatterplotIsMinimized;
 
@@ -511,7 +510,9 @@ class Scatterplot extends React.PureComponent<{}, State> {
         style={{
           position: "fixed",
           bottom:
-            level === "top" ? bottomToolbarGutter * 2 : bottomToolbarGutter,
+            level === "top"
+              ? globals.bottomToolbarGutter * 2
+              : globals.bottomToolbarGutter,
           borderRadius: "3px 3px 0px 0px",
           left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
           padding: "0px 20px 20px 0px",

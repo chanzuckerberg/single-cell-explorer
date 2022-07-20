@@ -35,20 +35,22 @@ class GeneExpression extends React.Component<{}, State> {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
-    let dfIds: Dataframe;
-    const geneIdCol = "feature_id";
+    
+    let dfIds;
+    const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+    this.setState({
+      geneNames: df.col(varIndex).asArray() as DataframeValue[],
+    });
 
+    const geneIdCol = "feature_id";
+    // if feature id column is available in var
     if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
-      const df: Dataframe = await annoMatrix.fetch("var", varIndex);
       dfIds = await annoMatrix.fetch("var", geneIdCol);
       this.setState({
         geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
       });
-      this.setState({
-        geneNames: df.col(varIndex).asArray() as DataframeValue[],
-      });
     } else {
-      console.log("no feature ids!");
+      console.error("Could not find feature ids.");
     }
   }
 
@@ -68,7 +70,7 @@ class GeneExpression extends React.Component<{}, State> {
           genesetIds.push(geneIds[geneNames.indexOf(gene[0])]);
           genesetNames.push(gene[0]);
         } catch {
-          console.log("failed to access ensembl ID");
+          console.error("failed to access ensembl ID");
         }
       }
 

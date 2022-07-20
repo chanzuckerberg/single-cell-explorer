@@ -61,12 +61,14 @@ function QuickGene() {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
+
+          // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
             dfIds = await annoMatrix.fetch("var", geneIdCol);
             console.log("id, success");
-            setGeneIds(dfIds.col(geneIdCol).asArray() as DataframeValue[]);
+            setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
           } else {
-            console.log("no feature ids!");
+            console.error("Could not find feature IDs.");
           }
 
           setStatus("name, success");

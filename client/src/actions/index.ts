@@ -139,19 +139,26 @@ async function genesetsFetchAndLoad(
   }
 }
 
-/**
- * Fetch gene summary information and dispatch gene information card action
- * @param dispatch Function facilitating update of store.
- * @param geneID ensembl ID corresponding to gene to search
- */
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
   synonyms: string[];
   summary: string;
 }
-async function fetchGeneInfo(geneID: DataframeValue): Promise<GeneInfoAPI> {
-  const response = await fetchJson<GeneInfoAPI>(`geneinfo?geneID=${geneID}`);
+/**
+ * Fetch gene summary information
+ * @param geneID ensembl ID corresponding to gene to search
+ */
+async function fetchGeneInfo(
+  geneID: DataframeValue
+): Promise<GeneInfoAPI | undefined> {
+  let response;
+  try {
+    response = await fetchJson<GeneInfoAPI>(`geneinfo?geneID=${geneID}`);
+  } catch {
+    dispatchNetworkErrorMessageToUser("Unable to request gene information.");
+    response = undefined;
+  }
   return response;
 }
 

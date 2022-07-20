@@ -8,6 +8,7 @@ import {
   Content,
   GeneSymbol,
   GeneHeader,
+  GeneInfoWrapper,
 } from "./style";
 import * as styles from "../util";
 import { RootState } from "../../../reducers";
@@ -64,7 +65,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
     } = this.props;
 
     const minimized = geneIsMinimized;
-    const bottomToolbarGutter = 48;
     const level = geneLevel;
 
     let synonymList;
@@ -77,17 +77,12 @@ class GeneInfo extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div
+      <GeneInfoWrapper
         style={{
-          position: "fixed",
           bottom:
-            level === "top" ? bottomToolbarGutter * 2 : bottomToolbarGutter,
-          borderRadius: "3px 3px 0px 0px",
-          left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
-          padding: "0px 20px 20px 0px",
-          background: "white",
-          boxShadow: "0px 0px 3px 2px rgba(153,153,153,0.2)",
-          zIndex: 2,
+            level === "top"
+              ? globals.bottomToolbarGutter * 2
+              : globals.bottomToolbarGutter,
         }}
         id="geneinfo_wrapper"
       >
@@ -221,7 +216,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             </div>
           ) : null}
         </div>
-      </div>
+      </GeneInfoWrapper>
     );
   }
 }

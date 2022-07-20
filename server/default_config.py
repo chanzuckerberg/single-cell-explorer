@@ -85,9 +85,6 @@ server:
     about: null
     title: null
 
-  gene_info:
-    api_base: null
-
   data_locator:
     api_base: null
     s3:

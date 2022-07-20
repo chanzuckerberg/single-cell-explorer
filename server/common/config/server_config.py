@@ -62,8 +62,8 @@ class ServerConfig(BaseConfig):
         self.handle_app(context)
         self.handle_data_source()
         self.handle_data_locator()
-        self.handle_gene_info()
         self.handle_adaptor()  # may depend on data_locator
+        self.handle_gene_info()
         self.handle_single_dataset(context)  # may depend on adaptor
         self.handle_multi_dataset()  # may depend on adaptor
         self.handle_limits()

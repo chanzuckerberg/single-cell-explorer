@@ -150,7 +150,7 @@ class SummarizeVarAPI(S3URIResource):
 class GeneInfoAPI(S3URIResource):
     @rest_get_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.gene_info_get(request, data_adaptor)
+        return common_rest.gene_info_get(request)
 
 
 def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
