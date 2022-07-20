@@ -63,7 +63,6 @@ class GeneExpression extends React.Component<{}, State> {
     for (const [name, geneset] of genesets) {
       // find ensembl IDs for each gene in the geneset
       for (const gene of geneset.genes) {
-        console.log(gene);
         try {
           genesetIds.push(geneIds[geneNames.indexOf(gene[0])]);
         } catch {

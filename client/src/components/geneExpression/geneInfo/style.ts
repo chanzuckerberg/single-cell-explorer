@@ -6,14 +6,16 @@ import {
   getColors,
   fontHeaderL,
 } from "czifui";
+import * as globals from "../../../globals";
 
 export const GeneInfoWrapper = styled.div`
-  position: fixed;
-  border-radius: 3px 3px 0px 0px;
-  padding: 0px 20px 20px 0px;
-  background: white;
-  box-shadow: 0px 0px 3px 2px rgba(153, 153, 153, 0.2);
-  z-index: 2;
+  position: "fixed",
+  border-radius: "3px 3px 0px 0px",
+  left: ${globals.leftSidebarWidth + globals.scatterplotMarginLeft},
+  padding: "0px 20px 20px 0px",
+  background: "white",
+  box-shadow: "0px 0px 3px 2px rgba(153,153,153,0.2)",
+  z-index: 2,
 `;
 
 export const GeneHeader = styled.p`
