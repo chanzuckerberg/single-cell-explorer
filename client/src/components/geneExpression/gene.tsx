@@ -2,13 +2,12 @@ import React from "react";
 
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
+import { Icon as InfoCircle } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 import { RootState } from "../../reducers";
 
 import actions from "../../actions";
-import { IconNames as CXGIconNames } from "../icon";
-import CustomIcon from "../icon/icon";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -164,19 +163,6 @@ class Gene extends React.Component<Props, State> {
               width: "100%",
             }}
           >
-            <div style={{ flexShrink: 0 }}>
-              <Button
-                minimal
-                small
-                data-testid={`get-info-${gene}`}
-                onClick={this.handleDisplayGeneInfo}
-                active={isGeneInfo}
-                intent={isGeneInfo ? "primary" : "none"}
-                style={{ paddingBottom: "3px" }}
-              >
-                <CustomIcon icon={CXGIconNames.ABOUT} />
-              </Button>
-            </div>
             <div>
               <Truncate
                 tooltipAddendum={geneDescription && `: ${geneDescription}`}
@@ -191,6 +177,24 @@ class Gene extends React.Component<Props, State> {
                   {gene}
                 </span>
               </Truncate>
+            </div>
+            <div style={{ flexShrink: 0 }}>
+              <Button
+                minimal
+                small
+                data-testid={`get-info-${gene}`}
+                onClick={this.handleDisplayGeneInfo}
+                active={isGeneInfo}
+                intent={isGeneInfo ? "primary" : "none"}
+              >
+                <div style={{ filter: "grayscale(100%)" }}>
+                  <InfoCircle
+                    sdsIcon="infoCircle"
+                    sdsSize="s"
+                    sdsType="static"
+                  />
+                </div>
+              </Button>
             </div>
             {!geneIsExpanded ? (
               <HistogramBrush
