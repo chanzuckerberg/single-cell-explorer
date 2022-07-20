@@ -1,8 +1,8 @@
 import React from "react";
 
 import { Button, Icon } from "@blueprintjs/core";
-import { Icon as InfoCircle } from "czifui";
 import { connect } from "react-redux";
+import { Icon as InfoCircle } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 import { RootState } from "../../reducers";
@@ -164,18 +164,6 @@ class Gene extends React.Component<Props, State> {
             }}
           >
             <div>
-              {!quickGene && (
-                <Icon
-                  icon="drag-handle-horizontal"
-                  iconSize={12}
-                  style={{
-                    marginRight: 7,
-                    cursor: "grab",
-                    position: "relative",
-                    top: -1,
-                  }}
-                />
-              )}
               <Truncate
                 tooltipAddendum={geneDescription && `: ${geneDescription}`}
               >
@@ -190,7 +178,7 @@ class Gene extends React.Component<Props, State> {
                 </span>
               </Truncate>
             </div>
-            <div>
+            <div style={{ flexShrink: 0 }}>
               <Button
                 minimal
                 small
@@ -199,7 +187,13 @@ class Gene extends React.Component<Props, State> {
                 active={isGeneInfo}
                 intent={isGeneInfo ? "primary" : "none"}
               >
-                <InfoCircle sdsIcon="infoCircle" sdsSize="s" sdsType="static" />
+                <div style={{ filter: "grayscale(100%)" }}>
+                  <InfoCircle
+                    sdsIcon="infoCircle"
+                    sdsSize="s"
+                    sdsType="static"
+                  />
+                </div>
               </Button>
             </div>
             {!geneIsExpanded ? (
