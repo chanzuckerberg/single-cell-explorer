@@ -126,17 +126,6 @@ class Scatterplot extends React.PureComponent<{}, State> {
     return positions;
   });
 
-  computePointColors = memoize((rgb) => {
-    /*
-    compute webgl colors for each point
-    */
-    const colors = new Float32Array(3 * rgb.length);
-    for (let i = 0, len = rgb.length; i < len; i += 1) {
-      colors.set(rgb[i], 3 * i);
-    }
-    return colors;
-  });
-
   computeSelectedFlags = memoize(
     (crossfilter, _flagSelected, _flagUnselected) => {
       const x = crossfilter.fillByIsSelected(
@@ -301,7 +290,6 @@ class Scatterplot extends React.PureComponent<{}, State> {
       yScale
     );
 
-    const colors = this.computePointColors(colorTable.rgb);
     const colorByData = colorDf?.icol(0)?.asArray();
     const {
       metadataField: pointDilationCategory,
@@ -319,7 +307,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
 
     return {
       positions,
-      colors,
+      colors: colorTable.rgb,
       flags,
       width,
       height,

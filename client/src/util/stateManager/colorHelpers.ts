@@ -23,7 +23,7 @@ import {
 
 interface Colors {
   // cell label to color mapping
-  rgb: [number, number, number][];
+  rgb: Float32Array;
   // function, mapping label index to color scale
   scale: d3.ScaleSequential<string, never> | undefined;
 }
@@ -87,9 +87,9 @@ export function createColorQuery(
 }
 
 function _defaultColors(nObs: number): Colors {
-  const defaultCellColor = parseRGB(globals.defaultCellColor);
+  // const defaultCellColor = parseRGB(globals.defaultCellColor);
   return {
-    rgb: new Array(nObs).fill(defaultCellColor),
+    rgb: new Float32Array(3 * nObs).fill(0),
     scale: undefined,
   };
 }
@@ -244,7 +244,7 @@ const createColorsByCategoricalMetadata = memoize(
 );
 
 function createRgbArray(data: DataframeValueArray, colors?: CategoryColors) {
-  const rgb = new Array(data.length);
+  const rgb = new Float32Array(3 * data.length);
 
   if (!colors) {
     throw new Error("`colors` is undefined");
@@ -252,7 +252,7 @@ function createRgbArray(data: DataframeValueArray, colors?: CategoryColors) {
 
   for (let i = 0, len = data.length; i < len; i += 1) {
     const label = data[i];
-    rgb[i] = colors[String(label)];
+    rgb.set(colors[String(label)], 3 * i);
   }
 
   return rgb;
@@ -276,14 +276,16 @@ function _createColorsByContinuousMetadata(
   }
 
   const nonFiniteColor = parseRGB(globals.nonFiniteCellColor);
-  const rgb = new Array(data.length);
+
+  const rgb = new Float32Array(3 * data.length);
   for (let i = 0, len = data.length; i < len; i += 1) {
     const val = data[i];
+
     if (Number.isFinite(val)) {
       const c = scale(val as number);
-      rgb[i] = colors[c];
+      rgb.set(colors[c], 3 * i);
     } else {
-      rgb[i] = nonFiniteColor;
+      rgb.set(nonFiniteColor, 3 * i);
     }
   }
   return { rgb, scale };
