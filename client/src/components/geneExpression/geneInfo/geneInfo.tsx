@@ -83,6 +83,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             level === "top"
               ? globals.bottomToolbarGutter * 2
               : globals.bottomToolbarGutter,
+          left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
         }}
         id="geneinfo_wrapper"
       >
