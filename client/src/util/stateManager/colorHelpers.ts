@@ -133,12 +133,7 @@ function _createColorTable(
         );
       }
 
-      return createColorsByCategoricalMetadata(
-        data,
-        col.columnDict,
-        colorByAccessor,
-        schema
-      );
+      return createColorsByCategoricalMetadata(data, colorByAccessor, schema);
     }
     case "color by continuous metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
@@ -236,7 +231,6 @@ interface CategoryColors {
 
 function _createColorsByCategoricalMetadata(
   data: DataframeValueArray,
-  columnDict: { [key: number]: string },
   colorAccessor: LabelType,
   schema: Schema
 ): Colors {
@@ -254,14 +248,7 @@ function _createColorsByCategoricalMetadata(
     acc[cat as string] = parseRGB(scale(idx));
     return acc;
   }, {});
-  const invColumnDict = Object.fromEntries(
-    Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
-  );
-  const newColors = Object.fromEntries(
-    Object.entries(colors).map((row) => [invColumnDict[row[0]], row[1]])
-  );
-  const rgb = createRgbArray(data, newColors);
-
+  const rgb = createRgbArray(data, colors);
   return { rgb, scale };
 }
 
