@@ -331,7 +331,7 @@ class Dataframe {
     Summarize the column data. Lazy eval, memoized
     */
     get.summarizeCategorical = callOnceLazy(() =>
-      _summarizeCategorical(column, columnDict)
+      _summarizeCategorical(column)
     );
     get.summarizeContinuous = isTypedArray(column)
       ? callOnceLazy(() => _summarizeContinuous(column))

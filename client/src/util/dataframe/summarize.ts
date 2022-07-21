@@ -68,21 +68,15 @@ export function summarizeContinuous(col: NumberArray): ContinuousColumnSummary {
 }
 
 export function summarizeCategorical(
-  col: SortableArray,
-  dict: { [key: number]: string }
+  col: SortableArray
 ): CategoricalColumnSummary {
   const categoryCounts = new Map();
   if (col) {
     for (let r = 0, l = col.length; r < l; r += 1) {
       const val = col[r];
-      const keyInt = parseInt(String(val), 10);
-      let name = val;
-      if (keyInt in dict) {
-        name = dict[keyInt];
-      }
-      let curCount = categoryCounts.get(name);
+      let curCount = categoryCounts.get(val);
       if (curCount === undefined) curCount = 0;
-      categoryCounts.set(name, curCount + 1);
+      categoryCounts.set(val, curCount + 1);
     }
   }
   const sortedCategoryByCounts = new Map(
