@@ -5,8 +5,10 @@
 class TypedArray(object):
     NONE = 0
     Float32Array = 1
-    Int32Array = 2
-    Uint32Array = 3
-    Float64Array = 4
-    JSONEncodedArray = 5
+    Int8Array = 2
+    Int16Array = 3
+    Int32Array = 4
+    Uint32Array = 5
+    Float64Array = 6
+    JSONEncodedArray = 7
 

@@ -3,17 +3,23 @@
 # namespace: NetEncoding
 
 import flatbuffers
+from flatbuffers.compat import import_numpy
+np = import_numpy()
 
 class Float64Array(object):
     __slots__ = ['_tab']
 
     @classmethod
-    def GetRootAsFloat64Array(cls, buf, offset):
+    def GetRootAs(cls, buf, offset=0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
         x = Float64Array()
         x.Init(buf, n + offset)
         return x
 
+    @classmethod
+    def GetRootAsFloat64Array(cls, buf, offset=0):
+        """This method is deprecated. Please switch to GetRootAs."""
+        return cls.GetRootAs(buf, offset)
     # Float64Array
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -40,7 +46,24 @@ class Float64Array(object):
             return self._tab.VectorLen(o)
         return 0
 
-def Float64ArrayStart(builder): builder.StartObject(1)
-def Float64ArrayAddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
-def Float64ArrayStartDataVector(builder, numElems): return builder.StartVector(8, numElems, 8)
-def Float64ArrayEnd(builder): return builder.EndObject()
+    # Float64Array
+    def DataIsNone(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
+        return o == 0
+
+def Start(builder): builder.StartObject(1)
+def Float64ArrayStart(builder):
+    """This method is deprecated. Please switch to Start."""
+    return Start(builder)
+def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+def Float64ArrayAddData(builder, data):
+    """This method is deprecated. Please switch to AddData."""
+    return AddData(builder, data)
+def StartDataVector(builder, numElems): return builder.StartVector(8, numElems, 8)
+def Float64ArrayStartDataVector(builder, numElems):
+    """This method is deprecated. Please switch to Start."""
+    return StartDataVector(builder, numElems)
+def End(builder): return builder.EndObject()
+def Float64ArrayEnd(builder):
+    """This method is deprecated. Please switch to End."""
+    return End(builder)
