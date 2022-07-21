@@ -1,5 +1,5 @@
 import json
-
+from json import JSONDecodeError
 import numpy as np
 import pandas as pd
 from flatbuffers import Builder
@@ -221,7 +221,7 @@ def deserialize_typed_array(tarr):
     code_to_cat = None
     try:
         code_to_cat = json.loads(u.String(u.Pos+4))
-    except:
+    except JSONDecodeError:
         pass        
 
     return narr, code_to_cat
