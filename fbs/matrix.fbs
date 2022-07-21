@@ -7,8 +7,8 @@
   organized in a columnar layout.   Each column is homomorphic, and
   several column types are supported:
     - IEEE 32 and 64 bit floats
-    - signed and unsigned 32 bit integers
     - JSON/UTF8 encoded array (for other types)
+    - signed and unsigned 8, 16, and 32 bit integers
 
   https://github.com/google/flatbuffers
   http://google.github.io/flatbuffers/
@@ -30,6 +30,14 @@ table Uint32Array {
   data: [uint32];
 }
 
+table Int8Array {
+  data: [int8];
+}
+
+table Int16Array {
+  data: [int16];
+}
+
 table Int32Array {
   data: [int32];
 }
@@ -46,6 +54,8 @@ table JSONEncodedArray {
 
 union TypedArray {
   Float32Array,
+  Int8Array,
+  Int16Array,
   Int32Array,
   Uint32Array,
   Float64Array,

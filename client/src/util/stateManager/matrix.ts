@@ -4,6 +4,7 @@ import {
   TypedArray,
   isTypedArray,
   isFloatTypedArray,
+  isIntTypedArray,
 } from "../../common/types/arraytypes";
 import {
   Dataframe,
@@ -11,6 +12,7 @@ import {
   DenseInt32Index,
   KeyIndex,
 } from "../dataframe";
+import { DictEncoder } from "../dataframe/dataframe";
 
 const utf8Decoder = new TextDecoder("utf-8");
 
@@ -22,16 +24,25 @@ const utf8Decoder = new TextDecoder("utf-8");
  * Decode NetEncoding.TypedArray
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function decodeTypedArray(uType: any, uValF: any, inplace = false) {
+function decodeTypedArray(uType: any, uValF: any, inplace = false): [any, any] {
   if (uType === NetEncoding.TypedArray.NONE) {
-    return null;
+    return [null, null];
   }
 
   // Convert to a JS class that supports this type
   // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
   const TypeClass = NetEncoding[NetEncoding.TypedArray[uType]];
   // Create a TypedArray that references the underlying buffer
-  let arr = uValF(new TypeClass()).dataArray();
+  const x = uValF(new TypeClass());
+  let arr = x.dataArray();
+
+  let dict;
+  try {
+    const convertedString = x.bb.__string(x.bb_pos + 4);
+    if (convertedString[0] === "{") dict = JSON.parse(convertedString);
+  } catch (SyntaxError) {
+    // expected behavior to ignore errors here
+  }
 
   if (uType === NetEncoding.TypedArray.JSONEncodedArray) {
     const json = utf8Decoder.decode(arr);
@@ -40,7 +51,7 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false) {
     /* force copy to release underlying FBS buffer */
     arr = new arr.constructor(arr);
   }
-  return arr;
+  return [arr, dict];
 }
 
 /**
@@ -66,14 +77,16 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   /* decode columns */
   const columnsLength = matrix.columnsLength();
   const columns = Array(columnsLength).fill(null);
+  const columnDicts = Array(columnsLength).fill(null);
   for (let c = 0; c < columnsLength; c += 1) {
     const col = matrix.columns(c);
-    columns[c] = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
-    
+    const [arr, dict] = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
+    columns[c] = arr;
+    columnDicts[c] = dict;
   }
 
   /* decode col_idx */
-  const colIdx = decodeTypedArray(
+  const [colIdx, _] = decodeTypedArray(
     matrix.colIndexType(),
     matrix.colIndex.bind(matrix),
     inplace
@@ -83,6 +96,7 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
     nRows,
     nCols,
     columns,
+    columnDicts,
     colIdx,
     rowIdx: null,
   };
@@ -241,20 +255,31 @@ export function matrixFBSToDataframe(
     if (b.nRows !== nRows)
       throw new Error("FBS with inconsistent dimensionality");
   });
+  const columnDicts: DictEncoder = {};
   const columns = fbs
-    .map((fb) =>
-      fb.columns.map((c) => {
-        if (isFloatTypedArray(c) || Array.isArray(c)) return c;
+    .map((fb) => {
+      fb.colIdx.forEach((item: string, index: number) => {
+        columnDicts[item] = fb.columnDicts[index];
+      });
+      return fb.columns.map((c) => {
+        if (isFloatTypedArray(c) || isIntTypedArray(c) || Array.isArray(c))
+          return c;
         return promoteTypedArray(c);
-      })
-    )
+      });
+    })
     .flat();
+
   // colIdx may be TypedArray or Array
   const colIdx = fbs
     .map((b) => (Array.isArray(b.colIdx) ? b.colIdx : Array.from(b.colIdx)))
     .flat();
   const nCols = columns.length;
-
-  const df = new Dataframe([nRows, nCols], columns, null, new KeyIndex(colIdx));
+  const df = new Dataframe(
+    [nRows, nCols],
+    columns,
+    null,
+    new KeyIndex(colIdx),
+    columnDicts
+  );
   return df;
 }
