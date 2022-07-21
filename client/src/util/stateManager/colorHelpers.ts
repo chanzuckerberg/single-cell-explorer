@@ -87,7 +87,6 @@ export function createColorQuery(
 }
 
 function _defaultColors(nObs: number): Colors {
-  // const defaultCellColor = parseRGB(globals.defaultCellColor);
   return {
     rgb: new Float32Array(3 * nObs).fill(0),
     scale: undefined,
