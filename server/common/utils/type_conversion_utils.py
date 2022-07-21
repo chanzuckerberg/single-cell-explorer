@@ -123,17 +123,7 @@ def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dt
 
     if dtype.kind == "O":
         if dtype.name == "category":
-            # Sometimes CategoricalDType can be encoded as int or float without further fuss.
-            # Do not specify the categories in the schema - let the client-side figure it out
-            # on its own.  Utilize Series.to_numpy() to do casting that handles categorical
-            # NA/NaN (missing or undefined) categories.
-            if dtype.categories.dtype.kind in ["f", "i", "u"]:
-                return (
-                    _get_type_info(array.to_numpy())[0],
-                    {"type": "categorical"},
-                )
-            else:
-                return (np.dtype(str), {"type": "categorical", "categories": dtype.categories.to_list()})
+            return (array.cat.codes.dtype, {"type": "categorical", "categories": dtype.categories.to_list()})
 
         # all other extension types are str-encoded
         return (np.dtype(str), {"type": "string"})
