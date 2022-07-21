@@ -32,6 +32,7 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false) {
   const TypeClass = NetEncoding[NetEncoding.TypedArray[uType]];
   // Create a TypedArray that references the underlying buffer
   let arr = uValF(new TypeClass()).dataArray();
+
   if (uType === NetEncoding.TypedArray.JSONEncodedArray) {
     const json = utf8Decoder.decode(arr);
     arr = JSON.parse(json);
@@ -68,6 +69,7 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   for (let c = 0; c < columnsLength; c += 1) {
     const col = matrix.columns(c);
     columns[c] = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
+    
   }
 
   /* decode col_idx */
@@ -231,8 +233,8 @@ export function matrixFBSToDataframe(
   if (arrayBuffers.length === 0) {
     return Dataframe.empty();
   }
-
   const fbs = arrayBuffers.map((ab) => decodeMatrixFBS(ab, true)); // leave in place
+
   /* check that all FBS have same row dimensionality */
   const { nRows } = fbs[0];
   fbs.forEach((b) => {
