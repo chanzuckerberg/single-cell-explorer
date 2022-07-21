@@ -60,16 +60,20 @@ def serialize_typed_array(builder, source_array, encoding_info):
     # convert to a simple ndarray
     code_to_cat = None
     numFields = 1
-    if sparse.issparse(arr):
-        arr = arr.toarray()
-    elif isinstance(arr, pd.Series):
-        if arr.dtype.name == "category":
-            code_to_cat = json.dumps(dict( enumerate(arr.cat.categories ) ))
-            arr = arr.cat.codes
-            numFields = 2
-        arr = arr.to_numpy()
-    if arr.dtype != as_type:
-        arr = arr.astype(as_type)
+    if as_type == "json":
+        as_json = arr.to_json(orient="records")
+        arr = np.array(bytearray(as_json, "utf-8"))  
+    else:  
+        if sparse.issparse(arr):
+            arr = arr.toarray()
+        elif isinstance(arr, pd.Series):
+            if arr.dtype.name == "category":
+                code_to_cat = json.dumps(dict( enumerate(arr.cat.categories ) ))
+                arr = arr.cat.codes
+                numFields = 2
+            arr = arr.to_numpy()
+        if arr.dtype != as_type:
+            arr = arr.astype(as_type)
 
     # serialize the ndarray into a vector
     if arr.ndim == 2:
