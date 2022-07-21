@@ -136,4 +136,6 @@ export interface DataframeColumn extends DataframeColumnGetter {
    * Return the value at the given offset, or undefined if not present.
    */
   iget: (offset: OffsetType) => DataframeValue | undefined;
+
+  columnDict: { [key: number]: string };
 }

@@ -120,12 +120,25 @@ function _createColorTable(
     case "color by categorical metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
 
-      const data = colorByData.col(colorByAccessor).asArray();
+      const col = colorByData.col(colorByAccessor);
+      const data = col.asArray();
 
       if (userColors && colorByAccessor in userColors) {
-        return createUserColors(data, colorByAccessor, schema, userColors);
+        return createUserColors(
+          data,
+          col.columnDict,
+          colorByAccessor,
+          schema,
+          userColors
+        );
       }
-      return createColorsByCategoricalMetadata(data, colorByAccessor, schema);
+
+      return createColorsByCategoricalMetadata(
+        data,
+        col.columnDict,
+        colorByAccessor,
+        schema
+      );
     }
     case "color by continuous metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
@@ -186,12 +199,20 @@ export function loadUserColorConfig(userColors: {
 
 function _createUserColors(
   data: DataframeValueArray,
+  columnDict: { [key: number]: string },
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
 ) {
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
-  const rgb = createRgbArray(data, colors);
+  const invColumnDict = Object.fromEntries(
+    Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
+  );
+  const newColors = Object.fromEntries(
+    Object.entries(colors).map((row) => [invColumnDict[row[0]], row[1]])
+  );
+
+  const rgb = createRgbArray(data, newColors);
 
   // color scale function param is INDEX (offset) into schema categories. It is NOT label value.
   // See createColorsByCategoricalMetadata() for another example.
@@ -215,6 +236,7 @@ interface CategoryColors {
 
 function _createColorsByCategoricalMetadata(
   data: DataframeValueArray,
+  columnDict: { [key: number]: string },
   colorAccessor: LabelType,
   schema: Schema
 ): Colors {
@@ -232,8 +254,13 @@ function _createColorsByCategoricalMetadata(
     acc[cat as string] = parseRGB(scale(idx));
     return acc;
   }, {});
-
-  const rgb = createRgbArray(data, colors);
+  const invColumnDict = Object.fromEntries(
+    Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
+  );
+  const newColors = Object.fromEntries(
+    Object.entries(colors).map((row) => [invColumnDict[row[0]], row[1]])
+  );
+  const rgb = createRgbArray(data, newColors);
 
   return { rgb, scale };
 }
@@ -248,7 +275,8 @@ function createRgbArray(data: DataframeValueArray, colors?: CategoryColors) {
   if (!colors) {
     throw new Error("`colors` is undefined");
   }
-
+  // console.log(colors)
+  // console.log(data)
   for (let i = 0, len = data.length; i < len; i += 1) {
     const label = data[i];
     rgb.set(colors[String(label)], 3 * i);

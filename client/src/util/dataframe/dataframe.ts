@@ -625,7 +625,11 @@ class Dataframe {
     );
   }
 
-  replaceColData(label: LabelType, newColData: DataframeValueArray): Dataframe {
+  replaceColData(
+    label: LabelType,
+    newColData: DataframeValueArray,
+    newColumnDicts: DictEncoder | null = null
+  ): Dataframe {
     /*
     Accelerator for dropping a column then adding it again with same
     label and different values.
@@ -644,7 +648,7 @@ class Dataframe {
       columns,
       this.rowIndex,
       this.colIndex,
-      this.columnDicts,
+      newColumnDicts ?? this.columnDicts,
       columnsAccessor
     );
   }
