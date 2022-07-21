@@ -35,6 +35,7 @@ class GeneExpression extends React.Component<{}, State> {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
+    
     let dfIds;
     const df: Dataframe = await annoMatrix.fetch("var", varIndex);
     this.setState({
@@ -46,7 +47,7 @@ class GeneExpression extends React.Component<{}, State> {
     if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
       dfIds = await annoMatrix.fetch("var", geneIdCol);
       this.setState({
-        geneIds: dfIds.col("feature_id").asArray() as DataframeValue[],
+        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
       });
     } else {
       console.error("Could not find feature ids.");
