@@ -42,7 +42,7 @@ export default class CentroidLabels extends PureComponent {
     const { colorAccessor } = colors;
     const [layoutDf, colorDf] = await this.fetchData();
     let labels;
-    if (colorDf) {
+    if (colorDf && showLabels) {
       labels = calcCentroid(
         schema,
         colorAccessor,
