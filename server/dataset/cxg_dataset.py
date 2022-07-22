@@ -402,11 +402,11 @@ class CxgDataset(Dataset):
                     data = A[:]
                 else:
                     data = A.query(attrs=fields)[:]
-                
+
                 categorical_dtypes = []
-                for c in self.get_schema()['annotations']['obs']['columns']:
-                    if c['name'] in fields and c['type'] == 'categorical':
-                        categorical_dtypes.append(c['name'])
+                for c in self.get_schema()["annotations"]["obs"]["columns"]:
+                    if c["name"] in fields and c["type"] == "categorical":
+                        categorical_dtypes.append(c["name"])
 
                 df = pd.DataFrame.from_dict(data)
                 for name in categorical_dtypes:

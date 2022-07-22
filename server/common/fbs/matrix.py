@@ -62,13 +62,13 @@ def serialize_typed_array(builder, source_array, encoding_info):
     numFields = 1
     if as_type == "json":
         as_json = arr.to_json(orient="records")
-        arr = np.array(bytearray(as_json, "utf-8"))  
-    else:  
+        arr = np.array(bytearray(as_json, "utf-8"))
+    else:
         if sparse.issparse(arr):
             arr = arr.toarray()
         elif isinstance(arr, pd.Series):
             if arr.dtype.name == "category":
-                code_to_cat = json.dumps(dict( enumerate(arr.cat.categories ) ))
+                code_to_cat = json.dumps(dict(enumerate(arr.cat.categories)))
                 arr = arr.cat.codes
                 numFields = 2
             arr = arr.to_numpy()
@@ -82,7 +82,6 @@ def serialize_typed_array(builder, source_array, encoding_info):
         elif arr.shape[1] == 1:
             arr = arr.T[0]
 
-    
     vec = builder.CreateNumpyVector(arr)
     if code_to_cat:
         vec_string = builder.CreateString(code_to_cat)
@@ -220,9 +219,9 @@ def deserialize_typed_array(tarr):
 
     code_to_cat = None
     try:
-        code_to_cat = json.loads(u.String(u.Pos+4))
+        code_to_cat = json.loads(u.String(u.Pos + 4))
     except JSONDecodeError:
-        pass        
+        pass
 
     return narr, code_to_cat
 
@@ -256,9 +255,9 @@ def decode_matrix_fbs(fbs):
     for col_idx in range(0, columns_length):
         col = matrix.Columns(col_idx)
         tarr = (col.UType(), col.U())
-        data, code_to_cat  = deserialize_typed_array(tarr)
-        if (code_to_cat):
-            data = pd.Categorical.from_codes(data,categories=list(code_to_cat.values()))
+        data, code_to_cat = deserialize_typed_array(tarr)
+        if code_to_cat:
+            data = pd.Categorical.from_codes(data, categories=list(code_to_cat.values()))
         columns_data[columns_index[col_idx]] = data
         if len(data) != n_rows:
             raise ValueError("FBS column length does not match number of rows")

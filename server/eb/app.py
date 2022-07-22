@@ -8,6 +8,7 @@ import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
 from flask_compress import Compress
+
 compress = Compress()
 
 if os.path.isdir("/opt/python/log"):
@@ -176,7 +177,7 @@ try:
     server = WSGIServer(app_config)
     debug = False
     compress.init_app(server.app)
-    
+
     application = server.app
 
 except Exception:
