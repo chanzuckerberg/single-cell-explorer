@@ -9,7 +9,7 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
+    apt-get install -y gettext moreutils build-essential nginx libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
     apt-get -y install nodejs && \
     node -v && \
@@ -17,6 +17,9 @@ RUN apt-get update && \
     apt-get clean
 
 ADD hosted/requirements.txt .
+ADD hosted/nginx.conf /etc/nginx/sites-available/
+RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
+RUN systemctl start nginx
 RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile
@@ -34,4 +37,5 @@ WORKDIR /
 
 ADD hosted/config.yaml config.yaml
 ENV CXG_CONFIG_FILE=/config.yaml
-CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]
+
+CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:4555", "server.eb.app:application", "--timeout", "60"]
