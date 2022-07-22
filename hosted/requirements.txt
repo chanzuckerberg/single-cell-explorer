@@ -52,4 +52,3 @@ tiledb==0.13.3
 urllib3==1.26.5
 Werkzeug==1.0.1
 zipp==3.1.0
-brotlipy==0.7.0

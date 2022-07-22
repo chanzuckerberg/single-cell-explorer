@@ -7,9 +7,6 @@ from flask import json
 import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
-from flask_compress import Compress
-
-compress = Compress()
 
 if os.path.isdir("/opt/python/log"):
     # This is the standard location where Amazon EC2 instances store the application logs.
@@ -176,8 +173,6 @@ try:
 
     server = WSGIServer(app_config)
     debug = False
-    compress.init_app(server.app)
-
     application = server.app
 
 except Exception:
