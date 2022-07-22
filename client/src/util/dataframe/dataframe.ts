@@ -5,7 +5,12 @@ import {
   AnyArray,
   GenericArrayConstructor,
 } from "../../common/types/arraytypes";
-import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
+import {
+  IdentityInt32Index,
+  LabelIndex,
+  isLabelIndex,
+  DenseInt32Index,
+} from "./labelIndex";
 import {
   summarizeContinuous as _summarizeContinuous,
   summarizeCategorical as _summarizeCategorical,
@@ -86,6 +91,9 @@ dominant pattern in cellxgene.
 Dataframe
 **/
 
+export interface DictEncoder {
+  [key: string]: { [key: number]: string };
+}
 interface DataframeConstructor {
   new (...args: ConstructorParameters<typeof Dataframe>): Dataframe;
 }
@@ -119,6 +127,8 @@ class Dataframe {
 
   rowIndex: LabelIndex;
 
+  columnDicts: DictEncoder;
+
   /**
   Constructors & factories
   **/
@@ -128,6 +138,7 @@ class Dataframe {
     columnarData: DataframeValueArray[],
     rowIndex?: LabelIndex | null,
     colIndex?: LabelIndex | null,
+    columnDicts?: { [key: string]: { [key: number]: string } } | null,
     __columnsAccessor: (DataframeColumn | null)[] = [] // private interface
   ) {
     /*
@@ -155,6 +166,9 @@ class Dataframe {
     if (!colIndex) {
       colIndex = new IdentityInt32Index(nCols);
     }
+    if (!columnDicts) {
+      columnDicts = {};
+    }
     Dataframe.__errorChecks(dims, columnarData, rowIndex, colIndex);
 
     this.__columns = Array.from(columnarData);
@@ -162,8 +176,8 @@ class Dataframe {
     this.length = nRows; // convenience accessor for row dimension
     this.rowIndex = rowIndex;
     this.colIndex = colIndex;
+    this.columnDicts = columnDicts;
     this.__id = __getMemoId();
-
     this.__compile(__columnsAccessor);
     Object.freeze(this);
   }
@@ -215,6 +229,7 @@ class Dataframe {
   /** @internal */
   private static __compileColumn(
     column: DataframeValueArray,
+    columnDict: { [key: number]: string },
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
   ): DataframeColumn {
@@ -349,6 +364,16 @@ class Dataframe {
     get.__id = __id;
     get.isContinuous = isContinuous;
 
+    if (columnDict) {
+      get.columnDict = columnDict;
+      get.invColumnDict = Object.fromEntries(
+        Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
+      );
+    } else {
+      get.columnDict = {};
+      get.invColumnDict = {};
+    }
+
     Object.freeze(get);
     return get;
   }
@@ -367,7 +392,12 @@ class Dataframe {
         if (accessors[idx]) {
           return accessors[idx] as DataframeColumn;
         }
-        return Dataframe.__compileColumn(column, getRowOffset, getRowLabel);
+        return Dataframe.__compileColumn(
+          column,
+          this.columnDicts?.[(this.colIndex as DenseInt32Index).rindex[idx]],
+          getRowOffset,
+          getRowLabel
+        );
       }
     );
     Object.freeze(this.__columnsAccessor);
@@ -382,6 +412,7 @@ class Dataframe {
       [...this.__columns],
       this.rowIndex,
       this.colIndex,
+      this.columnDicts,
       [...this.__columnsAccessor]
     );
   }
@@ -427,6 +458,7 @@ class Dataframe {
       columns,
       rowIndex,
       colIndex,
+      this.columnDicts,
       columnsAccessor
     );
   }
@@ -526,6 +558,7 @@ class Dataframe {
       columns,
       rowIndex,
       colIndex,
+      this.columnDicts,
       columnsAccessor
     );
   }
@@ -562,11 +595,13 @@ class Dataframe {
     const colIndex = this.colIndex.dropLabel(label);
     const columnsAccessor = [...this.__columnsAccessor];
     columnsAccessor.splice(coffset, 1);
+    const { [label]: _, ...newColumnDicts } = this.columnDicts;
     return new (this.constructor as DataframeConstructor)(
       dims,
       columns,
       this.rowIndex,
       colIndex,
+      newColumnDicts,
       columnsAccessor
     );
   }
@@ -587,16 +622,24 @@ class Dataframe {
     columnsAccessor.push(columnsAccessor[coffset]);
     columnsAccessor.splice(coffset, 1);
 
+    const { [oldLabel]: old, ...newColumnDicts } = this.columnDicts;
+    newColumnDicts[newLabel] = old;
+
     return new (this.constructor as DataframeConstructor)(
       this.dims,
       columns,
       this.rowIndex,
       colIndex,
+      newColumnDicts,
       columnsAccessor
     );
   }
 
-  replaceColData(label: LabelType, newColData: DataframeValueArray): Dataframe {
+  replaceColData(
+    label: LabelType,
+    newColData: DataframeValueArray,
+    newColumnDicts: DictEncoder | null = null
+  ): Dataframe {
     /*
     Accelerator for dropping a column then adding it again with same
     label and different values.
@@ -615,6 +658,7 @@ class Dataframe {
       columns,
       this.rowIndex,
       this.colIndex,
+      newColumnDicts ?? this.columnDicts,
       columnsAccessor
     );
   }
@@ -690,6 +734,7 @@ class Dataframe {
       __columns,
       rowIndex,
       colIndex,
+      this.columnDicts,
       __columnsAccessor
     );
   }
@@ -950,6 +995,7 @@ class Dataframe {
       columns,
       this.rowIndex,
       this.colIndex,
+      this.columnDicts,
       columnsAccessor
     );
   }

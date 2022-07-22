@@ -137,9 +137,9 @@ export function normalizeCategorical(
   const allCategories = new Set<Category>(
     // TODO #35: Use type guards instead of casting
 
-    colDataSummary.categories.concat(
-      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
-    )
+    colDataSummary.categories // .concat(
+    // (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
+    // )
   );
 
   // if no overflow, just UI sort schema categories and return
@@ -174,7 +174,9 @@ export function normalizeCategorical(
   }
 
   // replace data in dataframe
-  df = df.replaceColData(colLabel, newColData);
+  const columnDicts = JSON.parse(JSON.stringify(df.columnDicts));
+  columnDicts[overflowCatName] = overflowCatName;
+  df = df.replaceColData(colLabel, newColData, columnDicts);
 
   // Update schema with categories, in UI sort order. Ensure overflow label is at end
   // of list for display purposes.

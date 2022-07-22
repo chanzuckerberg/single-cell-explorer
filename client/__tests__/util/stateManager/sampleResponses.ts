@@ -7,6 +7,8 @@ import { flatbuffers } from "flatbuffers";
 import { NetEncoding } from "../../../src/util/stateManager/matrix_generated";
 import { RawSchema } from "../../../src/common/types/schema";
 
+// TODO (alec): PLEASE UPDATE THIS
+
 /*
 test data mocking REST 0.2 API responses.  Used in several tests.
 */
