@@ -48,3 +48,32 @@ jobs:
           # replace `/` with `_`
           DOCKER_TAG=${DOCKER_TAG//\//-}
           scripts/happy --profile="" push --stack-name ${DOCKER_TAG} --extra-tag sha-${GITHUB_SHA:0:8} --extra-tag build-${GITHUB_RUN_NUMBER} ${{ matrix.component }}
+  create-update-rdev:
+    runs-on: ubuntu-20.04
+    needs:
+      - build-push-images
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 900
+      - name: Calculate Branch and Base Names
+        id: refs
+        uses: chanzuckerberg/github-actions/.github/actions/get-github-ref-names@v1.2.0
+      - name: Get Stack Name
+        id: stack-name
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const ref = "${{ steps.refs.outputs.headRef }}";
+            core.setOutput('stack-name', ref)
+      - name: Create or update rdev
+        uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@v1.2.1
+        with:
+          tfe-token: ${{ secrets.TFE_TOKEN }}
+          stack-name: ${{ steps.stack-name.outputs.stack-name }}
+          happy_version: "0.25.0"
