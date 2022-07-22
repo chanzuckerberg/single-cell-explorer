@@ -138,4 +138,5 @@ export interface DataframeColumn extends DataframeColumnGetter {
   iget: (offset: OffsetType) => DataframeValue | undefined;
 
   columnDict: { [key: number]: string };
+  invColumnDict: { [key: string]: number };
 }

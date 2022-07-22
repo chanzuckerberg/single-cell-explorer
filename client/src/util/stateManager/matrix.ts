@@ -259,7 +259,7 @@ export function matrixFBSToDataframe(
   const columns = fbs
     .map((fb) => {
       fb.colIdx.forEach((item: string, index: number) => {
-        columnDicts[item] = fb.columnDicts[index];
+        if (fb.columnDicts[index]) columnDicts[item] = fb.columnDicts[index];
       });
       return fb.columns.map((c) => {
         if (isFloatTypedArray(c) || isIntTypedArray(c) || Array.isArray(c))

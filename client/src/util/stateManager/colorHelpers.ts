@@ -126,7 +126,7 @@ function _createColorTable(
       if (userColors && colorByAccessor in userColors) {
         return createUserColors(
           data,
-          col.columnDict,
+          col.invColumnDict,
           colorByAccessor,
           schema,
           userColors
@@ -194,15 +194,12 @@ export function loadUserColorConfig(userColors: {
 
 function _createUserColors(
   data: DataframeValueArray,
-  columnDict: { [key: number]: string },
+  invColumnDict: { [key: string]: number },
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
 ) {
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
-  const invColumnDict = Object.fromEntries(
-    Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
-  );
   const newColors = Object.fromEntries(
     Object.entries(colors).map((row) => [invColumnDict[row[0]], row[1]])
   );

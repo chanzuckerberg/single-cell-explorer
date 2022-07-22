@@ -363,7 +363,17 @@ class Dataframe {
     get.iget = iget;
     get.__id = __id;
     get.isContinuous = isContinuous;
-    get.columnDict = columnDict;
+
+    if (columnDict) {
+      get.columnDict = columnDict;
+      get.invColumnDict = Object.fromEntries(
+        Object.entries(columnDict).map((row) => [row[1], parseInt(row[0], 10)])
+      );
+    } else {
+      get.columnDict = {};
+      get.invColumnDict = {};
+    }
+
     Object.freeze(get);
     return get;
   }
