@@ -18,7 +18,7 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
-
+from scipy import sparse
 
 class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
@@ -271,10 +271,15 @@ class CxgDataset(Dataset):
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
-            densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
-            densedata[obsindices, varindices] = data[""]
-
-            return densedata
+            if obsindices.size / nrows > 0.5:
+                densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
+                densedata[obsindices, varindices] = data[""]
+                return densedata
+            else:
+                data = data[""]
+                x = obsindices
+                y = varindices
+                return sparse.coo_matrix((data,(x,y)),shape=(nrows,ncols))
 
         else:
             data = X.multi_index[obs_items, var_items][""]

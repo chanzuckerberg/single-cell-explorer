@@ -21,37 +21,57 @@ const utf8Decoder = new TextDecoder("utf-8");
  */
 
 /**
- * Decode NetEncoding.TypedArray
+ * Decode NetEncoding.TypedFBArray
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function decodeTypedArray(uType: any, uValF: any, inplace = false): [any, any] {
-  if (uType === NetEncoding.TypedArray.NONE) {
-    return [null, null];
+function decodeTypedArray(uType: any, uValF: any, inplace = false): any {
+  if (uType === NetEncoding.TypedFBArray.NONE) {
+    return null;
   }
 
   // Convert to a JS class that supports this type
   // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const TypeClass = NetEncoding[NetEncoding.TypedArray[uType]];
+  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
   // Create a TypedArray that references the underlying buffer
   const x = uValF(new TypeClass());
   let arr = x.dataArray();
-
   let dict;
-  try {
-    const convertedString = x.bb.__string(x.bb_pos + 4);
-    if (convertedString[0] === "{") dict = JSON.parse(convertedString);
-  } catch (SyntaxError) {
-    // expected behavior to ignore errors here
-  }
-
-  if (uType === NetEncoding.TypedArray.JSONEncodedArray) {
+  let flag = true;
+  if (uType === NetEncoding.TypedFBArray.JSONEncodedFBArray) {
     const json = utf8Decoder.decode(arr);
     arr = JSON.parse(json);
-  } else if (!inplace) {
+    flag = false;
+  } else if (
+    uType === NetEncoding.TypedFBArray.CatInt8FBArray ||
+    uType === NetEncoding.TypedFBArray.CatInt16FBArray ||
+    uType === NetEncoding.TypedFBArray.CatInt32FBArray
+  ) {
+    dict = JSON.parse(utf8Decoder.decode(x.codesArray()));
+  } else if (
+    uType === NetEncoding.TypedFBArray.SparseFloat32FBArray ||
+    uType === NetEncoding.TypedFBArray.SparseFloat64FBArray
+  ) {
+    const rows = x.rowsArray();
+    const size = x.sizeArray()[0];
+    const data = new arr.constructor(size);
+    for (const [i, row] of rows.entries()) {
+      data[row] = arr[i];
+    }
+    arr = data;
+    flag = false;
+  }
+
+  if (!inplace && flag) {
     /* force copy to release underlying FBS buffer */
     arr = new arr.constructor(arr);
   }
-  return [arr, dict];
+  if (dict) {
+    arr = {
+      codes: arr,
+      mapping: dict,
+    };
+  }
+  return arr;
 }
 
 /**
@@ -80,13 +100,18 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   const columnDicts = Array(columnsLength).fill(null);
   for (let c = 0; c < columnsLength; c += 1) {
     const col = matrix.columns(c);
-    const [arr, dict] = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
-    columns[c] = arr;
-    columnDicts[c] = dict;
+    const arr = decodeTypedArray(col?.uType(), col?.u.bind(col), inplace);
+
+    if (!(Array.isArray(arr) || isTypedArray(arr))) {
+      columns[c] = arr.codes;
+      columnDicts[c] = arr.mapping;
+    } else {
+      columns[c] = arr;
+    }
   }
 
   /* decode col_idx */
-  const [colIdx, _] = decodeTypedArray(
+  const colIdx = decodeTypedArray(
     matrix.colIndexType(),
     matrix.colIndex.bind(matrix),
     inplace
@@ -104,8 +129,7 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function encodeTypedArray(builder: any, uType: any, uData: any) {
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const uTypeName = NetEncoding.TypedArray[uType];
+  const uTypeName = NetEncoding.TypedFBArray[uType];
   // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
   const ArrayType = NetEncoding[uTypeName];
   const dv = ArrayType.createDataVector(builder, uData);
@@ -140,10 +164,10 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
       let tarr;
       if (isTypedArray(carr)) {
         // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-        uType = NetEncoding.TypedArray[carr.constructor.name];
+        uType = NetEncoding.TypedFBArray[carr.constructor.name];
         tarr = encodeTypedArray(builder, uType, carr);
       } else {
-        uType = NetEncoding.TypedArray.JSONEncodedArray;
+        uType = NetEncoding.TypedFBArray.JSONEncodedFBArray;
         const json = JSON.stringify(carr);
         const jsonUTF8 = utf8Encoder.encode(json);
         tarr = encodeTypedArray(builder, uType, jsonUTF8);
@@ -161,14 +185,14 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
       if (colIndexType === IdentityInt32Index) {
         encColIndex = undefined;
       } else if (colIndexType === DenseInt32Index) {
-        encColIndexUType = NetEncoding.TypedArray.Int32Array;
+        encColIndexUType = NetEncoding.TypedFBArray.Int32FBArray;
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
           df.colIndex.labels()
         );
       } else if (colIndexType === KeyIndex) {
-        encColIndexUType = NetEncoding.TypedArray.JSONEncodedArray;
+        encColIndexUType = NetEncoding.TypedFBArray.JSONEncodedFBArray;
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
@@ -258,6 +282,7 @@ export function matrixFBSToDataframe(
   const columnDicts: DictEncoder = {};
   const columns = fbs
     .map((fb) => {
+      // console.log(fb)
       fb.colIdx.forEach((item: string, index: number) => {
         if (fb.columnDicts[index]) columnDicts[item] = fb.columnDicts[index];
       });

@@ -4,90 +4,66 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
-
 np = import_numpy()
 
-
-class Float32Array(object):
-    __slots__ = ["_tab"]
+class Int32FBArray(object):
+    __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
-        x = Float32Array()
+        x = Int32FBArray()
         x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsFloat32Array(cls, buf, offset=0):
+    def GetRootAsInt32FBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-
-    # Float32Array
+    # Int32FBArray
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
-    # Float32Array
+    # Int32FBArray
     def Data(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(
-                flatbuffers.number_types.Float32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4)
-            )
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
         return 0
 
-    # Float32Array
+    # Int32FBArray
     def DataAsNumpy(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
-            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Float32Flags, o)
+            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Int32Flags, o)
         return 0
 
-    # Float32Array
+    # Int32FBArray
     def DataLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
-    # Float32Array
+    # Int32FBArray
     def DataIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
-
-def Start(builder):
-    builder.StartObject(1)
-
-
-def Float32ArrayStart(builder):
+def Start(builder): builder.StartObject(1)
+def Int32FBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-
-
-def AddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
-
-
-def Float32ArrayAddData(builder, data):
+def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+def Int32FBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
     return AddData(builder, data)
-
-
-def StartDataVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-
-def Float32ArrayStartDataVector(builder, numElems):
+def StartDataVector(builder, numElems): return builder.StartVector(4, numElems, 4)
+def Int32FBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartDataVector(builder, numElems)
-
-
-def End(builder):
-    return builder.EndObject()
-
-
-def Float32ArrayEnd(builder):
+def End(builder): return builder.EndObject()
+def Int32FBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

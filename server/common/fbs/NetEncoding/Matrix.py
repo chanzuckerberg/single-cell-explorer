@@ -4,12 +4,10 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
-
 np = import_numpy()
 
-
 class Matrix(object):
-    __slots__ = ["_tab"]
+    __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -22,7 +20,6 @@ class Matrix(object):
     def GetRootAsMatrix(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-
     # Matrix
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -49,7 +46,6 @@ class Matrix(object):
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
             from NetEncoding.Column import Column
-
             obj = Column()
             obj.Init(self._tab.Bytes, x)
             return obj
@@ -79,7 +75,6 @@ class Matrix(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(12))
         if o != 0:
             from flatbuffers.table import Table
-
             obj = Table(bytearray(), 0)
             self._tab.Union(obj, o)
             return obj
@@ -97,98 +92,48 @@ class Matrix(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(16))
         if o != 0:
             from flatbuffers.table import Table
-
             obj = Table(bytearray(), 0)
             self._tab.Union(obj, o)
             return obj
         return None
 
-
-def Start(builder):
-    builder.StartObject(7)
-
-
+def Start(builder): builder.StartObject(7)
 def MatrixStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-
-
-def AddNRows(builder, nRows):
-    builder.PrependUint32Slot(0, nRows, 0)
-
-
+def AddNRows(builder, nRows): builder.PrependUint32Slot(0, nRows, 0)
 def MatrixAddNRows(builder, nRows):
     """This method is deprecated. Please switch to AddNRows."""
     return AddNRows(builder, nRows)
-
-
-def AddNCols(builder, nCols):
-    builder.PrependUint32Slot(1, nCols, 0)
-
-
+def AddNCols(builder, nCols): builder.PrependUint32Slot(1, nCols, 0)
 def MatrixAddNCols(builder, nCols):
     """This method is deprecated. Please switch to AddNCols."""
     return AddNCols(builder, nCols)
-
-
-def AddColumns(builder, columns):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(columns), 0)
-
-
+def AddColumns(builder, columns): builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(columns), 0)
 def MatrixAddColumns(builder, columns):
     """This method is deprecated. Please switch to AddColumns."""
     return AddColumns(builder, columns)
-
-
-def StartColumnsVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-
+def StartColumnsVector(builder, numElems): return builder.StartVector(4, numElems, 4)
 def MatrixStartColumnsVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartColumnsVector(builder, numElems)
-
-
-def AddColIndexType(builder, colIndexType):
-    builder.PrependUint8Slot(3, colIndexType, 0)
-
-
+def AddColIndexType(builder, colIndexType): builder.PrependUint8Slot(3, colIndexType, 0)
 def MatrixAddColIndexType(builder, colIndexType):
     """This method is deprecated. Please switch to AddColIndexType."""
     return AddColIndexType(builder, colIndexType)
-
-
-def AddColIndex(builder, colIndex):
-    builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(colIndex), 0)
-
-
+def AddColIndex(builder, colIndex): builder.PrependUOffsetTRelativeSlot(4, flatbuffers.number_types.UOffsetTFlags.py_type(colIndex), 0)
 def MatrixAddColIndex(builder, colIndex):
     """This method is deprecated. Please switch to AddColIndex."""
     return AddColIndex(builder, colIndex)
-
-
-def AddRowIndexType(builder, rowIndexType):
-    builder.PrependUint8Slot(5, rowIndexType, 0)
-
-
+def AddRowIndexType(builder, rowIndexType): builder.PrependUint8Slot(5, rowIndexType, 0)
 def MatrixAddRowIndexType(builder, rowIndexType):
     """This method is deprecated. Please switch to AddRowIndexType."""
     return AddRowIndexType(builder, rowIndexType)
-
-
-def AddRowIndex(builder, rowIndex):
-    builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(rowIndex), 0)
-
-
+def AddRowIndex(builder, rowIndex): builder.PrependUOffsetTRelativeSlot(6, flatbuffers.number_types.UOffsetTFlags.py_type(rowIndex), 0)
 def MatrixAddRowIndex(builder, rowIndex):
     """This method is deprecated. Please switch to AddRowIndex."""
     return AddRowIndex(builder, rowIndex)
-
-
-def End(builder):
-    return builder.EndObject()
-
-
+def End(builder): return builder.EndObject()
 def MatrixEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

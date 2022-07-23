@@ -22,49 +22,70 @@
 
 namespace NetEncoding;
 
-table Float32Array {
+table Float32FBArray {
   data: [float32];
 }
 
-table Uint32Array {
+table Uint32FBArray {
   data: [uint32];
 }
 
-table Int8Array {
-  data: [int8];
-}
-
-table Int16Array {
-  data: [int16];
-}
-
-table Int32Array {
+table Int32FBArray {
   data: [int32];
 }
 
-table Float64Array {
+table Float64FBArray {
   data: [float64];
 }
 
-table JSONEncodedArray {
+table JSONEncodedFBArray {
   // contains a UTF-8/JSON encoded array.  Used to store other
   // types (or polymorphic arrays)
   data: [uint8];
 }
 
-union TypedArray {
-  Float32Array,
-  Int8Array,
-  Int16Array,
-  Int32Array,
-  Uint32Array,
-  Float64Array,
-  JSONEncodedArray
+table CatInt8FBArray {
+  data: [int8];
+  codes: [uint8];
+}
+
+table CatInt16FBArray {
+  data: [int16];
+  codes: [uint8];
+}
+
+table CatInt32FBArray {
+  data: [int32];
+  codes: [uint8];
+}
+
+table SparseFloat32FBArray {
+  data: [float32];
+  rows: [int32];
+  size: [int32];
+}
+table SparseFloat64FBArray {
+  data: [float64];
+  rows: [int32];
+  size: [int32];
+}
+
+union TypedFBArray {
+  Float32FBArray,
+  Int32FBArray,
+  Uint32FBArray,
+  Float64FBArray,
+  JSONEncodedFBArray,
+  CatInt8FBArray,
+  CatInt16FBArray,
+  CatInt32FBArray,
+  SparseFloat32FBArray,
+  SparseFloat64FBArray,
 }
 
 // Extra level of indirection required because vector of union not yet supported
 table Column {
-  u: TypedArray;
+  u: TypedFBArray;
 }
 
 // 2D matrix stored in columnar layout
@@ -76,8 +97,8 @@ table Matrix {
 
   // optional row and column index, with same length as corresponding dimension.
   // If null, defaults to numeric index, ie, [0, n_rows) or [0, n_cols)
-  col_index: TypedArray;
-  row_index: TypedArray;
+  col_index: TypedFBArray;
+  row_index: TypedFBArray;
 }
 
 root_type Matrix;

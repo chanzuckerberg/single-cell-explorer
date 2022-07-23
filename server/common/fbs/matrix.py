@@ -8,16 +8,18 @@ from scipy import sparse
 from server.common.utils.type_conversion_utils import get_encoding_dtype_of_array
 
 import server.common.fbs.NetEncoding.Column as Column
-import server.common.fbs.NetEncoding.Float32Array as Float32Array
-import server.common.fbs.NetEncoding.Float64Array as Float64Array
-import server.common.fbs.NetEncoding.Int8Array as Int8Array
-import server.common.fbs.NetEncoding.Int16Array as Int16Array
-import server.common.fbs.NetEncoding.Int32Array as Int32Array
-import server.common.fbs.NetEncoding.JSONEncodedArray as JSONEncodedArray
+import server.common.fbs.NetEncoding.Float32FBArray as Float32FBArray
+import server.common.fbs.NetEncoding.Float64FBArray as Float64FBArray
+import server.common.fbs.NetEncoding.Int32FBArray as Int32FBArray
+import server.common.fbs.NetEncoding.JSONEncodedFBArray as JSONEncodedFBArray
 import server.common.fbs.NetEncoding.Matrix as Matrix
-import server.common.fbs.NetEncoding.TypedArray as TypedArray
-import server.common.fbs.NetEncoding.Uint32Array as Uint32Array
-
+import server.common.fbs.NetEncoding.TypedFBArray as TypedFBArray
+import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
+import server.common.fbs.NetEncoding.CatInt16FBArray as CatInt16FBArray
+import server.common.fbs.NetEncoding.CatInt32FBArray as CatInt32FBArray
+import server.common.fbs.NetEncoding.CatInt8FBArray as CatInt8FBArray
+import server.common.fbs.NetEncoding.SparseFloat32FBArray as SparseFloat32FBArray
+import server.common.fbs.NetEncoding.SparseFloat64FBArray as SparseFloat64FBArray
 
 # Serialization helper
 def serialize_column(builder, typed_arr):
@@ -48,83 +50,92 @@ def serialize_matrix(builder, n_rows, n_cols, columns, col_idx):
 # Serialization helper
 def serialize_typed_array(builder, source_array, encoding_info):
     """
-    Serialize any of the various typed arrays, eg, Float32Array. Specific means of serialization and type conversion
+    Serialize any of the various typed arrays, eg, Float32FBArray. Specific means of serialization and type conversion
     are provided by type_info.
     """
 
     arr = source_array
-    (array_type, as_type) = encoding_info(source_array)
+    (array_type, as_type1, as_type2) = encoding_info(source_array)
     if isinstance(arr, pd.Index):
         arr = arr.to_series()
 
-    # convert to a simple ndarray
-    code_to_cat = None
-    numFields = 1
-    if as_type == "json":
+    types = [as_type1,as_type2,'int']
+    
+    if as_type1 == "json":
         as_json = arr.to_json(orient="records")
         arr = np.array(bytearray(as_json, "utf-8"))
+        fields = [arr]
     else:
         if sparse.issparse(arr):
-            arr = arr.toarray()
+            row = arr.row
+            data = arr.data
+            size = np.array([max(arr.shape)],dtype='int')
+            fields = [data,row,size]
         elif isinstance(arr, pd.Series):
             if arr.dtype.name == "category":
-                code_to_cat = json.dumps(dict(enumerate(arr.cat.categories)))
+                secondary = np.array(bytearray(json.dumps(dict(enumerate(arr.cat.categories))),"utf-8"))
                 arr = arr.cat.codes
-                numFields = 2
-            arr = arr.to_numpy()
-        if arr.dtype != as_type:
-            arr = arr.astype(as_type)
+                fields = [arr.to_numpy(),secondary]
+            else:
+                fields = [arr.to_numpy()]
+        else:
+            fields = [arr]
+                
 
-    # serialize the ndarray into a vector
-    if arr.ndim == 2:
-        if arr.shape[0] == 1:
-            arr = arr[0]
-        elif arr.shape[1] == 1:
-            arr = arr.T[0]
+        for i,field_type in zip(range(len(fields)),types):
+            if fields[i].dtype != field_type:
+                fields[i] = fields[i].astype(field_type) 
+            
+            if fields[i].ndim == 2:
+                if fields[i].shape[0] == 1:
+                    fields[i] = fields[i][0]
+                elif fields[i].shape[1] == 1:
+                    fields[i] = fields[i].T[0]
 
-    vec = builder.CreateNumpyVector(arr)
-    if code_to_cat:
-        vec_string = builder.CreateString(code_to_cat)
-    # serialize the typed array table
-    builder.StartObject(numFields)
-    builder.PrependUOffsetTRelativeSlot(0, vec, 0)
-    if code_to_cat:
-        builder.PrependUOffsetTRelativeSlot(1, vec_string, 0)
-
+    vecs = [builder.CreateNumpyVector(field) for field in fields]
+    builder.StartObject(len(vecs))
+    for i,vec in enumerate(vecs):
+        builder.PrependUOffsetTRelativeSlot(i, vec, 0)
     array_value = builder.EndObject()
     return (array_type, array_value)
 
 
 def column_encoding(arr):
     column_encoding_type_map = {
-        # array protocol string:  ( array_type, as_type )
-        np.dtype(np.float64).str: (TypedArray.TypedArray.Float32Array, np.float32),
-        np.dtype(np.float32).str: (TypedArray.TypedArray.Float32Array, np.float32),
-        np.dtype(np.float16).str: (TypedArray.TypedArray.Float32Array, np.float32),
-        np.dtype(np.int8).str: (TypedArray.TypedArray.Int8Array, np.int8),
-        np.dtype(np.int16).str: (TypedArray.TypedArray.Int16Array, np.int16),
-        np.dtype(np.int32).str: (TypedArray.TypedArray.Int32Array, np.int32),
-        np.dtype(np.int64).str: (TypedArray.TypedArray.Int32Array, np.int32),
-        np.dtype(np.uint8).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
-        np.dtype(np.uint16).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
-        np.dtype(np.uint32).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
-        np.dtype(np.uint64).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
+        # array protocol string:  ( array_type, as_type1, as_type2 )
+        # as_type2 is used for flatbuffers with more than one slot
+        np.dtype(np.float64).str: (TypedFBArray.TypedFBArray.Float32FBArray, np.float32, None),
+        np.dtype(np.float32).str: (TypedFBArray.TypedFBArray.Float32FBArray, np.float32, None),
+        np.dtype(np.float16).str: (TypedFBArray.TypedFBArray.Float32FBArray, np.float32, None),
+        "cat8": (TypedFBArray.TypedFBArray.CatInt8FBArray, np.int8, np.uint8),
+        "cat16": (TypedFBArray.TypedFBArray.CatInt16FBArray, np.int16, np.uint8),
+        "cat32": (TypedFBArray.TypedFBArray.CatInt32FBArray, np.int32, np.uint8),
+        np.dtype(np.int32).str: (TypedFBArray.TypedFBArray.Int32FBArray, np.int32, None),        
+        np.dtype(np.int64).str: (TypedFBArray.TypedFBArray.Int32FBArray, np.int32, None),
+        np.dtype(np.uint8).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
+        np.dtype(np.uint16).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
+        np.dtype(np.uint32).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
+        np.dtype(np.uint64).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
+        "sparse32": (TypedFBArray.TypedFBArray.SparseFloat32FBArray, np.float32, np.int32),
+        "sparse64": (TypedFBArray.TypedFBArray.SparseFloat64FBArray, np.float64, np.int32),
     }
-    column_encoding_default = (TypedArray.TypedArray.JSONEncodedArray, "json")
+    column_encoding_default = (TypedFBArray.TypedFBArray.JSONEncodedFBArray, "json", None)
 
-    encoding_dtype = np.dtype(get_encoding_dtype_of_array(arr))
-    return column_encoding_type_map.get(encoding_dtype.str, column_encoding_default)
+    encoding_dtype = get_encoding_dtype_of_array(arr)
+    if not isinstance(encoding_dtype,str):
+        encoding_dtype = np.dtype(encoding_dtype).str
+    return column_encoding_type_map.get(encoding_dtype, column_encoding_default)
 
 
 def index_encoding(arr):
     index_encoding_type_map = {
         # array protocol string:  ( array_type, as_type )
-        np.dtype(np.int32).str: (TypedArray.TypedArray.Int32Array, np.int32),
-        np.dtype(np.int64).str: (TypedArray.TypedArray.Int32Array, np.int32),
-        np.dtype(np.uint32).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
-        np.dtype(np.uint64).str: (TypedArray.TypedArray.Uint32Array, np.uint32),
+        np.dtype(np.int32).str: (TypedFBArray.TypedFBArray.Int32FBArray, np.int32, None),
+        np.dtype(np.int64).str: (TypedFBArray.TypedFBArray.Int32FBArray, np.int32, None),
+        np.dtype(np.uint32).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
+        np.dtype(np.uint64).str: (TypedFBArray.TypedFBArray.Uint32FBArray, np.uint32, None),
     }
-    index_encoding_default = (TypedArray.TypedArray.JSONEncodedArray, "json")
+    index_encoding_default = (TypedFBArray.TypedFBArray.JSONEncodedFBArray, "json", None)
 
     return index_encoding_type_map.get(arr.dtype.str, index_encoding_default)
 
@@ -160,15 +171,26 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
     if matrix.ndim != 2:
         raise ValueError("FBS Matrix must be 2D")
 
-    (n_rows, n_cols) = matrix.shape
+    if sparse.issparse(matrix):
+        matrix=matrix.tocoo()
 
+    (n_rows, n_cols) = matrix.shape
     # estimate size needed, so we don't unnecessarily realloc.
     builder = Builder(guess_at_mem_needed(matrix))
 
     columns = []
     for cidx in range(n_cols - 1, -1, -1):
         # serialize the typed array
-        col = matrix.iloc[:, cidx] if isinstance(matrix, pd.DataFrame) else matrix[:, cidx]
+        if isinstance(matrix, pd.DataFrame):
+            col = matrix.iloc[:, cidx]
+        elif sparse.issparse(matrix):
+            filt = matrix.col==cidx
+            s_row = matrix.row[filt]
+            s_data= matrix.data[filt]
+            s_col = np.zeros(s_row.size,dtype='int')
+            col = sparse.coo_matrix((s_data,(s_row,s_col)),shape=(matrix.shape[0],1))
+        else:
+            col = matrix[:, cidx]
         typed_arr = serialize_typed_array(builder, col, column_encoding)
 
         # serialize the Column union
@@ -194,18 +216,21 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
 
 def deserialize_typed_array(tarr):
     type_map = {
-        TypedArray.TypedArray.NONE: None,
-        TypedArray.TypedArray.Uint32Array: Uint32Array.Uint32Array,
-        TypedArray.TypedArray.Int8Array: Int8Array.Int8Array,
-        TypedArray.TypedArray.Int16Array: Int16Array.Int16Array,
-        TypedArray.TypedArray.Int32Array: Int32Array.Int32Array,
-        TypedArray.TypedArray.Float32Array: Float32Array.Float32Array,
-        TypedArray.TypedArray.Float64Array: Float64Array.Float64Array,
-        TypedArray.TypedArray.JSONEncodedArray: JSONEncodedArray.JSONEncodedArray,
+        TypedFBArray.TypedFBArray.NONE: None,
+        TypedFBArray.TypedFBArray.Uint32FBArray: Uint32FBArray.Uint32FBArray,
+        TypedFBArray.TypedFBArray.Int32FBArray: Int32FBArray.Int32FBArray,
+        TypedFBArray.TypedFBArray.Float32FBArray: Float32FBArray.Float32FBArray,
+        TypedFBArray.TypedFBArray.Float64FBArray: Float64FBArray.Float64FBArray,
+        TypedFBArray.TypedFBArray.JSONEncodedFBArray: JSONEncodedFBArray.JSONEncodedFBArray,
+        TypedFBArray.TypedFBArray.CatInt8FBArray: CatInt8FBArray.CatInt8FBArray,
+        TypedFBArray.TypedFBArray.CatInt16FBArray: CatInt16FBArray.CatInt16FBArray,        
+        TypedFBArray.TypedFBArray.CatInt32FBArray: CatInt32FBArray.CatInt32FBArray,
+        TypedFBArray.TypedFBArray.SparseFloat32FBArray: SparseFloat32FBArray.SparseFloat32FBArray,        
+        TypedFBArray.TypedFBArray.SparseFloat64FBArray: SparseFloat64FBArray.SparseFloat64FBArray,
     }
     (u_type, u) = tarr
-    if u_type is TypedArray.TypedArray.NONE:
-        return None, None
+    if u_type is TypedFBArray.TypedFBArray.NONE:
+        return [None, None, None]
 
     TarType = type_map.get(u_type, None)
     if TarType is None:
@@ -213,17 +238,24 @@ def deserialize_typed_array(tarr):
 
     arr = TarType()
     arr.Init(u.Bytes, u.Pos)
+
     narr = arr.DataAsNumpy()
-    if u_type == TypedArray.TypedArray.JSONEncodedArray:
+    if u_type == TypedFBArray.TypedFBArray.JSONEncodedFBArray:
         narr = json.loads(narr.tobytes().decode("utf-8"))
-
-    code_to_cat = None
-    try:
-        code_to_cat = json.loads(u.String(u.Pos + 4))
-    except JSONDecodeError:
-        pass
-
-    return narr, code_to_cat
+    
+    
+    result = [narr,None,None]
+    if (u_type == TypedFBArray.TypedFBArray.CatInt8FBArray or
+        u_type == TypedFBArray.TypedFBArray.CatInt16FBArray or
+        u_type == TypedFBArray.TypedFBArray.CatInt32FBArray):
+        narr2 = arr.CodesAsNumpy()
+        narr2 = json.loads(narr2.tobytes().decode("utf-8"))
+        result[1] = narr2
+    elif (u_type == TypedFBArray.TypedFBArray.SparseFloat32FBArray or
+          u_type == TypedFBArray.TypedFBArray.SparseFloat64FBArray):
+        result[1] = arr.RowsAsNumpy()
+        result[2] = arr.SizeAsNumpy()
+    return result
 
 
 def decode_matrix_fbs(fbs):
@@ -237,12 +269,12 @@ def decode_matrix_fbs(fbs):
     if n_rows == 0 or n_cols == 0:
         return pd.DataFrame()
 
-    if matrix.RowIndexType() is not TypedArray.TypedArray.NONE:
+    if matrix.RowIndexType() is not TypedFBArray.TypedFBArray.NONE:
         raise ValueError("row indexing not supported for FBS Matrix")
 
     columns_length = matrix.ColumnsLength()
 
-    columns_index, _ = deserialize_typed_array((matrix.ColIndexType(), matrix.ColIndex()))
+    columns_index,_,_ = deserialize_typed_array((matrix.ColIndexType(), matrix.ColIndex()))
     if columns_index is None:
         columns_index = range(0, n_cols)
 
@@ -255,13 +287,25 @@ def decode_matrix_fbs(fbs):
     for col_idx in range(0, columns_length):
         col = matrix.Columns(col_idx)
         tarr = (col.UType(), col.U())
-        data, code_to_cat = deserialize_typed_array(tarr)
-        if code_to_cat:
-            data = pd.Categorical.from_codes(data, categories=list(code_to_cat.values()))
+        
+        # the returned fields depend on the type of array
+        arr1, arr2, arr3 = deserialize_typed_array(tarr)
+
+        if (col.UType() is TypedFBArray.TypedFBArray.CatInt8FBArray or 
+            col.UType() is TypedFBArray.TypedFBArray.CatInt16FBArray or 
+            col.UType() is TypedFBArray.TypedFBArray.CatInt32FBArray):
+            data = pd.Categorical.from_codes(arr1, categories=list(arr2.values()))
+        elif (col.UType() is TypedFBArray.TypedFBArray.SparseFloat32FBArray or 
+            col.UType() is TypedFBArray.TypedFBArray.SparseFloat64FBArray):
+            data = np.zeros(arr3[0],dtype=arr1.dtype)
+            data[arr2] = arr1
+        else:
+            data = arr1
+
         columns_data[columns_index[col_idx]] = data
         if len(data) != n_rows:
             raise ValueError("FBS column length does not match number of rows")
-        if col.UType() is TypedArray.TypedArray.JSONEncodedArray:
+        if col.UType() is TypedFBArray.TypedFBArray.JSONEncodedFBArray:
             columns_type[columns_index[col_idx]] = "category"
 
     df = pd.DataFrame.from_dict(data=columns_data).astype(columns_type, copy=False)

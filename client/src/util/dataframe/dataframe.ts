@@ -394,7 +394,7 @@ class Dataframe {
         }
         return Dataframe.__compileColumn(
           column,
-          this.columnDicts?.[(this.colIndex as DenseInt32Index).rindex[idx]],
+          this.columnDicts?.[(this.colIndex as DenseInt32Index).rindex[idx]], // boo - bad
           getRowOffset,
           getRowLabel
         );
@@ -637,7 +637,7 @@ class Dataframe {
 
   replaceColData(
     label: LabelType,
-    newColData: DataframeValueArray,
+    newColData: DataframeValueArray, // accepts exact same data structure as array in constructor add another type
     newColumnDicts: DictEncoder | null = null
   ): Dataframe {
     /*
@@ -719,7 +719,7 @@ class Dataframe {
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
           const rowOffset = rowOffsets[i];
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
-          newCol[i] = col[rowOffset];
+          newCol[i] = col[rowOffset]; // TODO(alec): fix this for new abstraction
         }
         return newCol;
       });
@@ -897,7 +897,7 @@ class Dataframe {
     const roff = this.rowIndex.getOffset(r);
     if (coff === undefined || roff === undefined)
       throw new RangeError("Unknown row or column label.");
-    return this.__columns[coff][roff];
+    return this.__columns[coff][roff]; // (todo): FIX FOR NEW ABSTRACTION
   }
 
   iat(r: OffsetType, c: OffsetType): DataframeValue {
@@ -911,7 +911,7 @@ class Dataframe {
     const myVal = df.ihas(r, c) ? df.iat(r, c) : undefined;
     */
     if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0])
-      return this.__columns[c][r];
+      return this.__columns[c][r]; // (todo): FIX THIS
     throw new RangeError("Unknown row or column index.");
   }
 
