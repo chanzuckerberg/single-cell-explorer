@@ -4,10 +4,12 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
+
 np = import_numpy()
 
+
 class CatInt8FBArray(object):
-    __slots__ = ['_tab']
+    __slots__ = ["_tab"]
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -20,6 +22,7 @@ class CatInt8FBArray(object):
     def GetRootAsCatInt8FBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
+
     # CatInt8FBArray
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -29,7 +32,9 @@ class CatInt8FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Int8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+            return self._tab.Get(
+                flatbuffers.number_types.Int8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1)
+            )
         return 0
 
     # CatInt8FBArray
@@ -56,7 +61,9 @@ class CatInt8FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
+            return self._tab.Get(
+                flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1)
+            )
         return 0
 
     # CatInt8FBArray
@@ -78,27 +85,56 @@ class CatInt8FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         return o == 0
 
-def Start(builder): builder.StartObject(2)
+
+def Start(builder):
+    builder.StartObject(2)
+
+
 def CatInt8FBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+
+
+def AddData(builder, data):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+
+
 def CatInt8FBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
     return AddData(builder, data)
-def StartDataVector(builder, numElems): return builder.StartVector(1, numElems, 1)
+
+
+def StartDataVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+
 def CatInt8FBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartDataVector(builder, numElems)
-def AddCodes(builder, codes): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
+
+
+def AddCodes(builder, codes):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
+
+
 def CatInt8FBArrayAddCodes(builder, codes):
     """This method is deprecated. Please switch to AddCodes."""
     return AddCodes(builder, codes)
-def StartCodesVector(builder, numElems): return builder.StartVector(1, numElems, 1)
+
+
+def StartCodesVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+
 def CatInt8FBArrayStartCodesVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartCodesVector(builder, numElems)
-def End(builder): return builder.EndObject()
+
+
+def End(builder):
+    return builder.EndObject()
+
+
 def CatInt8FBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

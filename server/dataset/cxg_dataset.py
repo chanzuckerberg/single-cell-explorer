@@ -20,6 +20,7 @@ from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
 from scipy import sparse
 
+
 class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
     tiledb_ctx = tiledb.Ctx(
@@ -279,7 +280,7 @@ class CxgDataset(Dataset):
                 data = data[""]
                 x = obsindices
                 y = varindices
-                return sparse.coo_matrix((data,(x,y)),shape=(nrows,ncols))
+                return sparse.coo_matrix((data, (x, y)), shape=(nrows, ncols))
 
         else:
             data = X.multi_index[obs_items, var_items][""]

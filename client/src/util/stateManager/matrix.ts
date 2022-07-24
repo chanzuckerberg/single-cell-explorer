@@ -280,11 +280,13 @@ export function matrixFBSToDataframe(
       throw new Error("FBS with inconsistent dimensionality");
   });
   const columns = fbs
-    .map((fb) => fb.columns.map((c) => {
+    .map((fb) =>
+      fb.columns.map((c) => {
         if (isFloatTypedArray(c) || isCatTypedArray(c) || Array.isArray(c))
           return c;
         return promoteTypedArray(c);
-      }))
+      })
+    )
     .flat();
 
   // colIdx may be TypedArray or Array
@@ -296,9 +298,8 @@ export function matrixFBSToDataframe(
   return df;
 }
 
-export const isCatTypedArray = (c: unknown): boolean => (
-    c instanceof CatInt8Array ||
-    c instanceof CatInt16Array ||
-    c instanceof CatInt32Array
-  );
+export const isCatTypedArray = (c: unknown): boolean =>
+  c instanceof CatInt8Array ||
+  c instanceof CatInt16Array ||
+  c instanceof CatInt32Array;
 export type CatIntArray = CatInt8Array | CatInt16Array | CatInt32Array;

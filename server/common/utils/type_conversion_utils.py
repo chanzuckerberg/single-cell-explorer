@@ -61,7 +61,9 @@ def get_schema_type_hint_of_array(array: Union[np.ndarray, sp.spmatrix, pd.Serie
     return _get_type_info(array)[1]
 
 
-def get_dtype_and_schema_of_array(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -> Tuple[Union[np.dtype, str], dict]:
+def get_dtype_and_schema_of_array(
+    array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]
+) -> Tuple[Union[np.dtype, str], dict]:
     """Return tuple (encoding_dtype, schema_type_hint)"""
     return _get_type_info(array)
 
@@ -126,10 +128,13 @@ def _get_type_info(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -
             return res
 
     if isinstance(array, sp.spmatrix):
-        return ("sparse"+str(dtype.itemsize*8), {"type": dtype.name})
+        return ("sparse" + str(dtype.itemsize * 8), {"type": dtype.name})
     if dtype.kind == "O":
         if dtype.name == "category":
-            return ("cat"+str(array.cat.codes.dtype.itemsize*8), {"type": "categorical", "categories": dtype.categories.to_list()})
+            return (
+                "cat" + str(array.cat.codes.dtype.itemsize * 8),
+                {"type": "categorical", "categories": dtype.categories.to_list()},
+            )
 
         # all other extension types are str-encoded
         return (np.dtype(str), {"type": "string"})
