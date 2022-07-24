@@ -13,5 +13,5 @@ export class CatInt8Array extends Int8Array {
     this.codeMapping = codes;
   }
 
-  vat = (index: number): string | undefined => this.codeMapping[this[index]];
+  vat = (index: number): string => this.codeMapping[this[index]] ?? "NaN";
 }

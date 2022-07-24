@@ -355,8 +355,7 @@ class Dataframe {
 
     if (isCategorical) {
       const columnCat = column as CatIntArray;
-      get.getValuesFromCodes = () =>
-        memoGetValues(columnCat, columnCat.codeMapping, __id);
+      get.getValuesFromCodes = () => memoGetValues(columnCat, __id);
       get.codeMapping = columnCat.codeMapping;
       get.invCodeMapping = Object.fromEntries(
         Object.entries(columnCat.codeMapping).map((row) => [

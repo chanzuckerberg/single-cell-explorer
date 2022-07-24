@@ -13,5 +13,5 @@ export class CatInt32Array extends Int32Array {
     this.codeMapping = codes;
   }
 
-  vat = (index: number): string | undefined => this.codeMapping[this[index]];
+  vat = (index: number): string => this.codeMapping[this[index]] ?? "NaN";
 }
