@@ -7,7 +7,12 @@ import memoize from "memoize-one";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
-import { Dataframe, DataframeValueArray, LabelType } from "../dataframe";
+import {
+  Dataframe,
+  DataframeColumn,
+  DataframeValueArray,
+  LabelType,
+} from "../dataframe";
 import {
   Field,
   Schema,
@@ -121,19 +126,12 @@ function _createColorTable(
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
 
       const col = colorByData.col(colorByAccessor);
-      const data = col.asArray();
 
       if (userColors && colorByAccessor in userColors) {
-        return createUserColors(
-          data,
-          col.invColumnDict,
-          colorByAccessor,
-          schema,
-          userColors
-        );
+        return createUserColors(col, colorByAccessor, schema, userColors);
       }
 
-      return createColorsByCategoricalMetadata(data, colorByAccessor, schema);
+      return createColorsByCategoricalMetadata(col, colorByAccessor, schema);
     }
     case "color by continuous metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
@@ -193,16 +191,22 @@ export function loadUserColorConfig(userColors: {
 }
 
 function _createUserColors(
-  data: DataframeValueArray,
-  invColumnDict: { [key: string]: number },
+  col: DataframeColumn,
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
 ) {
+  const data = col.asArray();
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
-  const newColors = Object.fromEntries(
-    Object.entries(colors).map((row) => [invColumnDict[row[0]], row[1]])
-  );
+  let newColors = colors;
+  if (col.isCategorical) {
+    newColors = Object.fromEntries(
+      Object.entries(colors).map((row) => [
+        col.invCodeMapping?.[row[0]],
+        row[1],
+      ])
+    );
+  }
 
   const rgb = createRgbArray(data, newColors);
 
@@ -227,10 +231,11 @@ interface CategoryColors {
 }
 
 function _createColorsByCategoricalMetadata(
-  data: DataframeValueArray,
+  col: DataframeColumn,
   colorAccessor: LabelType,
   schema: Schema
 ): Colors {
+  const data = col.asArray();
   // TODO: #35 Use type guards to insure type instead of casting
   const { categories } = schema.annotations.obsByName[
     colorAccessor

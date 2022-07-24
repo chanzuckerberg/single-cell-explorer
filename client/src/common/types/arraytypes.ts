@@ -2,6 +2,9 @@
  * Utility type and interface definitions.
  */
 
+import { CatInt16Array } from "../../util/stateManager/cat16_array";
+import { CatInt8Array } from "../../util/stateManager/cat8_array";
+import { CatInt32Array } from "../../util/stateManager/cat32_array";
 /**
  * TypedArrays that can be assigned to a number.
  */
@@ -14,7 +17,10 @@ export type TypedArray =
   | Int32Array
   | Uint32Array
   | Float32Array
-  | Float64Array;
+  | Float64Array
+  | CatInt8Array
+  | CatInt16Array
+  | CatInt32Array;
 
 export type UnsignedIntTypedArray =
   | Uint8Array

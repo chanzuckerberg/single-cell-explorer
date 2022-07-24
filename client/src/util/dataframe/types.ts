@@ -1,4 +1,8 @@
 import { TypedArray } from "../../common/types/arraytypes";
+import {
+  CodeMapping,
+  InvCodeMapping,
+} from "../stateManager/code_mapping_interfaces";
 
 export type LabelType = number | string;
 
@@ -67,6 +71,11 @@ export interface DataframeColumn extends DataframeColumnGetter {
   isContinuous: boolean;
 
   /**
+   * Boolean indicating if the underlying data is dictionary-encoded.
+   */
+  isCategorical: boolean;
+
+  /**
    * Return underlying column data as an array-like object.
    */
   asArray: () => DataframeValueArray;
@@ -109,6 +118,21 @@ export interface DataframeColumn extends DataframeColumnGetter {
   histogramCategorical: () => CategoricalHistogram;
 
   /**
+   * Get value array from codes.
+   */
+  getValuesFromCodes: () => DataframeValueArray;
+
+  /**
+   * Mapping codes to values for categorical data types.
+   */
+  codeMapping?: CodeMapping;
+
+  /**
+   * Mapping values to codes for categorical data types.
+   */
+  invCodeMapping?: InvCodeMapping;
+
+  /**
    * Categorical bin/histogram grouped by another column.
    * @param by - group by categorical column
    */
@@ -136,7 +160,4 @@ export interface DataframeColumn extends DataframeColumnGetter {
    * Return the value at the given offset, or undefined if not present.
    */
   iget: (offset: OffsetType) => DataframeValue | undefined;
-
-  columnDict: { [key: number]: string };
-  invColumnDict: { [key: string]: number };
 }

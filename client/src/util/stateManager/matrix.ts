@@ -4,7 +4,6 @@ import {
   TypedArray,
   isTypedArray,
   isFloatTypedArray,
-  isIntTypedArray,
 } from "../../common/types/arraytypes";
 import {
   Dataframe,
@@ -12,7 +11,10 @@ import {
   DenseInt32Index,
   KeyIndex,
 } from "../dataframe";
-import { DictEncoder } from "../dataframe/dataframe";
+
+import { CatInt8Array } from "./cat8_array";
+import { CatInt16Array } from "./cat16_array";
+import { CatInt32Array } from "./cat32_array";
 
 const utf8Decoder = new TextDecoder("utf-8");
 
@@ -66,10 +68,13 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false): any {
     arr = new arr.constructor(arr);
   }
   if (dict) {
-    arr = {
-      codes: arr,
-      mapping: dict,
-    };
+    if (uType === NetEncoding.TypedFBArray.CatInt8FBArray) {
+      arr = new CatInt8Array({ array: arr, codeMapping: dict });
+    } else if (uType === NetEncoding.TypedFBArray.CatInt16FBArray) {
+      arr = new CatInt16Array({ array: arr, codeMapping: dict });
+    } else if (uType === NetEncoding.TypedFBArray.CatInt32FBArray) {
+      arr = new CatInt32Array({ array: arr, codeMapping: dict });
+    }
   }
   return arr;
 }
@@ -97,17 +102,10 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   /* decode columns */
   const columnsLength = matrix.columnsLength();
   const columns = Array(columnsLength).fill(null);
-  const columnDicts = Array(columnsLength).fill(null);
   for (let c = 0; c < columnsLength; c += 1) {
     const col = matrix.columns(c);
     const arr = decodeTypedArray(col?.uType(), col?.u.bind(col), inplace);
-
-    if (!(Array.isArray(arr) || isTypedArray(arr))) {
-      columns[c] = arr.codes;
-      columnDicts[c] = arr.mapping;
-    } else {
-      columns[c] = arr;
-    }
+    columns[c] = arr;
   }
 
   /* decode col_idx */
@@ -121,7 +119,6 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
     nRows,
     nCols,
     columns,
-    columnDicts,
     colIdx,
     rowIdx: null,
   };
@@ -141,6 +138,9 @@ function encodeTypedArray(builder: any, uType: any, uData: any) {
 /**
  * Encode the dataframe as an FBS Matrix
  */
+
+// (alec) TODO: update this for new encoding.
+
 export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {
@@ -279,19 +279,12 @@ export function matrixFBSToDataframe(
     if (b.nRows !== nRows)
       throw new Error("FBS with inconsistent dimensionality");
   });
-  const columnDicts: DictEncoder = {};
   const columns = fbs
-    .map((fb) => {
-      // console.log(fb)
-      fb.colIdx.forEach((item: string, index: number) => {
-        if (fb.columnDicts[index]) columnDicts[item] = fb.columnDicts[index];
-      });
-      return fb.columns.map((c) => {
-        if (isFloatTypedArray(c) || isIntTypedArray(c) || Array.isArray(c))
+    .map((fb) => fb.columns.map((c) => {
+        if (isFloatTypedArray(c) || isCatTypedArray(c) || Array.isArray(c))
           return c;
         return promoteTypedArray(c);
-      });
-    })
+      }))
     .flat();
 
   // colIdx may be TypedArray or Array
@@ -299,12 +292,13 @@ export function matrixFBSToDataframe(
     .map((b) => (Array.isArray(b.colIdx) ? b.colIdx : Array.from(b.colIdx)))
     .flat();
   const nCols = columns.length;
-  const df = new Dataframe(
-    [nRows, nCols],
-    columns,
-    null,
-    new KeyIndex(colIdx),
-    columnDicts
-  );
+  const df = new Dataframe([nRows, nCols], columns, null, new KeyIndex(colIdx));
   return df;
 }
+
+export const isCatTypedArray = (c: unknown): boolean => (
+    c instanceof CatInt8Array ||
+    c instanceof CatInt16Array ||
+    c instanceof CatInt32Array
+  );
+export type CatIntArray = CatInt8Array | CatInt16Array | CatInt32Array;

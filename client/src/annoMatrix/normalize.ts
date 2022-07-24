@@ -174,9 +174,7 @@ export function normalizeCategorical(
   }
 
   // replace data in dataframe
-  const columnDicts = JSON.parse(JSON.stringify(df.columnDicts));
-  columnDicts[overflowCatName] = overflowCatName;
-  df = df.replaceColData(colLabel, newColData, columnDicts);
+  df = df.replaceColData(colLabel, newColData);
 
   // Update schema with categories, in UI sort order. Ensure overflow label is at end
   // of list for display purposes.

@@ -77,7 +77,10 @@ type CategoryValueProps = PureCategoryValueProps & {
 
   const category = categoricalSelection[metadataField];
   const label = categorySummary.categoryValues[categoryIndex];
-  const labelName = categoryData.icol(0).columnDict[parseInt(label, 10)];
+  const col = categoryData.icol(0);
+  const labelName = col.isCategorical
+    ? col.codeMapping[parseInt(label, 10)]
+    : label;
   const isSelected = category.get(label) ?? true;
   return {
     annotations: state.annotations,
