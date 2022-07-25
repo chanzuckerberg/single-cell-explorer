@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_VERSION=1.19.3
 
 RUN apt-get update && \
-    apt-get install -y gettext libpcre3 wget libpcre3-dev openssl libssl-dev libxslt1-dev libgd-dev libgeoip-dev moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
+    apt-get install -y gettext libpcre3 wget libpcre3-dev nginx openssl libssl-dev libxslt1-dev libgd-dev libgeoip-dev moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
     apt-get -y install nodejs && \
     node -v && \
@@ -34,8 +34,9 @@ RUN mkdir -p /usr/share/nginx/modules && \
 
 
 ADD hosted/requirements.txt .
-COPY hosted/nginx.conf /usr/share/nginx/sites-available/
-RUN ln -s /usr/share/nginx/sites-available/nginx.conf /usr/share/nginx/sites-enabled/nginx.conf
+RUN cp -r /usr/share/nginx/modules /etc/nginx/modules
+COPY hosted/nginx.conf /etc/nginx/sites-available/
+RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
 RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile
