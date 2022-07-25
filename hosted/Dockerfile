@@ -26,6 +26,7 @@ RUN cd nginx-$NGINX_VERSION && \
     make modules
 
 RUN mkdir -p /usr/share/nginx/modules && \
+    cd nginx-$NGINX_VERSION && \
     cp objs/ngx_http_brotli_filter_module.so /usr/share/nginx/modules/ngx_http_brotli_filter_module.so && \
     cp objs/ngx_http_brotli_static_module.so /usr/share/nginx/modules/ngx_http_brotli_static_module.so && \
     chmod 644 /usr/share/nginx/modules/ngx_http_brotli_filter_module.so && \
