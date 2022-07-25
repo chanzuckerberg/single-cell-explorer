@@ -154,14 +154,9 @@ async function fetchGeneInfo(
   geneID: DataframeValue,
   gene: string
 ): Promise<GeneInfoAPI | undefined> {
-  let response;
-  try {
-    response = await fetchJson<GeneInfoAPI>(
-      `geneinfo?geneID=${geneID}&gene=${gene}`
-    );
-  } catch {
-    response = undefined;
-  }
+  const response = await fetchJson<GeneInfoAPI>(
+    `geneinfo?geneID=${geneID}&gene=${gene}`
+  );
   return response;
 }
 

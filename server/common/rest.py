@@ -8,6 +8,7 @@ from http import HTTPStatus
 import struct
 
 from flask import make_response, jsonify, current_app, abort, redirect
+from sqlalchemy import null
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
@@ -237,7 +238,8 @@ def gene_info_get(request):
         if response.status_code == 200:
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
-            raise Exception
+            # in the event of a failed search, return empty response
+            return None
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
