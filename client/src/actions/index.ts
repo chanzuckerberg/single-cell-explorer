@@ -148,15 +148,18 @@ interface GeneInfoAPI {
 /**
  * Fetch gene summary information
  * @param geneID ensembl ID corresponding to gene to search
+ * @param gene human-readable name of gene
  */
 async function fetchGeneInfo(
-  geneID: DataframeValue
+  geneID: DataframeValue,
+  gene: string
 ): Promise<GeneInfoAPI | undefined> {
   let response;
   try {
-    response = await fetchJson<GeneInfoAPI>(`geneinfo?geneID=${geneID}`);
+    response = await fetchJson<GeneInfoAPI>(
+      `geneinfo?geneID=${geneID}&gene=${gene}`
+    );
   } catch {
-    dispatchNetworkErrorMessageToUser("Unable to request gene information.");
     response = undefined;
   }
   return response;

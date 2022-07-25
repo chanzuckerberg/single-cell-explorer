@@ -65,10 +65,7 @@ function QuickGene() {
           // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
             dfIds = await annoMatrix.fetch("var", geneIdCol);
-            console.log("id, success");
             setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
-          } else {
-            console.error("Could not find feature IDs.");
           }
 
           setStatus("name, success");
@@ -142,7 +139,11 @@ function QuickGene() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     return userDefinedGenes.map((gene: any) => {
-      const geneId = geneIds[geneNames.indexOf(gene)];
+      let geneId = geneIds[geneNames.indexOf(gene)];
+      if (!geneId) {
+        geneId = "";
+      }
+
       return (
         <>
           <Gene
