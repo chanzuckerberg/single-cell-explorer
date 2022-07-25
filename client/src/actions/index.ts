@@ -148,6 +148,7 @@ interface GeneInfoAPI {
 /**
  * Fetch gene summary information
  * @param geneID ensembl ID corresponding to gene to search
+ * @param gene human-readable name of gene
  */
 async function fetchGeneInfo(
   geneID: DataframeValue,
