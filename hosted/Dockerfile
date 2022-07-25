@@ -20,7 +20,7 @@ RUN wget  http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
     tar -zxvf nginx-$NGINX_VERSION.tar.gz && \
     rm nginx-$NGINX_VERSION.tar.gz && \
     cd nginx-$NGINX_VERSION && \
-    ./configure --prefix=/var/www/html \
+    ./configure --prefix=/etc/nginx \
                 --sbin-path=/usr/sbin/nginx \
                 --conf-path=/etc/nginx/nginx.conf \
                 --http-log-path=/var/log/nginx/access.log \
