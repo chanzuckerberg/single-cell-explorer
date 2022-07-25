@@ -34,6 +34,7 @@ RUN mkdir -p /usr/share/nginx/modules && \
 
 
 ADD hosted/requirements.txt .
+RUN mv /usr/share/nginx /etc/nginx
 COPY hosted/nginx.conf /etc/nginx/sites-available/
 RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
 RUN python3 -m pip install -r requirements.txt
