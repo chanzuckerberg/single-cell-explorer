@@ -156,7 +156,6 @@ async function fetchGeneInfo(
   try {
     response = await fetchJson<GeneInfoAPI>(`geneinfo?geneID=${geneID}`);
   } catch {
-    dispatchNetworkErrorMessageToUser("Unable to request gene information.");
     response = undefined;
   }
   return response;
