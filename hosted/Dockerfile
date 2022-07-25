@@ -8,6 +8,10 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt update && \
+    apt install software-properties-common && \
+    add-apt-repository ppa:nginx/stable
+
 RUN apt-get update && \
     apt-get install -y gettext moreutils nginx-plus-module-brotli build-essential nginx libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
