@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_VERSION=1.19.3
 
 RUN apt-get update && \
-    apt-get install -y gettext libpcre3 libpcre3-dev openssl libssl-dev libxslt1-dev libgd-dev libgeoip-dev moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
+    apt-get install -y gettext libpcre3 wget libpcre3-dev openssl libssl-dev libxslt1-dev libgd-dev libgeoip-dev moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
     apt-get -y install nodejs && \
     node -v && \
