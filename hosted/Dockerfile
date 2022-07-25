@@ -19,7 +19,6 @@ RUN apt-get update && \
 ADD hosted/requirements.txt .
 COPY hosted/nginx.conf /etc/nginx/sites-available/
 RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
-RUN nginx -g 'daemon on;'
 RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile
@@ -36,6 +35,8 @@ RUN make build-ecs
 WORKDIR /
 
 ADD hosted/config.yaml config.yaml
+ADD hosted/start.sh start.sh
+RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml
 
-CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:4555", "server.eb.app:application", "--timeout", "60"]
+CMD ["/start.sh"]
