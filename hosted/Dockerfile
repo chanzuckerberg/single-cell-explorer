@@ -9,7 +9,7 @@ ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
-    apt install software-properties-common && \
+    apt-get install -y software-properties-common && \
     add-apt-repository ppa:nginx/stable
 
 RUN apt-get update && \
