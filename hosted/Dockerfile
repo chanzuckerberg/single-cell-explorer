@@ -48,8 +48,9 @@ RUN mkdir /etc/nginx/modules && \
     chmod 644 /etc/nginx/modules/ngx_http_brotli_static_module.so
 
 ADD hosted/requirements.txt .
-COPY hosted/nginx.conf /etc/nginx/sites-available/
-RUN ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/nginx.conf
+COPY hosted/rproxy /etc/nginx/sites-available/
+RUN ln -s /etc/nginx/sites-available/rproxy /etc/nginx/sites-enabled/rproxy
+COPY hosted/nginx.conf /etc/nginx/nginx.conf
 RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile
