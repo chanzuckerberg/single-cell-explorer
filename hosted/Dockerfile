@@ -25,7 +25,7 @@ RUN cd nginx-$NGINX_VERSION && \
     ./configure $(nginx -V) --add-dynamic-module=../ngx_brotli && \
     make modules
 
-RUN mkdir /usr/share/nginx/modules && \
+RUN mkdir -p /usr/share/nginx/modules && \
     cp objs/ngx_http_brotli_filter_module.so /usr/share/nginx/modules/ngx_http_brotli_filter_module.so && \
     cp objs/ngx_http_brotli_static_module.so /usr/share/nginx/modules/ngx_http_brotli_static_module.so && \
     chmod 644 /usr/share/nginx/modules/ngx_http_brotli_filter_module.so && \
