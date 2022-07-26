@@ -44,8 +44,11 @@ table JSONEncodedFBArray {
   data: [uint8];
 }
 
-table CatInt8FBArray {
+table CatInt8FBArray {  
   data: [int8];
+  // "codes" is a UTF-8/JSON dictionary encoded as a byte array,
+  // Stores the mapping between codes and values
+  // JSON object schema is {[code: integer]: value: string}
   codes: [uint8];
 }
 
@@ -59,9 +62,14 @@ table CatInt32FBArray {
   codes: [uint8];
 }
 
+// a sparse-encoding of float32 arrays in
+// COO sparse matrix format
 table SparseFloat32FBArray {
+  // nonzero data
   data: [float32];
+  // nonzero locations of the data in the array
   rows: [int32];
+  // size of the array
   size: [int32];
 }
 table SparseFloat64FBArray {
