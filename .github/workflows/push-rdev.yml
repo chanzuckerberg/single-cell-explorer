@@ -44,5 +44,6 @@ jobs:
         run: |
           DOCKER_TAG=${GITHUB_REF#refs/heads/}
           DOCKER_TAG=${DOCKER_TAG#refs/tags/}
+           # replace `/` with `_`
           DOCKER_TAG=${DOCKER_TAG//\//-}        
           happy push --aws-profile "" --tag sha-${GITHUB_SHA:0:8} --tag ${DOCKER_TAG}
