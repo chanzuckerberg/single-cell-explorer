@@ -1,4 +1,3 @@
-test
 # Single cell explorer
 _an interactive explorer for single-cell transcriptomics data_
 
