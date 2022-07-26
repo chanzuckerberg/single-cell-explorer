@@ -68,7 +68,7 @@ function QuickGene() {
             setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
           }
 
-          setStatus("name, success");
+          setStatus("success");
           setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
         } catch (error) {
           setStatus("error");
