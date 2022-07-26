@@ -82,10 +82,9 @@ export function summarizeCategorical(
   const sortedCategoryByCounts = new Map(
     [...categoryCounts.entries()].sort((a, b) => b[1] - a[1])
   );
-  const categories = [...sortedCategoryByCounts.keys()];
   return {
     categorical: true,
-    categories,
+    categories: [...sortedCategoryByCounts.keys()],
     categoryCounts: sortedCategoryByCounts,
     numCategories: sortedCategoryByCounts.size,
   };

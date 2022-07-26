@@ -199,6 +199,8 @@ function _createUserColors(
   const data = col.asArray();
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
   let newColors = colors;
+  // (#337): convert the keys in the color dictionary defined by the schema
+  // to their corresponding codes.
   if (col.isCategorical) {
     newColors = Object.fromEntries(
       Object.entries(colors).map((row) => [
@@ -264,8 +266,7 @@ function createRgbArray(data: DataframeValueArray, colors?: CategoryColors) {
   if (!colors) {
     throw new Error("`colors` is undefined");
   }
-  // console.log(colors)
-  // console.log(data)
+
   for (let i = 0, len = data.length; i < len; i += 1) {
     const label = data[i];
     rgb.set(colors[String(label)], 3 * i);

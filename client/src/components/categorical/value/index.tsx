@@ -37,6 +37,7 @@ const STACKED_BAR_WIDTH = 100;
 /* this is defined outside of the class so we can use it in connect() */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function _currentLabelAsString(ownProps: any) {
+  // (#337): `label` is now the code and `labelName` is the value.
   const { labelName } = ownProps;
   // when called as a function, the String() constructor performs type conversion,
   // and returns a primitive string.

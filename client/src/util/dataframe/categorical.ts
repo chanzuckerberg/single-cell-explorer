@@ -1,5 +1,5 @@
 /*
-Dataframe histogram
+This module contains helper functions to map an array of categorical codes to values
 */
 import { CatIntArray } from "../stateManager/matrix";
 import { DataframeValueArray } from "./types";

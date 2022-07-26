@@ -354,6 +354,14 @@ class Dataframe {
       memoHistogramCategoricalBy(get, by);
 
     if (isCategorical) {
+      /** if categorical column, assign helper functions and objects to `get`.
+       * the following are added:
+       * 1) col.codeMapping: code-to-values dict
+       * 2) col.invCodeMapping: value-to-codes dict
+       * 3) col.getValueFromCodes(): memoized function that returns the value array
+       * (3) may or may not be run in `col.asArray()` - currently it is not.
+       * */
+
       const columnCat = column as CatIntArray;
       get.getValuesFromCodes = () => memoGetValues(columnCat, __id);
       get.codeMapping = columnCat.codeMapping;
@@ -704,7 +712,7 @@ class Dataframe {
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
           const rowOffset = rowOffsets[i];
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
-          newCol[i] = col[rowOffset]; // TODO(alec): fix this for new abstraction
+          newCol[i] = col[rowOffset];
         }
         return newCol;
       });
@@ -881,7 +889,7 @@ class Dataframe {
     const roff = this.rowIndex.getOffset(r);
     if (coff === undefined || roff === undefined)
       throw new RangeError("Unknown row or column label.");
-    return this.__columns[coff][roff]; // (todo): FIX FOR NEW ABSTRACTION
+    return this.__columns[coff][roff];
   }
 
   iat(r: OffsetType, c: OffsetType): DataframeValue {
@@ -895,7 +903,7 @@ class Dataframe {
     const myVal = df.ihas(r, c) ? df.iat(r, c) : undefined;
     */
     if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0])
-      return this.__columns[c][r]; // (todo): FIX THIS
+      return this.__columns[c][r];
     throw new RangeError("Unknown row or column index.");
   }
 

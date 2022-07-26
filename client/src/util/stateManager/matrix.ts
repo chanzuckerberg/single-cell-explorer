@@ -49,6 +49,16 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false): any {
     uType === NetEncoding.TypedFBArray.CatInt32FBArray
   ) {
     dict = JSON.parse(utf8Decoder.decode(x.codesArray()));
+    if (dict) {
+      if (uType === NetEncoding.TypedFBArray.CatInt8FBArray) {
+        arr = new CatInt8Array({ array: arr, codeMapping: dict });
+      } else if (uType === NetEncoding.TypedFBArray.CatInt16FBArray) {
+        arr = new CatInt16Array({ array: arr, codeMapping: dict });
+      } else if (uType === NetEncoding.TypedFBArray.CatInt32FBArray) {
+        arr = new CatInt32Array({ array: arr, codeMapping: dict });
+      }
+    }
+    flag = false;
   } else if (
     uType === NetEncoding.TypedFBArray.SparseFloat32FBArray ||
     uType === NetEncoding.TypedFBArray.SparseFloat64FBArray
@@ -62,19 +72,10 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false): any {
     arr = data;
     flag = false;
   }
-
+  // (#337): flag is false for JSON, sparse, and categorical arrays as they have already been copied
   if (!inplace && flag) {
     /* force copy to release underlying FBS buffer */
     arr = new arr.constructor(arr);
-  }
-  if (dict) {
-    if (uType === NetEncoding.TypedFBArray.CatInt8FBArray) {
-      arr = new CatInt8Array({ array: arr, codeMapping: dict });
-    } else if (uType === NetEncoding.TypedFBArray.CatInt16FBArray) {
-      arr = new CatInt16Array({ array: arr, codeMapping: dict });
-    } else if (uType === NetEncoding.TypedFBArray.CatInt32FBArray) {
-      arr = new CatInt32Array({ array: arr, codeMapping: dict });
-    }
   }
   return arr;
 }
@@ -139,7 +140,7 @@ function encodeTypedArray(builder: any, uType: any, uData: any) {
  * Encode the dataframe as an FBS Matrix
  */
 
-// (alec) TODO: update this for new encoding.
+// (#337, alec) TODO: update this for new encoding.
 
 export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   /* row indexing not supported currently */

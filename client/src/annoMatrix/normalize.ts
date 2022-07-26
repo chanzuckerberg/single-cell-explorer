@@ -137,6 +137,18 @@ export function normalizeCategorical(
   const allCategories = new Set<Category>(
     // TODO #35: Use type guards instead of casting
 
+    /** (#337) - Note for below:
+     * 1) colDataSummary.categories now contains codes
+     * 2) schema categories are values
+     * 3) user-defined/manipualted categories no longer allowed
+     * Consequently, the frontend state and the schema
+     * are guaranteed to have the same labels in each
+     * category, so the concatenation can be safely removed for now.
+     * Later, if user annotations are reintroduced, this will need
+     * to be uncommented. One solution is to:
+     * 1) convert schema labels that are present in the current column into new codes
+     * 2) and add these codes to the code-to-value dictionary in the categorical column
+     **/
     colDataSummary.categories // .concat(
     // (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
     // )
