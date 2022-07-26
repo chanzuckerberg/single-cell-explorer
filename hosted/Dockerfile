@@ -15,33 +15,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
-#nginx config - version pinned to 1.21.6
-#nginx must be compiled from source to compile the brotli module
-ENV NGINX_VERSION=1.21.6 
-RUN wget  http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz && \
-    tar -zxvf nginx-$NGINX_VERSION.tar.gz && \
-    rm nginx-$NGINX_VERSION.tar.gz && \
-    cd nginx-$NGINX_VERSION && \
-    ./configure --prefix=/etc/nginx \
-                --sbin-path=/usr/sbin/nginx \
-                --conf-path=/etc/nginx/nginx.conf \
-                --http-log-path=/var/log/nginx/access.log \
-                --error-log-path=/var/log/nginx/error.log \
-                --with-pcre  --lock-path=/var/lock/nginx.lock \
-                --pid-path=/var/run/nginx.pid \
-                --modules-path=/etc/nginx/modules && \
-    make && \
-    make install && \
-    git clone https://github.com/eustas/ngx_brotli.git && \
-    cd ngx_brotli && git submodule update --init && cd ../ && \
-    ./configure $(echo $(nginx -V 2>&1) | awk -F':' '{print $3}' | awk '{$1=$1;print}') --add-dynamic-module=../ngx_brotli && \
-    make modules && \
-    mkdir /etc/nginx/modules && \
-    cp objs/*.so /etc/nginx/modules/ && \
-    chmod 644 /etc/nginx/modules/*.so
-
-COPY hosted/nginx.conf /etc/nginx/nginx.conf
-
 ADD hosted/requirements.txt .
 RUN python3 -m pip install -r requirements.txt
 
