@@ -102,9 +102,10 @@ class Gene extends React.Component<Props, State> {
         type: "open gene info",
         gene,
         url: "",
-        name: "failed",
+        name: "",
         synonyms: [],
         summary: "",
+        infoError: "fetch gene info failed",
       });
       return;
     }
@@ -115,6 +116,7 @@ class Gene extends React.Component<Props, State> {
       name: info.name,
       synonyms: info.synonyms,
       summary: info.summary,
+      infoError: null,
     });
   };
 

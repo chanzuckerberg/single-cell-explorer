@@ -35,6 +35,7 @@ interface Props {
     loading,
     geneIsMinimized,
     geneLevel,
+    infoError,
   } = state.controls;
 
   return {
@@ -46,6 +47,7 @@ interface Props {
     loading,
     geneIsMinimized,
     geneLevel,
+    infoError,
   };
 })
 class GeneInfo extends React.PureComponent<Props, State> {
@@ -62,6 +64,8 @@ class GeneInfo extends React.PureComponent<Props, State> {
       geneIsMinimized,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneLevel' does not exist on type '{ chi... Remove this comment to see the full error message
       geneLevel,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'infoError' does not exist on type '{ chi... Remove this comment to see the full error message
+      infoError,
     } = this.props;
 
     const minimized = geneIsMinimized;
@@ -75,6 +79,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
     } else {
       synonymList = null;
     }
+    console.log(infoError);
 
     return (
       <GeneInfoWrapper
@@ -135,7 +140,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
           }}
         >
           {/* loading tab */}
-          {!minimized && geneName === "" ? (
+          {!minimized && geneName === "" && infoError === null ? (
             <div
               style={{
                 marginTop: styles.margin.top,
@@ -149,7 +154,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             </div>
           ) : null}
           {/* failed gene search */}
-          {!minimized && geneName === "failed" ? (
+          {!minimized && infoError !== null ? (
             <div
               style={{
                 marginTop: styles.margin.top,
@@ -169,7 +174,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
               </Link>
             </div>
           ) : null}
-          {!minimized && geneName !== "" && geneName !== "failed" ? (
+          {!minimized && geneName !== "" && infoError === null ? (
             <div
               style={{
                 marginTop: styles.margin.top,

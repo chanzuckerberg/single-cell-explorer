@@ -8,7 +8,6 @@ from http import HTTPStatus
 import struct
 
 from flask import make_response, jsonify, current_app, abort, redirect
-from sqlalchemy import null
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
