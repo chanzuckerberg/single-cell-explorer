@@ -47,8 +47,8 @@ table JSONEncodedFBArray {
 table CatInt8FBArray {  
   data: [int8];
   // "codes" is a UTF-8/JSON dictionary encoded as a byte array,
-  // Stores the mapping between codes and values
-  // JSON object schema is {[code: integer]: value: string}
+  // Stores the mapping between codes and polymorphic values
+  // JSON object schema is {[code: integer]: value: string | number | boolean}
   codes: [uint8];
 }
 
