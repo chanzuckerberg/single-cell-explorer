@@ -1,33 +1,39 @@
 /* logic for minimizing and maximizing pop-ups */
 const minimizeMaximizePopUps = (
   geneLevel: string,
-  geneIsMin: boolean,
+  geneIsMinimized: boolean,
   geneIsOpen: boolean,
   scatterplotLevel: string,
-  scatterplotIsMin: boolean,
+  scatterplotIsMinimized: boolean,
   scatterplotIsOpen: boolean
 ) => {
-  if (geneIsMin && geneIsOpen && scatterplotIsMin && scatterplotIsOpen) {
+  if (
+    geneIsMinimized &&
+    geneIsOpen &&
+    scatterplotIsMinimized &&
+    scatterplotIsOpen
+  ) {
     return {
       geneLevel,
       scatterplotLevel,
     };
   }
-  if (!geneIsMin) {
+  if (!geneIsMinimized) {
     return {
-      geneLevel: scatterplotIsMin && scatterplotIsOpen ? "top" : "bottom",
-      scatterplotLevel: scatterplotIsMin && scatterplotIsOpen ? "bottom" : "",
+      geneLevel: scatterplotIsMinimized && scatterplotIsOpen ? "top" : "bottom",
+      scatterplotLevel:
+        scatterplotIsMinimized && scatterplotIsOpen ? "bottom" : "",
     };
   }
-  if (!scatterplotIsMin) {
+  if (!scatterplotIsMinimized) {
     return {
-      scatterplotLevel: geneIsMin && geneIsOpen ? "top" : "bottom",
-      geneLevel: geneIsMin && geneIsOpen ? "bottom" : "",
+      scatterplotLevel: geneIsMinimized && geneIsOpen ? "top" : "bottom",
+      geneLevel: geneIsMinimized && geneIsOpen ? "bottom" : "",
     };
   }
   return {
-    geneLevel: geneIsMin ? "bottom" : "top",
-    scatterplotLevel: scatterplotIsMin ? "bottom" : "top",
+    geneLevel: geneIsMinimized ? "bottom" : "top",
+    scatterplotLevel: scatterplotIsMinimized ? "bottom" : "top",
   };
 };
 
