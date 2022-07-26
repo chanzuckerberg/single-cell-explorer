@@ -79,7 +79,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
     } else {
       synonymList = null;
     }
-    console.log(infoError);
 
     return (
       <GeneInfoWrapper

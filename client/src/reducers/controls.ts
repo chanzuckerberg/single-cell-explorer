@@ -1,5 +1,5 @@
 /* logic for minimizing and maximizing pop-ups */
-const minMaxPopUps = (
+const minimizeMaximizePopUps = (
   geneLevel: string,
   geneIsMin: boolean,
   geneIsOpen: boolean,
@@ -51,6 +51,7 @@ const Controls = (
     scatterplotIsOpen: false,
     geneLevel: "",
     gene: null,
+    infoError: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
 
     datasetDrawer: false,
@@ -135,7 +136,7 @@ const Controls = (
       }
       state.geneIsOpen = true;
 
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -158,6 +159,7 @@ const Controls = (
           geneName: "",
           geneIsMinimized: state.geneIsMinimized,
           geneLevel: state.geneLevel,
+          infoError: state.infoError,
         };
       }
       return {
@@ -170,6 +172,7 @@ const Controls = (
         geneName: action.name,
         geneIsMinimized: false,
         geneLevel: state.geneLevel,
+        infoError: action.infoError,
       };
     }
 
@@ -185,7 +188,7 @@ const Controls = (
       }
       state.geneIsOpen = true;
 
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -207,6 +210,7 @@ const Controls = (
         geneName: "",
         geneIsMinimized: false,
         geneLevel: state.geneLevel,
+        infoError: null,
       };
     }
 
@@ -215,7 +219,7 @@ const Controls = (
       if (!state.geneIsMinimized) {
         state.scatterplotIsMinimized = true;
       }
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -230,12 +234,13 @@ const Controls = (
         geneIsMinimized: state.geneIsMinimized,
         geneLevel: state.geneLevel,
         scatterplotIsMinimized: state.scatterplotIsMinimized,
+        infoError: action.infoError,
       };
     }
 
     case "clear gene info": {
       state.geneIsOpen = false;
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -251,6 +256,7 @@ const Controls = (
         geneIsOpen: state.geneIsOpen,
         geneIsMinimized: null,
         geneLevel: state.geneLevel,
+        infoError: action.infoError,
       };
     }
 
@@ -269,7 +275,7 @@ const Controls = (
         state.scatterplotIsOpen = true;
       }
 
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -300,7 +306,7 @@ const Controls = (
         state.scatterplotIsOpen = true;
       }
 
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -324,7 +330,7 @@ const Controls = (
       if (!state.scatterplotIsMinimized) {
         state.geneIsMinimized = true;
       }
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
@@ -345,7 +351,7 @@ const Controls = (
 
     case "clear scatterplot": {
       state.scatterplotIsOpen = false;
-      const stackLevels = minMaxPopUps(
+      const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
         state.geneIsOpen,
