@@ -173,6 +173,7 @@ const Controls = (
         geneIsMinimized: false,
         geneLevel: state.geneLevel,
         infoError: action.infoError,
+        isEnsemblIdResult: action.is_ensembl_id_result,
       };
     }
 

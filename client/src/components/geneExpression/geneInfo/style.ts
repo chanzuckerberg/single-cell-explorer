@@ -85,3 +85,23 @@ export const Link = styled.a`
         `;
   }}
 `;
+
+export const WarningBanner = styled.div`
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  text {
+    margin-left: 10px;
+  }
+  ${fontBodyXs}
+  ${(props) => {
+    const colors = getColors(props);
+
+    return `
+        background-color: ${colors?.warning[100]};
+        svg {
+          fill: ${colors?.warning[400]}
+        }
+        `;
+  }}
+`;
