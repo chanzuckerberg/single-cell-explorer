@@ -24,23 +24,23 @@ function FloatingButton(): JSX.Element {
       content={
         <Menu>
           <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/README.md"
+            href="https://cellxgene.dev.single-cell.czi.technology/docs"
             rel="noopener"
             target="_blank"
             text="Documentation"
           />
           <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/explore-data/explorer-tutorials.md"
+            href="https://cellxgene.dev.single-cell.czi.technology/docs/04__Analyze%20Public%20Data/4_1__Hosted%20Tutorials"
             rel="noopener"
             target="_blank"
             text="Tutorials"
           />
-          <MenuItem
+          {/* <MenuItem
             href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md"
             rel="noopener"
             target="_blank"
             text="Our Roadmap"
-          />
+          /> */}
         </Menu>
       }
       hasBackdrop
