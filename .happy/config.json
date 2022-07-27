@@ -39,5 +39,8 @@
     "tasks": {
         "migrate": [],
         "delete": []
+    },
+    "features": {
+        "enable_dynamo_locking": true
     }
 }

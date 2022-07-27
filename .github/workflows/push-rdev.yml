@@ -38,8 +38,12 @@ jobs:
       - name: Install happy
         uses: chanzuckerberg/github-actions/.github/actions/install-happy@install-happy-v1.2.1
         with:
-          happy_version: "0.23.0"
+          happy_version: "0.25.0"
       - name: Build component
         shell: bash
         run: |
-          happy push --aws-profile "" --tag sha-${GITHUB_SHA:0:8}
+          DOCKER_TAG=${GITHUB_REF#refs/heads/}
+          DOCKER_TAG=${DOCKER_TAG#refs/tags/}
+           # replace `/` with `_`
+          DOCKER_TAG=${DOCKER_TAG//\//-}        
+          happy push --aws-profile "" --tag sha-${GITHUB_SHA:0:8} --tag ${DOCKER_TAG}

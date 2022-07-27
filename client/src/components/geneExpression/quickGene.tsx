@@ -28,6 +28,7 @@ function QuickGene() {
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [geneNames, setGeneNames] = useState([] as DataframeValue[]);
+  const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
 
   const { annoMatrix, userDefinedGenes, userDefinedGenesLoading } = useSelector(
@@ -50,6 +51,7 @@ function QuickGene() {
     fetch();
 
     async function fetch() {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
         const { schema } = annoMatrix;
         const varIndex = schema.annotations.var.index;
@@ -57,6 +59,15 @@ function QuickGene() {
         setStatus("pending");
         try {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+          let dfIds: Dataframe;
+          const geneIdCol = "feature_id";
+
+          // if feature id column is available in var
+          if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
+            dfIds = await annoMatrix.fetch("var", geneIdCol);
+            setGeneIds(dfIds.col("feature_id").asArray() as DataframeValue[]);
+          }
+
           setStatus("success");
           setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
         } catch (error) {
@@ -121,21 +132,31 @@ function QuickGene() {
     });
 
   const QuickGenes = useMemo((): JSX.Element => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
     const removeGene = (gene: any) => () => {
       dispatch({ type: "clear user defined gene", gene });
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    return userDefinedGenes.map((gene: any) => (
-      <Gene
-        key={`quick=${gene}`}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: string; gene: any; removeGene: (gene:... Remove this comment to see the full error message
-        gene={gene}
-        removeGene={removeGene}
-        quickGene
-      />
-    ));
-  }, [userDefinedGenes, dispatch]);
+    return userDefinedGenes.map((gene: any) => {
+      let geneId = geneIds[geneNames.indexOf(gene)];
+      if (!geneId) {
+        geneId = "";
+      }
+
+      return (
+        <>
+          <Gene
+            key={`quick=${gene}`}
+            gene={gene}
+            removeGene={removeGene}
+            quickGene
+            geneId={geneId}
+          />
+        </>
+      );
+    });
+  }, [userDefinedGenes, geneNames, geneIds, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>

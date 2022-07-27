@@ -64,7 +64,9 @@ export const genesetAddGenes =
         postUserErrorToast(
           `${gene.geneSymbol} doesn't appear to be a valid gene name.`
         );
-      } else acc.push(gene);
+      } else {
+        acc.push(gene);
+      }
       return acc;
     }, []);
 
