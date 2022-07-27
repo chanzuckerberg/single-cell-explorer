@@ -618,25 +618,3 @@ describe.each([
     await assertGeneDoesNotExist(geneToRemove);
   });
 });
-
-describe.each([
-  { withSubset: true, tag: "subset", categoricalAnno: true },
-  { withSubset: false, tag: "whole", categoricalAnno: true },
-])("annotations", (config) => {
-  test("stacked bar graph renders", async () => {
-    await setup(config);
-    await expandCategory(perTestCategoryName);
-
-    await clickOn(`colorby-louvain`);
-
-    const labels = await getAllByClass("categorical-row");
-
-    const result = await Promise.all(
-      labels.map((label) =>
-        page.evaluate((element) => element.outerHTML, label)
-      )
-    );
-
-    expect(result).toMatchSnapshot();
-  });
-});
