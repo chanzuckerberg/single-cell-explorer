@@ -64,11 +64,7 @@ unit-test-server:
 .PHONY: smoke-test
 smoke-test:
 	cd client && $(MAKE) smoke-test
-
-.PHONY: smoke-test-annotations
-smoke-test-annotations:
-	cd client && $(MAKE) smoke-test-annotations
-
+	
 # LINTING AND FORMATTING COMMANDS
 
 .PHONY: fmt
