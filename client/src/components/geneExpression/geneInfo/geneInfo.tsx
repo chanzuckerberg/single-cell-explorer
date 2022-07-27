@@ -77,7 +77,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
     } else if (geneSynonyms.length === 1) {
       synonymList = geneSynonyms[0];
     } else {
-      // hi
       synonymList = null;
     }
 
