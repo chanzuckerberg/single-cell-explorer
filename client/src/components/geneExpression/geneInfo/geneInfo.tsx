@@ -189,16 +189,18 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 marginBottom: styles.margin.bottom,
               }}
             >
-              <WarningBanner>
-                <Icon
-                  sdsIcon="exclamationMarkCircle"
-                  sdsSize="l"
-                  sdsType="static"
-                />
-                <text>
-                  NCBI didn&apos;t return an exact match for this gene.
-                </text>
-              </WarningBanner>
+              {!isEnsemblIdResult ? (
+                <WarningBanner>
+                  <Icon
+                    sdsIcon="exclamationMarkCircle"
+                    sdsSize="l"
+                    sdsType="static"
+                  />
+                  <text>
+                    NCBI didn&apos;t return an exact match for this gene.
+                  </text>
+                </WarningBanner>
+              ) : null}
               <GeneSymbol>{gene}</GeneSymbol>
               <Content>{geneName}</Content>
               {geneSummary === "" ? (
