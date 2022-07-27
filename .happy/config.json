@@ -36,5 +36,11 @@
             "log_group_prefix": "/explorer/prod"
         }
     },
-    "tasks": {}
+    "tasks": {
+        "migrate": [],
+        "delete": []
+    },
+    "features": {
+        "enable_dynamo_locking": true
+    }
 }

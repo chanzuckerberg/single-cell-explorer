@@ -1,11 +1,12 @@
 import datetime
 import hashlib
+import json
 import logging
 import os
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint
+from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint, request
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
@@ -199,3 +200,8 @@ class Server:
                 )
 
         self.app.app_config = app_config
+
+        @self.app.before_request
+        def pre_request_logging():
+            message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
+            self.app.logger.info(message)

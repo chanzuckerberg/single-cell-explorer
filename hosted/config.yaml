@@ -1,22 +1,3 @@
-import os
-env = os.getenv("HAPPY_ENV")
-
-assert(env is not None, "No HAPPY_ENV specified")
-
-# Happy uses `stage` as the environment, but the application needs `staging`
-if env == "stage":
-  env = "staging"
-
-if env == "prod":
-  api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
-  web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
-  data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
-else:
-  api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
-  web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
-  data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
-
-config = f"""
 server:
   app:
     verbose: true
@@ -39,35 +20,48 @@ server:
         - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
-    api_base_url: {api_base_url}
-    web_base_url: {web_base_url}
+
+# if env == "prod":
+#   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
+#   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
+#   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
+# else:
+#   api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
+#   web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
+#   data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
+
+    api_base_url: https://${API_DOMAIN}/cellxgene/
+    web_base_url: https://${WEB_DOMAIN}/
 
   multi_dataset:
     dataroot:
       covid19:
         base_url: d
-        dataroot: s3://hosted-cellxgene-{env}
+        dataroot: s3://${CXG_BUCKET_PATH}
       corpora_data_portal:
         base_url: e
-        dataroot: s3://hosted-cellxgene-{env}
+        dataroot: s3://${CXG_BUCKET_PATH}
 
     # The index page when in multi-dataset mode:
     #   false or null:  this returns a 404 code
     #   true:  loads a test index page, which links to the datasets that are available in the dataroot
     #   string/URL:  redirect to this URL:  flask.redirect(config.multi_dataset__index)
-    index: {web_base_url}
+    index: https://${WEB_DOMAIN}/
 
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
     allowed_matrix_types: []
 
   data_locator:
-    api_base: {data_locator_url}
+    api_base: https://${DATA_LOCATOR_DOMAIN}/dp/v1
     s3:
       # s3 region name.
       #   if true, then the s3 location is automatically determined from the datapath or dataroot.
       #   if false/null, then do not set.
       #   if a string, then use that value (e.g. us-east-1).
       region_name: true
+
+  gene_info:
+    api_base: https://${DATA_LOCATOR_DOMAIN}/gene_info/v1
 
   adaptor:
     cxg_adaptor:
@@ -111,8 +105,3 @@ dataset:
     enable: true
     lfc_cutoff: 0.01
     top_n: 10
-"""
-
-if __name__ == "__main__":
-    with open("config.yaml", "w") as f:
-        f.write(config)
