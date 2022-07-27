@@ -20,13 +20,14 @@ resource aws_ecs_service service {
     assign_public_ip = false
   }
 
-  wait_for_steady_state = var.wait_for_steady_state
+  wait_for_steady_state  = var.wait_for_steady_state
+  enable_execute_command = true
 }
 
 resource aws_ecs_task_definition task_definition {
-  family        = "explorer-${var.deployment_stage}-${var.custom_stack_name}-${var.app_name}"
-  network_mode  = "awsvpc"
-  task_role_arn = var.task_role_arn
+  family                = "explorer-${var.deployment_stage}-${var.custom_stack_name}-${var.app_name}"
+  network_mode          = "awsvpc"
+  task_role_arn         = var.task_role_arn
   container_definitions = <<EOF
 [
   {
