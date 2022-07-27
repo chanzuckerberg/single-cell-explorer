@@ -46,8 +46,6 @@ import {
 
 import { datasets } from "./data";
 
-const perTestCategoryName = "FAKE";
-
 // geneset CRUD
 const genesetToDeleteName = "geneset_to_delete";
 const meanExpressionBrushGenesetName = "second_gene_set";
