@@ -160,6 +160,7 @@ const Controls = (
           geneIsMinimized: state.geneIsMinimized,
           geneLevel: state.geneLevel,
           infoError: state.infoError,
+          isEnsemblIdResult: action.isEnsemblIdResult,
         };
       }
       return {
@@ -173,7 +174,7 @@ const Controls = (
         geneIsMinimized: false,
         geneLevel: state.geneLevel,
         infoError: action.infoError,
-        isEnsemblIdResult: action.is_ensembl_id_result,
+        isEnsemblIdResult: action.isEnsemblIdResult,
       };
     }
 

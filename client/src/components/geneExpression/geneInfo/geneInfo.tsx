@@ -71,7 +71,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
       geneLevel,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'infoError' does not exist on type '{ chi... Remove this comment to see the full error message
       infoError,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isEnsemblIdResult' does not exist on type '{ chi... Remove this comment to see the full error message
       isEnsemblIdResult,
     } = this.props;
 
@@ -196,9 +195,9 @@ class GeneInfo extends React.PureComponent<Props, State> {
                     sdsSize="l"
                     sdsType="static"
                   />
-                  <text>
+                  <span>
                     NCBI didn&apos;t return an exact match for this gene.
-                  </text>
+                  </span>
                 </WarningBanner>
               ) : null}
               <GeneSymbol>{gene}</GeneSymbol>
