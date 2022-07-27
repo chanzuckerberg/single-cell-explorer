@@ -1,5 +1,3 @@
-const TEST_TIMEOUT = 5000;
-
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export function getTestId(id: any) {
@@ -13,18 +11,12 @@ export function getTestClass(className: any) {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function waitByID(testId: any, props = {}) {
-  return page.waitForSelector(getTestId(testId), {
-    ...props,
-    timeout: TEST_TIMEOUT,
-  });
+  return page.waitForSelector(getTestId(testId), props);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function waitByClass(testClass: any, props = {}) {
-  return page.waitForSelector(`[data-testclass='${testClass}']`, {
-    ...props,
-    timeout: TEST_TIMEOUT,
-  });
+  return page.waitForSelector(`[data-testclass='${testClass}']`, props);
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -68,10 +60,7 @@ export async function clearInputAndTypeInto(testId: any, text: any) {
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function clickOn(testId: any, options = {}) {
-  await expect(page).toClick(getTestId(testId), {
-    ...options,
-    timeout: TEST_TIMEOUT,
-  });
+  await expect(page).toClick(getTestId(testId), options);
 }
 
 /**
