@@ -1,4 +1,4 @@
-const TEST_TIMEOUT = 2500;
+const TEST_TIMEOUT = 5000;
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
