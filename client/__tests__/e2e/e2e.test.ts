@@ -68,7 +68,7 @@ const setToRemoveFrom = "empty_this_geneset";
 const geneToBrushAndColorBy = "SIK1";
 const brushThisGeneGeneset = "brush_this_gene";
 const geneBrushedCellCount = "104";
-const subsetGeneBrushedCellCount = "89";
+const subsetGeneBrushedCellCount = "96";
 
 const genesetDescriptionID =
   "geneset-description-tooltip-fourth_gene_set: fourth description";
