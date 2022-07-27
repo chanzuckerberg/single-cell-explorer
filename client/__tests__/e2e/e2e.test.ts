@@ -22,23 +22,17 @@ import {
 
 import {
   calcDragCoordinates,
-  createCategory,
-  createLabel,
   drag,
   expandCategory,
   subset,
-  duplicateCategory,
   createGeneset,
   deleteGeneset,
   assertGenesetExists,
   assertGenesetDoesNotExist,
   getCellSetCount,
-  expandGeneset,
   editGenesetName,
-  addGeneToSet,
   assertGeneExistsInGeneset,
   removeGene,
-  renameLabel,
   assertGeneDoesNotExist,
   expandGene,
   colorByGeneset,
@@ -47,21 +41,18 @@ import {
   clip,
   getAllCategoriesAndCounts,
   selectCategory,
+  addGeneToSetAndExpand,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
 
-const perTestCategoryName = "TEST-CATEGORY";
-const perTestLabelName = "TEST-LABEL";
+const perTestCategoryName = "FAKE";
 
 // geneset CRUD
 const genesetToDeleteName = "geneset_to_delete";
-const preExistingGenesetName = "fifth_dataset";
 const meanExpressionBrushGenesetName = "second_gene_set";
-const meanExpressionBrushCellsSelected = "14";
-const subsetMeanExpressionBrushCellsSelected = "0";
 
-//const GENES_TO_ADD = ["PF4","PPBP","GNG11","SDPR","NRGN","SPARC","RGS18","TPM4","GP9","GPX1","CD9","TUBB1","ITGA2B"]
+// const GENES_TO_ADD = ["PF4","PPBP","GNG11","SDPR","NRGN","SPARC","RGS18","TPM4","GP9","GPX1","CD9","TUBB1","ITGA2B"]
 // initial text, the text we type in, the result
 const editableGenesetName = "geneset_to_edit";
 const editText = "_111";
@@ -78,8 +69,8 @@ const setToRemoveFrom = "empty_this_geneset";
 // brush a gene
 const geneToBrushAndColorBy = "SIK1";
 const brushThisGeneGeneset = "brush_this_gene";
-const geneBrushedCellCount = "109";
-const subsetGeneBrushedCellCount = "96";
+const geneBrushedCellCount = "104";
+const subsetGeneBrushedCellCount = "89";
 
 const genesetDescriptionID =
   "geneset-description-tooltip-fourth_gene_set: fourth description";
@@ -428,16 +419,9 @@ Tests included below are specific to annotation features
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 async function setup(config: any) {
   await goToPage(pageUrl);
-  //page
+  // page
   //  .on('console', message =>
   //    console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
-
-  if (config.categoricalAnno) {
-    // setup the test fixtures
-    await createCategory(perTestCategoryName);
-    await createLabel(perTestCategoryName, perTestLabelName);
-  }
-
   if (config.withSubset) {
     await subset({ x1: 0.1, y1: 0.1, x2: 0.8, y2: 0.8 });
   }
@@ -450,10 +434,8 @@ describe.each([
   test("brush on geneset mean", async () => {
     await setup(config);
     await createGeneset(meanExpressionBrushGenesetName);
-    await addGeneToSet(meanExpressionBrushGenesetName, "SIK1");
-    
-    await expandGeneset(meanExpressionBrushGenesetName);  
-    
+    await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1");
+
     const histBrushableAreaId = `histogram-${meanExpressionBrushGenesetName}-plot-brushable-area`;
 
     const coords = await calcDragCoordinates(histBrushableAreaId, {
@@ -474,7 +456,7 @@ describe.each([
   test("color by mean expression", async () => {
     await setup(config);
     await createGeneset(meanExpressionBrushGenesetName);
-    await addGeneToSet(meanExpressionBrushGenesetName, "SIK1");
+    await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1");
 
     await colorByGeneset(meanExpressionBrushGenesetName);
     await assertColorLegendLabel(meanExpressionBrushGenesetName);
@@ -584,8 +566,7 @@ describe.each([
   test("add a gene to geneset and undo/redo", async () => {
     await setup(config);
     await createGeneset(setToAddGeneTo);
-    await addGeneToSet(setToAddGeneTo, geneToAddToSet);
-    await expandGeneset(setToAddGeneTo);
+    await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet);
     await assertGeneExistsInGeneset(geneToAddToSet);
     await clickOn("undo");
     await assertGeneDoesNotExist(geneToAddToSet);
@@ -595,8 +576,7 @@ describe.each([
   test("expand gene and brush", async () => {
     await setup(config);
     await createGeneset(brushThisGeneGeneset);
-    await addGeneToSet(brushThisGeneGeneset, geneToBrushAndColorBy);
-    await expandGeneset(brushThisGeneGeneset);
+    await addGeneToSetAndExpand(brushThisGeneGeneset, geneToBrushAndColorBy);
     await expandGene(geneToBrushAndColorBy);
     const histBrushableAreaId = `histogram-${geneToBrushAndColorBy}-plot-brushable-area`;
 
@@ -617,11 +597,10 @@ describe.each([
   test("color by gene in geneset", async () => {
     await setup(config);
     await createGeneset(meanExpressionBrushGenesetName);
-    await addGeneToSet(meanExpressionBrushGenesetName, geneToBrushAndColorBy);
-    await expandGeneset(meanExpressionBrushGenesetName);
+    await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1");
 
-    await colorByGene(geneToBrushAndColorBy);
-    await assertColorLegendLabel(geneToBrushAndColorBy);
+    await colorByGene("SIK1");
+    await assertColorLegendLabel("SIK1");
   });
   test("delete gene from geneset and undo/redo", async () => {
     // We've already deleted the gene
@@ -629,9 +608,8 @@ describe.each([
 
     await setup(config);
     await createGeneset(setToRemoveFrom);
-    await addGeneToSet(setToRemoveFrom, geneToRemove);
+    await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove);
 
-    await expandGeneset(setToRemoveFrom);
     await removeGene(geneToRemove);
     await assertGeneDoesNotExist(geneToRemove);
     await clickOn("undo");
@@ -645,67 +623,8 @@ describe.each([
   { withSubset: true, tag: "subset", categoricalAnno: true },
   { withSubset: false, tag: "whole", categoricalAnno: true },
 ])("annotations", (config) => {
-  test("check cell count for a label loaded from file", async () => {
-    await setup(config);
-
-    const duplicateCategoryName = "duplicate";
-    await duplicateCategory(duplicateCategoryName);
-
-    await page.reload({ waitUntil: ["networkidle0", "domcontentloaded"] });
-
-    const firstCategoryExpandIcon = await expect(page).toMatchElement(
-      getTestClass("category-expand")
-    );
-
-    await firstCategoryExpandIcon.click();
-
-    const expectedCategoryRow = await expect(page).toMatchElement(
-      getTestClass("categorical-row")
-    );
-    const expectedLabelName = await getInnerText(
-      expectedCategoryRow,
-      "categorical-value"
-    );
-    const expectedLabelCount = await getInnerText(
-      expectedCategoryRow,
-      "categorical-value-count"
-    );
-
-    await expandCategory(duplicateCategoryName);
-
-    const expectedCategory = await expect(page).toMatchElement(
-      getTestClass("category")
-    );
-
-    const actualCategoryRow = await expect(expectedCategory).toMatchElement(
-      getTestClass("categorical-row")
-    );
-    const actualLabelName = await getInnerText(
-      actualCategoryRow,
-      "categorical-value"
-    );
-    const actualLabelCount = await getInnerText(
-      actualCategoryRow,
-      "categorical-value-count"
-    );
-
-    expect(actualLabelName).toBe(expectedLabelName);
-    expect(actualLabelCount).toBe(expectedLabelCount);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    async function getInnerText(element: any, className: any) {
-      return element.$eval(
-        getTestClass(className),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        (node: any) => node?.innerText
-      );
-    }
-  });
-
   test("stacked bar graph renders", async () => {
     await setup(config);
-
-    await duplicateCategory(perTestCategoryName);
     await expandCategory(perTestCategoryName);
 
     await clickOn(`colorby-louvain`);
@@ -718,31 +637,6 @@ describe.each([
       )
     );
 
-    expect(result).toMatchSnapshot();
-  });
-  test("truncate midpoint whitespace", async () => {
-    await setup(config);
-    const newLabelName = "123 456";
-    await duplicateCategory(perTestCategoryName);
-    await createLabel(perTestCategoryName,perTestLabelName)
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
-    expect(result).toMatchSnapshot();
-  });
-
-  test("truncate single character", async () => {
-    await setup(config);
-    const newLabelName = "T";
-    await duplicateCategory(perTestCategoryName);
-    await createLabel(perTestCategoryName,perTestLabelName)    
-    await renameLabel(perTestCategoryName, perTestLabelName, newLabelName);
-    const value = await waitByID(
-      `categorical-value-${perTestCategoryName}-${newLabelName}`
-    );
-    const result = await page.evaluate((elem) => elem.outerHTML, value);
     expect(result).toMatchSnapshot();
   });
 });
