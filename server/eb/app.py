@@ -4,9 +4,9 @@ import hashlib
 import base64
 from urllib.parse import urlparse
 from flask import json
-import logging
 from flask_talisman import Talisman
 from flask_cors import CORS
+import logging
 
 if os.path.isdir("/opt/python/log"):
     # This is the standard location where Amazon EC2 instances store the application logs.
@@ -16,6 +16,14 @@ if os.path.isdir("/opt/python/log"):
         format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )    
+
+logger = logging.getLogger()
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
@@ -25,7 +33,7 @@ try:
     from server.app.app import Server
     from server.common.utils.data_locator import DataLocator, discover_s3_region_name
 except Exception:
-    logging.critical("Exception importing server modules", exc_info=True)
+    logger.critical("Exception importing server modules", exc_info=True)
     sys.exit(1)
 
 
@@ -100,7 +108,7 @@ class WSGIServer(Server):
             csp_hashes = {}
         script_hashes = [f"'{hash}'" for hash in csp_hashes.get("script-hashes", [])]
         if len(script_hashes) == 0:
-            logging.error("Content security policy hashes are missing, falling back to unsafe-inline policy")
+            logger.error("Content security policy hashes are missing, falling back to unsafe-inline policy")
 
         return script_hashes
 
@@ -136,7 +144,7 @@ try:
     config_location = DataLocator(config_file)
     if config_location.exists():
         with config_location.local_handle() as lh:
-            logging.info(f"Configuration from {config_file}")
+            logger.info(f"Configuration from {config_file}")
             app_config.update_from_config_file(lh)
             has_config = True
 
@@ -148,20 +156,20 @@ try:
             config_location = DataLocator(config_file, region_name)
             if config_location.exists():
                 with config_location.local_handle() as lh:
-                    logging.info(f"Configuration from {config_file}")
+                    logger.info(f"Configuration from {config_file}")
                     app_config.update_from_config_file(lh)
                     has_config = True
             else:
-                logging.critical(f"Configuration file not found {config_file}")
+                logger.critical(f"Configuration file not found {config_file}")
                 sys.exit(1)
 
     if not has_config:
-        logging.critical("No config file found")
+        logger.critical("No config file found")
         sys.exit(1)
 
     dataroot = os.getenv("CXG_DATAROOT")
     if dataroot:
-        logging.info("Configuration from CXG_DATAROOT")
+        logger.info("Configuration from CXG_DATAROOT")
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
     app_config.update_server_config(
@@ -169,24 +177,24 @@ try:
     )
 
     # complete config
-    app_config.complete_config(logging.info)
+    app_config.complete_config(logger.info)
 
     server = WSGIServer(app_config)
     debug = False
     application = server.app
 
 except Exception:
-    logging.critical("Caught exception during initialization", exc_info=True)
+    logger.critical("Caught exception during initialization", exc_info=True)
     sys.exit(1)
 
 if app_config.is_multi_dataset():
-    logging.info(f"starting server with multi_dataset__dataroot={app_config.server_config.multi_dataset__dataroot}")
+    logger.info(f"starting server with multi_dataset__dataroot={app_config.server_config.multi_dataset__dataroot}")
 else:
-    logging.info(f"starting server with single_dataset__datapath={app_config.server_config.single_dataset__datapath}")
+    logger.info(f"starting server with single_dataset__datapath={app_config.server_config.single_dataset__datapath}")
 
 if __name__ == "__main__":
     try:
         application.run(host=app_config.server_config.app__host, debug=debug, threaded=not debug, use_debugger=False)
     except Exception:
-        logging.critical("Caught exception during initialization", exc_info=True)
+        logger.critical("Caught exception during initialization", exc_info=True)
         sys.exit(1)
