@@ -253,6 +253,30 @@ export async function addGeneToSetAndExpand(genesetName: any, geneSymbol: any) {
     }
   }
 }
+
+export async function requestGeneInfo(gene: string): Promise<void> {
+  await clickOn(`get-info-${gene}`);
+}
+
+export async function assertCorrectGeneInfoCard(gene: string): Promise<void> {
+  const testIds = [
+    `${gene}:gene-info`,
+    "gene-info-header",
+    "min-gene-info",
+    "clear-gene-info",
+    "gene-info-symbol",
+    "gene-info-summary",
+    "gene-info-synonyms",
+    "gene-info-link",
+  ];
+  for (const id of testIds) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+    const result = await isElementPresent(getTestId(id));
+    await expect(result).toBe(true);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function expandGeneset(genesetName: string) {
   const expand = await waitByID(`${genesetName}:geneset-expand`);
   const notExpanded = await expand?.$(
