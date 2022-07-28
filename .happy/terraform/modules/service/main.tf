@@ -45,6 +45,10 @@ resource aws_ecs_task_definition task_definition {
         "value": "${var.deployment_stage}"
       },
       {
+        "name": "APP_NAME",
+        "value": "${var.app_name}"
+      },
+      {
         "name": "AWS_REGION",
         "value": "${data.aws_region.current.name}"
       },

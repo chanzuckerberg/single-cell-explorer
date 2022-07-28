@@ -23,3 +23,4 @@ requests>=2.22.0
 tiledb==0.13.3  # Explorer's major/minor tiledb version should always be the >= Portal's tiledb major/minor version (for read/write compatibility)
 s3fs==0.4.2
 MarkupSafe==1.1.1
+python-json-logger

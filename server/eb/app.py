@@ -7,23 +7,12 @@ from flask import json
 from flask_talisman import Talisman
 from flask_cors import CORS
 import logging
+from logger import configure_logging
 
-if os.path.isdir("/opt/python/log"):
-    # This is the standard location where Amazon EC2 instances store the application logs.
-    logging.basicConfig(
-        filename="/opt/python/log/app.log",
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-else:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )    
+APP_NAME = "{}-{}".format(os.environ["APP_NAME"], os.environ["DEPLOYMENT_STAGE"])
+configure_logging(APP_NAME)
+logger = logging.getLogger("gunicorn.info")
 
-logger = logging.getLogger()
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
