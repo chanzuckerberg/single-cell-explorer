@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Button, ButtonGroup } from "@blueprintjs/core";
+import { Icon } from "czifui";
 import {
   SynHeader,
   Synonyms,
@@ -9,6 +10,7 @@ import {
   GeneSymbol,
   GeneHeader,
   GeneInfoWrapper,
+  WarningBanner,
 } from "./style";
 import * as styles from "../util";
 import { RootState } from "../../../reducers";
@@ -22,6 +24,7 @@ interface Props {
   gene: string;
   geneUrl: string;
   geneSynonyms: string[];
+  isEnsemblIdResult: boolean;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -36,6 +39,7 @@ interface Props {
     geneIsMinimized,
     geneLevel,
     infoError,
+    isEnsemblIdResult,
   } = state.controls;
 
   return {
@@ -48,6 +52,7 @@ interface Props {
     geneIsMinimized,
     geneLevel,
     infoError,
+    isEnsemblIdResult,
   };
 })
 class GeneInfo extends React.PureComponent<Props, State> {
@@ -66,6 +71,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
       geneLevel,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'infoError' does not exist on type '{ chi... Remove this comment to see the full error message
       infoError,
+      isEnsemblIdResult,
     } = this.props;
 
     const minimized = geneIsMinimized;
@@ -182,6 +188,18 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 marginBottom: styles.margin.bottom,
               }}
             >
+              {!isEnsemblIdResult ? (
+                <WarningBanner>
+                  <Icon
+                    sdsIcon="exclamationMarkCircle"
+                    sdsSize="l"
+                    sdsType="static"
+                  />
+                  <span>
+                    NCBI didn&apos;t return an exact match for this gene.
+                  </span>
+                </WarningBanner>
+              ) : null}
               <GeneSymbol>{gene}</GeneSymbol>
               <Content>{geneName}</Content>
               {geneSummary === "" ? (
