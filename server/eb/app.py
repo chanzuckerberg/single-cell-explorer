@@ -1,17 +1,18 @@
-import sys
-import os
-import hashlib
 import base64
-from urllib.parse import urlparse
-from flask import json
+import hashlib
 import logging
-from flask_talisman import Talisman
+import os
+import sys
+
+from flask import json
 from flask_cors import CORS
+from flask_talisman import Talisman
+from logging.config import dictConfig
+from urllib.parse import urlparse
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
 
-from logging.config import dictConfig
 
 dictConfig({
     'version': 1,
