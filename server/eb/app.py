@@ -7,7 +7,7 @@ from flask import json
 from flask_talisman import Talisman
 from flask_cors import CORS
 import logging
-from logger import configure_logging
+from server.eb.logger import configure_logging
 
 APP_NAME = "{}-{}".format(os.environ["APP_NAME"], os.environ["DEPLOYMENT_STAGE"])
 configure_logging(APP_NAME)
