@@ -1,14 +1,17 @@
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
-import { Int32 } from "../../common/types/arraytypes";
 
 interface StillLoadingProps {
-  height: Int32;
+  height?: number;
 }
 /**
  * Render a loading indicator for the field.
  */
-const StillLoading = ({ height }: StillLoadingProps): JSX.Element => (
+const StillLoading = ({ height = 211 }: StillLoadingProps): JSX.Element => (
   <div style={{ height }} className={SKELETON} />
 );
+StillLoading.defaultProps = {
+  height: 211,
+};
+
 export default StillLoading;

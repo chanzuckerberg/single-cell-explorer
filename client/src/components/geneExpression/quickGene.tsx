@@ -153,7 +153,6 @@ function QuickGene() {
             quickGene
             geneId={geneId}
             isGeneExpressionComplete
-            onGeneExpressionComplete={() => {}}
           />
         </>
       );
