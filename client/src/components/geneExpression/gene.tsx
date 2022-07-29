@@ -148,7 +148,6 @@ class Gene extends React.Component<Props, State> {
       isGeneInfo,
       quickGene,
       removeGene,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'onGeneExpressionComplete' does not exist on type ... Remove this comment to see the full error message
       onGeneExpressionComplete,
       isGeneExpressionComplete,
     } = this.props;
@@ -297,9 +296,9 @@ class Gene extends React.Component<Props, State> {
             />
           </div>
         </div>
-        {/* @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call. */}
         {geneIsExpanded && (
           <HistogramBrush
+            // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
             isUserDefined
             field={gene}
             onGeneExpressionComplete={() => {}}
