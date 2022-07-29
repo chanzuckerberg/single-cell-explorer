@@ -3,8 +3,6 @@ import logging
 
 import numpy as np
 import pandas as pd
-import scipy.sparse as sp
-
 
 """
 These routines drive all type inference for the schema generation and the
@@ -53,17 +51,15 @@ def get_dtypes_and_schemas_of_dataframe(dataframe: pd.DataFrame):
     return dtypes_by_column_name, schema_type_hints_by_column_name
 
 
-def get_encoding_dtype_of_array(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -> Union[np.dtype, str]:
+def get_encoding_dtype_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> np.dtype:
     return _get_type_info(array)[0]
 
 
-def get_schema_type_hint_of_array(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -> dict:
+def get_schema_type_hint_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> dict:
     return _get_type_info(array)[1]
 
 
-def get_dtype_and_schema_of_array(
-    array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]
-) -> Tuple[Union[np.dtype, str], dict]:
+def get_dtype_and_schema_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:
     """Return tuple (encoding_dtype, schema_type_hint)"""
     return _get_type_info(array)
 
@@ -105,7 +101,7 @@ def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
     return None
 
 
-def _get_type_info(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:
+def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:
     """
     Determine encoding type and schema hint from an array.  This allows more
     flexible casting than may be possible by using just the dtype, as it can
@@ -113,7 +109,6 @@ def _get_type_info(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -
     """
     if (
         not isinstance(array, np.ndarray)
-        and not isinstance(array, sp.spmatrix)
         and not isinstance(array, pd.Series)
         and not isinstance(array, pd.Index)
         and not hasattr(array, "dtype")
@@ -122,19 +117,23 @@ def _get_type_info(array: Union[np.ndarray, sp.spmatrix, pd.Series, pd.Index]) -
 
     dtype = array.dtype
 
-    if not isinstance(array, sp.spmatrix):
-        res = _get_type_info_from_dtype(dtype)
-        if res is not None:
-            return res
+    res = _get_type_info_from_dtype(dtype)
+    if res is not None:
+        return res
 
-    if isinstance(array, sp.spmatrix):
-        return ("sparse" + str(dtype.itemsize * 8), {"type": dtype.name})
     if dtype.kind == "O":
         if dtype.name == "category":
-            return (
-                "cat" + str(array.cat.codes.dtype.itemsize * 8),
-                {"type": "categorical", "categories": dtype.categories.to_list()},
-            )
+            # Sometimes CategoricalDType can be encoded as int or float without further fuss.
+            # Do not specify the categories in the schema - let the client-side figure it out
+            # on its own.  Utilize Series.to_numpy() to do casting that handles categorical
+            # NA/NaN (missing or undefined) categories.
+            if dtype.categories.dtype.kind in ["f", "i", "u"]:
+                return (
+                    _get_type_info(array.to_numpy())[0],
+                    {"type": "categorical"},
+                )
+            else:
+                return (np.dtype(str), {"type": "categorical", "categories": dtype.categories.to_list()})
 
         # all other extension types are str-encoded
         return (np.dtype(str), {"type": "string"})

@@ -1,5 +1,5 @@
 import { flatbuffers } from "flatbuffers";
-import { NetEncoding } from "./matrix_generated";
+import { NetEncoding } from "./fbs_data_types";
 import {
   TypedArray,
   isTypedArray,

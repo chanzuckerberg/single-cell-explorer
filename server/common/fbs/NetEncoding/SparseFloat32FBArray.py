@@ -86,33 +86,11 @@ class SparseFloat32FBArray(object):
         return o == 0
 
     # SparseFloat32FBArray
-    def Size(self, j):
+    def Size(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
-            a = self._tab.Vector(o)
-            return self._tab.Get(
-                flatbuffers.number_types.Int32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4)
-            )
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
-
-    # SparseFloat32FBArray
-    def SizeAsNumpy(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Int32Flags, o)
-        return 0
-
-    # SparseFloat32FBArray
-    def SizeLength(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        if o != 0:
-            return self._tab.VectorLen(o)
-        return 0
-
-    # SparseFloat32FBArray
-    def SizeIsNone(self):
-        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
-        return o == 0
 
 
 def Start(builder):
@@ -161,21 +139,12 @@ def SparseFloat32FBArrayStartRowsVector(builder, numElems):
 
 
 def AddSize(builder, size):
-    builder.PrependUOffsetTRelativeSlot(2, flatbuffers.number_types.UOffsetTFlags.py_type(size), 0)
+    builder.PrependInt32Slot(2, size, 0)
 
 
 def SparseFloat32FBArrayAddSize(builder, size):
     """This method is deprecated. Please switch to AddSize."""
     return AddSize(builder, size)
-
-
-def StartSizeVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-
-def SparseFloat32FBArrayStartSizeVector(builder, numElems):
-    """This method is deprecated. Please switch to Start."""
-    return StartSizeVector(builder, numElems)
 
 
 def End(builder):
