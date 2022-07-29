@@ -2,7 +2,7 @@ import React from "react";
 
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
-import { Icon as InfoCircle } from "czifui";
+import { Icon as InfoCircle, IconButton } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
 import { RootState } from "../../reducers";
@@ -24,6 +24,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
   removeGene: any;
   geneId: DataframeValue;
+  isGeneExpressionComplete: boolean;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -142,9 +143,13 @@ class Gene extends React.Component<Props, State> {
       isGeneInfo,
       quickGene,
       removeGene,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'onGeneExpressionComplete' does not exist on type ... Remove this comment to see the full error message
+      onGeneExpressionComplete,
+      isGeneExpressionComplete,
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
+    console.log(geneIsExpanded, gene);
 
     return (
       <div>
@@ -187,32 +192,41 @@ class Gene extends React.Component<Props, State> {
                 </span>
               </Truncate>
             </div>
-            <div style={{ flexShrink: 0 }}>
+            <div style={{ display: "inline-block", marginLeft: "0" }}>
               <Button
-                minimal
                 small
-                data-testid={`get-info-${gene}`}
-                onClick={this.handleDisplayGeneInfo}
-                active={isGeneInfo}
+                minimal
                 intent={isGeneInfo ? "primary" : "none"}
+                data-testid={`get-info-${gene}`}
+                active={isGeneInfo}
+                onClick={this.handleDisplayGeneInfo}
+                disabled={!isGeneExpressionComplete}
               >
-                <div style={{ filter: "grayscale(100%)" }}>
-                  <InfoCircle
-                    sdsIcon="infoCircle"
-                    sdsSize="s"
-                    sdsType="static"
-                  />
-                </div>
+                <IconButton
+                  disabled={!isGeneExpressionComplete}
+                  sdsSize="small"
+                >
+                  <div style={{ filter: "grayscale(100%)" }}>
+                    <InfoCircle
+                      sdsIcon="infoCircle"
+                      sdsSize="s"
+                      sdsType="iconButton"
+                    />
+                  </div>
+                </IconButton>
               </Button>
             </div>
             {!geneIsExpanded ? (
-              <HistogramBrush
-                // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-                isUserDefined
-                field={gene}
-                mini
-                width={MINI_HISTOGRAM_WIDTH}
-              />
+              <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
+                <HistogramBrush
+                  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
+                  isUserDefined
+                  field={gene}
+                  mini
+                  width={MINI_HISTOGRAM_WIDTH}
+                  onGeneExpressionComplete={onGeneExpressionComplete}
+                />
+              </div>
             ) : null}
           </div>
           <div style={{ flexShrink: 0, marginLeft: 2 }}>
@@ -279,7 +293,13 @@ class Gene extends React.Component<Props, State> {
           </div>
         </div>
         {/* @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call. */}
-        {geneIsExpanded && <HistogramBrush isUserDefined field={gene} />}
+        {geneIsExpanded && (
+          <HistogramBrush
+            isUserDefined
+            field={gene}
+            onGeneExpressionComplete={() => {}}
+          />
+        )}
       </div>
     );
   }

@@ -152,6 +152,8 @@ function QuickGene() {
             removeGene={removeGene}
             quickGene
             geneId={geneId}
+            isGeneExpressionComplete
+            onGeneExpressionComplete={() => {}}
           />
         </>
       );

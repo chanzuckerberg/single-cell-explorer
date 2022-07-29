@@ -21,6 +21,8 @@ class GeneSet extends React.Component<{}, State> {
     super(props);
     this.state = {
       isOpen: false,
+      genesetLoadCount: 0,
+      isGeneExpressionComplete: false,
     };
   }
 
@@ -35,16 +37,29 @@ class GeneSet extends React.Component<{}, State> {
     this.setState({ isOpen: !isOpen });
   };
 
+  onGeneExpressionComplete = (): void => {
+    const { genesetLoadCount } = this.state;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setGenes' does not exist on type 'Readonl... Remove this comment to see the full error message
+    const { setGenes } = this.props;
+    this.setState({ genesetLoadCount: genesetLoadCount + 1 });
+    if (genesetLoadCount + 1 === setGenes.size) {
+      this.setState({ isGeneExpressionComplete: true });
+    }
+  };
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   renderGenes() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setName' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { setName, setGenes, geneIds, geneNames } = this.props;
     const setGenesNames = [...setGenes.keys()];
+    const { isGeneExpressionComplete } = this.state;
+    // this.setState({ geneCount: setGenes.keys().length });
     return (
       <div data-testclass="gene-set-genes">
         {setGenesNames.map((gene) => {
           const { geneDescription } = setGenes.get(gene);
           const geneId = geneIds[geneNames.indexOf(gene)];
+          console.log(gene);
           return (
             <Gene
               key={gene}
@@ -53,6 +68,8 @@ class GeneSet extends React.Component<{}, State> {
               geneDescription={geneDescription}
               geneset={setName}
               geneId={geneId}
+              onGeneExpressionComplete={this.onGeneExpressionComplete}
+              isGeneExpressionComplete={isGeneExpressionComplete}
             />
           );
         })}
@@ -144,6 +161,7 @@ class GeneSet extends React.Component<{}, State> {
             isGeneSetSummary
             field={setName}
             setGenes={setGenes}
+            onGeneExpressionComplete={() => {}}
           />
         )}
         {isOpen && !genesetIsEmpty && this.renderGenes()}
