@@ -38,19 +38,21 @@ class GeneSet extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   renderGenes() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setName' does not exist on type 'Readonl... Remove this comment to see the full error message
-    const { setName, setGenes } = this.props;
+    const { setName, setGenes, geneIds, geneNames } = this.props;
     const setGenesNames = [...setGenes.keys()];
     return (
       <div data-testclass="gene-set-genes">
         {setGenesNames.map((gene) => {
           const { geneDescription } = setGenes.get(gene);
+          const geneId = geneIds[geneNames.indexOf(gene)];
           return (
             <Gene
               key={gene}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; gene: any; geneDescription: any;... Remove this comment to see the full error message
               gene={gene}
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; gene: any; geneDescription: any;... Remove this comment to see the full error message
               geneDescription={geneDescription}
               geneset={setName}
+              geneId={geneId}
             />
           );
         })}

@@ -5,16 +5,17 @@ ENV LANG=C.UTF-8
 ARG HAPPY_ENV
 ENV HAPPY_ENV=$HAPPY_ENV
 ENV DEPLOYMENT_STAGE=$HAPPY_ENV
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y gettext moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
+    apt-get install -y gettext nginx moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
     curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
     apt-get -y install nodejs && \
     node -v && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
+
+COPY hosted/nginx.conf /etc/nginx/nginx.conf
 
 ADD hosted/requirements.txt .
 RUN python3 -m pip install -r requirements.txt
@@ -33,5 +34,8 @@ RUN make build-ecs
 WORKDIR /
 
 ADD hosted/config.yaml config.yaml
+ADD hosted/start.sh start.sh
+RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml
-CMD ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]
+
+CMD ["/start.sh"]
