@@ -88,9 +88,12 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED);
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene, geneId, isGeneInfo } = this.props;
+    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
+      gene,
+    });
+
     if (isGeneInfo) {
       dispatch({
         type: "clear gene info",
