@@ -4,11 +4,12 @@
   Flatbuffers schema for use in cellxgene wire-format.
 
   Schema defines a general purpose, polymorphic, 2D matrix.  Data is
-  organized in a columnar layout.   Each column is homomorphic, and
-  several column types are supported:
+  organized in a columnar layout. Several column types are supported:
     - IEEE 32 and 64 bit floats
     - JSON/UTF8 encoded array (for other types)
-    - signed and unsigned 8, 16, and 32 bit integers
+    - signed and unsigned 8, 16, 32, and 64 bit integers
+    - dictionary-encoded categorical arrays with 8, 16, and 32 bit integer codes
+    - sparse arrays encoding nonzero coordinates of values in 32 and 64 bit float arrays
 
   https://github.com/google/flatbuffers
   http://google.github.io/flatbuffers/
@@ -16,7 +17,7 @@
   NOTE: IF YOU MODIFY THIS FILE, YOU MUST RECOMPILE AND COMMIT
   RESULTING FILES TO THE REPO:
   * server/app/util/fbs/NetEncoding/*
-  * client/src/util/stateManager/matrix_generated.js
+  * client/src/util/stateManager/nec-encoding/*
 
 */
 
@@ -70,12 +71,12 @@ table SparseFloat32FBArray {
   // nonzero locations of the data in the array
   rows: [int32];
   // size of the array
-  size: [int32];
+  size: int32;
 }
 table SparseFloat64FBArray {
   data: [float64];
   rows: [int32];
-  size: [int32];
+  size: int32;
 }
 
 union TypedFBArray {

@@ -29,13 +29,13 @@ def generate_tests(args):
     """Write tests in JSON format to output file."""
 
     fname = args.out
-    if not fname.endswith('.jsonl.gz'):
-        if fname.endswith('.jsonl'):
-            fname += '.gz'
+    if not fname.endswith(".jsonl.gz"):
+        if fname.endswith(".jsonl"):
+            fname += ".gz"
         else:
-            fname += '.jsonl.gz'
+            fname += ".jsonl.gz"
 
-    with gzip.open(fname, mode='wb') as fp:
+    with gzip.open(fname, mode="wb") as fp:
         with jsonlines.Writer(fp) as output:
             rng = np.random.default_rng(args.seed)
             test_id = 0
@@ -83,11 +83,15 @@ def generate_tests(args):
                     for (labelA, labelB) in itertools.combinations(labels, 2):
                         setA = {
                             "label": labelA,
-                            "postings_list": (np.asarray(ad.obs[col] == labelA).nonzero()[0]).astype(np.uint32).tolist(),
+                            "postings_list": (np.asarray(ad.obs[col] == labelA).nonzero()[0])
+                            .astype(np.uint32)
+                            .tolist(),
                         }
                         setB = {
                             "label": labelB,
-                            "postings_list": (np.asarray(ad.obs[col] == labelB).nonzero()[0]).astype(np.uint32).tolist(),
+                            "postings_list": (np.asarray(ad.obs[col] == labelB).nonzero()[0])
+                            .astype(np.uint32)
+                            .tolist(),
                         }
                         setA["postings_list"].sort()
                         setB["postings_list"].sort()
