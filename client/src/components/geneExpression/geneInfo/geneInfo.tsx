@@ -158,7 +158,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
               }}
             >
               <GeneSymbol>{gene}</GeneSymbol>
-              <Content>loading...</Content>
+              <Content data-testid="gene-info-loading">loading...</Content>
             </div>
           ) : null}
           {/* failed gene search */}
