@@ -4,12 +4,10 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
-
 np = import_numpy()
 
-
 class Uint32FBArray(object):
-    __slots__ = ["_tab"]
+    __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -22,7 +20,6 @@ class Uint32FBArray(object):
     def GetRootAsUint32FBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-
     # Uint32FBArray
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -32,9 +29,7 @@ class Uint32FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(
-                flatbuffers.number_types.Uint32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4)
-            )
+            return self._tab.Get(flatbuffers.number_types.Uint32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
         return 0
 
     # Uint32FBArray
@@ -56,38 +51,19 @@ class Uint32FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
-
-def Start(builder):
-    builder.StartObject(1)
-
-
+def Start(builder): builder.StartObject(1)
 def Uint32FBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-
-
-def AddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
-
-
+def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 def Uint32FBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
     return AddData(builder, data)
-
-
-def StartDataVector(builder, numElems):
-    return builder.StartVector(4, numElems, 4)
-
-
+def StartDataVector(builder, numElems): return builder.StartVector(4, numElems, 4)
 def Uint32FBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartDataVector(builder, numElems)
-
-
-def End(builder):
-    return builder.EndObject()
-
-
+def End(builder): return builder.EndObject()
 def Uint32FBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

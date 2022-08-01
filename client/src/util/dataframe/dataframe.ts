@@ -1,10 +1,9 @@
 import { callOnceLazy, memoize, __getMemoId } from "./util";
-import {
-  isTypedArray,
+import {isTypedArray,
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
-} from "../../common/types/arraytypes";
+ CatIntArray, isCatTypedArray } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
 import {
   summarizeContinuous as _summarizeContinuous,
@@ -36,8 +35,6 @@ import {
   ContinuousHistogram,
   ContinuousHistogramBy,
 } from "./types";
-import { CatIntArray, isCatTypedArray } from "../stateManager/matrix";
-
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
 but (currently) without all of the surrounding support functions.

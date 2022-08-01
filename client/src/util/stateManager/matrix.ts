@@ -2,7 +2,7 @@ import { flatbuffers } from "flatbuffers";
 import { NetEncoding } from "./fbs_data_types";
 import {
   TypedArray,
-  isTypedArray,
+  isCatTypedArray,
   isFloatTypedArray,
 } from "../../common/types/arraytypes";
 import {
@@ -25,59 +25,83 @@ const utf8Decoder = new TextDecoder("utf-8");
 /**
  * Decode NetEncoding.TypedFBArray
  */
+
+function decodeCatArray(uType: any, uValF: any): any {
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
+  const arr = uValF(new TypeClass());
+  const codesArray = arr.codesArray();
+  let codesToValues = arr.dictArray();
+  codesToValues = JSON.parse(utf8Decoder.decode(codesToValues));
+
+  let data;
+  if (uType === NetEncoding.TypedFBArray.CatInt8FBArray) {
+    data = new CatInt8Array({ array: codesArray, codeMapping: codesToValues });
+  } else if (uType === NetEncoding.TypedFBArray.CatInt16FBArray) {
+    data = new CatInt16Array({ array: codesArray, codeMapping: codesToValues });
+  } else if (uType === NetEncoding.TypedFBArray.CatInt32FBArray) {
+    data = new CatInt32Array({ array: codesArray, codeMapping: codesToValues });
+  }
+  return data;
+}
+
+function decodeNumericArray(uType: any, uValF: any, inplace = false): any {
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
+  const arr = uValF(new TypeClass());
+  let dataArray = arr.dataArray();
+  if (!inplace) {
+    /* force copy to release underlying FBS buffer */
+    dataArray = new dataArray.constructor(dataArray);
+  }
+  return dataArray;
+}
+
+function decodeSparseArray(uType: any, uValF: any): any {
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
+  const arr = uValF(new TypeClass());
+  const dataArray = arr.dataArray();
+  const rowsArray = arr.rowsArray();
+  const size = arr.size();
+  const denseArray = new arr.constructor(size);
+  for (let i = 0, nrows = rowsArray.length; i < nrows; i += 1) {
+    denseArray[rowsArray[i]] = dataArray[i];
+  }
+  return denseArray;
+}
+
+function decodeJSONArray(uType: any, uValF: any): any {
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
+  const arr = uValF(new TypeClass());
+  const dataArray = arr.dataArray();
+  const json = utf8Decoder.decode(dataArray);
+  return JSON.parse(json);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function decodeTypedArray(uType: any, uValF: any, inplace = false): any {
   if (uType === NetEncoding.TypedFBArray.NONE) {
     return null;
   }
-
-  // Convert to a JS class that supports this type
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const TypeClass = NetEncoding[NetEncoding.TypedFBArray[uType]];
-  // Create a TypedArray that references the underlying buffer
-  const x = uValF(new TypeClass());
-  let arr = x.dataArray();
-  let dict;
-  let flag = true;
-  if (uType === NetEncoding.TypedFBArray.JSONEncodedFBArray) {
-    const json = utf8Decoder.decode(arr);
-    arr = JSON.parse(json);
-    flag = false;
-  } else if (
-    uType === NetEncoding.TypedFBArray.CatInt8FBArray ||
-    uType === NetEncoding.TypedFBArray.CatInt16FBArray ||
-    uType === NetEncoding.TypedFBArray.CatInt32FBArray
-  ) {
-    dict = JSON.parse(utf8Decoder.decode(x.codesArray()));
-    if (dict) {
-      if (uType === NetEncoding.TypedFBArray.CatInt8FBArray) {
-        arr = new CatInt8Array({ array: arr, codeMapping: dict });
-      } else if (uType === NetEncoding.TypedFBArray.CatInt16FBArray) {
-        arr = new CatInt16Array({ array: arr, codeMapping: dict });
-      } else if (uType === NetEncoding.TypedFBArray.CatInt32FBArray) {
-        arr = new CatInt32Array({ array: arr, codeMapping: dict });
-      }
+  switch (uType) {
+    case NetEncoding.TypedFBArray.JSONEncodedFBArray: {
+      return decodeJSONArray(uType, uValF);
     }
-    flag = false;
-  } else if (
-    uType === NetEncoding.TypedFBArray.SparseFloat32FBArray ||
-    uType === NetEncoding.TypedFBArray.SparseFloat64FBArray
-  ) {
-    const rows = x.rowsArray();
-    const size = x.sizeArray()[0];
-    const data = new arr.constructor(size);
-    for (const [i, row] of rows.entries()) {
-      data[row] = arr[i];
+    case NetEncoding.TypedFBArray.CatInt8FBArray:
+    case NetEncoding.TypedFBArray.CatInt16FBArray:
+    case NetEncoding.TypedFBArray.CatInt32FBArray: {
+      return decodeCatArray(uType, uValF);
     }
-    arr = data;
-    flag = false;
+    case NetEncoding.TypedFBArray.SparseFloat32FBArray:
+    case NetEncoding.TypedFBArray.SparseFloat64FBArray: {
+      return decodeSparseArray(uType, uValF);
+    }
+    default: {
+      return decodeNumericArray(uType, uValF, inplace);
+    }
   }
-  // (#337): flag is false for JSON, sparse, and categorical arrays as they have already been copied
-  if (!inplace && flag) {
-    /* force copy to release underlying FBS buffer */
-    arr = new arr.constructor(arr);
-  }
-  return arr;
 }
 
 /**
@@ -125,22 +149,89 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function encodeTypedArray(builder: any, uType: any, uData: any) {
+function encodeCatArray(builder: any, uType: any, uData: any): any {
   const uTypeName = NetEncoding.TypedFBArray[uType];
   // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
   const ArrayType = NetEncoding[uTypeName];
-  const dv = ArrayType.createDataVector(builder, uData);
-  builder.startObject(1);
-  builder.addFieldOffset(0, dv, 0);
+  const dCodes = ArrayType.createCodesVector(builder, uData);
+
+  const json = JSON.stringify(uData.codeMapping);
+  const utf8Encoder = new TextEncoder();
+  const jsonUTF8 = utf8Encoder.encode(json);
+  const dDict = ArrayType.createCodesVector(builder, jsonUTF8);
+  builder.startObject(2);
+  builder.addFieldOffset(0, dCodes, 0);
+  builder.addFieldOffset(0, dDict, 0);
   return builder.endObject();
+}
+
+function encodeNumericArray(builder: any, uType: any, uData: any): any {
+  const uTypeName = NetEncoding.TypedFBArray[uType];
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const ArrayType = NetEncoding[uTypeName];
+  const dArray = ArrayType.createDataVector(builder, uData);
+  builder.startObject(1);
+  builder.addFieldOffset(0, dArray, 0);
+  return builder.endObject();
+}
+
+function encodeSparseArray(builder: any, uType: any, uData: any): any {
+  const uTypeName = NetEncoding.TypedFBArray[uType];
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const ArrayType = NetEncoding[uTypeName];
+  const dataArray: number[] = [];
+  const rowsArray: number[] = [];
+  for (let i = 0; i < uData.length; i += 1) {
+    if (uData[i] !== 0) {
+      dataArray.push(uData[i]);
+      rowsArray.push(i);
+    }
+  }
+  const dArray = ArrayType.createDataVector(builder, dataArray);
+  const dRows = ArrayType.createDataVector(builder, rowsArray);
+  builder.startObject(2);
+  builder.addFieldOffset(0, dArray, 0);
+  builder.addFieldOffset(0, dRows, 0);
+  return builder.endObject();
+}
+
+function encodeJSONArray(builder: any, uType: any, uData: any): any {
+  const uTypeName = NetEncoding.TypedFBArray[uType];
+  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+  const ArrayType = NetEncoding[uTypeName];
+  const json = JSON.stringify(uData);
+  const utf8Encoder = new TextEncoder();
+  const jsonUTF8 = utf8Encoder.encode(json);
+  const dArray = ArrayType.createCodesVector(builder, jsonUTF8);
+  builder.startObject(1);
+  builder.addFieldOffset(0, dArray, 0);
+  return builder.endObject();
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+function encodeTypedArray(builder: any, uType: any, uData: any) {
+  switch (uType) {
+    case NetEncoding.TypedFBArray.JSONEncodedFBArray: {
+      return encodeJSONArray(builder, uType, uData);
+    }
+    case NetEncoding.TypedFBArray.CatInt8FBArray:
+    case NetEncoding.TypedFBArray.CatInt16FBArray:
+    case NetEncoding.TypedFBArray.CatInt32FBArray: {
+      return encodeCatArray(builder, uType, uData);
+    }
+    case NetEncoding.TypedFBArray.SparseFloat32FBArray:
+    case NetEncoding.TypedFBArray.SparseFloat64FBArray: {
+      return encodeSparseArray(builder, uType, uData);
+    }
+    default: {
+      return encodeNumericArray(builder, uType, uData);
+    }
+  }
 }
 
 /**
  * Encode the dataframe as an FBS Matrix
  */
-
-// (#337, alec) TODO: update this for new encoding.
 
 export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   /* row indexing not supported currently */
@@ -161,18 +252,9 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
     const columns = df.columns().map((col) => col.asArray());
 
     const cols = columns.map((carr) => {
-      let uType;
-      let tarr;
-      if (isTypedArray(carr)) {
-        // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-        uType = NetEncoding.TypedFBArray[carr.constructor.name];
-        tarr = encodeTypedArray(builder, uType, carr);
-      } else {
-        uType = NetEncoding.TypedFBArray.JSONEncodedFBArray;
-        const json = JSON.stringify(carr);
-        const jsonUTF8 = utf8Encoder.encode(json);
-        tarr = encodeTypedArray(builder, uType, jsonUTF8);
-      }
+      // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
+      const uType = NetEncoding.TypedFBArray[carr.constructor.name];
+      const tarr = encodeTypedArray(builder, uType, carr);
       NetEncoding.Column.startColumn(builder);
       NetEncoding.Column.addUType(builder, uType);
       NetEncoding.Column.addU(builder, tarr);
@@ -298,9 +380,3 @@ export function matrixFBSToDataframe(
   const df = new Dataframe([nRows, nCols], columns, null, new KeyIndex(colIdx));
   return df;
 }
-
-export const isCatTypedArray = (c: unknown): boolean =>
-  c instanceof CatInt8Array ||
-  c instanceof CatInt16Array ||
-  c instanceof CatInt32Array;
-export type CatIntArray = CatInt8Array | CatInt16Array | CatInt32Array;

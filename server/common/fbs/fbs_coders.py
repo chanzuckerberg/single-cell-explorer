@@ -149,10 +149,10 @@ class CategoricalCoder:
     def decode_array(self, u, TarType):
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
-        data = arr.DataAsNumpy()
-        dictionary = arr.CodesAsNumpy()
+        codes = arr.CodesAsNumpy()
+        dictionary = arr.DictAsNumpy()
         dictionary = json.loads(dictionary.tobytes().decode("utf-8"))
-        return pd.Categorical.from_codes(data, categories=list(dictionary.values()))
+        return pd.Categorical.from_codes(codes, categories=list(dictionary.values()))
 
 
 class SparseNumericCoder:
@@ -165,9 +165,9 @@ class SparseNumericCoder:
     def encode_array(self, array):
         if sp.issparse(array) and array.shape[1] == 1:
             array = array.tocoo()
-            row_coords = array.row
+            row_coords = np.uint32(array.row) # ensure this is uint32 to match schema
             nnz_data = array.data
-            size = array.shape[0]
+            size = np.uint32(array.shape[0]) # ensure this is uint32 to match schema
             if np.dtype(nnz_data.dtype).str != self.dtype:
                 nnz_data = nnz_data.astype(self.dtype)
 
