@@ -265,8 +265,6 @@ class HistogramBrush extends React.PureComponent {
   fetchAsyncProps = async () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
     const { annoMatrix, width, onGeneExpressionComplete } = this.props;
-    // console.log(onGeneExpressionComplete());
-
     const { isClipped } = annoMatrix;
 
     const query = this.createQuery();
