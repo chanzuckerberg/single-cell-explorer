@@ -186,7 +186,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
               }}
             >
               <GeneSymbol data-testid="gene-info-symbol">{gene}</GeneSymbol>
-              <Content>{geneName}</Content>
+              <Content data-testid="gene-info-name">{geneName}</Content>
               {geneSummary === "" ? (
                 <Content
                   style={{
@@ -212,9 +212,11 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 </Content>
               )}
               {synonymList ? (
-                <p data-testid="gene-info-synonyms">
+                <p>
                   <SynHeader>Synonyms</SynHeader>
-                  <Synonyms>{synonymList}</Synonyms>
+                  <Synonyms data-testid="gene-info-synonyms">
+                    {synonymList}
+                  </Synonyms>
                 </p>
               ) : null}
               {geneUrl !== "" ? (

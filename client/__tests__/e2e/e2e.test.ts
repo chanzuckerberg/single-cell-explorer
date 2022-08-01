@@ -42,6 +42,13 @@ import {
   getAllCategoriesAndCounts,
   selectCategory,
   addGeneToSetAndExpand,
+  requestGeneInfo,
+  assertGeneInfoCardExists,
+  assertGeneInfoCardIsMinimized,
+  minimizeGeneInfo,
+  removeGeneInfo,
+  addGeneToSearch,
+  assertGeneInfoDoesNotExist,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -69,6 +76,9 @@ const geneToBrushAndColorBy = "SIK1";
 const brushThisGeneGeneset = "brush_this_gene";
 const geneBrushedCellCount = "109";
 const subsetGeneBrushedCellCount = "96";
+
+// open gene info card
+const geneToRequestInfo = "SIK1";
 
 const genesetDescriptionID =
   "geneset-description-tooltip-fourth_gene_set: fourth description";
@@ -614,5 +624,37 @@ describe.each([
     await assertGeneExistsInGeneset(geneToRemove);
     await clickOn("redo");
     await assertGeneDoesNotExist(geneToRemove);
+  });
+  test("open gene info card and hide/remove", async () => {
+    await setup(config);
+    // create geneset and add gene
+    await addGeneToSearch(geneToRequestInfo);
+
+    // assert gene info card shows up
+    await requestGeneInfo(geneToRequestInfo);
+    await assertGeneInfoCardExists(geneToRequestInfo);
+
+    // assert gene info card has the correct information
+    const geneInfoData = data.geneInfo;
+    expect(await getOneElementInnerHTML(getTestId("gene-info-symbol"))).toBe(
+      geneInfoData.symbol
+    );
+    expect(await getOneElementInnerHTML(getTestId("gene-info-name"))).toBe(
+      geneInfoData.name
+    );
+    expect(await getOneElementInnerHTML(getTestId("gene-info-summary"))).toBe(
+      geneInfoData.summary
+    );
+    expect(await getOneElementInnerHTML(getTestId("gene-info-synonyms"))).toBe(
+      geneInfoData.synonyms
+    );
+
+    // minimize gene info card
+    await minimizeGeneInfo();
+    await assertGeneInfoCardIsMinimized(geneToRequestInfo);
+
+    // remove gene info card
+    await removeGeneInfo();
+    await assertGeneInfoDoesNotExist(geneToRequestInfo);
   });
 });
