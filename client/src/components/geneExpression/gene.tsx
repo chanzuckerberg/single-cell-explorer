@@ -117,6 +117,7 @@ class Gene extends React.Component<Props, State> {
       synonyms: info.synonyms,
       summary: info.summary,
       infoError: null,
+      isEnsemblIdResult: info.is_ensembl_id_result,
     });
   };
 
