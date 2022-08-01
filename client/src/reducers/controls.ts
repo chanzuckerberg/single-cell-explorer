@@ -242,7 +242,7 @@ const Controls = (
         geneIsMinimized: state.geneIsMinimized,
         geneLevel: state.geneLevel,
         scatterplotIsMinimized: state.scatterplotIsMinimized,
-        infoError: action.infoError,
+        infoError: state.infoError,
       };
     }
 

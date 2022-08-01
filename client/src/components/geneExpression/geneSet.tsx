@@ -16,11 +16,14 @@ type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneSet extends React.Component<{}, State> {
+  isGeneExpressionLoadComplete = false;
+
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
     this.state = {
       isOpen: false,
+      genesetLoadCount: 0,
     };
   }
 
@@ -33,6 +36,21 @@ class GeneSet extends React.Component<{}, State> {
     }
 
     this.setState({ isOpen: !isOpen });
+  };
+
+  onGeneExpressionComplete = (): void => {
+    const { genesetLoadCount } = this.state;
+    this.setState({ genesetLoadCount: genesetLoadCount + 1 });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  componentDidUpdate = () => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setGenes' does not exist on type 'Readonl... Remove this comment to see the full error message
+    const { setGenes } = this.props;
+    const { genesetLoadCount } = this.state;
+    if (genesetLoadCount + 1 >= setGenes.size) {
+      this.isGeneExpressionLoadComplete = true;
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
@@ -53,6 +71,8 @@ class GeneSet extends React.Component<{}, State> {
               geneDescription={geneDescription}
               geneset={setName}
               geneId={geneId}
+              onGeneExpressionComplete={this.onGeneExpressionComplete}
+              isGeneExpressionComplete={this.isGeneExpressionLoadComplete}
             />
           );
         })}
@@ -144,6 +164,7 @@ class GeneSet extends React.Component<{}, State> {
             isGeneSetSummary
             field={setName}
             setGenes={setGenes}
+            onGeneExpressionComplete={() => {}}
           />
         )}
         {isOpen && !genesetIsEmpty && this.renderGenes()}
