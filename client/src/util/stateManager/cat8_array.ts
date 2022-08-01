@@ -14,10 +14,13 @@ export interface Cat8ArrayProps {
 export class CatInt8Array extends Int8Array {
   codeMapping: CodeMapping;
 
+  codes: Int8Array;
+
   constructor(props: Cat8ArrayProps) {
-    const { codeMapping: codes, array } = props;
+    const { codeMapping: codeMap, array } = props;
     super(array);
-    this.codeMapping = codes;
+    this.codeMapping = codeMap;
+    this.codes = array;
   }
 
   vat = (index: number): string => this.codeMapping[this[index]] ?? "NaN";

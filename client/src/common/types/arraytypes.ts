@@ -18,10 +18,7 @@ export type TypedArray =
   | Int32Array
   | Uint32Array
   | Float32Array
-  | Float64Array
-  | CatInt8Array
-  | CatInt16Array
-  | CatInt32Array;
+  | Float64Array;
 
 export type UnsignedIntTypedArray =
   | Uint8Array
