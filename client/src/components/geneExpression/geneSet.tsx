@@ -16,13 +16,14 @@ type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneSet extends React.Component<{}, State> {
+  isGeneExpressionLoadComplete = false;
+
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
     this.state = {
       isOpen: false,
       genesetLoadCount: 0,
-      isGeneExpressionComplete: false,
     };
   }
 
@@ -39,11 +40,16 @@ class GeneSet extends React.Component<{}, State> {
 
   onGeneExpressionComplete = (): void => {
     const { genesetLoadCount } = this.state;
+    this.setState({ genesetLoadCount: genesetLoadCount + 1 });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  componentDidUpdate = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setGenes' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { setGenes } = this.props;
-    this.setState({ genesetLoadCount: genesetLoadCount + 1 });
-    if (genesetLoadCount + 1 === setGenes.size) {
-      this.setState({ isGeneExpressionComplete: true });
+    const { genesetLoadCount } = this.state;
+    if (genesetLoadCount >= setGenes.size) {
+      this.isGeneExpressionLoadComplete = true;
     }
   };
 
@@ -52,8 +58,6 @@ class GeneSet extends React.Component<{}, State> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setName' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { setName, setGenes, geneIds, geneNames } = this.props;
     const setGenesNames = [...setGenes.keys()];
-    const { isGeneExpressionComplete } = this.state;
-    // this.setState({ geneCount: setGenes.keys().length });
     return (
       <div data-testclass="gene-set-genes">
         {setGenesNames.map((gene) => {
@@ -68,7 +72,7 @@ class GeneSet extends React.Component<{}, State> {
               geneset={setName}
               geneId={geneId}
               onGeneExpressionComplete={this.onGeneExpressionComplete}
-              isGeneExpressionComplete={isGeneExpressionComplete}
+              isGeneExpressionComplete={this.isGeneExpressionLoadComplete}
             />
           );
         })}
