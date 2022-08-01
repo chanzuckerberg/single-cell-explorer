@@ -22,8 +22,6 @@ class DiffexpButtons extends React.PureComponent {
   computeDiffExp = () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, differential } = this.props;
-    console.log(differential.cellist1);
-    console.log(differential.celllist2);
     if (differential.celllist1 && differential.celllist2) {
       dispatch(
         actions.requestDifferentialExpression(

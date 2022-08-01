@@ -153,7 +153,6 @@ class Gene extends React.Component<Props, State> {
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
-    console.log(geneIsExpanded, gene);
 
     return (
       <div>

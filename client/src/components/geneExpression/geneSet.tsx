@@ -59,7 +59,6 @@ class GeneSet extends React.Component<{}, State> {
         {setGenesNames.map((gene) => {
           const { geneDescription } = setGenes.get(gene);
           const geneId = geneIds[geneNames.indexOf(gene)];
-          console.log(gene);
           return (
             <Gene
               key={gene}
