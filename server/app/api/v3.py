@@ -182,9 +182,9 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(AnnotationsObsAPI, "/annotations/obs")
     add_resource(AnnotationsVarAPI, "/annotations/var")
     add_resource(DataVarAPI, "/data/var")
+    add_resource(GeneInfoAPI, "/geneinfo")
     add_resource(GenesetsAPI, "/genesets")
     add_resource(SummarizeVarAPI, "/summarize/var")
-    add_resource(GeneInfoAPI, "/geneinfo")
     # Display routes
     add_resource(ColorsAPI, "/colors")
     # Computation routes
