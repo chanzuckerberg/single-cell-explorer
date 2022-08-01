@@ -48,7 +48,7 @@ class GeneSet extends React.Component<{}, State> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setGenes' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { setGenes } = this.props;
     const { genesetLoadCount } = this.state;
-    if (genesetLoadCount >= setGenes.size) {
+    if (genesetLoadCount + 1 >= setGenes.size) {
       this.isGeneExpressionLoadComplete = true;
     }
   };
