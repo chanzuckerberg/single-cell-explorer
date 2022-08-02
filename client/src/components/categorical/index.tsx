@@ -284,7 +284,7 @@ class Categories extends React.Component<{}, State> {
         {/* this is duplicative but flat, could be abstracted */}
         {standardCategoryNames.length ? (
           <Collapse>
-            <span>Standard Categories</span>
+            <span>Standard Categories (Test)</span>
             {standardCategoryNames.map((catName: string) => (
               <Category
                 key={catName}
