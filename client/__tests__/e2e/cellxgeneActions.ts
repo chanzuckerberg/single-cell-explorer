@@ -257,8 +257,7 @@ export async function addGeneToSetAndExpand(
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-export async function expandGeneset(genesetName: string) {
+export async function expandGeneset(genesetName: string): Promise<void> {
   const expand = await waitByID(`${genesetName}:geneset-expand`);
   const notExpanded = await expand?.$(
     "[data-testclass='geneset-expand-is-not-expanded']"
@@ -364,8 +363,6 @@ export async function assertGeneDoesNotExist(geneSymbol: any) {
   await expect(result).toBe(false);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-
 export async function expandGene(geneSymbol: string): Promise<void> {
   await clickOn(`maximize-${geneSymbol}`);
 }
@@ -389,8 +386,16 @@ export async function assertGeneInfoCardExists(gene: string): Promise<void> {
   const buttonExists = await isElementPresent(getTestId("min-gene-info"));
   await expect(buttonExists).toBe(true);
 
-  // in case it is loading...
-  await waitByID("gene-info-symbol");
+  // in case it is loading... load for a few tries
+  let secondCount = 0;
+  while (secondCount < 5) {
+    try {
+      await waitByID("gene-info-symbol");
+      break;
+    } catch (TimeoutError) {
+      secondCount += 1;    
+    }
+  }
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
   const symbolExists = await isElementPresent(getTestId("gene-info-symbol"));
   await expect(symbolExists).toBe(true);
