@@ -223,6 +223,7 @@ class Dataframe {
     column: DataframeValueArray,
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
+    // (#337): will TS be able to infer the return type based on the existing properties?
   ): DataframeColumn | DataframeCategoricalColumn {
     /*
       Each column accessor is a function which will lookup data by
@@ -351,6 +352,7 @@ class Dataframe {
       memoHistogramCategoricalBy(get, by);
 
     if (isDictionaryEncoded) {
+      // (#337): these properties belong to DataframeCategoricalColumn
       const columnCat = column as CatIntArray;
       get.getValuesFromCodes = () => memoGetValues(columnCat, __id);
       get.codes = column; // currently, an alias for col.asArray();
@@ -370,6 +372,7 @@ class Dataframe {
     get.indexOf = _indexOf;
     get.iget = iget;
     get.__id = __id;
+    get.isDictionaryEncoded = isDictionaryEncoded;
     get.isContinuous = isContinuous;
     Object.freeze(get);
     return get;

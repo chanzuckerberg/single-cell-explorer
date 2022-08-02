@@ -71,6 +71,11 @@ export interface DataframeColumn extends DataframeColumnGetter {
   isContinuous: boolean;
 
   /**
+   * Boolean indicating if the underlying data is dictionary-encoded.
+   */
+  isDictionaryEncoded: boolean;
+
+  /**
    * Return underlying column data as an array-like object.
    */
   asArray: () => DataframeValueArray;

@@ -77,7 +77,7 @@ function decodeSparseArray(
   const dataArray = arr.dataArray();
   const rowsArray = arr.rowsArray();
   const size = arr.size();
-  const denseArray = new arr.constructor(size);
+  const denseArray = new dataArray.constructor(size);
   for (let i = 0, nrows = rowsArray.length; i < nrows; i += 1) {
     denseArray[rowsArray[i]] = dataArray[i];
   }
@@ -161,7 +161,6 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
     matrix.colIndex.bind(matrix),
     inplace
   );
-
   return {
     nRows,
     nCols,
@@ -293,7 +292,7 @@ export function encodeMatrixFBS(
     const columns = df.columns().map((col) => col.asArray());
 
     const cols = columns.map((carr) => {
-      let {name} = carr.constructor;
+      let { name } = carr.constructor;
       if (encodeSparse) {
         name = `Sparse${name}`;
       }
@@ -408,12 +407,10 @@ export function matrixFBSToDataframe(
       throw new Error("FBS with inconsistent dimensionality");
   });
   const columns = fbs
-    .map((fb) =>
-      fb.columns.map((c) => {
+    .map((fb) => fb.columns.map((c) => {
         if (isTypedArray(c) || isCatTypedArray(c) || Array.isArray(c)) return c;
         return promoteTypedArray(c);
-      })
-    )
+      }))
     .flat();
 
   // colIdx may be TypedArray or Array

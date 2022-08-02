@@ -25,6 +25,7 @@ import {
   ConvertedUserColors,
   UserColor,
 } from "../../reducers/colors";
+import { DataframeCategoricalColumn } from "../dataframe/types";
 
 interface Colors {
   // cell label to color mapping
@@ -191,7 +192,7 @@ export function loadUserColorConfig(userColors: {
 }
 
 function _createUserColors(
-  col: DataframeColumn,
+  col: DataframeColumn | DataframeCategoricalColumn,
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
@@ -201,27 +202,33 @@ function _createUserColors(
   let newColors = colors;
   // (#337): convert the keys in the color dictionary defined by the schema
   // to their corresponding codes.
-  if (col.isCategorical) {
+  if (col.isDictionaryEncoded) {
     newColors = Object.fromEntries(
       Object.entries(colors).map((row) => [
-        col.invCodeMapping?.[row[0]],
+        // (#337): I'm not sure how to avoid type casting here.
+        // I thought `isDictionaryEncoded=true` should be a sufficient type guard,
+        // but...
+        (col as DataframeCategoricalColumn).invCodeMapping[row[0]],
         row[1],
       ])
     );
   }
-
   const rgb = createRgbArray(data, newColors);
 
   // color scale function param is INDEX (offset) into schema categories. It is NOT label value.
   // See createColorsByCategoricalMetadata() for another example.
   // TODO: #35 Use type guards to insure type instead of casting
-  const { categories } = schema.annotations.obsByName[
+  let { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
+  if (col.isDictionaryEncoded) {
+    categories = categories.map(
+      (cat) => (col as DataframeCategoricalColumn).codeMapping[cat as number]
+    );
+  }
   const categoryMap = new Map();
 
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
-
   const scale = (idx: number) => scaleByLabel(categoryMap.get(idx));
 
   return { rgb, scale };

@@ -58,12 +58,12 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
     Given a 2D DataFrame, ndarray or sparse equivalent, create and return a Matrix flatbuffer.
 
     :param matrix: 2D DataFrame, ndarray or sparse equivalent
-    :param row_idx: index for row dimension, Index or ndarray
-    :param col_idx: index for col dimension, Index or ndarray
+    :param row_idx: array-like index for col dimension or pandas.Index (not supported)
+    :param col_idx: array-like index for col dimension or pandas.Index
 
     NOTE: row indices are (currently) unsupported and must be None
     """
-
+    
     if row_idx is not None:
         raise ValueError("row indexing not supported for FBS Matrix")
     if matrix.ndim != 2:
@@ -79,6 +79,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
     columns = []
     for cidx in range(n_cols - 1, -1, -1):
         # serialize the typed array
+        
         if isinstance(matrix, pd.DataFrame):
             col = matrix.iloc[:, cidx]
         elif sparse.issparse(matrix):
@@ -89,6 +90,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
             col = sparse.coo_matrix((s_data, (s_row, s_col)), shape=(matrix.shape[0], 1))
         else:
             col = matrix[:, cidx]
+
         typed_arr = serialize_typed_array(builder, col)
 
         # serialize the Column union
@@ -104,7 +106,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
     cidx = None
     if col_idx is not None:
         cidx = serialize_typed_array(builder, col_idx)
-
+        
     # Serialize Matrix
     matrix = serialize_matrix(builder, n_rows, n_cols, matrix_column_vec, cidx)
 

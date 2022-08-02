@@ -27,16 +27,16 @@ def _get_array_class(array):
 
 
 def serialize_typed_array(builder, source_array):
-    if isinstance(arr, pd.Index):
-        arr = arr.to_series()
+    if isinstance(source_array, pd.Index):
+        source_array = source_array.to_series()
 
     array_class = _get_array_class(source_array)
     if array_class == "category":
-        encoding_dtype = get_encoding_dtype_of_array(source_array.codes).str
+        encoding_dtype = np.dtype(source_array.cat.codes.values.dtype).str
     elif array_class == "sparse":
-        encoding_dtype = get_encoding_dtype_of_array(source_array.data).str
+        encoding_dtype = np.dtype(get_encoding_dtype_of_array(source_array.data)).str
     else:
-        encoding_dtype = get_encoding_dtype_of_array(source_array).str
+        encoding_dtype = np.dtype(get_encoding_dtype_of_array(source_array)).str
 
     arrayEncoder = {
         "dense": {
@@ -53,20 +53,20 @@ def serialize_typed_array(builder, source_array):
             np.dtype(np.uint64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
         },
         "sparse": {
-            np.dtype(np.float64).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
+            np.dtype(np.float64).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat64FBArray),
             np.dtype(np.float32).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
         },
         "category": {
-            np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
-            np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
-            np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
+            np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt8FBArray),
+            np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt16FBArray),
+            np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt32FBArray),
         },
     }
     defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
     Coder, array_type = arrayEncoder[array_class].get(encoding_dtype, defaultCoder)
     coder_obj = Coder(builder, encoding_dtype)
     array_value = coder_obj.encode_array(source_array)
-    return (array_value, array_type)
+    return (array_type, array_value)
 
 
 def deserialize_typed_array(tarr):
@@ -132,7 +132,7 @@ class CategoricalCoder:
     def encode_array(self, array):
         if isinstance(array, pd.Series) and array.dtype.name == "category":
             dictionary = np.array(bytearray(json.dumps(dict(enumerate(array.cat.categories))), "utf-8"))
-            codes = array.cat.codes
+            codes = array.cat.codes.values
 
             if np.dtype(codes.dtype).str != self.dtype:
                 codes = codes.astype(self.dtype)
@@ -173,11 +173,10 @@ class SparseNumericCoder:
 
             vec_nnz_data = self.builder.CreateNumpyVector(nnz_data)
             vec_row_coords = self.builder.CreateNumpyVector(row_coords)
-            vec_size = self.builder.CreateByteVector(size.to_bytes(32, "big"))
             self.builder.StartObject(self.n_slots)
             self.builder.PrependUOffsetTRelativeSlot(0, vec_nnz_data, 0)
             self.builder.PrependUOffsetTRelativeSlot(1, vec_row_coords, 0)
-            self.builder.PrependUOffsetTRelativeSlot(2, vec_size, 0)
+            self.builder.PrependUint32Slot(2, size, 0)
             return self.builder.EndObject()
         else:
             raise ValueError("Input array must be a sparse column")
