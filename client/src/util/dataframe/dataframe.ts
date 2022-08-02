@@ -4,6 +4,8 @@ import {
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
+  CatIntArray,
+  isCatTypedArray,
 } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
 import {
@@ -35,9 +37,8 @@ import {
   LabelArray,
   ContinuousHistogram,
   ContinuousHistogramBy,
+  DataframeCategoricalColumn,
 } from "./types";
-import { CatIntArray, isCatTypedArray } from "../stateManager/matrix";
-
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
 but (currently) without all of the surrounding support functions.
@@ -106,10 +107,6 @@ export type MapColumnsCallbackFn = (
 /** @internal */
 function raiseIsNotContinuous<R = void>(): R {
   throw TypeError("Column is not a continuous data type.");
-}
-/** @internal */
-function raiseIsNotCategorical<R = void>(): R {
-  throw TypeError("Column is not a categorical data type.");
 }
 class Dataframe {
   /** @internal */
@@ -226,7 +223,8 @@ class Dataframe {
     column: DataframeValueArray,
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
-  ): DataframeColumn {
+    // (#337): will TS be able to infer the return type based on the existing properties?
+  ): DataframeColumn | DataframeCategoricalColumn {
     /*
       Each column accessor is a function which will lookup data by
       index (ie, is equivalent to dataframe.get(row, col), where 'col'
@@ -260,7 +258,7 @@ class Dataframe {
     const { length } = column;
     const __id = __getMemoId();
     const isContinuous = isTypedArray(column);
-    const isCategorical = isCatTypedArray(column);
+    const isDictionaryEncoded = isCatTypedArray(column);
 
     const memoGetValues = memoize(_mapCodesToValues, hashMapCodesToValues);
     const memoHistogramContinuous = memoize(
@@ -353,17 +351,12 @@ class Dataframe {
     get.histogramCategoricalBy = (by: DataframeColumn) =>
       memoHistogramCategoricalBy(get, by);
 
-    if (isCategorical) {
-      /** if categorical column, assign helper functions and objects to `get`.
-       * the following are added:
-       * 1) col.codeMapping: code-to-values dict
-       * 2) col.invCodeMapping: value-to-codes dict
-       * 3) col.getValueFromCodes(): memoized function that returns the value array
-       * (3) may or may not be run in `col.asArray()` - currently it is not.
-       * */
-
+    if (isDictionaryEncoded) {
+      // (#337): these properties belong to DataframeCategoricalColumn
       const columnCat = column as CatIntArray;
       get.getValuesFromCodes = () => memoGetValues(columnCat, __id);
+      get.codes = column; // currently, an alias for col.asArray();
+      get.values = get.getValuesFromCodes();
       get.codeMapping = columnCat.codeMapping;
       get.invCodeMapping = Object.fromEntries(
         Object.entries(columnCat.codeMapping).map((row) => [
@@ -371,8 +364,6 @@ class Dataframe {
           parseInt(row[0], 10),
         ])
       );
-    } else {
-      get.getValuesFromCodes = raiseIsNotCategorical;
     }
 
     get.asArray = asArray;
@@ -381,8 +372,8 @@ class Dataframe {
     get.indexOf = _indexOf;
     get.iget = iget;
     get.__id = __id;
+    get.isDictionaryEncoded = isDictionaryEncoded;
     get.isContinuous = isContinuous;
-    get.isCategorical = isCategorical;
     Object.freeze(get);
     return get;
   }

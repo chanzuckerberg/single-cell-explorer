@@ -5,6 +5,7 @@
 import { CatInt16Array } from "../../util/stateManager/cat16_array";
 import { CatInt8Array } from "../../util/stateManager/cat8_array";
 import { CatInt32Array } from "../../util/stateManager/cat32_array";
+
 /**
  * TypedArrays that can be assigned to a number.
  */
@@ -17,10 +18,7 @@ export type TypedArray =
   | Int32Array
   | Uint32Array
   | Float32Array
-  | Float64Array
-  | CatInt8Array
-  | CatInt16Array
-  | CatInt32Array;
+  | Float64Array;
 
 export type UnsignedIntTypedArray =
   | Uint8Array
@@ -114,6 +112,17 @@ export function isUnsignedIntTypedArray(
     tbd instanceof Uint32Array
   );
 }
+
+/**
+ * Test if the parameter is a categorical typed array
+ * @param c - value to be tested
+ * @returns - true if `c` is a categorical typed array
+ */
+export const isCatTypedArray = (c: unknown): boolean =>
+  c instanceof CatInt8Array ||
+  c instanceof CatInt16Array ||
+  c instanceof CatInt32Array;
+export type CatIntArray = CatInt8Array | CatInt16Array | CatInt32Array;
 
 /**
  * Test if the paramter is an int TypedArray

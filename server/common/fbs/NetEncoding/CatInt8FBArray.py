@@ -28,7 +28,7 @@ class CatInt8FBArray(object):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # CatInt8FBArray
-    def Data(self, j):
+    def Codes(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
@@ -38,26 +38,26 @@ class CatInt8FBArray(object):
         return 0
 
     # CatInt8FBArray
-    def DataAsNumpy(self):
+    def CodesAsNumpy(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Int8Flags, o)
         return 0
 
     # CatInt8FBArray
-    def DataLength(self):
+    def CodesLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # CatInt8FBArray
-    def DataIsNone(self):
+    def CodesIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
     # CatInt8FBArray
-    def Codes(self, j):
+    def Dict(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             a = self._tab.Vector(o)
@@ -67,21 +67,21 @@ class CatInt8FBArray(object):
         return 0
 
     # CatInt8FBArray
-    def CodesAsNumpy(self):
+    def DictAsNumpy(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
         return 0
 
     # CatInt8FBArray
-    def CodesLength(self):
+    def DictLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # CatInt8FBArray
-    def CodesIsNone(self):
+    def DictIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         return o == 0
 
@@ -95,26 +95,8 @@ def CatInt8FBArrayStart(builder):
     return Start(builder)
 
 
-def AddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
-
-
-def CatInt8FBArrayAddData(builder, data):
-    """This method is deprecated. Please switch to AddData."""
-    return AddData(builder, data)
-
-
-def StartDataVector(builder, numElems):
-    return builder.StartVector(1, numElems, 1)
-
-
-def CatInt8FBArrayStartDataVector(builder, numElems):
-    """This method is deprecated. Please switch to Start."""
-    return StartDataVector(builder, numElems)
-
-
 def AddCodes(builder, codes):
-    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
 
 
 def CatInt8FBArrayAddCodes(builder, codes):
@@ -129,6 +111,24 @@ def StartCodesVector(builder, numElems):
 def CatInt8FBArrayStartCodesVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartCodesVector(builder, numElems)
+
+
+def AddDict(builder, dict):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(dict), 0)
+
+
+def CatInt8FBArrayAddDict(builder, dict):
+    """This method is deprecated. Please switch to AddDict."""
+    return AddDict(builder, dict)
+
+
+def StartDictVector(builder, numElems):
+    return builder.StartVector(1, numElems, 1)
+
+
+def CatInt8FBArrayStartDictVector(builder, numElems):
+    """This method is deprecated. Please switch to Start."""
+    return StartDictVector(builder, numElems)
 
 
 def End(builder):

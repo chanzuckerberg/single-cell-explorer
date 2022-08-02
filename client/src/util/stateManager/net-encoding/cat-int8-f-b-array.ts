@@ -32,19 +32,19 @@ export class CatInt8FBArray {
     );
   }
 
-  data(index: number): number | null {
+  codes(index: number): number | null {
     const offset = this.bb!.__offset(this.bb_pos, 4);
     return offset
       ? this.bb!.readInt8(this.bb!.__vector(this.bb_pos + offset) + index)
       : 0;
   }
 
-  dataLength(): number {
+  codesLength(): number {
     const offset = this.bb!.__offset(this.bb_pos, 4);
     return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
   }
 
-  dataArray(): Int8Array | null {
+  codesArray(): Int8Array | null {
     const offset = this.bb!.__offset(this.bb_pos, 4);
     return offset
       ? new Int8Array(
@@ -55,19 +55,19 @@ export class CatInt8FBArray {
       : null;
   }
 
-  codes(index: number): number | null {
+  dict(index: number): number | null {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset
       ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index)
       : 0;
   }
 
-  codesLength(): number {
+  dictLength(): number {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
   }
 
-  codesArray(): Uint8Array | null {
+  dictArray(): Uint8Array | null {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset
       ? new Uint8Array(
@@ -82,46 +82,27 @@ export class CatInt8FBArray {
     builder.startObject(2);
   }
 
-  static addData(builder: flatbuffers.Builder, dataOffset: flatbuffers.Offset) {
-    builder.addFieldOffset(0, dataOffset, 0);
+  static addCodes(
+    builder: flatbuffers.Builder,
+    codesOffset: flatbuffers.Offset
+  ) {
+    builder.addFieldOffset(0, codesOffset, 0);
   }
 
-  static createDataVector(
+  static createCodesVector(
     builder: flatbuffers.Builder,
     data: number[] | Int8Array
   ): flatbuffers.Offset;
   /**
    * @deprecated This Uint8Array overload will be removed in the future.
    */
-  static createDataVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Uint8Array
-  ): flatbuffers.Offset;
-  static createDataVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Int8Array | Uint8Array
-  ): flatbuffers.Offset {
-    builder.startVector(1, data.length, 1);
-    for (let i = data.length - 1; i >= 0; i--) {
-      builder.addInt8(data[i]!);
-    }
-    return builder.endVector();
-  }
-
-  static startDataVector(builder: flatbuffers.Builder, numElems: number) {
-    builder.startVector(1, numElems, 1);
-  }
-
-  static addCodes(
-    builder: flatbuffers.Builder,
-    codesOffset: flatbuffers.Offset
-  ) {
-    builder.addFieldOffset(1, codesOffset, 0);
-  }
-
   static createCodesVector(
     builder: flatbuffers.Builder,
     data: number[] | Uint8Array
+  ): flatbuffers.Offset;
+  static createCodesVector(
+    builder: flatbuffers.Builder,
+    data: number[] | Int8Array | Uint8Array
   ): flatbuffers.Offset {
     builder.startVector(1, data.length, 1);
     for (let i = data.length - 1; i >= 0; i--) {
@@ -134,6 +115,25 @@ export class CatInt8FBArray {
     builder.startVector(1, numElems, 1);
   }
 
+  static addDict(builder: flatbuffers.Builder, dictOffset: flatbuffers.Offset) {
+    builder.addFieldOffset(1, dictOffset, 0);
+  }
+
+  static createDictVector(
+    builder: flatbuffers.Builder,
+    data: number[] | Uint8Array
+  ): flatbuffers.Offset {
+    builder.startVector(1, data.length, 1);
+    for (let i = data.length - 1; i >= 0; i--) {
+      builder.addInt8(data[i]!);
+    }
+    return builder.endVector();
+  }
+
+  static startDictVector(builder: flatbuffers.Builder, numElems: number) {
+    builder.startVector(1, numElems, 1);
+  }
+
   static endCatInt8FBArray(builder: flatbuffers.Builder): flatbuffers.Offset {
     const offset = builder.endObject();
     return offset;
@@ -141,12 +141,12 @@ export class CatInt8FBArray {
 
   static createCatInt8FBArray(
     builder: flatbuffers.Builder,
-    dataOffset: flatbuffers.Offset,
-    codesOffset: flatbuffers.Offset
+    codesOffset: flatbuffers.Offset,
+    dictOffset: flatbuffers.Offset
   ): flatbuffers.Offset {
     CatInt8FBArray.startCatInt8FBArray(builder);
-    CatInt8FBArray.addData(builder, dataOffset);
     CatInt8FBArray.addCodes(builder, codesOffset);
+    CatInt8FBArray.addDict(builder, dictOffset);
     return CatInt8FBArray.endCatInt8FBArray(builder);
   }
 }

@@ -1,4 +1,4 @@
-import { TypedArray } from "../../common/types/arraytypes";
+import { CatIntArray, TypedArray } from "../../common/types/arraytypes";
 import {
   CodeMapping,
   InvCodeMapping,
@@ -48,7 +48,7 @@ export type CategoricalHistogramBy = Map<DataframeValue, CategoricalHistogram>;
 
 export type DataframeValue = number | string | boolean;
 
-export type DataframeValueArray = DataframeValue[] | TypedArray;
+export type DataframeValueArray = DataframeValue[] | TypedArray | CatIntArray;
 
 export type DataframeColumnGetter = (
   label: LabelType
@@ -73,7 +73,7 @@ export interface DataframeColumn extends DataframeColumnGetter {
   /**
    * Boolean indicating if the underlying data is dictionary-encoded.
    */
-  isCategorical: boolean;
+  isDictionaryEncoded: boolean;
 
   /**
    * Return underlying column data as an array-like object.
@@ -118,21 +118,6 @@ export interface DataframeColumn extends DataframeColumnGetter {
   histogramCategorical: () => CategoricalHistogram;
 
   /**
-   * Get value array from codes.
-   */
-  getValuesFromCodes: () => DataframeValueArray;
-
-  /**
-   * Mapping codes to values for categorical data types.
-   */
-  codeMapping?: CodeMapping;
-
-  /**
-   * Mapping values to codes for categorical data types.
-   */
-  invCodeMapping?: InvCodeMapping;
-
-  /**
    * Categorical bin/histogram grouped by another column.
    * @param by - group by categorical column
    */
@@ -161,3 +146,21 @@ export interface DataframeColumn extends DataframeColumnGetter {
    */
   iget: (offset: OffsetType) => DataframeValue | undefined;
 }
+
+/**
+ * Sub-interface representing a Dataframe categorical column.
+ */
+
+export interface DataframeCategoricalColumn extends DataframeColumn {
+  codes: CatIntArray;
+  values: DataframeValueArray;
+  codeMapping: CodeMapping;
+  invCodeMapping: InvCodeMapping;
+  /**
+   * Get value array from codes.
+   */
+  getValuesFromCodes: () => DataframeValueArray;
+}
+/**
+ * Sub-interface representing a Dataframe sparse column.
+ */

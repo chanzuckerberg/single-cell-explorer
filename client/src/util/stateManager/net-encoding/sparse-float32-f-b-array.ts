@@ -60,7 +60,7 @@ export class SparseFloat32FBArray {
   rows(index: number): number | null {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset
-      ? this.bb!.readInt32(this.bb!.__vector(this.bb_pos + offset) + index * 4)
+      ? this.bb!.readUint32(this.bb!.__vector(this.bb_pos + offset) + index * 4)
       : 0;
   }
 
@@ -69,10 +69,10 @@ export class SparseFloat32FBArray {
     return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
   }
 
-  rowsArray(): Int32Array | null {
+  rowsArray(): Uint32Array | null {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset
-      ? new Int32Array(
+      ? new Uint32Array(
           this.bb!.bytes().buffer,
           this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset),
           this.bb!.__vector_len(this.bb_pos + offset)
@@ -80,27 +80,9 @@ export class SparseFloat32FBArray {
       : null;
   }
 
-  size(index: number): number | null {
+  size(): number {
     const offset = this.bb!.__offset(this.bb_pos, 8);
-    return offset
-      ? this.bb!.readInt32(this.bb!.__vector(this.bb_pos + offset) + index * 4)
-      : 0;
-  }
-
-  sizeLength(): number {
-    const offset = this.bb!.__offset(this.bb_pos, 8);
-    return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
-  }
-
-  sizeArray(): Int32Array | null {
-    const offset = this.bb!.__offset(this.bb_pos, 8);
-    return offset
-      ? new Int32Array(
-          this.bb!.bytes().buffer,
-          this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset),
-          this.bb!.__vector_len(this.bb_pos + offset)
-        )
-      : null;
+    return offset ? this.bb!.readUint32(this.bb_pos + offset) : 0;
   }
 
   static startSparseFloat32FBArray(builder: flatbuffers.Builder) {
@@ -143,7 +125,7 @@ export class SparseFloat32FBArray {
 
   static createRowsVector(
     builder: flatbuffers.Builder,
-    data: number[] | Int32Array
+    data: number[] | Uint32Array
   ): flatbuffers.Offset;
   /**
    * @deprecated This Uint8Array overload will be removed in the future.
@@ -154,7 +136,7 @@ export class SparseFloat32FBArray {
   ): flatbuffers.Offset;
   static createRowsVector(
     builder: flatbuffers.Builder,
-    data: number[] | Int32Array | Uint8Array
+    data: number[] | Uint32Array | Uint8Array
   ): flatbuffers.Offset {
     builder.startVector(4, data.length, 4);
     for (let i = data.length - 1; i >= 0; i--) {
@@ -167,34 +149,8 @@ export class SparseFloat32FBArray {
     builder.startVector(4, numElems, 4);
   }
 
-  static addSize(builder: flatbuffers.Builder, sizeOffset: flatbuffers.Offset) {
-    builder.addFieldOffset(2, sizeOffset, 0);
-  }
-
-  static createSizeVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Int32Array
-  ): flatbuffers.Offset;
-  /**
-   * @deprecated This Uint8Array overload will be removed in the future.
-   */
-  static createSizeVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Uint8Array
-  ): flatbuffers.Offset;
-  static createSizeVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Int32Array | Uint8Array
-  ): flatbuffers.Offset {
-    builder.startVector(4, data.length, 4);
-    for (let i = data.length - 1; i >= 0; i--) {
-      builder.addInt32(data[i]!);
-    }
-    return builder.endVector();
-  }
-
-  static startSizeVector(builder: flatbuffers.Builder, numElems: number) {
-    builder.startVector(4, numElems, 4);
+  static addSize(builder: flatbuffers.Builder, size: number) {
+    builder.addFieldInt32(2, size, 0);
   }
 
   static endSparseFloat32FBArray(
@@ -208,12 +164,12 @@ export class SparseFloat32FBArray {
     builder: flatbuffers.Builder,
     dataOffset: flatbuffers.Offset,
     rowsOffset: flatbuffers.Offset,
-    sizeOffset: flatbuffers.Offset
+    size: number
   ): flatbuffers.Offset {
     SparseFloat32FBArray.startSparseFloat32FBArray(builder);
     SparseFloat32FBArray.addData(builder, dataOffset);
     SparseFloat32FBArray.addRows(builder, rowsOffset);
-    SparseFloat32FBArray.addSize(builder, sizeOffset);
+    SparseFloat32FBArray.addSize(builder, size);
     return SparseFloat32FBArray.endSparseFloat32FBArray(builder);
   }
 }

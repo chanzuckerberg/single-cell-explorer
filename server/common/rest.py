@@ -3,6 +3,7 @@ import hashlib
 import logging
 import sys
 import zlib
+import requests
 from http import HTTPStatus
 import struct
 
@@ -220,6 +221,25 @@ def colors_get(data_adaptor):
         return make_response(jsonify(data_adaptor.get_colors()), HTTPStatus.OK)
     except ColorFormatException as e:
         return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)
+
+
+def gene_info_get(request):
+    """
+    Request information about a gene from the data portal gene_info api
+    """
+    api_base_url = current_app.app_config.server_config.get_gene_info_api_base_url()
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    try:
+        response = requests.get(
+            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}", headers=headers
+        )
+        if response.status_code == 200:
+            return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
+        else:
+            # in the event of a failed search, return empty response
+            return None
+    except Exception as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
 def diffexp_obs_post(request, data_adaptor):

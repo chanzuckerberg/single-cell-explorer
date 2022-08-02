@@ -8,21 +8,48 @@ import QuickGene from "./quickGene";
 import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { Dataframe, DataframeValue } from "../../util/dataframe";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  genesets: (state as any).genesets.genesets,
+@connect((state: RootState) => ({
+  genesets: state.genesets.genesets,
+  annoMatrix: state.annoMatrix,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneExpression extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
-    this.state = { geneSetsExpanded: true };
+    this.state = {
+      geneSetsExpanded: true,
+      geneIds: null,
+      geneNames: null,
+    };
+  }
+
+  async componentDidMount(): Promise<void> {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { annoMatrix } = this.props;
+    const { schema } = annoMatrix;
+    const varIndex = schema.annotations.var.index;
+
+    let dfIds;
+    const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+    this.setState({
+      geneNames: df.col(varIndex).asArray() as DataframeValue[],
+    });
+
+    const geneIdCol = "feature_id";
+    // if feature id column is available in var
+    if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
+      dfIds = await annoMatrix.fetch("var", geneIdCol);
+      this.setState({
+        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
+      });
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
@@ -30,8 +57,24 @@ class GeneExpression extends React.Component<{}, State> {
     const sets = [];
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesets' does not exist on type 'Readon... Remove this comment to see the full error message
     const { genesets } = this.props;
+    const { geneIds, geneNames } = this.state;
 
     for (const [name, geneset] of genesets) {
+      const genesetIds = [];
+      const genesetNames = [];
+
+      // find ensembl IDs for each gene in the geneset
+      for (const gene of geneset.genes) {
+        let geneId;
+        if (geneIds) {
+          geneId = geneIds[geneNames.indexOf(gene[0])];
+        } else {
+          geneId = "";
+        }
+        genesetIds.push(geneId);
+        genesetNames.push(gene[0]);
+      }
+
       sets.push(
         <GeneSet
           key={name}
@@ -39,6 +82,8 @@ class GeneExpression extends React.Component<{}, State> {
           setGenes={geneset.genes}
           setName={name}
           genesetDescription={geneset.genesetDescription}
+          geneIds={genesetIds}
+          geneNames={genesetNames}
         />
       );
     }

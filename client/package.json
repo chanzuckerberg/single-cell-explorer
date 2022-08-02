@@ -25,7 +25,6 @@
     "extends": "./configuration/eslint/eslint.js"
   },
   "eslintIgnore": [
-    "src/util/stateManager/matrix_generated.js",
     "src/util/stateManager/net-encoding/*"
   ],
   "resolutions": {

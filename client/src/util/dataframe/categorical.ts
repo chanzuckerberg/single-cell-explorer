@@ -1,7 +1,7 @@
 /*
 This module contains helper functions to map an array of categorical codes to values
 */
-import { CatIntArray } from "../stateManager/matrix";
+import { CatIntArray } from "../../common/types/arraytypes";
 import { DataframeValueArray } from "./types";
 
 export function mapCodesToValues(
