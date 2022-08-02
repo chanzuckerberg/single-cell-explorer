@@ -45,20 +45,20 @@ table JSONEncodedFBArray {
   data: [uint8];
 }
 
-table CatInt8FBArray {  
+table DictEncoded8FBArray {  
   codes: [int8];
-  // "codes" is a UTF-8/JSON dictionary encoded as a byte array,
+  // "dict" is a UTF-8/JSON dictionary encoded as a byte array,
   // Stores the mapping between codes and polymorphic values
   // JSON object schema is {[code: integer]: value: string | number | boolean}
   dict: [uint8];
 }
 
-table CatInt16FBArray {
+table DictEncoded16FBArray {
   codes: [int16];
   dict: [uint8];
 }
 
-table CatInt32FBArray {
+table DictEncoded32FBArray {
   codes: [int32];
   dict: [uint8];
 }
@@ -85,9 +85,9 @@ union TypedFBArray {
   Uint32FBArray,
   Float64FBArray,
   JSONEncodedFBArray,
-  CatInt8FBArray,
-  CatInt16FBArray,
-  CatInt32FBArray,
+  DictEncoded8FBArray,
+  DictEncoded16FBArray,
+  DictEncoded32FBArray,
   SparseFloat32FBArray,
   SparseFloat64FBArray,
 }
