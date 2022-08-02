@@ -143,12 +143,5 @@ export const datasets = {
       count: "386",
       "gene-cell-count": "416",
     },
-    geneInfo: {
-      symbol: "SIK1",
-      name: "salt inducible kinase 1",
-      summary:
-        "This gene encodes a serine/threonine protein kinase that contains a ubiquitin-associated (UBA) domain. The encoded protein is a member of the adenosine monophosphate-activated kinase (AMPK) subfamily of kinases that play a role in conserved signal transduction pathways. A mutation in this gene is associated with early infantile epileptic encephalopathy 30. [provided by RefSeq, Nov 2016]",
-      synonyms: "MSK, SIK, DEE30, SIK-1, SIK1B, SNF1LK",
-    },
   },
 };

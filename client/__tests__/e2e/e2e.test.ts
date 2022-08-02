@@ -627,33 +627,11 @@ describe.each([
   });
   test("open gene info card and hide/remove", async () => {
     await setup(config);
-    // create geneset and add gene
     await addGeneToSearch(geneToRequestInfo);
-
-    // assert gene info card shows up
     await requestGeneInfo(geneToRequestInfo);
     await assertGeneInfoCardExists(geneToRequestInfo);
-
-    // assert gene info card has the correct information
-    const geneInfoData = data.geneInfo;
-    expect(await getOneElementInnerHTML(getTestId("gene-info-symbol"))).toBe(
-      geneInfoData.symbol
-    );
-    expect(await getOneElementInnerHTML(getTestId("gene-info-name"))).toBe(
-      geneInfoData.name
-    );
-    expect(await getOneElementInnerHTML(getTestId("gene-info-summary"))).toBe(
-      geneInfoData.summary
-    );
-    expect(await getOneElementInnerHTML(getTestId("gene-info-synonyms"))).toBe(
-      geneInfoData.synonyms
-    );
-
-    // minimize gene info card
     await minimizeGeneInfo();
     await assertGeneInfoCardIsMinimized(geneToRequestInfo);
-
-    // remove gene info card
     await removeGeneInfo();
     await assertGeneInfoDoesNotExist(geneToRequestInfo);
   });
