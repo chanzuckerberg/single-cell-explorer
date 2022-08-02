@@ -139,20 +139,20 @@ class PerformanceTestingAnnotations:
     def create_matrix(self, dataset_name, num_cat, max_labels):
         with self.elapsed_timer() as elapsed:
             annon_dict = self.create_annotations_dict_multi_process(dataset_name, num_cat, max_labels)
-            dict_size = sum(sys.getsizeof(value) for value in annon_dict.values()) / 1024 ** 2
+            dict_size = sum(sys.getsizeof(value) for value in annon_dict.values()) / 1024**2
             self.test_notes[dataset_name][f"num_categories_{num_cat}"][f"max_label_{max_labels}"]["annotation_dict"] = {
                 "creation_time": str(elapsed()),
                 "size": f"{dict_size} mb",
             }
             df = pd.DataFrame(annon_dict)
-            df_size = sys.getsizeof(df) / 1024 ** 2
+            df_size = sys.getsizeof(df) / 1024**2
             self.test_notes[dataset_name][f"num_categories_{num_cat}"][f"max_label_{max_labels}"]["data_frame"] = {
                 "creation_time": str(elapsed()),
                 "size": f"{df_size} mb",
             }
             try:
                 matrix = encode_matrix_fbs(matrix=df, row_idx=None, col_idx=df.columns)
-                matrix_size = sys.getsizeof(matrix) / 1024 ** 2
+                matrix_size = sys.getsizeof(matrix) / 1024**2
                 self.test_notes[dataset_name][f"num_categories_{num_cat}"][f"max_label_{max_labels}"]["fbs_matrix"] = {
                     "creation_time": str(elapsed()),
                     "size": f"{matrix_size} mb",
