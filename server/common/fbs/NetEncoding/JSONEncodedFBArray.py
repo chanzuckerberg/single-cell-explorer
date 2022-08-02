@@ -4,12 +4,10 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
-
 np = import_numpy()
 
-
 class JSONEncodedFBArray(object):
-    __slots__ = ["_tab"]
+    __slots__ = ['_tab']
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -22,7 +20,6 @@ class JSONEncodedFBArray(object):
     def GetRootAsJSONEncodedFBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
-
     # JSONEncodedFBArray
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -32,9 +29,7 @@ class JSONEncodedFBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(
-                flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1)
-            )
+            return self._tab.Get(flatbuffers.number_types.Uint8Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 1))
         return 0
 
     # JSONEncodedFBArray
@@ -56,38 +51,19 @@ class JSONEncodedFBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
-
-def Start(builder):
-    builder.StartObject(1)
-
-
+def Start(builder): builder.StartObject(1)
 def JSONEncodedFBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-
-
-def AddData(builder, data):
-    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
-
-
+def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 def JSONEncodedFBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
     return AddData(builder, data)
-
-
-def StartDataVector(builder, numElems):
-    return builder.StartVector(1, numElems, 1)
-
-
+def StartDataVector(builder, numElems): return builder.StartVector(1, numElems, 1)
 def JSONEncodedFBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartDataVector(builder, numElems)
-
-
-def End(builder):
-    return builder.EndObject()
-
-
+def End(builder): return builder.EndObject()
 def JSONEncodedFBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

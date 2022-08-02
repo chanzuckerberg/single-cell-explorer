@@ -1,10 +1,10 @@
 import { flatbuffers } from "flatbuffers";
-import { NetEncoding, NetEncodingInterface } from "./fbs_data_types";
+import { NetEncoding } from "./fbs_data_types";
 import {
   TypedArray,
-  isCatTypedArray,
+  isDictEncodedTypedArray,
   isTypedArray,
-  CatIntArray,
+  DictEncodedArray,
   isFloatTypedArray,
 } from "../../common/types/arraytypes";
 import {
@@ -15,9 +15,9 @@ import {
   DataframeValueArray,
 } from "../dataframe";
 
-import { CatInt8Array } from "./cat8_array";
-import { CatInt16Array } from "./cat16_array";
-import { CatInt32Array } from "./cat32_array";
+import { DictEncoded8Array } from "./dict-encoded8_array";
+import { DictEncoded16Array } from "./dict-encoded16_array";
+import { DictEncoded32Array } from "./dict-encoded32_array";
 import { TypedFBArray } from "./net-encoding/typed-f-b-array";
 import { Matrix } from "./net-encoding/matrix";
 import { Column } from "./net-encoding/column";
@@ -32,21 +32,21 @@ const utf8Decoder = new TextDecoder("utf-8");
  * Decode TypedFBArray
  */
 
-function decodeCatArray(uType: TypedFBArray, uValF: Column["u"]): CatIntArray {
+function decodeCatArray(uType: TypedFBArray, uValF: Column["u"]): DictEncodedArray {
   const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof NetEncodingInterface];
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
   const arr = uValF(new TypeClass());
   const codesArray = arr.codesArray();
   let codesToValues = arr.dictArray();
   codesToValues = JSON.parse(utf8Decoder.decode(codesToValues));
 
-  let data: CatIntArray;
-  if (uType === TypedFBArray.CatInt8FBArray) {
-    data = new CatInt8Array({ array: codesArray, codeMapping: codesToValues });
-  } else if (uType === TypedFBArray.CatInt16FBArray) {
-    data = new CatInt16Array({ array: codesArray, codeMapping: codesToValues });
+  let data: DictEncodedArray;
+  if (uType === TypedFBArray.DictEncoded8FBArray) {
+    data = new DictEncoded8Array({ array: codesArray, codeMapping: codesToValues });
+  } else if (uType === TypedFBArray.DictEncoded16FBArray) {
+    data = new DictEncoded16Array({ array: codesArray, codeMapping: codesToValues });
   } else {
-    data = new CatInt32Array({ array: codesArray, codeMapping: codesToValues });
+    data = new DictEncoded32Array({ array: codesArray, codeMapping: codesToValues });
   }
   return data;
 }
@@ -57,7 +57,7 @@ function decodeNumericArray(
   inplace = false
 ): TypedArray {
   const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof NetEncodingInterface];
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
   const arr = uValF(new TypeClass());
   let dataArray = arr.dataArray();
   if (!inplace) {
@@ -72,7 +72,7 @@ function decodeSparseArray(
   uValF: Column["u"]
 ): TypedArray {
   const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof NetEncodingInterface];
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
   const arr = uValF(new TypeClass());
   const dataArray = arr.dataArray();
   const rowsArray = arr.rowsArray();
@@ -89,7 +89,7 @@ function decodeJSONArray(
   uValF: Column["u"]
 ): DataframeValueArray {
   const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof NetEncodingInterface];
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
   const arr = uValF(new TypeClass());
   const dataArray = arr.dataArray();
   const json = utf8Decoder.decode(dataArray);
@@ -100,7 +100,7 @@ function decodeTypedArray(
   uType: TypedFBArray,
   uValF: Column["u"],
   inplace = false
-): TypedArray | DataframeValueArray | CatIntArray | null {
+): TypedArray | DataframeValueArray | DictEncodedArray | null {
   if (uType === TypedFBArray.NONE) {
     return null;
   }
@@ -108,9 +108,9 @@ function decodeTypedArray(
     case TypedFBArray.JSONEncodedFBArray: {
       return decodeJSONArray(uType, uValF);
     }
-    case TypedFBArray.CatInt8FBArray:
-    case TypedFBArray.CatInt16FBArray:
-    case TypedFBArray.CatInt32FBArray: {
+    case TypedFBArray.DictEncoded8FBArray:
+    case TypedFBArray.DictEncoded16FBArray:
+    case TypedFBArray.DictEncoded32FBArray: {
       return decodeCatArray(uType, uValF);
     }
     case TypedFBArray.SparseFloat32FBArray:
@@ -172,7 +172,7 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
 
 function encodeCatArray(builder: any, uType: any, uData: any): any {
   const uTypeName = TypedFBArray[uType];
-  const ArrayType = NetEncoding[uTypeName as keyof NetEncodingInterface];
+  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
   // @ts-expect-error FIX ME: broken types with variable classes
   const dCodes = ArrayType.createCodesVector(builder, uData);
 
@@ -252,9 +252,9 @@ function encodeTypedArray(
     case TypedFBArray.JSONEncodedFBArray: {
       return encodeJSONArray(builder, uType, uData);
     }
-    case TypedFBArray.CatInt8FBArray:
-    case TypedFBArray.CatInt16FBArray:
-    case TypedFBArray.CatInt32FBArray: {
+    case TypedFBArray.DictEncoded8FBArray:
+    case TypedFBArray.DictEncoded16FBArray:
+    case TypedFBArray.DictEncoded32FBArray: {
       return encodeCatArray(builder, uType, uData);
     }
     case TypedFBArray.SparseFloat32FBArray:
@@ -409,7 +409,7 @@ export function matrixFBSToDataframe(
   const columns = fbs
     .map((fb) =>
       fb.columns.map((c) => {
-        if (isTypedArray(c) || isCatTypedArray(c) || Array.isArray(c)) return c;
+        if (isTypedArray(c) || isDictEncodedTypedArray(c) || Array.isArray(c)) return c;
         return promoteTypedArray(c);
       })
     )

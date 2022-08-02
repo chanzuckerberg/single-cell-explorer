@@ -1,5 +1,5 @@
 /**
- * This module exports a subclass of Int16Array for
+ * This module exports a subclass of Int32Array for
  * categorical data types. The subclass contains the
  * `codeMapping` dictionary which maps codes to values,
  * and a helper function `vat` that returns the value at
@@ -7,16 +7,16 @@
  */
 import { CodeMapping } from "./code_mapping_interfaces";
 
-export interface Cat16ArrayProps {
+export interface DictEncoded32ArrayProps {
   codeMapping: CodeMapping;
-  array: Int16Array;
+  array: Int32Array;
 }
-export class CatInt16Array extends Int16Array {
+export class DictEncoded32Array extends Int32Array {
   codeMapping: CodeMapping;
 
-  codes: Int16Array;
+  codes: Int32Array;
 
-  constructor(props: Cat16ArrayProps) {
+  constructor(props: DictEncoded32ArrayProps) {
     const { codeMapping: codeMap, array } = props;
     super(array);
     this.codeMapping = codeMap;

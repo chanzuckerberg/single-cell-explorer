@@ -2,9 +2,9 @@
  * Utility type and interface definitions.
  */
 
-import { CatInt16Array } from "../../util/stateManager/cat16_array";
-import { CatInt8Array } from "../../util/stateManager/cat8_array";
-import { CatInt32Array } from "../../util/stateManager/cat32_array";
+import { DictEncoded16Array } from "../../util/stateManager/dict-encoded16_array";
+import { DictEncoded8Array } from "../../util/stateManager/dict-encoded8_array";
+import { DictEncoded32Array } from "../../util/stateManager/dict-encoded32_array";
 
 /**
  * TypedArrays that can be assigned to a number.
@@ -118,11 +118,11 @@ export function isUnsignedIntTypedArray(
  * @param c - value to be tested
  * @returns - true if `c` is a categorical typed array
  */
-export const isCatTypedArray = (c: unknown): boolean =>
-  c instanceof CatInt8Array ||
-  c instanceof CatInt16Array ||
-  c instanceof CatInt32Array;
-export type CatIntArray = CatInt8Array | CatInt16Array | CatInt32Array;
+export const isDictEncodedTypedArray = (c: unknown): boolean =>
+  c instanceof DictEncoded8Array ||
+  c instanceof DictEncoded16Array ||
+  c instanceof DictEncoded32Array;
+export type DictEncodedArray = DictEncoded8Array | DictEncoded16Array | DictEncoded32Array;
 
 /**
  * Test if the paramter is an int TypedArray

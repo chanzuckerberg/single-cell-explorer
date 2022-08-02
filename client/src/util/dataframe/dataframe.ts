@@ -4,8 +4,8 @@ import {
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
-  CatIntArray,
-  isCatTypedArray,
+  DictEncodedArray,
+  isDictEncodedTypedArray,
 } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
 import {
@@ -15,7 +15,7 @@ import {
 import {
   mapCodesToValues as _mapCodesToValues,
   hashMapCodesToValues,
-} from "./categorical";
+} from "./dict-encoded";
 
 import {
   histogramCategorical as _histogramCategorical,
@@ -258,7 +258,7 @@ class Dataframe {
     const { length } = column;
     const __id = __getMemoId();
     const isContinuous = isTypedArray(column);
-    const isDictionaryEncoded = isCatTypedArray(column);
+    const isDictEncoded = isDictEncodedTypedArray(column);
 
     const memoGetValues = memoize(_mapCodesToValues, hashMapCodesToValues);
     const memoHistogramContinuous = memoize(
@@ -351,15 +351,15 @@ class Dataframe {
     get.histogramCategoricalBy = (by: DataframeColumn) =>
       memoHistogramCategoricalBy(get, by);
 
-    if (isDictionaryEncoded) {
+    if (isDictEncoded) {
       // (#337): these properties belong to DataframeCategoricalColumn
-      const columnCat = column as CatIntArray;
-      get.getValuesFromCodes = () => memoGetValues(columnCat, __id);
+      const columnDictEnc = column as DictEncodedArray;
+      get.getValuesFromCodes = () => memoGetValues(columnDictEnc, __id);
       get.codes = column; // currently, an alias for col.asArray();
       get.values = get.getValuesFromCodes();
-      get.codeMapping = columnCat.codeMapping;
+      get.codeMapping = columnDictEnc.codeMapping;
       get.invCodeMapping = Object.fromEntries(
-        Object.entries(columnCat.codeMapping).map((row) => [
+        Object.entries(columnDictEnc.codeMapping).map((row) => [
           row[1],
           parseInt(row[0], 10),
         ])
@@ -372,7 +372,7 @@ class Dataframe {
     get.indexOf = _indexOf;
     get.iget = iget;
     get.__id = __id;
-    get.isDictionaryEncoded = isDictionaryEncoded;
+    get.isDictEncoded = isDictEncoded;
     get.isContinuous = isContinuous;
     Object.freeze(get);
     return get;

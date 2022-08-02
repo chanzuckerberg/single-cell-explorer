@@ -10,9 +10,9 @@ import server.common.fbs.NetEncoding.Float64FBArray as Float64FBArray
 import server.common.fbs.NetEncoding.Int32FBArray as Int32FBArray
 import server.common.fbs.NetEncoding.JSONEncodedFBArray as JSONEncodedFBArray
 import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
-import server.common.fbs.NetEncoding.CatInt16FBArray as CatInt16FBArray
-import server.common.fbs.NetEncoding.CatInt32FBArray as CatInt32FBArray
-import server.common.fbs.NetEncoding.CatInt8FBArray as CatInt8FBArray
+import server.common.fbs.NetEncoding.DictEncoded16FBArray as DictEncoded16FBArray
+import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArray
+import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 import server.common.fbs.NetEncoding.SparseFloat32FBArray as SparseFloat32FBArray
 import server.common.fbs.NetEncoding.SparseFloat64FBArray as SparseFloat64FBArray
 
@@ -57,9 +57,9 @@ def serialize_typed_array(builder, source_array):
             np.dtype(np.float32).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
         },
         "category": {
-            np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt8FBArray),
-            np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt16FBArray),
-            np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.CatInt32FBArray),
+            np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
+            np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded16FBArray),
+            np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded32FBArray),
         },
     }
     defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
@@ -77,9 +77,9 @@ def deserialize_typed_array(tarr):
         TypedFBArray.TypedFBArray.Float32FBArray: (DenseNumericCoder, Float32FBArray.Float32FBArray),
         TypedFBArray.TypedFBArray.Float64FBArray: (DenseNumericCoder, Float64FBArray.Float64FBArray),
         TypedFBArray.TypedFBArray.JSONEncodedFBArray: (PolymorphicCoder, JSONEncodedFBArray.JSONEncodedFBArray),
-        TypedFBArray.TypedFBArray.CatInt8FBArray: (CategoricalCoder, CatInt8FBArray.CatInt8FBArray),
-        TypedFBArray.TypedFBArray.CatInt16FBArray: (CategoricalCoder, CatInt16FBArray.CatInt16FBArray),
-        TypedFBArray.TypedFBArray.CatInt32FBArray: (CategoricalCoder, CatInt32FBArray.CatInt32FBArray),
+        TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
+        TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
+        TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
         TypedFBArray.TypedFBArray.SparseFloat32FBArray: (SparseNumericCoder, SparseFloat32FBArray.SparseFloat32FBArray),
         TypedFBArray.TypedFBArray.SparseFloat64FBArray: (SparseNumericCoder, SparseFloat64FBArray.SparseFloat64FBArray),
     }

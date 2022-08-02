@@ -202,11 +202,11 @@ function _createUserColors(
   let newColors = colors;
   // (#337): convert the keys in the color dictionary defined by the schema
   // to their corresponding codes.
-  if (col.isDictionaryEncoded) {
+  if (col.isDictEncoded) {
     newColors = Object.fromEntries(
       Object.entries(colors).map((row) => [
         // (#337): I'm not sure how to avoid type casting here.
-        // I thought `isDictionaryEncoded=true` should be a sufficient type guard,
+        // I thought `isDictEncoded=true` should be a sufficient type guard,
         // but...
         (col as DataframeCategoricalColumn).invCodeMapping[row[0]],
         row[1],
@@ -221,7 +221,7 @@ function _createUserColors(
   let { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
-  if (col.isDictionaryEncoded) {
+  if (col.isDictEncoded) {
     categories = categories.map(
       (cat) => (col as DataframeCategoricalColumn).codeMapping[cat as number]
     );

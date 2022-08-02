@@ -7,16 +7,16 @@
  */
 import { CodeMapping } from "./code_mapping_interfaces";
 
-export interface Cat8ArrayProps {
+export interface DictEncoded8ArrayProps {
   codeMapping: CodeMapping;
   array: Int8Array;
 }
-export class CatInt8Array extends Int8Array {
+export class DictEncoded8Array extends Int8Array {
   codeMapping: CodeMapping;
 
   codes: Int8Array;
 
-  constructor(props: Cat8ArrayProps) {
+  constructor(props: DictEncoded8ArrayProps) {
     const { codeMapping: codeMap, array } = props;
     super(array);
     this.codeMapping = codeMap;

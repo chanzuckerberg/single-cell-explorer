@@ -1,4 +1,4 @@
-import { CatIntArray, TypedArray } from "../../common/types/arraytypes";
+import { DictEncodedArray, TypedArray } from "../../common/types/arraytypes";
 import {
   CodeMapping,
   InvCodeMapping,
@@ -48,7 +48,7 @@ export type CategoricalHistogramBy = Map<DataframeValue, CategoricalHistogram>;
 
 export type DataframeValue = number | string | boolean;
 
-export type DataframeValueArray = DataframeValue[] | TypedArray | CatIntArray;
+export type DataframeValueArray = DataframeValue[] | TypedArray | DictEncodedArray;
 
 export type DataframeColumnGetter = (
   label: LabelType
@@ -73,7 +73,7 @@ export interface DataframeColumn extends DataframeColumnGetter {
   /**
    * Boolean indicating if the underlying data is dictionary-encoded.
    */
-  isDictionaryEncoded: boolean;
+  isDictEncoded: boolean;
 
   /**
    * Return underlying column data as an array-like object.
@@ -152,7 +152,7 @@ export interface DataframeColumn extends DataframeColumnGetter {
  */
 
 export interface DataframeCategoricalColumn extends DataframeColumn {
-  codes: CatIntArray;
+  codes: DictEncodedArray;
   values: DataframeValueArray;
   codeMapping: CodeMapping;
   invCodeMapping: InvCodeMapping;
