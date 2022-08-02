@@ -231,8 +231,7 @@ def gene_info_get(request):
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(
-            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}",
-            headers=headers
+            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}", headers=headers
         )
         if response.status_code == 200:
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})

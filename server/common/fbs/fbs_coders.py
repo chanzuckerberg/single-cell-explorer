@@ -165,9 +165,9 @@ class SparseNumericCoder:
     def encode_array(self, array):
         if sp.issparse(array) and array.shape[1] == 1:
             array = array.tocoo()
-            row_coords = np.uint32(array.row) # ensure this is uint32 to match schema
+            row_coords = np.uint32(array.row)  # ensure this is uint32 to match schema
             nnz_data = array.data
-            size = np.uint32(array.shape[0]) # ensure this is uint32 to match schema
+            size = np.uint32(array.shape[0])  # ensure this is uint32 to match schema
             if np.dtype(nnz_data.dtype).str != self.dtype:
                 nnz_data = nnz_data.astype(self.dtype)
 

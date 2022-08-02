@@ -4,10 +4,12 @@
 
 import flatbuffers
 from flatbuffers.compat import import_numpy
+
 np = import_numpy()
 
+
 class SparseFloat64FBArray(object):
-    __slots__ = ['_tab']
+    __slots__ = ["_tab"]
 
     @classmethod
     def GetRootAs(cls, buf, offset=0):
@@ -20,6 +22,7 @@ class SparseFloat64FBArray(object):
     def GetRootAsSparseFloat64FBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
         return cls.GetRootAs(buf, offset)
+
     # SparseFloat64FBArray
     def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
@@ -29,7 +32,9 @@ class SparseFloat64FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Float64Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 8))
+            return self._tab.Get(
+                flatbuffers.number_types.Float64Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 8)
+            )
         return 0
 
     # SparseFloat64FBArray
@@ -56,7 +61,9 @@ class SparseFloat64FBArray(object):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             a = self._tab.Vector(o)
-            return self._tab.Get(flatbuffers.number_types.Uint32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4))
+            return self._tab.Get(
+                flatbuffers.number_types.Uint32Flags, a + flatbuffers.number_types.UOffsetTFlags.py_type(j * 4)
+            )
         return 0
 
     # SparseFloat64FBArray
@@ -85,31 +92,65 @@ class SparseFloat64FBArray(object):
             return self._tab.Get(flatbuffers.number_types.Uint32Flags, o + self._tab.Pos)
         return 0
 
-def Start(builder): builder.StartObject(3)
+
+def Start(builder):
+    builder.StartObject(3)
+
+
 def SparseFloat64FBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
-def AddData(builder, data): builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+
+
+def AddData(builder, data):
+    builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
+
+
 def SparseFloat64FBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
     return AddData(builder, data)
-def StartDataVector(builder, numElems): return builder.StartVector(8, numElems, 8)
+
+
+def StartDataVector(builder, numElems):
+    return builder.StartVector(8, numElems, 8)
+
+
 def SparseFloat64FBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartDataVector(builder, numElems)
-def AddRows(builder, rows): builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(rows), 0)
+
+
+def AddRows(builder, rows):
+    builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(rows), 0)
+
+
 def SparseFloat64FBArrayAddRows(builder, rows):
     """This method is deprecated. Please switch to AddRows."""
     return AddRows(builder, rows)
-def StartRowsVector(builder, numElems): return builder.StartVector(4, numElems, 4)
+
+
+def StartRowsVector(builder, numElems):
+    return builder.StartVector(4, numElems, 4)
+
+
 def SparseFloat64FBArrayStartRowsVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
     return StartRowsVector(builder, numElems)
-def AddSize(builder, size): builder.PrependUint32Slot(2, size, 0)
+
+
+def AddSize(builder, size):
+    builder.PrependUint32Slot(2, size, 0)
+
+
 def SparseFloat64FBArrayAddSize(builder, size):
     """This method is deprecated. Please switch to AddSize."""
     return AddSize(builder, size)
-def End(builder): return builder.EndObject()
+
+
+def End(builder):
+    return builder.EndObject()
+
+
 def SparseFloat64FBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
     return End(builder)

@@ -407,10 +407,12 @@ export function matrixFBSToDataframe(
       throw new Error("FBS with inconsistent dimensionality");
   });
   const columns = fbs
-    .map((fb) => fb.columns.map((c) => {
+    .map((fb) =>
+      fb.columns.map((c) => {
         if (isTypedArray(c) || isCatTypedArray(c) || Array.isArray(c)) return c;
         return promoteTypedArray(c);
-      }))
+      })
+    )
     .flat();
 
   // colIdx may be TypedArray or Array
