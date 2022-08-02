@@ -32,7 +32,10 @@ const utf8Decoder = new TextDecoder("utf-8");
  * Decode TypedFBArray
  */
 
-function decodeCatArray(uType: TypedFBArray, uValF: Column["u"]): DictEncodedArray {
+function decodeCatArray(
+  uType: TypedFBArray,
+  uValF: Column["u"]
+): DictEncodedArray {
   const TypeClass =
     NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
   const arr = uValF(new TypeClass());
@@ -42,11 +45,20 @@ function decodeCatArray(uType: TypedFBArray, uValF: Column["u"]): DictEncodedArr
 
   let data: DictEncodedArray;
   if (uType === TypedFBArray.DictEncoded8FBArray) {
-    data = new DictEncoded8Array({ array: codesArray, codeMapping: codesToValues });
+    data = new DictEncoded8Array({
+      array: codesArray,
+      codeMapping: codesToValues,
+    });
   } else if (uType === TypedFBArray.DictEncoded16FBArray) {
-    data = new DictEncoded16Array({ array: codesArray, codeMapping: codesToValues });
+    data = new DictEncoded16Array({
+      array: codesArray,
+      codeMapping: codesToValues,
+    });
   } else {
-    data = new DictEncoded32Array({ array: codesArray, codeMapping: codesToValues });
+    data = new DictEncoded32Array({
+      array: codesArray,
+      codeMapping: codesToValues,
+    });
   }
   return data;
 }
@@ -232,7 +244,6 @@ function encodeJSONArray(
   uData: any
 ): any {
   const uTypeName = TypedFBArray[uType];
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
   const ArrayType = NetEncoding[uTypeName];
   const json = JSON.stringify(uData);
   const utf8Encoder = new TextEncoder();
@@ -409,7 +420,8 @@ export function matrixFBSToDataframe(
   const columns = fbs
     .map((fb) =>
       fb.columns.map((c) => {
-        if (isTypedArray(c) || isDictEncodedTypedArray(c) || Array.isArray(c)) return c;
+        if (isTypedArray(c) || isDictEncodedTypedArray(c) || Array.isArray(c))
+          return c;
         return promoteTypedArray(c);
       })
     )
