@@ -172,7 +172,9 @@ class GeneInfo extends React.PureComponent<Props, State> {
               }}
             >
               <GeneSymbol>{gene}</GeneSymbol>
-              <Content>Sorry, this gene could not be found on NCBI.</Content>
+              <Content data-testid="gene-info-not-found">
+                Sorry, this gene could not be found on NCBI.
+              </Content>
               <Link
                 href={`https://www.google.com/search?q=${gene}`}
                 target="_blank"

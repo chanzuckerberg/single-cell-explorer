@@ -396,6 +396,9 @@ export async function assertGeneInfoCardExists(gene: string): Promise<void> {
       secondCount += 1;    
     }
   }
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const failedExists = await isElementPresent(getTestId("gene-info-not-found"));
+  await expect(failedExists).toBe(true);
   await waitByID("gene-info-symbol");
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
   const symbolExists = await isElementPresent(getTestId("gene-info-symbol"));
