@@ -394,7 +394,7 @@ class Dataset(metaclass=ABCMeta):
         else:
             X = self.get_X_array(obs_selector, var_selector, allow_sparse_return=True)
             if sparse.issparse(X):
-                mean = X.mean(axis=1).A
+                mean = X.mean(axis=1).tocoo()
             else:
                 mean = X.mean(axis=1, keepdims=True)
 
