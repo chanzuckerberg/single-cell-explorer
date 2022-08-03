@@ -94,6 +94,9 @@ server:
       #   if a string, then use that value (e.g. us-east-1).
       region_name: true
 
+  gene_info:
+    api_base: null
+
   adaptor:
     cxg_adaptor:
       # The key/values under tiledb_ctx will be used to initialize the tiledb Context.

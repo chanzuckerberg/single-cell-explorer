@@ -264,8 +264,7 @@ class HistogramBrush extends React.PureComponent {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   fetchAsyncProps = async () => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix, width } = this.props;
-
+    const { annoMatrix, width, onGeneExpressionComplete } = this.props;
     const { isClipped } = annoMatrix;
 
     const query = this.createQuery();
@@ -316,6 +315,7 @@ class HistogramBrush extends React.PureComponent {
 
     const OK2Render = !summary.categorical && !nonFiniteExtent;
 
+    onGeneExpressionComplete();
     return {
       histogram,
       miniHistogram,
@@ -467,7 +467,11 @@ class HistogramBrush extends React.PureComponent {
         watchProps={{ annoMatrix, setGenes }}
       >
         <Async.Pending initial>
-          <StillLoading />
+          {mini ? (
+            <StillLoading height={HEIGHT_MINI} />
+          ) : (
+            <StillLoading height={HEIGHT} />
+          )}
         </Async.Pending>
         <Async.Rejected>
           {(error) => (

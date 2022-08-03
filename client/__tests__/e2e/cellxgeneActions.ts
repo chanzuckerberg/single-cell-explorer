@@ -235,12 +235,27 @@ export async function assertColorLegendLabel(label: any) {
 
   return expect(result).toBe(label);
 }
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-export async function expandGeneset(genesetName: any) {
+export async function addGeneToSetAndExpand(genesetName: any, geneSymbol: any) {
+  /**
+   * this is an awful hack but for some reason, the add gene to set
+   * doesn't work each time. must repeat to get it to trigger.
+   * */
+  let z = 0;
+  while (z < 10) {
+    await addGeneToSet(genesetName, geneSymbol);
+    await expandGeneset(genesetName);
+    try {
+      await waitByClass("geneset-expand-is-expanded");
+      break;
+    } catch (TimeoutError) {
+      z += 1;
+      console.log(`trying again - ${z}`);
+    }
+  }
+}
+export async function expandGeneset(genesetName: string) {
   const expand = await waitByID(`${genesetName}:geneset-expand`);
-  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  const notExpanded = await expand.$(
+  const notExpanded = await expand?.$(
     "[data-testclass='geneset-expand-is-not-expanded']"
   );
   if (notExpanded) await clickOn(`${genesetName}:geneset-expand`);
@@ -251,10 +266,9 @@ export async function createGeneset(genesetName: any) {
   await clickOnUntil("open-create-geneset-dialog", async () => {
     await expect(page).toMatchElement(getTestId("create-geneset-input"));
   });
-
   await typeInto("create-geneset-input", genesetName);
+  // await typeInto("add-genes", "SIK1");
   await clickOn("submit-geneset");
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -280,7 +294,6 @@ export async function deleteGeneset(genesetName: any) {
   await clickOn(targetId);
 
   await assertGenesetDoesNotExist(genesetName);
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -311,8 +324,10 @@ export async function assertGenesetExists(genesetName: any) {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function addGeneToSet(genesetName: any, geneToAddToSet: any) {
   const submitButton = `${genesetName}:submit-gene`;
-
-  await clickOn(`${genesetName}:add-new-gene-to-geneset`);
+  await clickOnUntil(`${genesetName}:add-new-gene-to-geneset`, async () => {
+    await expect(page).toMatchElement(getTestId("add-genes"));
+  });
+  assert(await isElementPresent(getTestId("add-genes"), {}));
   await typeInto("add-genes", geneToAddToSet);
   await clickOn(submitButton);
 }
@@ -322,8 +337,6 @@ export async function removeGene(geneSymbol: any) {
   const targetId = `delete-from-geneset:${geneSymbol}`;
 
   await clickOn(targetId);
-
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -347,10 +360,10 @@ export async function assertGeneDoesNotExist(geneSymbol: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+
 export async function expandGene(geneSymbol: any) {
   await clickOn(`maximize-${geneSymbol}`);
 }
-
 /**
  * CATEGORY
  */
@@ -378,8 +391,6 @@ export async function duplicateCategory(categoryName: any) {
       getTestId(`${categoryName}:category-expand`)
     );
   });
-
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

@@ -39,6 +39,7 @@ class Continuous extends React.PureComponent {
               field={key}
               isObs
               zebra={zebra % 2 === 0}
+              onGeneExpressionComplete={() => {}}
             />
           ))}
         </Collapse>

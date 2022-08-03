@@ -26,7 +26,7 @@ import {
 } from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { LabelArray, LabelIndex } from "../util/dataframe";
+import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
@@ -137,6 +137,28 @@ async function genesetsFetchAndLoad(
       data: defaultResponse,
     });
   }
+}
+
+interface GeneInfoAPI {
+  ncbi_url: string;
+  name: string;
+  synonyms: string[];
+  summary: string;
+  is_ensembl_id_result: boolean;
+}
+/**
+ * Fetch gene summary information
+ * @param geneID ensembl ID corresponding to gene to search
+ * @param gene human-readable name of gene
+ */
+async function fetchGeneInfo(
+  geneID: DataframeValue,
+  gene: string
+): Promise<GeneInfoAPI | undefined> {
+  const response = await fetchJson<GeneInfoAPI>(
+    `geneinfo?geneID=${geneID}&gene=${gene}`
+  );
+  return response;
 }
 
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
@@ -457,6 +479,7 @@ export default {
   checkExplainNewTab,
   navigateCheckUserState,
   selectDataset,
+  fetchGeneInfo,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
   selectCategoricalAllMetadataAction:

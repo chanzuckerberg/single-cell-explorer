@@ -120,6 +120,7 @@ export const graphWidth = 700;
 export const graphHeight = 700;
 export const scatterplotMarginLeft = 11;
 
+/* graph width + right sidebar width + left sidebar width is just below 1440p */
 export const rightSidebarWidth = 365;
 export const leftSidebarWidth = 365;
 export const leftSidebarSectionHeading = {
@@ -138,6 +139,8 @@ export const maxGenes = 100;
 
 export const diffexpPopNamePrefix1 = "Pop1 high";
 export const diffexpPopNamePrefix2 = "Pop2 high";
+
+export const bottomToolbarGutter = 48;
 
 /* Maximum number of menu items displayable in menu before scroll is enabled */
 export const maxMenuItemCount = 9;

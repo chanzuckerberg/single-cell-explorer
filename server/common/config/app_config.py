@@ -127,7 +127,6 @@ class AppConfig(object):
 
     def update_from_config_file(self, config_file):
         try:
-            print("open config")
             config = EnvYAML(config_file)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}")

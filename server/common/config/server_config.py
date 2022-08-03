@@ -50,6 +50,7 @@ class ServerConfig(BaseConfig):
             self.data_locator__s3__region_name = default_config["data_locator"]["s3"]["region_name"]
             self.data_locator__api_base = default_config["data_locator"]["api_base"]
             self.adaptor__cxg_adaptor__tiledb_ctx = default_config["adaptor"]["cxg_adaptor"]["tiledb_ctx"]
+            self.gene_info__api_base = default_config["gene_info"]["api_base"]
 
             self.limits__diffexp_cellcount_max = default_config["limits"]["diffexp_cellcount_max"]
             self.limits__column_request_max = default_config["limits"]["column_request_max"]
@@ -62,6 +63,7 @@ class ServerConfig(BaseConfig):
         self.handle_data_source()
         self.handle_data_locator()
         self.handle_adaptor()  # may depend on data_locator
+        self.handle_gene_info()
         self.handle_single_dataset(context)  # may depend on adaptor
         self.handle_multi_dataset()  # may depend on adaptor
         self.handle_limits()
@@ -148,6 +150,9 @@ class ServerConfig(BaseConfig):
             else:
                 region_name = None
             self.data_locator__s3__region_name = region_name
+
+    def handle_gene_info(self):
+        self.validate_correct_type_of_configuration_attribute("gene_info__api_base", (type(None), str))
 
     def handle_data_source(self):
         self.validate_correct_type_of_configuration_attribute("single_dataset__datapath", (str, type(None)))
@@ -289,3 +294,6 @@ class ServerConfig(BaseConfig):
 
     def get_data_locator_api_base_url(self):
         return self.data_locator__api_base
+
+    def get_gene_info_api_base_url(self):
+        return self.gene_info__api_base

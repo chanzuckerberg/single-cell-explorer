@@ -41,15 +41,6 @@ smoke-test:
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --verbose --no-cache false'
 
-# start an instance of the Explorer server and run the end-to-end annotations tests
-.PHONY: smoke-test-annotations
-smoke-test-annotations:
-	start_server_and_test \
-		'CXG_OPTIONS="" $(MAKE) start-server' \
-		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e-annotations -- --verbose false'
-	rm -rf $(TMP_DIR)
-
 .PHONY: unit-test
 unit-test:
 	node node_modules/jest/bin/jest.js --testPathIgnorePatterns e2e

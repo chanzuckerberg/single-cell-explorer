@@ -32,7 +32,7 @@ locals {
     "https://", module.explorer_dns[0].dns_prefix, ".", local.external_dns
   ]), var.frontend_url)
   explorer_image_repo = local.secret["ecrs"]["explorer"]["url"]
-  explorer_cmd        = ["gunicorn", "--worker-class", "gevent", "--bind", "0.0.0.0:5000", "server.eb.app:application", "--timeout", "60"]
+  explorer_cmd        = ["/start.sh"]
   # TODO end explorer stuff
 
   artifact_bucket            = try(local.secret["s3_buckets"]["artifact"]["name"], "")
