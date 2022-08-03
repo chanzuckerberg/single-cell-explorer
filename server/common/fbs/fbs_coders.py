@@ -120,7 +120,7 @@ class DenseNumericCoder:
         if isinstance(array, pd.Series):
             array = array.to_numpy()
         elif sp.issparse(array):
-            array=array.A.flatten()
+            array = array.A.flatten()
         # convert to the specified dtype
         if np.dtype(array.dtype).str != dtype:
             array = array.astype(dtype)
@@ -204,10 +204,11 @@ class SparseNumericCoder:
 
 class PolymorphicCoder:
     n_slots = 1
-    # dtype is unused here as array is just getting slammed into a JSON
+
     def encode_array(self, array, builder, dtype=None):
+        # dtype is unused here as array is just getting slammed into a JSON
         if sp.issparse(array):
-            array=array.A.flatten()
+            array = array.A.flatten()
         array = pd.Series(array)
         as_json = array.to_json(orient="records")
         json_array = np.array(bytearray(as_json, "utf-8"))
