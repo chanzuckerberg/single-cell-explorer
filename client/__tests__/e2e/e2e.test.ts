@@ -42,6 +42,13 @@ import {
   getAllCategoriesAndCounts,
   selectCategory,
   addGeneToSetAndExpand,
+  requestGeneInfo,
+  assertGeneInfoCardExists,
+  assertGeneInfoCardIsMinimized,
+  minimizeGeneInfo,
+  removeGeneInfo,
+  addGeneToSearch,
+  assertGeneInfoDoesNotExist,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -69,6 +76,9 @@ const geneToBrushAndColorBy = "SIK1";
 const brushThisGeneGeneset = "brush_this_gene";
 const geneBrushedCellCount = "109";
 const subsetGeneBrushedCellCount = "96";
+
+// open gene info card
+const geneToRequestInfo = "SIK1";
 
 const genesetDescriptionID =
   "geneset-description-tooltip-fourth_gene_set: fourth description";
@@ -614,5 +624,15 @@ describe.each([
     await assertGeneExistsInGeneset(geneToRemove);
     await clickOn("redo");
     await assertGeneDoesNotExist(geneToRemove);
+  });
+  test("open gene info card and hide/remove", async () => {
+    await setup(config);
+    await addGeneToSearch(geneToRequestInfo);
+    await requestGeneInfo(geneToRequestInfo);
+    await assertGeneInfoCardExists(geneToRequestInfo);
+    await minimizeGeneInfo();
+    await assertGeneInfoCardIsMinimized(geneToRequestInfo);
+    await removeGeneInfo();
+    await assertGeneInfoDoesNotExist(geneToRequestInfo);
   });
 });
