@@ -85,7 +85,7 @@ variable explorer_instance_count {
 variable memory {
   type        = number
   description = "Allocated memory"
-  default     = 15360
+  default     = 8000
 }
 
 variable "api_domain" {
