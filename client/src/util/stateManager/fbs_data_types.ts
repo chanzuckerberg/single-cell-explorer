@@ -10,14 +10,14 @@ import { SparseFloat64FBArray } from "./net-encoding/sparse-float64-f-b-array";
 import { Uint32FBArray } from "./net-encoding/uint32-f-b-array";
 
 export const NetEncoding = {
-    DictEncoded8FBArray,
-    DictEncoded16FBArray,
-    DictEncoded32FBArray,
-    Float32FBArray,
-    Float64FBArray,
-    Int32FBArray,
-    JSONEncodedFBArray,
-    SparseFloat32FBArray,
-    SparseFloat64FBArray,
-    Uint32FBArray
-}
+  DictEncoded8FBArray,
+  DictEncoded16FBArray,
+  DictEncoded32FBArray,
+  Float32FBArray,
+  Float64FBArray,
+  Int32FBArray,
+  JSONEncodedFBArray,
+  SparseFloat32FBArray,
+  SparseFloat64FBArray,
+  Uint32FBArray,
+};

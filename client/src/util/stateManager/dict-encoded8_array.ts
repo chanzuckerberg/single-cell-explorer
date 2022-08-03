@@ -14,13 +14,10 @@ export interface DictEncoded8ArrayProps {
 export class DictEncoded8Array extends Int8Array {
   codeMapping: CodeMapping;
 
-  codes: Int8Array;
-
   constructor(props: DictEncoded8ArrayProps) {
     const { codeMapping: codeMap, array } = props;
     super(array);
     this.codeMapping = codeMap;
-    this.codes = array;
   }
 
   vat = (index: number): string => this.codeMapping[this[index]] ?? "NaN";

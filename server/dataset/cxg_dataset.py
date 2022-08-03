@@ -256,6 +256,7 @@ class CxgDataset(Dataset):
         return ncoord, coordindices
 
     def get_X_array(self, obs_mask=None, var_mask=None, allow_sparse_return=False):
+        # allow_sparse_return = True for /data/var requests to forego densification
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
         if obs_items is None or var_items is None:

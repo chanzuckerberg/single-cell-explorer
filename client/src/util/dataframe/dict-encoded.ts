@@ -15,6 +15,9 @@ export function mapCodesToValues(
   return result;
 }
 
-export function hashMapCodesToValues(column: DictEncodedArray, id: string): string {
+export function hashMapCodesToValues(
+  column: DictEncodedArray,
+  id: string
+): string {
   return `${JSON.stringify(column.codeMapping)}:${id}`;
 }

@@ -58,7 +58,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
     Given a 2D DataFrame, ndarray or sparse equivalent, create and return a Matrix flatbuffer.
 
     :param matrix: 2D DataFrame, ndarray or sparse equivalent
-    :param row_idx: array-like index for col dimension or pandas.Index (not supported)
+    :param row_idx: array-like index for row dimension or pandas.Index (not supported)
     :param col_idx: array-like index for col dimension or pandas.Index
 
     NOTE: row indices are (currently) unsupported and must be None
@@ -149,7 +149,7 @@ def decode_matrix_fbs(fbs):
         columns_data[columns_index[col_idx]] = data
         if len(data) != n_rows:
             raise ValueError("FBS column length does not match number of rows")
-        if col.UType() is TypedFBArray.TypedFBArray.JSONEncodedFBArray:  # and categorical
+        if col.UType() is TypedFBArray.TypedFBArray.JSONEncodedFBArray:
             columns_type[columns_index[col_idx]] = "category"
 
     df = pd.DataFrame.from_dict(data=columns_data).astype(columns_type, copy=False)

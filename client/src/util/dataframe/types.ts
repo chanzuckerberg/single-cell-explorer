@@ -48,17 +48,20 @@ export type CategoricalHistogramBy = Map<DataframeValue, CategoricalHistogram>;
 
 export type DataframeValue = number | string | boolean;
 
-export type DataframeValueArray = DataframeValue[] | TypedArray | DictEncodedArray;
+export type DataframeValueArray =
+  | DataframeValue[]
+  | TypedArray
+  | DictEncodedArray;
 
 export type DataframeColumnGetter = (
   label: LabelType
 ) => DataframeValue | undefined;
 
 /**
- * Interface representing a Dataframe column.  Eg, returned by
+ * Interface representing a numeric Dataframe column.  Eg, returned by
  * Dataframe.col().
  */
-export interface DataframeColumn extends DataframeColumnGetter {
+export interface DataframeNumericColumn extends DataframeColumnGetter {
   /**
    * __id is unique per Dataframe and DataframeColumn, and is used as a memoization key.
    */
@@ -148,10 +151,9 @@ export interface DataframeColumn extends DataframeColumnGetter {
 }
 
 /**
- * Sub-interface representing a Dataframe categorical column.
+ * Sub-interface representing a Dataframe dictionary encoded column.
  */
-
-export interface DataframeCategoricalColumn extends DataframeColumn {
+export interface DataframeDictEncodedColumn extends DataframeNumericColumn {
   codes: DictEncodedArray;
   values: DataframeValueArray;
   codeMapping: CodeMapping;
@@ -162,5 +164,8 @@ export interface DataframeCategoricalColumn extends DataframeColumn {
   getValuesFromCodes: () => DataframeValueArray;
 }
 /**
- * Sub-interface representing a Dataframe sparse column.
+ * Union of numeric and dictionary-encoded column types.
  */
+export type DataframeColumn =
+  | DataframeDictEncodedColumn
+  | DataframeNumericColumn;

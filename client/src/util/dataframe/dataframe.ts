@@ -37,7 +37,6 @@ import {
   LabelArray,
   ContinuousHistogram,
   ContinuousHistogramBy,
-  DataframeCategoricalColumn,
 } from "./types";
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
@@ -224,7 +223,7 @@ class Dataframe {
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
     // (#337): will TS be able to infer the return type based on the existing properties?
-  ): DataframeColumn | DataframeCategoricalColumn {
+  ): DataframeColumn {
     /*
       Each column accessor is a function which will lookup data by
       index (ie, is equivalent to dataframe.get(row, col), where 'col'
@@ -352,7 +351,7 @@ class Dataframe {
       memoHistogramCategoricalBy(get, by);
 
     if (isDictEncoded) {
-      // (#337): these properties belong to DataframeCategoricalColumn
+      // (#337): these properties belong to DataframeDictEncodedColumn
       const columnDictEnc = column as DictEncodedArray;
       get.getValuesFromCodes = () => memoGetValues(columnDictEnc, __id);
       get.codes = column; // currently, an alias for col.asArray();

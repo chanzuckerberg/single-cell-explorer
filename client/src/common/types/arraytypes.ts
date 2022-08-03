@@ -116,13 +116,16 @@ export function isUnsignedIntTypedArray(
 /**
  * Test if the parameter is a categorical typed array
  * @param c - value to be tested
- * @returns - true if `c` is a categorical typed array
+ * @returns - true if `c` is a dictionary encoded array
  */
 export const isDictEncodedTypedArray = (c: unknown): boolean =>
   c instanceof DictEncoded8Array ||
   c instanceof DictEncoded16Array ||
   c instanceof DictEncoded32Array;
-export type DictEncodedArray = DictEncoded8Array | DictEncoded16Array | DictEncoded32Array;
+export type DictEncodedArray =
+  | DictEncoded8Array
+  | DictEncoded16Array
+  | DictEncoded32Array;
 
 /**
  * Test if the paramter is an int TypedArray
