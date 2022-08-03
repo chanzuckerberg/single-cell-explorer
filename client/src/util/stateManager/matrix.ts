@@ -414,7 +414,11 @@ export function matrixFBSToDataframe(
   const columns = fbs
     .map((fb) =>
       fb.columns.map((c) => {
-        if (isTypedArray(c) || isDictEncodedTypedArray(c) || Array.isArray(c))
+        if (
+          isFloatTypedArray(c) ||
+          isDictEncodedTypedArray(c) ||
+          Array.isArray(c)
+        )
           return c;
         return promoteTypedArray(c);
       })
