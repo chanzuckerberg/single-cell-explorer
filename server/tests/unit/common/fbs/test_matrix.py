@@ -50,7 +50,7 @@ class FbsTests(unittest.TestCase):
                 "d": pd.Series(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"], dtype="category"),
             }
         )
-        expected_types = ((np.ndarray, np.float32), (np.ndarray, np.int32), (np.ndarray, np.int32), (list, None))
+        expected_types = ((np.ndarray, np.float32), (np.ndarray, np.int32), (np.ndarray, np.int32), (pd.Categorical, df['d'].dtype))
         fbs = encode_matrix_fbs(matrix=df, row_idx=None, col_idx=df.columns)
         self.fbs_checks(fbs, (10, 4), expected_types, ["a", "b", "c", "d"])
 
@@ -95,7 +95,7 @@ to create the client schema).
 
 The following test cases are all dicts which contain the following keys:
     - dataframe - the dataframe used as input for encode_matrix_fbs
-    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Float32Array)
+    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Float32FBArray)
     - expected_schema_hints - upon success, dict of schema hint
 All are keyed by column name.
 """
@@ -106,7 +106,7 @@ int_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in int_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Int32Array) for dtype in int_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Int32FBArray) for dtype in int_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "int32"}) for dtype in int_dtypes]),
     }
@@ -118,7 +118,7 @@ float_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in float_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Float32Array) for dtype in float_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Float32FBArray) for dtype in float_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "float32"}) for dtype in float_dtypes]),
     }
@@ -130,7 +130,7 @@ bool_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.ones((10,), dtype=dtype) for dtype in bool_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Uint32Array) for dtype in bool_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Uint32FBArray) for dtype in bool_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "boolean"}) for dtype in bool_dtypes]),
     }
@@ -139,38 +139,38 @@ bool_test_cases = [
 cat_test_cases = [
     {
         "dataframe": pd.DataFrame({"a": pd.Series(["a", "b", "c", "a", "b", "c"], dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical", "categories": ["a", "b", "c"]}},
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(["a", "b", "c", "a", "b", "c"], dtype="category").cat.remove_categories("b")}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical", "categories": ["a", "c"]}},
     },
     {
         "dataframe": pd.DataFrame({"a": pd.Series(np.arange(0, 10, dtype=np.int64), dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Int32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(np.arange(0, 10, dtype=np.int64), dtype="category").cat.remove_categories(2)}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
     },
     {
         "dataframe": pd.DataFrame({"a": pd.Series(np.arange(0, 10, dtype=np.float64), dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(np.arange(0, 10, dtype=np.float64), dtype="category").cat.remove_categories(2)}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
     },
 ]
@@ -203,8 +203,8 @@ class TestTypeConversionConsistency(unittest.TestCase):
         columns_length = matrix.ColumnsLength()
         self.assertEqual(columns_length, self.dataframe.shape[1])
 
-        self.assertEqual(matrix.ColIndexType(), fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray)
-        col_labels_arr = fbs.NetEncoding.JSONEncodedArray.JSONEncodedArray()
+        self.assertEqual(matrix.ColIndexType(), fbs.NetEncoding.TypedFBArray.TypedFBArray.JSONEncodedFBArray)
+        col_labels_arr = fbs.NetEncoding.JSONEncodedFBArray.JSONEncodedFBArray()
         col_labels_arr.Init(matrix.ColIndex().Bytes, matrix.ColIndex().Pos)
         col_index_labels = json.loads(col_labels_arr.DataAsNumpy().tobytes().decode("utf-8"))
         self.assertEqual(len(col_index_labels), self.dataframe.shape[1])

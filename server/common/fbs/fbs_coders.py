@@ -64,6 +64,11 @@ def serialize_typed_array(builder, source_array):
         "sparse": {
             np.dtype(np.float64).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat64FBArray),
             np.dtype(np.float32).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
+            # below is to handle cases where integer sparse arrays are encoded - densify in this case.
+            np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+            np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+            np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+            np.dtype(np.int64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
         },
         "category": {
             np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
@@ -114,7 +119,8 @@ class DenseNumericCoder:
         # convert pandas series to numpy array
         if isinstance(array, pd.Series):
             array = array.to_numpy()
-
+        elif sp.issparse(array):
+            array=array.A.flatten()
         # convert to the specified dtype
         if np.dtype(array.dtype).str != dtype:
             array = array.astype(dtype)
@@ -198,9 +204,10 @@ class SparseNumericCoder:
 
 class PolymorphicCoder:
     n_slots = 1
-
+    # dtype is unused here as array is just getting slammed into a JSON
     def encode_array(self, array, builder, dtype=None):
-        # dtype is unused here as array is just getting slammed into a JSON
+        if sp.issparse(array):
+            array=array.A.flatten()
         array = pd.Series(array)
         as_json = array.to_json(orient="records")
         json_array = np.array(bytearray(as_json, "utf-8"))
@@ -214,4 +221,4 @@ class PolymorphicCoder:
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
         narr = arr.DataAsNumpy()
-        return json.loads(narr.tobytes().decode("utf-8"))
+        return np.array(json.loads(narr.tobytes().decode("utf-8")))
