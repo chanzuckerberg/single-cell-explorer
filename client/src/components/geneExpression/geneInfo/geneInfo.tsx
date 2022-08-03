@@ -96,6 +96,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
           left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
         }}
         id="geneinfo_wrapper"
+        data-testid={`${gene}:gene-info`}
       >
         <GeneHeader
           style={{
@@ -103,6 +104,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
             marginLeft: styles.margin.left,
             top: styles.margin.bottom / 2,
           }}
+          data-testid="gene-info-header"
         >
           Gene Info
         </GeneHeader>
@@ -116,6 +118,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
           <Button
             type="button"
             minimal
+            data-testid="min-gene-info"
             onClick={() => {
               dispatch({ type: "minimize/maximize gene info" });
             }}
@@ -200,8 +203,8 @@ class GeneInfo extends React.PureComponent<Props, State> {
                   </span>
                 </WarningBanner>
               ) : null}
-              <GeneSymbol>{gene}</GeneSymbol>
-              <Content>{geneName}</Content>
+              <GeneSymbol data-testid="gene-info-symbol">{gene}</GeneSymbol>
+              <Content data-testid="gene-info-name">{geneName}</Content>
               {geneSummary === "" ? (
                 <Content
                   style={{
@@ -221,6 +224,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
                     WebkitBoxOrient: "vertical",
                     overflow: "hidden",
                   }}
+                  data-testid="gene-info-summary"
                 >
                   {geneSummary}
                 </Content>
@@ -228,11 +232,18 @@ class GeneInfo extends React.PureComponent<Props, State> {
               {synonymList ? (
                 <p>
                   <SynHeader>Synonyms</SynHeader>
-                  <Synonyms>{synonymList}</Synonyms>
+                  <Synonyms data-testid="gene-info-synonyms">
+                    {synonymList}
+                  </Synonyms>
                 </p>
               ) : null}
               {geneUrl !== "" ? (
-                <Link href={geneUrl} target="_blank" rel="noreferrer noopener">
+                <Link
+                  href={geneUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  data-testid="gene-info-link"
+                >
                   View on NCBI
                 </Link>
               ) : null}
