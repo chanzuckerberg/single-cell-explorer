@@ -202,7 +202,6 @@ export class AnnoMatrixRowSubsetView extends AnnoMatrixView {
     if (field === Field.var) {
       return [null, df];
     }
-
     const dfSubset = df.subset(null, null, this.rowIndex);
     const whereCacheUpdate = _whereCacheCreate(
       field,

@@ -35,7 +35,7 @@ class GeneExpression extends React.Component<{}, State> {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
-    
+
     let dfIds;
     const df: Dataframe = await annoMatrix.fetch("var", varIndex);
     this.setState({

@@ -7,7 +7,12 @@ import memoize from "memoize-one";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
-import { Dataframe, DataframeValueArray, LabelType } from "../dataframe";
+import {
+  Dataframe,
+  DataframeColumn,
+  DataframeValueArray,
+  LabelType,
+} from "../dataframe";
 import {
   Field,
   Schema,
@@ -20,6 +25,7 @@ import {
   ConvertedUserColors,
   UserColor,
 } from "../../reducers/colors";
+import { DataframeDictEncodedColumn } from "../dataframe/types";
 
 interface Colors {
   // cell label to color mapping
@@ -120,12 +126,13 @@ function _createColorTable(
     case "color by categorical metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
 
-      const data = colorByData.col(colorByAccessor).asArray();
+      const col = colorByData.col(colorByAccessor);
 
       if (userColors && colorByAccessor in userColors) {
-        return createUserColors(data, colorByAccessor, schema, userColors);
+        return createUserColors(col, colorByAccessor, schema, userColors);
       }
-      return createColorsByCategoricalMetadata(data, colorByAccessor, schema);
+
+      return createColorsByCategoricalMetadata(col, colorByAccessor, schema);
     }
     case "color by continuous metadata": {
       if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
@@ -185,24 +192,44 @@ export function loadUserColorConfig(userColors: {
 }
 
 function _createUserColors(
-  data: DataframeValueArray,
+  col: DataframeColumn,
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
 ) {
+  const data = col.asArray();
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
-  const rgb = createRgbArray(data, colors);
+  let newColors = colors;
+  // (#337): convert the keys in the color dictionary defined by the schema
+  // to their corresponding codes.
+  if (col.isDictEncoded) {
+    newColors = Object.fromEntries(
+      Object.entries(colors).map((row) => [
+        // (#337): I'm not sure how to avoid type casting here.
+        // I thought `isDictEncoded=true` should be a sufficient type guard,
+        // but...
+        (col as DataframeDictEncodedColumn).invCodeMapping[row[0]],
+        row[1],
+      ])
+    );
+  }
+  const rgb = createRgbArray(data, newColors);
 
   // color scale function param is INDEX (offset) into schema categories. It is NOT label value.
   // See createColorsByCategoricalMetadata() for another example.
   // TODO: #35 Use type guards to insure type instead of casting
-  const { categories } = schema.annotations.obsByName[
+  let { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
+  if (col.isDictEncoded) {
+    categories = categories.map(
+      // (#337): not sure how to avoid type casting here.
+      (cat) => (col as DataframeDictEncodedColumn).codeMapping[cat as number]
+    );
+  }
   const categoryMap = new Map();
 
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
-
   const scale = (idx: number) => scaleByLabel(categoryMap.get(idx));
 
   return { rgb, scale };
@@ -214,10 +241,11 @@ interface CategoryColors {
 }
 
 function _createColorsByCategoricalMetadata(
-  data: DataframeValueArray,
+  col: DataframeColumn,
   colorAccessor: LabelType,
   schema: Schema
 ): Colors {
+  const data = col.asArray();
   // TODO: #35 Use type guards to insure type instead of casting
   const { categories } = schema.annotations.obsByName[
     colorAccessor
@@ -232,9 +260,7 @@ function _createColorsByCategoricalMetadata(
     acc[cat as string] = parseRGB(scale(idx));
     return acc;
   }, {});
-
   const rgb = createRgbArray(data, colors);
-
   return { rgb, scale };
 }
 

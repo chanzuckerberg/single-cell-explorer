@@ -4,8 +4,10 @@ import isNumber from "lodash.isnumber";
 import zip from "lodash.zip";
 import _ from "lodash";
 import { flatbuffers } from "flatbuffers";
-import { NetEncoding } from "../../../src/util/stateManager/matrix_generated";
+import { NetEncoding } from "../../../src/util/stateManager/fbs_data_types";
 import { RawSchema } from "../../../src/common/types/schema";
+
+// TODO (alec): PLEASE UPDATE THIS
 
 /*
 test data mocking REST 0.2 API responses.  Used in several tests.

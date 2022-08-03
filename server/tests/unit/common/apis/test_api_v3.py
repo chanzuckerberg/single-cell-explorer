@@ -1,3 +1,4 @@
+from urllib.parse import quote
 import json
 import os
 import time
@@ -16,8 +17,6 @@ from server.common.diffexpdu import DiffExArguments
 
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
-
-from urllib.parse import quote
 
 
 class BaseTest(_BaseTest):
@@ -310,7 +309,7 @@ class EndPoints(BaseTest):
 
         # Content-Length too large
         result = self.client.post(
-            url, content_length=100 * 1024 ** 3, headers={"Content-Type": "application/octet-stream"}
+            url, content_length=100 * 1024**3, headers={"Content-Type": "application/octet-stream"}
         )
         self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
 

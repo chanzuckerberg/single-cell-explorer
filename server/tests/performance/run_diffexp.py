@@ -43,7 +43,7 @@ def main():
     app_config.update_server_config(
         adaptor__cxg_adaptor__tiledb_ctx={
             "sm.tile_cache_size": "60129542144",
-            "py.init_buffer_bytes": str(512 * 1024 ** 2),
+            "py.init_buffer_bytes": str(512 * 1024**2),
             "vfs.s3.region": "us-west-2",
         }
     )

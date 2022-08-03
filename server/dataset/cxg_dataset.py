@@ -18,6 +18,7 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
+from scipy import sparse
 
 
 class CxgDataset(Dataset):
@@ -254,7 +255,8 @@ class CxgDataset(Dataset):
         coordindices = mapindex[coord_data]
         return ncoord, coordindices
 
-    def get_X_array(self, obs_mask=None, var_mask=None):
+    def get_X_array(self, obs_mask=None, var_mask=None, allow_sparse_return=False):
+        # allow_sparse_return = True for /data/var requests to forego densification
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
         if obs_items is None or var_items is None:
@@ -271,11 +273,15 @@ class CxgDataset(Dataset):
 
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
-            densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
-            densedata[obsindices, varindices] = data[""]
-
-            return densedata
-
+            if allow_sparse_return and obsindices.size / nrows <= 0.5:
+                data = data[""]
+                x = obsindices
+                y = varindices
+                return sparse.coo_matrix((data, (x, y)), shape=(nrows, ncols))
+            else:
+                densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
+                densedata[obsindices, varindices] = data[""]
+                return densedata
         else:
             data = X.multi_index[obs_items, var_items][""]
             return data
@@ -403,7 +409,14 @@ class CxgDataset(Dataset):
                 else:
                     data = A.query(attrs=fields)[:]
 
+                categorical_dtypes = []
+                for c in self.get_schema()["annotations"]["obs"]["columns"]:
+                    if c["name"] in fields and c["type"] == "categorical":
+                        categorical_dtypes.append(c["name"])
+
                 df = pd.DataFrame.from_dict(data)
+                for name in categorical_dtypes:
+                    df[name] = pd.Categorical(df[name])
 
                 if fields:
                     df = df[fields]

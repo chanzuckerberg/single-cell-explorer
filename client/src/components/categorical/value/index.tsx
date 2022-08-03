@@ -37,10 +37,11 @@ const STACKED_BAR_WIDTH = 100;
 /* this is defined outside of the class so we can use it in connect() */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function _currentLabelAsString(ownProps: any) {
-  const { label } = ownProps;
+  // (#337): `label` is now the code and `labelName` is the value.
+  const { labelName } = ownProps;
   // when called as a function, the String() constructor performs type conversion,
   // and returns a primitive string.
-  return String(label);
+  return String(labelName);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -69,21 +70,27 @@ type CategoryValueProps = PureCategoryValueProps & {
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect(((state: RootState, ownProps: PureCategoryValueProps) => {
   const { pointDilation, categoricalSelection } = state;
-  const { metadataField, categorySummary, categoryIndex } = ownProps;
+  const { metadataField, categorySummary, categoryIndex, categoryData } =
+    ownProps;
   const isDilated =
     pointDilation.metadataField === metadataField &&
     pointDilation.categoryField === _currentLabelAsString(ownProps);
 
   const category = categoricalSelection[metadataField];
   const label = categorySummary.categoryValues[categoryIndex];
-  const isSelected = category.get(label) ?? true;
+  const col = categoryData.icol(0);
+  const labelName = col.isDictEncoded
+    ? col.codeMapping[parseInt(label, 10)]
+    : label;
 
+  const isSelected = category.get(label) ?? true;
   return {
     annotations: state.annotations,
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
     label,
+    labelName,
   };
 }) as any)
 // TODO: type categorySummary

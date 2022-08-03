@@ -4,12 +4,19 @@ import {
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
+  DictEncodedArray,
+  isDictEncodedTypedArray,
 } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
 import {
   summarizeContinuous as _summarizeContinuous,
   summarizeCategorical as _summarizeCategorical,
 } from "./summarize";
+import {
+  mapCodesToValues as _mapCodesToValues,
+  hashMapCodesToValues,
+} from "./dict-encoded";
+
 import {
   histogramCategorical as _histogramCategorical,
   histogramCategoricalBy as _histogramCategoricalBy,
@@ -31,7 +38,6 @@ import {
   ContinuousHistogram,
   ContinuousHistogramBy,
 } from "./types";
-
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
 but (currently) without all of the surrounding support functions.
@@ -101,7 +107,6 @@ export type MapColumnsCallbackFn = (
 function raiseIsNotContinuous<R = void>(): R {
   throw TypeError("Column is not a continuous data type.");
 }
-
 class Dataframe {
   /** @internal */
   private __columns: DataframeValueArray[];
@@ -155,6 +160,7 @@ class Dataframe {
     if (!colIndex) {
       colIndex = new IdentityInt32Index(nCols);
     }
+
     Dataframe.__errorChecks(dims, columnarData, rowIndex, colIndex);
 
     this.__columns = Array.from(columnarData);
@@ -163,7 +169,6 @@ class Dataframe {
     this.rowIndex = rowIndex;
     this.colIndex = colIndex;
     this.__id = __getMemoId();
-
     this.__compile(__columnsAccessor);
     Object.freeze(this);
   }
@@ -217,6 +222,7 @@ class Dataframe {
     column: DataframeValueArray,
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
+    // (#337): will TS be able to infer the return type based on the existing properties?
   ): DataframeColumn {
     /*
       Each column accessor is a function which will lookup data by
@@ -251,6 +257,9 @@ class Dataframe {
     const { length } = column;
     const __id = __getMemoId();
     const isContinuous = isTypedArray(column);
+    const isDictEncoded = isDictEncodedTypedArray(column);
+
+    const memoGetValues = memoize(_mapCodesToValues, hashMapCodesToValues);
     const memoHistogramContinuous = memoize(
       _histogramContinuous,
       hashContinuous
@@ -341,14 +350,29 @@ class Dataframe {
     get.histogramCategoricalBy = (by: DataframeColumn) =>
       memoHistogramCategoricalBy(get, by);
 
+    if (isDictEncoded) {
+      // (#337): these properties belong to DataframeDictEncodedColumn
+      const columnDictEnc = column as DictEncodedArray;
+      get.getValuesFromCodes = () => memoGetValues(columnDictEnc, __id);
+      get.codes = column; // currently, an alias for col.asArray();
+      get.values = get.getValuesFromCodes();
+      get.codeMapping = columnDictEnc.codeMapping;
+      get.invCodeMapping = Object.fromEntries(
+        Object.entries(columnDictEnc.codeMapping).map((row) => [
+          row[1],
+          parseInt(row[0], 10),
+        ])
+      );
+    }
+
     get.asArray = asArray;
     get.has = has;
     get.ihas = ihas;
     get.indexOf = _indexOf;
     get.iget = iget;
     get.__id = __id;
+    get.isDictEncoded = isDictEncoded;
     get.isContinuous = isContinuous;
-
     Object.freeze(get);
     return get;
   }
@@ -596,7 +620,10 @@ class Dataframe {
     );
   }
 
-  replaceColData(label: LabelType, newColData: DataframeValueArray): Dataframe {
+  replaceColData(
+    label: LabelType,
+    newColData: DataframeValueArray // accepts exact same data structure as array in constructor add another type
+  ): Dataframe {
     /*
     Accelerator for dropping a column then adding it again with same
     label and different values.
@@ -674,8 +701,15 @@ class Dataframe {
         >)(rowOffsets.length);
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
           const rowOffset = rowOffsets[i];
+
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
           newCol[i] = col[rowOffset];
+        }
+        if (isDictEncodedTypedArray(col)) {
+          // (#337): not sure how to avoid type casting here...
+          (newCol as DictEncodedArray).setCodeMapping(
+            (col as DictEncodedArray).codeMapping
+          );
         }
         return newCol;
       });
@@ -706,6 +740,7 @@ class Dataframe {
     If withRowIndex is specified, rowLabels is ignored.
     */
     let rowIndex = null;
+
     if (withRowIndex) {
       rowIndex = withRowIndex;
     } else if (rowLabels) {

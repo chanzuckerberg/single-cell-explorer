@@ -96,7 +96,6 @@ class DiffExpTest(unittest.TestCase):
         results = diffexp_ttest(adaptor, maskA.nonzero()[0], maskB.nonzero()[0], 10, selector_lists=True)
         self.check_1_10_2_10(results)
 
-
     def test_cxg_sparse(self):
         adaptor_sparse = self.load_dataset(
             f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg",
