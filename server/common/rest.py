@@ -231,8 +231,7 @@ def gene_info_get(request):
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(
-            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}",
-            headers=headers
+            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}", headers=headers
         )
         if response.status_code == 200:
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
@@ -281,7 +280,7 @@ def diffexp_obs_post(request, data_adaptor):
 
 
 def diffex_binary_post(request, data_adaptor):
-    MAX_CONTENT_LENGTH = 100 * 1024 ** 2  # perhaps a config variable would be suitable?
+    MAX_CONTENT_LENGTH = 100 * 1024**2  # perhaps a config variable would be suitable?
     if not data_adaptor.dataset_config.diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     if not request.content_type or "application/octet-stream" not in request.content_type:

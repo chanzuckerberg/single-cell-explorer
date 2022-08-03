@@ -144,6 +144,7 @@ interface GeneInfoAPI {
   name: string;
   synonyms: string[];
   summary: string;
+  is_ensembl_id_result: boolean;
 }
 /**
  * Fetch gene summary information
