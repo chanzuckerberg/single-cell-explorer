@@ -167,7 +167,7 @@ export default class CentroidLabels extends PureComponent {
                 displayLabel = (categoryColumn as DataframeDictEncodedColumn)
                   .codeMapping[parseInt(displayLabel, 10)];
               }
-              console.log(displayLabel);
+              const fullDisplayLabel = displayLabel;
               if (displayLabel.length > categoryLabelDisplayStringLongLength) {
                 displayLabel = `${displayLabel.slice(
                   0,
@@ -176,7 +176,6 @@ export default class CentroidLabels extends PureComponent {
                   -categoryLabelDisplayStringLongLength / 2
                 )}`;
               }
-              console.log(displayLabel);
               labelSVGS.push(
                 // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events -- the mouse actions for centroid labels do not have a screen reader alternative
                 <Label
@@ -188,6 +187,7 @@ export default class CentroidLabels extends PureComponent {
                   opactity={selected ? 1 : deselectOpacity}
                   colorAccessor={colorAccessor}
                   displayLabel={displayLabel}
+                  fullDisplayLabel={fullDisplayLabel} // not truncated, used for tests.
                   onMouseEnter={this.handleMouseEnter}
                   onMouseOut={this.handleMouseOut}
                 />
@@ -209,6 +209,7 @@ const Label = ({
   opacity,
   colorAccessor,
   displayLabel,
+  fullDisplayLabel,
   onMouseEnter,
   onMouseOut, // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 }: any) => {
@@ -228,7 +229,7 @@ const Label = ({
       className="centroid-label"
       transform={`translate(${coords[0]}, ${coords[1]})`}
       data-testclass="centroid-label"
-      data-testid={`${label}-centroid-label`}
+      data-testid={`${fullDisplayLabel}-centroid-label`}
     >
       {/* eslint-disable-next-line jsx-a11y/mouse-events-have-key-events --- the mouse actions for centroid labels do not have a screen reader alternative*/}
       <text
