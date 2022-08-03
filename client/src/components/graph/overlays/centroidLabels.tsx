@@ -5,6 +5,7 @@ import Async from "react-async";
 import { categoryLabelDisplayStringLongLength } from "../../../globals";
 import calcCentroid from "../../../util/centroid";
 import { createColorQuery } from "../../../util/stateManager/colorHelpers";
+import { DataframeDictEncodedColumn } from "../../../util/dataframe/types";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -56,10 +57,12 @@ export default class CentroidLabels extends PureComponent {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'overlaySetShowing' does not exist on typ... Remove this comment to see the full error message
     const { overlaySetShowing } = this.props;
     overlaySetShowing("centroidLabels", showLabels && labels.size > 0);
+
     return {
       labels,
       colorAccessor,
       category: categoricalSelection[colorAccessor],
+      categoryColumn: colorDf.col(colorAccessor),
     };
   };
 
@@ -148,21 +151,32 @@ export default class CentroidLabels extends PureComponent {
         <Async.Fulfilled>
           {(asyncProps) => {
             if (!showLabels) return null;
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
             const labelSVGS: any = [];
             const deselectOpacity = 0.375;
             // @ts-expect-error ts-migrate(2339) FIXME: Property 'category' does not exist on type 'unknow... Remove this comment to see the full error message
-            const { category, colorAccessor, labels } = asyncProps;
+            const { category, colorAccessor, labels, categoryColumn } =
+              asyncProps;
             labels.forEach((coords: [number, number], label: string) => {
               const selected = category.get(label) ?? true;
               // Mirror LSB middle truncation
+
               let displayLabel = label;
+              if (categoryColumn.isDictEncoded) {
+                displayLabel = (categoryColumn as DataframeDictEncodedColumn)
+                  .codeMapping[parseInt(displayLabel, 10)];
+              }
+              console.log(displayLabel);
               if (displayLabel.length > categoryLabelDisplayStringLongLength) {
-                displayLabel = `${label.slice(
+                displayLabel = `${displayLabel.slice(
                   0,
                   categoryLabelDisplayStringLongLength / 2
-                )}…${label.slice(-categoryLabelDisplayStringLongLength / 2)}`;
+                )}…${displayLabel.slice(
+                  -categoryLabelDisplayStringLongLength / 2
+                )}`;
               }
+              console.log(displayLabel);
               labelSVGS.push(
                 // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events -- the mouse actions for centroid labels do not have a screen reader alternative
                 <Label
