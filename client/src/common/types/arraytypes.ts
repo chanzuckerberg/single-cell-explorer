@@ -56,6 +56,9 @@ export interface GenericArrayConstructor<T> {
         typeof Uint32Array &
         typeof Float32Array &
         typeof Float64Array &
+        typeof DictEncoded8Array &
+        typeof DictEncoded16Array &
+        typeof DictEncoded32Array &
         typeof Array &
         T
     >

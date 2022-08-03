@@ -7,18 +7,17 @@
  */
 import { CodeMapping } from "./code_mapping_interfaces";
 
-export interface DictEncoded16ArrayProps {
-  codeMapping: CodeMapping;
-  array: Int16Array;
-}
 export class DictEncoded16Array extends Int16Array {
   codeMapping: CodeMapping;
 
-  constructor(props: DictEncoded16ArrayProps) {
-    const { codeMapping: codeMap, array } = props;
-    super(array);
-    this.codeMapping = codeMap;
+  constructor(props: ArrayBufferLike) {
+    super(props);
+    this.codeMapping = {};
   }
 
-  vat = (index: number): string => this.codeMapping[this[index]] ?? "NaN";
+  setCodeMapping = (codeMap: CodeMapping) => {
+    this.codeMapping = codeMap;
+  };
+
+  vat = (index: number): string => this.codeMapping?.[this[index]] ?? "NaN";
 }

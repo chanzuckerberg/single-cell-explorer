@@ -45,20 +45,14 @@ function decodeCatArray(
 
   let data: DictEncodedArray;
   if (uType === TypedFBArray.DictEncoded8FBArray) {
-    data = new DictEncoded8Array({
-      array: codesArray,
-      codeMapping: codesToValues,
-    });
+    data = new DictEncoded8Array(codesArray);
+    data.setCodeMapping(codesToValues);
   } else if (uType === TypedFBArray.DictEncoded16FBArray) {
-    data = new DictEncoded16Array({
-      array: codesArray,
-      codeMapping: codesToValues,
-    });
+    data = new DictEncoded16Array(codesArray);
+    data.setCodeMapping(codesToValues);
   } else {
-    data = new DictEncoded32Array({
-      array: codesArray,
-      codeMapping: codesToValues,
-    });
+    data = new DictEncoded32Array(codesArray);
+    data.setCodeMapping(codesToValues);
   }
   return data;
 }

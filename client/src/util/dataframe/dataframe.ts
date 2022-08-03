@@ -701,8 +701,15 @@ class Dataframe {
         >)(rowOffsets.length);
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
           const rowOffset = rowOffsets[i];
+
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
           newCol[i] = col[rowOffset];
+        }
+        if (isDictEncodedTypedArray(col)) {
+          // (#337): not sure how to avoid type casting here...
+          (newCol as DictEncodedArray).setCodeMapping(
+            (col as DictEncodedArray).codeMapping
+          );
         }
         return newCol;
       });
@@ -733,6 +740,7 @@ class Dataframe {
     If withRowIndex is specified, rowLabels is ignored.
     */
     let rowIndex = null;
+
     if (withRowIndex) {
       rowIndex = withRowIndex;
     } else if (rowLabels) {
