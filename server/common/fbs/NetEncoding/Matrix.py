@@ -48,7 +48,7 @@ class Matrix(object):
             x = self._tab.Vector(o)
             x += flatbuffers.number_types.UOffsetTFlags.py_type(j) * 4
             x = self._tab.Indirect(x)
-            from NetEncoding.Column import Column
+            from server.common.fbs.NetEncoding.Column import Column
 
             obj = Column()
             obj.Init(self._tab.Bytes, x)

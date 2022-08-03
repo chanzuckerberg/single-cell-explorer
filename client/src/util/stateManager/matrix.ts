@@ -83,10 +83,12 @@ function decodeSparseArray(
   const dataArray = arr.dataArray();
   const rowsArray = arr.rowsArray();
   const size = arr.size();
+  console.log(new Date().getTime());
   const denseArray = new dataArray.constructor(size);
   for (let i = 0, nrows = rowsArray.length; i < nrows; i += 1) {
     denseArray[rowsArray[i]] = dataArray[i];
   }
+  console.log(new Date().getTime());
   return denseArray;
 }
 
