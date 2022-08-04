@@ -52,6 +52,8 @@ type State = any;
   const {
     scatterplotXXaccessor,
     scatterplotYYaccessor,
+    scatterplotIsMinimized,
+    scatterplotLevel,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   } = (state as any).controls;
 
@@ -65,6 +67,8 @@ type State = any;
     // Accessors are var/gene names (strings)
     scatterplotXXaccessor,
     scatterplotYYaccessor,
+    scatterplotIsMinimized,
+    scatterplotLevel,
     crossfilter,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     genesets: (state as any).genesets.genesets,
@@ -205,14 +209,15 @@ class Scatterplot extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
+
     const viewport = this.getViewportDimensions();
     this.axes = false;
     this.reglCanvas = null;
     this.renderCache = null;
+
     this.state = {
       regl: null,
       drawPoints: null,
-      minimized: null,
       viewport,
       projectionTF: createProjectionTF(width, height),
     };
@@ -479,15 +484,23 @@ class Scatterplot extends React.PureComponent<{}, State> {
       crossfilter,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'pointDilation' does not exist on type 'R... Remove this comment to see the full error message
       pointDilation,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'scatterplotIsMinimized' does not exist on type 'R... Remove this comment to see the full error message
+      scatterplotIsMinimized,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneIsMinimized' does not exist on type 'R... Remove this comment to see the full error message
+      scatterplotLevel,
     } = this.props;
-    const { minimized, regl, viewport } = this.state;
-    const bottomToolbarGutter = 48; // gutter for bottom tool bar
+    const { regl, viewport } = this.state;
+    const level = scatterplotLevel;
+    const minimized = scatterplotIsMinimized;
 
     return (
       <div
         style={{
           position: "fixed",
-          bottom: bottomToolbarGutter,
+          bottom:
+            level === "top"
+              ? globals.bottomToolbarGutter * 2
+              : globals.bottomToolbarGutter,
           borderRadius: "3px 3px 0px 0px",
           left: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
           padding: "0px 20px 20px 0px",
@@ -509,7 +522,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
             type="button"
             minimal
             onClick={() => {
-              this.setState({ minimized: !minimized });
+              dispatch({ type: "minimize/maximize scatterplot" });
             }}
           >
             {minimized ? "show scatterplot" : "hide"}
@@ -544,8 +557,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
             style={{
               marginLeft: margin.left,
               marginTop: margin.top,
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '"none" | null' is not assignable to type 'Di... Remove this comment to see the full error message
-              display: minimized ? "none" : null,
+              display: minimized ? "none" : undefined,
             }}
             ref={this.setReglCanvas}
           />
@@ -677,8 +689,7 @@ const ScatterplotAxis = React.memo(
         height={height + margin.top + margin.bottom}
         data-testid="scatterplot-svg"
         style={{
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '"none" | null' is not assignable to type 'Di... Remove this comment to see the full error message
-          display: minimized ? "none" : null,
+          display: minimized ? "none" : undefined,
         }}
       >
         <g ref={svgRef} transform={`translate(${margin.left},${margin.top})`} />
