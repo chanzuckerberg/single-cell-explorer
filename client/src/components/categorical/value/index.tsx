@@ -30,6 +30,7 @@ import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
 import { RootState } from "../../../reducers";
 import { Schema } from "../../../common/types/schema";
+import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -79,7 +80,7 @@ type CategoryValueProps = PureCategoryValueProps & {
   const category = categoricalSelection[metadataField];
   const label = categorySummary.categoryValues[categoryIndex];
   const col = categoryData.icol(0);
-  const labelName = col.isDictEncoded
+  const labelName = isDataframeDictEncodedColumn(col)
     ? col.codeMapping[parseInt(label, 10)]
     : label;
 

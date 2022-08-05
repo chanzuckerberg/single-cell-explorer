@@ -74,11 +74,6 @@ export interface DataframeNumericColumn extends DataframeColumnGetter {
   isContinuous: boolean;
 
   /**
-   * Boolean indicating if the underlying data is dictionary-encoded.
-   */
-  isDictEncoded: boolean;
-
-  /**
    * Return underlying column data as an array-like object.
    */
   asArray: () => DataframeValueArray;
@@ -163,6 +158,13 @@ export interface DataframeDictEncodedColumn extends DataframeNumericColumn {
    */
   getValuesFromCodes: () => DataframeValueArray;
 }
+
+/**
+ * Type guard for DataframeDictEncodedColumn
+ */
+export const isDataframeDictEncodedColumn = (
+  col: DataframeColumn
+): col is DataframeDictEncodedColumn => "codes" in col && "codeMappping" in col;
 /**
  * Union of numeric and dictionary-encoded column types.
  */

@@ -121,10 +121,11 @@ export function isUnsignedIntTypedArray(
  * @param c - value to be tested
  * @returns - true if `c` is a dictionary encoded array
  */
-export const isDictEncodedTypedArray = (c: unknown): boolean =>
+export const isDictEncodedTypedArray = (c: unknown): c is DictEncodedArray =>
   c instanceof DictEncoded8Array ||
   c instanceof DictEncoded16Array ||
   c instanceof DictEncoded32Array;
+
 export type DictEncodedArray =
   | DictEncoded8Array
   | DictEncoded16Array

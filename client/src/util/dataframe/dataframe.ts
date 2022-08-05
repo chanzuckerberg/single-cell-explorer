@@ -37,6 +37,7 @@ import {
   LabelArray,
   ContinuousHistogram,
   ContinuousHistogramBy,
+  DataframeDictEncodedColumn,
 } from "./types";
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
@@ -364,14 +365,12 @@ class Dataframe {
         ])
       );
     }
-
     get.asArray = asArray;
     get.has = has;
     get.ihas = ihas;
     get.indexOf = _indexOf;
     get.iget = iget;
     get.__id = __id;
-    get.isDictEncoded = isDictEncoded;
     get.isContinuous = isContinuous;
     Object.freeze(get);
     return get;
@@ -705,11 +704,8 @@ class Dataframe {
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
           newCol[i] = col[rowOffset];
         }
-        if (isDictEncodedTypedArray(col)) {
-          // (#337): not sure how to avoid type casting here...
-          (newCol as DictEncodedArray).setCodeMapping(
-            (col as DictEncodedArray).codeMapping
-          );
+        if (isDictEncodedTypedArray(col) && isDictEncodedTypedArray(newCol)) {
+          newCol.setCodeMapping(col.codeMapping);
         }
         return newCol;
       });

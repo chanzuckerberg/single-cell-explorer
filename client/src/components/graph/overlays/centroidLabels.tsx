@@ -5,7 +5,10 @@ import Async from "react-async";
 import { categoryLabelDisplayStringLongLength } from "../../../globals";
 import calcCentroid from "../../../util/centroid";
 import { createColorQuery } from "../../../util/stateManager/colorHelpers";
-import { DataframeDictEncodedColumn } from "../../../util/dataframe/types";
+import {
+  DataframeDictEncodedColumn,
+  isDataframeDictEncodedColumn,
+} from "../../../util/dataframe/types";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
@@ -163,7 +166,7 @@ export default class CentroidLabels extends PureComponent {
               // Mirror LSB middle truncation
 
               let displayLabel = label;
-              if (categoryColumn.isDictEncoded) {
+              if (isDataframeDictEncodedColumn(categoryColumn)) {
                 displayLabel = (categoryColumn as DataframeDictEncodedColumn)
                   .codeMapping[parseInt(displayLabel, 10)];
               }

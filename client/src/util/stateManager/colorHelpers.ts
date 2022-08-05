@@ -25,7 +25,10 @@ import {
   ConvertedUserColors,
   UserColor,
 } from "../../reducers/colors";
-import { DataframeDictEncodedColumn } from "../dataframe/types";
+import {
+  DataframeDictEncodedColumn,
+  isDataframeDictEncodedColumn,
+} from "../dataframe/types";
 
 interface Colors {
   // cell label to color mapping
@@ -202,15 +205,9 @@ function _createUserColors(
   let newColors = colors;
   // (#337): convert the keys in the color dictionary defined by the schema
   // to their corresponding codes.
-  if (col.isDictEncoded) {
+  if (isDataframeDictEncodedColumn(col)) {
     newColors = Object.fromEntries(
-      Object.entries(colors).map((row) => [
-        // (#337): I'm not sure how to avoid type casting here.
-        // I thought `isDictEncoded=true` should be a sufficient type guard,
-        // but...
-        (col as DataframeDictEncodedColumn).invCodeMapping[row[0]],
-        row[1],
-      ])
+      Object.entries(colors).map((row) => [col.invCodeMapping[row[0]], row[1]])
     );
   }
   const rgb = createRgbArray(data, newColors);
@@ -221,11 +218,8 @@ function _createUserColors(
   let { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
-  if (col.isDictEncoded) {
-    categories = categories.map(
-      // (#337): not sure how to avoid type casting here.
-      (cat) => (col as DataframeDictEncodedColumn).codeMapping[cat as number]
-    );
+  if (isDataframeDictEncodedColumn(col)) {
+    categories = categories.map((cat) => col.codeMapping[cat as number]);
   }
   const categoryMap = new Map();
 
