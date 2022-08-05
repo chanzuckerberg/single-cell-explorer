@@ -35,7 +35,7 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
           <MenuItem
             icon={<Icon icon={CXGIconNames.ABOUT} />}
             popoverProps={{ openOnTargetFocus: false }}
-            text="About CellxGene"
+            text="About CZ CELLxGENE"
           >
             {tosURL && (
               <MenuItem

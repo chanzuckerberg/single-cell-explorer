@@ -53,7 +53,7 @@ class App extends React.Component<Props> {
         <StylesProvider injectFirst>
           <EmotionThemeProvider theme={theme}>
             <ThemeProvider theme={theme}>
-              <Helmet title="cellxgene" />
+              <Helmet title="CELLxGENE | Explorer" />
               {loading ? <LayoutSkeleton /> : null}
               {error ? (
                 <div
