@@ -5,6 +5,9 @@ server:
     debug: true
     verbose: true
 
+  gene_info:
+    api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"
+
 dataset:
   presentation:
     max_categories: 1000

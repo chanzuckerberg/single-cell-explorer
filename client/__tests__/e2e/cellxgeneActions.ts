@@ -235,12 +235,31 @@ export async function assertColorLegendLabel(label: any) {
 
   return expect(result).toBe(label);
 }
+export async function addGeneToSetAndExpand(
+  genesetName: string,
+  geneSymbol: string
+): Promise<void> {
+  /**
+   * this is an awful hack but for some reason, the add gene to set
+   * doesn't work each time. must repeat to get it to trigger.
+   * */
+  let z = 0;
+  while (z < 10) {
+    await addGeneToSet(genesetName, geneSymbol);
+    await expandGeneset(genesetName);
+    try {
+      await waitByClass("geneset-expand-is-expanded");
+      break;
+    } catch (TimeoutError) {
+      z += 1;
+      console.log(`trying again - ${z}`);
+    }
+  }
+}
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-export async function expandGeneset(genesetName: any) {
+export async function expandGeneset(genesetName: string): Promise<void> {
   const expand = await waitByID(`${genesetName}:geneset-expand`);
-  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  const notExpanded = await expand.$(
+  const notExpanded = await expand?.$(
     "[data-testclass='geneset-expand-is-not-expanded']"
   );
   if (notExpanded) await clickOn(`${genesetName}:geneset-expand`);
@@ -251,10 +270,9 @@ export async function createGeneset(genesetName: any) {
   await clickOnUntil("open-create-geneset-dialog", async () => {
     await expect(page).toMatchElement(getTestId("create-geneset-input"));
   });
-
   await typeInto("create-geneset-input", genesetName);
+  // await typeInto("add-genes", "SIK1");
   await clickOn("submit-geneset");
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -280,7 +298,6 @@ export async function deleteGeneset(genesetName: any) {
   await clickOn(targetId);
 
   await assertGenesetDoesNotExist(genesetName);
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -311,8 +328,10 @@ export async function assertGenesetExists(genesetName: any) {
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function addGeneToSet(genesetName: any, geneToAddToSet: any) {
   const submitButton = `${genesetName}:submit-gene`;
-
-  await clickOn(`${genesetName}:add-new-gene-to-geneset`);
+  await clickOnUntil(`${genesetName}:add-new-gene-to-geneset`, async () => {
+    await expect(page).toMatchElement(getTestId("add-genes"));
+  });
+  assert(await isElementPresent(getTestId("add-genes"), {}));
   await typeInto("add-genes", geneToAddToSet);
   await clickOn(submitButton);
 }
@@ -322,8 +341,6 @@ export async function removeGene(geneSymbol: any) {
   const targetId = `delete-from-geneset:${geneSymbol}`;
 
   await clickOn(targetId);
-
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -346,9 +363,85 @@ export async function assertGeneDoesNotExist(geneSymbol: any) {
   await expect(result).toBe(false);
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-export async function expandGene(geneSymbol: any) {
+export async function expandGene(geneSymbol: string): Promise<void> {
   await clickOn(`maximize-${geneSymbol}`);
+}
+
+export async function requestGeneInfo(gene: string): Promise<void> {
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const result = await isElementPresent(getTestId(`get-info-${gene}`));
+  await expect(result).toBe(true);
+  await clickOn(`get-info-${gene}`);
+  await waitByID(`${gene}:gene-info`);
+}
+
+export async function assertGeneInfoCardExists(gene: string): Promise<void> {
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const wrapperExists = await isElementPresent(getTestId(`${gene}:gene-info`));
+  await expect(wrapperExists).toBe(true);
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const headerExists = await isElementPresent(getTestId("gene-info-header"));
+  await expect(headerExists).toBe(true);
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const buttonExists = await isElementPresent(getTestId("min-gene-info"));
+  await expect(buttonExists).toBe(true);
+
+  await waitByID("gene-info-symbol");
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const symbolExists = await isElementPresent(getTestId("gene-info-symbol"));
+  await expect(symbolExists).toBe(true);
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const summaryExists = await isElementPresent(getTestId("gene-info-summary"));
+  await expect(summaryExists).toBe(true);
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const synonymsExists = await isElementPresent(
+    getTestId("gene-info-synonyms")
+  );
+  await expect(synonymsExists).toBe(true);
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const linkExists = await isElementPresent(getTestId("gene-info-link"));
+  await expect(linkExists).toBe(true);
+}
+
+export async function minimizeGeneInfo(): Promise<void> {
+  await clickOn("min-gene-info");
+}
+
+export async function assertGeneInfoCardIsMinimized(
+  gene: string
+): Promise<void> {
+  const testIds = [
+    `${gene}:gene-info`,
+    "gene-info-header",
+    "min-gene-info",
+    "clear-gene-info",
+  ];
+  for (const id of testIds) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+    const result = await isElementPresent(getTestId(id));
+    await expect(result).toBe(true);
+  }
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  const result = await isElementPresent(getTestId("gene-info-symbol"));
+  await expect(result).toBe(false);
+}
+
+export async function removeGeneInfo(): Promise<void> {
+  await clickOn("clear-gene-info");
+}
+
+export async function assertGeneInfoDoesNotExist(gene: string): Promise<void> {
+  const testIds = [
+    `${gene}:gene-info`,
+    "gene-info-header",
+    "min-gene-info",
+    "clear-gene-info",
+  ];
+  for (const id of testIds) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+    const result = await isElementPresent(getTestId(id));
+    await expect(result).toBe(false);
+  }
 }
 
 /**
@@ -378,8 +471,6 @@ export async function duplicateCategory(categoryName: any) {
       getTestId(`${categoryName}:category-expand`)
     );
   });
-
-  await waitByClass("autosave-complete");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

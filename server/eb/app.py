@@ -1,24 +1,37 @@
-import sys
-import os
-import hashlib
 import base64
-from urllib.parse import urlparse
-from flask import json
+import hashlib
 import logging
-from flask_talisman import Talisman
-from flask_cors import CORS
+import os
+import sys
 
-if os.path.isdir("/opt/python/log"):
-    # This is the standard location where Amazon EC2 instances store the application logs.
-    logging.basicConfig(
-        filename="/opt/python/log/app.log",
-        level=logging.INFO,
-        format="%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+from flask import json
+from flask_cors import CORS
+from flask_talisman import Talisman
+from logging.config import dictConfig
+from urllib.parse import urlparse
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
+
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+            }
+        },
+        "handlers": {
+            "wsgi": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://flask.logging.wsgi_errors_stream",
+                "formatter": "default",
+            }
+        },
+        "root": {"level": "INFO", "handlers": ["wsgi"]},
+    }
+)
 
 try:
     from server.common.config.app_config import AppConfig
