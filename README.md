@@ -18,7 +18,7 @@ Whether you need to visualize one thousand cells or one million, CELLxGENE Explo
 
 ### Supported browsers
 
-CELLxGENE Explorer currently supports the following browsers:
+CZ CELLxGENE Explorer currently supports the following browsers:
 
 - Google Chrome 61+
 - Edge 15+
