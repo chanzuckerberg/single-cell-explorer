@@ -103,6 +103,34 @@ export async function clickOnUntil(testId: any, assert: any) {
   }
 }
 
+export async function tryUntil(
+  assert: () => void,
+  maxRetry = 50
+): Promise<void> {
+  const WAIT_FOR_MS = 200;
+
+  let retry = 0;
+
+  let savedError: Error = new Error();
+
+  while (retry < maxRetry) {
+    try {
+      await assert();
+
+      break;
+    } catch (error) {
+      retry += 1;
+      savedError = error as Error;
+      await page.waitForTimeout(WAIT_FOR_MS);
+    }
+  }
+
+  if (retry === maxRetry) {
+    savedError.message += " tryUntil() failed";
+    throw savedError;
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function getOneElementInnerHTML(selector: any, options = {}) {
   await page.waitForSelector(selector, options);
