@@ -18,6 +18,7 @@ import {
   clickOnUntil,
   getOneElementInnerHTML,
   getElementCoordinates,
+  tryUntil,
 } from "./puppeteerUtils";
 
 import {
@@ -510,6 +511,15 @@ describe.each([
       {},
       getTestClass("gene-loading-spinner")
     );
+
+    // (thuang): Assumes Pop2 geneset has NKG7 gene
+    await tryUntil(async () => {
+      const geneset = await page.$(getTestClass("geneset"));
+      expect(geneset).toBeTruthy();
+
+      const NKG7 = await page.$(getTestId("NKG7:gene-label"));
+      expect(NKG7).toBeTruthy();
+    });
 
     genesHTML = await getOneElementInnerHTML(getTestClass("gene-set-genes"));
 
