@@ -5,6 +5,7 @@
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 
+import { Classes } from "@blueprintjs/core";
 import { appUrlBase, DATASET } from "./config";
 
 import {
@@ -53,6 +54,8 @@ import {
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
+
+const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
 
 // geneset CRUD
 const genesetToDeleteName = "geneset_to_delete";
@@ -489,12 +492,7 @@ describe.each([
     await waitByClass("pop-1-geneset-expand");
     await expect(page).toClick(getTestClass("pop-1-geneset-expand"));
 
-    await page.waitForFunction(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (selector: any) => !document.querySelector(selector),
-      {},
-      getTestClass("gene-loading-spinner")
-    );
+    await waitUntilNoSkeletonDetected();
 
     let genesHTML = await getOneElementInnerHTML(
       getTestClass("gene-set-genes")
@@ -502,28 +500,32 @@ describe.each([
 
     expect(genesHTML).toMatchSnapshot();
 
-    await expect(page).toClick(getTestClass("pop-1-geneset-expand"));
-    await expect(page).toClick(getTestClass("pop-2-geneset-expand"));
-
-    await page.waitForFunction(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (selector: any) => !document.querySelector(selector),
-      {},
-      getTestClass("gene-loading-spinner")
-    );
-
-    // (thuang): Assumes Pop2 geneset has NKG7 gene
+    // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
+    // the click is so fast that it's not registered
     await tryUntil(async () => {
+      await expect(page).toClick(getTestClass("pop-1-geneset-expand"));
+      await expect(page).toClick(getTestClass("pop-2-geneset-expand"));
+
+      await waitUntilNoSkeletonDetected();
+
       const geneset = await page.$(getTestClass("geneset"));
       expect(geneset).toBeTruthy();
 
-      const NKG7 = await page.$(getTestId("NKG7:gene-label"));
-      expect(NKG7).toBeTruthy();
+      await waitByClass("geneset");
+      // (thuang): Assumes Pop2 geneset has NKG7 gene
+      await waitByID("NKG7:gene-label");
     });
 
     genesHTML = await getOneElementInnerHTML(getTestClass("gene-set-genes"));
 
     expect(genesHTML).toMatchSnapshot();
+
+    async function waitUntilNoSkeletonDetected() {
+      await tryUntil(async () => {
+        const skeleton = await page.$(`.${BLUEPRINT_SKELETON_CLASS_NAME}`);
+        expect(skeleton).toBeFalsy();
+      });
+    }
   });
   test("create a new geneset and undo/redo", async () => {
     if (config.withSubset) return;
