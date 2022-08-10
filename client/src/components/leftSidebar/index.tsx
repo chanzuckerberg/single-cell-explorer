@@ -7,7 +7,6 @@ import Categorical from "../categorical";
 import * as globals from "../../globals";
 import DynamicScatterplot from "../scatterplot/scatterplot";
 import GeneInfo from "../geneExpression/geneInfo/geneInfo";
-import TopLeftLogoAndTitle from "./topLeftLogoAndTitle";
 import Continuous from "../continuous/continuous";
 
 /* Styles */
@@ -35,7 +34,6 @@ class LeftSideBar extends React.Component {
       this.props;
     return (
       <div style={STYLE_LEFT_SIDEBAR}>
-        <TopLeftLogoAndTitle />
         <div
           style={{
             height: "100%",

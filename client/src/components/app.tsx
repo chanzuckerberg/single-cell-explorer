@@ -18,7 +18,7 @@ import Graph from "./graph/graph";
 import MenuBar from "./menubar";
 import Autosave from "./autosave";
 import Embedding from "./embedding";
-
+import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 
@@ -68,6 +68,7 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
+              <Header />
               {loading || error ? null : (
                 <Layout>
                   <LeftSideBar />
