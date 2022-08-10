@@ -67,14 +67,6 @@ const button = css`
   }
 `;
 
-const iconButton = css`
-  ${button}
-
-  .${Classes.ICON} {
-    color: inherit; /* Overrides BP button icon color rule by inheriting color from parent. */
-  }
-`;
-
 export const LinkWrapper = styled.span`
   ${button}
 
@@ -84,19 +76,6 @@ export const LinkWrapper = styled.span`
 
   display: flex;
   align-items: center;
-`;
-
-export const LearnButtonWrapper = styled.span`
-  ${iconButton}
-`;
-
-export const AuthButtonWrapper = styled.span`
-  ${iconButton}
-
-  .${Classes.BUTTON}.${Classes.MINIMAL} {
-    color: ${Colors.WHITE}; /* Overrides locally defined button color rule. */
-    font-weight: 400; /* Overrides locally defined button font weight rule. */
-  }
 `;
 
 export const BetaChip = styled(Chip)`
