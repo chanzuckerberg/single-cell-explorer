@@ -84,12 +84,16 @@ class GenesetMenus extends React.PureComponent<{}, State> {
   };
 
   render(): JSX.Element {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneset' does not exist on type 'Readonl... Remove this comment to see the full error message
     const {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneset' does not exist on type 'Readonl... Remove this comment to see the full error message
       geneset,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesetsEditable' does not exist on type 'Readonl... Remove this comment to see the full error message
       genesetsEditable,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'createText' does not exist on type 'Readonl... Remove this comment to see the full error message
       createText,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'Readonl... Remove this comment to see the full error message
       colorAccessor,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorLoading' does not exist on type 'Readonl... Remove this comment to see the full error message
       colorLoading,
     } = this.props;
 
