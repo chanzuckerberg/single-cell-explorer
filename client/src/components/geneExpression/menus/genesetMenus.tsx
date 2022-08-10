@@ -28,6 +28,8 @@ type State = any;
   genesetsUI: (state as any).genesetsUI,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   colorAccessor: (state as any).colors.colorAccessor,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  colorLoading: (state as any).controls.colorLoading,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GenesetMenus extends React.PureComponent<{}, State> {
@@ -83,7 +85,13 @@ class GenesetMenus extends React.PureComponent<{}, State> {
 
   render(): JSX.Element {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneset' does not exist on type 'Readonl... Remove this comment to see the full error message
-    const { geneset, genesetsEditable, createText, colorAccessor } = this.props;
+    const {
+      geneset,
+      genesetsEditable,
+      createText,
+      colorAccessor,
+      colorLoading,
+    } = this.props;
 
     const isColorBy = geneset === colorAccessor;
 
@@ -151,6 +159,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 active={isColorBy}
                 intent={isColorBy ? "primary" : "none"}
                 style={{ marginLeft: 0 }}
+                loading={isColorBy && colorLoading}
                 onClick={this.handleColorByEntireGeneset}
                 data-testclass="colorby-entire-geneset"
                 data-testid={`${geneset}:colorby-entire-geneset`}

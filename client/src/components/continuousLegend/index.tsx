@@ -1,7 +1,8 @@
 import React from "react";
-import { connect } from "react-redux";
+import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import { interpolateCool } from "d3-scale-chromatic";
+import Async from "react-async";
 
 import {
   createColorTable,
@@ -119,51 +120,98 @@ const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
   genesets: (state as any).genesets.genesets,
 }))
 class ContinuousLegend extends React.Component {
+  static watchAsync(props: any, prevProps: any) {
+    return !shallowEqual(props.watchProps, prevProps.watchProps);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  cachedWatchProps: any;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  cachedAsyncProps: any;
+
+  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
+  constructor(props: {}) {
+    super(props);
+    this.cachedWatchProps = { colors: null, genesets: null, annoMatrix: null };
+    this.cachedAsyncProps = null;
+  }
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async componentDidUpdate(prevProps: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix, colors, genesets } = this.props;
-    if (!colors || !annoMatrix) return;
-    if (colors !== prevProps?.colors || annoMatrix !== prevProps?.annoMatrix) {
-      const { schema } = annoMatrix;
-      const { colorMode, colorAccessor, userColors } = colors;
-      const colorQuery = createColorQuery(
-        colorMode,
-        colorAccessor,
-        schema,
-        genesets
-      );
-      const colorDf = colorQuery ? await annoMatrix.fetch(...colorQuery) : null;
-      const colorTable = createColorTable(
-        colorMode,
-        colorAccessor,
-        colorDf,
-        schema,
-        userColors
-      );
-      const colorScale = colorTable.scale;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'range' does not exist on type '((idx: an... Remove this comment to see the full error message
-      const range = colorScale?.range;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'domain' does not exist on type '((idx: a... Remove this comment to see the full error message
-      const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];
-      /* always remove it, if it's not continuous we don't put it back. */
-      d3.select("#continuous_legend").selectAll("*").remove();
-      if (colorAccessor && colorScale && range && domainMin < domainMax) {
-        /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
-        if (range()[0][0] !== "#") {
-          continuous(
-            "#continuous_legend",
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'domain' does not exist on type '((idx: a... Remove this comment to see the full error message
-            d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
-            colorAccessor
-          );
-        }
+  fetchAsyncProps = async (props: any) => {
+    const { annoMatrix, colors, genesets } = props.watchProps;
+    const { colors: cachedColors, annoMatrix: cachedAnnoMatrix } =
+      this.cachedWatchProps;
+    if (!colors || !annoMatrix) return this.cachedAsyncProps;
+    if (colors === cachedColors && annoMatrix === cachedAnnoMatrix)
+      return this.cachedAsyncProps;
+    this.cachedWatchProps = props.watchProps;
+    if (!colors.colorMode) return this.cachedAsyncProps;
+    const { schema } = annoMatrix;
+    const { colorMode, colorAccessor, userColors } = colors;
+    const colorQuery = createColorQuery(
+      colorMode,
+      colorAccessor,
+      schema,
+      genesets
+    );
+    const colorDf = colorQuery ? await annoMatrix.fetch(...colorQuery) : null;
+    const colorTable = createColorTable(
+      colorMode,
+      colorAccessor,
+      colorDf,
+      schema,
+      userColors
+    );
+    const colorScale = colorTable.scale;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'range' does not exist on type '((idx: an... Remove this comment to see the full error message
+    const range = colorScale?.range;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'domain' does not exist on type '((idx: a... Remove this comment to see the full error message
+    const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];
+
+    return {
+      colorAccessor,
+      colorScale,
+      range,
+      domainMin,
+      domainMax,
+      colorMode,
+    };
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  updateContinuousLegend = (asyncProps: any) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'R... Remove this comment to see the full error message
+    const { dispatch } = this.props;
+    const {
+      colorAccessor,
+      colorScale,
+      range,
+      domainMin,
+      domainMax,
+      colorMode,
+    } = asyncProps;
+    this.cachedAsyncProps = asyncProps;
+    /* always remove it, if it's not continuous we don't put it back. */
+    d3.select("#continuous_legend").selectAll("*").remove();
+    if (colorAccessor && colorScale && range && domainMin < domainMax) {
+      /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
+      if (range()[0][0] !== "#") {
+        continuous(
+          "#continuous_legend",
+          d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+          colorAccessor
+        );
       }
     }
-  }
+    if (colorScale && colorMode === "color by geneset mean expression")
+      dispatch({ type: "color by geneset mean expression success" });
+  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'R... Remove this comment to see the full error message
+    const { annoMatrix, colors, genesets } = this.props;
     return (
       <div
         id="continuous_legend"
@@ -174,7 +222,29 @@ class ContinuousLegend extends React.Component {
           zIndex: 1,
           pointerEvents: "none",
         }}
-      />
+      >
+        <Async
+          watchFn={ContinuousLegend.watchAsync}
+          promiseFn={this.fetchAsyncProps}
+          watchProps={{
+            annoMatrix,
+            colors,
+            genesets,
+          }}
+        >
+          <Async.Fulfilled>
+            {(asyncProps) => {
+              if (
+                !shallowEqual(asyncProps, this.cachedAsyncProps) &&
+                asyncProps
+              ) {
+                this.updateContinuousLegend(asyncProps);
+              }
+              return null;
+            }}
+          </Async.Fulfilled>
+        </Async>
+      </div>
     );
   }
 }
