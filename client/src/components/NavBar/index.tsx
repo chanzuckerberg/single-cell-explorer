@@ -16,7 +16,7 @@ import {
 
 const Header = () => {
   return (
-    <Wrapper>
+    <Wrapper data-testid="header">
       <MainWrapper>
         <Left>
           <a href={ROUTES.HOMEPAGE}>
