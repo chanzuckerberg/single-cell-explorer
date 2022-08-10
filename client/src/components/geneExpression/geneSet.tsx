@@ -95,7 +95,7 @@ class GeneSet extends React.Component<{}, State> {
       testClass = "pop-2-geneset-expand";
 
     return (
-      <div style={{ marginBottom: 3 }}>
+      <div data-testclass="geneset" style={{ marginBottom: 3 }}>
         <div
           style={{
             display: "flex",
