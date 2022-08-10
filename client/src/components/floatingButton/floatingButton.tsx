@@ -8,10 +8,14 @@ import { EVENTS } from "../../analytics/events";
 import { IconNames } from "../icon";
 import Icon from "../icon/icon";
 
+interface Props {
+  baseUrl: string;
+}
+
 /**
  * Documentation and roadmap menu, toggled from the FAB.
  */
-function FloatingButton(): JSX.Element {
+function FloatingButton(props: Props): JSX.Element {
   const [helpMenuOpen, setHelpMenuOpen] = useState(false);
 
   function handleHelpMenuClick() {
@@ -19,27 +23,23 @@ function FloatingButton(): JSX.Element {
     setHelpMenuOpen(true);
   }
 
+  const { baseUrl } = props;
+
   return (
     <Popover
       content={
         <Menu>
           <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/README.md"
+            href={`${baseUrl}/docs`}
             rel="noopener"
             target="_blank"
             text="Documentation"
           />
           <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/explore-data/explorer-tutorials.md"
+            href={`${baseUrl}/docs/04__Analyze%20Public%20Data/4_1__Hosted%20Tutorials`}
             rel="noopener"
             target="_blank"
             text="Tutorials"
-          />
-          <MenuItem
-            href="https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md"
-            rel="noopener"
-            target="_blank"
-            text="Our Roadmap"
           />
         </Menu>
       }

@@ -27,6 +27,7 @@ interface Props {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
+  baseUrl: string; // Used for help button links
 }
 
 class App extends React.Component<Props> {
@@ -46,7 +47,7 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter } = this.props;
+    const { loading, error, graphRenderCounter, baseUrl } = this.props;
 
     return (
       <Container>
@@ -77,7 +78,7 @@ class App extends React.Component<Props> {
                         <MenuBar />
                       </Controls>
                       <Embedding />
-                      <FloatingButton />
+                      <FloatingButton baseUrl={baseUrl} />
                       <Autosave />
                       <Legend />
                       <Graph
@@ -103,4 +104,10 @@ export default connect((state: RootState) => ({
   loading: state.controls.loading,
   error: state.controls.error,
   graphRenderCounter: state.controls.graphRenderCounter,
+
+  // Used for help button links
+  baseUrl:
+    state.config?.portalUrl ||
+    state.config?.links?.["collections-home-page"] ||
+    "https://cellxgene.dev.single-cell.czi.technology",
 }))(App);
