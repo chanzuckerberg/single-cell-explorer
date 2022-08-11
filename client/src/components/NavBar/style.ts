@@ -49,13 +49,16 @@ const button = css`
     background: none;
     border-radius: 0;
     color: ${GRAY.D};
-    font-size: 13px;
-    font-weight: 500;
     height: 22px;
     letter-spacing: -0.1px;
     line-height: 18px;
     min-height: 22px;
     padding: 0;
+
+    > span {
+      font-size: 13px;
+      font-weight: 500;
+    }
 
     &.${Classes.ACTIVE}, &:hover {
       color: ${Colors.WHITE};
