@@ -63,14 +63,6 @@ const STYLE_MEASURE_SPAN: CSSProperties = {
   visibility: "hidden",
 };
 
-// Inline styles for breadcrumbs container
-const STYLE_WRAPPER = {
-  overflow: "hidden",
-  position: "absolute",
-  bottom: 8,
-  left: 8,
-};
-
 /**
  * Individual Breadcrumb States
  * ----------------------------
