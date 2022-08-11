@@ -225,7 +225,14 @@ const TruncatingBreadcrumbs = React.memo<Props>(
       });
 
     return (
-      <div style={STYLE_WRAPPER}>
+      <div
+        style={{
+          overflow: "hidden",
+          position: "absolute",
+          bottom: 8,
+          left: 8,
+        }}
+      >
         <ResizeSensor onResize={onResize}>
           <ul className={Classes.BREADCRUMBS} style={STYLE_BREADCRUMBS}>
             {renderBreadcrumbs(breadcrumbConfigs)}

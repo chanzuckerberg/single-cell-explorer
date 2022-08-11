@@ -1,9 +1,11 @@
 import React from "react";
-import { AnchorButton } from "@blueprintjs/core";
+import { AnchorButton, Menu, MenuItem, Position } from "@blueprintjs/core";
+import { Popover2 } from "@blueprintjs/popover2";
+import { IconNames as CXGIconNames } from "../icon";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
-import Information from "./information";
+import Icon from "../icon/icon";
 import {
   BetaChip,
   Left,
@@ -14,7 +16,16 @@ import {
   Wrapper,
 } from "./style";
 
-const Header = () => {
+function handleMenuClick() {
+  track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
+}
+
+interface HeaderProps {
+  tosURL?: string;
+  privacyURL?: string;
+}
+const Header = (props: HeaderProps) => {
+  const { tosURL, privacyURL } = props;
   return (
     <Wrapper data-testid="header">
       <MainWrapper>
@@ -72,16 +83,64 @@ const Header = () => {
         </Left>
         <Right>
           <LinkWrapper>
-            <AnchorButton
-              active={false}
-              href={ROUTES.DOCS}
-              rel="noopener"
-              target="_blank"
-              minimal
-              text="Help & Documentation"
-            />
+            <Popover2
+              content={
+                <Menu>
+                  <MenuItem
+                    href={ROUTES.DOCS}
+                    target="_blank"
+                    text="Documentation"
+                    rel="noopener"
+                  />
+                  <MenuItem
+                    href="https://join-cellxgene-users.herokuapp.com/"
+                    icon={<Icon icon={CXGIconNames.SLACK} />}
+                    target="_blank"
+                    text="Chat"
+                    rel="noopener"
+                  />
+                  {(tosURL || privacyURL) && (
+                    <MenuItem
+                      icon={<Icon icon={CXGIconNames.ABOUT} />}
+                      popoverProps={{ openOnTargetFocus: false }}
+                      text="About cellxgene"
+                    >
+                      {tosURL && (
+                        <MenuItem
+                          href={tosURL}
+                          rel="noopener"
+                          target="_blank"
+                          text="Terms of Service"
+                        />
+                      )}
+                      {privacyURL && (
+                        <MenuItem
+                          href={privacyURL}
+                          rel="noopener"
+                          target="_blank"
+                          text="Privacy Policy"
+                        />
+                      )}
+                    </MenuItem>
+                  )}
+                </Menu>
+              }
+              position={Position.BOTTOM_LEFT}
+              modifiers={{
+                preventOverflow: { enabled: false },
+                hide: { enabled: false },
+              }}
+            >
+              <AnchorButton
+                active={false}
+                data-testid="menu"
+                minimal
+                text="Help & Documentation"
+                rightIcon="chevron-down"
+                onClick={handleMenuClick}
+              />
+            </Popover2>
           </LinkWrapper>
-          <Information />
         </Right>
       </MainWrapper>
     </Wrapper>
@@ -90,5 +149,9 @@ const Header = () => {
   function handleWMGClick(): void {
     track(EVENTS.WMG_CLICK_NAV);
   }
+};
+Header.defaultProps = {
+  tosURL: undefined,
+  privacyURL: undefined,
 };
 export default Header;

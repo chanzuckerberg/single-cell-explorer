@@ -24,6 +24,8 @@ interface Props {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
+  tosURL: string | undefined;
+  privacyURL: string | undefined;
 }
 
 class App extends React.Component<Props> {
@@ -43,7 +45,8 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter } = this.props;
+    const { loading, error, graphRenderCounter, tosURL, privacyURL } =
+      this.props;
 
     return (
       <Container>
@@ -64,7 +67,7 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
-              <Header />
+              <Header tosURL={tosURL} privacyURL={privacyURL} />
               {loading || error ? null : (
                 <Layout>
                   <LeftSideBar />
@@ -98,4 +101,6 @@ export default connect((state: RootState) => ({
   loading: state.controls.loading,
   error: state.controls.error,
   graphRenderCounter: state.controls.graphRenderCounter,
+  tosURL: state.config?.parameters?.about_legal_tos,
+  privacyURL: state.config?.parameters?.about_legal_privacy,
 }))(App);
