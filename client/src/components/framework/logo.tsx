@@ -7,11 +7,16 @@ const Logo = (props: any) => {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
       <rect width="48" height="48" fill="white" />
-      <rect width="48" height="48" fill={globals.logoColor} />
-      <rect x="19" y="19" width="22" height="22" fill="white" />
-      <rect x="24" y="24" width="12" height="12" fill={globals.logoColor} />
-      <rect x="7" y="19" width="7" height="22" fill="white" />
-      <rect x="19" y="7" width="22" height="7" fill="white" />
+      <rect x="19" y="19" width="22" height="22" fill={globals.logoColor} />
+      <rect x="26" y="26" width="8" height="8" fill="white" />
+      <rect x="7" y="19" width="7" height="22" fill={globals.logoColor} />
+      <rect
+        x="19"
+        y="7"
+        width="22"
+        height="7"
+        fill={globals.logoIconAccentColor}
+      />
     </svg>
   );
 };
