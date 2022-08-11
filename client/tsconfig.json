@@ -7,7 +7,10 @@
     // Ensure Babel can safely transpile files
     "isolatedModules": true,
     "jsx": "preserve",
-    "lib": ["dom", "es2020"],
+    "lib": [
+      "dom",
+      "es2020"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,
@@ -29,7 +32,10 @@
     "src/**/*",
     "configuration/**/*",
     "__tests__/**/*",
-    "jest-puppeteer.config.js"
+    "jest-puppeteer.config.js",
   ],
-  "exclude": ["node_modules", "__tests__/e2e/__snapshots__/**/*"]
+  "exclude": [
+    "node_modules",
+    "__tests__/e2e/__snapshots__/**/*"
+  ]
 }
