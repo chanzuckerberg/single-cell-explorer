@@ -7,7 +7,6 @@ import { theme } from "./theme";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
-import FloatingButton from "./floatingButton/floatingButton";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
@@ -17,7 +16,6 @@ import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
 import Autosave from "./autosave";
-import Embedding from "./embedding";
 import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
@@ -27,7 +25,6 @@ interface Props {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
-  baseUrl: string; // Used for help button links
 }
 
 class App extends React.Component<Props> {
@@ -47,7 +44,7 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter, baseUrl } = this.props;
+    const { loading, error, graphRenderCounter } = this.props;
 
     return (
       <Container>
@@ -78,8 +75,6 @@ class App extends React.Component<Props> {
                         <DatasetSelector />
                         <MenuBar />
                       </Controls>
-                      <Embedding />
-                      <FloatingButton baseUrl={baseUrl} />
                       <Autosave />
                       <Legend />
                       <Graph
@@ -105,10 +100,4 @@ export default connect((state: RootState) => ({
   loading: state.controls.loading,
   error: state.controls.error,
   graphRenderCounter: state.controls.graphRenderCounter,
-
-  // Used for help button links
-  baseUrl:
-    state.config?.portalUrl ||
-    state.config?.links?.["collections-home-page"] ||
-    "https://cellxgene.dev.single-cell.czi.technology",
 }))(App);
