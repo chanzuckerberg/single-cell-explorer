@@ -6,7 +6,7 @@ const Title = (): JSX.Element => (
     style={{
       fontSize: 24,
       position: "relative",
-      top: -6,
+      top: -3,
       fontWeight: "bold",
       marginLeft: 5,
       color: globals.logoColor,
