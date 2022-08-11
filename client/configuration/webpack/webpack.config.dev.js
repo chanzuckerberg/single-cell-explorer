@@ -39,10 +39,11 @@ const devConfig = {
       {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
         loader: "file-loader",
-        include: [nodeModules, fonts],
         options: {
           name: "static/assets/[name].[ext]",
-          // (thuang): This is needed to make sure @font url path is '/static/assets/'
+          // (thuang): This is needed to make sure static asset url path is '/static/assets/',
+          // so it ignores the base_url (/d, /e) and dataset in the url.
+          // e.g., http://localhost:3000/static/assets/heatmap.svg
           publicPath: "/",
         },
       },
