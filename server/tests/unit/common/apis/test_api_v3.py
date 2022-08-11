@@ -310,7 +310,7 @@ class EndPoints(BaseTest):
 
         # Content-Length too large
         result = self.client.post(
-            url, content_length=100 * 1024 ** 3, headers={"Content-Type": "application/octet-stream"}
+            url, content_length=100 * 1024**3, headers={"Content-Type": "application/octet-stream"}
         )
         self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
 
