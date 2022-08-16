@@ -163,5 +163,4 @@ class TestDatasetConfig(ConfigTests):
             app_config.update_from_config_file(configfile)
 
             # test config from specialization
-            self.assertEqual(app_config.server_config.multi_dataset__dataroot['test']['base_url'], 'test')
-
+            self.assertEqual(app_config.server_config.multi_dataset__dataroot["test"]["base_url"], "test")
