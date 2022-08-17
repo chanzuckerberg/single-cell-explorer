@@ -24,7 +24,7 @@ interface Props {
   gene: string;
   geneUrl: string;
   geneSynonyms: string[];
-  isEnsemblIdResult: boolean;
+  showWarningBanner: boolean;
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -39,7 +39,7 @@ interface Props {
     geneIsMinimized,
     geneLevel,
     infoError,
-    isEnsemblIdResult,
+    showWarningBanner,
   } = state.controls;
 
   return {
@@ -52,7 +52,7 @@ interface Props {
     geneIsMinimized,
     geneLevel,
     infoError,
-    isEnsemblIdResult,
+    showWarningBanner,
   };
 })
 class GeneInfo extends React.PureComponent<Props, State> {
@@ -71,7 +71,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
       geneLevel,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'infoError' does not exist on type '{ chi... Remove this comment to see the full error message
       infoError,
-      isEnsemblIdResult,
+      showWarningBanner,
     } = this.props;
 
     const minimized = geneIsMinimized;
@@ -191,7 +191,7 @@ class GeneInfo extends React.PureComponent<Props, State> {
                 marginBottom: styles.margin.bottom,
               }}
             >
-              {!isEnsemblIdResult ? (
+              {showWarningBanner ? (
                 <WarningBanner>
                   <Icon
                     sdsIcon="exclamationMarkCircle"

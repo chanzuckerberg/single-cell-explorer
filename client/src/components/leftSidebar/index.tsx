@@ -56,7 +56,7 @@ class LeftSideBar extends React.Component {
             gene=""
             geneUrl=""
             geneSynonyms={[]}
-            isEnsemblIdResult
+            showWarningBanner
           />
         ) : null}
       </div>
