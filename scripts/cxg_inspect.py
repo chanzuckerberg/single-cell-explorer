@@ -21,20 +21,18 @@ from server.dataset.cxg_dataset import CxgDataset
 
 
 @click.command()
-@click.option("--url", "-u", type=str, help="CXG file URL. E.g. `file:/my_dataset.cxg`, or `s3://fba8204.cxg`.")
-@click.option(
-    "--urls-file",
-    "-f",
-    type=str,
-    help="File containing a list of CXG file URLs, separated by newlines. " "Output will conform to jsonl format.",
-)
-@click.option("--limit", "-l", type=int)
+@click.option('--url', '-u', type=str,
+              help='CXG file URL. E.g. `file:/my_dataset.cxg`, or `s3://fba8204.cxg`.')
+@click.option('--urls-file', '-f', type=str,
+              help='File containing a list of CXG file URLs, separated by newlines. '
+                   'Output will conform to jsonl format.')
+@click.option('--limit', '-l', type=int)
 def inspect_cxg(url: Optional[str], urls_file: Optional[str], limit=None) -> None:
     urls = []
     if url:
         urls.append(url)
     if urls_file:
-        with open(os.path.expanduser(urls_file), "rt") as f:
+        with open(os.path.expanduser(urls_file), 'rt') as f:
             urls.extend([f.strip() for f in f.readlines()])
 
     for cxg_props in filter(None, (_inspect_cxg(url) for url in urls[:limit])):
@@ -46,7 +44,7 @@ def _flatten_dict(d: dict, root_prop: Optional[str] = None):
         return {}
     flattened_props = {}
     for k, v in d.items():
-        fq_key = f"{root_prop}.{k}" if root_prop else k  # fully-qualified key
+        fq_key = f'{root_prop}.{k}' if root_prop else k  # fully-qualified key
 
         # try to decode nested json dict
         if type(v) is str:
@@ -71,15 +69,16 @@ def _inspect_cxg(dataset_url: str) -> Optional[dict]:
     try:
         sys.stderr.write(f"Inspecting {dataset_url}\n")
         cxg = CxgDataset(dl, app_config=AppConfig())
-        metadata = cxg.open_array("cxg_group_metadata").meta
-        return dict(url=dataset_url, **_flatten_dict(metadata))
+        metadata = cxg.open_array('cxg_group_metadata').meta
+        return dict(url=dataset_url,
+                    **_flatten_dict(metadata))
     except:
         sys.stderr.write(f"No metadata for {dataset_url}\n")
         return dict(url=dataset_url)
 
 
 # For S3 URLs, these env vars must be set appropriately: AWS_PROFILE, DEPLOYMENT_STAGE, AWS_REGION
-if __name__ == "__main__":
+if __name__ == '__main__':
     pp = pprint.PrettyPrinter(width=120, sort_dicts=False)
-    CxgDataset.set_tiledb_context({"vfs.s3.region": os.getenv("AWS_REGION", "us-west-2")})
+    CxgDataset.set_tiledb_context({"vfs.s3.region": os.getenv('AWS_REGION', "us-west-2")})
     inspect_cxg()

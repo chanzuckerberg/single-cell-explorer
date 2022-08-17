@@ -19,28 +19,26 @@ import {
 } from "../util/stateManager/viewStackHelpers";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export const clipAction =
-  (min: any, max: any) =>
-  (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    dispatch: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    getState: any
-  ) => {
-    /*
+export const clipAction = (min: any, max: any) => (
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  dispatch: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  getState: any
+) => {
+  /*
   apply a clip to the current annoMatrix.  By convention, the clip
   view is ALWAYS the top view.
   */
-    const { annoMatrix: prevAnnoMatrix } = getState();
-    const annoMatrix = _clipAnnoMatrix(prevAnnoMatrix, min, max);
-    const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
-    dispatch({
-      type: "set clip quantiles",
-      clipQuantiles: { min, max },
-      annoMatrix,
-      obsCrossfilter,
-    });
-  };
+  const { annoMatrix: prevAnnoMatrix } = getState();
+  const annoMatrix = _clipAnnoMatrix(prevAnnoMatrix, min, max);
+  const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
+  dispatch({
+    type: "set clip quantiles",
+    clipQuantiles: { min, max },
+    annoMatrix,
+    obsCrossfilter,
+  });
+};
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export const subsetAction = () => (dispatch: any, getState: any) => {
@@ -51,8 +49,10 @@ export const subsetAction = () => (dispatch: any, getState: any) => {
   By convention, a clip view is ALWAYS the top view, so if present, pop
   off and re-apply
   */
-  const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
-    getState();
+  const {
+    annoMatrix: prevAnnoMatrix,
+    obsCrossfilter: prevObsCrossfilter,
+  } = getState();
   const annoMatrix = _userSubsetAnnoMatrix(
     prevAnnoMatrix,
     prevObsCrossfilter.allSelectedMask()

@@ -89,7 +89,7 @@ class TestServer(Server):
             if len(files) > 1:
                 logging.warning(f"Found more than one dataset in {dataroot}")
             for dataroot_file in files:
-                if dataroot_file.endswith(".cxg"):
+                if dataroot_file.endswith('.cxg'):
                     cxg_file = dataroot_file
                     logging.info(f"Explorer will load dataset: {path.join(dataroot, cxg_file)}")
                     with open(".test_base_url.txt", "a") as test_base_url_file:

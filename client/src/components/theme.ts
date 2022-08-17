@@ -32,7 +32,7 @@ const corners = {
 };
 
 const typography = {
-  fontFamily: "Roboto Condensed",
+  fontFamily: "Inter",
   styles: {
     body: {
       button: {

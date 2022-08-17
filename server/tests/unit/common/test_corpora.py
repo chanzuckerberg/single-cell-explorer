@@ -16,7 +16,8 @@ class CorporaRESTAPITest(BaseTest):
     def setUpClass(cls, app_config=None):
         if not app_config:
             app_config = AppConfig()
-        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="test")
+        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT,
+                                        app__flask_secret_key="test")
 
         super().setUpClass(app_config)
         cls.app.testing = True
@@ -41,9 +42,7 @@ class CorporaRESTAPITest(BaseTest):
 
         self.assertEqual(corpora_props["schema_version"], "2.0.0")
 
-        self.assertEqual(
-            corpora_props["title"],
-            "Spatiotemporal analysis of human intestinal development at single-cell resolution: Fetal A7",
-        )
+        self.assertEqual(corpora_props["title"],
+                         "Spatiotemporal analysis of human intestinal development at single-cell resolution: Fetal A7")
         # TODO: reinstate? would need to add `default_embedding` to test.cxg file
         # self.assertEqual(parameters["default_embedding"], "tsne")

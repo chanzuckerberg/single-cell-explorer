@@ -343,15 +343,15 @@ const buildDatasetMetadataViews = (
 
 const InfoFormat = React.memo<Props>(
   ({ datasetMetadata, singleValueCategories }) => (
-    <div className={Classes.DRAWER_BODY}>
-      <div className={Classes.DIALOG_BODY}>
-        <H3>{datasetMetadata.collection_name}</H3>
-        <p>{datasetMetadata.collection_description}</p>
-        {renderCollectionLinks(datasetMetadata)}
-        {renderDatasetMetadata(singleValueCategories)}
+      <div className={Classes.DRAWER_BODY}>
+        <div className={Classes.DIALOG_BODY}>
+          <H3>{datasetMetadata.collection_name}</H3>
+          <p>{datasetMetadata.collection_description}</p>
+          {renderCollectionLinks(datasetMetadata)}
+          {renderDatasetMetadata(singleValueCategories)}
+        </div>
       </div>
-    </div>
-  )
+    )
 );
 
 export default InfoFormat;

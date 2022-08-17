@@ -47,7 +47,7 @@ class TestDiffexPdu(unittest.TestCase):
 
     def test_roundtrip(self):
         """Test wide variety of densities to trigger all encoding block types"""
-        n_obs = 4 * 2**16
+        n_obs = 4 * 2 ** 16
         for density in [0.0001, 0.01, 0.1, 0.2, 0.4, 0.6, 0.8, 0.99, 0.9999]:
             n_elem = int(n_obs * density)
             draw = (
