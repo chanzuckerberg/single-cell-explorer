@@ -4,6 +4,10 @@
     "default_env": "rdev",
     "app": "explorer",
     "default_compose_env_file": ".env.ecr",
+    "services": [
+        "frontend",
+        "backend"
+    ],
     "environments": {
         "rdev": {
             "aws_profile": "single-cell-dev",
