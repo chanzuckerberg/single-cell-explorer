@@ -5,8 +5,7 @@
     "app": "explorer",
     "default_compose_env_file": ".env.ecr",
     "services": [
-        "frontend",
-        "backend"
+        "explorer"
     ],
     "environments": {
         "rdev": {
