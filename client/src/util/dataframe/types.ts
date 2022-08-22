@@ -164,7 +164,7 @@ export interface DataframeDictEncodedColumn extends DataframeNumericColumn {
  */
 export const isDataframeDictEncodedColumn = (
   col: DataframeColumn
-): col is DataframeDictEncodedColumn => "codes" in col && "codeMappping" in col;
+): col is DataframeDictEncodedColumn => "codes" in col && "codeMapping" in col;
 /**
  * Union of numeric and dictionary-encoded column types.
  */

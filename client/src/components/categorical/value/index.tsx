@@ -83,7 +83,6 @@ type CategoryValueProps = PureCategoryValueProps & {
   const labelName = isDataframeDictEncodedColumn(col)
     ? col.codeMapping[parseInt(label, 10)]
     : label;
-
   const isSelected = category.get(label) ?? true;
   return {
     annotations: state.annotations,
