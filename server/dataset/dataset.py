@@ -3,7 +3,6 @@ from os.path import basename, splitext
 
 import numpy as np
 import pandas as pd
-from scipy import sparse
 from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig

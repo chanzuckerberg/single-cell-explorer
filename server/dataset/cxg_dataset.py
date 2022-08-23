@@ -18,7 +18,6 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
-from scipy import sparse
 
 
 class CxgDataset(Dataset):
