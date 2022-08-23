@@ -16,29 +16,23 @@ import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 
 
 def _get_array_class(array):
-    # return the generic type of array - category, sparse, or dense
+    # returns
+    # (1) the generic type of array - category, sparse, or dense
     # this determines which coder should be used.
+    # (2) the encoding data type from the corresponding attribute of the
+    # source array. e.g. for pandas Categorical, the encoding data type
+    # is computed from the codes array.
     if pd.api.types.is_categorical_dtype(array):
-        return "category"
+        return "category", np.dtype(array.cat.codes.values.dtype).str
     else:
-        return "dense"
+        return "dense", np.dtype(get_encoding_dtype_of_array(array)).str
 
 
 def serialize_typed_array(builder, source_array):
     if isinstance(source_array, pd.Index):
         source_array = source_array.to_series()
 
-    array_class = _get_array_class(source_array)
-
-    # depending on the array class, compute the encoding data type from
-    # the corresponding attribute of the source array. e.g. for pandas Categoricals,
-    # the encoding data type is computed from the codes array.
-    if array_class == "category":
-        encoding_dtype = np.dtype(source_array.cat.codes.values.dtype).str
-    elif array_class == "sparse":
-        encoding_dtype = np.dtype(get_encoding_dtype_of_array(source_array.data)).str
-    else:
-        encoding_dtype = np.dtype(get_encoding_dtype_of_array(source_array)).str
+    array_class, encoding_dtype = _get_array_class(source_array)
 
     # two-layer mapper (1) array_class, (2) encoding_dtype
     # this is necessary as an int32 codes array will require a different coder
@@ -130,9 +124,8 @@ class CategoricalCoder:
             dictionary = np.array(bytearray(json.dumps(dict(enumerate(array.cat.categories))), "utf-8"))
             codes = array.cat.codes.values
 
-            # this type safeguard is likely unecessary but can't hurt to include
-            if np.dtype(codes.dtype).str != dtype:
-                codes = codes.astype(dtype)
+            # ensure that the dtype is able to afford the number of categories
+            assert len(array.cat.categories) <= np.iinfo(dtype).max + 1
 
             vec_codes = builder.CreateNumpyVector(codes)
             vec_dictionary = builder.CreateNumpyVector(dictionary)
