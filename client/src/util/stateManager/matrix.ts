@@ -1,5 +1,5 @@
 import { flatbuffers } from "flatbuffers";
-import { NetEncoding } from "./fbs_data_types";
+import { NetEncoding, NetEncodingDict } from "./fbs_data_types";
 import {
   TypedArray,
   isDictEncodedTypedArray,
@@ -31,12 +31,12 @@ const utf8Decoder = new TextDecoder("utf-8");
  * Decode TypedFBArray
  */
 
-function decodeCatArray(
+function decodeDictArray(
   uType: TypedFBArray,
   uValF: Column["u"]
 ): DictEncodedArray {
   const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
+    NetEncodingDict[TypedFBArray[uType] as keyof typeof NetEncodingDict];
   const arr = uValF(new TypeClass());
   const codesArray = arr.codesArray();
   let codesToValues = arr.dictArray();
@@ -99,7 +99,7 @@ function decodeTypedArray(
     case TypedFBArray.DictEncoded8FBArray:
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
-      return decodeCatArray(uType, uValF);
+      return decodeDictArray(uType, uValF);
     }
     default: {
       return decodeNumericArray(uType, uValF, inplace);
@@ -154,19 +154,86 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   };
 }
 
-function encodeCatArray(builder: any, uType: any, uData: any): any {
-  const uTypeName = TypedFBArray[uType];
-  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
-  const dCodes = ArrayType.createCodesVector(builder, uData);
-
-  const json = JSON.stringify(uData.codeMapping);
-  const utf8Encoder = new TextEncoder();
-  const jsonUTF8 = utf8Encoder.encode(json);
-  const dDict = ArrayType.createDictVector(builder, jsonUTF8);
+function encodeDictArray(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: DictEncodedArray
+): any {
+  const [dCodes, dDict] = _getCodesAndDictVectorOffset(builder, uType, uData);
   builder.startObject(2);
   builder.addFieldOffset(0, dCodes, 0);
   builder.addFieldOffset(0, dDict, 0);
   return builder.endObject();
+}
+
+function _getCodesAndDictVectorOffset(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: DictEncodedArray
+): [number, number] {
+  const uTypeName = TypedFBArray[uType];
+  const ArrayType = NetEncodingDict[uTypeName as keyof typeof NetEncodingDict];
+
+  const json = JSON.stringify(uData.codeMapping);
+  const utf8Encoder = new TextEncoder();
+  const jsonUTF8 = utf8Encoder.encode(json);
+
+  let dCodes;
+  if (ArrayType === NetEncodingDict.DictEncoded8FBArray) {
+    dCodes = NetEncodingDict.DictEncoded8FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded8Array
+    );
+  } else if (ArrayType === NetEncodingDict.DictEncoded16FBArray) {
+    dCodes = NetEncodingDict.DictEncoded16FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded16Array
+    );
+  } else if (ArrayType === NetEncodingDict.DictEncoded32FBArray) {
+    dCodes = NetEncodingDict.DictEncoded32FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded32Array
+    );
+  } else {
+    throw new Error(`unsupported dictionary-encoded array type ${uTypeName}`);
+  }
+
+  const dDict = ArrayType.createDictVector(builder, jsonUTF8);
+  return [dCodes, dDict];
+}
+
+function _getNumericDataVectorOffset(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: TypedArray
+): number {
+  const uTypeName = TypedFBArray[uType];
+  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
+  let dArray;
+  if (ArrayType === NetEncoding.Int32FBArray) {
+    dArray = NetEncoding.Int32FBArray.createDataVector(
+      builder,
+      uData as Int32Array
+    );
+  } else if (ArrayType === NetEncoding.Float32FBArray) {
+    dArray = NetEncoding.Float32FBArray.createDataVector(
+      builder,
+      uData as Float32Array
+    );
+  } else if (ArrayType === NetEncoding.Float64FBArray) {
+    dArray = NetEncoding.Float64FBArray.createDataVector(
+      builder,
+      uData as Float64Array
+    );
+  } else if (ArrayType === NetEncoding.Uint32FBArray) {
+    dArray = NetEncoding.Uint32FBArray.createDataVector(
+      builder,
+      uData as Uint32Array
+    );
+  } else {
+    throw new Error(`unsupported numeric array type ${uTypeName}`);
+  }
+  return dArray;
 }
 
 function encodeNumericArray(
@@ -174,9 +241,7 @@ function encodeNumericArray(
   uType: TypedFBArray,
   uData: TypedArray
 ): number {
-  const uTypeName = TypedFBArray[uType];
-  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
-  const dArray = ArrayType.createDataVector(builder, uData);
+  const dArray = _getNumericDataVectorOffset(builder, uType, uData);
   builder.startObject(1);
   builder.addFieldOffset(0, dArray, 0);
   return builder.endObject();
@@ -184,15 +249,15 @@ function encodeNumericArray(
 
 function encodeJSONArray(
   builder: flatbuffers.Builder,
-  uType: any,
-  uData: any
+  uData: Array<string> | Array<boolean>
 ): any {
-  const uTypeName = TypedFBArray[uType];
-  const ArrayType = NetEncoding[uTypeName];
   const json = JSON.stringify(uData);
   const utf8Encoder = new TextEncoder();
   const jsonUTF8 = utf8Encoder.encode(json);
-  const dArray = ArrayType.createCodesVector(builder, jsonUTF8);
+  const dArray = NetEncoding.JSONEncodedFBArray.createDataVector(
+    builder,
+    jsonUTF8
+  );
   builder.startObject(1);
   builder.addFieldOffset(0, dArray, 0);
   return builder.endObject();
@@ -205,12 +270,12 @@ function encodeTypedArray(
 ) {
   switch (uType) {
     case TypedFBArray.JSONEncodedFBArray: {
-      return encodeJSONArray(builder, uType, uData);
+      return encodeJSONArray(builder, uData);
     }
     case TypedFBArray.DictEncoded8FBArray:
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
-      return encodeCatArray(builder, uType, uData);
+      return encodeDictArray(builder, uType, uData);
     }
     default: {
       return encodeNumericArray(builder, uType, uData);
