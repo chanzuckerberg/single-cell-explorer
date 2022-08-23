@@ -44,10 +44,10 @@ def guess_at_mem_needed(matrix):
         guess = (n_rows * n_cols * matrix.dtype.itemsize) + 1024
     elif isinstance(matrix, pd.DataFrame):
         guess = pd.DataFrame.memory_usage(matrix).values.sum()
-    elif isinstance(matrix, pd.Series):        
+    elif isinstance(matrix, pd.Series):
         guess = pd.Series.memory_usage(matrix)
-    elif isinstance(matrix, pd.Categorical):        
-        guess = pd.Categorical.memory_usage(matrix)        
+    elif isinstance(matrix, pd.Categorical):
+        guess = pd.Categorical.memory_usage(matrix)
     else:
         guess = 1
 

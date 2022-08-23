@@ -15,7 +15,7 @@ export class DictEncoded8Array extends Int8Array {
     this.codeMapping = {};
   }
 
-  setCodeMapping = (codeMap: CodeMapping) => {
+  setCodeMapping = (codeMap: CodeMapping): void => {
     this.codeMapping = codeMap;
   };
 

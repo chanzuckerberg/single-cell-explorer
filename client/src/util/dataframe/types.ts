@@ -149,14 +149,8 @@ export interface DataframeNumericColumn extends DataframeColumnGetter {
  * Sub-interface representing a Dataframe dictionary encoded column.
  */
 export interface DataframeDictEncodedColumn extends DataframeNumericColumn {
-  codes: DictEncodedArray;
-  values: DataframeValueArray;
   codeMapping: CodeMapping;
   invCodeMapping: InvCodeMapping;
-  /**
-   * Get value array from codes.
-   */
-  getValuesFromCodes: () => DataframeValueArray;
 }
 
 /**

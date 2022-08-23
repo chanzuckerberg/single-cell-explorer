@@ -7,7 +7,7 @@ import { DictEncoded8Array } from "../../util/stateManager/dict-encoded8_array";
 import { DictEncoded32Array } from "../../util/stateManager/dict-encoded32_array";
 
 /**
- * TypedArrays that can be assigned to a number.
+ * Arrays of numeric values.
  */
 export type TypedArray =
   | Int8Array

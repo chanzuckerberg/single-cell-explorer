@@ -145,6 +145,7 @@ class CategoricalCoder:
         dictionary = json.loads(dictionary.tobytes().decode("utf-8"))
         return pd.Categorical.from_codes(codes, categories=list(dictionary.values()))
 
+
 class PolymorphicCoder:
     n_slots = 1
 

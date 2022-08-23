@@ -4,7 +4,6 @@ import {
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
-  DictEncodedArray,
   isDictEncodedTypedArray,
 } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
@@ -12,10 +11,6 @@ import {
   summarizeContinuous as _summarizeContinuous,
   summarizeCategorical as _summarizeCategorical,
 } from "./summarize";
-import {
-  mapCodesToValues as _mapCodesToValues,
-  hashMapCodesToValues,
-} from "./dict-encoded";
 
 import {
   histogramCategorical as _histogramCategorical,
@@ -37,7 +32,6 @@ import {
   LabelArray,
   ContinuousHistogram,
   ContinuousHistogramBy,
-  DataframeDictEncodedColumn,
 } from "./types";
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
@@ -260,7 +254,6 @@ class Dataframe {
     const isContinuous = isTypedArray(column);
     const isDictEncoded = isDictEncodedTypedArray(column);
 
-    const memoGetValues = memoize(_mapCodesToValues, hashMapCodesToValues);
     const memoHistogramContinuous = memoize(
       _histogramContinuous,
       hashContinuous
@@ -352,14 +345,9 @@ class Dataframe {
       memoHistogramCategoricalBy(get, by);
 
     if (isDictEncoded) {
-      // (#337): these properties belong to DataframeDictEncodedColumn
-      const columnDictEnc = column as DictEncodedArray;
-      get.getValuesFromCodes = () => memoGetValues(columnDictEnc, __id);
-      get.codes = column; // currently, an alias for col.asArray();
-      get.values = get.getValuesFromCodes();
-      get.codeMapping = columnDictEnc.codeMapping;
+      get.codeMapping = column.codeMapping;
       get.invCodeMapping = Object.fromEntries(
-        Object.entries(columnDictEnc.codeMapping).map((row) => [
+        Object.entries(column.codeMapping).map((row) => [
           row[1],
           parseInt(row[0], 10),
         ])
@@ -883,7 +871,13 @@ class Dataframe {
     const roff = this.rowIndex.getOffset(r);
     if (coff === undefined || roff === undefined)
       throw new RangeError("Unknown row or column label.");
-    return this.__columns[coff][roff];
+
+    const col = this.__columns[coff];
+    if (isDictEncodedTypedArray(col)) {
+      return col.vat(roff);
+    } 
+      return col[roff];
+    
   }
 
   iat(r: OffsetType, c: OffsetType): DataframeValue {
@@ -896,8 +890,14 @@ class Dataframe {
 
     const myVal = df.ihas(r, c) ? df.iat(r, c) : undefined;
     */
-    if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0])
-      return this.__columns[c][r];
+    if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0]) {
+      const col = this.__columns[c];
+      if (isDictEncodedTypedArray(col)) {
+        return col.vat(r);
+      } 
+        return col[r];
+      
+    }
     throw new RangeError("Unknown row or column index.");
   }
 
@@ -965,14 +965,26 @@ class Dataframe {
 
     callback MUST not modify the column, but instead return a mutated copy.
     */
-    const columns = this.__columns.map((colData, colIdx) =>
-      callback(
-        colData,
+    const columns = this.__columns.map((colData, colIdx) => {
+      let data: DataframeValueArray;
+      // mapColumns will mutate dictionary encoded arrays into standard value arrays.
+      // This ensures that users will always be dealing with values in the callback.
+      // TODO: memoize this function to avoid repeated work.
+      if (isDictEncodedTypedArray(colData)) {
+        data = new Array(colData.length);
+        for (let i = 0; i < data.length; i += 1) {
+          data[i] = colData.vat(i);
+        }
+      } else {
+        data = colData;
+      }
+      return callback(
+        data,
         colIdx,
         this.colIndex.getLabel(colIdx) as LabelType,
         this
-      )
-    );
+      );
+    });
     const columnsAccessor: (DataframeColumn | null)[] = columns.map((c, idx) =>
       this.__columns[idx] === c ? this.__columnsAccessor[idx] : null
     );
