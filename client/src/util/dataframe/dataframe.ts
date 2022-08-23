@@ -606,10 +606,7 @@ class Dataframe {
     );
   }
 
-  replaceColData(
-    label: LabelType,
-    newColData: DataframeValueArray // accepts exact same data structure as array in constructor add another type
-  ): Dataframe {
+  replaceColData(label: LabelType, newColData: DataframeValueArray): Dataframe {
     /*
     Accelerator for dropping a column then adding it again with same
     label and different values.
