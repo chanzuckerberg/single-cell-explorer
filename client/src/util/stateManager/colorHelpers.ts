@@ -25,10 +25,7 @@ import {
   ConvertedUserColors,
   UserColor,
 } from "../../reducers/colors";
-import {
-  DataframeDictEncodedColumn,
-  isDataframeDictEncodedColumn,
-} from "../dataframe/types";
+import { isDataframeDictEncodedColumn } from "../dataframe/types";
 
 interface Colors {
   // cell label to color mapping

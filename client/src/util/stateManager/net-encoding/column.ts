@@ -2,11 +2,7 @@
 
 import { flatbuffers } from "flatbuffers";
 
-import {
-  TypedFBArray,
-  unionToTypedFBArray,
-  unionListToTypedFBArray,
-} from "../net-encoding/typed-f-b-array";
+import { TypedFBArray } from "../net-encoding/typed-f-b-array";
 
 export class Column {
   bb: flatbuffers.ByteBuffer | null = null;
@@ -42,7 +38,7 @@ export class Column {
       : TypedFBArray.NONE;
   }
 
-  u<T extends flatbuffers.Table>(obj: any): any | null {
+  u(obj: any): any | null {
     const offset = this.bb!.__offset(this.bb_pos, 6);
     return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
   }

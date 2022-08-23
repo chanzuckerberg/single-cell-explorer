@@ -31,6 +31,5 @@
     "__tests__/**/*",
     "jest-puppeteer.config.js"
   ],
-  "exclude": ["node_modules", "__tests__/e2e/__snapshots__/**/*", 
-"src/util/stateManager/net-encoding/*"]
+  "exclude": ["node_modules", "__tests__/e2e/__snapshots__/**/*"]
 }

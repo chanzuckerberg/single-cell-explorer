@@ -3,11 +3,7 @@
 import { flatbuffers } from "flatbuffers";
 
 import { Column } from "../net-encoding/column";
-import {
-  TypedFBArray,
-  unionToTypedFBArray,
-  unionListToTypedFBArray,
-} from "../net-encoding/typed-f-b-array";
+import { TypedFBArray } from "../net-encoding/typed-f-b-array";
 
 export class Matrix {
   bb: flatbuffers.ByteBuffer | null = null;
@@ -70,7 +66,7 @@ export class Matrix {
       : TypedFBArray.NONE;
   }
 
-  colIndex<T extends flatbuffers.Table>(obj: any): any | null {
+  colIndex(obj: any): any | null {
     const offset = this.bb!.__offset(this.bb_pos, 12);
     return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
   }
@@ -82,7 +78,7 @@ export class Matrix {
       : TypedFBArray.NONE;
   }
 
-  rowIndex<T extends flatbuffers.Table>(obj: any): any | null {
+  rowIndex(obj: any): any | null {
     const offset = this.bb!.__offset(this.bb_pos, 16);
     return offset ? this.bb!.__union(obj, this.bb_pos + offset) : null;
   }
