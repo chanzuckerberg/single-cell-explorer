@@ -3,7 +3,6 @@ import { NetEncoding } from "./fbs_data_types";
 import {
   TypedArray,
   isDictEncodedTypedArray,
-  isTypedArray,
   DictEncodedArray,
   isFloatTypedArray,
 } from "../../common/types/arraytypes";
@@ -158,13 +157,11 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
 function encodeCatArray(builder: any, uType: any, uData: any): any {
   const uTypeName = TypedFBArray[uType];
   const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
-  // @ts-expect-error FIX ME: broken types with variable classes
   const dCodes = ArrayType.createCodesVector(builder, uData);
 
   const json = JSON.stringify(uData.codeMapping);
   const utf8Encoder = new TextEncoder();
   const jsonUTF8 = utf8Encoder.encode(json);
-  // @ts-expect-error FIX ME: broken types with variable classes
   const dDict = ArrayType.createDictVector(builder, jsonUTF8);
   builder.startObject(2);
   builder.addFieldOffset(0, dCodes, 0);
@@ -179,7 +176,6 @@ function encodeNumericArray(
 ): number {
   const uTypeName = TypedFBArray[uType];
   const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
-  // @ts-expect-error FIX ME: broken types with variable classes
   const dArray = ArrayType.createDataVector(builder, uData);
   builder.startObject(1);
   builder.addFieldOffset(0, dArray, 0);
