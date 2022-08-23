@@ -255,8 +255,7 @@ class CxgDataset(Dataset):
         coordindices = mapindex[coord_data]
         return ncoord, coordindices
 
-    def get_X_array(self, obs_mask=None, var_mask=None, allow_sparse_return=False):
-        # allow_sparse_return = True for /data/var requests to forego densification
+    def get_X_array(self, obs_mask=None, var_mask=None):
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
         if obs_items is None or var_items is None:
@@ -270,18 +269,11 @@ class CxgDataset(Dataset):
 
         if X.schema.sparse:
             data = X.query(order="U").multi_index[obs_items, var_items]
-
             nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
-            if allow_sparse_return and obsindices.size / nrows <= 0.5:
-                data = data[""]
-                x = obsindices
-                y = varindices
-                return sparse.coo_matrix((data, (x, y)), shape=(nrows, ncols))
-            else:
-                densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
-                densedata[obsindices, varindices] = data[""]
-                return densedata
+            densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
+            densedata[obsindices, varindices] = data[""]
+            return densedata
         else:
             data = X.multi_index[obs_items, var_items][""]
             return data

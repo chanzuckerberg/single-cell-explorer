@@ -72,9 +72,9 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_X_array(self, obs_mask=None, var_mask=None, allow_sparse_return=False):
+    def get_X_array(self, obs_mask=None, var_mask=None):
         """return the X array, possibly filtered by obs_mask or var_mask.
-        the return type is either ndarray or scipy.sparse.spmatrix."""
+        the return type is ndarray."""
         pass
 
     @abstractmethod
@@ -252,7 +252,7 @@ class Dataset(metaclass=ABCMeta):
         if self.server_config.exceeds_limit("column_request_max", num_columns):
             raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
 
-        X = self.get_X_array(obs_selector, var_selector, allow_sparse_return=True)
+        X = self.get_X_array(obs_selector, var_selector)
         col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
         return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)
 
@@ -392,11 +392,8 @@ class Dataset(metaclass=ABCMeta):
         if var_selector is None or np.count_nonzero(var_selector) == 0:
             mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
         else:
-            X = self.get_X_array(obs_selector, var_selector, allow_sparse_return=True)
-            if sparse.issparse(X):
-                mean = X.mean(axis=1).tocoo()
-            else:
-                mean = X.mean(axis=1, keepdims=True)
+            X = self.get_X_array(obs_selector, var_selector)
+            mean = X.mean(axis=1, keepdims=True)
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)

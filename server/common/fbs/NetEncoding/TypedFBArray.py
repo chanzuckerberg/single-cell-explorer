@@ -2,7 +2,6 @@
 
 # namespace: NetEncoding
 
-
 class TypedFBArray(object):
     NONE = 0
     Float32FBArray = 1
@@ -13,5 +12,4 @@ class TypedFBArray(object):
     DictEncoded8FBArray = 6
     DictEncoded16FBArray = 7
     DictEncoded32FBArray = 8
-    SparseFloat32FBArray = 9
-    SparseFloat64FBArray = 10
+

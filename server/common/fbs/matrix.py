@@ -70,7 +70,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
         raise ValueError("FBS Matrix must be 2D")
 
     if sparse.issparse(matrix):
-        matrix = matrix.tocoo()
+        matrix = matrix.A
 
     (n_rows, n_cols) = matrix.shape
     # estimate size needed, so we don't unnecessarily realloc.
@@ -82,12 +82,6 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
 
         if isinstance(matrix, pd.DataFrame):
             col = matrix.iloc[:, cidx]
-        elif sparse.issparse(matrix):
-            filt = matrix.col == cidx
-            s_row = matrix.row[filt]
-            s_data = matrix.data[filt]
-            s_col = np.zeros(s_row.size, dtype="int")
-            col = sparse.coo_matrix((s_data, (s_row, s_col)), shape=(matrix.shape[0], 1))
         else:
             col = matrix[:, cidx]
 

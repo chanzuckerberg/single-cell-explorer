@@ -13,17 +13,13 @@ import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
 import server.common.fbs.NetEncoding.DictEncoded16FBArray as DictEncoded16FBArray
 import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArray
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
-import server.common.fbs.NetEncoding.SparseFloat32FBArray as SparseFloat32FBArray
-import server.common.fbs.NetEncoding.SparseFloat64FBArray as SparseFloat64FBArray
 
 
 def _get_array_class(array):
     # return the generic type of array - category, sparse, or dense
     # this determines which coder should be used.
-    if isinstance(array, pd.Series) and array.dtype.name == "category":
+    if pd.api.types.is_categorical_dtype(array):
         return "category"
-    elif sp.issparse(array):
-        return "sparse"
     else:
         return "dense"
 
@@ -61,15 +57,6 @@ def serialize_typed_array(builder, source_array):
             np.dtype(np.uint32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
             np.dtype(np.uint64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
         },
-        "sparse": {
-            np.dtype(np.float64).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat64FBArray),
-            np.dtype(np.float32).str: (SparseNumericCoder, TypedFBArray.TypedFBArray.SparseFloat32FBArray),
-            # below is to handle cases where integer sparse arrays are encoded - densify in this case.
-            np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-        },
         "category": {
             np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
             np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded16FBArray),
@@ -97,8 +84,6 @@ def deserialize_typed_array(tarr):
         TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
         TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
         TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
-        TypedFBArray.TypedFBArray.SparseFloat32FBArray: (SparseNumericCoder, SparseFloat32FBArray.SparseFloat32FBArray),
-        TypedFBArray.TypedFBArray.SparseFloat64FBArray: (SparseNumericCoder, SparseFloat64FBArray.SparseFloat64FBArray),
     }
 
     (u_type, u) = tarr
@@ -166,41 +151,6 @@ class CategoricalCoder:
         dictionary = arr.DictAsNumpy()
         dictionary = json.loads(dictionary.tobytes().decode("utf-8"))
         return pd.Categorical.from_codes(codes, categories=list(dictionary.values()))
-
-
-class SparseNumericCoder:
-    n_slots = 3
-
-    def encode_array(self, array, builder, dtype):
-        # ensure array is columnar and sparse format
-        if sp.issparse(array) and array.shape[1] == 1:
-            array = array.tocoo()  # cast to COO
-            row_coords = np.uint32(array.row)  # ensure this is uint32 to match schema
-            nnz_data = array.data
-            size = np.uint32(array.shape[0])  # ensure this is uint32 to match schema
-            if np.dtype(nnz_data.dtype).str != dtype:
-                nnz_data = nnz_data.astype(dtype)
-
-            vec_nnz_data = builder.CreateNumpyVector(nnz_data)
-            vec_row_coords = builder.CreateNumpyVector(row_coords)
-            builder.StartObject(self.n_slots)
-            builder.PrependUOffsetTRelativeSlot(0, vec_nnz_data, 0)
-            builder.PrependUOffsetTRelativeSlot(1, vec_row_coords, 0)
-            builder.PrependUint32Slot(2, size, 0)
-            return builder.EndObject()
-        else:
-            raise ValueError("Input array must be a sparse column")
-
-    def decode_array(self, u, TarType):
-        arr = TarType()
-        arr.Init(u.Bytes, u.Pos)
-        data = arr.DataAsNumpy()
-        rows = arr.RowsAsNumpy()
-        size = arr.Size()
-        dense_data = np.zeros(size, dtype=data.dtype)
-        dense_data[rows] = data
-        return dense_data
-
 
 class PolymorphicCoder:
     n_slots = 1

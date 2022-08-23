@@ -7,8 +7,6 @@ import { Float32FBArray } from "../net-encoding/float32-f-b-array";
 import { Float64FBArray } from "../net-encoding/float64-f-b-array";
 import { Int32FBArray } from "../net-encoding/int32-f-b-array";
 import { JSONEncodedFBArray } from "../net-encoding/j-s-o-n-encoded-f-b-array";
-import { SparseFloat32FBArray } from "../net-encoding/sparse-float32-f-b-array";
-import { SparseFloat64FBArray } from "../net-encoding/sparse-float64-f-b-array";
 import { Uint32FBArray } from "../net-encoding/uint32-f-b-array";
 
 export enum TypedFBArray {
@@ -21,8 +19,6 @@ export enum TypedFBArray {
   DictEncoded8FBArray = 6,
   DictEncoded16FBArray = 7,
   DictEncoded32FBArray = 8,
-  SparseFloat32FBArray = 9,
-  SparseFloat64FBArray = 10,
 }
 
 export function unionToTypedFBArray(
@@ -36,8 +32,6 @@ export function unionToTypedFBArray(
       | Float64FBArray
       | Int32FBArray
       | JSONEncodedFBArray
-      | SparseFloat32FBArray
-      | SparseFloat64FBArray
       | Uint32FBArray
   ) =>
     | DictEncoded16FBArray
@@ -47,8 +41,6 @@ export function unionToTypedFBArray(
     | Float64FBArray
     | Int32FBArray
     | JSONEncodedFBArray
-    | SparseFloat32FBArray
-    | SparseFloat64FBArray
     | Uint32FBArray
     | null
 ):
@@ -59,8 +51,6 @@ export function unionToTypedFBArray(
   | Float64FBArray
   | Int32FBArray
   | JSONEncodedFBArray
-  | SparseFloat32FBArray
-  | SparseFloat64FBArray
   | Uint32FBArray
   | null {
   switch (TypedFBArray[type]) {
@@ -82,10 +72,6 @@ export function unionToTypedFBArray(
       return accessor(new DictEncoded16FBArray())! as DictEncoded16FBArray;
     case "DictEncoded32FBArray":
       return accessor(new DictEncoded32FBArray())! as DictEncoded32FBArray;
-    case "SparseFloat32FBArray":
-      return accessor(new SparseFloat32FBArray())! as SparseFloat32FBArray;
-    case "SparseFloat64FBArray":
-      return accessor(new SparseFloat64FBArray())! as SparseFloat64FBArray;
     default:
       return null;
   }
@@ -103,8 +89,6 @@ export function unionListToTypedFBArray(
       | Float64FBArray
       | Int32FBArray
       | JSONEncodedFBArray
-      | SparseFloat32FBArray
-      | SparseFloat64FBArray
       | Uint32FBArray
   ) =>
     | DictEncoded16FBArray
@@ -114,8 +98,6 @@ export function unionListToTypedFBArray(
     | Float64FBArray
     | Int32FBArray
     | JSONEncodedFBArray
-    | SparseFloat32FBArray
-    | SparseFloat64FBArray
     | Uint32FBArray
     | null,
   index: number
@@ -127,8 +109,6 @@ export function unionListToTypedFBArray(
   | Float64FBArray
   | Int32FBArray
   | JSONEncodedFBArray
-  | SparseFloat32FBArray
-  | SparseFloat64FBArray
   | Uint32FBArray
   | null {
   switch (TypedFBArray[type]) {
@@ -156,16 +136,6 @@ export function unionListToTypedFBArray(
         index,
         new DictEncoded32FBArray()
       )! as DictEncoded32FBArray;
-    case "SparseFloat32FBArray":
-      return accessor(
-        index,
-        new SparseFloat32FBArray()
-      )! as SparseFloat32FBArray;
-    case "SparseFloat64FBArray":
-      return accessor(
-        index,
-        new SparseFloat64FBArray()
-      )! as SparseFloat64FBArray;
     default:
       return null;
   }

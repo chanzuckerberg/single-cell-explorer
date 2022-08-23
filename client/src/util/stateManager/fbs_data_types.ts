@@ -5,8 +5,6 @@ import { Float32FBArray } from "./net-encoding/float32-f-b-array";
 import { Float64FBArray } from "./net-encoding/float64-f-b-array";
 import { Int32FBArray } from "./net-encoding/int32-f-b-array";
 import { JSONEncodedFBArray } from "./net-encoding/j-s-o-n-encoded-f-b-array";
-import { SparseFloat32FBArray } from "./net-encoding/sparse-float32-f-b-array";
-import { SparseFloat64FBArray } from "./net-encoding/sparse-float64-f-b-array";
 import { Uint32FBArray } from "./net-encoding/uint32-f-b-array";
 
 export const NetEncoding = {
@@ -17,7 +15,5 @@ export const NetEncoding = {
   Float64FBArray,
   Int32FBArray,
   JSONEncodedFBArray,
-  SparseFloat32FBArray,
-  SparseFloat64FBArray,
   Uint32FBArray,
 };

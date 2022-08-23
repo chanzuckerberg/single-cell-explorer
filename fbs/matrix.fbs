@@ -63,22 +63,6 @@ table DictEncoded32FBArray {
   dict: [uint8];
 }
 
-// a sparse-encoding of float32 arrays in
-// COO sparse matrix format
-table SparseFloat32FBArray {
-  // nonzero data
-  data: [float32];
-  // nonzero locations of the data in the array
-  rows: [uint32];
-  // size of the array
-  size: uint32;
-}
-table SparseFloat64FBArray {
-  data: [float64];
-  rows: [uint32];
-  size: uint32;
-}
-
 union TypedFBArray {
   Float32FBArray,
   Int32FBArray,
@@ -88,8 +72,6 @@ union TypedFBArray {
   DictEncoded8FBArray,
   DictEncoded16FBArray,
   DictEncoded32FBArray,
-  SparseFloat32FBArray,
-  SparseFloat64FBArray,
 }
 
 // Extra level of indirection required because vector of union not yet supported

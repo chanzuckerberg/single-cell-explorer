@@ -73,25 +73,6 @@ function decodeNumericArray(
   return dataArray;
 }
 
-function decodeSparseArray(
-  uType: TypedFBArray,
-  uValF: Column["u"]
-): TypedArray {
-  const TypeClass =
-    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
-  const arr = uValF(new TypeClass());
-  const dataArray = arr.dataArray();
-  const rowsArray = arr.rowsArray();
-  const size = arr.size();
-  console.log(new Date().getTime());
-  const denseArray = new dataArray.constructor(size);
-  for (let i = 0, nrows = rowsArray.length; i < nrows; i += 1) {
-    denseArray[rowsArray[i]] = dataArray[i];
-  }
-  console.log(new Date().getTime());
-  return denseArray;
-}
-
 function decodeJSONArray(
   uType: TypedFBArray,
   uValF: Column["u"]
@@ -120,10 +101,6 @@ function decodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return decodeCatArray(uType, uValF);
-    }
-    case TypedFBArray.SparseFloat32FBArray:
-    case TypedFBArray.SparseFloat64FBArray: {
-      return decodeSparseArray(uType, uValF);
     }
     default: {
       return decodeNumericArray(uType, uValF, inplace);
@@ -209,31 +186,6 @@ function encodeNumericArray(
   return builder.endObject();
 }
 
-function encodeSparseArray(
-  builder: flatbuffers.Builder,
-  uType: any,
-  uData: any
-): any {
-  const uTypeName = TypedFBArray[uType];
-  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
-  const dataArray: number[] = [];
-  const rowsArray: number[] = [];
-  for (let i = 0; i < uData.length; i += 1) {
-    if (uData[i] !== 0) {
-      dataArray.push(uData[i]);
-      rowsArray.push(i);
-    }
-  }
-  // @ts-expect-error FIX ME: broken types with variable classes
-  const dArray = ArrayType.createDataVector(builder, dataArray);
-  // @ts-expect-error FIX ME: broken types with variable classes
-  const dRows = ArrayType.createDataVector(builder, rowsArray);
-  builder.startObject(2);
-  builder.addFieldOffset(0, dArray, 0);
-  builder.addFieldOffset(0, dRows, 0);
-  return builder.endObject();
-}
-
 function encodeJSONArray(
   builder: flatbuffers.Builder,
   uType: any,
@@ -263,10 +215,6 @@ function encodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return encodeCatArray(builder, uType, uData);
-    }
-    case TypedFBArray.SparseFloat32FBArray:
-    case TypedFBArray.SparseFloat64FBArray: {
-      return encodeSparseArray(builder, uType, uData);
     }
     default: {
       return encodeNumericArray(builder, uType, uData);
