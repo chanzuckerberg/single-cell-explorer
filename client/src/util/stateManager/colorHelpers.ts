@@ -203,7 +203,7 @@ function _createUserColors(
   const data = col.asArray();
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
   let newColors = colors;
-  // (#337): convert the keys in the color dictionary defined by the schema
+  // convert the keys in the color dictionary defined by the schema
   // to their corresponding codes.
   if (isDataframeDictEncodedColumn(col)) {
     newColors = Object.fromEntries(

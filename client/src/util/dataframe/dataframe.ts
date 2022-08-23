@@ -217,7 +217,6 @@ class Dataframe {
     column: DataframeValueArray,
     getRowOffset: (label: LabelType) => OffsetType | -1,
     getRowLabel: (offset: number) => LabelType | undefined
-    // (#337): will TS be able to infer the return type based on the existing properties?
   ): DataframeColumn {
     /*
       Each column accessor is a function which will lookup data by
@@ -875,9 +874,8 @@ class Dataframe {
     const col = this.__columns[coff];
     if (isDictEncodedTypedArray(col)) {
       return col.vat(roff);
-    } 
-      return col[roff];
-    
+    }
+    return col[roff];
   }
 
   iat(r: OffsetType, c: OffsetType): DataframeValue {
@@ -894,9 +892,8 @@ class Dataframe {
       const col = this.__columns[c];
       if (isDictEncodedTypedArray(col)) {
         return col.vat(r);
-      } 
-        return col[r];
-      
+      }
+      return col[r];
     }
     throw new RangeError("Unknown row or column index.");
   }
