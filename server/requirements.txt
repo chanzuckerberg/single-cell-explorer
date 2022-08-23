@@ -20,6 +20,6 @@ pandas>=1.0,!=1.1  # pandas 1.1 breaks tests, https://github.com/pandas-dev/pand
 PyYAML>=5.4  # CVE-2020-14343
 scipy>=1.4
 requests>=2.22.0
-tiledb==0.13.3  # Explorer's major/minor tiledb version should always be the >= Portal's tiledb major/minor version (for read/write compatibility)
+tiledb==0.16.5  # Explorer's major/minor tiledb version should always be the >= Portal's tiledb major/minor version (for read/write compatibility)
 s3fs==0.4.2
 MarkupSafe==1.1.1
