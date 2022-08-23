@@ -6,9 +6,9 @@ import _ from "lodash";
 import { flatbuffers } from "flatbuffers";
 import { NetEncoding } from "../../../src/util/stateManager/fbs_data_types";
 import { RawSchema } from "../../../src/common/types/schema";
-
-// TODO (alec): PLEASE UPDATE THIS
-
+import { TypedFBArray } from "../../../src/util/stateManager/net-encoding/typed-f-b-array";
+import { Column } from "../../../src/util/stateManager/net-encoding/column";
+import { Matrix } from "../../../src/util/stateManager/net-encoding/matrix";
 /*
 test data mocking REST 0.2 API responses.  Used in several tests.
 */
@@ -114,8 +114,7 @@ const anAnnotationsVarJSONResponse = {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function encodeTypedArray(builder: any, uType: any, uData: any) {
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const uTypeName = NetEncoding.TypedArray[uType];
+  const uTypeName = TypedFBArray[uType];
   // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
   const ArrayType = NetEncoding[uTypeName];
   const dv = ArrayType.createDataVector(builder, uData);
@@ -141,43 +140,43 @@ function encodeMatrix(columns: any, colIndex = undefined) {
     let uType;
     let tarr;
     if (every(carr, isNumber)) {
-      uType = NetEncoding.TypedArray.Float32Array;
+      uType = TypedFBArray.Float32FBArray;
       tarr = encodeTypedArray(builder, uType, new Float32Array(carr));
     } else {
-      uType = NetEncoding.TypedArray.JSONEncodedArray;
+      uType = TypedFBArray.JSONEncodedFBArray;
       const json = JSON.stringify(carr);
       const jsonUTF8 = utf8Encoder.encode(json);
       tarr = encodeTypedArray(builder, uType, jsonUTF8);
     }
-    NetEncoding.Column.startColumn(builder);
-    NetEncoding.Column.addUType(builder, uType);
-    NetEncoding.Column.addU(builder, tarr);
-    return NetEncoding.Column.endColumn(builder);
+    Column.startColumn(builder);
+    Column.addUType(builder, uType);
+    Column.addU(builder, tarr);
+    return Column.endColumn(builder);
   });
 
-  const encColumns = NetEncoding.Matrix.createColumnsVector(builder, cols);
+  const encColumns = Matrix.createColumnsVector(builder, cols);
 
   let encColIndex;
   if (colIndex) {
     encColIndex = encodeTypedArray(
       builder,
-      NetEncoding.TypedArray.JSONEncodedArray,
+      TypedFBArray.JSONEncodedFBArray,
       utf8Encoder.encode(JSON.stringify(colIndex))
     );
   }
 
-  NetEncoding.Matrix.startMatrix(builder);
-  NetEncoding.Matrix.addNRows(builder, columns[0].length);
-  NetEncoding.Matrix.addNCols(builder, columns.length);
-  NetEncoding.Matrix.addColumns(builder, encColumns);
+  Matrix.startMatrix(builder);
+  Matrix.addNRows(builder, columns[0].length);
+  Matrix.addNCols(builder, columns.length);
+  Matrix.addColumns(builder, encColumns);
   if (colIndex) {
-    NetEncoding.Matrix.addColIndexType(
+    Matrix.addColIndexType(
       builder,
-      NetEncoding.TypedArray.JSONEncodedArray
+      TypedFBArray.JSONEncodedFBArray
     );
-    NetEncoding.Matrix.addColIndex(builder, encColIndex);
+    Matrix.addColIndex(builder, encColIndex);
   }
-  const root = NetEncoding.Matrix.endMatrix(builder);
+  const root = Matrix.endMatrix(builder);
   builder.finish(root);
   return builder.asUint8Array();
 }
