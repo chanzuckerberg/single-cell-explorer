@@ -95,7 +95,6 @@ export const darkGreen = "#448C4D";
 
 export const nonFiniteCellColor = lightGrey;
 export const logoColor = "black"; /* logo pink: "#E9429A" */
-export const logoIconAccentColor = "#6c6cd8";
 
 /* typography constants */
 
