@@ -47,7 +47,7 @@ class FbsTests(unittest.TestCase):
                 "a": np.zeros((10,), dtype=np.float32),
                 "b": np.ones((10,), dtype=np.int64),
                 "c": np.array([i for i in range(0, 10)], dtype=np.uint16),
-                "d": pd.Series(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"], dtype="category"),
+                "d": pd.Categorical(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"]),
             }
         )
         expected_types = (
@@ -69,6 +69,18 @@ class FbsTests(unittest.TestCase):
         csc = sparse.csc_matrix(np.array([[0, 1, 2], [3, 0, 4]]))
         expected_types = ((np.ndarray, np.int32), (np.ndarray, np.int32), (np.ndarray, np.int32))
         fbs = encode_matrix_fbs(matrix=csc, row_idx=None, col_idx=None)
+        self.fbs_checks(fbs, (2, 3), expected_types, None)
+
+    def test_encode_categorical_8(self):
+        cat8 = pd.Categorical(np.arange(2**7-2))
+        expected_types = ((pd.Categorical, cat8.dtype),)
+        fbs = encode_matrix_fbs(matrix=cat8, row_idx=None, col_idx=None)
+        self.fbs_checks(fbs, (2, 3), expected_types, None)
+
+    def test_encode_categorical_16(self):
+        cat16 = pd.Categorical(np.arange(2**15-2))
+        expected_types = ((pd.Categorical, cat16.dtype),)
+        fbs = encode_matrix_fbs(matrix=cat16, row_idx=None, col_idx=None)
         self.fbs_checks(fbs, (2, 3), expected_types, None)
 
     def test_roundtrip(self):
