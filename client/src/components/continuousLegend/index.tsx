@@ -227,7 +227,7 @@ class ContinuousLegend extends React.Component<Props> {
     ) {
       /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
       const r = range();
-      if (typeof r === "function" && r()[0][0] !== "#") {
+      if (!(typeof r === "function" && r()[0][0] === "#")) {
         continuous(
           "#continuous_legend",
           d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
