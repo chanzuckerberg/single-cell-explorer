@@ -163,18 +163,9 @@ class ContinuousLegend extends React.Component<Props> {
     props: AsyncProps<FetchedAsyncProps | null>
   ): Promise<FetchedAsyncProps | null> => {
     const { annoMatrix, colors, genesets } = props.watchProps as StateProps;
-    let cachedColors = null;
-    let cachedAnnoMatrix = null;
-    if (this.cachedWatchProps) {
-      cachedColors = this.cachedWatchProps.colors;
-      cachedAnnoMatrix = this.cachedWatchProps.annoMatrix;
-    }
-    if (!colors || !annoMatrix) return this.cachedAsyncProps;
-    if (colors === cachedColors && annoMatrix === cachedAnnoMatrix)
-      return this.cachedAsyncProps;
-    this.cachedWatchProps = props.watchProps;
-    if (!colors.colorMode || !colors.colorAccessor)
-      return this.cachedAsyncProps;
+
+    if (!colors || !annoMatrix || !colors.colorMode || !colors.colorAccessor)
+      return null;
     const { schema } = annoMatrix;
     const { colorMode, colorAccessor, userColors } = colors;
     const colorQuery = createColorQuery(
@@ -216,9 +207,6 @@ class ContinuousLegend extends React.Component<Props> {
       domainMax,
       colorMode,
     } = asyncProps;
-    this.cachedAsyncProps = asyncProps;
-    /* always remove it, if it's not continuous we don't put it back. */
-    d3.select("#continuous_legend").selectAll("*").remove();
     if (
       colorAccessor &&
       colorScale &&
@@ -235,8 +223,9 @@ class ContinuousLegend extends React.Component<Props> {
         );
       }
     }
-    if (colorScale && colorMode === "color by geneset mean expression")
+    if (colorScale && colorMode === "color by geneset mean expression") {
       handleColorSuccess();
+    }
   };
 
   render() {
@@ -263,12 +252,14 @@ class ContinuousLegend extends React.Component<Props> {
         >
           <Async.Fulfilled>
             {(asyncProps: FetchedAsyncProps) => {
+              d3.select("#continuous_legend").selectAll("*").remove();
               if (
                 !shallowEqual(asyncProps, this.cachedAsyncProps) &&
                 asyncProps
               ) {
                 this.updateContinuousLegend(asyncProps);
               }
+              this.cachedAsyncProps = asyncProps;
               return null;
             }}
           </Async.Fulfilled>
