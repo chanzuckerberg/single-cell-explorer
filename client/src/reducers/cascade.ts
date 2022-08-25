@@ -1,5 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export default function cascadeReducers(arg: any) {
+import { AnyAction, Reducer } from "redux";
+import type { RootState } from ".";
+
+type CascadedReducers = [string, Reducer<RootState, AnyAction>][];
+
+export default function cascadeReducers(arg: CascadedReducers) {
   /*
   Combine a set of cascading reducers into a single reducer.  Cascading
   reducers are reducers which may rely on state computed by another reducer.
@@ -24,7 +28,7 @@ export default function cascadeReducers(arg: any) {
   */
   const reducers = arg instanceof Map ? arg : new Map(arg);
   const reducerKeys = [...reducers.keys()];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+
   return (prevState: any, action: any) => {
     const nextState = {};
     let stateChange = false;
@@ -38,7 +42,6 @@ export default function cascadeReducers(arg: any) {
         nextState,
         prevState
       );
-      // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
       nextState[key] = nextStateForKey;
       stateChange = stateChange || nextStateForKey !== prevStateForKey;
     }
