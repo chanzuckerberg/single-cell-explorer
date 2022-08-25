@@ -1,14 +1,20 @@
 import { AnyAction } from "redux";
 
+type Level = "top" | "bottom" | "";
+
+interface StackLevels {
+  geneLevel: Level;
+  scatterplotLevel: Level;
+}
 /* logic for minimizing and maximizing pop-ups */
 const minimizeMaximizePopUps = (
-  geneLevel: string,
+  geneLevel: Level,
   geneIsMinimized: boolean,
   geneIsOpen: boolean,
-  scatterplotLevel: string,
+  scatterplotLevel: Level,
   scatterplotIsMinimized: boolean,
   scatterplotIsOpen: boolean
-) => {
+): StackLevels => {
   if (
     geneIsMinimized &&
     geneIsOpen &&
@@ -38,8 +44,6 @@ const minimizeMaximizePopUps = (
     scatterplotLevel: scatterplotIsMinimized ? "bottom" : "top",
   };
 };
-
-type Level = "top" | "bottom" | "";
 
 interface ControlsState {
   loading: boolean;
