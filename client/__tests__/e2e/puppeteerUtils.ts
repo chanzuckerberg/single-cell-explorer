@@ -159,9 +159,6 @@ async function nameNewAnnotation() {
   if (await isElementPresent(getTestId("annotation-dialog"))) {
     await typeInto("new-annotation-name", "ignoreE2E");
     await clickOn("submit-annotation");
-
-    // wait for the page to load
-    await waitByClass("autosave-complete");
   }
 }
 
