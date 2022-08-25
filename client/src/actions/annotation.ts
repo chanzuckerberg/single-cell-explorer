@@ -2,10 +2,9 @@
  * Action creators for user annotation
  */
 import difference from "lodash.difference";
-import pako from "pako";
 import * as globals from "../globals";
 import { AppDispatch, GetState } from "../reducers";
-import { MatrixFBS, AnnotationsHelpers } from "../util/stateManager";
+import { AnnotationsHelpers } from "../util/stateManager";
 
 const { isUserAnnotation } = AnnotationsHelpers;
 
