@@ -8,7 +8,9 @@ export type ReducerFunction = (
   prevState?: RootState
 ) => any;
 
-type CascadedReducers = [string, ReducerFunction][];
+type CascadedReducers =
+  | [string, ReducerFunction][]
+  | Map<string, ReducerFunction>;
 
 export default function cascadeReducers(arg: CascadedReducers) {
   /*
@@ -42,15 +44,17 @@ export default function cascadeReducers(arg: CascadedReducers) {
     for (let i = 0, l = reducerKeys.length; i < l; i += 1) {
       const key = reducerKeys[i] as string;
       const reducer = reducers.get(key);
-      const prevStateForKey = prevState ? prevState[key] : undefined;
-      const nextStateForKey = reducer(
-        prevStateForKey,
-        action,
-        nextState,
-        prevState
-      );
-      nextState[key] = nextStateForKey;
-      stateChange = stateChange || nextStateForKey !== prevStateForKey;
+      if (reducer) {
+        const prevStateForKey = prevState ? prevState[key] : undefined;
+        const nextStateForKey = reducer(
+          prevStateForKey,
+          action,
+          nextState,
+          prevState
+        );
+        nextState[key] = nextStateForKey;
+        stateChange = stateChange || nextStateForKey !== prevStateForKey;
+      }
     }
     return stateChange ? nextState : prevState;
   };
