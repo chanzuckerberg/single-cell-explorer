@@ -23,7 +23,6 @@ import controls from "./controls";
 import annotations from "./annotations";
 import genesets from "./genesets";
 import genesetsUI from "./genesetsUI";
-import autosave from "./autosave";
 import centroidLabels from "./centroidLabels";
 import pointDialation from "./pointDilation";
 import quickGenes from "./quickGenes";
@@ -50,7 +49,6 @@ const AppReducer = undoable(
     ["differential", differential],
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDialation],
-    ["autosave", autosave],
     ["datasetMetadata", datasetMetadata],
   ]),
   [

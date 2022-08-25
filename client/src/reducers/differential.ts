@@ -1,13 +1,21 @@
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+import { AnyAction } from "redux";
+import { LabelArray } from "../util/dataframe";
+
+interface DifferentialState {
+  loading: boolean | null;
+  error: Error | string | null;
+  celllist1: LabelArray | null;
+  celllist2: LabelArray | null;
+}
+
 const Differential = (
-  state = {
+  state: DifferentialState = {
     loading: null,
     error: null,
     celllist1: null,
     celllist2: null,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   switch (action.type) {
     case "request differential expression started":
