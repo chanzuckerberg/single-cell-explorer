@@ -1,6 +1,6 @@
 import { AnyAction } from "redux";
 
-interface GeneSetsUIState {
+export interface GeneSetsUIState {
   createGenesetModeActive: boolean;
   isEditingGenesetName: string | false;
   isAddingGenesToGeneset: string | false;
