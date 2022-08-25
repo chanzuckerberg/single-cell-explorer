@@ -45,8 +45,8 @@ interface ControlsState {
   resettingInterface: boolean;
   graphInteractionMode: string;
   opacityForDeselectedCells: number;
-  scatterplotXXaccessor: string | boolean;
-  scatterplotYYaccessor: string | boolean;
+  scatterplotXXaccessor: string | false;
+  scatterplotYYaccessor: string | false;
   geneIsOpen: boolean;
   scatterplotIsMinimized: boolean;
   geneIsMinimized: boolean;
