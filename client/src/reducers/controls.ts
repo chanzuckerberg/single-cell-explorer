@@ -39,20 +39,22 @@ const minimizeMaximizePopUps = (
   };
 };
 
+type Level = "top" | "bottom" | "";
+
 interface ControlsState {
   loading: boolean;
   error: Error | string | null;
   resettingInterface: boolean;
-  graphInteractionMode: string;
+  graphInteractionMode: "zoom" | "select";
   opacityForDeselectedCells: number;
   scatterplotXXaccessor: string | false;
   scatterplotYYaccessor: string | false;
   geneIsOpen: boolean;
   scatterplotIsMinimized: boolean;
   geneIsMinimized: boolean;
-  scatterplotLevel: string;
+  scatterplotLevel: Level;
   scatterplotIsOpen: boolean;
-  geneLevel: string;
+  geneLevel: Level;
   gene: string | null;
   infoError: string | null;
   graphRenderCounter: number;
