@@ -59,7 +59,7 @@ const Controls = (
     gene: null,
     infoError: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
-
+    colorLoading: false,
     datasetDrawer: false,
   },
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -105,7 +105,18 @@ const Controls = (
         error: action.error,
       };
     }
-
+    case "color by geneset mean expression": {
+      return {
+        ...state,
+        colorLoading: true,
+      };
+    }
+    case "color by geneset mean expression success": {
+      return {
+        ...state,
+        colorLoading: false,
+      };
+    }
     /*******************************
              User Events
      *******************************/
