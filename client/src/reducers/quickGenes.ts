@@ -1,21 +1,16 @@
 import uniq from "lodash.uniq";
 import filter from "lodash.filter";
+import { AnyAction } from "redux";
 import type { RootState } from ".";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 
-interface QuickGenesActions {
-  type: string;
-  gene: string;
-  selection: string;
-  data: string;
-}
 const quickGenes = (
   state: { userDefinedGenes: string[]; userDefinedGenesLoading: boolean } = {
     userDefinedGenes: [],
     userDefinedGenesLoading: false,
   },
-  action: QuickGenesActions,
+  action: AnyAction,
   nextSharedState: RootState
 ) => {
   switch (action.type) {

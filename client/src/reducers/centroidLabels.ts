@@ -1,10 +1,6 @@
-import type { Action } from "redux";
+import type { AnyAction } from "redux";
 
 export interface CentroidLabelsState {
-  showLabels: boolean;
-}
-
-export interface CentroidLabelsAction extends Action<string> {
   showLabels: boolean;
 }
 
@@ -14,7 +10,7 @@ const initialState: CentroidLabelsState = {
 
 const centroidLabels = (
   state = initialState,
-  action: CentroidLabelsAction,
+  action: AnyAction,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   sharedNextState: any
 ): CentroidLabelsState => {

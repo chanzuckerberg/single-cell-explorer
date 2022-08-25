@@ -1,7 +1,14 @@
-import { AnyAction, Reducer } from "redux";
+import { AnyAction } from "redux";
 import type { RootState } from ".";
 
-type CascadedReducers = [string, Reducer<RootState, AnyAction>][];
+export type ReducerFunction = (
+  prevStateForKey: any,
+  action: AnyAction,
+  nexState?: RootState,
+  prevState?: RootState
+) => any;
+
+type CascadedReducers = [string, ReducerFunction][];
 
 export default function cascadeReducers(arg: CascadedReducers) {
   /*
@@ -29,11 +36,11 @@ export default function cascadeReducers(arg: CascadedReducers) {
   const reducers = arg instanceof Map ? arg : new Map(arg);
   const reducerKeys = [...reducers.keys()];
 
-  return (prevState: any, action: any) => {
-    const nextState = {};
+  return (prevState: RootState, action: AnyAction) => {
+    const nextState: RootState = {};
     let stateChange = false;
     for (let i = 0, l = reducerKeys.length; i < l; i += 1) {
-      const key = reducerKeys[i];
+      const key = reducerKeys[i] as string;
       const reducer = reducers.get(key);
       const prevStateForKey = prevState ? prevState[key] : undefined;
       const nextStateForKey = reducer(

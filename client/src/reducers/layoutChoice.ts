@@ -8,7 +8,7 @@ about commonly used names.  Preferentially, pick in the following order:
   4. give up, use the first available
 */
 
-import type { Action } from "redux";
+import type { AnyAction } from "redux";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
 import type { RootState } from ".";
 
@@ -34,13 +34,9 @@ export interface LayoutChoiceState {
   currentDimNames: Array<string>;
 }
 
-export interface LayoutChoiceAction extends Action<string> {
-  layoutChoice: string;
-}
-
 const LayoutChoice = (
   state: LayoutChoiceState,
-  action: LayoutChoiceAction,
+  action: AnyAction,
   nextSharedState: RootState
 ): LayoutChoiceState => {
   switch (action.type) {

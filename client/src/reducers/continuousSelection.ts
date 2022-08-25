@@ -1,14 +1,5 @@
-import type { Action } from "redux";
-
+import type { AnyAction } from "redux";
 import { makeContinuousDimensionName } from "../util/nameCreators";
-
-import type { ContinuousNamespace } from "../util/nameCreators";
-
-export interface ContinuousSelectionAction extends Action<string> {
-  continuousNamespace: ContinuousNamespace;
-  selection: string;
-  range: [number, number];
-}
 
 export interface ContinuousSelectionState {
   [name: string]: [number, number];
@@ -16,7 +7,7 @@ export interface ContinuousSelectionState {
 
 const ContinuousSelection = (
   state: ContinuousSelectionState = {},
-  action: ContinuousSelectionAction
+  action: AnyAction
 ): ContinuousSelectionState => {
   switch (action.type) {
     case "reset subset":
