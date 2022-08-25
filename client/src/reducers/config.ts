@@ -1,12 +1,24 @@
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-const Config = (
-  state = {
+import { AnyAction } from "redux";
+import type { Config } from "../globals";
+
+interface ConfigState {
+  features: Config["features"] | null;
+  parameters: Config["parameters"] | null;
+  displayNames: Config["displayNames"] | null;
+  loading?: boolean;
+  error?: Error | string | null;
+  corpora_props?: Config["corpora_props"];
+  library_versions?: Config["library_versions"];
+  portalUrl?: Config["portalUrl"];
+  links?: Config["links"];
+}
+const ConfigReducer = (
+  state: ConfigState = {
     displayNames: null,
     features: null,
     parameters: null,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   switch (action.type) {
     case "initial data load start":
@@ -32,4 +44,4 @@ const Config = (
   }
 };
 
-export default Config;
+export default ConfigReducer;
