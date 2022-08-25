@@ -343,21 +343,6 @@ const GeneSets = (
       };
     }
 
-    /**
-     * Used by autosave to update the server synchronization TID
-     */
-    case "geneset: set tid": {
-      const { tid } = action;
-      if (!Number.isInteger(tid) || tid < 0)
-        throw new Error("TID must be a positive integer number");
-      if (state.lastTid !== undefined && tid < state.lastTid)
-        throw new Error("TID may not be decremented.");
-      return {
-        ...state,
-        lastTid: tid,
-      };
-    }
-
     case "request differential expression success": {
       const { data } = action;
 
