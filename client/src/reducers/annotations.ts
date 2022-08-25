@@ -41,7 +41,6 @@ const Annotations = (
     labelEditable: { category: null, label: null },
     promptForFilename: true,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   action: AnyAction
 ) => {
   switch (action.type) {
