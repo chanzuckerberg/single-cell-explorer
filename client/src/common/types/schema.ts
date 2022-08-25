@@ -13,6 +13,7 @@ export type AnnotationColumnSchema =
       name: string;
       type: "string" | "float32" | "int32" | "boolean";
       writable: boolean;
+      categories?: Category[];
     };
 
 export interface XMatrixSchema {
