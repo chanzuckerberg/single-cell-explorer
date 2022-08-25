@@ -1,15 +1,20 @@
+import { AnyAction } from "redux";
+
+interface GeneSetsUIState {
+  createGenesetModeActive: boolean;
+  isEditingGenesetName: string | false;
+  isAddingGenesToGeneset: string | false;
+}
 /*
 Reducers for geneset UI-state.
 */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const GeneSetsUI = (
-  state = {
+  state: GeneSetsUIState = {
     createGenesetModeActive: false,
     isEditingGenesetName: false,
     isAddingGenesToGeneset: false,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   switch (action.type) {
     /**
