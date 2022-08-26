@@ -1,5 +1,3 @@
-import { AnyAction } from "redux";
-import type { RootState } from ".";
 import { ControlsHelpers as CH } from "../util/stateManager";
 
 /*
@@ -13,13 +11,14 @@ Label state default (if missing) is up to the component, but typically true.
   ...
 }
 */
-interface CategoricalSelectionState {
-  [key: string]: Map<string, boolean>;
-}
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const CategoricalSelection = (
-  state: CategoricalSelectionState,
-  action: AnyAction,
-  nextSharedState: RootState
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  state: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  action: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  nextSharedState: any
 ) => {
   switch (action.type) {
     case "initial data load complete":

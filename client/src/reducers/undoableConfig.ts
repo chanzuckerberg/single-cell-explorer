@@ -34,6 +34,14 @@ const skipOnActions = new Set<string>([
   "category value mouse hover start",
   "category value mouse hover end",
 
+  /* autosave annotations */
+  "writable obs annotations - save complete",
+  "writable obs annotations - save started",
+  "writable obs annotations - save error",
+  "autosave: genesets started",
+  "autosave: genesets error",
+  "autosave: genesets complete",
+
   /* annotation component action */
   "annotation: activate add new label mode",
   "annotation: disable add new label mode",

@@ -21,6 +21,13 @@ import {
   UserColor,
 } from "../../reducers/colors";
 
+interface Colors {
+  // cell label to color mapping
+  rgb: Float32Array;
+  // function, mapping label index to color scale
+  scale: d3.ScaleSequential<string, never> | undefined;
+}
+
 /**
  * Given a color mode & accessor, generate an annoMatrix query that will
  * fulfill it
@@ -79,7 +86,7 @@ export function createColorQuery(
   }
 }
 
-function _defaultColors(nObs: number): ColorTable {
+function _defaultColors(nObs: number): Colors {
   return {
     rgb: new Float32Array(3 * nObs).fill(0),
     scale: undefined,
@@ -88,21 +95,6 @@ function _defaultColors(nObs: number): ColorTable {
 
 const defaultColors = memoize(_defaultColors);
 
-export type ColorRange =
-  | d3.ScaleSequentialBase<string, never>["range"]
-  | d3.ScaleQuantile<number, never>["range"];
-export interface ColorTable {
-  rgb: Float32Array;
-  scale:
-    | {
-        (idx: number): d3.RGBColor;
-        range?(): ColorRange;
-        domain(): number[];
-      }
-    | d3.ScaleQuantile<number, never>
-    | d3.ScaleSequential<string, never>
-    | undefined;
-}
 /**
  * Create colors scale and RGB array and return as object.
  *
@@ -119,7 +111,7 @@ function _createColorTable(
   colorByData: Dataframe | null,
   schema: Schema,
   userColors: ConvertedUserColors | null = null
-): ColorTable {
+) {
   if (colorMode === null || colorByData === null) {
     return defaultColors(schema.dataframe.nObs);
   }
@@ -197,7 +189,7 @@ function _createUserColors(
   colorAccessor: LabelType,
   schema: Schema,
   userColors: ConvertedUserColors
-): ColorTable {
+) {
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
   const rgb = createRgbArray(data, colors);
 
@@ -212,7 +204,7 @@ function _createUserColors(
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
 
   const scale = (idx: number) => scaleByLabel(categoryMap.get(idx));
-  scale.domain = () => [0, 0];
+
   return { rgb, scale };
 }
 const createUserColors = memoize(_createUserColors);
@@ -225,7 +217,7 @@ function _createColorsByCategoricalMetadata(
   data: DataframeValueArray,
   colorAccessor: LabelType,
   schema: Schema
-): ColorTable {
+): Colors {
   // TODO: #35 Use type guards to insure type instead of casting
   const { categories } = schema.annotations.obsByName[
     colorAccessor
@@ -242,6 +234,7 @@ function _createColorsByCategoricalMetadata(
   }, {});
 
   const rgb = createRgbArray(data, colors);
+
   return { rgb, scale };
 }
 
@@ -268,7 +261,7 @@ function _createColorsByContinuousMetadata(
   data: DataframeValueArray,
   min: number,
   max: number
-): ColorTable {
+) {
   const colorBins = 100;
   const scale = d3
     .scaleQuantile()

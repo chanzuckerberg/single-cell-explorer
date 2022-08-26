@@ -1,16 +1,10 @@
-import { AnyAction } from "redux";
-
-interface PointDilationState {
-  metadataField: string;
-  categoryField: string;
-}
-
-const initialState: PointDilationState = {
+const initialState = {
   metadataField: "",
   categoryField: "",
 };
 
-const pointDialation = (state = initialState, action: AnyAction) => {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+const pointDialation = (state = initialState, action: any) => {
   const { metadataField, label: categoryField } = action;
 
   switch (action.type) {

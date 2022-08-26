@@ -154,11 +154,24 @@ export async function getElementCoordinates(testId: any) {
   });
 }
 
+async function nameNewAnnotation() {
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
+  if (await isElementPresent(getTestId("annotation-dialog"))) {
+    await typeInto("new-annotation-name", "ignoreE2E");
+    await clickOn("submit-annotation");
+
+    // wait for the page to load
+    await waitByClass("autosave-complete");
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function goToPage(url: any) {
   await page.goto(url, {
     waitUntil: "networkidle0",
   });
+
+  await nameNewAnnotation();
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.

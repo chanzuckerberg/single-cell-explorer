@@ -504,6 +504,8 @@ export default {
     annoActions.annotationDeleteLabelFromCategory,
   annotationRenameLabelInCategory: annoActions.annotationRenameLabelInCategory,
   annotationLabelCurrentSelection: annoActions.annotationLabelCurrentSelection,
+  saveObsAnnotationsAction: annoActions.saveObsAnnotationsAction,
+  saveGenesetsAction: annoActions.saveGenesetsAction,
   needToSaveObsAnnotations: annoActions.needToSaveObsAnnotations,
   layoutChoiceAction: embActions.layoutChoiceAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,

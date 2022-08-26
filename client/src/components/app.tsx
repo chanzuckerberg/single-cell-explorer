@@ -16,6 +16,7 @@ import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
+import Autosave from "./autosave";
 import Embedding from "./embedding";
 
 import actions from "../actions";
@@ -78,6 +79,7 @@ class App extends React.Component<Props> {
                       </Controls>
                       <Embedding />
                       <FloatingButton baseUrl={baseUrl} />
+                      <Autosave />
                       <Legend />
                       <Graph
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore

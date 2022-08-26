@@ -2,17 +2,12 @@
 Reducer for the annoMatrix
 */
 
-import { AnyAction } from "redux";
-import AnnoMatrix from "../annoMatrix/annoMatrix";
-
-const AnnoMatrixReducer = (
-  state: AnnoMatrix | null = null,
-  action: AnyAction
-) => {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+const AnnoMatrix = (state = null, action: any) => {
   if (action.annoMatrix) {
     return action.annoMatrix;
   }
   return state;
 };
 
-export default AnnoMatrixReducer;
+export default AnnoMatrix;
