@@ -1,11 +1,16 @@
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+import { AnyAction } from "redux";
+import { CrossfilterSelector } from "../util/typedCrossfilter";
+
+interface GraphSelectionState {
+  tool: "lasso" | "brush";
+  selection: CrossfilterSelector;
+}
 const GraphSelection = (
-  state = {
+  state: GraphSelectionState = {
     tool: "lasso", // what selection tool mode (lasso, brush, ...)
     selection: { mode: "all" }, // current selection, which is tool specific
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   switch (action.type) {
     case "set clip quantiles":
