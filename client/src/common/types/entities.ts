@@ -15,8 +15,6 @@ export const STANDARD_CATEGORY_NAMES = [
   "disease_ontology_term_id",
   "ethnicity",
   "ethnicity_ontology_term_id",
-  "self_reported_ethnicity",
-  "self_reported_ethnicity_ontology_term_id",
   "is_primary_data",
   "organism",
   "organism_ontology_term_id",
@@ -24,8 +22,6 @@ export const STANDARD_CATEGORY_NAMES = [
   "sex",
   "tissue_ontology_term_id",
   "tissue",
-  "suspension_type",
-  "donor_id",
 ];
 
 /**
