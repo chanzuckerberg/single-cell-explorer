@@ -6,7 +6,7 @@ interface ConfigState {
   parameters: Config["parameters"] | null;
   displayNames: Config["displayNames"] | null;
   loading?: boolean;
-  error?: Error | string | null;
+  error?: Error | null;
   corpora_props?: Config["corpora_props"];
   library_versions?: Config["library_versions"];
   portalUrl?: Config["portalUrl"];
