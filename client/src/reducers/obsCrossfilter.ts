@@ -2,8 +2,13 @@
 Reducer for the obsCrossfilter
 */
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-const ObsCrossfilter = (state = null, action: any) => {
+import { AnyAction } from "redux";
+import { AnnoMatrixObsCrossfilter } from "../annoMatrix";
+
+const ObsCrossfilter = (
+  state: AnnoMatrixObsCrossfilter | null = null,
+  action: AnyAction
+) => {
   if (action.obsCrossfilter) {
     return action.obsCrossfilter;
   }
