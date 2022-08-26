@@ -1,12 +1,20 @@
+import { AnyAction } from "redux";
+
+type Level = "top" | "bottom" | "";
+
+interface StackLevels {
+  geneLevel: Level;
+  scatterplotLevel: Level;
+}
 /* logic for minimizing and maximizing pop-ups */
 const minimizeMaximizePopUps = (
-  geneLevel: string,
+  geneLevel: Level,
   geneIsMinimized: boolean,
   geneIsOpen: boolean,
-  scatterplotLevel: string,
+  scatterplotLevel: Level,
   scatterplotIsMinimized: boolean,
   scatterplotIsOpen: boolean
-) => {
+): StackLevels => {
   if (
     geneIsMinimized &&
     geneIsOpen &&
@@ -37,13 +45,31 @@ const minimizeMaximizePopUps = (
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+interface ControlsState {
+  loading: boolean;
+  error: Error | string | null;
+  resettingInterface: boolean;
+  graphInteractionMode: "zoom" | "select";
+  opacityForDeselectedCells: number;
+  scatterplotXXaccessor: string | false;
+  scatterplotYYaccessor: string | false;
+  geneIsOpen: boolean;
+  scatterplotIsMinimized: boolean;
+  geneIsMinimized: boolean;
+  scatterplotLevel: Level;
+  scatterplotIsOpen: boolean;
+  geneLevel: Level;
+  gene: string | null;
+  infoError: string | null;
+  graphRenderCounter: number;
+  colorLoading: boolean;
+  datasetDrawer: boolean;
+}
 const Controls = (
-  state = {
+  state: ControlsState = {
     // data loading flag
     loading: true,
     error: null,
-
     // all of the data + selection state
     resettingInterface: false,
     graphInteractionMode: "select",
@@ -62,8 +88,7 @@ const Controls = (
     colorLoading: false,
     datasetDrawer: false,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   /*
   For now, log anything looking like an error to the console.
@@ -163,7 +188,6 @@ const Controls = (
       );
       state.geneLevel = stackLevels.geneLevel;
       state.scatterplotLevel = stackLevels.scatterplotLevel;
-
       // new gene clicked in the span of loading
       if (state.gene !== action.gene) {
         return {
