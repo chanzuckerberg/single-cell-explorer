@@ -3,10 +3,19 @@
  */
 
 // Core dependencies
-import { AnyAction } from "redux";
+import { Action } from "redux";
 
 // App dependencies
 import { DatasetMetadata as IDatasetMetadata } from "../common/types/entities";
+
+/*
+ Action dispatched on successful response from dataset-metadata endpoint.
+ */
+export interface DatasetMetdataAction extends Action<string> {
+  datasetMetadata: IDatasetMetadata;
+  error: string;
+  portalUrl: string;
+}
 
 /*
  Dataset metdata state; selected dataset ID and corresponding collection information.
@@ -27,7 +36,7 @@ const DatasetMetadata = (
     datasetMetadata: null,
     portalUrl: null,
   },
-  action: AnyAction
+  action: DatasetMetdataAction
 ): DatasetMetadataState => {
   switch (action.type) {
     case "initial data load start":

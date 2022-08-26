@@ -8,9 +8,8 @@ about commonly used names.  Preferentially, pick in the following order:
   4. give up, use the first available
 */
 
-import type { AnyAction } from "redux";
+import type { Action } from "redux";
 import { EmbeddingSchema, Schema } from "../common/types/schema";
-import type { RootState } from ".";
 
 function bestDefaultLayout(layouts: Array<string>): string {
   const preferredNames = ["umap", "tsne", "pca"];
@@ -34,10 +33,15 @@ export interface LayoutChoiceState {
   currentDimNames: Array<string>;
 }
 
+export interface LayoutChoiceAction extends Action<string> {
+  layoutChoice: string;
+}
+
 const LayoutChoice = (
   state: LayoutChoiceState,
-  action: AnyAction,
-  nextSharedState: RootState
+  action: LayoutChoiceAction,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,  @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  nextSharedState: any
 ): LayoutChoiceState => {
   switch (action.type) {
     case "initial data load complete": {
