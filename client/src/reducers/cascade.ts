@@ -41,7 +41,7 @@ export default function cascadeReducers(arg: CascadedReducers): Reducer {
     const nextState: RootState = {};
     let stateChange = false;
     for (let i = 0, l = reducerKeys.length; i < l; i += 1) {
-      const key = reducerKeys[i] as string;
+      const key = reducerKeys[i];
       const reducer = reducers.get(key);
       if (reducer) {
         const prevStateForKey = prevState ? prevState[key] : undefined;
