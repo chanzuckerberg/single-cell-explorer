@@ -4,7 +4,7 @@ import type { RootState } from ".";
 export type ReducerFunction = (
   prevStateForKey: RootState[keyof RootState],
   action: AnyAction,
-  nexState?: RootState,
+  nextState?: RootState,
   prevState?: RootState
 ) => RootState;
 
