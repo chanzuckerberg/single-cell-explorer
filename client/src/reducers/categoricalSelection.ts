@@ -20,7 +20,7 @@ const CategoricalSelection = (
   state: CategoricalSelectionState,
   action: AnyAction,
   nextSharedState: RootState
-) => {
+): CategoricalSelectionState => {
   switch (action.type) {
     case "initial data load complete":
     case "subset to selection":
