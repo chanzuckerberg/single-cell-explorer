@@ -1,23 +1,28 @@
 import uniq from "lodash.uniq";
 import filter from "lodash.filter";
+import { Action, AnyAction } from "redux";
 import type { RootState } from ".";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 
-interface QuickGenesActions {
-  type: string;
+interface State {
+  userDefinedGenes: string[];
+  userDefinedGenesLoading: boolean;
+}
+
+interface QuickGenesActions extends Action<string> {
   gene: string;
   selection: string;
   data: string;
 }
 const quickGenes = (
-  state: { userDefinedGenes: string[]; userDefinedGenesLoading: boolean } = {
+  state: State = {
     userDefinedGenes: [],
     userDefinedGenesLoading: false,
   },
-  action: QuickGenesActions,
+  action: AnyAction,
   nextSharedState: RootState
-) => {
+): State => {
   switch (action.type) {
     case "request user defined gene started": {
       return {
@@ -33,7 +38,10 @@ const quickGenes = (
     }
     case "request user defined gene success": {
       const { userDefinedGenes } = state;
-      const _userDefinedGenes = uniq([...userDefinedGenes, action.gene]);
+      const { gene } = action as QuickGenesActions;
+
+      const _userDefinedGenes = uniq([...userDefinedGenes, gene]);
+
       return {
         ...state,
         userDefinedGenes: _userDefinedGenes,
@@ -42,10 +50,10 @@ const quickGenes = (
     }
     case "clear user defined gene": {
       const { userDefinedGenes } = state;
-      const newUserDefinedGenes = filter(
-        userDefinedGenes,
-        (d) => d !== action.gene
-      );
+      const { gene } = action as QuickGenesActions;
+
+      const newUserDefinedGenes = filter(userDefinedGenes, (d) => d !== gene);
+
       return {
         ...state,
         userDefinedGenes: newUserDefinedGenes,
@@ -56,7 +64,7 @@ const quickGenes = (
     case "color by expression":
     case "set scatterplot x":
     case "set scatterplot y": {
-      const { selection, gene } = action;
+      const { selection, gene } = action as QuickGenesActions;
       const { controls } = nextSharedState;
       const { scatterplotXXaccessor, scatterplotYYaccessor } = controls;
 

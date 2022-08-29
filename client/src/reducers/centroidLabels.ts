@@ -1,4 +1,5 @@
-import type { Action } from "redux";
+import type { Action, AnyAction } from "redux";
+import type { RootState } from ".";
 
 export interface CentroidLabelsState {
   showLabels: boolean;
@@ -14,15 +15,15 @@ const initialState: CentroidLabelsState = {
 
 const centroidLabels = (
   state = initialState,
-  action: CentroidLabelsAction,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  sharedNextState: any
+  action: AnyAction,
+  sharedNextState: RootState
 ): CentroidLabelsState => {
   const {
     colors: { colorAccessor },
   } = sharedNextState;
 
-  const showLabels = action.showLabels ?? state.showLabels;
+  const showLabels =
+    (action as CentroidLabelsAction).showLabels ?? state.showLabels;
 
   switch (action.type) {
     case "color by categorical metadata":
