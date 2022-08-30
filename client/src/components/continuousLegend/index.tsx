@@ -1,15 +1,22 @@
 import React from "react";
-import { connect } from "react-redux";
+import { Action } from "redux";
+import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import { interpolateCool } from "d3-scale-chromatic";
+import Async, { AsyncProps } from "react-async";
+import AnnoMatrix from "../../annoMatrix/annoMatrix";
+import { AppDispatch, RootState } from "../../reducers";
 
 import {
   createColorTable,
   createColorQuery,
+  ColorTable,
+  ColorRange,
 } from "../../util/stateManager/colorHelpers";
+import { ColorsState } from "../../reducers/colors";
+import { Genesets } from "../../reducers/genesets";
 
 // create continuous color legend
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
   const legendHeight = 200;
   const legendWidth = 80;
@@ -34,8 +41,7 @@ const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
     we flip the color scale as well [1, 0] instead of [0, 1] */
     .node();
 
-  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas?.getContext("2d");
 
   const legendScale = d3
     .scaleLinear()
@@ -46,8 +52,8 @@ const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
     ]); /* we flip this to make viridis colors dark if high in the color scale */
 
   // image data hackery based on http://bl.ocks.org/mbostock/048d21cf747371b11884f75ad896e5a5
-  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  const image = ctx.createImageData(1, legendHeight);
+  const image = ctx?.createImageData(1, legendHeight);
+  if (!image) return;
   d3.range(legendHeight).forEach((i) => {
     const c = d3.rgb(colorScale(legendScale.invert(i)));
     image.data[4 * i] = c.r;
@@ -55,8 +61,8 @@ const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
     image.data[4 * i + 2] = c.b;
     image.data[4 * i + 3] = 255;
   });
-  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-  ctx.putImageData(image, 0, 0);
+
+  ctx?.putImageData(image, 0, 0);
 
   // A simpler way to do the above, but possibly slower. keep in mind the legend
   // width is stretched because the width attr of the canvas is 1
@@ -109,61 +115,121 @@ const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
     .text(colorAccessor);
 };
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  annoMatrix: (state as any).annoMatrix,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  colors: (state as any).colors,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  genesets: (state as any).genesets.genesets,
-}))
-class ContinuousLegend extends React.Component {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  async componentDidUpdate(prevProps: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix, colors, genesets } = this.props;
-    if (!colors || !annoMatrix) return;
-    if (colors !== prevProps?.colors || annoMatrix !== prevProps?.annoMatrix) {
-      const { schema } = annoMatrix;
-      const { colorMode, colorAccessor, userColors } = colors;
-      const colorQuery = createColorQuery(
-        colorMode,
-        colorAccessor,
-        schema,
-        genesets
-      );
-      const colorDf = colorQuery ? await annoMatrix.fetch(...colorQuery) : null;
-      const colorTable = createColorTable(
-        colorMode,
-        colorAccessor,
-        colorDf,
-        schema,
-        userColors
-      );
-      const colorScale = colorTable.scale;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'range' does not exist on type '((idx: an... Remove this comment to see the full error message
-      const range = colorScale?.range;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'domain' does not exist on type '((idx: a... Remove this comment to see the full error message
-      const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];
-      /* always remove it, if it's not continuous we don't put it back. */
-      d3.select("#continuous_legend").selectAll("*").remove();
-      if (colorAccessor && colorScale && range && domainMin < domainMax) {
-        /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
-        if (range()[0][0] !== "#") {
-          continuous(
-            "#continuous_legend",
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'domain' does not exist on type '((idx: a... Remove this comment to see the full error message
-            d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
-            colorAccessor
-          );
-        }
-      }
-    }
+interface FetchedAsyncProps {
+  colorAccessor: string;
+  colorScale: ColorTable["scale"];
+  range?: ColorRange;
+  domainMin: number;
+  domainMax: number;
+  colorMode: Action["type"];
+}
+
+interface StateProps {
+  annoMatrix: AnnoMatrix;
+  colors: ColorsState;
+  genesets: Genesets;
+}
+interface DispatchProps {
+  handleColorSuccess: () => void;
+}
+const mapStateToProps = (state: RootState): StateProps => ({
+  annoMatrix: state.annoMatrix,
+  colors: state.colors,
+  genesets: state.genesets.genesets,
+});
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  handleColorSuccess: () =>
+    dispatch({ type: "color by geneset mean expression success" }),
+});
+
+type Props = StateProps & DispatchProps;
+
+class ContinuousLegend extends React.Component<Props> {
+  static watchAsync(props: any, prevProps: any) {
+    return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  cachedWatchProps: StateProps | null;
+
+  cachedAsyncProps: FetchedAsyncProps | null;
+
+  constructor(props: Props) {
+    super(props);
+    this.cachedWatchProps = null;
+    this.cachedAsyncProps = null;
+  }
+
+  fetchAsyncProps = async (
+    props: AsyncProps<FetchedAsyncProps | null>
+  ): Promise<FetchedAsyncProps | null> => {
+    const { annoMatrix, colors, genesets } = props.watchProps as StateProps;
+
+    if (!colors || !annoMatrix || !colors.colorMode || !colors.colorAccessor)
+      return null;
+    const { schema } = annoMatrix;
+    const { colorMode, colorAccessor, userColors } = colors;
+    const colorQuery = createColorQuery(
+      colorMode,
+      colorAccessor,
+      schema,
+      genesets
+    );
+    const colorDf = colorQuery ? await annoMatrix.fetch(...colorQuery) : null;
+    const colorTable = createColorTable(
+      colorMode,
+      colorAccessor,
+      colorDf,
+      schema,
+      userColors
+    );
+    const colorScale = colorTable.scale;
+    const range = (colorScale?.range ?? (() => [0, 0])) as ColorRange;
+    const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];
+
+    const result: FetchedAsyncProps = {
+      colorAccessor,
+      colorScale,
+      range,
+      domainMin,
+      domainMax,
+      colorMode,
+    };
+    return result;
+  };
+
+  updateContinuousLegend = (asyncProps: FetchedAsyncProps) => {
+    const { handleColorSuccess } = this.props;
+    const {
+      colorAccessor,
+      colorScale,
+      range,
+      domainMin,
+      domainMax,
+      colorMode,
+    } = asyncProps;
+    if (
+      colorAccessor &&
+      colorScale &&
+      range &&
+      (domainMin ?? 0) < (domainMax ?? 0)
+    ) {
+      /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
+      const r = range();
+      if (!(typeof r === "function" && r()[0][0] === "#")) {
+        continuous(
+          "#continuous_legend",
+          d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+          colorAccessor
+        );
+      }
+    }
+    if (colorScale && colorMode === "color by geneset mean expression") {
+      handleColorSuccess();
+    }
+  };
+
   render() {
+    const { annoMatrix, colors, genesets } = this.props;
     return (
       <div
         id="continuous_legend"
@@ -174,9 +240,33 @@ class ContinuousLegend extends React.Component {
           zIndex: 1,
           pointerEvents: "none",
         }}
-      />
+      >
+        <Async
+          watchFn={ContinuousLegend.watchAsync}
+          promiseFn={this.fetchAsyncProps}
+          watchProps={{
+            annoMatrix,
+            colors,
+            genesets,
+          }}
+        >
+          <Async.Fulfilled>
+            {(asyncProps: FetchedAsyncProps) => {
+              d3.select("#continuous_legend").selectAll("*").remove();
+              if (
+                !shallowEqual(asyncProps, this.cachedAsyncProps) &&
+                asyncProps
+              ) {
+                this.updateContinuousLegend(asyncProps);
+              }
+              this.cachedAsyncProps = asyncProps;
+              return null;
+            }}
+          </Async.Fulfilled>
+        </Async>
+      </div>
     );
   }
 }
 
-export default ContinuousLegend;
+export default connect(mapStateToProps, mapDispatchToProps)(ContinuousLegend);

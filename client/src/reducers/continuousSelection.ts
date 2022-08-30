@@ -1,4 +1,4 @@
-import type { Action } from "redux";
+import type { Action, AnyAction } from "redux";
 
 import { makeContinuousDimensionName } from "../util/nameCreators";
 
@@ -16,7 +16,7 @@ export interface ContinuousSelectionState {
 
 const ContinuousSelection = (
   state: ContinuousSelectionState = {},
-  action: ContinuousSelectionAction
+  action: AnyAction
 ): ContinuousSelectionState => {
   switch (action.type) {
     case "reset subset":
@@ -27,20 +27,20 @@ const ContinuousSelection = (
     case "continuous metadata histogram start":
     case "continuous metadata histogram brush":
     case "continuous metadata histogram end": {
-      const name = makeContinuousDimensionName(
-        action.continuousNamespace,
-        action.selection
-      );
+      const { continuousNamespace, selection, range } =
+        action as ContinuousSelectionAction;
+
+      const name = makeContinuousDimensionName(continuousNamespace, selection);
       return {
         ...state,
-        [name]: action.range,
+        [name]: range,
       };
     }
     case "continuous metadata histogram cancel": {
-      const name = makeContinuousDimensionName(
-        action.continuousNamespace,
-        action.selection
-      );
+      const { continuousNamespace, selection } =
+        action as ContinuousSelectionAction;
+
+      const name = makeContinuousDimensionName(continuousNamespace, selection);
       const { [name]: deletedField, ...newState } = state;
       return newState;
     }
