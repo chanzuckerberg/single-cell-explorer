@@ -97,6 +97,10 @@ class CxgDataset(Dataset):
 
     def get_path(self, *urls):
         return path_join(self.url, *urls)
+    
+    def _init_sparsity(self):
+        X = self.open_array("X")
+        self.is_sparse = X.schema.sparse
 
     @staticmethod
     def _lsuri(uri, tiledb_ctx):
@@ -187,6 +191,7 @@ class CxgDataset(Dataset):
         self.about = about
         self.cxg_version = cxg_version
         self.corpora_props = corpora_props
+        self._init_sparsity()
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
@@ -257,23 +262,23 @@ class CxgDataset(Dataset):
     def get_X_array(self, obs_mask=None, var_mask=None):
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
+        shape = self.get_shape()
         if obs_items is None or var_items is None:
             # If either zero rows or zero columns were selected, return an empty 2d array.
-            shape = self.get_shape()
             obs_size = 0 if obs_items is None else shape[0] if obs_mask is None else np.count_nonzero(obs_mask)
             var_size = 0 if var_items is None else shape[1] if var_mask is None else np.count_nonzero(var_mask)
             return np.ndarray((obs_size, var_size))
 
-        X = self.open_array("X")
-
-        if X.schema.sparse:
-            data = X.query(order="U").multi_index[obs_items, var_items]
-            nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
-            ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
+        if self.is_sparse:
+            X = self.open_array("Xc")
+            data = X.query(order="U").multi_index[var_items]
+            nrows, obsindices = self.__remap_indices(shape[0], obs_mask, data.get("coords", data)["obs"])
+            ncols, varindices = self.__remap_indices(shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
             return densedata
         else:
+            X = self.open_array("X")
             data = X.multi_index[obs_items, var_items][""]
             return data
 
@@ -282,11 +287,14 @@ class CxgDataset(Dataset):
 
     def get_shape(self):
         X = self.open_array("X")
-        return X.shape
+        if not X.schema.sparse:
+            return X.shape
+        Xc = self.open_array("Xc")
+        return (X.shape[0],Xc.shape[0])
 
     def get_X_array_dtype(self):
         X = self.open_array("X")
-        return X.dtype
+        return X.attr("").dtype
 
     def query_var_array(self, term_name):
         var = self.open_array("var")
