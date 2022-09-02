@@ -16,9 +16,9 @@ import server.common.fbs.NetEncoding.TypedFBArray as TypedFBArray
 def serialize_column(builder, typed_arr):
     """Serialize NetEncoding.Column"""
 
-    (u_type, u_value) = typed_arr
+    (union_type, u_value) = typed_arr
     Column.ColumnStart(builder)
-    Column.ColumnAddUType(builder, u_type)
+    Column.ColumnAddUType(builder, union_type)
     Column.ColumnAddU(builder, u_value)
     return Column.ColumnEnd(builder)
 
@@ -32,8 +32,8 @@ def serialize_matrix(builder, n_rows, n_cols, columns, col_idx):
     Matrix.MatrixAddNCols(builder, n_cols)
     Matrix.MatrixAddColumns(builder, columns)
     if col_idx is not None:
-        (u_type, u_val) = col_idx
-        Matrix.MatrixAddColIndexType(builder, u_type)
+        (union_type, u_val) = col_idx
+        Matrix.MatrixAddColIndexType(builder, union_type)
         Matrix.MatrixAddColIndex(builder, u_val)
     return Matrix.MatrixEnd(builder)
 

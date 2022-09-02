@@ -15,82 +15,6 @@ import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArra
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 
 
-def _get_array_class(array):
-    # returns
-    # (1) the generic type of array - category, sparse, or dense
-    # this determines which coder should be used.
-    # (2) the encoding data type from the corresponding attribute of the
-    # source array. e.g. for pandas Categorical, the encoding data type
-    # is computed from the codes array.
-    if pd.api.types.is_categorical_dtype(array):
-        return "category", np.dtype(array.cat.codes.values.dtype).str
-    else:
-        return "dense", np.dtype(get_encoding_dtype_of_array(array)).str
-
-
-def serialize_typed_array(builder, source_array):
-    if isinstance(source_array, pd.Index):
-        source_array = source_array.to_series()
-
-    array_class, encoding_dtype = _get_array_class(source_array)
-
-    # two-layer mapper (1) array_class, (2) encoding_dtype
-    # this is necessary as an int32 codes array will require a different coder
-    # than an int32 numeric array.
-    arrayEncoder = {
-        "dense": {
-            np.dtype(np.float64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
-            np.dtype(np.float32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
-            np.dtype(np.float16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
-            np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.int64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
-            np.dtype(np.uint8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
-            np.dtype(np.uint16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
-            np.dtype(np.uint32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
-            np.dtype(np.uint64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
-        },
-        "category": {
-            np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
-            np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded16FBArray),
-            np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded32FBArray),
-        },
-    }
-    # the default coder will assume the data is polymorphic and yield a JSON encoded array
-    defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
-    Coder, array_type = arrayEncoder[array_class].get(encoding_dtype, defaultCoder)
-
-    coder_obj = Coder()
-    # for encoding, we require the source array, flatbuffer builder, and encoding data type
-    array_value = coder_obj.encode_array(source_array, builder, encoding_dtype)
-    return (array_type, array_value)
-
-
-def deserialize_typed_array(tarr):
-    type_map = {
-        TypedFBArray.TypedFBArray.NONE: (None, None),
-        TypedFBArray.TypedFBArray.Uint32FBArray: (DenseNumericCoder, Uint32FBArray.Uint32FBArray),
-        TypedFBArray.TypedFBArray.Int32FBArray: (DenseNumericCoder, Int32FBArray.Int32FBArray),
-        TypedFBArray.TypedFBArray.Float32FBArray: (DenseNumericCoder, Float32FBArray.Float32FBArray),
-        TypedFBArray.TypedFBArray.Float64FBArray: (DenseNumericCoder, Float64FBArray.Float64FBArray),
-        TypedFBArray.TypedFBArray.JSONEncodedFBArray: (PolymorphicCoder, JSONEncodedFBArray.JSONEncodedFBArray),
-        TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
-        TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
-        TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
-    }
-
-    (u_type, u) = tarr
-    if u_type is TypedFBArray.TypedFBArray.NONE:
-        return None
-
-    Coder, TarType = type_map.get(u_type, None)
-    if TarType is None:
-        raise TypeError(f"FBS contains unknown data type: {u_type}")
-    # for decoding, we require the encoded column and the type of typed array
-    return Coder().decode_array(u, TarType)
-
-
 class DenseNumericCoder:
     n_slots = 1
 
@@ -167,3 +91,80 @@ class PolymorphicCoder:
         arr.Init(u.Bytes, u.Pos)
         narr = arr.DataAsNumpy()
         return np.array(json.loads(narr.tobytes().decode("utf-8")))
+
+
+# two-layer mapper (1) array_class, (2) encoding_dtype
+# this is necessary as an int32 codes array will require a different coder
+# than an int32 numeric array.
+ARRAY_ENCODER = {
+    "dense": {
+        np.dtype(np.float64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.float32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.float16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+        np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+        np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+        np.dtype(np.int64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
+        np.dtype(np.uint8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
+        np.dtype(np.uint16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
+        np.dtype(np.uint32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
+        np.dtype(np.uint64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
+    },
+    "category": {
+        np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
+        np.dtype(np.int16).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded16FBArray),
+        np.dtype(np.int32).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded32FBArray),
+    },
+}
+
+TYPE_MAP = {
+    TypedFBArray.TypedFBArray.NONE: (None, None),
+    TypedFBArray.TypedFBArray.Uint32FBArray: (DenseNumericCoder, Uint32FBArray.Uint32FBArray),
+    TypedFBArray.TypedFBArray.Int32FBArray: (DenseNumericCoder, Int32FBArray.Int32FBArray),
+    TypedFBArray.TypedFBArray.Float32FBArray: (DenseNumericCoder, Float32FBArray.Float32FBArray),
+    TypedFBArray.TypedFBArray.Float64FBArray: (DenseNumericCoder, Float64FBArray.Float64FBArray),
+    TypedFBArray.TypedFBArray.JSONEncodedFBArray: (PolymorphicCoder, JSONEncodedFBArray.JSONEncodedFBArray),
+    TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
+    TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
+    TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
+}
+
+
+def _get_array_class(array):
+    # returns
+    # (1) the generic type of array - category, sparse, or dense
+    # this determines which coder should be used.
+    # (2) the encoding data type from the corresponding attribute of the
+    # source array. e.g. for pandas Categorical, the encoding data type
+    # is computed from the codes array.
+    if pd.api.types.is_categorical_dtype(array):
+        return "category", np.dtype(array.cat.codes.values.dtype).str
+    else:
+        return "dense", np.dtype(get_encoding_dtype_of_array(array)).str
+
+
+def serialize_typed_array(builder, source_array):
+    if isinstance(source_array, pd.Index):
+        source_array = source_array.to_series()
+
+    array_class, encoding_dtype = _get_array_class(source_array)
+    # the default coder will assume the data is polymorphic and yield a JSON encoded array
+    defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
+    Coder, array_type = ARRAY_ENCODER[array_class].get(encoding_dtype, defaultCoder)
+
+    coder_obj = Coder()
+    # for encoding, we require the source array, flatbuffer builder, and encoding data type
+    array_value = coder_obj.encode_array(source_array, builder, encoding_dtype)
+    return (array_type, array_value)
+
+
+def deserialize_typed_array(tarr):
+    (union_type, u) = tarr
+    if union_type is TypedFBArray.TypedFBArray.NONE:
+        return None
+
+    Coder, TarType = TYPE_MAP.get(union_type, None)
+    if TarType is None:
+        raise TypeError(f"FBS contains unknown data type: {union_type}")
+    # for decoding, we require the encoded column and the type of typed array
+    return Coder().decode_array(u, TarType)

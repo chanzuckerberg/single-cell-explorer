@@ -363,9 +363,13 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
-                    schema["type"] = type_hint["type"]
-                    if schema["type"] == "categorical" and "categories" in type_hint:
-                        schema["categories"] = type_hint["categories"]
+                    # if there are a ton of categories, > 75% of the number of cells, then convert to string
+                    if "categories" in type_hint and len(type_hint.get("categories", [])) > 0.75 * shape[0]:
+                        schema["type"] = "string"
+                    else:
+                        schema["type"] = type_hint["type"]
+                        if schema["type"] == "categorical" and "categories" in type_hint:
+                            schema["categories"] = type_hint["categories"]
                 else:
                     schema.update(get_schema_type_hint_from_dtype(attr.dtype))
                 cols.append(schema)
