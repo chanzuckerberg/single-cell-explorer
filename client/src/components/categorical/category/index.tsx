@@ -665,7 +665,6 @@ const CategoryValueList = React.memo(
           {tuples.map(([value, index]) => (
             <Value
               key={value}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}
@@ -688,7 +687,6 @@ const CategoryValueList = React.memo(
         {tuples.map(([value, index]) => (
           <Flipped key={value} flipId={value}>
             <Value
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}

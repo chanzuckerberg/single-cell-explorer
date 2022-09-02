@@ -2,8 +2,12 @@
  * Utility type and interface definitions.
  */
 
+import { DictEncoded16Array } from "../../util/stateManager/dict-encoded16_array";
+import { DictEncoded8Array } from "../../util/stateManager/dict-encoded8_array";
+import { DictEncoded32Array } from "../../util/stateManager/dict-encoded32_array";
+
 /**
- * TypedArrays that can be assigned to a number.
+ * Arrays of numeric values.
  */
 export type TypedArray =
   | Int8Array
@@ -52,6 +56,9 @@ export interface GenericArrayConstructor<T> {
         typeof Uint32Array &
         typeof Float32Array &
         typeof Float64Array &
+        typeof DictEncoded8Array &
+        typeof DictEncoded16Array &
+        typeof DictEncoded32Array &
         typeof Array &
         T
     >
@@ -108,6 +115,21 @@ export function isUnsignedIntTypedArray(
     tbd instanceof Uint32Array
   );
 }
+
+/**
+ * Test if the parameter is a categorical typed array
+ * @param c - value to be tested
+ * @returns - true if `c` is a dictionary encoded array
+ */
+export const isDictEncodedTypedArray = (c: unknown): c is DictEncodedArray =>
+  c instanceof DictEncoded8Array ||
+  c instanceof DictEncoded16Array ||
+  c instanceof DictEncoded32Array;
+
+export type DictEncodedArray =
+  | DictEncoded8Array
+  | DictEncoded16Array
+  | DictEncoded32Array;
 
 /**
  * Test if the paramter is an int TypedArray

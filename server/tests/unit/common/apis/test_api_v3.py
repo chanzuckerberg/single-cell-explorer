@@ -1,3 +1,4 @@
+from urllib.parse import quote
 import json
 import os
 import time
@@ -16,8 +17,6 @@ from server.common.diffexpdu import DiffExArguments
 
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
-
-from urllib.parse import quote
 
 
 class BaseTest(_BaseTest):

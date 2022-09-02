@@ -1,8 +1,9 @@
 import { flatbuffers } from "flatbuffers";
-import { NetEncoding } from "./matrix_generated";
+import { NetEncoding, NetEncodingDict } from "./fbs_data_types";
 import {
   TypedArray,
-  isTypedArray,
+  isDictEncodedTypedArray,
+  DictEncodedArray,
   isFloatTypedArray,
 } from "../../common/types/arraytypes";
 import {
@@ -10,7 +11,15 @@ import {
   IdentityInt32Index,
   DenseInt32Index,
   KeyIndex,
+  DataframeValueArray,
 } from "../dataframe";
+
+import { DictEncoded8Array } from "./dict-encoded8_array";
+import { DictEncoded16Array } from "./dict-encoded16_array";
+import { DictEncoded32Array } from "./dict-encoded32_array";
+import { TypedFBArray } from "./net-encoding/typed-f-b-array";
+import { Matrix } from "./net-encoding/matrix";
+import { Column } from "./net-encoding/column";
 
 const utf8Decoder = new TextDecoder("utf-8");
 
@@ -19,27 +28,83 @@ const utf8Decoder = new TextDecoder("utf-8");
  */
 
 /**
- * Decode NetEncoding.TypedArray
+ * Decode TypedFBArray
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function decodeTypedArray(uType: any, uValF: any, inplace = false) {
-  if (uType === NetEncoding.TypedArray.NONE) {
+
+function decodeDictArray(
+  uType: TypedFBArray,
+  uValF: Column["u"]
+): DictEncodedArray {
+  const TypeClass =
+    NetEncodingDict[TypedFBArray[uType] as keyof typeof NetEncodingDict];
+  const arr = uValF(new TypeClass());
+  const codesArray = arr.codesArray();
+  let codesToValues = arr.dictArray();
+  codesToValues = JSON.parse(utf8Decoder.decode(codesToValues));
+
+  let data: DictEncodedArray;
+  if (uType === TypedFBArray.DictEncoded8FBArray) {
+    data = new DictEncoded8Array(codesArray);
+    data.setCodeMapping(codesToValues);
+  } else if (uType === TypedFBArray.DictEncoded16FBArray) {
+    data = new DictEncoded16Array(codesArray);
+    data.setCodeMapping(codesToValues);
+  } else {
+    data = new DictEncoded32Array(codesArray);
+    data.setCodeMapping(codesToValues);
+  }
+  return data;
+}
+
+function decodeNumericArray(
+  uType: TypedFBArray,
+  uValF: Column["u"],
+  inplace = false
+): TypedArray {
+  const TypeClass =
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
+  const arr = uValF(new TypeClass());
+  let dataArray = arr.dataArray();
+  if (!inplace) {
+    /* force copy to release underlying FBS buffer */
+    dataArray = new dataArray.constructor(dataArray);
+  }
+  return dataArray;
+}
+
+function decodeJSONArray(
+  uType: TypedFBArray,
+  uValF: Column["u"]
+): DataframeValueArray {
+  const TypeClass =
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
+  const arr = uValF(new TypeClass());
+  const dataArray = arr.dataArray();
+  const json = utf8Decoder.decode(dataArray);
+  return JSON.parse(json);
+}
+
+function decodeTypedArray(
+  uType: TypedFBArray,
+  uValF: Column["u"],
+  inplace = false
+): TypedArray | DataframeValueArray | DictEncodedArray | null {
+  if (uType === TypedFBArray.NONE) {
     return null;
   }
-
-  // Convert to a JS class that supports this type
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const TypeClass = NetEncoding[NetEncoding.TypedArray[uType]];
-  // Create a TypedArray that references the underlying buffer
-  let arr = uValF(new TypeClass()).dataArray();
-  if (uType === NetEncoding.TypedArray.JSONEncodedArray) {
-    const json = utf8Decoder.decode(arr);
-    arr = JSON.parse(json);
-  } else if (!inplace) {
-    /* force copy to release underlying FBS buffer */
-    arr = new arr.constructor(arr);
+  switch (uType) {
+    case TypedFBArray.JSONEncodedFBArray: {
+      return decodeJSONArray(uType, uValF);
+    }
+    case TypedFBArray.DictEncoded8FBArray:
+    case TypedFBArray.DictEncoded16FBArray:
+    case TypedFBArray.DictEncoded32FBArray: {
+      return decodeDictArray(uType, uValF);
+    }
+    default: {
+      return decodeNumericArray(uType, uValF, inplace);
+    }
   }
-  return arr;
 }
 
 /**
@@ -54,10 +119,9 @@ function decodeTypedArray(uType: any, uValF: any, inplace = false) {
  *   colIdx: [] | null,
  * }
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   const bb = new flatbuffers.ByteBuffer(new Uint8Array(arrayBuffer));
-  const matrix = NetEncoding.Matrix.getRootAsMatrix(bb);
+  const matrix = Matrix.getRootAsMatrix(bb);
 
   const nRows = matrix.nRows();
   const nCols = matrix.nCols();
@@ -67,7 +131,12 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   const columns = Array(columnsLength).fill(null);
   for (let c = 0; c < columnsLength; c += 1) {
     const col = matrix.columns(c);
-    columns[c] = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
+    if (!col) {
+      columns[c] = null;
+    } else {
+      const arr = decodeTypedArray(col.uType(), col.u.bind(col), inplace);
+      columns[c] = arr;
+    }
   }
 
   /* decode col_idx */
@@ -76,7 +145,6 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
     matrix.colIndex.bind(matrix),
     inplace
   );
-
   return {
     nRows,
     nCols,
@@ -86,30 +154,150 @@ export function decodeMatrixFBS(arrayBuffer: any, inplace = false) {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function encodeTypedArray(builder: any, uType: any, uData: any) {
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const uTypeName = NetEncoding.TypedArray[uType];
-  // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-  const ArrayType = NetEncoding[uTypeName];
-  const dv = ArrayType.createDataVector(builder, uData);
-  builder.startObject(1);
-  builder.addFieldOffset(0, dv, 0);
+function encodeDictArray(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: DictEncodedArray
+): any {
+  const [dCodes, dDict] = _getCodesAndDictVectorOffset(builder, uType, uData);
+  builder.startObject(2);
+  builder.addFieldOffset(0, dCodes, 0);
+  builder.addFieldOffset(0, dDict, 0);
   return builder.endObject();
+}
+
+function _getCodesAndDictVectorOffset(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: DictEncodedArray
+): [number, number] {
+  const uTypeName = TypedFBArray[uType];
+  const ArrayType = NetEncodingDict[uTypeName as keyof typeof NetEncodingDict];
+
+  const json = JSON.stringify(uData.codeMapping);
+  const utf8Encoder = new TextEncoder();
+  const jsonUTF8 = utf8Encoder.encode(json);
+
+  let dCodes;
+  if (ArrayType === NetEncodingDict.DictEncoded8FBArray) {
+    dCodes = NetEncodingDict.DictEncoded8FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded8Array
+    );
+  } else if (ArrayType === NetEncodingDict.DictEncoded16FBArray) {
+    dCodes = NetEncodingDict.DictEncoded16FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded16Array
+    );
+  } else if (ArrayType === NetEncodingDict.DictEncoded32FBArray) {
+    dCodes = NetEncodingDict.DictEncoded32FBArray.createCodesVector(
+      builder,
+      uData as DictEncoded32Array
+    );
+  } else {
+    throw new Error(`unsupported dictionary-encoded array type ${uTypeName}`);
+  }
+
+  const dDict = ArrayType.createDictVector(builder, jsonUTF8);
+  return [dCodes, dDict];
+}
+
+function _getNumericDataVectorOffset(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: TypedArray
+): number {
+  const uTypeName = TypedFBArray[uType];
+  const ArrayType = NetEncoding[uTypeName as keyof typeof NetEncoding];
+  let dArray;
+  if (ArrayType === NetEncoding.Int32FBArray) {
+    dArray = NetEncoding.Int32FBArray.createDataVector(
+      builder,
+      uData as Int32Array
+    );
+  } else if (ArrayType === NetEncoding.Float32FBArray) {
+    dArray = NetEncoding.Float32FBArray.createDataVector(
+      builder,
+      uData as Float32Array
+    );
+  } else if (ArrayType === NetEncoding.Float64FBArray) {
+    dArray = NetEncoding.Float64FBArray.createDataVector(
+      builder,
+      uData as Float64Array
+    );
+  } else if (ArrayType === NetEncoding.Uint32FBArray) {
+    dArray = NetEncoding.Uint32FBArray.createDataVector(
+      builder,
+      uData as Uint32Array
+    );
+  } else {
+    throw new Error(`unsupported numeric array type ${uTypeName}`);
+  }
+  return dArray;
+}
+
+function encodeNumericArray(
+  builder: flatbuffers.Builder,
+  uType: TypedFBArray,
+  uData: TypedArray
+): number {
+  const dArray = _getNumericDataVectorOffset(builder, uType, uData);
+  builder.startObject(1);
+  builder.addFieldOffset(0, dArray, 0);
+  return builder.endObject();
+}
+
+function encodeJSONArray(
+  builder: flatbuffers.Builder,
+  uData: Array<string> | Array<boolean>
+): any {
+  const json = JSON.stringify(uData);
+  const utf8Encoder = new TextEncoder();
+  const jsonUTF8 = utf8Encoder.encode(json);
+  const dArray = NetEncoding.JSONEncodedFBArray.createDataVector(
+    builder,
+    jsonUTF8
+  );
+  builder.startObject(1);
+  builder.addFieldOffset(0, dArray, 0);
+  return builder.endObject();
+}
+
+function encodeTypedArray(
+  builder: flatbuffers.Builder,
+  uType: any,
+  uData: any
+) {
+  switch (uType) {
+    case TypedFBArray.JSONEncodedFBArray: {
+      return encodeJSONArray(builder, uData);
+    }
+    case TypedFBArray.DictEncoded8FBArray:
+    case TypedFBArray.DictEncoded16FBArray:
+    case TypedFBArray.DictEncoded32FBArray: {
+      return encodeDictArray(builder, uType, uData);
+    }
+    default: {
+      return encodeNumericArray(builder, uType, uData);
+    }
+  }
 }
 
 /**
  * Encode the dataframe as an FBS Matrix
  */
-export function encodeMatrixFBS(df: Dataframe): Uint8Array {
+
+export function encodeMatrixFBS(
+  df: Dataframe,
+  encodeSparse = false
+): Uint8Array {
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {
     throw new Error("FBS does not support row index encoding at this time");
   }
 
   const shape = df.dims;
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
-  const utf8Encoder = new TextEncoder("utf-8");
+  const utf8Encoder = new TextEncoder();
   const builder = new flatbuffers.Builder(1024);
 
   let encColIndex;
@@ -120,39 +308,34 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
     const columns = df.columns().map((col) => col.asArray());
 
     const cols = columns.map((carr) => {
-      let uType;
-      let tarr;
-      if (isTypedArray(carr)) {
-        // @ts-expect-error --- FIXME: Element implicitly has an 'any' type.
-        uType = NetEncoding.TypedArray[carr.constructor.name];
-        tarr = encodeTypedArray(builder, uType, carr);
-      } else {
-        uType = NetEncoding.TypedArray.JSONEncodedArray;
-        const json = JSON.stringify(carr);
-        const jsonUTF8 = utf8Encoder.encode(json);
-        tarr = encodeTypedArray(builder, uType, jsonUTF8);
+      let { name } = carr.constructor;
+      if (encodeSparse) {
+        name = `Sparse${name}`;
       }
-      NetEncoding.Column.startColumn(builder);
-      NetEncoding.Column.addUType(builder, uType);
-      NetEncoding.Column.addU(builder, tarr);
-      return NetEncoding.Column.endColumn(builder);
+      name = name.replace("Array", "FBArray");
+      const uType = TypedFBArray[name as keyof typeof TypedFBArray];
+      const tarr = encodeTypedArray(builder, uType, carr);
+      Column.startColumn(builder);
+      Column.addUType(builder, uType);
+      Column.addU(builder, tarr);
+      return Column.endColumn(builder);
     });
 
-    encColumns = NetEncoding.Matrix.createColumnsVector(builder, cols);
+    encColumns = Matrix.createColumnsVector(builder, cols);
 
     if (df.colIndex && shape[1] > 0) {
       const colIndexType = df.colIndex.constructor;
       if (colIndexType === IdentityInt32Index) {
         encColIndex = undefined;
       } else if (colIndexType === DenseInt32Index) {
-        encColIndexUType = NetEncoding.TypedArray.Int32Array;
+        encColIndexUType = TypedFBArray.Int32FBArray;
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
           df.colIndex.labels()
         );
       } else if (colIndexType === KeyIndex) {
-        encColIndexUType = NetEncoding.TypedArray.JSONEncodedArray;
+        encColIndexUType = TypedFBArray.JSONEncodedFBArray;
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
@@ -164,17 +347,17 @@ export function encodeMatrixFBS(df: Dataframe): Uint8Array {
     }
   }
 
-  NetEncoding.Matrix.startMatrix(builder);
-  NetEncoding.Matrix.addNRows(builder, shape[0]);
-  NetEncoding.Matrix.addNCols(builder, shape[1]);
+  Matrix.startMatrix(builder);
+  Matrix.addNRows(builder, shape[0]);
+  Matrix.addNCols(builder, shape[1]);
   if (encColumns) {
-    NetEncoding.Matrix.addColumns(builder, encColumns);
+    Matrix.addColumns(builder, encColumns);
   }
   if (encColIndexUType) {
-    NetEncoding.Matrix.addColIndexType(builder, encColIndexUType);
-    NetEncoding.Matrix.addColIndex(builder, encColIndex);
+    Matrix.addColIndexType(builder, encColIndexUType);
+    Matrix.addColIndex(builder, encColIndex);
   }
-  const root = NetEncoding.Matrix.endMatrix(builder);
+  const root = Matrix.endMatrix(builder);
   builder.finish(root);
   return builder.asUint8Array();
 }
@@ -231,8 +414,8 @@ export function matrixFBSToDataframe(
   if (arrayBuffers.length === 0) {
     return Dataframe.empty();
   }
-
   const fbs = arrayBuffers.map((ab) => decodeMatrixFBS(ab, true)); // leave in place
+
   /* check that all FBS have same row dimensionality */
   const { nRows } = fbs[0];
   fbs.forEach((b) => {
@@ -242,17 +425,25 @@ export function matrixFBSToDataframe(
   const columns = fbs
     .map((fb) =>
       fb.columns.map((c) => {
-        if (isFloatTypedArray(c) || Array.isArray(c)) return c;
+        if (
+          isFloatTypedArray(c) ||
+          isDictEncodedTypedArray(c) ||
+          Array.isArray(c)
+        )
+          return c;
         return promoteTypedArray(c);
       })
     )
     .flat();
+
   // colIdx may be TypedArray or Array
   const colIdx = fbs
-    .map((b) => (Array.isArray(b.colIdx) ? b.colIdx : Array.from(b.colIdx)))
-    .flat();
+    .map((b) => {
+      if (!b.colIdx) return Array.from(Array(b.nCols).keys());
+      return Array.isArray(b.colIdx) ? b.colIdx : Array.from(b.colIdx);
+    })
+    .flat() as (string | number)[];
   const nCols = columns.length;
-
   const df = new Dataframe([nRows, nCols], columns, null, new KeyIndex(colIdx));
   return df;
 }

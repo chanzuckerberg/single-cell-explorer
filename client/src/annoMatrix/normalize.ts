@@ -137,13 +137,7 @@ export function normalizeCategorical(
 
   // consolidate all categories from data and schema into a single list
   const colDataSummary = col.summarizeCategorical();
-  const allCategories = new Set<Category>(
-    // TODO #35: Use type guards instead of casting
-
-    colDataSummary.categories.concat(
-      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
-    )
-  );
+  const allCategories = new Set<Category>(colDataSummary.categories);
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {

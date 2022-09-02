@@ -3,7 +3,6 @@ from os.path import basename, splitext
 
 import numpy as np
 import pandas as pd
-from scipy import sparse
 from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig
@@ -74,7 +73,7 @@ class Dataset(metaclass=ABCMeta):
     @abstractmethod
     def get_X_array(self, obs_mask=None, var_mask=None):
         """return the X array, possibly filtered by obs_mask or var_mask.
-        the return type is either ndarray or scipy.sparse.spmatrix."""
+        the return type is ndarray."""
         pass
 
     @abstractmethod
@@ -393,10 +392,7 @@ class Dataset(metaclass=ABCMeta):
             mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
         else:
             X = self.get_X_array(obs_selector, var_selector)
-            if sparse.issparse(X):
-                mean = X.mean(axis=1).A
-            else:
-                mean = X.mean(axis=1, keepdims=True)
+            mean = X.mean(axis=1, keepdims=True)
 
         col_idx = pd.Index([query_hash])
         return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)

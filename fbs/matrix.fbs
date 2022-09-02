@@ -4,11 +4,11 @@
   Flatbuffers schema for use in cellxgene wire-format.
 
   Schema defines a general purpose, polymorphic, 2D matrix.  Data is
-  organized in a columnar layout.   Each column is homomorphic, and
-  several column types are supported:
+  organized in a columnar layout. Several column types are supported:
     - IEEE 32 and 64 bit floats
-    - signed and unsigned 32 bit integers
     - JSON/UTF8 encoded array (for other types)
+    - signed and unsigned 8, 16, 32, and 64 bit integers
+    - dictionary-encoded categorical arrays with 8, 16, and 32 bit integer codes
 
   https://github.com/google/flatbuffers
   http://google.github.io/flatbuffers/
@@ -16,45 +16,66 @@
   NOTE: IF YOU MODIFY THIS FILE, YOU MUST RECOMPILE AND COMMIT
   RESULTING FILES TO THE REPO:
   * server/app/util/fbs/NetEncoding/*
-  * client/src/util/stateManager/matrix_generated.js
+  * client/src/util/stateManager/nec-encoding/*
 
 */
 
 namespace NetEncoding;
 
-table Float32Array {
+table Float32FBArray {
   data: [float32];
 }
 
-table Uint32Array {
+table Uint32FBArray {
   data: [uint32];
 }
 
-table Int32Array {
+table Int32FBArray {
   data: [int32];
 }
 
-table Float64Array {
+table Float64FBArray {
   data: [float64];
 }
 
-table JSONEncodedArray {
+table JSONEncodedFBArray {
   // contains a UTF-8/JSON encoded array.  Used to store other
   // types (or polymorphic arrays)
   data: [uint8];
 }
 
-union TypedArray {
-  Float32Array,
-  Int32Array,
-  Uint32Array,
-  Float64Array,
-  JSONEncodedArray
+table DictEncoded8FBArray {  
+  codes: [int8];
+  // "dict" is a UTF-8/JSON dictionary encoded as a byte array,
+  // Stores the mapping between codes and polymorphic values
+  // JSON object schema is {[code: integer]: value: string | number | boolean}
+  dict: [uint8];
+}
+
+table DictEncoded16FBArray {
+  codes: [int16];
+  dict: [uint8];
+}
+
+table DictEncoded32FBArray {
+  codes: [int32];
+  dict: [uint8];
+}
+
+union TypedFBArray {
+  Float32FBArray,
+  Int32FBArray,
+  Uint32FBArray,
+  Float64FBArray,
+  JSONEncodedFBArray,
+  DictEncoded8FBArray,
+  DictEncoded16FBArray,
+  DictEncoded32FBArray,
 }
 
 // Extra level of indirection required because vector of union not yet supported
 table Column {
-  u: TypedArray;
+  u: TypedFBArray;
 }
 
 // 2D matrix stored in columnar layout
@@ -66,8 +87,8 @@ table Matrix {
 
   // optional row and column index, with same length as corresponding dimension.
   // If null, defaults to numeric index, ie, [0, n_rows) or [0, n_cols)
-  col_index: TypedArray;
-  row_index: TypedArray;
+  col_index: TypedFBArray;
+  row_index: TypedFBArray;
 }
 
 root_type Matrix;
