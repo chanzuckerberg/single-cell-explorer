@@ -1,12 +1,11 @@
 anndata>=0.7.6 # we need to_memory(), added in 0.7.6
 bitarray>=2.3.6
 boto3>=1.12.18
-click<8.0,>=5.1
 envyaml>=1.9
-Flask>=1.0.2,<2.0.0 # Flask 2.0 is not compatible with the latest version of Flask-RESTful (0.3.8)
+Flask~=2.2
 Flask-Compress>=1.4.0
 Flask-Cors>=3.0.9  # CVE-2020-25032
-Flask-RESTful>=0.3.6
+Flask-RESTful>=0.3.9
 flask-server-timing>=0.1.2
 flask-talisman>=0.7.0
 flatbuffers>=1.11.0,<2.0.0 # cellxgene is not compatible with 2.0.0. Requires migration
@@ -14,7 +13,7 @@ flatten-dict>=0.2.0
 fsspec>=0.4.4,<0.8.0
 gunicorn>=20.0.4
 numba>=0.51.2
-numpy<1.21,>=1.17
+numpy>=1.17
 packaging>=20.0
 pandas>=1.0,!=1.1  # pandas 1.1 breaks tests, https://github.com/pandas-dev/pandas/issues/35446
 PyYAML>=5.4  # CVE-2020-14343
@@ -22,4 +21,3 @@ scipy>=1.4
 requests>=2.22.0
 tiledb==0.16.5  # Explorer's major/minor tiledb version should always be the >= Portal's tiledb major/minor version (for read/write compatibility)
 s3fs==0.4.2
-MarkupSafe==1.1.1

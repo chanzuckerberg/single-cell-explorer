@@ -199,7 +199,7 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
 
     s3uri_api_path = "s3_uri"
     bp_s3uri = Blueprint(
-        f"api_dataset_{s3uri_api_path}_{api_version}",
+        f"api_dataset_{s3uri_api_path}_{api_version.replace('.',',')}",
         __name__,
         url_prefix=(f"{api_url_prefix}/{s3uri_api_path}/<s3_uri>" + api_version).replace("//", "/"),
     )
@@ -213,7 +213,7 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
         for dataroot_dict in server_config.multi_dataset__dataroot.values():
             url_dataroot = dataroot_dict["base_url"]
             bp_dataroot = Blueprint(
-                f"api_dataset_{url_dataroot}_{api_version}",
+                f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
                 __name__,
                 url_prefix=(f"{api_url_prefix}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
             )
@@ -236,7 +236,7 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
             #     methods=["GET"],
             # )
     else:
-        bp_api = Blueprint("api", __name__, url_prefix=f"{api_url_prefix}{api_version}")
+        bp_api = Blueprint("api", __name__, url_prefix=f"{api_url_prefix}{api_version.replace('.',',')}")
         resources = get_api_dataroot_resources(bp_api)
         app.register_blueprint(resources.blueprint)
         app.add_url_rule(

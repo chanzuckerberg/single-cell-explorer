@@ -177,7 +177,7 @@ def register_api_v2(app, app_config, server_config, api_url_prefix):
         for dataroot_dict in server_config.multi_dataset__dataroot.values():
             url_dataroot = dataroot_dict["base_url"]
             bp_dataroot = Blueprint(
-                name=f"api_dataset_{url_dataroot}_{api_version}",
+                name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
                 import_name=__name__,
                 url_prefix=(f"{api_url_prefix}/{url_dataroot}/<dataset>" + api_version).replace("//", "/"),
             )
