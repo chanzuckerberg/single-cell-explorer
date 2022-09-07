@@ -15,12 +15,14 @@ import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArra
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArray
 
-NUM_BINS = 5000
+DEFAULT_NUM_BINS = 5000
 
 class DenseNumericIntCoder:
     n_slots = 2
 
-    def encode_array(self, array, builder, _dtype):
+    def encode_array(self, array, builder, _dtype, num_bins = None):
+        if num_bins is None:
+            num_bins = DEFAULT_NUM_BINS
         # convert pandas series to numpy array
         if isinstance(array, pd.Series):
             array = array.to_numpy()
@@ -28,7 +30,7 @@ class DenseNumericIntCoder:
             array = array.A.flatten()
 
         max_val = array.max().astype('float32')
-        int_coded = np.int16(array/max_val*NUM_BINS)
+        int_coded = np.int16(array/max_val*num_bins)
         vec = builder.CreateNumpyVector(int_coded)
 
         builder.StartObject(self.n_slots)
@@ -41,7 +43,7 @@ class DenseNumericIntCoder:
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
         max_val = arr.Max()
-        return (codes/NUM_BINS*max_val).astype('float32')
+        return (codes/codes.max()*max_val).astype('float32')
 
 class DenseNumericCoder:
     n_slots = 1
@@ -170,7 +172,7 @@ def _get_array_class(array):
         return "dense", np.dtype(get_encoding_dtype_of_array(array)).str
 
 
-def serialize_typed_array(builder, source_array):
+def serialize_typed_array(builder, source_array, num_bins=None):
     if isinstance(source_array, pd.Index):
         source_array = source_array.to_series()
 
@@ -181,7 +183,7 @@ def serialize_typed_array(builder, source_array):
 
     coder_obj = Coder()
     # for encoding, we require the source array, flatbuffer builder, and encoding data type
-    array_value = coder_obj.encode_array(source_array, builder, encoding_dtype)
+    array_value = coder_obj.encode_array(source_array, builder, encoding_dtype, num_bins=num_bins)
     return (array_type, array_value)
 
 

@@ -56,7 +56,7 @@ def guess_at_mem_needed(matrix):
     return guess
 
 
-def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
+def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
     """
     Given a 2D DataFrame, ndarray or sparse equivalent, create and return a Matrix flatbuffer.
 
@@ -88,7 +88,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None):
         else:
             col = matrix[:, cidx]
 
-        typed_arr = serialize_typed_array(builder, col)
+        typed_arr = serialize_typed_array(builder, col, num_bins=num_bins)
 
         # serialize the Column union
         columns.append(serialize_column(builder, typed_arr))

@@ -253,7 +253,7 @@ class Dataset(metaclass=ABCMeta):
 
         X = self.get_X_array(obs_selector, var_selector)
         col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
-        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)
+        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None, num_bins=100)
 
     def diffexp_topN(self, obsFilterA, obsFilterB, top_n=None):
         """
@@ -395,4 +395,4 @@ class Dataset(metaclass=ABCMeta):
             mean = X.mean(axis=1, keepdims=True)
 
         col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=100)

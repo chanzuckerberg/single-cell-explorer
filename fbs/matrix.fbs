@@ -65,6 +65,7 @@ table DictEncoded32FBArray {
 table Int16EncodedXFBArray {
   codes: [int16];
   max: float32;
+  nbins: int32;
 }
 
 union TypedFBArray {
