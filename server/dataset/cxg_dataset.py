@@ -281,7 +281,10 @@ class CxgDataset(Dataset):
 
         if self.is_sparse:
             X = self.open_X_array(col=True)
-            data = X.query(order="U").multi_index[var_items]
+            if self.is_1d:
+                data = X.query(order="U").multi_index[var_items]
+            else:
+                data = X.query(order="U").multi_index[obs_items, var_items]
             nrows, obsindices = self.__remap_indices(shape[0], obs_mask, data.get("coords", data)["obs"])
             ncols, varindices = self.__remap_indices(shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
