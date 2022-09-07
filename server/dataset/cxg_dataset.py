@@ -24,8 +24,8 @@ class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
     tiledb_ctx = tiledb.Ctx(
         {
-            "sm.tile_cache_size": 8 * 1024**3,
-            "py.init_buffer_bytes": 512 * 1024**2,
+            "sm.tile_cache_size": 8 * 1024 ** 3,
+            "py.init_buffer_bytes": 512 * 1024 ** 2,
             "vfs.s3.region": "us-east-1",
         }
     )
@@ -97,6 +97,11 @@ class CxgDataset(Dataset):
 
     def get_path(self, *urls):
         return path_join(self.url, *urls)
+
+    def _init_sparsity_and_format(self):
+        X = self.open_array("X")
+        self.is_sparse = X.schema.sparse
+        self.is_1d = len(X.shape) == 1
 
     @staticmethod
     def _lsuri(uri, tiledb_ctx):
@@ -187,10 +192,21 @@ class CxgDataset(Dataset):
         self.about = about
         self.cxg_version = cxg_version
         self.corpora_props = corpora_props
+        self._init_sparsity_and_format()
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
         return tiledb.open(uri, mode="r", ctx=tiledb_ctx)
+
+    def open_X_array(self, col=False):
+        """
+        A helper function to open the 1D X array in row or column orientation with
+        backwards compatibility for 2D arrays.
+        """
+        if self.is_1d and col:
+            return self.open_array("Xc")
+        else:
+            return self.open_array("X")
 
     def open_array(self, name):
         try:
@@ -203,7 +219,7 @@ class CxgDataset(Dataset):
         array = self.open_array(f"emb/{ename}")
         return array[:, 0:dims]
 
-    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, arr="X", selector_lists=False):
+    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, selector_lists=False):
         if top_n is None:
             top_n = self.dataset_config.diffexp__top_n
         if lfc_cutoff is None:
@@ -214,7 +230,6 @@ class CxgDataset(Dataset):
             setB=setB,
             top_n=top_n,
             diffexp_lfc_cutoff=lfc_cutoff,
-            arr=arr,
             selector_lists=selector_lists,
         )
 
@@ -257,23 +272,26 @@ class CxgDataset(Dataset):
     def get_X_array(self, obs_mask=None, var_mask=None):
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
+        shape = self.get_shape()
         if obs_items is None or var_items is None:
             # If either zero rows or zero columns were selected, return an empty 2d array.
-            shape = self.get_shape()
             obs_size = 0 if obs_items is None else shape[0] if obs_mask is None else np.count_nonzero(obs_mask)
             var_size = 0 if var_items is None else shape[1] if var_mask is None else np.count_nonzero(var_mask)
             return np.ndarray((obs_size, var_size))
 
-        X = self.open_array("X")
-
-        if X.schema.sparse:
-            data = X.query(order="U").multi_index[obs_items, var_items]
-            nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
-            ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
+        if self.is_sparse:
+            X = self.open_X_array(col=True)
+            if self.is_1d:
+                data = X.query(order="U").multi_index[var_items]
+            else:
+                data = X.query(order="U").multi_index[obs_items, var_items]
+            nrows, obsindices = self.__remap_indices(shape[0], obs_mask, data.get("coords", data)["obs"])
+            ncols, varindices = self.__remap_indices(shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
             return densedata
         else:
+            X = self.open_X_array()
             data = X.multi_index[obs_items, var_items][""]
             return data
 
@@ -281,12 +299,16 @@ class CxgDataset(Dataset):
         return self.X_approximate_distribution
 
     def get_shape(self):
-        X = self.open_array("X")
-        return X.shape
+        X = self.open_X_array()        
+        if self.is_1d:
+            Xc = self.open_X_array(col=True)
+            return (X.shape[0], Xc.shape[0])
+        else:
+            return X.shape
 
     def get_X_array_dtype(self):
-        X = self.open_array("X")
-        return X.dtype
+        X = self.open_X_array()
+        return X.attr("").dtype
 
     def query_var_array(self, term_name):
         var = self.open_array("var")

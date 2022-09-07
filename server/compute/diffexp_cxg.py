@@ -8,7 +8,7 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ComputeError
 
 
-def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X", selector_lists=False):
+def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selector_lists=False):
     """
     Return differential expression statistics for top N variables.
 
@@ -37,10 +37,9 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
-    matrix = adaptor.open_array(arr)
-    dtype = matrix.dtype
-    n_obs = matrix.shape[0]
-    cols = matrix.shape[1]
+    matrix = adaptor.open_X_array()
+    dtype = matrix.attr("").dtype
+    n_obs, cols = adaptor.get_shape()
     is_sparse = matrix.schema.sparse
 
     if selector_lists:
@@ -55,9 +54,6 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
         row_selector_A = setA.nonzero()[0]
         row_selector_B = setB.nonzero()[0]
 
-    dtype = matrix.dtype
-    cols = matrix.shape[1]
-    is_sparse = matrix.schema.sparse
 
     mean_var_cnt_fn = mean_var_cnt_sparse if is_sparse else mean_var_cnt_dense
     with concurrent.futures.ThreadPoolExecutor() as tp:
@@ -186,7 +182,7 @@ def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):
 
 
 def mean_var_cnt_dense(matrix, _, rows):
-    xslc = matrix.multi_index[rows, :]
+    xslc = matrix.multi_index[rows]
     return mean_var_n(xslc[""])
 
 
@@ -219,7 +215,7 @@ def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):
 
 
 def mean_var_cnt_sparse(matrix, n_var, rows):
-    query_iterator = matrix.query(dims=["var"], attrs=[""], order="U", return_incomplete=True).multi_index[rows, :]
+    query_iterator = matrix.query(order="U", return_incomplete=True).multi_index[rows]
 
     # accumulators, by gene (var) for n, u (mean) and M (sum of squares of difference from mean)
     n_rows = len(rows)
