@@ -29,7 +29,7 @@ class DenseNumericIntCoder:
         max_val = array.max().astype('float32')
         int_coded = np.int16(array/max_val*1000)
         vec = builder.CreateNumpyVector(int_coded)
-        vec_max = self.builder.CreateByteVector(max_val.tobytes())
+        vec_max = builder.CreateByteVector(max_val.tobytes())
 
         builder.StartObject(self.n_slots)
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
