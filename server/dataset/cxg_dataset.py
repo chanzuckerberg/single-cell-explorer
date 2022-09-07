@@ -296,11 +296,12 @@ class CxgDataset(Dataset):
         return self.X_approximate_distribution
 
     def get_shape(self):
-        X = self.open_X_array()
-        if not X.schema.sparse:
+        X = self.open_X_array()        
+        if self.is_1d:
+            Xc = self.open_X_array(col=True)
+            return (X.shape[0], Xc.shape[0])
+        else:
             return X.shape
-        Xc = self.open_X_array(col=True)
-        return (X.shape[0], Xc.shape[0])
 
     def get_X_array_dtype(self):
         X = self.open_X_array()
