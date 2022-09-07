@@ -8,7 +8,7 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ComputeError
 
 
-def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X", selector_lists=False):
+def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selector_lists=False):
     """
     Return differential expression statistics for top N variables.
 
@@ -37,7 +37,7 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, arr="X"
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
-    matrix = adaptor.open_array(arr)
+    matrix = adaptor.open_X_array()
     dtype = matrix.attr("").dtype
     n_obs, cols = adaptor.get_shape()
     is_sparse = matrix.schema.sparse
