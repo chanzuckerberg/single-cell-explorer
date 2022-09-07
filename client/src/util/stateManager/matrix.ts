@@ -83,9 +83,10 @@ function decodeIntCodedArray(
   const codesArray = arr.codesArray();
   const dataArray = new Float32Array(codesArray.length);
   const maxValue = arr.max();
+  const minValue = arr.min();
   const numBins = arr.nbins();
   for (let i = 0; i < dataArray.length; i += 1) {
-    dataArray[i] = (codesArray[i] / numBins) * maxValue;
+    dataArray[i] = (codesArray[i] / numBins) * (maxValue - minValue) + minValue;
   }
   return dataArray;
 }
@@ -274,16 +275,21 @@ function encodeIntCodedArray(
 ): number {
   const codesArray = new Int16Array(uData.length);
   const maxValue = Math.max(...codesArray);
+  const minValue = Math.min(...codesArray);
   for (let i = 0; i < codesArray.length; i += 1) {
-    codesArray[i] = Math.floor((uData[i] / maxValue) * DEFAULT_NUM_BINS);
+    codesArray[i] = Math.floor(
+      ((uData[i] - minValue) / (maxValue - minValue)) * DEFAULT_NUM_BINS
+    );
   }
   const cArray = NetEncoding.Int16EncodedXFBArray.createCodesVector(
     builder,
     codesArray
   );
-  builder.startObject(2);
+  builder.startObject(4);
   builder.addFieldOffset(0, cArray, 0);
   NetEncoding.Int16EncodedXFBArray.addMax(builder, maxValue);
+  NetEncoding.Int16EncodedXFBArray.addMin(builder, minValue);
+  NetEncoding.Int16EncodedXFBArray.addNbins(builder, DEFAULT_NUM_BINS);
   return builder.endObject();
 }
 

@@ -19,7 +19,7 @@ DEFAULT_NUM_BINS = 5000
 
 
 class DenseNumericIntCoder:
-    n_slots = 3
+    n_slots = 4
 
     def encode_array(self, array, builder, _dtype, num_bins=None):
         if num_bins is None:
@@ -31,13 +31,15 @@ class DenseNumericIntCoder:
             array = array.A.flatten()
 
         max_val = array.max().astype("float32")
-        int_coded = np.int16(array / max_val * num_bins)
+        min_val = array.min().astype("float32")
+        int_coded = np.int16((array - min_val) / (max_val - min_val) * num_bins)
         vec = builder.CreateNumpyVector(int_coded)
 
         builder.StartObject(self.n_slots)
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
         builder.PrependFloat32Slot(1, max_val, 0)
-        builder.PrependInt32Slot(2, num_bins, 0)
+        builder.PrependFloat32Slot(2, min_val, 0)
+        builder.PrependInt32Slot(3, num_bins, 0)
         return builder.EndObject()
 
     def decode_array(self, u, TarType):
@@ -45,8 +47,9 @@ class DenseNumericIntCoder:
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
         max_val = arr.Max()
+        min_val = arr.Min()
         num_bins = arr.Nbins()
-        return (codes / num_bins * max_val).astype("float32")
+        return (codes / num_bins * (max_val - min_val) + min_val).astype("float32")
 
 
 class DenseNumericCoder:

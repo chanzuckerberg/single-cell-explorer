@@ -68,6 +68,8 @@ table Int16EncodedXFBArray {
   codes: [int16];
   // the maximum value of the source array
   max: float32;
+  // the minimum value of the source array
+  min: float32;
   // the number of bins
   nbins: int32;
 }

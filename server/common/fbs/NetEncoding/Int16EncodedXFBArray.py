@@ -59,13 +59,20 @@ class Int16EncodedXFBArray(object):
         return 0.0
 
     # Int16EncodedXFBArray
-    def Nbins(self):
+    def Min(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
+        return 0.0
+
+    # Int16EncodedXFBArray
+    def Nbins(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
-def Start(builder): builder.StartObject(3)
+def Start(builder): builder.StartObject(4)
 def Int16EncodedXFBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
@@ -81,7 +88,11 @@ def AddMax(builder, max): builder.PrependFloat32Slot(1, max, 0.0)
 def Int16EncodedXFBArrayAddMax(builder, max):
     """This method is deprecated. Please switch to AddMax."""
     return AddMax(builder, max)
-def AddNbins(builder, nbins): builder.PrependInt32Slot(2, nbins, 0)
+def AddMin(builder, min): builder.PrependFloat32Slot(2, min, 0.0)
+def Int16EncodedXFBArrayAddMin(builder, min):
+    """This method is deprecated. Please switch to AddMin."""
+    return AddMin(builder, min)
+def AddNbins(builder, nbins): builder.PrependInt32Slot(3, nbins, 0)
 def Int16EncodedXFBArrayAddNbins(builder, nbins):
     """This method is deprecated. Please switch to AddNbins."""
     return AddNbins(builder, nbins)
