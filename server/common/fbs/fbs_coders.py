@@ -17,10 +17,11 @@ import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArra
 
 DEFAULT_NUM_BINS = 5000
 
+
 class DenseNumericIntCoder:
     n_slots = 3
 
-    def encode_array(self, array, builder, _dtype, num_bins = None):
+    def encode_array(self, array, builder, _dtype, num_bins=None):
         if num_bins is None:
             num_bins = DEFAULT_NUM_BINS
         # convert pandas series to numpy array
@@ -29,14 +30,14 @@ class DenseNumericIntCoder:
         elif sp.issparse(array):
             array = array.A.flatten()
 
-        max_val = array.max().astype('float32')
-        int_coded = np.int16(array/max_val*num_bins)
+        max_val = array.max().astype("float32")
+        int_coded = np.int16(array / max_val * num_bins)
         vec = builder.CreateNumpyVector(int_coded)
 
         builder.StartObject(self.n_slots)
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
-        builder.PrependFloat32Slot(1,max_val,0)
-        builder.PrependInt32Slot(2,num_bins,0)
+        builder.PrependFloat32Slot(1, max_val, 0)
+        builder.PrependInt32Slot(2, num_bins, 0)
         return builder.EndObject()
 
     def decode_array(self, u, TarType):
@@ -45,7 +46,8 @@ class DenseNumericIntCoder:
         codes = arr.CodesAsNumpy()
         max_val = arr.Max()
         num_bins = arr.Nbins()
-        return (codes/num_bins*max_val).astype('float32')
+        return (codes / num_bins * max_val).astype("float32")
+
 
 class DenseNumericCoder:
     n_slots = 1
@@ -124,6 +126,7 @@ class PolymorphicCoder:
         narr = arr.DataAsNumpy()
         return np.array(json.loads(narr.tobytes().decode("utf-8")))
 
+
 # two-layer mapper (1) array_class, (2) encoding_dtype
 # this is necessary as an int32 codes array will require a different coder
 # than an int32 numeric array.
@@ -154,12 +157,13 @@ TYPE_MAP = {
     TypedFBArray.TypedFBArray.Int32FBArray: (DenseNumericCoder, Int32FBArray.Int32FBArray),
     TypedFBArray.TypedFBArray.Float32FBArray: (DenseNumericCoder, Float32FBArray.Float32FBArray),
     TypedFBArray.TypedFBArray.Float64FBArray: (DenseNumericCoder, Float64FBArray.Float64FBArray),
-    TypedFBArray.TypedFBArray.Int16EncodedXFBArray: (DenseNumericIntCoder, Int16EncodedXFBArray.Int16EncodedXFBArray),    
+    TypedFBArray.TypedFBArray.Int16EncodedXFBArray: (DenseNumericIntCoder, Int16EncodedXFBArray.Int16EncodedXFBArray),
     TypedFBArray.TypedFBArray.JSONEncodedFBArray: (PolymorphicCoder, JSONEncodedFBArray.JSONEncodedFBArray),
     TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
     TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
     TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
 }
+
 
 def _get_array_class(array):
     # returns
