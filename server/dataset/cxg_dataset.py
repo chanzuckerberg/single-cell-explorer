@@ -99,7 +99,7 @@ class CxgDataset(Dataset):
         return path_join(self.url, *urls)
 
     def _init_sparsity_and_format(self):
-        X = self.open_X_array()
+        X = self.open_array("X")
         self.is_sparse = X.schema.sparse
         self.is_1d = len(X.shape) == 1
 
