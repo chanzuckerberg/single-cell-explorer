@@ -18,7 +18,7 @@ import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArra
 DEFAULT_NUM_BINS = 5000
 
 class DenseNumericIntCoder:
-    n_slots = 2
+    n_slots = 3
 
     def encode_array(self, array, builder, _dtype, num_bins = None):
         if num_bins is None:
@@ -50,7 +50,7 @@ class DenseNumericIntCoder:
 class DenseNumericCoder:
     n_slots = 1
 
-    def encode_array(self, array, builder, dtype):
+    def encode_array(self, array, builder, dtype, **kwargs):
         # convert pandas series to numpy array
         if isinstance(array, pd.Series):
             array = array.to_numpy()
@@ -74,7 +74,7 @@ class DenseNumericCoder:
 class CategoricalCoder:
     n_slots = 2
 
-    def encode_array(self, array, builder, dtype):
+    def encode_array(self, array, builder, dtype, **kwargs):
         if isinstance(array, pd.Series) and array.dtype.name == "category":
             # create the code-to-value dictionary and encode in utf-8 as a byte array
             dictionary = np.array(bytearray(json.dumps(dict(enumerate(array.cat.categories))), "utf-8"))
@@ -105,7 +105,7 @@ class CategoricalCoder:
 class PolymorphicCoder:
     n_slots = 1
 
-    def encode_array(self, array, builder, dtype=None):
+    def encode_array(self, array, builder, dtype=None, **kwargs):
         # dtype is unused here as array is just getting slammed into a JSON
         if sp.issparse(array):
             array = array.A.flatten()
