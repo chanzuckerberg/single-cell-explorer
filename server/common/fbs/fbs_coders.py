@@ -15,6 +15,7 @@ import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArra
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArray
 
+NUM_BINS = 5000
 
 class DenseNumericIntCoder:
     n_slots = 2
@@ -27,13 +28,12 @@ class DenseNumericIntCoder:
             array = array.A.flatten()
 
         max_val = array.max().astype('float32')
-        int_coded = np.int16(array/max_val*1000)
+        int_coded = np.int16(array/max_val*NUM_BINS)
         vec = builder.CreateNumpyVector(int_coded)
-        vec_max = builder.CreateByteVector(max_val.tobytes())
 
         builder.StartObject(self.n_slots)
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
-        builder.PrependUOffsetTRelativeSlot(1, vec_max, 0)
+        builder.PrependFloat32Slot(1,max_val,0)
         return builder.EndObject()
 
     def decode_array(self, u, TarType):
@@ -41,7 +41,7 @@ class DenseNumericIntCoder:
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
         max_val = arr.Max()
-        return (codes/1000*max_val).astype('float32')
+        return (codes/NUM_BINS*max_val).astype('float32')
 
 class DenseNumericCoder:
     n_slots = 1
@@ -120,7 +120,6 @@ class PolymorphicCoder:
         narr = arr.DataAsNumpy()
         return np.array(json.loads(narr.tobytes().decode("utf-8")))
 
-
 # two-layer mapper (1) array_class, (2) encoding_dtype
 # this is necessary as an int32 codes array will require a different coder
 # than an int32 numeric array.
@@ -157,7 +156,6 @@ TYPE_MAP = {
     TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),
     TypedFBArray.TypedFBArray.DictEncoded32FBArray: (CategoricalCoder, DictEncoded32FBArray.DictEncoded32FBArray),
 }
-
 
 def _get_array_class(array):
     # returns

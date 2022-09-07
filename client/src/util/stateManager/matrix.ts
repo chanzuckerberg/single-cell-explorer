@@ -22,6 +22,7 @@ import { Matrix } from "./net-encoding/matrix";
 import { Column } from "./net-encoding/column";
 
 const utf8Decoder = new TextDecoder("utf-8");
+const numBins = 5000;
 
 /**
  * Matrix flatbuffer decoding support. See fbs/matrix.fbs
@@ -83,7 +84,7 @@ function decodeIntCodedArray(
   const dataArray = new Float32Array(codesArray.length);
   const maxValue = arr.max();
   for (let i = 0; i < dataArray.length; i += 1) {
-    dataArray[i] = (codesArray[i] / 1000) * maxValue;
+    dataArray[i] = (codesArray[i] / numBins) * maxValue;
   }
   return dataArray;
 }
@@ -273,7 +274,7 @@ function encodeIntCodedArray(
   const codesArray = new Int16Array(uData.length);
   const maxValue = Math.max(...codesArray);
   for (let i = 0; i < codesArray.length; i += 1) {
-    codesArray[i] = Math.floor((uData[i] / maxValue) * 1000);
+    codesArray[i] = Math.floor((uData[i] / maxValue) * numBins);
   }
   const cArray = NetEncoding.Int16EncodedXFBArray.createCodesVector(
     builder,
