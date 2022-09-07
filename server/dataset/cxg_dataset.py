@@ -204,9 +204,9 @@ class CxgDataset(Dataset):
         backwards compatibility for 2D arrays.
         """
         if self.is_1d and col:
-            return self.open_X_array(col=True)
+            return self.open_array("Xc")
         else:
-            return self.open_X_array()
+            return self.open_array("X")
 
     def open_array(self, name):
         try:
