@@ -13,7 +13,35 @@ import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
 import server.common.fbs.NetEncoding.DictEncoded16FBArray as DictEncoded16FBArray
 import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArray
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
+import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArray
 
+
+class DenseNumericIntCoder:
+    n_slots = 2
+
+    def encode_array(self, array, builder, _dtype):
+        # convert pandas series to numpy array
+        if isinstance(array, pd.Series):
+            array = array.to_numpy()
+        elif sp.issparse(array):
+            array = array.A.flatten()
+
+        max_val = array.max().astype('float32')
+        int_coded = np.int16(array/max_val*1000)
+        vec = builder.CreateNumpyVector(int_coded)
+        vec_max = self.builder.CreateByteVector(max_val.tobytes())
+
+        builder.StartObject(self.n_slots)
+        builder.PrependUOffsetTRelativeSlot(0, vec, 0)
+        builder.PrependUOffsetTRelativeSlot(1, vec_max, 0)
+        return builder.EndObject()
+
+    def decode_array(self, u, TarType):
+        arr = TarType()
+        arr.Init(u.Bytes, u.Pos)
+        codes = arr.CodesAsNumpy()
+        max_val = arr.Max()
+        return (codes/1000*max_val).astype('float32')
 
 class DenseNumericCoder:
     n_slots = 1
@@ -98,9 +126,9 @@ class PolymorphicCoder:
 # than an int32 numeric array.
 ARRAY_ENCODER = {
     "dense": {
-        np.dtype(np.float64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
-        np.dtype(np.float32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
-        np.dtype(np.float16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.float64).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
+        np.dtype(np.float32).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
+        np.dtype(np.float16).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
         np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
         np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
         np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
@@ -123,6 +151,7 @@ TYPE_MAP = {
     TypedFBArray.TypedFBArray.Int32FBArray: (DenseNumericCoder, Int32FBArray.Int32FBArray),
     TypedFBArray.TypedFBArray.Float32FBArray: (DenseNumericCoder, Float32FBArray.Float32FBArray),
     TypedFBArray.TypedFBArray.Float64FBArray: (DenseNumericCoder, Float64FBArray.Float64FBArray),
+    TypedFBArray.TypedFBArray.Int16EncodedXFBArray: (DenseNumericIntCoder, Int16EncodedXFBArray.Int16EncodedXFBArray),    
     TypedFBArray.TypedFBArray.JSONEncodedFBArray: (PolymorphicCoder, JSONEncodedFBArray.JSONEncodedFBArray),
     TypedFBArray.TypedFBArray.DictEncoded8FBArray: (CategoricalCoder, DictEncoded8FBArray.DictEncoded8FBArray),
     TypedFBArray.TypedFBArray.DictEncoded16FBArray: (CategoricalCoder, DictEncoded16FBArray.DictEncoded16FBArray),

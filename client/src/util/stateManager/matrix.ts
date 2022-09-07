@@ -72,6 +72,22 @@ function decodeNumericArray(
   return dataArray;
 }
 
+function decodeIntCodedArray(
+  uType: TypedFBArray,
+  uValF: Column["u"]
+): TypedArray {
+  const TypeClass =
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
+  const arr = uValF(new TypeClass());
+  const codesArray = arr.codesArray();
+  const dataArray = new Float32Array(codesArray.length);
+  const maxValue = arr.max();
+  for (let i = 0; i < dataArray.length; i += 1) {
+    dataArray[i] = (codesArray[i] / 1000) * maxValue;
+  }
+  return dataArray;
+}
+
 function decodeJSONArray(
   uType: TypedFBArray,
   uValF: Column["u"]
@@ -100,6 +116,9 @@ function decodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return decodeDictArray(uType, uValF);
+    }
+    case TypedFBArray.Int16EncodedXFBArray: {
+      return decodeIntCodedArray(uType, uValF);
     }
     default: {
       return decodeNumericArray(uType, uValF, inplace);
@@ -247,6 +266,25 @@ function encodeNumericArray(
   return builder.endObject();
 }
 
+function encodeIntCodedArray(
+  builder: flatbuffers.Builder,
+  uData: TypedArray
+): number {
+  const codesArray = new Int16Array(uData.length);
+  const maxValue = Math.max(...codesArray);
+  for (let i = 0; i < codesArray.length; i += 1) {
+    codesArray[i] = Math.floor((uData[i] / maxValue) * 1000);
+  }
+  const cArray = NetEncoding.Int16EncodedXFBArray.createCodesVector(
+    builder,
+    codesArray
+  );
+  builder.startObject(2);
+  builder.addFieldOffset(0, cArray, 0);
+  NetEncoding.Int16EncodedXFBArray.addMax(builder, maxValue);
+  return builder.endObject();
+}
+
 function encodeJSONArray(
   builder: flatbuffers.Builder,
   uData: Array<string> | Array<boolean>
@@ -276,6 +314,9 @@ function encodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return encodeDictArray(builder, uType, uData);
+    }
+    case TypedFBArray.Int16EncodedXFBArray: {
+      return encodeIntCodedArray(builder, uData);
     }
     default: {
       return encodeNumericArray(builder, uType, uData);
