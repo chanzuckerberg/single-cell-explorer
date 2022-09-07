@@ -36,6 +36,7 @@ class DenseNumericIntCoder:
         builder.StartObject(self.n_slots)
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
         builder.PrependFloat32Slot(1,max_val,0)
+        builder.PrependInt32Slot(2,num_bins,0)
         return builder.EndObject()
 
     def decode_array(self, u, TarType):
@@ -43,7 +44,8 @@ class DenseNumericIntCoder:
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
         max_val = arr.Max()
-        return (codes/codes.max()*max_val).astype('float32')
+        num_bins = arr.Nbins()
+        return (codes/num_bins*max_val).astype('float32')
 
 class DenseNumericCoder:
     n_slots = 1

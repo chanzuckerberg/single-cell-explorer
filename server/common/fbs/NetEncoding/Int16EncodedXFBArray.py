@@ -58,7 +58,14 @@ class Int16EncodedXFBArray(object):
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
-def Start(builder): builder.StartObject(2)
+    # Int16EncodedXFBArray
+    def Nbins(self):
+        o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
+        if o != 0:
+            return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
+        return 0
+
+def Start(builder): builder.StartObject(3)
 def Int16EncodedXFBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
     return Start(builder)
@@ -74,6 +81,10 @@ def AddMax(builder, max): builder.PrependFloat32Slot(1, max, 0.0)
 def Int16EncodedXFBArrayAddMax(builder, max):
     """This method is deprecated. Please switch to AddMax."""
     return AddMax(builder, max)
+def AddNbins(builder, nbins): builder.PrependInt32Slot(2, nbins, 0)
+def Int16EncodedXFBArrayAddNbins(builder, nbins):
+    """This method is deprecated. Please switch to AddNbins."""
+    return AddNbins(builder, nbins)
 def End(builder): return builder.EndObject()
 def Int16EncodedXFBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
