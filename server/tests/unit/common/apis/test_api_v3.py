@@ -514,7 +514,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
+        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
@@ -550,7 +550,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
+        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]

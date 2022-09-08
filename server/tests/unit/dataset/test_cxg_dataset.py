@@ -47,4 +47,4 @@ class TestCxgDataset(unittest.TestCase):
         self.assertIs(type(summary["columns"]), list)
         self.assertEqual(len(summary["columns"]), 1)
         self.assertEqual(len(summary["columns"][0]), 2638)
-        self.assertEqual(summary["columns"][0].sum(), np.float32(-19.00301))
+        self.assertEqual(summary["columns"][0].sum(), np.float32(-35.90116))

@@ -118,7 +118,7 @@ to create the client schema).
 
 The following test cases are all dicts which contain the following keys:
     - dataframe - the dataframe used as input for encode_matrix_fbs
-    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Float32FBArray)
+    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Int16EncodedXFBArray)
     - expected_schema_hints - upon success, dict of schema hint
 All are keyed by column name.
 """
@@ -135,13 +135,13 @@ int_test_cases = [
     }
 ]
 
-# simple tests that we convert all floats to float32
+# simple tests that we convert all floats to int16-encoded arrays
 float_dtypes = [np.dtype(d) for d in [np.float16, np.float32, np.float64]]
 float_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in float_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Float32FBArray) for dtype in float_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Int16EncodedXFBArray) for dtype in float_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "float32"}) for dtype in float_dtypes]),
     }
