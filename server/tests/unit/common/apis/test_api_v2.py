@@ -331,7 +331,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
+        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
     def test_post_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -366,7 +366,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
+        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
 
 class TestDataLocatorMockApi(BaseTest):
