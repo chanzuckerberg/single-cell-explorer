@@ -63,6 +63,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
     :param matrix: 2D DataFrame, ndarray or sparse equivalent
     :param row_idx: array-like index for row dimension or pandas.Index (not supported)
     :param col_idx: array-like index for col dimension or pandas.Index
+    :param num_bins: number of bins to use for lossy compression of float data. if unset, no compression.
 
     NOTE: row indices are (currently) unsupported and must be None
     """

@@ -63,6 +63,15 @@ table DictEncoded32FBArray {
   dict: [uint8];
 }
 
+
+// This encoding performs the following operation on the source array, A:
+//   A' = Floor((A - min(A)) / (max(A) - min(A)) * nBins)
+// where Floor is the integer truncation operation. This digitizes the float array
+// into nBins bins and encodes the result as an integer array, yielding responses
+// with smaller memory footprints. The client then reverses the linear scaling
+// operation to recover the original data. The integer truncation results in
+// significant loss of precision for small nBins, so nBins>=500 is recommended.
+
 table Int16EncodedXFBArray {
   // the integer codes corresponding to float bins
   codes: [int16];
