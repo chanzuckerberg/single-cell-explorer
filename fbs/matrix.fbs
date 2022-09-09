@@ -9,7 +9,7 @@
     - JSON/UTF8 encoded array (for other types)
     - signed and unsigned 8, 16, 32, and 64 bit integers
     - dictionary-encoded categorical arrays with 8, 16, and 32 bit integer codes
-    - integer-encoded float arrays
+    - integer-encoded float arrays (lossy)
 
   https://github.com/google/flatbuffers
   http://google.github.io/flatbuffers/
