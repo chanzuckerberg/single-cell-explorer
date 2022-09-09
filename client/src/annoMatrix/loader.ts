@@ -22,6 +22,7 @@ import {
   _hashStringValues,
   _urlEncodeComplexQuery,
   _urlEncodeLabelQuery,
+  _urlOptionalEncodeNbinsSuffix,
   ComplexQuery,
   Query,
 } from "./query";
@@ -296,7 +297,8 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
    **/
   async _doLoad(
     field: Field,
-    query: Query
+    query: Query,
+    nBins: number | null
   ): Promise<[WhereCache | null, Dataframe]> {
     /*
     _doLoad - evaluates the query against the field. Returns:
@@ -309,15 +311,15 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     switch (field) {
       case "obs":
       case "var": {
-        doRequest = _obsOrVarLoader(this.baseURL, field, query);
+        doRequest = _obsOrVarLoader(this.baseURL, field, query, nBins);
         break;
       }
       case "X": {
-        doRequest = _XLoader(this.baseURL, field, query);
+        doRequest = _XLoader(this.baseURL, field, query, nBins);
         break;
       }
       case "emb": {
-        doRequest = _embLoader(this.baseURL, field, query);
+        doRequest = _embLoader(this.baseURL, field, query, nBins);
         priority = 0; // high prio load for embeddings
         break;
       }
@@ -362,33 +364,36 @@ function _writableObsCategoryTypeCheck(
 function _embLoader(
   baseURL: string,
   _field: Field,
-  query: Query
+  query: Query,
+  nBins: number | null = null
 ): () => Promise<ArrayBuffer> {
   _expectSimpleQuery(query);
 
   const urlBase = `${baseURL}layout/obs`;
   const urlQuery = _urlEncodeLabelQuery("layout-name", query);
-  const url = `${urlBase}?${urlQuery}`;
+  const url = _urlOptionalEncodeNbinsSuffix(`${urlBase}?${urlQuery}`, nBins);
   return () => doBinaryRequest(url);
 }
 
 function _obsOrVarLoader(
   baseURL: string,
   field: Field,
-  query: Query
+  query: Query,
+  nBins: number | null = null
 ): () => Promise<ArrayBuffer> {
   _expectSimpleQuery(query);
 
   const urlBase = `${baseURL}annotations/${field}`;
   const urlQuery = _urlEncodeLabelQuery("annotation-name", query);
-  const url = `${urlBase}?${urlQuery}`;
+  const url = _urlOptionalEncodeNbinsSuffix(`${urlBase}?${urlQuery}`, nBins);
   return () => doBinaryRequest(url);
 }
 
 function _XLoader(
   baseURL: string,
   _field: Field,
-  query: Query
+  query: Query,
+  nBins: number | null = null
 ): () => Promise<ArrayBuffer> {
   _expectComplexQuery(query);
 
@@ -398,7 +403,7 @@ function _XLoader(
   if ("where" in complexQuery) {
     const urlBase = `${baseURL}data/var`;
     const urlQuery = _urlEncodeComplexQuery(complexQuery);
-    const url = `${urlBase}?${urlQuery}`;
+    const url = _urlOptionalEncodeNbinsSuffix(`${urlBase}?${urlQuery}`, nBins);
     return () => doBinaryRequest(url);
   }
 
@@ -407,11 +412,17 @@ function _XLoader(
     const urlQuery = _urlEncodeComplexQuery(complexQuery);
 
     if (urlBase.length + urlQuery.length < 2000) {
-      const url = `${urlBase}?${urlQuery}`;
+      const url = _urlOptionalEncodeNbinsSuffix(
+        `${urlBase}?${urlQuery}`,
+        nBins
+      );
       return () => doBinaryRequest(url);
     }
 
-    const url = `${urlBase}?key=${_hashStringValues([urlQuery])}`;
+    const url = _urlOptionalEncodeNbinsSuffix(
+      `${urlBase}?key=${_hashStringValues([urlQuery])}`,
+      nBins
+    );
     return async () => {
       const res = await doFetch(url, {
         method: "POST",

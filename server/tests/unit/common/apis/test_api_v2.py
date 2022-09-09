@@ -315,7 +315,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
@@ -331,7 +331,7 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
+        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
 
     def test_post_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -351,12 +351,82 @@ class EndPoints(BaseTest):
         self.assertEqual(df["n_rows"], 2638)
         self.assertEqual(df["n_cols"], 1)
         self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
         filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
         query = f"method=mean&{filter}"
+        query_hash = hashlib.sha1(query.encode()).hexdigest()
+        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
+        result = self.client.post(url, headers=headers, data=query)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+        df = decode_fbs.decode_matrix_FBS(result.data)
+        self.assertEqual(df["n_rows"], 2638)
+        self.assertEqual(df["n_cols"], 1)
+        self.assertEqual(df["col_idx"], [query_hash])
+        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
+
+    def test_get_summaryvar_lossy(self):
+        index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
+        endpoint = "summarize/var"
+
+        # single column
+        filter = f"var:{index_col_name}=F5"
+        query = f"method=mean&{filter}&nbins=500"
+        query_hash = hashlib.sha1(query.encode()).hexdigest()
+        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
+        header = {"Accept": "application/octet-stream"}
+        result = self.client.get(url, headers=header)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+        df = decode_fbs.decode_matrix_FBS(result.data)
+        self.assertEqual(df["n_rows"], 2638)
+        self.assertEqual(df["n_cols"], 1)
+        self.assertEqual(df["col_idx"], [query_hash])
+        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+
+        # multi-column
+        col_names = ["F5", "BEB3", "SIK1"]
+        filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
+        query = f"method=mean&{filter}&nbins=500"
+        query_hash = hashlib.sha1(query.encode()).hexdigest()
+        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
+        header = {"Accept": "application/octet-stream"}
+        result = self.client.get(url, headers=header)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+        df = decode_fbs.decode_matrix_FBS(result.data)
+        self.assertEqual(df["n_rows"], 2638)
+        self.assertEqual(df["n_cols"], 1)
+        self.assertEqual(df["col_idx"], [query_hash])
+        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
+
+    def test_post_summaryvar_lossy(self):
+        index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
+        endpoint = "summarize/var"
+        headers = {"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/octet-stream"}
+
+        # single column
+        filter = f"var:{index_col_name}=F5&nbins=500"
+        query = f"method=mean&{filter}"
+        query_hash = hashlib.sha1(query.encode()).hexdigest()
+        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
+        result = self.client.post(url, headers=headers, data=query)
+
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+        df = decode_fbs.decode_matrix_FBS(result.data)
+        self.assertEqual(df["n_rows"], 2638)
+        self.assertEqual(df["n_cols"], 1)
+        self.assertEqual(df["col_idx"], [query_hash])
+        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+
+        # multi-column
+        col_names = ["F5", "BEB3", "SIK1"]
+        filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
+        query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
         result = self.client.post(url, headers=headers, data=query)

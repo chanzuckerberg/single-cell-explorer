@@ -144,6 +144,10 @@ def config_get(app_config, data_adaptor):
 
 def annotations_obs_get(request, data_adaptor):
     fields = request.args.getlist("annotation-name", None)
+    nBins = request.args.get("nbins", None)
+    if nBins is not None:
+        nBins = int(nBins)
+
     num_columns_requested = len(data_adaptor.get_obs_keys()) if len(fields) == 0 else len(fields)
     if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
@@ -152,7 +156,7 @@ def annotations_obs_get(request, data_adaptor):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields)
+        fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields, num_bins=nBins)
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
     except KeyError as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
@@ -164,6 +168,10 @@ def inflate(data):
 
 def annotations_var_get(request, data_adaptor):
     fields = request.args.getlist("annotation-name", None)
+    nBins = request.args.get("nbins", None)
+    if nBins is not None:
+        nBins = int(nBins)
+
     num_columns_requested = len(data_adaptor.get_var_keys()) if len(fields) == 0 else len(fields)
     if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
@@ -173,7 +181,7 @@ def annotations_var_get(request, data_adaptor):
 
     try:
         return make_response(
-            data_adaptor.annotation_to_fbs_matrix(Axis.VAR, fields),
+            data_adaptor.annotation_to_fbs_matrix(Axis.VAR, fields, num_bins=nBins),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
@@ -188,9 +196,13 @@ def data_var_put(request, data_adaptor):
 
     filter_json = request.get_json()
     filter = filter_json["filter"] if filter_json else None
+    nBins = filter_json.get("nbins", None) if filter_json else None
+    if nBins is not None:
+        nBins = int(nBins)
+
     try:
         return make_response(
-            data_adaptor.data_frame_to_fbs_matrix(filter, axis=Axis.VAR),
+            data_adaptor.data_frame_to_fbs_matrix(filter, axis=Axis.VAR, num_bins=nBins),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
@@ -204,9 +216,14 @@ def data_var_get(request, data_adaptor):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
-        filter = _query_parameter_to_filter(request.args)
+        nBins = request.args.get("nbins", None)
+        if nBins is not None:
+            nBins = int(nBins)
+        args_filter_only = request.args.copy()
+        args_filter_only.poplist("nbins")
+        filter = _query_parameter_to_filter(args_filter_only)
         return make_response(
-            data_adaptor.data_frame_to_fbs_matrix(filter, axis=Axis.VAR),
+            data_adaptor.data_frame_to_fbs_matrix(filter, axis=Axis.VAR, num_bins=nBins),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
@@ -311,6 +328,10 @@ def diffex_binary_post(request, data_adaptor):
 
 def layout_obs_get(request, data_adaptor):
     fields = request.args.getlist("layout-name", None)
+    nBins = request.args.get("nbins", None)
+    if nBins is not None:
+        nBins = int(nBins)
+
     num_columns_requested = len(data_adaptor.get_embedding_names()) if len(fields) == 0 else len(fields)
     if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
@@ -321,7 +342,9 @@ def layout_obs_get(request, data_adaptor):
 
     try:
         return make_response(
-            data_adaptor.layout_to_fbs_matrix(fields), HTTPStatus.OK, {"Content-Type": "application/octet-stream"}
+            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins),
+            HTTPStatus.OK,
+            {"Content-Type": "application/octet-stream"},
         )
     except (KeyError, DatasetAccessError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
@@ -352,6 +375,9 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     summary_method = request.values.get("method", default="mean")
+    nBins = request.values.get("nbins", default=None)
+    if nBins is not None:
+        nBins = int(nBins)
 
     def summarizeQueryHash(raw_query):
         """generate a cache key (hash) from the raw query string"""
@@ -364,11 +390,12 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
     args_filter_only = request.values.copy()
     args_filter_only.poplist("method")
     args_filter_only.poplist("key")
+    args_filter_only.poplist("nbins")
 
     try:
         filter = _query_parameter_to_filter(args_filter_only)
         return make_response(
-            data_adaptor.summarize_var(summary_method, filter, query_hash),
+            data_adaptor.summarize_var(summary_method, filter, query_hash, num_bins=nBins),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )

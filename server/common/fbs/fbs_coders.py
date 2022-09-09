@@ -15,15 +15,14 @@ import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArra
 import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArray
 
-DEFAULT_NUM_BINS = 5000
-
 
 class DenseNumericIntCoder:
     n_slots = 4
 
     def encode_array(self, array, builder, _dtype, num_bins=None):
         if num_bins is None:
-            num_bins = DEFAULT_NUM_BINS
+            raise ValueError("num_bins must be specified for DenseNumericIntCoder")
+
         # convert pandas series to numpy array
         if isinstance(array, pd.Series):
             array = array.to_numpy()
@@ -135,9 +134,9 @@ class PolymorphicCoder:
 # than an int32 numeric array.
 ARRAY_ENCODER = {
     "dense": {
-        np.dtype(np.float64).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
-        np.dtype(np.float32).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
-        np.dtype(np.float16).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
+        np.dtype(np.float64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.float32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
+        np.dtype(np.float16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Float32FBArray),
         np.dtype(np.int8).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
         np.dtype(np.int16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
         np.dtype(np.int32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Int32FBArray),
@@ -146,6 +145,11 @@ ARRAY_ENCODER = {
         np.dtype(np.uint16).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
         np.dtype(np.uint32).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
         np.dtype(np.uint64).str: (DenseNumericCoder, TypedFBArray.TypedFBArray.Uint32FBArray),
+    },
+    "lossy": {
+        np.dtype(np.float64).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
+        np.dtype(np.float32).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
+        np.dtype(np.float16).str: (DenseNumericIntCoder, TypedFBArray.TypedFBArray.Int16EncodedXFBArray),
     },
     "category": {
         np.dtype(np.int8).str: (CategoricalCoder, TypedFBArray.TypedFBArray.DictEncoded8FBArray),
@@ -168,9 +172,9 @@ TYPE_MAP = {
 }
 
 
-def _get_array_class(array):
+def _get_array_class(array, num_bins=None):
     # returns
-    # (1) the generic type of array - category, sparse, or dense
+    # (1) the generic type of array - category, dense, or lossy
     # this determines which coder should be used.
     # (2) the encoding data type from the corresponding attribute of the
     # source array. e.g. for pandas Categorical, the encoding data type
@@ -178,20 +182,23 @@ def _get_array_class(array):
     if pd.api.types.is_categorical_dtype(array):
         return "category", np.dtype(array.cat.codes.values.dtype).str
     else:
-        return "dense", np.dtype(get_encoding_dtype_of_array(array)).str
+        dtype = np.dtype(get_encoding_dtype_of_array(array)).str
+        array_class = "lossy" if dtype.startswith("<f") and num_bins is not None else "dense"
+        return array_class, dtype
 
 
 def serialize_typed_array(builder, source_array, num_bins=None):
     if isinstance(source_array, pd.Index):
         source_array = source_array.to_series()
 
-    array_class, encoding_dtype = _get_array_class(source_array)
+    array_class, encoding_dtype = _get_array_class(source_array, num_bins=num_bins)
     # the default coder will assume the data is polymorphic and yield a JSON encoded array
     defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
     Coder, array_type = ARRAY_ENCODER[array_class].get(encoding_dtype, defaultCoder)
 
     coder_obj = Coder()
-    # for encoding, we require the source array, flatbuffer builder, and encoding data type
+    # for encoding, we require the source array, flatbuffer builder, encoding data type, and
+    # number of bins for lossy integer compression
     array_value = coder_obj.encode_array(source_array, builder, encoding_dtype, num_bins=num_bins)
     return (array_type, array_value)
 

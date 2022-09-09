@@ -125,7 +125,9 @@ export default Embedding;
 const loadAllEmbeddingCounts = async ({ annoMatrix, available }: any) => {
   const embeddings = await Promise.all(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    available.map((name: any) => annoMatrix.base().fetch("emb", name))
+    available.map((name: any) =>
+      annoMatrix.base().fetch("emb", name, globals.numBinsEmb)
+    )
   );
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'name' implicitly has an 'any' type.
   return available.map((name, idx) => ({
