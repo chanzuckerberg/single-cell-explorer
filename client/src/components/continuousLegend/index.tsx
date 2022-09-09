@@ -15,7 +15,7 @@ import {
 } from "../../util/stateManager/colorHelpers";
 import { ColorsState } from "../../reducers/colors";
 import { Genesets } from "../../reducers/genesets";
-
+import * as globals from "../../globals";
 // create continuous color legend
 const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
   const legendHeight = 200;
@@ -174,7 +174,9 @@ class ContinuousLegend extends React.Component<Props> {
       schema,
       genesets
     );
-    const colorDf = colorQuery ? await annoMatrix.fetch(...colorQuery) : null;
+    const colorDf = colorQuery
+      ? await annoMatrix.fetch(...colorQuery, globals.numBinsObsX)
+      : null;
     const colorTable = createColorTable(
       colorMode,
       colorAccessor,

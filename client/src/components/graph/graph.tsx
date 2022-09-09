@@ -636,8 +636,10 @@ class Graph extends React.Component<{}, GraphState> {
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
-      annoMatrix.fetch("emb", layoutChoice.current),
-      query ? annoMatrix.fetch(...query) : Promise.resolve(null),
+      annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
+      query
+        ? annoMatrix.fetch(...query, globals.numBinsObsX)
+        : Promise.resolve(null),
       pointDilationAccessor
         ? annoMatrix.fetch("obs", pointDilationAccessor)
         : Promise.resolve(null),
