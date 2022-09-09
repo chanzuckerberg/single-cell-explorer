@@ -261,7 +261,7 @@ export default abstract class AnnoMatrix {
 
     nBins is an optional parameter, which if present, will instruct the server
     to perform lossy integer encoding on continuous data. Continuous data includes
-    embeddings, continuous cell metadata, and the results of where and summarize
+    embeddings, continuous cell metadata, and the results of 'where' and 'summarize'
     queries. This parameter is ignored for categorical, integer, and polymorphic
     (e.g. an array of strings) data.
     The encoding performs the following operation on the source array, A:
