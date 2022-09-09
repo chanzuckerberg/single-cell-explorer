@@ -65,10 +65,10 @@ const STYLE_MEASURE_SPAN: CSSProperties = {
 
 // Inline styles for breadcrumbs container
 const STYLE_WRAPPER = {
-  flex: 1,
-  flexGrow: 1,
-  marginTop: "8px", // Match margin on sibling menu buttons (TODO move to controls container and remove from here and menu)
   overflow: "hidden",
+  position: "absolute",
+  bottom: 8,
+  left: 8,
 };
 
 /**

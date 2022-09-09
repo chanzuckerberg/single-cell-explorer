@@ -81,7 +81,6 @@ const DatasetSelector: FC<Props> = ({
 
     // Build props backing breadcrumbs
     setItems([
-      buildHomeBreadcrumbProps(portalUrl, navigateCheckUserStateFn),
       buildCollectionBreadcrumbProps(datasetMetadata, navigateCheckUserStateFn),
       buildDatasetBreadcrumbProps(
         datasetMetadata.dataset_name,
@@ -159,23 +158,6 @@ function buildCollectionBreadcrumbProps(
     onClick: () => navigateCheckUserStateFn(datasetMetadata.collection_url),
     shortText: "Collection",
     text: datasetMetadata.collection_name,
-  };
-}
-
-/**
- * Build "home" breadcrumb props, links to Portal's collection index page.
- * @param portalUrl - URL to Portal's collection index page.
- * @param navigateCheckUserStateFn - Function called on click of home breadcrumb.
- * @returns Returns breadcrumbs props for rendering the "home" breadcrumb.
- */
-function buildHomeBreadcrumbProps(
-  portalUrl: string,
-  navigateCheckUserStateFn: NavigateCheckUserState
-): TruncatingBreadcrumbProps {
-  return {
-    onClick: () => navigateCheckUserStateFn(portalUrl),
-    shortText: "Home",
-    text: "Home",
   };
 }
 
