@@ -152,11 +152,12 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def annotation_to_fbs_matrix(self, axis, field=None, uid=None):
+    def annotation_to_fbs_matrix(self, axis, field=None, uid=None, num_bins=None):
         """
         Gets annotation value for each observation
         :param axis: string obs or var
         :param fields: list of keys for annotation to return, returns all annotation values if not set.
+        :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         :return: flatbuffer: in fbs/matrix.fbs encoding
         """
         pass
@@ -225,11 +226,12 @@ class Dataset(metaclass=ABCMeta):
 
         return (obs_selector, var_selector)
 
-    def data_frame_to_fbs_matrix(self, filter, axis):
+    def data_frame_to_fbs_matrix(self, filter, axis, num_bins=None):
         """
         Retrieves data 'X' and returns in a flatbuffer Matrix.
         :param filter: filter: dictionary with filter params
         :param axis: string obs or var
+        :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         :return: flatbuffer Matrix
 
         Caveats:
@@ -253,7 +255,7 @@ class Dataset(metaclass=ABCMeta):
 
         X = self.get_X_array(obs_selector, var_selector)
         col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
-        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None)
+        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None, num_bins=num_bins)
 
     def diffexp_topN(self, obsFilterA, obsFilterB, top_n=None):
         """
@@ -342,8 +344,9 @@ class Dataset(metaclass=ABCMeta):
         normalized_layout = normalized_layout.astype(dtype=np.float32)
         return normalized_layout
 
-    def layout_to_fbs_matrix(self, fields):
+    def layout_to_fbs_matrix(self, fields, num_bins=None):
         """
+        :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         return specified embeddings as a flatbuffer, using the cellxgene matrix fbs encoding.
 
         * returns only first two dimensions, with name {ename}_0 and {ename}_1,
@@ -366,7 +369,7 @@ class Dataset(metaclass=ABCMeta):
                 df = pd.concat(layout_data, axis=1, copy=False)
             else:
                 df = pd.DataFrame()
-            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None)
+            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
 
@@ -377,7 +380,7 @@ class Dataset(metaclass=ABCMeta):
             lastmod = None
         return lastmod
 
-    def summarize_var(self, method, filter, query_hash):
+    def summarize_var(self, method, filter, query_hash, num_bins=None):
         if method != "mean":
             raise UnsupportedSummaryMethod("Unknown gene set summary method.")
 
@@ -395,4 +398,4 @@ class Dataset(metaclass=ABCMeta):
             mean = X.mean(axis=1, keepdims=True)
 
         col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None)
+        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)

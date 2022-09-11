@@ -416,7 +416,7 @@ class CxgDataset(Dataset):
                 self.schema = self._get_schema()
         return self.schema
 
-    def annotation_to_fbs_matrix(self, axis, fields=None):
+    def annotation_to_fbs_matrix(self, axis, fields=None, num_bins=None):
         with ServerTiming.time(f"annotations.{axis}.query"):
             A = self.open_array(str(axis))
 
@@ -441,6 +441,6 @@ class CxgDataset(Dataset):
                 raise KeyError(e)
 
         with ServerTiming.time(f"annotations.{axis}.encode"):
-            fbs = encode_matrix_fbs(df, col_idx=df.columns)
+            fbs = encode_matrix_fbs(df, col_idx=df.columns, num_bins=num_bins)
 
         return fbs

@@ -149,6 +149,10 @@ export const maxMenuItemCount = 9;
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
 
+/* number of bins to use for lossy integer compression */
+export const numBinsEmb = 5000;
+export const numBinsObsX = 500;
+
 const CXG_SERVER_PORT =
   process.env.CXG_SERVER_PORT || ENV_DEFAULT.CXG_SERVER_PORT;
 
