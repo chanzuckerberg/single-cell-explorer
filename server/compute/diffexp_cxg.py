@@ -88,7 +88,7 @@ def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp
 
     # degrees of freedom for Welch's t-test
     with np.errstate(divide="ignore", invalid="ignore"):
-        dof = sum_vn ** 2 / (vnA ** 2 / (nA - 1) + vnB ** 2 / (nB - 1))
+        dof = sum_vn**2 / (vnA**2 / (nA - 1) + vnB**2 / (nB - 1))
     dof[np.isnan(dof)] = 1
 
     # Welch's t-test score calculation
@@ -209,7 +209,7 @@ def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):
     n_b = n_rows - n_a
     delta = -u_a  # assumes u_b == 0
     u = (n_a * u_a) / n_rows
-    M2 = M2_a + delta ** 2 * n_a * n_b / n_rows  # assumes M2_b == 0
+    M2 = M2_a + delta**2 * n_a * n_b / n_rows  # assumes M2_b == 0
     return u, M2
 
 

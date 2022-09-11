@@ -297,7 +297,7 @@ def diffexp_obs_post(request, data_adaptor):
 
 
 def diffex_binary_post(request, data_adaptor):
-    MAX_CONTENT_LENGTH = 100 * 1024 ** 2  # perhaps a config variable would be suitable?
+    MAX_CONTENT_LENGTH = 100 * 1024**2  # perhaps a config variable would be suitable?
     if not data_adaptor.dataset_config.diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     if not request.content_type or "application/octet-stream" not in request.content_type:
