@@ -308,7 +308,7 @@ class CxgDataset(Dataset):
 
     def get_X_array_dtype(self):
         X = self.open_X_array()
-        return X.attr("").dtype
+        return X.attr(0).dtype
 
     def query_var_array(self, term_name):
         var = self.open_array("var")

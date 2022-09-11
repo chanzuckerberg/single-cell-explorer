@@ -38,7 +38,7 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selecto
               "negative": for top N genes, [ varindex, foldchange, pval, pval_adj ]}
     """
     matrix = adaptor.open_X_array()
-    dtype = matrix.attr("").dtype
+    dtype = matrix.attr(0).dtype
     n_obs, cols = adaptor.get_shape()
     is_sparse = matrix.schema.sparse
 
