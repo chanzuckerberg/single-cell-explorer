@@ -152,14 +152,14 @@ def _choose_block_type(part: _ListPartition) -> _BlockDescription.BlockType:
     in the format description (`dev_docs/diffexpdu.md`)
     """
     n_elem = part.end_idx - part.start_idx
-    assert 0 < n_elem <= 2**16
+    assert 0 < n_elem <= 2 ** 16
     assert (part.arr[part.start_idx] >> 16) == (part.arr[part.end_idx - 1] >> 16)
 
     interval = (part.arr[part.end_idx - 1] & 0xFFFF) + 1 - (part.arr[part.start_idx] & 0xFFFF)
     density = n_elem / interval
 
-    minBitArrayThreshold = 2**11
-    maxBitArrayThreshold = 2**16 - minBitArrayThreshold
+    minBitArrayThreshold = 2 ** 11
+    maxBitArrayThreshold = 2 ** 16 - minBitArrayThreshold
     if (minBitArrayThreshold < n_elem < maxBitArrayThreshold) and (0.125 < density < 0.875):
         return _BlockDescription.BlockType.BitArray
 
@@ -183,13 +183,13 @@ def _encode_bitarray_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_Bloc
     """
     Encode as bitarray, compressed with zlib.
     """
-    bool_arr = np.zeros((2**16,), dtype=np.bool_)
+    bool_arr = np.zeros((2 ** 16,), dtype=np.bool_)
     bool_arr[arr] = 1
     ba = bitarray.bitarray(endian="little")
     ba.pack(bool_arr.tobytes())
 
     buf = ba.tobytes()
-    assert len(buf) == 2**13
+    assert len(buf) == 2 ** 13
     buf = _blockCompress(buf)
     key = part.arr[part.start_idx] >> 16
     header = _BlockDescription(
