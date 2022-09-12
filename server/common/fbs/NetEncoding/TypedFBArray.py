@@ -12,4 +12,5 @@ class TypedFBArray(object):
     DictEncoded8FBArray = 6
     DictEncoded16FBArray = 7
     DictEncoded32FBArray = 8
+    Int16EncodedXFBArray = 9
 

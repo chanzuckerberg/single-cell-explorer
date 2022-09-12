@@ -2,31 +2,31 @@
 // @ts-nocheck
 import { flatbuffers } from "flatbuffers";
 
-export class DictEncoded16FBArray {
+export class Int16EncodedXFBArray {
   bb: flatbuffers.ByteBuffer | null = null;
   bb_pos = 0;
-  __init(i: number, bb: flatbuffers.ByteBuffer): DictEncoded16FBArray {
+  __init(i: number, bb: flatbuffers.ByteBuffer): Int16EncodedXFBArray {
     this.bb_pos = i;
     this.bb = bb;
     return this;
   }
 
-  static getRootAsDictEncoded16FBArray(
+  static getRootAsInt16EncodedXFBArray(
     bb: flatbuffers.ByteBuffer,
-    obj?: DictEncoded16FBArray
-  ): DictEncoded16FBArray {
-    return (obj || new DictEncoded16FBArray()).__init(
+    obj?: Int16EncodedXFBArray
+  ): Int16EncodedXFBArray {
+    return (obj || new Int16EncodedXFBArray()).__init(
       bb.readInt32(bb.position()) + bb.position(),
       bb
     );
   }
 
-  static getSizePrefixedRootAsDictEncoded16FBArray(
+  static getSizePrefixedRootAsInt16EncodedXFBArray(
     bb: flatbuffers.ByteBuffer,
-    obj?: DictEncoded16FBArray
-  ): DictEncoded16FBArray {
+    obj?: Int16EncodedXFBArray
+  ): Int16EncodedXFBArray {
     bb.setPosition(bb.position() + flatbuffers.SIZE_PREFIX_LENGTH);
-    return (obj || new DictEncoded16FBArray()).__init(
+    return (obj || new Int16EncodedXFBArray()).__init(
       bb.readInt32(bb.position()) + bb.position(),
       bb
     );
@@ -55,31 +55,23 @@ export class DictEncoded16FBArray {
       : null;
   }
 
-  dict(index: number): number | null {
+  max(): number {
     const offset = this.bb!.__offset(this.bb_pos, 6);
-    return offset
-      ? this.bb!.readUint8(this.bb!.__vector(this.bb_pos + offset) + index)
-      : 0;
+    return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
   }
 
-  dictLength(): number {
-    const offset = this.bb!.__offset(this.bb_pos, 6);
-    return offset ? this.bb!.__vector_len(this.bb_pos + offset) : 0;
+  min(): number {
+    const offset = this.bb!.__offset(this.bb_pos, 8);
+    return offset ? this.bb!.readFloat32(this.bb_pos + offset) : 0.0;
   }
 
-  dictArray(): Uint8Array | null {
-    const offset = this.bb!.__offset(this.bb_pos, 6);
-    return offset
-      ? new Uint8Array(
-          this.bb!.bytes().buffer,
-          this.bb!.bytes().byteOffset + this.bb!.__vector(this.bb_pos + offset),
-          this.bb!.__vector_len(this.bb_pos + offset)
-        )
-      : null;
+  nbins(): number {
+    const offset = this.bb!.__offset(this.bb_pos, 10);
+    return offset ? this.bb!.readInt32(this.bb_pos + offset) : 0;
   }
 
-  static startDictEncoded16FBArray(builder: flatbuffers.Builder) {
-    builder.startObject(2);
+  static startInt16EncodedXFBArray(builder: flatbuffers.Builder) {
+    builder.startObject(4);
   }
 
   static addCodes(
@@ -115,40 +107,37 @@ export class DictEncoded16FBArray {
     builder.startVector(2, numElems, 2);
   }
 
-  static addDict(builder: flatbuffers.Builder, dictOffset: flatbuffers.Offset) {
-    builder.addFieldOffset(1, dictOffset, 0);
+  static addMax(builder: flatbuffers.Builder, max: number) {
+    builder.addFieldFloat32(1, max, 0.0);
   }
 
-  static createDictVector(
-    builder: flatbuffers.Builder,
-    data: number[] | Uint8Array
-  ): flatbuffers.Offset {
-    builder.startVector(1, data.length, 1);
-    for (let i = data.length - 1; i >= 0; i--) {
-      builder.addInt8(data[i]!);
-    }
-    return builder.endVector();
+  static addMin(builder: flatbuffers.Builder, min: number) {
+    builder.addFieldFloat32(2, min, 0.0);
   }
 
-  static startDictVector(builder: flatbuffers.Builder, numElems: number) {
-    builder.startVector(1, numElems, 1);
+  static addNbins(builder: flatbuffers.Builder, nbins: number) {
+    builder.addFieldInt32(3, nbins, 0);
   }
 
-  static endDictEncoded16FBArray(
+  static endInt16EncodedXFBArray(
     builder: flatbuffers.Builder
   ): flatbuffers.Offset {
     const offset = builder.endObject();
     return offset;
   }
 
-  static createDictEncoded16FBArray(
+  static createInt16EncodedXFBArray(
     builder: flatbuffers.Builder,
     codesOffset: flatbuffers.Offset,
-    dictOffset: flatbuffers.Offset
+    max: number,
+    min: number,
+    nbins: number
   ): flatbuffers.Offset {
-    DictEncoded16FBArray.startDictEncoded16FBArray(builder);
-    DictEncoded16FBArray.addCodes(builder, codesOffset);
-    DictEncoded16FBArray.addDict(builder, dictOffset);
-    return DictEncoded16FBArray.endDictEncoded16FBArray(builder);
+    Int16EncodedXFBArray.startInt16EncodedXFBArray(builder);
+    Int16EncodedXFBArray.addCodes(builder, codesOffset);
+    Int16EncodedXFBArray.addMax(builder, max);
+    Int16EncodedXFBArray.addMin(builder, min);
+    Int16EncodedXFBArray.addNbins(builder, nbins);
+    return Int16EncodedXFBArray.endInt16EncodedXFBArray(builder);
   }
 }

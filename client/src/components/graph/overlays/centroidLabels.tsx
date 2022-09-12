@@ -9,7 +9,7 @@ import {
   DataframeDictEncodedColumn,
   isDataframeDictEncodedColumn,
 } from "../../../util/dataframe/types";
-
+import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -109,7 +109,9 @@ export default class CentroidLabels extends PureComponent {
     // fetch all data we need: layout, category
     const promises = [];
     // layout
-    promises.push(annoMatrix.fetch("emb", layoutChoice.current));
+    promises.push(
+      annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb)
+    );
     // category to label - we ONLY label on obs, never on X, etc.
     const query = this.colorByQuery();
     if (query && query[0] === "obs") {

@@ -239,7 +239,11 @@ export default abstract class AnnoMatrix {
   /**
    ** Load / read interfaces
    **/
-  fetch(field: Field, q: Query | Query[]): Promise<Dataframe> {
+  fetch(
+    field: Field,
+    q: Query | Query[],
+    nBins: number | null = null
+  ): Promise<Dataframe> {
     /*
 		Return the given query on a single matrix field as a single dataframe.
 		Currently supports ONLY full column query.
@@ -254,6 +258,19 @@ export default abstract class AnnoMatrix {
 				"n_genes"
 			* an object, containing an "value" query (see below).
 			* an array, containing one or more of the above.
+
+    nBins is an optional parameter, which if present, will instruct the server
+    to perform lossy integer encoding on continuous data. Continuous data includes
+    embeddings, continuous cell metadata, and the results of 'where' and 'summarize'
+    queries. This parameter is ignored for categorical, integer, and polymorphic
+    (e.g. an array of strings) data.
+    The encoding performs the following operation on the source array, A:
+      A' = Floor((A - min(A)) / (max(A) - min(A)) * nBins)
+    where Floor is the integer truncation operation. This digitizes the float array
+    into nBins bins and encodes the result as an integer array, yielding responses
+    with smaller memory footprints. The client then reverses the linear scaling
+    operation to recover the original data. The integer truncation results in
+    significant loss of precision for small nBins, so nBins>=500 is recommended.
 
 		Columns may have more than one dimension, and all will be fetched
 		and returned together.  This is most commonly seen in an embedding,
@@ -293,10 +310,10 @@ export default abstract class AnnoMatrix {
 		supported.
 
 		*/
-    return this._fetch(field, q);
+    return this._fetch(field, q, nBins);
   }
 
-  prefetch(field: Field, q: Query): void {
+  prefetch(field: Field, q: Query, nBins: number | null = null): void {
     /*
 		Start a data fetch & cache fill.  Identical to fetch() except it does
 		not return a value.
@@ -304,7 +321,7 @@ export default abstract class AnnoMatrix {
     Primary use is to being a cache load as early as is possible, reducing
     overall component rendering latency.
 		*/
-    this._fetch(field, q);
+    this._fetch(field, q, nBins);
   }
 
   /**
@@ -489,7 +506,11 @@ export default abstract class AnnoMatrix {
       .flat();
   }
 
-  async _fetch(field: Field, q: Query | Query[]): Promise<Dataframe> {
+  async _fetch(
+    field: Field,
+    q: Query | Query[],
+    nBins: number | null = null
+  ): Promise<Dataframe> {
     if (!AnnoMatrix.fields().includes(field)) return Dataframe.empty();
     const queries = Array.isArray(q) ? q : [q];
     queries.forEach(_queryValidate);
@@ -517,7 +538,11 @@ export default abstract class AnnoMatrix {
             query,
             async (_field: Field, _query: Query): Promise<void> => {
               /* fetch, then index.  _doLoad is subclass interface */
-              const [whereCacheUpdate, df] = await this._doLoad(_field, _query);
+              const [whereCacheUpdate, df] = await this._doLoad(
+                _field,
+                _query,
+                nBins
+              );
               this._cache[_field] = this._cache[_field].withColsFrom(df);
               this._whereCache = _whereCacheMerge(
                 this._whereCache,
@@ -565,7 +590,8 @@ export default abstract class AnnoMatrix {
 
   abstract _doLoad(
     field: Field,
-    query: Query
+    query: Query,
+    nBins: number | null
   ): Promise<[WhereCache | null, Dataframe]>;
 
   /**

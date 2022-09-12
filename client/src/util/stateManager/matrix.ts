@@ -22,6 +22,7 @@ import { Matrix } from "./net-encoding/matrix";
 import { Column } from "./net-encoding/column";
 
 const utf8Decoder = new TextDecoder("utf-8");
+const DEFAULT_NUM_BINS = 5000;
 
 /**
  * Matrix flatbuffer decoding support. See fbs/matrix.fbs
@@ -72,6 +73,24 @@ function decodeNumericArray(
   return dataArray;
 }
 
+function decodeIntCodedArray(
+  uType: TypedFBArray,
+  uValF: Column["u"]
+): TypedArray {
+  const TypeClass =
+    NetEncoding[TypedFBArray[uType] as keyof typeof NetEncoding];
+  const arr = uValF(new TypeClass());
+  const codesArray = arr.codesArray();
+  const dataArray = new Float32Array(codesArray.length);
+  const maxValue = arr.max();
+  const minValue = arr.min();
+  const numBins = arr.nbins();
+  for (let i = 0; i < dataArray.length; i += 1) {
+    dataArray[i] = (codesArray[i] / numBins) * (maxValue - minValue) + minValue;
+  }
+  return dataArray;
+}
+
 function decodeJSONArray(
   uType: TypedFBArray,
   uValF: Column["u"]
@@ -100,6 +119,9 @@ function decodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return decodeDictArray(uType, uValF);
+    }
+    case TypedFBArray.Int16EncodedXFBArray: {
+      return decodeIntCodedArray(uType, uValF);
     }
     default: {
       return decodeNumericArray(uType, uValF, inplace);
@@ -247,6 +269,30 @@ function encodeNumericArray(
   return builder.endObject();
 }
 
+function encodeIntCodedArray(
+  builder: flatbuffers.Builder,
+  uData: TypedArray
+): number {
+  const codesArray = new Int16Array(uData.length);
+  const maxValue = Math.max(...codesArray);
+  const minValue = Math.min(...codesArray);
+  for (let i = 0; i < codesArray.length; i += 1) {
+    codesArray[i] = Math.floor(
+      ((uData[i] - minValue) / (maxValue - minValue)) * DEFAULT_NUM_BINS
+    );
+  }
+  const cArray = NetEncoding.Int16EncodedXFBArray.createCodesVector(
+    builder,
+    codesArray
+  );
+  builder.startObject(4);
+  builder.addFieldOffset(0, cArray, 0);
+  NetEncoding.Int16EncodedXFBArray.addMax(builder, maxValue);
+  NetEncoding.Int16EncodedXFBArray.addMin(builder, minValue);
+  NetEncoding.Int16EncodedXFBArray.addNbins(builder, DEFAULT_NUM_BINS);
+  return builder.endObject();
+}
+
 function encodeJSONArray(
   builder: flatbuffers.Builder,
   uData: Array<string> | Array<boolean>
@@ -276,6 +322,9 @@ function encodeTypedArray(
     case TypedFBArray.DictEncoded16FBArray:
     case TypedFBArray.DictEncoded32FBArray: {
       return encodeDictArray(builder, uType, uData);
+    }
+    case TypedFBArray.Int16EncodedXFBArray: {
+      return encodeIntCodedArray(builder, uData);
     }
     default: {
       return encodeNumericArray(builder, uType, uData);
