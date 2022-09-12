@@ -225,7 +225,11 @@ class ContinuousLegend extends React.Component<Props> {
         );
       }
     }
-    if (colorScale && colorMode === "color by geneset mean expression") {
+    if (
+      colorScale &&
+      colorMode &&
+      colorMode !== "color by categorical metadata"
+    ) {
       handleColorSuccess();
     }
   };
@@ -257,7 +261,9 @@ class ContinuousLegend extends React.Component<Props> {
               d3.select("#continuous_legend").selectAll("*").remove();
               if (
                 !shallowEqual(asyncProps, this.cachedAsyncProps) &&
-                asyncProps
+                asyncProps &&
+                asyncProps.colorMode &&
+                asyncProps.colorMode !== "color by categorical metadata"
               ) {
                 this.updateContinuousLegend(asyncProps);
               }
