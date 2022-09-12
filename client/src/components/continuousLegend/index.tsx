@@ -225,11 +225,7 @@ class ContinuousLegend extends React.Component<Props> {
         );
       }
     }
-    if (
-      colorScale &&
-      colorMode &&
-      colorMode !== "color by categorical metadata"
-    ) {
+    if (colorScale && colorMode === "color by geneset mean expression") {
       handleColorSuccess();
     }
   };
