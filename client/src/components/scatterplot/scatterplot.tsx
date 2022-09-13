@@ -384,10 +384,18 @@ class Scatterplot extends React.PureComponent<{}, State> {
 
     const promises: [Dataframe, Dataframe, Dataframe | null, Dataframe | null] =
       [
-        // @ts-expect-error ts-migrate(2488) FIXME: Type '(string | { where: { field: string; column: ... Remove this comment to see the full error message
-        annoMatrix.fetch(...this.createXQuery(scatterplotXXaccessor)),
-        annoMatrix.fetch(...this.createXQuery(scatterplotYYaccessor)),
-        query ? annoMatrix.fetch(...query) : Promise.resolve(null),
+        annoMatrix.fetch(
+          // @ts-expect-error ts-migrate(2488) FIXME: Type '(string | { where: { field: string; column: ... Remove this comment to see the full error message
+          ...this.createXQuery(scatterplotXXaccessor),
+          globals.numBinsObsX
+        ),
+        annoMatrix.fetch(
+          ...this.createXQuery(scatterplotYYaccessor),
+          globals.numBinsObsX
+        ),
+        query
+          ? annoMatrix.fetch(...query, globals.numBinsObsX)
+          : Promise.resolve(null),
         pointDilationAccessor
           ? annoMatrix.fetch("obs", pointDilationAccessor)
           : Promise.resolve(null),

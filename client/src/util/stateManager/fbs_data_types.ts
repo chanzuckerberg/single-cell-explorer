@@ -6,6 +6,7 @@ import { Float64FBArray } from "./net-encoding/float64-f-b-array";
 import { Int32FBArray } from "./net-encoding/int32-f-b-array";
 import { JSONEncodedFBArray } from "./net-encoding/j-s-o-n-encoded-f-b-array";
 import { Uint32FBArray } from "./net-encoding/uint32-f-b-array";
+import { Int16EncodedXFBArray } from "./net-encoding/int16-encoded-x-f-b-array";
 
 export const NetEncodingDict = {
   DictEncoded8FBArray,
@@ -14,6 +15,7 @@ export const NetEncodingDict = {
 };
 
 export const NetEncoding = {
+  Int16EncodedXFBArray,
   Float32FBArray,
   Float64FBArray,
   Int32FBArray,

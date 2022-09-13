@@ -215,7 +215,8 @@ class Category extends React.PureComponent {
         schema,
         genesets
       );
-      if (query) colorDataPromise = annoMatrix.fetch(...query);
+      if (query)
+        colorDataPromise = annoMatrix.fetch(...query, globals.numBinsObsX);
     }
     const [categoryData, colorData]: [Dataframe, Dataframe | null] =
       await Promise.all([

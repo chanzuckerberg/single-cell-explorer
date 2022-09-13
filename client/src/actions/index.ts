@@ -168,7 +168,7 @@ function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   const { schema } = annoMatrix;
   const available = schema.layout.obs.map((v: EmbeddingSchema) => v.name);
   available.forEach((embName: EmbeddingSchema["name"]) =>
-    annoMatrix.prefetch(Field.emb, embName)
+    annoMatrix.prefetch(Field.emb, embName, globals.numBinsEmb)
   );
 }
 
