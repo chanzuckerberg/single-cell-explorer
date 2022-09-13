@@ -99,9 +99,13 @@ class CxgDataset(Dataset):
         return path_join(self.url, *urls)
 
     def _init_sparsity_and_format(self):
-        X = self.open_array("X")
+        try:
+            X = self.open_array("Xr")
+            self.is_1d = True
+        except tiledb.TileDBError:
+            X = self.open_array("X")
+            self.is_1d = False
         self.is_sparse = X.schema.sparse
-        self.is_1d = len(X.shape) == 1
 
     @staticmethod
     def _lsuri(uri, tiledb_ctx):
@@ -205,6 +209,8 @@ class CxgDataset(Dataset):
         """
         if self.is_1d and col:
             return self.open_array("Xc")
+        elif self.is_1d and not col:
+            return self.open_array("Xr")
         else:
             return self.open_array("X")
 
