@@ -391,13 +391,9 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
-                    # if there are a ton of categories, > 75% of the number of cells, then convert to string
-                    if "categories" in type_hint and len(type_hint.get("categories", [])) > 0.75 * shape[0]:
-                        schema["type"] = "string"
-                    else:
-                        schema["type"] = type_hint["type"]
-                        if schema["type"] == "categorical" and "categories" in type_hint:
-                            schema["categories"] = type_hint["categories"]
+                    schema["type"] = type_hint["type"]
+                    if schema["type"] == "categorical" and "categories" in type_hint:
+                        schema["categories"] = type_hint["categories"]
                 else:
                     schema.update(get_schema_type_hint_from_dtype(attr.dtype))
                 cols.append(schema)
@@ -435,11 +431,11 @@ class CxgDataset(Dataset):
                 categorical_dtypes = []
                 for c in self.get_schema()["annotations"]["obs"]["columns"]:
                     if c["name"] in fields and c["type"] == "categorical":
-                        categorical_dtypes.append(c["name"])
+                        categorical_dtypes.append((c["name"], c["categories"]))
 
                 df = pd.DataFrame.from_dict(data)
-                for name in categorical_dtypes:
-                    df[name] = pd.Categorical(df[name])
+                for name,categories in categorical_dtypes:
+                    df[name] = pd.Categorical.from_codes(df[name], categories=categories)
 
                 if fields:
                     df = df[fields]
