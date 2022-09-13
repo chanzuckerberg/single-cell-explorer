@@ -323,8 +323,13 @@ class CxgDataset(Dataset):
 
     def query_obs_array(self, term_name):
         var = self.open_array("obs")
+        schema = self.get_schema()
         try:
             data = var.query(attrs=[term_name])[:][term_name]
+            type_hint = schema.get(term_name,None)
+            if type_hint is not None:
+                if type_hint[term_name]["type"] == "categorical":
+                    data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs")
         return data
