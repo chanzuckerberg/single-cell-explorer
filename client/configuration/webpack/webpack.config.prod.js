@@ -58,8 +58,6 @@ const prodConfig = {
         loader: "file-loader",
         options: {
           name: "static/assets/[name]-[contenthash].[ext]",
-          // (thuang): This is needed to make sure @font url path is '../static/assets/'
-          publicPath: "..",
         },
       },
     ],
