@@ -326,9 +326,9 @@ class CxgDataset(Dataset):
         schema = self.get_schema()
         try:
             data = obs.query(attrs=[term_name])[:][term_name]
-            type_hint = schema.get(term_name,None)
+            type_hint = schema.get(term_name, None)
             if type_hint is not None:
-                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith('int'):
+                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith("int"):
                     data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs")
@@ -439,7 +439,7 @@ class CxgDataset(Dataset):
                         categorical_dtypes.append((c["name"], c["categories"]))
 
                 df = pd.DataFrame.from_dict(data)
-                for name,categories in categorical_dtypes:
+                for name, categories in categorical_dtypes:
                     df[name] = pd.Categorical.from_codes(df[name], categories=categories)
 
                 if fields:
