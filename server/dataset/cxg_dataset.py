@@ -328,7 +328,7 @@ class CxgDataset(Dataset):
             data = var.query(attrs=[term_name])[:][term_name]
             type_hint = schema.get(term_name,None)
             if type_hint is not None:
-                if type_hint[term_name]["type"] == "categorical":
+                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith('int'):
                     data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs")
