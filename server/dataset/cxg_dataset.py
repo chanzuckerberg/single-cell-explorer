@@ -322,10 +322,10 @@ class CxgDataset(Dataset):
         return data
 
     def query_obs_array(self, term_name):
-        var = self.open_array("obs")
+        obs = self.open_array("obs")
         schema = self.get_schema()
         try:
-            data = var.query(attrs=[term_name])[:][term_name]
+            data = obs.query(attrs=[term_name])[:][term_name]
             type_hint = schema.get(term_name,None)
             if type_hint is not None:
                 if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith('int'):
