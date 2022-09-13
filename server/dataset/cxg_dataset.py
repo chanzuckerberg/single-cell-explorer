@@ -440,7 +440,10 @@ class CxgDataset(Dataset):
 
                 df = pd.DataFrame.from_dict(data)
                 for name, categories in categorical_dtypes:
-                    df[name] = pd.Categorical.from_codes(df[name], categories=categories)
+                    if str(df[name].dtype).startswith('int'):
+                        df[name] = pd.Categorical.from_codes(df[name], categories=categories)
+                    else:
+                        df[name] = pd.Categorical(df[name])
 
                 if fields:
                     df = df[fields]
