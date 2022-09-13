@@ -102,7 +102,7 @@ class CxgDataset(Dataset):
         try:
             X = self.open_array("Xr")
             self.is_1d = True
-        except tiledb.TileDBError:
+        except Exception:
             X = self.open_array("X")
             self.is_1d = False
         self.is_sparse = X.schema.sparse
