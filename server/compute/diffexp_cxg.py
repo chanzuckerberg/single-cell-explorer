@@ -31,7 +31,6 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selecto
     :param setB: observation selector (mask or list) for set 2
     :param top_n: number of variables to return stats for
     :param diffexp_lfc_cutoff: minimum
-    :param arr: the tdb array to read
     :param selector_lists: if True, the selectors are presumed to be masks of length n_obs; else, lists of obs indices
     absolute value returning [ varindex, logfoldchange, pval, pval_adj ] for top N genes
     :return:  for top N genes, {"positive": for top N genes, [ varindex, foldchange, pval, pval_adj ],
