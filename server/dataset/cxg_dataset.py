@@ -202,14 +202,14 @@ class CxgDataset(Dataset):
     def _open_array(uri, tiledb_ctx):
         return tiledb.open(uri, mode="r", ctx=tiledb_ctx)
 
-    def open_X_array(self, col=False):
+    def open_X_array(self, col_wise=False):
         """
         A helper function to open the 1D X array in row or column orientation with
         backwards compatibility for 2D arrays.
         """
-        if self.is_1d and col:
+        if self.is_1d and col_wise:
             return self.open_array("Xc")
-        elif self.is_1d and not col:
+        elif self.is_1d and not col_wise:
             return self.open_array("Xr")
         else:
             # If not 1D, then X array is either dense data or sparse data that has not
