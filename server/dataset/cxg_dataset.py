@@ -288,7 +288,7 @@ class CxgDataset(Dataset):
             return np.ndarray((obs_size, var_size))
 
         if self.is_sparse:
-            X = self.open_X_array(col=True)
+            X = self.open_X_array(col_wise=True)
             if self.is_1d:
                 data = X.query(order="U").multi_index[var_items]
             else:
@@ -309,7 +309,7 @@ class CxgDataset(Dataset):
     def get_shape(self):
         X = self.open_X_array()
         if self.is_1d:
-            Xc = self.open_X_array(col=True)
+            Xc = self.open_X_array(col_wise=True)
             return (X.shape[0], Xc.shape[0])
         else:
             return X.shape
