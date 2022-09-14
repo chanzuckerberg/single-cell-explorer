@@ -144,9 +144,10 @@ class CxgDataset(Dataset):
             return False
         if not tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) == "array":
             return False
-        if (not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array" and
-            not (tiledb.object_type(path_join(url, "Xr"), ctx=CxgDataset.tiledb_ctx) == "array" and 
-            tiledb.object_type(path_join(url, "Xc"), ctx=CxgDataset.tiledb_ctx) == "array")):
+        if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array" and not (
+            tiledb.object_type(path_join(url, "Xr"), ctx=CxgDataset.tiledb_ctx) == "array"
+            and tiledb.object_type(path_join(url, "Xc"), ctx=CxgDataset.tiledb_ctx) == "array"
+        ):
             return False
         if not tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) == "group":
             return False
