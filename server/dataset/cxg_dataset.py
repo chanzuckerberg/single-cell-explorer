@@ -212,6 +212,8 @@ class CxgDataset(Dataset):
         elif self.is_1d and not col:
             return self.open_array("Xr")
         else:
+            # If not 1D, then X array is either dense data or sparse data that has not
+            # been remastered. Support for 2D sparse arrays is deprecated.
             return self.open_array("X")
 
     def open_array(self, name):
