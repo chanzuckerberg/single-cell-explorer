@@ -40,7 +40,7 @@ CXG consumers (readers) MUST be prepared to handle any legal TileDB compression,
 ### CXG
 
 The CXG is a TileDB group containing all data and metadata for a single annotated matrix.  The following objects MUST be present in a CXG, except where noted as optional:
-* `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute. Annotations for categorical metadata must be encoded as integers. The integers must correspond to the index location of the corresponding categories in the schema stored in the array's TileDB metadata (`ObsArray.meta['cxg_schema']`).
+* `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute. Annotations for categorical metadata may be encoded as integers for faster performance. The integers must correspond to the index location of the corresponding categories in the schema stored in the array's TileDB metadata (`ObsArray.meta['cxg_schema']`).
 * `var`: a TileDB array, of shape (n_var,), containing var annotations, each annotation stored in a separate TileDB array attribute.
 * `X`: a TileDB array, of shape (n_obs, n_var) for dense data, with a single TileDB attribute of numeric type.
 * `Xr`: a TileDB array, of shape (n_obs) for sparse data, with two TileDB attributes of numeric type. The first ("") is expression data, and the second ("var") are the corresponding column indices. Used for row-slicing.
