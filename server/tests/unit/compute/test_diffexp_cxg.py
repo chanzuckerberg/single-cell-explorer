@@ -97,6 +97,28 @@ class DiffExpTest(unittest.TestCase):
         self.check_1_10_2_10(results)
 
     def test_cxg_sparse(self):
+        """Test a cxg adaptor with its default diffexp algorithm (diffexp_cxg)"""
+        adaptor = self.load_dataset(f"{FIXTURES_ROOT}/pbmc3k_sparse.cxg")
+        maskA = self.get_mask(adaptor, 1, 10)
+        maskB = self.get_mask(adaptor, 2, 10)
+
+        # run it through the adaptor
+        results = adaptor.compute_diffexp_ttest(maskA, maskB, 10)
+        self.check_1_10_2_10(results)
+
+        # check list (not mask) variant
+        results = adaptor.compute_diffexp_ttest(maskA.nonzero()[0], maskB.nonzero()[0], 10, selector_lists=True)
+        self.check_1_10_2_10(results)
+
+        # run it directly
+
+        results = diffexp_ttest(adaptor, maskA, maskB, 10)
+        self.check_1_10_2_10(results)
+
+        results = diffexp_ttest(adaptor, maskA.nonzero()[0], maskB.nonzero()[0], 10, selector_lists=True)
+        self.check_1_10_2_10(results)
+
+    def test_cxg_sparse(self):
         adaptor_sparse = self.load_dataset(
             f"{FIXTURES_ROOT}/diffexp/sparse_no_col_shift.cxg",
         )
