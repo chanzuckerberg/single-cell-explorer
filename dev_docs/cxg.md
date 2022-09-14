@@ -42,7 +42,9 @@ CXG consumers (readers) MUST be prepared to handle any legal TileDB compression,
 The CXG is a TileDB group containing all data and metadata for a single annotated matrix.  The following objects MUST be present in a CXG, except where noted as optional:
 * `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute.
 * `var`: a TileDB array, of shape (n_var,), containing var annotations, each annotation stored in a separate TileDB array attribute.
-* `X`: a TileDB array, of shape (n_obs, n_var), with a single TileDB attribute of numeric type.
+* `X`: a TileDB array, of shape (n_obs, n_var) for dense data, with a single TileDB attribute of numeric type.
+* `Xr`: a TileDB array, of shape (n_obs) for sparse data, with two TileDB attributes of numeric type. The first ("") is expression data, and the second ("var") are the corresponding column indices. Used for row-slicing.
+* `Xc`: a TileDB array, of shape (n_var) for sparse data, with a single TileDB attribute of numeric type. The first ("") is expression data, and the second ("obs") are the corresponding row indices. Used for column-slicing.
 * `X_col_shift`: (optional) TileDB array used in column shift encoding, shape (n_var,), dtype = X.dtype. Single unnamed numeric attribute.  
 * `emb`: a TileDB group, which in turn contains all (zero or more) embeddings.
 * `emb/<EMBEDDING_NAME>`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
