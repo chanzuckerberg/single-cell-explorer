@@ -129,32 +129,3 @@ class BaseTest(unittest.TestCase):
         app.debug = True
 
         return app
-
-
-class BaseTestSparse(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls, app_config=None):
-        cls.TEST_DATASET_URL_BASE = "/d/pbmc3k_sparse.cxg"
-        cls.TEST_URL_BASE = f"{cls.TEST_DATASET_URL_BASE}/api/v0.3/"
-        cls.maxDiff = None
-        cls.app = cls.create_app(app_config)
-
-    @classmethod
-    def create_app(cls, app_config=None):
-        if not app_config:
-            app_config = AppConfig()
-            app_config.update_server_config(
-                app__flask_secret_key="testing",
-                app__debug=True,
-                multi_dataset__dataroot=f"{FIXTURES_ROOT}",
-                multi_dataset__index=True,
-                multi_dataset__allowed_matrix_types=["cxg"],
-            )
-        app_config.complete_config(logging.info)
-
-        app = TestServer(app_config).app
-
-        app.testing = True
-        app.debug = True
-
-        return app
