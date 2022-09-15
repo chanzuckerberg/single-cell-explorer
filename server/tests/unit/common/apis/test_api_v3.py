@@ -23,9 +23,13 @@ class BaseTest(_BaseTest):
     @classmethod
     def setUpClass(cls, app_config=None):
         cls.TEST_S3_URI = f"{FIXTURES_ROOT}/pbmc3k.cxg"
+        cls.TEST_S3_URI_SPARSE = f"{FIXTURES_ROOT}/pbmc3k_sparse.cxg"
         cls.TEST_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_S3_URI)
+        cls.TEST_S3_URI_ENCODED_SPARSE = cls.encode_s3_uri(cls.TEST_S3_URI_SPARSE)
         cls.TEST_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED}"
+        cls.TEST_DATASET_URL_BASE_SPARSE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED_SPARSE}"
         cls.TEST_URL_BASE = f"{cls.TEST_DATASET_URL_BASE}/api/v0.3/"
+        cls.TEST_URL_BASE_SPARSE = f"{cls.TEST_DATASET_URL_BASE_SPARSE}/api/v0.3/"
         cls.maxDiff = None
         cls.app = cls.create_app(app_config)
 
@@ -39,8 +43,11 @@ class EndPoints(BaseTest):
     def setUpClass(cls, app_config=None):
         super().setUpClass(app_config)
         cls.TEST_S3_URI = f"{FIXTURES_ROOT}/pbmc3k.cxg"
+        cls.TEST_S3_URI_SPARSE = f"{FIXTURES_ROOT}/pbmc3k_sparse.cxg"
         cls.TEST_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_S3_URI)
+        cls.TEST_S3_URI_ENCODED_SPARSE = cls.encode_s3_uri(cls.TEST_S3_URI_SPARSE)
         cls.TEST_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED}"
+        cls.TEST_DATASET_URL_BASE_SPARSE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED_SPARSE}"
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
@@ -52,422 +59,480 @@ class EndPoints(BaseTest):
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
 
+        for i in range(90):
+            try:
+                result = cls.client.get(f"{cls.TEST_URL_BASE_SPARSE}schema")
+                cls.schema = json.loads(result.data)
+                break
+            except requests.exceptions.ConnectionError:
+                time.sleep(1)
+
     def test_initialize(self):
         endpoint = "schema"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertEqual(result_data["schema"]["dataframe"]["nObs"], 2638)
-        self.assertEqual(len(result_data["schema"]["annotations"]["obs"]), 2)
-        self.assertEqual(len(result_data["schema"]["annotations"]["obs"]["columns"]), 5)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data["schema"]["dataframe"]["nObs"], 2638)
+                self.assertEqual(len(result_data["schema"]["annotations"]["obs"]), 2)
+                self.assertEqual(len(result_data["schema"]["annotations"]["obs"]["columns"]), 5)
 
     def test_config(self):
         endpoint = "config"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertIn("library_versions", result_data["config"])
-        self.assertEqual(result_data["config"]["displayNames"]["dataset"], "pbmc3k")
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertIn("library_versions", result_data["config"])
+                self.assertEqual(result_data["config"]["displayNames"]["dataset"], "pbmc3k")
 
     def test_get_layout_fbs(self):
         endpoint = "layout/obs"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 8)
-        self.assertIsNotNone(df["columns"])
-        self.assertSetEqual(
-            set(df["col_idx"]),
-            {"pca_0", "pca_1", "tsne_0", "tsne_1", "umap_0", "umap_1", "draw_graph_fr_0", "draw_graph_fr_1"},
-        )
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 8)
+                self.assertIsNotNone(df["columns"])
+                self.assertSetEqual(
+                    set(df["col_idx"]),
+                    {"pca_0", "pca_1", "tsne_0", "tsne_1", "umap_0", "umap_1", "draw_graph_fr_0", "draw_graph_fr_1"},
+                )
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
 
     def test_bad_filter(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.put(url, headers=header, json=BAD_FILTER)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.put(url, headers=header, json=BAD_FILTER)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_get_annotations_obs_fbs(self):
         endpoint = "annotations/obs"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 5)
-        self.assertIsNotNone(df["columns"])
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
-        obs_index_col_name = self.schema["schema"]["annotations"]["obs"]["index"]
-        self.assertCountEqual(
-            df["col_idx"],
-            [obs_index_col_name, "n_genes", "percent_mito", "n_counts", "louvain"],
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 5)
+                self.assertIsNotNone(df["columns"])
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
+                obs_index_col_name = self.schema["schema"]["annotations"]["obs"]["index"]
+                self.assertCountEqual(
+                    df["col_idx"],
+                    [obs_index_col_name, "n_genes", "percent_mito", "n_counts", "louvain"],
         )
 
     def test_get_annotations_obs_keys_fbs(self):
         endpoint = "annotations/obs"
         query = "annotation-name=n_genes&annotation-name=percent_mito"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 2)
-        self.assertIsNotNone(df["columns"])
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
-        self.assertCountEqual(df["col_idx"], ["n_genes", "percent_mito"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 2)
+                self.assertIsNotNone(df["columns"])
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
+                self.assertCountEqual(df["col_idx"], ["n_genes", "percent_mito"])
 
     def test_get_annotations_obs_error(self):
         endpoint = "annotations/obs"
         query = "annotation-name=notakey"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
     # TEMP: Testing count 15 to match hardcoded values for diffexp
     # TODO(#1281): Switch back to dynamic values
     def test_diff_exp(self):
         endpoint = "diffexp/obs"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        params = {
-            "mode": "topN",
-            "set1": {"filter": {"obs": {"annotation_value": [{"name": "louvain", "values": ["NK cells"]}]}}},
-            "set2": {"filter": {"obs": {"annotation_value": [{"name": "louvain", "values": ["CD8 T cells"]}]}}},
-            "count": 15,
-        }
-        result = self.client.post(url, json=params)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertEqual(len(result_data["positive"]), 15)
-        self.assertEqual(len(result_data["negative"]), 15)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                params = {
+                    "mode": "topN",
+                    "set1": {"filter": {"obs": {"annotation_value": [{"name": "louvain", "values": ["NK cells"]}]}}},
+                    "set2": {"filter": {"obs": {"annotation_value": [{"name": "louvain", "values": ["CD8 T cells"]}]}}},
+                    "count": 15,
+                }
+                result = self.client.post(url, json=params)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(len(result_data["positive"]), 15)
+                self.assertEqual(len(result_data["negative"]), 15)
 
     def test_diff_exp_indices(self):
         endpoint = "diffexp/obs"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        params = {
-            "mode": "topN",
-            "count": 15,
-            "set1": {"filter": {"obs": {"index": [[0, 500]]}}},
-            "set2": {"filter": {"obs": {"index": [[500, 1000]]}}},
-        }
-        result = self.client.post(url, json=params)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertEqual(len(result_data["positive"]), 15)
-        self.assertEqual(len(result_data["negative"]), 15)
-        self.assertEqual(
-            [p[0] for p in result_data["positive"]],
-            [
-                533,
-                1685,
-                1119,
-                579,
-                193,
-                1336,
-                960,
-                1042,
-                1354,
-                625,
-                833,
-                1510,
-                1358,
-                304,
-                536,
-            ],
-        )
-        self.assertEqual(
-            [n[0] for n in result_data["negative"]],
-            [
-                1034,
-                1644,
-                1433,
-                1022,
-                699,
-                826,
-                123,
-                1318,
-                994,
-                642,
-                377,
-                816,
-                1390,
-                1239,
-                55,
-            ],
-        )
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                params = {
+                    "mode": "topN",
+                    "count": 15,
+                    "set1": {"filter": {"obs": {"index": [[0, 500]]}}},
+                    "set2": {"filter": {"obs": {"index": [[500, 1000]]}}},
+                }
+                result = self.client.post(url, json=params)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(len(result_data["positive"]), 15)
+                self.assertEqual(len(result_data["negative"]), 15)
+                self.assertEqual(
+                    [p[0] for p in result_data["positive"]],
+                    [
+                        533,
+                        1685,
+                        1119,
+                        579,
+                        193,
+                        1336,
+                        960,
+                        1042,
+                        1354,
+                        625,
+                        833,
+                        1510,
+                        1358,
+                        304,
+                        536,
+                    ],
+                )
+                self.assertEqual(
+                    [n[0] for n in result_data["negative"]],
+                    [
+                        1034,
+                        1644,
+                        1433,
+                        1022,
+                        699,
+                        826,
+                        123,
+                        1318,
+                        994,
+                        642,
+                        377,
+                        816,
+                        1390,
+                        1239,
+                        55,
+                    ],
+                )
 
     def test_diffex2(self):
         endpoint = "diffexp/obs2"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        de_args = DiffExArguments(
-            mode=DiffExArguments.DiffExMode.TopN,
-            params=DiffExArguments.TopNParams(N=21),
-            set1=np.arange(0, 500, dtype=np.uint32),
-            set2=np.arange(500, 1000, dtype=np.uint32),
-        )
-        result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=de_args.pack())
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                de_args = DiffExArguments(
+                    mode=DiffExArguments.DiffExMode.TopN,
+                    params=DiffExArguments.TopNParams(N=21),
+                    set1=np.arange(0, 500, dtype=np.uint32),
+                    set2=np.arange(500, 1000, dtype=np.uint32),
+                )
+                result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=de_args.pack())
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
 
-        self.assertEqual(len(result_data["positive"]), 21)
-        self.assertEqual(len(result_data["negative"]), 21)
+                self.assertEqual(len(result_data["positive"]), 21)
+                self.assertEqual(len(result_data["negative"]), 21)
 
-        self.assertEqual(
-            [p[0] for p in result_data["positive"]],
-            [
-                533,
-                1685,
-                1119,
-                579,
-                193,
-                1336,
-                960,
-                1042,
-                1354,
-                625,
-                833,
-                1510,
-                1358,
-                304,
-                536,
-                850,
-                1273,
-                1670,
-                400,
-                1604,
-                1124,
-            ],
-        )
-        self.assertEqual(
-            [n[0] for n in result_data["negative"]],
-            [
-                1034,
-                1644,
-                1433,
-                1022,
-                699,
-                826,
-                123,
-                1318,
-                994,
-                642,
-                377,
-                816,
-                1390,
-                1239,
-                55,
-                1572,
-                85,
-                234,
-                1567,
-                650,
-                1397,
-            ],
-        )
+                self.assertEqual(
+                    [p[0] for p in result_data["positive"]],
+                    [
+                        533,
+                        1685,
+                        1119,
+                        579,
+                        193,
+                        1336,
+                        960,
+                        1042,
+                        1354,
+                        625,
+                        833,
+                        1510,
+                        1358,
+                        304,
+                        536,
+                        850,
+                        1273,
+                        1670,
+                        400,
+                        1604,
+                        1124,
+                    ],
+                )
+                self.assertEqual(
+                    [n[0] for n in result_data["negative"]],
+                    [
+                        1034,
+                        1644,
+                        1433,
+                        1022,
+                        699,
+                        826,
+                        123,
+                        1318,
+                        994,
+                        642,
+                        377,
+                        816,
+                        1390,
+                        1239,
+                        55,
+                        1572,
+                        85,
+                        234,
+                        1567,
+                        650,
+                        1397,
+                    ],
+                )
 
     def test_diffex2_error_conditions(self):
         endpoint = "diffexp/obs2"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        de_args = DiffExArguments(
-            mode=DiffExArguments.DiffExMode.TopN,
-            params=DiffExArguments.TopNParams(N=10),
-            set1=np.arange(0, 500, dtype=np.uint32),
-            set2=np.arange(500, 1000, dtype=np.uint32),
-        )
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                de_args = DiffExArguments(
+                    mode=DiffExArguments.DiffExMode.TopN,
+                    params=DiffExArguments.TopNParams(N=10),
+                    set1=np.arange(0, 500, dtype=np.uint32),
+                    set2=np.arange(500, 1000, dtype=np.uint32),
+                )
 
-        # without the right MIME type, should give us a 415
-        result = self.client.post(url, data=de_args.pack())
-        self.assertEqual(result.status_code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+                # without the right MIME type, should give us a 415
+                result = self.client.post(url, data=de_args.pack())
+                self.assertEqual(result.status_code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
 
-        # empty or malformed PDU
-        result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=bytes(20))
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+                # empty or malformed PDU
+                result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=bytes(20))
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
-        # missing content length
-        result = self.client.post(url, content_length=False, headers={"Content-Type": "application/octet-stream"})
-        self.assertEqual(result.status_code, HTTPStatus.LENGTH_REQUIRED)
+                # missing content length
+                result = self.client.post(url, content_length=False, headers={"Content-Type": "application/octet-stream"})
+                self.assertEqual(result.status_code, HTTPStatus.LENGTH_REQUIRED)
 
-        # Content-Length too large
-        result = self.client.post(
-            url, content_length=100 * 1024**3, headers={"Content-Type": "application/octet-stream"}
-        )
-        self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+                # Content-Length too large
+                result = self.client.post(
+                    url, content_length=100 * 1024**3, headers={"Content-Type": "application/octet-stream"}
+                )
+                self.assertEqual(result.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
 
     def test_get_annotations_var_fbs(self):
         endpoint = "annotations/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 1838)
-        self.assertEqual(df["n_cols"], 2)
-        self.assertIsNotNone(df["columns"])
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
-        var_index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
-        self.assertCountEqual(df["col_idx"], [var_index_col_name, "n_cells"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 1838)
+                self.assertEqual(df["n_cols"], 2)
+                self.assertIsNotNone(df["columns"])
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
+                var_index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
+                self.assertCountEqual(df["col_idx"], [var_index_col_name, "n_cells"])
 
     def test_get_annotations_var_keys_fbs(self):
         endpoint = "annotations/var"
         query = "annotation-name=n_cells"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 1838)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertIsNotNone(df["columns"])
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
-        self.assertCountEqual(df["col_idx"], ["n_cells"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 1838)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertIsNotNone(df["columns"])
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
+                self.assertCountEqual(df["col_idx"], ["n_cells"])
 
     def test_get_annotations_var_error(self):
         endpoint = "annotations/var"
         query = "annotation-name=notakey"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_data_mimetype_error(self):
         endpoint = "data/var"
         header = {"Accept": "xxx"}
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.put(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.NOT_ACCEPTABLE)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.put(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.NOT_ACCEPTABLE)
 
     def test_fbs_default(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        headers = {"Accept": "application/octet-stream"}
-        result = self.client.put(url, headers=headers)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                headers = {"Accept": "application/octet-stream"}
+                result = self.client.put(url, headers=headers)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
-        filter = {"filter": {"var": {"index": [0, 1, 4]}}}
-        result = self.client.put(url, headers=headers, json=filter)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                filter = {"filter": {"var": {"index": [0, 1, 4]}}}
+                result = self.client.put(url, headers=headers, json=filter)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
 
     def test_data_put_fbs(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.put(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.put(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_data_get_fbs(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
     def test_data_put_filter_fbs(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        filter = {"filter": {"var": {"index": [0, 1, 4]}}}
-        result = self.client.put(url, headers=header, json=filter)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 3)
-        self.assertIsNotNone(df["columns"])
-        self.assertIsNone(df["row_idx"])
-        self.assertEqual(len(df["columns"]), df["n_cols"])
-        self.assertListEqual(df["col_idx"].tolist(), [0, 1, 4])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                filter = {"filter": {"var": {"index": [0, 1, 4]}}}
+                result = self.client.put(url, headers=header, json=filter)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 3)
+                self.assertIsNotNone(df["columns"])
+                self.assertIsNone(df["row_idx"])
+                self.assertEqual(len(df["columns"]), df["n_cols"])
+                self.assertListEqual(df["col_idx"].tolist(), [0, 1, 4])
 
     def test_data_get_filter_fbs(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
         endpoint = "data/var"
         query = f"var:{index_col_name}=SIK1"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
 
     def test_data_get_unknown_filter_fbs(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
         endpoint = "data/var"
         query = f"var:{index_col_name}=UNKNOWN"
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 0)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 0)
 
     def test_data_put_single_var(self):
         endpoint = "data/var"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        header = {"Accept": "application/octet-stream"}
-        index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
-        var_filter = {"filter": {"var": {"annotation_value": [{"name": index_col_name, "values": ["RER1"]}]}}}
-        result = self.client.put(url, headers=header, json=var_filter)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                header = {"Accept": "application/octet-stream"}
+                index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
+                var_filter = {"filter": {"var": {"annotation_value": [{"name": index_col_name, "values": ["RER1"]}]}}}
+                result = self.client.put(url, headers=header, json=var_filter)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
 
     def test_colors(self):
         endpoint = "colors"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertEqual(result_data, pbmc3k_colors)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data, pbmc3k_colors)
 
     @patch("server.common.rest.requests.get")
     def test_gene_info_success(self, mock_request):
         # successfully returns a json object
         endpoint = "geneinfo?geneID=ENSG00000130203&gene=APOE"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        mock_request.return_value = MockResponse(body="", status_code=200)
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                mock_request.return_value = MockResponse(body="", status_code=200)
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
 
     @patch("server.common.rest.requests.get")
     def test_gene_info_failure(self, mock_request):
         # successfully aborts on bad request
         endpoint = "geneinfo?geneID="
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        mock_request.return_value = MockResponse(body="", status_code=400)
-        result = self.client.get(url)
-        self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                mock_request.return_value = MockResponse(body="", status_code=400)
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
 
     @skip_if(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):
@@ -478,24 +543,29 @@ class EndPoints(BaseTest):
         self.assertEqual(result.status_code, HTTPStatus.OK)
 
     def test_genesets_config(self):
-        result = self.client.get(f"{self.TEST_URL_BASE}config")
-        config_data = json.loads(result.data)
-        params = config_data["config"]["parameters"]
-        annotations_genesets = params["annotations_genesets"]
-        annotations_genesets_readonly = params["annotations_genesets_readonly"]
-        annotations_genesets_summary_methods = params["annotations_genesets_summary_methods"]
-        self.assertTrue(annotations_genesets)
-        self.assertTrue(annotations_genesets_readonly)
-        self.assertEqual(annotations_genesets_summary_methods, ["mean"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}config"        
+                result = self.client.get(url)
+                config_data = json.loads(result.data)
+                params = config_data["config"]["parameters"]
+                annotations_genesets = params["annotations_genesets"]
+                annotations_genesets_readonly = params["annotations_genesets_readonly"]
+                annotations_genesets_summary_methods = params["annotations_genesets_summary_methods"]
+                self.assertTrue(annotations_genesets)
+                self.assertTrue(annotations_genesets_readonly)
+                self.assertEqual(annotations_genesets_summary_methods, ["mean"])
 
     def test_get_genesets(self):
         endpoint = "genesets"
-        url = f"{self.TEST_URL_BASE}{endpoint}"
-        result = self.client.get(url, headers={"Accept": "application/json"})
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/json")
-        result_data = json.loads(result.data)
-        self.assertIsNotNone(result_data["genesets"])
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url, headers={"Accept": "application/json"})
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertIsNotNone(result_data["genesets"])
 
     def test_get_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -505,32 +575,36 @@ class EndPoints(BaseTest):
         filter = f"var:{index_col_name}=F5"
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
         filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):        
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
 
     def test_post_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -541,31 +615,35 @@ class EndPoints(BaseTest):
         filter = f"var:{index_col_name}=F5"
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
-        result = self.client.post(url, headers=headers, data=query)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):              
+                url = f"{url_base}{endpoint}?key={query_hash}"
+                result = self.client.post(url, headers=headers, data=query)
 
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.110451095)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
         filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
-        result = self.client.post(url, headers=headers, data=query)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):               
+                url = f"{url_base}{endpoint}?key={query_hash}"
+                result = self.client.post(url, headers=headers, data=query)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.16628358)
 
     def test_get_summaryvar_lossy(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -575,32 +653,36 @@ class EndPoints(BaseTest):
         filter = f"var:{index_col_name}=F5"
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):               
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
         filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?{query}"
-        header = {"Accept": "application/octet-stream"}
-        result = self.client.get(url, headers=header)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):               
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/octet-stream"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
     def test_post_summaryvar_lossy(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -611,31 +693,35 @@ class EndPoints(BaseTest):
         filter = f"var:{index_col_name}=F5&nbins=500"
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
-        result = self.client.post(url, headers=headers, data=query)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):               
+                url = f"{url_base}{endpoint}?key={query_hash}"
+                result = self.client.post(url, headers=headers, data=query)
 
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.11505317)
 
         # multi-column
         col_names = ["F5", "BEB3", "SIK1"]
         filter = "&".join([f"var:{index_col_name}={name}" for name in col_names])
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
-        url = f"{self.TEST_URL_BASE}{endpoint}?key={query_hash}"
-        result = self.client.post(url, headers=headers, data=query)
-        self.assertEqual(result.status_code, HTTPStatus.OK)
-        self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-        df = decode_fbs.decode_matrix_FBS(result.data)
-        self.assertEqual(df["n_rows"], 2638)
-        self.assertEqual(df["n_cols"], 1)
-        self.assertEqual(df["col_idx"], [query_hash])
-        self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):               
+                url = f"{url_base}{endpoint}?key={query_hash}"
+                result = self.client.post(url, headers=headers, data=query)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
+                df = decode_fbs.decode_matrix_FBS(result.data)
+                self.assertEqual(df["n_rows"], 2638)
+                self.assertEqual(df["n_cols"], 1)
+                self.assertEqual(df["col_idx"], [query_hash])
+                self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
 
 
