@@ -350,17 +350,20 @@ describe("graph overlay", () => {
       `${categoryValue}-centroid-label`
     );
 
-    await drag("layout-graph", panCoords.start, panCoords.end, false);
-    const terminalCoordinates = await getElementCoordinates(
-      `${categoryValue}-centroid-label`
-    );
+    await tryUntil(async () => {
+      await drag("layout-graph", panCoords.start, panCoords.end, false);
 
-    expect(terminalCoordinates[0] - initialCoordinates[0]).toBeCloseTo(
-      panCoords.end.x - panCoords.start.x
-    );
-    expect(terminalCoordinates[1] - initialCoordinates[1]).toBeCloseTo(
-      panCoords.end.y - panCoords.start.y
-    );
+      const terminalCoordinates = await getElementCoordinates(
+        `${categoryValue}-centroid-label`
+      );
+
+      expect(terminalCoordinates[0] - initialCoordinates[0]).toBeCloseTo(
+        panCoords.end.x - panCoords.start.x
+      );
+      expect(terminalCoordinates[1] - initialCoordinates[1]).toBeCloseTo(
+        panCoords.end.y - panCoords.start.y
+      );
+    });
   });
 });
 
