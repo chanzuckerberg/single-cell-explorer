@@ -33,6 +33,7 @@ class Layout extends React.Component {
       <div
         style={{
           display: "grid",
+          paddingTop: globals.HEADER_HEIGHT_PX,
           gridTemplateColumns: `
           [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
           [left-sidebar-end graph-start] auto

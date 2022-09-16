@@ -27,7 +27,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "1131",
+          count: "1094",
         },
       ],
       categorical: [
@@ -83,7 +83,7 @@ export const datasets = {
           values: ["B cells", "Megakaryocytes"],
         },
       ],
-      count: "357",
+      count: "332",
       categorical: {
         louvain: {
           "B cells": "342",
@@ -98,14 +98,14 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.05, x2: 0.75, y2: 0.55 },
-        count: "332",
+        count: "357",
       },
     },
     scatter: {
       genes: { x: "S100A8", y: "FCGR3A" },
     },
     pan: {
-      "coordinates-as-percent": { x1: 0.75, y1: 0.75, x2: 0.35, y2: 0.35 },
+      "coordinates-as-percent": { x1: 0.75, y1: 0.75, x2: 0.25, y2: 0.25 },
     },
     features: {
       panzoom: {

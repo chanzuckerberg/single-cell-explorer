@@ -5,6 +5,7 @@ import {
   Button,
   ButtonGroup,
   H4,
+  MaybeElement,
   Popover,
   Position,
   Radio,
@@ -16,6 +17,9 @@ import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+
+import heatmapIcon from "./heatmap.svg";
+import { SvgIcon } from "../svgIcon";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type EmbeddingState = any;
@@ -56,13 +60,11 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on type 'Re... Remove this comment to see the full error message
     const { layoutChoice, schema, crossfilter } = this.props;
     const { annoMatrix } = crossfilter;
+
     return (
       <ButtonGroup
         style={{
-          position: "absolute",
-          display: "inherit",
-          left: 8,
-          bottom: 8,
+          paddingTop: 8,
           zIndex: 9999,
         }}
       >
@@ -76,8 +78,9 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
               <Button
                 type="button"
                 data-testid="layout-choice"
-                icon="heatmap"
-                // minimal
+                icon={
+                  (<SvgIcon src={heatmapIcon} />) as unknown as MaybeElement
+                }
                 id="embedding"
                 style={{
                   cursor: "pointer",
