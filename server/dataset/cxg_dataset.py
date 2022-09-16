@@ -189,7 +189,7 @@ class CxgDataset(Dataset):
             # version 0
             cxg_version = "0.0"
 
-        if cxg_version not in ["0.0", "0.1", "0.2.0"]:
+        if cxg_version not in ["0.0", "0.1", "0.2.0", "0.3.0"]:
             raise DatasetAccessError(f"cxg matrix is not valid: {self.url}")
         if self.dataset_config.X_approximate_distribution == "auto":
             raise ConfigurationError("X-approximate-distribution 'auto' mode unsupported.")
