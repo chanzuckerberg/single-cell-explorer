@@ -30,6 +30,7 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
   const y2 = elBox.content[0].y + end.y;
   await page.mouse.move(x1, y1);
   await page.mouse.down();
+
   if (lasso) {
     await page.mouse.move(x2, y1);
     await page.mouse.move(x2, y2);
@@ -38,6 +39,7 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
   } else {
     await page.mouse.move(x2, y2);
   }
+
   await page.mouse.up();
 }
 
