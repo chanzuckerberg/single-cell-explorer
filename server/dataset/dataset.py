@@ -401,7 +401,7 @@ class Dataset(metaclass=ABCMeta):
             else:
                 X = self.get_X_array(obs_selector, var_selector)
                 mean = X.mean(axis=1, keepdims=True)
-        with ServerTiming.time("summarize.query"):
+        with ServerTiming.time("summarize.encode"):
             col_idx = pd.Index([query_hash])
             fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
         return fbs
