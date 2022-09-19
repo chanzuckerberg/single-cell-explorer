@@ -238,7 +238,7 @@ class Dataset(metaclass=ABCMeta):
         * currently only supports access on VAR axis
         * currently only supports filtering on VAR axis
         """
-        with ServerTiming.time(f"data.{axis}.query"):
+        with ServerTiming.time(f"where.query"):
             if axis != Axis.VAR:
                 raise ValueError("Only VAR dimension access is supported")
 
@@ -255,7 +255,7 @@ class Dataset(metaclass=ABCMeta):
                 raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
 
             X = self.get_X_array(obs_selector, var_selector)
-        with ServerTiming.time(f"data.{axis}.encode"):
+        with ServerTiming.time(f"where.encode"):
             col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
             fbs = encode_matrix_fbs(X, col_idx=col_idx, row_idx=None, num_bins=num_bins)
 
@@ -385,21 +385,23 @@ class Dataset(metaclass=ABCMeta):
         return lastmod
 
     def summarize_var(self, method, filter, query_hash, num_bins=None):
-        if method != "mean":
-            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
+        with ServerTiming.time(f"summarize.query"):
+            if method != "mean":
+                raise UnsupportedSummaryMethod("Unknown gene set summary method.")
 
-        obs_selector, var_selector = self._filter_to_mask(filter)
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
+            obs_selector, var_selector = self._filter_to_mask(filter)
+            if obs_selector is not None:
+                raise FilterError("filtering on obs unsupported")
 
-        # if no filter, just return zeros.  We don't have a use case
-        # for summarizing the entire X without a filter, and it would
-        # potentially be quite compute / memory intensive.
-        if var_selector is None or np.count_nonzero(var_selector) == 0:
-            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
-        else:
-            X = self.get_X_array(obs_selector, var_selector)
-            mean = X.mean(axis=1, keepdims=True)
-
-        col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+            # if no filter, just return zeros.  We don't have a use case
+            # for summarizing the entire X without a filter, and it would
+            # potentially be quite compute / memory intensive.
+            if var_selector is None or np.count_nonzero(var_selector) == 0:
+                mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
+            else:
+                X = self.get_X_array(obs_selector, var_selector)
+                mean = X.mean(axis=1, keepdims=True)
+        with ServerTiming.time(f"summarize.query"):
+            col_idx = pd.Index([query_hash])
+            fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+        return fbs
