@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y gettext nginx moreutils build-essential libxml2-dev python3-dev python3-pip zlib1g-dev python3-requests python3-aiohttp llvm jq npm git zip curl && \
-    curl -sL https://deb.nodesource.com/setup_15.x  | bash - && \
+    curl -sL https://deb.nodesource.com/setup_16.x  | bash - && \
     apt-get -y install nodejs && \
     node -v && \
     rm -rf /var/lib/apt/lists/* && \

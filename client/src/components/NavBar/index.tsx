@@ -74,7 +74,7 @@ const Header = (props: HeaderProps) => {
                 active={false}
                 href={ROUTES.WHERE_IS_MY_GENE}
                 minimal
-                text="scExpression"
+                text="Gene Expression"
                 onClick={handleWMGClick}
               />
               <BetaChip label="Beta" size="small" />
