@@ -2,7 +2,7 @@
 
 Document Status: _draft_
 
-Version: 0.2.0 (_DRAFT, not yet approved_)
+Version: 0.3.0 (_DRAFT, not yet approved_)
 
 Date Last Modified: 2021-09-29
 

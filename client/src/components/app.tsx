@@ -7,7 +7,6 @@ import { theme } from "./theme";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
-import FloatingButton from "./floatingButton/floatingButton";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
@@ -16,8 +15,7 @@ import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
-import Embedding from "./embedding";
-
+import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 
@@ -26,7 +24,8 @@ interface Props {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
-  baseUrl: string; // Used for help button links
+  tosURL: string | undefined;
+  privacyURL: string | undefined;
 }
 
 class App extends React.Component<Props> {
@@ -46,7 +45,8 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter, baseUrl } = this.props;
+    const { loading, error, graphRenderCounter, tosURL, privacyURL } =
+      this.props;
 
     return (
       <Container>
@@ -67,6 +67,7 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
+              <Header tosURL={tosURL} privacyURL={privacyURL} />
               {loading || error ? null : (
                 <Layout>
                   <LeftSideBar />
@@ -76,8 +77,6 @@ class App extends React.Component<Props> {
                         <DatasetSelector />
                         <MenuBar />
                       </Controls>
-                      <Embedding />
-                      <FloatingButton baseUrl={baseUrl} />
                       <Legend />
                       <Graph
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore
@@ -102,10 +101,6 @@ export default connect((state: RootState) => ({
   loading: state.controls.loading,
   error: state.controls.error,
   graphRenderCounter: state.controls.graphRenderCounter,
-
-  // Used for help button links
-  baseUrl:
-    state.config?.portalUrl ||
-    state.config?.links?.["collections-home-page"] ||
-    "https://cellxgene.dev.single-cell.czi.technology",
+  tosURL: state.config?.parameters?.about_legal_tos,
+  privacyURL: state.config?.parameters?.about_legal_privacy,
 }))(App);
