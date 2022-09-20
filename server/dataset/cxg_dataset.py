@@ -98,6 +98,15 @@ class CxgDataset(Dataset):
     def get_path(self, *urls):
         return path_join(self.url, *urls)
 
+    def _init_sparsity_and_format(self):
+        try:
+            X = self.open_array("Xr")
+            self.is_1d = True
+        except Exception:
+            X = self.open_array("X")
+            self.is_1d = False
+        self.is_sparse = X.schema.sparse
+
     @staticmethod
     def _lsuri(uri, tiledb_ctx):
         def _cleanpath(p):
@@ -135,7 +144,10 @@ class CxgDataset(Dataset):
             return False
         if not tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) == "array":
             return False
-        if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array":
+        if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array" and not (
+            tiledb.object_type(path_join(url, "Xr"), ctx=CxgDataset.tiledb_ctx) == "array"
+            and tiledb.object_type(path_join(url, "Xc"), ctx=CxgDataset.tiledb_ctx) == "array"
+        ):
             return False
         if not tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) == "group":
             return False
@@ -177,7 +189,7 @@ class CxgDataset(Dataset):
             # version 0
             cxg_version = "0.0"
 
-        if cxg_version not in ["0.0", "0.1", "0.2.0"]:
+        if cxg_version not in ["0.0", "0.1", "0.2.0", "0.3.0"]:
             raise DatasetAccessError(f"cxg matrix is not valid: {self.url}")
         if self.dataset_config.X_approximate_distribution == "auto":
             raise ConfigurationError("X-approximate-distribution 'auto' mode unsupported.")
@@ -187,10 +199,25 @@ class CxgDataset(Dataset):
         self.about = about
         self.cxg_version = cxg_version
         self.corpora_props = corpora_props
+        self._init_sparsity_and_format()
 
     @staticmethod
     def _open_array(uri, tiledb_ctx):
         return tiledb.open(uri, mode="r", ctx=tiledb_ctx)
+
+    def open_X_array(self, col_wise=False):
+        """
+        A helper function to open the 1D X array in row or column orientation with
+        backwards compatibility for 2D arrays.
+        """
+        if self.is_1d and col_wise:
+            return self.open_array("Xc")
+        elif self.is_1d and not col_wise:
+            return self.open_array("Xr")
+        else:
+            # If not 1D, then X array is either dense data or sparse data that has not
+            # been remastered. Support for 2D sparse arrays is deprecated.
+            return self.open_array("X")
 
     def open_array(self, name):
         try:
@@ -203,7 +230,7 @@ class CxgDataset(Dataset):
         array = self.open_array(f"emb/{ename}")
         return array[:, 0:dims]
 
-    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, arr="X", selector_lists=False):
+    def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, selector_lists=False):
         if top_n is None:
             top_n = self.dataset_config.diffexp__top_n
         if lfc_cutoff is None:
@@ -214,7 +241,6 @@ class CxgDataset(Dataset):
             setB=setB,
             top_n=top_n,
             diffexp_lfc_cutoff=lfc_cutoff,
-            arr=arr,
             selector_lists=selector_lists,
         )
 
@@ -257,23 +283,26 @@ class CxgDataset(Dataset):
     def get_X_array(self, obs_mask=None, var_mask=None):
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
+        shape = self.get_shape()
         if obs_items is None or var_items is None:
             # If either zero rows or zero columns were selected, return an empty 2d array.
-            shape = self.get_shape()
             obs_size = 0 if obs_items is None else shape[0] if obs_mask is None else np.count_nonzero(obs_mask)
             var_size = 0 if var_items is None else shape[1] if var_mask is None else np.count_nonzero(var_mask)
             return np.ndarray((obs_size, var_size))
 
-        X = self.open_array("X")
-
-        if X.schema.sparse:
-            data = X.query(order="U").multi_index[obs_items, var_items]
-            nrows, obsindices = self.__remap_indices(X.shape[0], obs_mask, data.get("coords", data)["obs"])
-            ncols, varindices = self.__remap_indices(X.shape[1], var_mask, data.get("coords", data)["var"])
+        if self.is_sparse:
+            X = self.open_X_array(col_wise=True)
+            if self.is_1d:
+                data = X.query(order="U").multi_index[var_items]
+            else:
+                data = X.query(order="U").multi_index[obs_items, var_items]
+            nrows, obsindices = self.__remap_indices(shape[0], obs_mask, data.get("coords", data)["obs"])
+            ncols, varindices = self.__remap_indices(shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
             return densedata
         else:
+            X = self.open_X_array()
             data = X.multi_index[obs_items, var_items][""]
             return data
 
@@ -281,12 +310,16 @@ class CxgDataset(Dataset):
         return self.X_approximate_distribution
 
     def get_shape(self):
-        X = self.open_array("X")
-        return X.shape
+        X = self.open_X_array()
+        if self.is_1d:
+            Xc = self.open_X_array(col_wise=True)
+            return (X.shape[0], Xc.shape[0])
+        else:
+            return X.shape
 
     def get_X_array_dtype(self):
-        X = self.open_array("X")
-        return X.dtype
+        X = self.open_X_array()
+        return X.attr(0).dtype
 
     def query_var_array(self, term_name):
         var = self.open_array("var")
@@ -294,9 +327,15 @@ class CxgDataset(Dataset):
         return data
 
     def query_obs_array(self, term_name):
-        var = self.open_array("obs")
+        obs = self.open_array("obs")
+        schema = self.get_schema()
         try:
-            data = var.query(attrs=[term_name])[:][term_name]
+            data = obs.query(attrs=[term_name])[:][term_name]
+            type_hint = schema.get(term_name, None)
+            if type_hint is not None:
+                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith("int"):
+                    if "categories" in type_hint[term_name]:
+                        data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs")
         return data
@@ -363,13 +402,9 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
-                    # if there are a ton of categories, > 75% of the number of cells, then convert to string
-                    if "categories" in type_hint and len(type_hint.get("categories", [])) > 0.75 * shape[0]:
-                        schema["type"] = "string"
-                    else:
-                        schema["type"] = type_hint["type"]
-                        if schema["type"] == "categorical" and "categories" in type_hint:
-                            schema["categories"] = type_hint["categories"]
+                    schema["type"] = type_hint["type"]
+                    if schema["type"] == "categorical" and "categories" in type_hint:
+                        schema["categories"] = type_hint["categories"]
                 else:
                     schema.update(get_schema_type_hint_from_dtype(attr.dtype))
                 cols.append(schema)
@@ -407,11 +442,16 @@ class CxgDataset(Dataset):
                 categorical_dtypes = []
                 for c in self.get_schema()["annotations"]["obs"]["columns"]:
                     if c["name"] in fields and c["type"] == "categorical":
-                        categorical_dtypes.append(c["name"])
+                        categories = c.get("categories", None)
+                        if categories:
+                            categorical_dtypes.append((c["name"], c["categories"]))
 
                 df = pd.DataFrame.from_dict(data)
-                for name in categorical_dtypes:
-                    df[name] = pd.Categorical(df[name])
+                for name, categories in categorical_dtypes:
+                    if str(df[name].dtype).startswith("int"):
+                        df[name] = pd.Categorical.from_codes(df[name], categories=categories)
+                    else:
+                        df[name] = pd.Categorical(df[name])
 
                 if fields:
                     df = df[fields]

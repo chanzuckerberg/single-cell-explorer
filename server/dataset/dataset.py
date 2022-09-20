@@ -238,24 +238,28 @@ class Dataset(metaclass=ABCMeta):
         * currently only supports access on VAR axis
         * currently only supports filtering on VAR axis
         """
-        if axis != Axis.VAR:
-            raise ValueError("Only VAR dimension access is supported")
+        with ServerTiming.time("where.query"):
+            if axis != Axis.VAR:
+                raise ValueError("Only VAR dimension access is supported")
 
-        try:
-            obs_selector, var_selector = self._filter_to_mask(filter)
-        except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
-            raise FilterError("Error parsing filter")
+            try:
+                obs_selector, var_selector = self._filter_to_mask(filter)
+            except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
+                raise FilterError("Error parsing filter")
 
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
+            if obs_selector is not None:
+                raise FilterError("filtering on obs unsupported")
 
-        num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
-        if self.server_config.exceeds_limit("column_request_max", num_columns):
-            raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
+            num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
+            if self.server_config.exceeds_limit("column_request_max", num_columns):
+                raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
 
-        X = self.get_X_array(obs_selector, var_selector)
-        col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
-        return encode_matrix_fbs(X, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+            X = self.get_X_array(obs_selector, var_selector)
+        with ServerTiming.time("where.encode"):
+            col_idx = np.nonzero([] if var_selector is None else var_selector)[0]
+            fbs = encode_matrix_fbs(X, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+
+        return fbs
 
     def diffexp_topN(self, obsFilterA, obsFilterB, top_n=None):
         """
@@ -381,21 +385,23 @@ class Dataset(metaclass=ABCMeta):
         return lastmod
 
     def summarize_var(self, method, filter, query_hash, num_bins=None):
-        if method != "mean":
-            raise UnsupportedSummaryMethod("Unknown gene set summary method.")
+        with ServerTiming.time("summarize.query"):
+            if method != "mean":
+                raise UnsupportedSummaryMethod("Unknown gene set summary method.")
 
-        obs_selector, var_selector = self._filter_to_mask(filter)
-        if obs_selector is not None:
-            raise FilterError("filtering on obs unsupported")
+            obs_selector, var_selector = self._filter_to_mask(filter)
+            if obs_selector is not None:
+                raise FilterError("filtering on obs unsupported")
 
-        # if no filter, just return zeros.  We don't have a use case
-        # for summarizing the entire X without a filter, and it would
-        # potentially be quite compute / memory intensive.
-        if var_selector is None or np.count_nonzero(var_selector) == 0:
-            mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
-        else:
-            X = self.get_X_array(obs_selector, var_selector)
-            mean = X.mean(axis=1, keepdims=True)
-
-        col_idx = pd.Index([query_hash])
-        return encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+            # if no filter, just return zeros.  We don't have a use case
+            # for summarizing the entire X without a filter, and it would
+            # potentially be quite compute / memory intensive.
+            if var_selector is None or np.count_nonzero(var_selector) == 0:
+                mean = np.zeros((self.get_shape()[0], 1), dtype=np.float32)
+            else:
+                X = self.get_X_array(obs_selector, var_selector)
+                mean = X.mean(axis=1, keepdims=True)
+        with ServerTiming.time("summarize.encode"):
+            col_idx = pd.Index([query_hash])
+            fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
+        return fbs

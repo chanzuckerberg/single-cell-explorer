@@ -24,7 +24,6 @@ def main():
         "--new-selection", default=False, action="store_true", help="change the selection between each trial"
     )
     parser.add_argument("--seed", default=1, type=int, help="set the random seed")
-    parser.add_argument("--arr", default="X", type=str, help="tdb array to use")
 
     args = parser.parse_args()
     if sum([int(bool(arg)) for arg in [args.num, args.var, args.fraction]]) != 1:
@@ -55,15 +54,15 @@ def main():
     rng = np.random.default_rng(seed=args.seed)
 
     if args.show:
-        adaptor.open_array(args.arr).schema.dump()
+        adaptor.open_X_array().schema.dump()
 
     print(f"Dataset shape: {adaptor.get_shape()}")
-    print(f"Sparse: {adaptor.open_array(args.arr).schema.sparse}")
+    print(f"Sparse: {adaptor.open_X_array().schema.sparse}")
 
     # The _first_ call to compute differential expression will compile (numba) various
     # functions. We want to remove that from the benchmark, as it only happens once
     # on backend startup.
-    adaptor.compute_diffexp_ttest(np.array([0]), np.array([1]), arr=args.arr, selector_lists=True)
+    adaptor.compute_diffexp_ttest(np.array([0]), np.array([1]), selector_lists=True)
 
     filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
@@ -72,7 +71,7 @@ def main():
         gc.collect()
         t1 = time.time()
         if args.alg == "cxg":
-            results = adaptor.compute_diffexp_ttest(filterA, filterB, arr=args.arr, selector_lists=True)
+            results = adaptor.compute_diffexp_ttest(filterA, filterB, selector_lists=True)
         else:
             raise ValueError(f"Unsupported algo {args.alg}")
 

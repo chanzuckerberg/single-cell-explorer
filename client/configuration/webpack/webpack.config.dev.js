@@ -27,7 +27,10 @@ const devConfig = {
   output: {
     pathinfo: true,
     filename: "static/js/bundle.js",
-    publicPath: "/", // ensures the static asset calls use "/" as the root and not "/<base_url>/<dataset>"
+    // (thuang): This is needed to make sure static asset url path is '/static/assets/',
+    // so it ignores the base_url (/d, /e) and dataset in the url.
+    // e.g., http://localhost:3000/static/assets/heatmap.svg
+    publicPath: "/",
   },
   module: {
     rules: [
@@ -39,7 +42,6 @@ const devConfig = {
       {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
         loader: "file-loader",
-        include: [nodeModules, fonts],
         options: {
           name: "static/assets/[name].[ext]",
           // (thuang): This is needed to make sure @font url path is '/static/assets/'
