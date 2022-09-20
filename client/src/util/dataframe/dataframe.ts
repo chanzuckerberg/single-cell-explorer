@@ -959,26 +959,12 @@ class Dataframe {
 
     callback MUST not modify the column, but instead return a mutated copy.
     */
-    const columns = this.__columns.map((colData, colIdx) => {
-      let data: DataframeValueArray;
-      // mapColumns will mutate dictionary encoded arrays into standard value arrays.
-      // This ensures that users will always be dealing with values in the callback.
-      // TODO: memoize this function to avoid repeated work.
-      if (isDictEncodedTypedArray(colData)) {
-        data = new Array(colData.length);
-        for (let i = 0; i < data.length; i += 1) {
-          data[i] = colData.vat(i);
-        }
-      } else {
-        data = colData;
-      }
-      return callback(
-        data,
+    const columns = this.__columns.map((colData, colIdx) => callback(
+        colData,
         colIdx,
         this.colIndex.getLabel(colIdx) as LabelType,
         this
-      );
-    });
+      ));
     const columnsAccessor: (DataframeColumn | null)[] = columns.map((c, idx) =>
       this.__columns[idx] === c ? this.__columnsAccessor[idx] : null
     );
