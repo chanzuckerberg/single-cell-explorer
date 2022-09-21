@@ -52,7 +52,7 @@ server:
     allowed_matrix_types: []
 
   data_locator:
-    api_base: https://${DATA_LOCATOR_DOMAIN}/dp/v1
+    api_base: http://${DATA_LOCATOR_DOMAIN}/dp/v1
     s3:
       # s3 region name.
       #   if true, then the s3 location is automatically determined from the datapath or dataroot.

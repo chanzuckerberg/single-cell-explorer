@@ -16,8 +16,9 @@ module stack {
 
   api_domain                   = "${var.stack_name}-explorer.rdev.single-cell.czi.technology"
   web_domain                   = "${var.stack_name}-explorer.rdev.single-cell.czi.technology"
-  data_locator_domain          = "${var.stack_name}-backend.internal.rdev.single-cell.czi.technology"
-  cxg_bucket_path              = "env-rdev-cellxgene/${var.stack_name}"
+  # data_locator_domain          = "${var.stack_name}-backend.internal.rdev.single-cell.czi.technology" 
+  data_locator_domain          = "internal-happy-rdev-backend-1100870308.us-west-2.elb.amazonaws.com"
+  cxg_bucket_path              = "env-rdev-cellxgene/rdev-schema-3-0-0"
 
   wait_for_steady_state        = var.wait_for_steady_state
 }

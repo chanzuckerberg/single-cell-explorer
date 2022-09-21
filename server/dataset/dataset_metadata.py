@@ -16,7 +16,7 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     Check the data portal metadata api for datasets stored under the given url_path
     If present return dataset metadata object else return None
     """
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    headers = {"Content-Type": "application/json", "Accept": "application/json", "Host": "rdev-schema-3-0-0-backend.rdev.single-cell.czi.technology"}
     try:
         response = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
 
@@ -68,7 +68,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
-    explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
+    explorer_url_path = f"https://rdev-schema-3-0-0-explorer.rdev.single-cell.czi.technology/{dataset_root}/{dataset_id}"
 
     if app_config.server_config.data_locator__api_base:
         dataset_metadata = request_dataset_metadata_from_data_portal(
@@ -123,7 +123,7 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
         suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
         suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
 
-        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
+        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}", headers={"Host": "rdev-schema-3-0-0-backend.rdev.single-cell.czi.technology"}).json()
 
         web_base_url = app_config.server_config.get_web_base_url()
         metadata = {
