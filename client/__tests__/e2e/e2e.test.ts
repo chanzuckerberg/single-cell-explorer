@@ -272,6 +272,29 @@ describe("clipping", () => {
     await drag(histBrushableAreaId, coords.start, coords.end);
     const cellCount = await getCellSetCount(1);
     expect(cellCount).toBe(data.clip.count);
+
+    // ensure categorical data appears properly
+    for (const label of Object.keys(data.categorical)) {
+      const element = await getOneElementInnerHTML(
+        getTestId(`category-${label}`)
+      );
+
+      expect(element).toMatchSnapshot();
+
+      await clickOn(`${label}:category-expand`);
+
+      const categories = await getAllCategoriesAndCounts(label);
+
+      expect(Object.keys(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.keys(data.categorical[label])
+      );
+
+      expect(Object.values(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.values(data.categorical[label])
+      );
+    }    
   });
 });
 
