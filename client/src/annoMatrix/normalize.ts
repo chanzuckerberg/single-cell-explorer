@@ -13,6 +13,7 @@ import {
   Category,
   CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
+import { isDictEncodedTypedArray } from "../common/types/arraytypes";
 
 export function normalizeResponse(
   field: Field,
@@ -163,13 +164,17 @@ export function normalizeCategorical(
   topNCategories.add(overflowCatName);
 
   // rewrite data - consolidate all excess labels into overflow label
-  const newColData = Array.from(col.asArray());
+  const colData = col.asArray();
+  const newColData = new Array(colData.length); // Array.from(col.asArray());
   for (let i = 0; i < newColData.length; i += 1) {
-    if (!topNCategories.has(newColData[i])) {
+    if (!topNCategories.has(colData[i])) {
       newColData[i] = overflowCatName;
-    }
+    } else if (isDictEncodedTypedArray(colData)) {
+        newColData[i] = colData.vat(i);
+      } else {
+        newColData[i] = colData[i];
+      }
   }
-
   // replace data in dataframe
   df = df.replaceColData(colLabel, newColData);
 
