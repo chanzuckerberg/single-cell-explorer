@@ -208,7 +208,10 @@ const TruncatingBreadcrumbs = React.memo<Props>(
           text: config.displayAs,
         };
         return (
-          <li key={`bc-${config.item.shortText}`}>
+          <li
+            data-testid={`bc-${config.item.shortText}`}
+            key={`bc-${config.item.shortText}`}
+          >
             {isCurrentBreadcrumb(configs, i)
               ? currentBreadcrumbRenderer(props)
               : breadcrumbRenderer(props)}
