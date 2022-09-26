@@ -219,10 +219,11 @@ const TruncatingBreadcrumbs = React.memo<Props>(
     return (
       <div
         style={{
-          overflow: "hidden",
+          overflow: "visible",
           position: "absolute",
           bottom: 8,
           left: 8,
+          width: "100%",
         }}
       >
         <ResizeSensor onResize={onResize}>
