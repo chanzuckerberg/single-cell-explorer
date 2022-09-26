@@ -11,7 +11,6 @@ import Clip from "./clip";
 
 import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
-import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
@@ -334,12 +333,6 @@ class MenuBar extends React.PureComponent<{}, State> {
               />
             </ButtonGroup>
           ) : null}
-          <UndoRedoReset
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ dispatch: any; undoDisabled: any; redoDisa... Remove this comment to see the full error message
-            dispatch={dispatch}
-            undoDisabled={undoDisabled}
-            redoDisabled={redoDisabled}
-          />
           <Clip
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
             pendingClipPercentiles={pendingClipPercentiles}
