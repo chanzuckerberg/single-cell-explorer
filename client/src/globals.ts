@@ -82,6 +82,9 @@ export const globalConfig = {
   maxCategoricalOptionsToDisplay: 200,
 };
 
+/* is mac os? */
+export const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+
 /* colors */
 export const blue = Colors.BLUE3;
 export const linkBlue = Colors.BLUE5;
