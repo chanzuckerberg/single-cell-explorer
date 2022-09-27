@@ -3,6 +3,7 @@ import React from "react";
 
 interface Props {
   children: React.ReactNode;
+  bottom?: number;
 }
 
 /**
@@ -10,7 +11,7 @@ interface Props {
  * @returns Markup displaying children positioned within the graph grid template area.
  */
 function Controls(props: Props): JSX.Element {
-  const { children } = props;
+  const { children, bottom } = props;
   return (
     <div
       style={{
@@ -19,13 +20,17 @@ function Controls(props: Props): JSX.Element {
         left: 8,
         position: "absolute",
         right: 8,
-        top: 0,
         zIndex: 3,
+        ...(bottom !== undefined ? { bottom } : { top: 0 }),
       }}
     >
       {children}
     </div>
   );
 }
+
+Controls.defaultProps = {
+  bottom: undefined,
+};
 
 export default Controls;

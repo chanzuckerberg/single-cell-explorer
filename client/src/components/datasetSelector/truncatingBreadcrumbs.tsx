@@ -208,7 +208,10 @@ const TruncatingBreadcrumbs = React.memo<Props>(
           text: config.displayAs,
         };
         return (
-          <li key={`bc-${config.item.shortText}`}>
+          <li
+            data-testid={`bc-${config.item.shortText}`}
+            key={`bc-${config.item.shortText}`}
+          >
             {isCurrentBreadcrumb(configs, i)
               ? currentBreadcrumbRenderer(props)
               : breadcrumbRenderer(props)}
@@ -219,10 +222,11 @@ const TruncatingBreadcrumbs = React.memo<Props>(
     return (
       <div
         style={{
-          overflow: "hidden",
+          overflow: "visible",
           position: "absolute",
           bottom: 8,
           left: 8,
+          width: "100%",
         }}
       >
         <ResizeSensor onResize={onResize}>

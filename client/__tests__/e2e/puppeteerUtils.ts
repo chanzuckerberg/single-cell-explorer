@@ -133,7 +133,7 @@ export async function tryUntil(
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function getOneElementInnerHTML(selector: any, options = {}) {
-  await page.waitForSelector(selector, options);
+  await page.waitForSelector(selector, {...options, timeout: TEST_TIMEOUT});
 
   return page.$eval(selector, (el) => el.innerHTML);
 }

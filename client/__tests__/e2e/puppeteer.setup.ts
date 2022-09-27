@@ -9,6 +9,9 @@ import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
 
+// TODO: uncomment this for breadcrumbs tests
+// const fetch = require("puppeteer-fetch").default;
+
 // (thuang): This is the max time a test can take to run.
 // Since when debugging, we run slowMo and !headless, this means
 // a test can take more time to finish, so we don't want
@@ -26,7 +29,6 @@ beforeEach(async () => {
   page.on("request", (interceptedRequest) => {
     if (interceptedRequest.url().endsWith("/dataset-metadata")) {
       const { referer } = interceptedRequest.headers();
-
       interceptedRequest.respond({
         status: 200,
         contentType: "application/json",
@@ -38,7 +40,30 @@ beforeEach(async () => {
         },
       });
       return;
-    }
+    } /* else if (interceptedRequest.url().endsWith("/config")) {
+      const { referer } = interceptedRequest.headers();
+      
+      fetch(interceptedRequest.url()).then((response: any) => {
+        response.json().then((body: any) => {
+          interceptedRequest.respond({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              ...body,
+              links: {
+                ...body.links,
+                "collections-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+              }
+            }),
+            headers: {
+              "Access-Control-Allow-Origin": referer.slice(0, referer.length - 1),
+              "Access-Control-Allow-Credentials": "true",
+            },
+          });
+        });
+      });
+      return;      
+    } */
     interceptedRequest.continue();
   });
 

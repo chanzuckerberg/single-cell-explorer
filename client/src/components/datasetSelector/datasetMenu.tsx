@@ -53,6 +53,7 @@ const buildDatasetMenuItems = (
           onDatasetSelected(dataset);
         }}
         text={dataset.name}
+        data-testid={`dataset-menu-item-${dataset.name}`}
       />
     );
   });
