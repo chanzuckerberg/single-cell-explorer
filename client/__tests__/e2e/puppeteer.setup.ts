@@ -9,6 +9,9 @@ import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
 
+// TODO: uncomment this for breadcrumbs tests
+// const fetch = require("puppeteer-fetch").default;
+
 // (thuang): This is the max time a test can take to run.
 // Since when debugging, we run slowMo and !headless, this means
 // a test can take more time to finish, so we don't want
@@ -26,7 +29,6 @@ beforeEach(async () => {
   page.on("request", (interceptedRequest) => {
     if (interceptedRequest.url().endsWith("/dataset-metadata")) {
       const { referer } = interceptedRequest.headers();
-
       interceptedRequest.respond({
         status: 200,
         contentType: "application/json",
@@ -38,11 +40,11 @@ beforeEach(async () => {
         },
       });
       return;
-    } if (interceptedRequest.url().endsWith("/config")) {
+    } /* else if (interceptedRequest.url().endsWith("/config")) {
       const { referer } = interceptedRequest.headers();
       
-      fetch(interceptedRequest.url()).then((response) => {
-        response.json().then((body) => {
+      fetch(interceptedRequest.url()).then((response: any) => {
+        response.json().then((body: any) => {
           interceptedRequest.respond({
             status: 200,
             contentType: "application/json",
@@ -50,7 +52,7 @@ beforeEach(async () => {
               ...body,
               links: {
                 ...body.links,
-                "collection-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+                "collections-home-page": "https://cellxgene.cziscience.com/dummy-collection",
               }
             }),
             headers: {
@@ -61,7 +63,7 @@ beforeEach(async () => {
         });
       });
       return;      
-    }
+    } */
     interceptedRequest.continue();
   });
 
