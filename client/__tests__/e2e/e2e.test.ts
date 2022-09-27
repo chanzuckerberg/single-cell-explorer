@@ -51,6 +51,8 @@ import {
   removeGeneInfo,
   addGeneToSearch,
   assertGeneInfoDoesNotExist,
+  keyboardUndo,
+  keyboardRedo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -592,9 +594,9 @@ describe.each([
     await createGeneset(genesetName);
     /* note: as of June 2021, the aria label is in the truncate component which clones the element */
     await assertGenesetExists(genesetName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetDoesNotExist(genesetName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetExists(genesetName);
   });
   test("edit geneset name and undo/redo", async () => {
@@ -602,9 +604,9 @@ describe.each([
     await createGeneset(editableGenesetName);
     await editGenesetName(editableGenesetName, editText);
     await assertGenesetExists(newGenesetName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetExists(editableGenesetName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetExists(newGenesetName);
   });
   test("delete a geneset and undo/redo", async () => {
@@ -613,9 +615,9 @@ describe.each([
     await setup(config);
     await createGeneset(genesetToDeleteName);
     await deleteGeneset(genesetToDeleteName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetExists(genesetToDeleteName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetDoesNotExist(genesetToDeleteName);
   });
   test("geneset description", async () => {
@@ -643,9 +645,9 @@ describe.each([
     await createGeneset(setToAddGeneTo);
     await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet);
     await assertGeneExistsInGeneset(geneToAddToSet);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGeneDoesNotExist(geneToAddToSet);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGeneExistsInGeneset(geneToAddToSet);
   });
   test("expand gene and brush", async () => {
@@ -687,9 +689,9 @@ describe.each([
 
     await removeGene(geneToRemove);
     await assertGeneDoesNotExist(geneToRemove);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGeneExistsInGeneset(geneToRemove);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGeneDoesNotExist(geneToRemove);
   });
   test("open gene info card and hide/remove", async () => {
