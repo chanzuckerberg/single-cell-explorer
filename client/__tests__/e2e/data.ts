@@ -1,6 +1,13 @@
 const truncate: {[key: string]: number} = {};
+const truncateLabels = [];
 for (let i = 0; i < 999; i+=1) {
-  truncate[`CellType${i}`] = 1;
+  truncateLabels.push(`CellType${i}`)
+}
+truncateLabels.push(`CellType1100`)
+truncateLabels.sort();
+truncateLabels.push("truncate: all other labels")
+for (let i = 0; i < truncateLabels.length; i+=1) {
+  truncate[truncateLabels[i]] = 1
 }
 truncate.CellType1100 = 400;
 truncate["truncate: all other labels"] = 101;
