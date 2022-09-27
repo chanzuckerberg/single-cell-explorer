@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { AppDispatch } from "../../reducers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import * as globals from "../../globals";
 
 interface DispatchProps {
   undo: () => void;
@@ -26,7 +27,7 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
   const hotkeys = useMemo(
     () => [
       {
-        combo: "CTRL+Z",
+        combo: globals.isMac ? "CMD+Z" : "CTRL+Z",
         global: true,
         label: "Undo.",
         onKeyDown: () => {
@@ -34,7 +35,7 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
         },
       },
       {
-        combo: "CTRL+SHIFT+Z",
+        combo: globals.isMac ? "CMD+SHIFT+Z" : "CTRL+SHIFT+Z",
         global: true,
         label: "Redo.",
         onKeyDown: () => {
