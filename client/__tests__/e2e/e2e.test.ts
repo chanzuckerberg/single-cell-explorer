@@ -6,7 +6,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 
 import { Classes } from "@blueprintjs/core";
-import { appUrlBase, DATASET } from "./config";
+import { appUrlBase, DATASET, DATASET_TRUNCATE } from "./config";
 
 import {
   clickOn,
@@ -90,11 +90,16 @@ const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
 const data = datasets[DATASET];
+const dataTruncate = datasets[DATASET_TRUNCATE];
 
 const defaultBaseUrl = "d";
 const pageUrl = appUrlBase.includes("localhost")
   ? [appUrlBase, defaultBaseUrl, DATASET].join("/")
   : appUrlBase;
+
+  const pageUrlTruncate = appUrlBase.includes("localhost")
+  ? [appUrlBase, defaultBaseUrl, DATASET_TRUNCATE].join("/")
+  : appUrlBase;  
 
 describe("did launch", () => {
   test("page launched", async () => {
@@ -129,6 +134,32 @@ describe("metadata loads", () => {
       expect(Object.values(categories)).toMatchObject(
         // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         Object.values(data.categorical[label])
+      );
+    }
+  });
+
+  test("categories and values from dataset appear and properly truncate if applicable", async () => {
+    await goToPage(pageUrlTruncate);
+
+    for (const label of Object.keys(dataTruncate.categorical)) {
+      const element = await getOneElementInnerHTML(
+        getTestId(`category-${label}`)
+      );
+
+      expect(element).toMatchSnapshot();
+
+      await clickOn(`${label}:category-expand`);
+
+      const categories = await getAllCategoriesAndCounts(label);
+
+      expect(Object.keys(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.keys(dataTruncate.categorical[label])
+      );
+
+      expect(Object.values(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.values(dataTruncate.categorical[label])
       );
     }
   });
