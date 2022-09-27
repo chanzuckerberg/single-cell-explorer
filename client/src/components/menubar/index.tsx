@@ -11,7 +11,6 @@ import Clip from "./clip";
 
 import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
-import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
@@ -54,10 +53,6 @@ type State = any;
     scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     libraryVersions: (state as any).config?.library_versions,
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    undoDisabled: state["@@undoable/past"].length === 0,
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    redoDisabled: state["@@undoable/future"].length === 0,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     aboutLink: (state as any).config?.links?.["about-dataset"],
     disableDiffexp:
