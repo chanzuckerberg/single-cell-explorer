@@ -76,7 +76,6 @@ class App extends React.Component<Props> {
                     <>
                       <GlobalHotkeys />
                       <Controls>
-                        <DatasetSelector />
                         <MenuBar />
                       </Controls>
                       <Legend />
@@ -86,6 +85,9 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      <Controls bottom={0}>
+                        <DatasetSelector />
+                      </Controls>
                     </>
                   )}
                   <RightSideBar />
