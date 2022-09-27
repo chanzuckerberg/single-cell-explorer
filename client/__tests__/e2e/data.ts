@@ -98,7 +98,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.05, x2: 0.75, y2: 0.55 },
-        count: "357",
+        count: "332",
       },
     },
     scatter: {
