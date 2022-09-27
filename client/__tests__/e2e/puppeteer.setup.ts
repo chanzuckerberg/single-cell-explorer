@@ -38,6 +38,29 @@ beforeEach(async () => {
         },
       });
       return;
+    } if (interceptedRequest.url().endsWith("/config")) {
+      const { referer } = interceptedRequest.headers();
+      
+      fetch(interceptedRequest.url()).then((response) => {
+        response.json().then((body) => {
+          interceptedRequest.respond({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              ...body,
+              links: {
+                ...body.links,
+                "collection-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+              }
+            }),
+            headers: {
+              "Access-Control-Allow-Origin": referer.slice(0, referer.length - 1),
+              "Access-Control-Allow-Credentials": "true",
+            },
+          });
+        });
+      });
+      return;      
     }
     interceptedRequest.continue();
   });

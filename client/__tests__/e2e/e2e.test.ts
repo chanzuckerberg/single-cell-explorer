@@ -106,8 +106,6 @@ describe("did launch", () => {
   });
 });
 
-/* TODO: Implement these smoke tests
-
 describe("breadcrumbs loads", () => {
   test("dataset and collection from breadcrumbs appears", async () => {
     await goToPage(pageUrl);
@@ -126,8 +124,7 @@ describe("breadcrumbs loads", () => {
     const element = await getOneElementInnerHTML(getTestId("dataset-menu-item-Sed eu nisi condimentum"));
     expect(element).toMatchSnapshot();
   });
-});*/
-
+});
 
 describe("metadata loads", () => {
   test("categories and values from dataset appear", async () => {
