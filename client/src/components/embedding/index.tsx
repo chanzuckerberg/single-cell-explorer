@@ -5,7 +5,6 @@ import {
   Button,
   ButtonGroup,
   H4,
-  MaybeElement,
   Popover,
   Position,
   Radio,
@@ -17,9 +16,6 @@ import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-
-import heatmapIcon from "./heatmap.svg";
-import { SvgIcon } from "../svgIcon";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type EmbeddingState = any;
@@ -78,16 +74,13 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
               <Button
                 type="button"
                 data-testid="layout-choice"
-                icon={
-                  (<SvgIcon src={heatmapIcon} />) as unknown as MaybeElement
-                }
                 id="embedding"
                 style={{
                   cursor: "pointer",
                 }}
                 onClick={this.handleLayoutChoiceClick}
               >
-                {layoutChoice?.current}: {crossfilter.countSelected()} out of{" "}
+                {layoutChoice?.current}: {crossfilter.countSelected()} of{" "}
                 {crossfilter.size()} cells
               </Button>
             </Tooltip>
