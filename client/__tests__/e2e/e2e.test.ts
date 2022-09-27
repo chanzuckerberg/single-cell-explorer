@@ -97,9 +97,7 @@ const pageUrl = appUrlBase.includes("localhost")
   ? [appUrlBase, defaultBaseUrl, DATASET].join("/")
   : appUrlBase;
 
-  const pageUrlTruncate = appUrlBase.includes("localhost")
-  ? [appUrlBase, defaultBaseUrl, DATASET_TRUNCATE].join("/")
-  : appUrlBase;  
+  const pageUrlTruncate = [appUrlBase, defaultBaseUrl, DATASET_TRUNCATE].join("/");
 
 describe("did launch", () => {
   test("page launched", async () => {
@@ -151,7 +149,7 @@ describe("metadata loads", () => {
       await clickOn(`${label}:category-expand`);
 
       const categories = await getAllCategoriesAndCounts(label);
-
+      
       expect(Object.keys(categories)).toMatchObject(
         // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         Object.keys(dataTruncate.categorical[label])

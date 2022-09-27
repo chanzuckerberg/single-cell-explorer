@@ -165,15 +165,15 @@ export function normalizeCategorical(
 
   // rewrite data - consolidate all excess labels into overflow label
   const colData = col.asArray();
-  const newColData = new Array(colData.length); // Array.from(col.asArray());
+  const newColData = new Array(colData.length);
   for (let i = 0; i < newColData.length; i += 1) {
     if (!topNCategories.has(colData[i])) {
       newColData[i] = overflowCatName;
     } else if (isDictEncodedTypedArray(colData)) {
-        newColData[i] = colData.vat(i);
-      } else {
-        newColData[i] = colData[i];
-      }
+      newColData[i] = colData.vat(i);
+    } else {
+      newColData[i] = colData[i];
+    }
   }
   // replace data in dataframe
   df = df.replaceColData(colLabel, newColData);
