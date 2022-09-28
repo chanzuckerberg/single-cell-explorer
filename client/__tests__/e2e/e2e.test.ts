@@ -6,7 +6,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 
 import { Classes } from "@blueprintjs/core";
-import { appUrlBase, DATASET } from "./config";
+import { appUrlBase, DATASET, DATASET_TRUNCATE } from "./config";
 
 import {
   clickOn,
@@ -51,6 +51,8 @@ import {
   removeGeneInfo,
   addGeneToSearch,
   assertGeneInfoDoesNotExist,
+  keyboardUndo,
+  keyboardRedo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -90,11 +92,14 @@ const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
 const data = datasets[DATASET];
+const dataTruncate = datasets[DATASET_TRUNCATE];
 
 const defaultBaseUrl = "d";
 const pageUrl = appUrlBase.includes("localhost")
   ? [appUrlBase, defaultBaseUrl, DATASET].join("/")
   : appUrlBase;
+
+  const pageUrlTruncate = [appUrlBase, defaultBaseUrl, DATASET_TRUNCATE].join("/");
 
 describe("did launch", () => {
   test("page launched", async () => {
@@ -105,6 +110,28 @@ describe("did launch", () => {
     expect(element).toMatchSnapshot();
   });
 });
+
+/* TODO: Fix this test
+describe("breadcrumbs loads", () => {
+  test("dataset and collection from breadcrumbs appears", async () => {
+    await goToPage(pageUrl);
+
+    const datasetElement = await getOneElementInnerHTML(getTestId("bc-Dataset"));
+    const collectionsElement = await getOneElementInnerHTML(getTestId("bc-Collection"));
+    expect(datasetElement).toMatchSnapshot();
+    expect(collectionsElement).toMatchSnapshot();
+  });
+
+  test("datasets from breadcrumbs appears on clicking collections", async () => {
+    await goToPage(pageUrl);
+
+    await clickOn(`bc-Collection`);
+    await waitByID("dataset-menu-item-Sed eu nisi condimentum")
+    const element = await getOneElementInnerHTML(getTestId("dataset-menu-item-Sed eu nisi condimentum"));
+    expect(element).toMatchSnapshot();
+  });
+});
+*/
 
 describe("metadata loads", () => {
   test("categories and values from dataset appear", async () => {
@@ -129,6 +156,32 @@ describe("metadata loads", () => {
       expect(Object.values(categories)).toMatchObject(
         // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
         Object.values(data.categorical[label])
+      );
+    }
+  });
+
+  test("categories and values from dataset appear and properly truncate if applicable", async () => {
+    await goToPage(pageUrlTruncate);
+
+    for (const label of Object.keys(dataTruncate.categorical)) {
+      const element = await getOneElementInnerHTML(
+        getTestId(`category-${label}`)
+      );
+
+      expect(element).toMatchSnapshot();
+
+      await clickOn(`${label}:category-expand`);
+
+      const categories = await getAllCategoriesAndCounts(label);
+      
+      expect(Object.keys(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.keys(dataTruncate.categorical[label])
+      );
+
+      expect(Object.values(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.values(dataTruncate.categorical[label])
       );
     }
   });
@@ -272,6 +325,29 @@ describe("clipping", () => {
     await drag(histBrushableAreaId, coords.start, coords.end);
     const cellCount = await getCellSetCount(1);
     expect(cellCount).toBe(data.clip.count);
+
+    // ensure categorical data appears properly
+    for (const label of Object.keys(data.categorical)) {
+      const element = await getOneElementInnerHTML(
+        getTestId(`category-${label}`)
+      );
+
+      expect(element).toMatchSnapshot();
+
+      await clickOn(`${label}:category-expand`);
+
+      const categories = await getAllCategoriesAndCounts(label);
+
+      expect(Object.keys(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.keys(data.categorical[label])
+      );
+
+      expect(Object.values(categories)).toMatchObject(
+        // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+        Object.values(data.categorical[label])
+      );
+    }    
   });
 });
 
@@ -540,9 +616,9 @@ describe.each([
     await createGeneset(genesetName);
     /* note: as of June 2021, the aria label is in the truncate component which clones the element */
     await assertGenesetExists(genesetName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetDoesNotExist(genesetName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetExists(genesetName);
   });
   test("edit geneset name and undo/redo", async () => {
@@ -550,9 +626,9 @@ describe.each([
     await createGeneset(editableGenesetName);
     await editGenesetName(editableGenesetName, editText);
     await assertGenesetExists(newGenesetName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetExists(editableGenesetName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetExists(newGenesetName);
   });
   test("delete a geneset and undo/redo", async () => {
@@ -561,9 +637,9 @@ describe.each([
     await setup(config);
     await createGeneset(genesetToDeleteName);
     await deleteGeneset(genesetToDeleteName);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGenesetExists(genesetToDeleteName);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGenesetDoesNotExist(genesetToDeleteName);
   });
   test("geneset description", async () => {
@@ -591,9 +667,9 @@ describe.each([
     await createGeneset(setToAddGeneTo);
     await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet);
     await assertGeneExistsInGeneset(geneToAddToSet);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGeneDoesNotExist(geneToAddToSet);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGeneExistsInGeneset(geneToAddToSet);
   });
   test("expand gene and brush", async () => {
@@ -635,9 +711,9 @@ describe.each([
 
     await removeGene(geneToRemove);
     await assertGeneDoesNotExist(geneToRemove);
-    await clickOn("undo");
+    await keyboardUndo();
     await assertGeneExistsInGeneset(geneToRemove);
-    await clickOn("redo");
+    await keyboardRedo();
     await assertGeneDoesNotExist(geneToRemove);
   });
   test("open gene info card and hide/remove", async () => {

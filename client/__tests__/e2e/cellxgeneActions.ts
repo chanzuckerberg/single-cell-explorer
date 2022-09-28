@@ -43,6 +43,20 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
   await page.mouse.up();
 }
 
+export async function keyboardUndo() {
+  await page.keyboard.down("MetaLeft");
+  await page.keyboard.press("KeyZ");
+  await page.keyboard.up("MetaLeft");
+}
+
+export async function keyboardRedo() {
+  await page.keyboard.down("MetaLeft");
+  await page.keyboard.down("ShiftLeft");
+  await page.keyboard.press("KeyZ");
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("MetaLeft");
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 export async function clickOnCoordinate(testId: any, coord: any) {
   const layout = await expect(page).toMatchElement(getTestId(testId));

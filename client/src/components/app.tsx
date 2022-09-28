@@ -18,6 +18,7 @@ import MenuBar from "./menubar";
 import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
+import GlobalHotkeys from "./hotkeys";
 
 interface Props {
   dispatch: AppDispatch;
@@ -73,8 +74,8 @@ class App extends React.Component<Props> {
                   <LeftSideBar />
                   {(viewportRef: RefObject<HTMLDivElement>) => (
                     <>
+                      <GlobalHotkeys />
                       <Controls>
-                        <DatasetSelector />
                         <MenuBar />
                       </Controls>
                       <Legend />
@@ -84,6 +85,9 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      <Controls bottom={0}>
+                        <DatasetSelector />
+                      </Controls>
                     </>
                   )}
                   <RightSideBar />
