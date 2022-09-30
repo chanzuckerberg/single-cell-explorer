@@ -19,6 +19,7 @@ import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
+import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 
 interface Props {
   dispatch: AppDispatch;
@@ -27,6 +28,7 @@ interface Props {
   graphRenderCounter: number;
   tosURL: string | undefined;
   privacyURL: string | undefined;
+  seamlessEnabled: boolean;
 }
 
 class App extends React.Component<Props> {
@@ -46,8 +48,14 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter, tosURL, privacyURL } =
-      this.props;
+    const {
+      loading,
+      error,
+      graphRenderCounter,
+      tosURL,
+      privacyURL,
+      seamlessEnabled,
+    } = this.props;
 
     return (
       <Container>
@@ -68,7 +76,9 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
-              <Header tosURL={tosURL} privacyURL={privacyURL} />
+              {seamlessEnabled && (
+                <Header tosURL={tosURL} privacyURL={privacyURL} />
+              )}
               {loading || error ? null : (
                 <Layout>
                   <LeftSideBar />
@@ -107,4 +117,5 @@ export default connect((state: RootState) => ({
   graphRenderCounter: state.controls.graphRenderCounter,
   tosURL: state.config?.parameters?.about_legal_tos,
   privacyURL: state.config?.parameters?.about_legal_privacy,
+  seamlessEnabled: selectIsSeamlessEnabled(state),
 }))(App);
