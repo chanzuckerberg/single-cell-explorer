@@ -24,6 +24,7 @@ import {
 
 import {
   calcDragCoordinates,
+  calcTransformDragCoordinates,
   drag,
   expandCategory,
   subset,
@@ -111,7 +112,7 @@ describe("did launch", () => {
   });
 });
 
-/* TODO: Fix this test
+
 describe("breadcrumbs loads", () => {
   test("dataset and collection from breadcrumbs appears", async () => {
     await goToPage(pageUrl);
@@ -125,13 +126,13 @@ describe("breadcrumbs loads", () => {
   test("datasets from breadcrumbs appears on clicking collections", async () => {
     await goToPage(pageUrl);
 
-    await clickOn(`bc-Collection`);
+    await clickOn(`bc-Dataset`);
     await waitByID("dataset-menu-item-Sed eu nisi condimentum")
     const element = await getOneElementInnerHTML(getTestId("dataset-menu-item-Sed eu nisi condimentum"));
     expect(element).toMatchSnapshot();
   });
 });
-*/
+
 
 describe("metadata loads", () => {
   test("categories and values from dataset appear", async () => {
@@ -415,7 +416,7 @@ describe("graph overlay", () => {
     await clickOn("centroid-label-toggle");
     await clickOn("mode-pan-zoom");
 
-    const panCoords = await calcDragCoordinates(
+    const panCoords = await calcTransformDragCoordinates(
       "layout-graph",
       data.pan["coordinates-as-percent"]
     );

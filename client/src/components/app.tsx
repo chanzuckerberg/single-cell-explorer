@@ -1,4 +1,4 @@
-import React, { RefObject } from "react";
+import React from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
@@ -80,9 +80,9 @@ class App extends React.Component<Props> {
                 <Header tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
-                <Layout>
-                  <LeftSideBar />
-                  {(viewportRef: RefObject<HTMLDivElement>) => (
+                <Layout
+                  seamlessEnabled={seamlessEnabled}
+                  renderGraph={(viewportRef: HTMLDivElement) => (
                     <>
                       <GlobalHotkeys />
                       <Controls>
@@ -100,6 +100,8 @@ class App extends React.Component<Props> {
                       </Controls>
                     </>
                   )}
+                >
+                  <LeftSideBar />
                   <RightSideBar />
                 </Layout>
               )}
