@@ -5,12 +5,10 @@
  */
 
 import { setDefaultOptions } from "expect-puppeteer";
+import fetch from "puppeteer-fetch";
 import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
-
-// TODO: uncomment this for breadcrumbs tests
-// const fetch = require("puppeteer-fetch").default;
 
 // (thuang): This is the max time a test can take to run.
 // Since when debugging, we run slowMo and !headless, this means
@@ -40,7 +38,7 @@ beforeEach(async () => {
         },
       });
       return;
-    } /* else if (interceptedRequest.url().endsWith("/config")) {
+    } if (interceptedRequest.url().endsWith("/config")) {
       const { referer } = interceptedRequest.headers();
       
       fetch(interceptedRequest.url()).then((response: any) => {
@@ -49,10 +47,12 @@ beforeEach(async () => {
             status: 200,
             contentType: "application/json",
             body: JSON.stringify({
-              ...body,
-              links: {
-                ...body.links,
-                "collections-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+              config: {
+                ...body.config,
+                links: {
+                  ...body.config.links,                
+                  "collections-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+                },              
               }
             }),
             headers: {
@@ -63,7 +63,7 @@ beforeEach(async () => {
         });
       });
       return;      
-    } */
+    }
     interceptedRequest.continue();
   });
 
