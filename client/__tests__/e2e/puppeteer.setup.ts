@@ -9,7 +9,6 @@ import fetch from "puppeteer-fetch";
 import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
-// TODO: uncomment this for breadcrumbs tests
 
 // (thuang): This is the max time a test can take to run.
 // Since when debugging, we run slowMo and !headless, this means
