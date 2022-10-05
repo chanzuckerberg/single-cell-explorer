@@ -41,7 +41,6 @@ class DuplicateCategorySelect extends React.PureComponent<{}, State> {
               onClick={handleClick}
               // @ts-expect-error ts-migrate(2322) FIXME: Type 'unknown' is not assignable to type 'Key | nu... Remove this comment to see the full error message
               key={d}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'unknown' is not assignable to type 'ReactNod... Remove this comment to see the full error message
               text={d}
             />
           )}

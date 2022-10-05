@@ -28,116 +28,127 @@ import { CategoryCrossfilterContext } from "../categoryContext";
 import { Dataframe, ContinuousHistogram } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
-import { RootState } from "../../../reducers";
-import { Schema } from "../../../common/types/schema";
+import { RootState, AppDispatch } from "../../../reducers";
+import { Schema, Category } from "../../../common/types/schema";
+import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
+import { AnnotationsState } from "../../../reducers/annotations";
+import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
+import { ColorTable } from "../../../util/stateManager/colorHelpers";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
 
-/* this is defined outside of the class so we can use it in connect() */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function _currentLabelAsString(ownProps: any) {
-  const { label } = ownProps;
-  // when called as a function, the String() constructor performs type conversion,
-  // and returns a primitive string.
+function _currentLabelAsString(label: Category): string {
   return String(label);
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
-
 interface PureCategoryValueProps {
   metadataField: string;
   colorMode: string;
-  categoryIndex: string;
-  categorySummary: any;
+  categoryIndex: number;
+  categorySummary: CategorySummary;
   colorAccessor: string;
-  colorTable: any;
-  colorData: any;
-  categoryData: any;
+  colorTable: ColorTable;
+  colorData: Dataframe | null;
+  categoryData: Dataframe;
   isUserAnno: boolean;
 }
 
-type CategoryValueProps = PureCategoryValueProps & {
-  annotations: any;
+interface StateProps {
+  annotations: AnnotationsState;
   schema: Schema;
   isDilated: boolean;
   isSelected: boolean;
   label: string;
-};
+  labelName: string;
+  isColorBy: boolean;
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect(((state: RootState, ownProps: PureCategoryValueProps) => {
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type Props = StateProps & PureCategoryValueProps & DispatchProps;
+
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  dispatch,
+});
+
+const mapStateToProps = (
+  state: RootState,
+  ownProps: PureCategoryValueProps
+): StateProps => {
   const { pointDilation, categoricalSelection } = state;
-  const { metadataField, categorySummary, categoryIndex } = ownProps;
+  const {
+    metadataField,
+    categorySummary,
+    colorAccessor,
+    colorMode,
+    categoryIndex,
+    categoryData,
+  } = ownProps;
+
+  const label = categorySummary.categoryValues[categoryIndex];
   const isDilated =
     pointDilation.metadataField === metadataField &&
-    pointDilation.categoryField === _currentLabelAsString(ownProps);
+    pointDilation.categoryField === _currentLabelAsString(label);
 
   const category = categoricalSelection[metadataField];
-  const label = categorySummary.categoryValues[categoryIndex];
+  const col = categoryData.icol(0);
+  const labelName = isDataframeDictEncodedColumn(col)
+    ? col.codeMapping[parseInt(label as string, 10)]
+    : label;
   const isSelected = category.get(label) ?? true;
 
+  const isColorBy =
+    metadataField === colorAccessor &&
+    colorMode === "color by categorical metadata";
   return {
     annotations: state.annotations,
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
-    label,
+    label: label as string,
+    labelName: labelName as string,
+    isColorBy,
   };
-}) as any)
-// TODO: type categorySummary
-// eslint-disable-next-line @typescript-eslint/ban-types --- issue with redux typing
-class CategoryValue extends React.Component<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- issue with redux typing
-  constructor(props: {}) {
+};
+interface InternalStateProps {
+  editedLabelText: string;
+}
+class CategoryValue extends React.Component<Props, InternalStateProps> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       editedLabelText: this.currentLabelAsString(),
     };
   }
 
-  componentDidUpdate(prevProps: CategoryValueProps): void {
-    const { metadataField, categoryIndex, categorySummary, colorMode } = this
-      .props as CategoryValueProps;
+  componentDidUpdate(prevProps: Props): void {
+    const { metadataField, categoryIndex, categorySummary, colorMode } =
+      this.props;
     if (
       prevProps.metadataField !== metadataField ||
       prevProps.colorMode !== colorMode ||
       prevProps.categoryIndex !== categoryIndex ||
       prevProps.categorySummary !== categorySummary
     ) {
-      // eslint-disable-next-line react/no-did-update-set-state --- adequately checked to prevent looping
       this.setState({
         editedLabelText: this.currentLabelAsString(),
       });
     }
   }
 
-  // If coloring by and this isn't the colorAccessor and it isn't being edited
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  get shouldRenderStackedBarOrHistogram() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
-    const { colorAccessor, isColorBy, annotations } = this.props;
-    return !!colorAccessor && !isColorBy && !annotations.isEditingLabelName;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleDeleteValue = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, label } = this.props;
     dispatch(actions.annotationDeleteLabelFromCategory(metadataField, label));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleAddCurrentSelectionToThisLabel = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, label } = this.props;
     dispatch(actions.annotationLabelCurrentSelection(metadataField, label));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleEditValue = (e: any) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, label } = this.props;
     const { editedLabelText } = this.state;
     this.cancelEditMode();
@@ -151,9 +162,7 @@ class CategoryValue extends React.Component<{}, State> {
     e.preventDefault();
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleCreateArbitraryLabel = (txt: any) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, label } = this.props;
     this.cancelEditMode();
     dispatch(
@@ -161,22 +170,17 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   labelNameError = (name: any) => {
-    const { metadataField, schema } = this.props as CategoryValueProps;
+    const { metadataField, schema } = this.props;
     if (name === this.currentLabelAsString()) return false;
     return isLabelErroneous(name, metadataField, schema);
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   instruction = (label: any) =>
     labelPrompt(this.labelNameError(label), "New, unique label", ":");
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   activateEditLabelMode = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this
-      .props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, label } = this.props;
     dispatch({
       type: "annotation: activate edit label mode",
       metadataField,
@@ -185,11 +189,8 @@ class CategoryValue extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   cancelEditMode = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this
-      .props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, label } = this.props;
     this.setState({
       editedLabelText: this.currentLabelAsString(),
     });
@@ -201,17 +202,11 @@ class CategoryValue extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   toggleOff = () => {
     track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
 
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-      dispatch,
-      metadataField,
-      categoryIndex,
-      categorySummary,
-    } = this.props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, categorySummary } =
+      this.props;
 
     const label = categorySummary.categoryValues[categoryIndex];
     dispatch(
@@ -226,8 +221,8 @@ class CategoryValue extends React.Component<{}, State> {
   };
 
   shouldComponentUpdate = (
-    nextProps: CategoryValueProps,
-    nextState: any
+    nextProps: Props,
+    nextState: InternalStateProps
   ): boolean => {
     /*
     Checks to see if at least one of the following changed:
@@ -240,7 +235,7 @@ class CategoryValue extends React.Component<{}, State> {
     If and only if true, update the component
     */
     const { state } = this;
-    const props = this.props as CategoryValueProps;
+    const {props} = this;
     const { categoryIndex, categorySummary, isSelected } = props;
     const {
       categoryIndex: newCategoryIndex,
@@ -283,17 +278,11 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   toggleOn = () => {
     track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
 
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-      dispatch,
-      metadataField,
-      categoryIndex,
-      categorySummary,
-    } = this.props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, categorySummary } =
+      this.props;
     const label = categorySummary.categoryValues[categoryIndex];
     dispatch(
       actions.selectCategoricalMetadataAction(
@@ -306,11 +295,8 @@ class CategoryValue extends React.Component<{}, State> {
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleMouseEnter = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this
-      .props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, label } = this.props;
     dispatch({
       type: "category value mouse hover start",
       metadataField,
@@ -319,11 +305,8 @@ class CategoryValue extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleMouseExit = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryIndex, label } = this
-      .props as CategoryValueProps;
+    const { dispatch, metadataField, categoryIndex, label } = this.props;
     dispatch({
       type: "category value mouse hover end",
       metadataField,
@@ -332,32 +315,18 @@ class CategoryValue extends React.Component<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleTextChange = (text: any) => {
+  handleTextChange = (text: string) => {
     this.setState({ editedLabelText: text });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleChoice = (e: any) => {
-    /* Blueprint Suggest format */
-    this.setState({ editedLabelText: e.target });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   createHistogramBins = (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    metadataField: any,
+    metadataField: string,
     categoryData: Dataframe,
-    // @ts-expect-error ts-migrate(6133) FIXME: 'colorAccessor' is declared but its value is never... Remove this comment to see the full error message
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    colorAccessor: any,
+    _colorAccessor: string,
     colorData: Dataframe,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    categoryValue: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    width: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    height: any
+    categoryValue: string,
+    width: number,
+    height: number
   ) => {
     /*
       Knowing that colorScale is based off continuous data,
@@ -391,23 +360,15 @@ class CategoryValue extends React.Component<{}, State> {
     };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   createStackedGraphBins = (
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    metadataField: any,
+    metadataField: string,
     categoryData: Dataframe,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    colorAccessor: any,
+    colorAccessor: string,
     colorData: Dataframe,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    categoryValue: any,
-    // @ts-expect-error ts-migrate(6133) FIXME: 'colorTable' is declared but its value is never re... Remove this comment to see the full error message
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    colorTable: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    schema: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    width: any
+    categoryValue: string,
+    _colorTable: ColorTable,
+    schema: Schema,
+    width: number
   ) => {
     /*
       Knowing that the color scale is based off of categorical data,
@@ -428,8 +389,7 @@ class CategoryValue extends React.Component<{}, State> {
         /* get all the keys d[1] as an array, then find the sum */
         .domain([0, d3.sum(Array.from(occupancy.values()))])
         .range([0, width]);
-      const categories =
-        schema.annotations.obsByName[colorAccessor]?.categories;
+      const {categories} = schema.annotations.obsByName[colorAccessor];
 
       const dfColumn = colorData.col(colorAccessor);
       const categoryValues = dfColumn.summarizeCategorical().categories;
@@ -444,19 +404,24 @@ class CategoryValue extends React.Component<{}, State> {
     return null;
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  currentLabelAsString() {
-    return _currentLabelAsString(this.props);
+  // If coloring by and this isn't the colorAccessor and it isn't being edited
+  shouldRenderStackedBarOrHistogram() {
+    const { colorAccessor, isColorBy, annotations } = this.props;
+    return !!colorAccessor && !isColorBy && !annotations.isEditingLabelName;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  currentLabelAsString() {
+    const { labelName } = this.props;
+    return _currentLabelAsString(labelName);
+  }
+
   isAddCurrentSelectionDisabled(crossfilter: any, category: any, value: any) {
     /*
     disable "add current selection to label", if one of the following is true:
     1. no cells are selected
     2. all currently selected cells already have this label, on this category
     */
-    const { categoryData } = this.props as CategoryValueProps;
+    const { categoryData } = this.props;
 
     // 1. no cells selected?
     if (crossfilter.countSelected() === 0) {
@@ -483,16 +448,18 @@ class CategoryValue extends React.Component<{}, State> {
       schema,
       label,
       colorMode,
-    } = this.props as CategoryValueProps;
+    } = this.props;
     const isColorBy =
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
 
+    if (!schema) return null;
     if (
       !this.shouldRenderStackedBarOrHistogram ||
       colorMode === "color by expression" ||
       !AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) ||
-      isColorBy
+      isColorBy ||
+      !colorData
     ) {
       return null;
     }
@@ -539,9 +506,9 @@ class CategoryValue extends React.Component<{}, State> {
       schema,
       label,
       colorMode,
-    } = this.props as CategoryValueProps;
+    } = this.props;
     const colorScale = colorTable?.scale;
-
+    if (!schema) return null;
     if (
       !this.shouldRenderStackedBarOrHistogram ||
       // This function returns true on categorical annotations(when stacked bar should not render),
@@ -549,7 +516,8 @@ class CategoryValue extends React.Component<{}, State> {
       (AnnotationsHelpers.isCategoricalAnnotation(schema, colorAccessor) ===
         true &&
         colorMode !== "color by expression" &&
-        colorMode !== "color by continuous metadata")
+        colorMode !== "color by continuous metadata") ||
+      !colorData
     ) {
       return null;
     }
@@ -596,7 +564,7 @@ class CategoryValue extends React.Component<{}, State> {
       categorySummary,
       label,
       colorMode,
-    } = this.props as CategoryValueProps;
+    } = this.props;
     const colorScale = colorTable?.scale;
 
     const { editedLabelText } = this.state;
@@ -692,8 +660,7 @@ class CategoryValue extends React.Component<{}, State> {
               <span
                 data-testid={`categorical-value-${metadataField}-${displayString}`}
                 data-testclass="categorical-value"
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-                tabIndex="-1"
+                tabIndex={-1}
                 style={{
                   width: labelWidth,
                   color:
@@ -786,8 +753,10 @@ class CategoryValue extends React.Component<{}, State> {
                 width: 15,
                 height: 15,
                 backgroundColor:
-                  isColorBy && categoryValueIndices
-                    ? colorScale(categoryValueIndices.get(label))
+                  isColorBy && categoryValueIndices && colorScale
+                    ? (colorScale(
+                        categoryValueIndices.get(label) ?? 0
+                      ) as string)
                     : "inherit",
               }}
             />
@@ -878,5 +847,4 @@ class CategoryValue extends React.Component<{}, State> {
     );
   }
 }
-
-export default CategoryValue;
+export default connect(mapStateToProps, mapDispatchToProps)(CategoryValue);

@@ -1,9 +1,21 @@
 /*
 Reducers for annotation UI-state.
 */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+
+import { AnyAction } from "redux";
+
+export interface AnnotationsState {
+  dataCollectionNameIsReadOnly: boolean;
+  dataCollectionName: string | null;
+  isEditingCategoryName: boolean;
+  isEditingLabelName: boolean;
+  categoryBeingEdited: string | null;
+  categoryAddingNewLabel: string | null;
+  labelEditable: { category: string | null; label: number | null };
+  promptForFilename: boolean;
+}
 const Annotations = (
-  state = {
+  state: AnnotationsState = {
     /*
     Annotations collection name - which will be used to save the named set of annotations
     in some persistent store (database, file system, etc).
@@ -29,8 +41,7 @@ const Annotations = (
     labelEditable: { category: null, label: null },
     promptForFilename: true,
   },
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  action: any
+  action: AnyAction
 ) => {
   switch (action.type) {
     case "configuration load complete": {

@@ -19,13 +19,14 @@
   },
   "engineStrict": true,
   "engines": {
-    "npm": ">=3.0.0"
+    "npm": ">=3.0.0",
+    "node": ">=16"
   },
   "eslintConfig": {
     "extends": "./configuration/eslint/eslint.js"
   },
   "eslintIgnore": [
-    "src/util/stateManager/matrix_generated.js"
+    "src/util/stateManager/net-encoding/*"
   ],
   "resolutions": {
     "eslint-scope": "3.7.1"
@@ -49,7 +50,7 @@
     "@emotion/styled": "^11.9.3",
     "@material-ui/core": "^4.12.4",
     "@material-ui/icons": "^4.11.3",
-    "@material-ui/lab": "*",
+    "@material-ui/lab": "^4.0.0-alpha.61",
     "abort-controller": "^3.0.0",
     "core-js": "^3.6.5",
     "czifui": "^6.6.0",
@@ -69,6 +70,7 @@
     "lodash.uniq": "^4.5.0",
     "memoize-one": "^5.1.1",
     "pako": "^2.0.3",
+    "puppeteer-fetch": "^0.3.1",
     "react": "^17.0.2",
     "react-async": "^10.0.1",
     "react-dom": "^17.0.2",

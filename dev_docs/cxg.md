@@ -2,7 +2,7 @@
 
 Document Status: _draft_
 
-Version: 0.2.0 (_DRAFT, not yet approved_)
+Version: 0.3.0 (_DRAFT, not yet approved_)
 
 Date Last Modified: 2021-09-29
 
@@ -40,9 +40,11 @@ CXG consumers (readers) MUST be prepared to handle any legal TileDB compression,
 ### CXG
 
 The CXG is a TileDB group containing all data and metadata for a single annotated matrix.  The following objects MUST be present in a CXG, except where noted as optional:
-* `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute.
+* `obs`: a TileDB array, of shape (n_obs,), containing obs annotations, each annotation stored in a separate TileDB array attribute. Annotations for categorical metadata may be encoded as integers for faster performance. The integers must correspond to the index location of the corresponding categories in the schema stored in the array's TileDB metadata (`ObsArray.meta['cxg_schema']`).
 * `var`: a TileDB array, of shape (n_var,), containing var annotations, each annotation stored in a separate TileDB array attribute.
-* `X`: a TileDB array, of shape (n_obs, n_var), with a single TileDB attribute of numeric type.
+* `X`: a TileDB array, of shape (n_obs, n_var) for dense data, with a single TileDB attribute of numeric type.
+* `Xr`: a TileDB array, of shape (n_obs) for sparse data, with two TileDB attributes of numeric type. The first ("") is expression data, and the second ("var") are the corresponding column indices. Used for row-slicing.
+* `Xc`: a TileDB array, of shape (n_var) for sparse data, with a single TileDB attribute of numeric type. The first ("") is expression data, and the second ("obs") are the corresponding row indices. Used for column-slicing.
 * `X_col_shift`: (optional) TileDB array used in column shift encoding, shape (n_var,), dtype = X.dtype. Single unnamed numeric attribute.  
 * `emb`: a TileDB group, which in turn contains all (zero or more) embeddings.
 * `emb/<EMBEDDING_NAME>`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
@@ -183,6 +185,7 @@ There were several ad hoc version of CXG files created prior to this spec.  This
 | ------- | ----------- | --------- |
 | _unnamed_ | An unnamed development version. Did not include explicit versioning support in the data model. Created in early 2020, and not actively used in production. | Missing `cxg_group_metadata` |
 | `0.1`       | The first version, defined to support the capabilities of the mid-2020 cellxgene.  Created in early 2020, and in active use. Includes everything in this spec, excluding Corpora schema support.  __NOTE:__ this version is encoded with a short-hand (malformed) semver version number. | `cxg_group_metadata.cxg_version == '0.1'` | 
-| `0.2.0`     | This specification and the current version.  Corpora Schema 1.0.0, 1.1.0, and 2.0.0 H5AD files have all been converted into CXG 0.2.0 files. CXG files generated from Corpora 1.x Schema files can be identified by the `corpora.version.corpora_schema_version` metadata property.  CXG files generated from Corpora 2.0.0 Schema files can be identified via the `corpora.schema_version=2.0.0` property. Arguably, the differences in `corpora` properties could have been captured in a new CXG file version, but in reality they all used the same 0.2.0 CXG version. In the near future, all CXG existing files will have been generated from Corpora 2.0.0 Schema files.  | `cxg_group_metadata.cxg_version == '0.2.0'` |
+| `0.2.0`     | Corpora Schema 1.0.0, 1.1.0, and 2.0.0 H5AD files have all been converted into CXG 0.2.0 files. CXG files generated from Corpora 1.x Schema files can be identified by the `corpora.version.corpora_schema_version` metadata property.  CXG files generated from Corpora 2.0.0 Schema files can be identified via the `corpora.schema_version=2.0.0` property. Arguably, the differences in `corpora` properties could have been captured in a new CXG file version, but in reality they all used the same 0.2.0 CXG version. In the near future, all CXG existing files will have been generated from Corpora 2.0.0 Schema files.  | `cxg_group_metadata.cxg_version == '0.2.0'` |
+| `0.3.0`     | This specification and the current version.  Sparse `X` arrays have been converted into two 1-dimensional arrays `Xr` and `Xc` for row- and column-slicing, respectively. To improve load times of categorical metadata, the `obs` cell metadata array has been updated to store categorical columns as integers. These integers correspond to the index locations of the categories in the schema type hints stored in the TileDB array metadata for `obs`. | `cxg_group_metadata.cxg_version == '0.3.0'` |
 
 You may use the `scripts/cxg_inspect.py`, available in this repository, to determine the version of a CXG file, along with the version of the Corpora Schema from which it may (or may not) have been generated.

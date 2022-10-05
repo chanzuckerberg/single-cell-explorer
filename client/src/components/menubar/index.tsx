@@ -11,12 +11,12 @@ import Clip from "./clip";
 
 import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
-import UndoRedoReset from "./undoRedo";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import Embedding from "../embedding";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -53,10 +53,6 @@ type State = any;
     scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     libraryVersions: (state as any).config?.library_versions,
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    undoDisabled: state["@@undoable/past"].length === 0,
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    redoDisabled: state["@@undoable/future"].length === 0,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     aboutLink: (state as any).config?.links?.["about-dataset"],
     disableDiffexp:
@@ -294,119 +290,131 @@ class MenuBar extends React.PureComponent<{}, State> {
       <div
         style={{
           display: "flex",
-          flexDirection: "row-reverse",
-          alignItems: "flex-start",
+          flexDirection: "row",
           flexWrap: "wrap",
-          marginLeft: "auto", // Right-align menubar if dataset selector is not enabled
-          justifyContent: "flex-start",
+          justifyContent: "space-between",
+          width: "100%",
         }}
       >
-        {seamlessEnabled ? (
-          <ButtonGroup className={styles.menubarButton}>
-            <AnchorButton
-              type="button"
-              icon={IconNames.INFO_SIGN}
-              onClick={() => {
-                dispatch({ type: "toggle dataset drawer" });
-              }}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid="drawer"
-            />
-          </ButtonGroup>
-        ) : null}
-        <UndoRedoReset
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ dispatch: any; undoDisabled: any; redoDisa... Remove this comment to see the full error message
-          dispatch={dispatch}
-          undoDisabled={undoDisabled}
-          redoDisabled={redoDisabled}
-        />
-        <Clip
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
-          pendingClipPercentiles={pendingClipPercentiles}
-          clipPercentileMin={clipPercentileMin}
-          clipPercentileMax={clipPercentileMax}
-          handleClipOpening={this.handleClipOpening}
-          handleClipClosing={this.handleClipClosing}
-          handleClipCommit={this.handleClipCommit}
-          isClipDisabled={this.isClipDisabled}
-          handleClipOnKeyPress={this.handleClipOnKeyPress}
-          handleClipPercentileMaxValueChange={
-            this.handleClipPercentileMaxValueChange
-          }
-          handleClipPercentileMinValueChange={
-            this.handleClipPercentileMinValueChange
-          }
-        />
-        <Tooltip
-          content="When a category is colored by, show labels on the graph"
-          position="bottom"
-          disabled={graphInteractionMode === "zoom"}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "left",
+          }}
         >
-          <AnchorButton
-            className={styles.menubarButton}
-            type="button"
-            data-testid="centroid-label-toggle"
-            icon="property"
-            onClick={this.handleCentroidChange}
-            active={showCentroidLabels}
-            intent={showCentroidLabels ? "primary" : "none"}
-            disabled={!isColoredByCategorical}
+          <Embedding />
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row-reverse",
+            flexWrap: "wrap",
+            justifyContent: "right",
+          }}
+        >
+          {seamlessEnabled ? (
+            <ButtonGroup className={styles.menubarButton}>
+              <AnchorButton
+                type="button"
+                icon={IconNames.INFO_SIGN}
+                onClick={() => {
+                  dispatch({ type: "toggle dataset drawer" });
+                }}
+                style={{
+                  cursor: "pointer",
+                }}
+                data-testid="drawer"
+              />
+            </ButtonGroup>
+          ) : null}
+          <Clip
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
+            pendingClipPercentiles={pendingClipPercentiles}
+            clipPercentileMin={clipPercentileMin}
+            clipPercentileMax={clipPercentileMax}
+            handleClipOpening={this.handleClipOpening}
+            handleClipClosing={this.handleClipClosing}
+            handleClipCommit={this.handleClipCommit}
+            isClipDisabled={this.isClipDisabled}
+            handleClipOnKeyPress={this.handleClipOnKeyPress}
+            handleClipPercentileMaxValueChange={
+              this.handleClipPercentileMaxValueChange
+            }
+            handleClipPercentileMinValueChange={
+              this.handleClipPercentileMinValueChange
+            }
           />
-        </Tooltip>
-        <ButtonGroup className={styles.menubarButton}>
           <Tooltip
-            content={selectionTooltip}
+            content="When a category is colored by, show labels on the graph"
             position="bottom"
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            disabled={graphInteractionMode === "zoom"}
           >
             <AnchorButton
+              className={styles.menubarButton}
               type="button"
-              data-testid="mode-lasso"
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
-              icon={selectionButtonIcon}
-              active={graphInteractionMode === "select"}
-              onClick={() => {
-                track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
-
-                dispatch({
-                  type: "change graph interaction mode",
-                  data: "select",
-                });
-              }}
+              data-testid="centroid-label-toggle"
+              icon="property"
+              onClick={this.handleCentroidChange}
+              active={showCentroidLabels}
+              intent={showCentroidLabels ? "primary" : "none"}
+              disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          <Tooltip
-            content="Drag to pan, scroll to zoom"
-            position="bottom"
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
-          >
-            <AnchorButton
-              type="button"
-              data-testid="mode-pan-zoom"
-              icon="zoom-in"
-              active={graphInteractionMode === "zoom"}
-              onClick={() => {
-                track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+          <ButtonGroup className={styles.menubarButton}>
+            <Tooltip
+              content={selectionTooltip}
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <AnchorButton
+                type="button"
+                data-testid="mode-lasso"
+                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
+                icon={selectionButtonIcon}
+                active={graphInteractionMode === "select"}
+                onClick={() => {
+                  track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
 
-                dispatch({
-                  type: "change graph interaction mode",
-                  data: "zoom",
-                });
-              }}
-            />
-          </Tooltip>
-        </ButtonGroup>
-        <Subset
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
-          subsetPossible={subsetPossible}
-          subsetResetPossible={subsetResetPossible}
-          handleSubset={this.handleSubset}
-          handleSubsetReset={this.handleSubsetReset}
-        />
-        {disableDiffexp ? null : <DiffexpButtons />}
-        <InfoDrawer />
+                  dispatch({
+                    type: "change graph interaction mode",
+                    data: "select",
+                  });
+                }}
+              />
+            </Tooltip>
+            <Tooltip
+              content="Drag to pan, scroll to zoom"
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <AnchorButton
+                type="button"
+                data-testid="mode-pan-zoom"
+                icon="zoom-in"
+                active={graphInteractionMode === "zoom"}
+                onClick={() => {
+                  track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+
+                  dispatch({
+                    type: "change graph interaction mode",
+                    data: "zoom",
+                  });
+                }}
+              />
+            </Tooltip>
+          </ButtonGroup>
+          <Subset
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
+            subsetPossible={subsetPossible}
+            subsetResetPossible={subsetResetPossible}
+            handleSubset={this.handleSubset}
+            handleSubsetReset={this.handleSubsetReset}
+          />
+          {disableDiffexp ? null : <DiffexpButtons />}
+          <InfoDrawer />
+        </div>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import React, { RefObject } from "react";
+import React from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
@@ -7,7 +7,6 @@ import { theme } from "./theme";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
-import FloatingButton from "./floatingButton/floatingButton";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
@@ -16,17 +15,20 @@ import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import Graph from "./graph/graph";
 import MenuBar from "./menubar";
-import Embedding from "./embedding";
-
+import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
+import GlobalHotkeys from "./hotkeys";
+import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 
 interface Props {
   dispatch: AppDispatch;
   loading: boolean;
   error: string;
   graphRenderCounter: number;
-  baseUrl: string; // Used for help button links
+  tosURL: string | undefined;
+  privacyURL: string | undefined;
+  seamlessEnabled: boolean;
 }
 
 class App extends React.Component<Props> {
@@ -46,7 +48,14 @@ class App extends React.Component<Props> {
   }
 
   render(): JSX.Element {
-    const { loading, error, graphRenderCounter, baseUrl } = this.props;
+    const {
+      loading,
+      error,
+      graphRenderCounter,
+      tosURL,
+      privacyURL,
+      seamlessEnabled,
+    } = this.props;
 
     return (
       <Container>
@@ -67,17 +76,18 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
+              {seamlessEnabled && (
+                <Header tosURL={tosURL} privacyURL={privacyURL} />
+              )}
               {loading || error ? null : (
-                <Layout>
-                  <LeftSideBar />
-                  {(viewportRef: RefObject<HTMLDivElement>) => (
+                <Layout
+                  seamlessEnabled={seamlessEnabled}
+                  renderGraph={(viewportRef: HTMLDivElement) => (
                     <>
+                      <GlobalHotkeys />
                       <Controls>
-                        <DatasetSelector />
                         <MenuBar />
                       </Controls>
-                      <Embedding />
-                      <FloatingButton baseUrl={baseUrl} />
                       <Legend />
                       <Graph
                         // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore
@@ -85,8 +95,13 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      <Controls bottom={0}>
+                        <DatasetSelector />
+                      </Controls>
                     </>
                   )}
+                >
+                  <LeftSideBar />
                   <RightSideBar />
                 </Layout>
               )}
@@ -102,10 +117,7 @@ export default connect((state: RootState) => ({
   loading: state.controls.loading,
   error: state.controls.error,
   graphRenderCounter: state.controls.graphRenderCounter,
-
-  // Used for help button links
-  baseUrl:
-    state.config?.portalUrl ||
-    state.config?.links?.["collections-home-page"] ||
-    "https://cellxgene.dev.single-cell.czi.technology",
+  tosURL: state.config?.parameters?.about_legal_tos,
+  privacyURL: state.config?.parameters?.about_legal_privacy,
+  seamlessEnabled: selectIsSeamlessEnabled(state),
 }))(App);

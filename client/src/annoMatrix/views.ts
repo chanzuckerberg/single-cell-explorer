@@ -140,9 +140,10 @@ class AnnoMatrixMapView extends AnnoMatrixView {
 
   async _doLoad(
     field: Field,
-    query: Query
+    query: Query,
+    nBins: number | null = null
   ): Promise<[WhereCache | null, Dataframe]> {
-    const df = await this.viewOf._fetch(field, query);
+    const df = await this.viewOf._fetch(field, query, nBins);
     const dfMapped = df.mapColumns(
       (colData: DataframeValueArray, _colIdx: number, colLabel: LabelType) => {
         const colSchema = _getColumnSchema(this.schema, field, colLabel);
@@ -194,15 +195,15 @@ export class AnnoMatrixRowSubsetView extends AnnoMatrixView {
 
   async _doLoad(
     field: Field,
-    query: Query
+    query: Query,
+    nBins: number | null = null
   ): Promise<[WhereCache | null, Dataframe]> {
-    const df = await this.viewOf._fetch(field, query);
+    const df = await this.viewOf._fetch(field, query, nBins);
 
     // don't try to row-subset the var dimension.
     if (field === Field.var) {
       return [null, df];
     }
-
     const dfSubset = df.subset(null, null, this.rowIndex);
     const whereCacheUpdate = _whereCacheCreate(
       field,

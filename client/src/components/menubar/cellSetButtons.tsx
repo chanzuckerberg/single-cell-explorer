@@ -42,8 +42,6 @@ class CellSetButton extends React.PureComponent {
           }}
           data-testid={`cellset-button-${eitherCellSetOneOrTwo}`}
         >
-          {eitherCellSetOneOrTwo}
-          {": "}
           <span data-testid={`cellset-count-${eitherCellSetOneOrTwo}`}>
             {cellsSelected}
           </span>

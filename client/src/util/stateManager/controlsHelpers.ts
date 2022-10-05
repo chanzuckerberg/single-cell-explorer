@@ -65,7 +65,7 @@ export function selectableCategoryNames(
   return names.filter((name) => isSelectableCategoryName(schema, name));
 }
 
-interface CategorySummary {
+export interface CategorySummary {
   // Array of natively typed category values (all of them)
   allCategoryValues: Category[];
   // Array of natively typed category values (top N only)

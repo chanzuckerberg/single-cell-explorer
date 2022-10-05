@@ -15,6 +15,9 @@ export const DATASET_MAX_CELL_COUNT = 2_000_000;
 /* Category name suffix used to determine if category name is ontology term id. */
 export const ONTOLOGY_KEY = "ontology_term_id";
 
+/* Unified navigation bar header height. */
+export const HEADER_HEIGHT_PX = 48;
+
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
@@ -78,6 +81,9 @@ export const globalConfig = {
   /* if a categorical metadata field has more options than this, truncate */
   maxCategoricalOptionsToDisplay: 200,
 };
+
+/* is mac os? */
+export const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 /* colors */
 export const blue = Colors.BLUE3;
@@ -148,6 +154,10 @@ export const maxMenuItemCount = 9;
 /* various timing-related behaviors */
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
+
+/* number of bins to use for lossy integer compression */
+export const numBinsEmb = 5000;
+export const numBinsObsX = 500;
 
 const CXG_SERVER_PORT =
   process.env.CXG_SERVER_PORT || ENV_DEFAULT.CXG_SERVER_PORT;

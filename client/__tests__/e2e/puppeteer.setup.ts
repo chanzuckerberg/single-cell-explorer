@@ -5,6 +5,7 @@
  */
 
 import { setDefaultOptions } from "expect-puppeteer";
+import fetch from "puppeteer-fetch";
 import { isDebug, isDev } from "./config";
 import * as ENV_DEFAULT from "../../../environment.default.json";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
@@ -26,7 +27,6 @@ beforeEach(async () => {
   page.on("request", (interceptedRequest) => {
     if (interceptedRequest.url().endsWith("/dataset-metadata")) {
       const { referer } = interceptedRequest.headers();
-
       interceptedRequest.respond({
         status: 200,
         contentType: "application/json",
@@ -38,6 +38,31 @@ beforeEach(async () => {
         },
       });
       return;
+    } if (interceptedRequest.url().endsWith("/config")) {
+      const { referer } = interceptedRequest.headers();
+      
+      fetch(interceptedRequest.url()).then((response: any) => {
+        response.json().then((body: any) => {
+          interceptedRequest.respond({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              config: {
+                ...body.config,
+                links: {
+                  ...body.config.links,                
+                  "collections-home-page": "https://cellxgene.cziscience.com/dummy-collection",
+                },              
+              }
+            }),
+            headers: {
+              "Access-Control-Allow-Origin": referer.slice(0, referer.length - 1),
+              "Access-Control-Allow-Credentials": "true",
+            },
+          });
+        });
+      });
+      return;      
     }
     interceptedRequest.continue();
   });

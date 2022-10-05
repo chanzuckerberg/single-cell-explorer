@@ -47,10 +47,15 @@ class FbsTests(unittest.TestCase):
                 "a": np.zeros((10,), dtype=np.float32),
                 "b": np.ones((10,), dtype=np.int64),
                 "c": np.array([i for i in range(0, 10)], dtype=np.uint16),
-                "d": pd.Series(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"], dtype="category"),
+                "d": pd.Categorical(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"]),
             }
         )
-        expected_types = ((np.ndarray, np.float32), (np.ndarray, np.int32), (np.ndarray, np.int32), (list, None))
+        expected_types = (
+            (np.ndarray, np.float32),
+            (np.ndarray, np.int32),
+            (np.ndarray, np.int32),
+            (pd.Categorical, df["d"].dtype),
+        )
         fbs = encode_matrix_fbs(matrix=df, row_idx=None, col_idx=df.columns)
         self.fbs_checks(fbs, (10, 4), expected_types, ["a", "b", "c", "d"])
 
@@ -65,6 +70,24 @@ class FbsTests(unittest.TestCase):
         expected_types = ((np.ndarray, np.int32), (np.ndarray, np.int32), (np.ndarray, np.int32))
         fbs = encode_matrix_fbs(matrix=csc, row_idx=None, col_idx=None)
         self.fbs_checks(fbs, (2, 3), expected_types, None)
+
+    def test_encode_categorical_8(self):
+        cat8 = pd.DataFrame(pd.Categorical(np.arange(2 ** 7 - 2)))
+        expected_types = ((pd.Categorical, cat8[0].dtype),)
+        fbs = encode_matrix_fbs(matrix=cat8, row_idx=None, col_idx=None)
+        self.fbs_checks(fbs, (2 ** 7 - 2, 1), expected_types, None)
+
+    def test_encode_categorical_16(self):
+        cat16 = pd.DataFrame(pd.Categorical(np.arange(2 ** 15 - 2)))
+        expected_types = ((pd.Categorical, cat16[0].dtype),)
+        fbs = encode_matrix_fbs(matrix=cat16, row_idx=None, col_idx=None)
+        self.fbs_checks(fbs, (2 ** 15 - 2, 1), expected_types, None)
+
+    def test_encode_categorical_32(self):
+        cat32 = pd.DataFrame(pd.Categorical(np.arange(2 ** 15 - 1)))
+        expected_types = ((pd.Categorical, cat32[0].dtype),)
+        fbs = encode_matrix_fbs(matrix=cat32, row_idx=None, col_idx=None)
+        self.fbs_checks(fbs, (2 ** 15 - 1, 1), expected_types, None)
 
     def test_roundtrip(self):
         dfSrc = pd.DataFrame(
@@ -95,7 +118,7 @@ to create the client schema).
 
 The following test cases are all dicts which contain the following keys:
     - dataframe - the dataframe used as input for encode_matrix_fbs
-    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Float32Array)
+    - expected_fbs_types - upon success, dict of FBS column types expected (eg, Float32FBArray)
     - expected_schema_hints - upon success, dict of schema hint
 All are keyed by column name.
 """
@@ -106,21 +129,36 @@ int_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in int_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Int32Array) for dtype in int_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Int32FBArray) for dtype in int_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "int32"}) for dtype in int_dtypes]),
+        "nbins": None
     }
 ]
 
-# simple tests that we convert all floats to float32
+# simple tests that we convert all floats to float32 arrays
 float_dtypes = [np.dtype(d) for d in [np.float16, np.float32, np.float64]]
 float_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in float_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Float32Array) for dtype in float_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Float32FBArray) for dtype in float_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "float32"}) for dtype in float_dtypes]),
+        "nbins": None
+    }
+]
+
+# simple tests that we convert all floats to int16-encoded arrays
+lossy_float_dtypes = [np.dtype(d) for d in [np.float16, np.float32, np.float64]]
+lossy_float_test_cases = [
+    {
+        "dataframe": pd.DataFrame({dtype.name: np.zeros((10,), dtype=dtype) for dtype in float_dtypes}),
+        "expected_fbs_types": dict(
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Int16EncodedXFBArray) for dtype in float_dtypes]
+        ),
+        "expected_schema_hints": dict([(dtype.name, {"type": "float32"}) for dtype in float_dtypes]),
+        "nbins": 500
     }
 ]
 
@@ -130,48 +168,55 @@ bool_test_cases = [
     {
         "dataframe": pd.DataFrame({dtype.name: np.ones((10,), dtype=dtype) for dtype in bool_dtypes}),
         "expected_fbs_types": dict(
-            [(dtype.name, fbs.NetEncoding.TypedArray.TypedArray.Uint32Array) for dtype in bool_dtypes]
+            [(dtype.name, fbs.NetEncoding.TypedFBArray.TypedFBArray.Uint32FBArray) for dtype in bool_dtypes]
         ),
         "expected_schema_hints": dict([(dtype.name, {"type": "boolean"}) for dtype in bool_dtypes]),
+        "nbins": None
     }
 ]
 
 cat_test_cases = [
     {
         "dataframe": pd.DataFrame({"a": pd.Series(["a", "b", "c", "a", "b", "c"], dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical", "categories": ["a", "b", "c"]}},
+        "nbins": None
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(["a", "b", "c", "a", "b", "c"], dtype="category").cat.remove_categories("b")}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical", "categories": ["a", "c"]}},
+        "nbins": None
     },
     {
         "dataframe": pd.DataFrame({"a": pd.Series(np.arange(0, 10, dtype=np.int64), dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Int32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
+        "nbins": None
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(np.arange(0, 10, dtype=np.int64), dtype="category").cat.remove_categories(2)}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
+        "nbins": None
     },
     {
         "dataframe": pd.DataFrame({"a": pd.Series(np.arange(0, 10, dtype=np.float64), dtype="category")}),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
+        "nbins": None
     },
     {
         "dataframe": pd.DataFrame(
             {"a": pd.Series(np.arange(0, 10, dtype=np.float64), dtype="category").cat.remove_categories(2)}
         ),
-        "expected_fbs_types": {"a": fbs.NetEncoding.TypedArray.TypedArray.Float32Array},
+        "expected_fbs_types": {"a": fbs.NetEncoding.TypedFBArray.TypedFBArray.DictEncoded8FBArray},
         "expected_schema_hints": {"a": {"type": "categorical"}},
+        "nbins": None
     },
 ]
 
@@ -179,6 +224,7 @@ cat_test_cases = [
 test_cases = [
     *int_test_cases,
     *float_test_cases,
+    *lossy_float_test_cases,
     *bool_test_cases,
     *cat_test_cases,
 ]
@@ -190,7 +236,7 @@ class TestTypeConversionConsistency(unittest.TestCase):
         self.assertEqual(self.dataframe.shape[1], len(self.expected_fbs_types))
         self.assertEqual(self.dataframe.shape[1], len(self.expected_schema_hints))
 
-        buf = encode_matrix_fbs(matrix=self.dataframe, col_idx=self.dataframe.columns)
+        buf = encode_matrix_fbs(matrix=self.dataframe, col_idx=self.dataframe.columns, num_bins = self.nbins)
         encoding_dtypes, schema_hints = get_dtypes_and_schemas_of_dataframe(self.dataframe)
 
         # check schema hints
@@ -203,8 +249,8 @@ class TestTypeConversionConsistency(unittest.TestCase):
         columns_length = matrix.ColumnsLength()
         self.assertEqual(columns_length, self.dataframe.shape[1])
 
-        self.assertEqual(matrix.ColIndexType(), fbs.NetEncoding.TypedArray.TypedArray.JSONEncodedArray)
-        col_labels_arr = fbs.NetEncoding.JSONEncodedArray.JSONEncodedArray()
+        self.assertEqual(matrix.ColIndexType(), fbs.NetEncoding.TypedFBArray.TypedFBArray.JSONEncodedFBArray)
+        col_labels_arr = fbs.NetEncoding.JSONEncodedFBArray.JSONEncodedFBArray()
         col_labels_arr.Init(matrix.ColIndex().Bytes, matrix.ColIndex().Pos)
         col_index_labels = json.loads(col_labels_arr.DataAsNumpy().tobytes().decode("utf-8"))
         self.assertEqual(len(col_index_labels), self.dataframe.shape[1])

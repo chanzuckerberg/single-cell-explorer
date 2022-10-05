@@ -30,6 +30,7 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
   const y2 = elBox.content[0].y + end.y;
   await page.mouse.move(x1, y1);
   await page.mouse.down();
+
   if (lasso) {
     await page.mouse.move(x2, y1);
     await page.mouse.move(x2, y2);
@@ -38,7 +39,22 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
   } else {
     await page.mouse.move(x2, y2);
   }
+
   await page.mouse.up();
+}
+
+export async function keyboardUndo() {
+  await page.keyboard.down("MetaLeft");
+  await page.keyboard.press("KeyZ");
+  await page.keyboard.up("MetaLeft");
+}
+
+export async function keyboardRedo() {
+  await page.keyboard.down("MetaLeft");
+  await page.keyboard.down("ShiftLeft");
+  await page.keyboard.press("KeyZ");
+  await page.keyboard.up("ShiftLeft");
+  await page.keyboard.up("MetaLeft");
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -151,6 +167,27 @@ export async function calcCoordinate(
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+export async function calcTransformCoordinate(
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  testId: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  xAsPercent: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  yAsPercent: any
+) {
+  const el = await waitByID(testId);
+  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
+  const size = await el.boxModel();
+  // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
+  const height = size.height - size.content[0].y
+  return {
+    // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
+    x: Math.floor(size.width * xAsPercent),
+    y: Math.floor(height * yAsPercent),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 export async function calcDragCoordinates(
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   testId: any,
@@ -164,6 +201,27 @@ export async function calcDragCoordinates(
       coordinateAsPercent.y1
     ),
     end: await calcCoordinate(
+      testId,
+      coordinateAsPercent.x2,
+      coordinateAsPercent.y2
+    ),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+export async function calcTransformDragCoordinates(
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  testId: any,
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  coordinateAsPercent: any
+) {
+  return {
+    start: await calcTransformCoordinate(
+      testId,
+      coordinateAsPercent.x1,
+      coordinateAsPercent.y1
+    ),
+    end: await calcTransformCoordinate(
       testId,
       coordinateAsPercent.x2,
       coordinateAsPercent.y2

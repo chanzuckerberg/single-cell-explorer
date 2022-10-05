@@ -4,7 +4,10 @@ import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
 import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
-import { Schema } from "../../common/types/schema";
+import {
+  CategoricalAnnotationColumnSchema,
+  Schema,
+} from "../../common/types/schema";
 import Collapse from "../../util/collapse";
 import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
 import AnnoDialog from "../annoDialog";
@@ -161,7 +164,9 @@ class Categories extends React.Component<{}, State> {
       return true;
     }
     // Only display categoricals if they have more than one value.
-    return columnSchema.categories.length > 1;
+    return (
+      (columnSchema as CategoricalAnnotationColumnSchema).categories.length > 1
+    );
   };
 
   /**

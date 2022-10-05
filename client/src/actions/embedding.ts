@@ -8,6 +8,7 @@ import { AnnoMatrixObsCrossfilter } from "../annoMatrix";
 import type { AppDispatch, GetState, RootState } from "../reducers";
 import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
+import * as globals from "../globals";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 export async function _switchEmbedding(
@@ -22,7 +23,11 @@ export async function _switchEmbedding(
   DRY helper used by embedding action creators
   */
   const base = prevAnnoMatrix.base();
-  const embeddingDf = await base.fetch("emb", newEmbeddingName);
+  const embeddingDf = await base.fetch(
+    "emb",
+    newEmbeddingName,
+    globals.numBinsEmb
+  );
   const annoMatrix = _setEmbeddingSubset(prevAnnoMatrix, embeddingDf);
   const obsCrossfilter = await new AnnoMatrixObsCrossfilter(
     annoMatrix,

@@ -269,7 +269,7 @@ class HistogramBrush extends React.PureComponent {
 
     const query = this.createQuery();
     // @ts-expect-error ts-migrate(2488) FIXME: Type 'any[] | null' must have a '[Symbol.iterator]... Remove this comment to see the full error message
-    const df: Dataframe = await annoMatrix.fetch(...query);
+    const df: Dataframe = await annoMatrix.fetch(...query, globals.numBinsObsX);
     const column = df.icol(0);
 
     // if we are clipped, fetch both our value and our unclipped value,
@@ -279,7 +279,10 @@ class HistogramBrush extends React.PureComponent {
 
     let unclippedRange = [...range];
     if (isClipped) {
-      const parent: Dataframe = await annoMatrix.viewOf.fetch(...query);
+      const parent: Dataframe = await annoMatrix.viewOf.fetch(
+        ...query,
+        globals.numBinsObsX
+      );
       const { min, max } = parent.icol(0).summarizeContinuous();
       unclippedRange = [min, max];
     }

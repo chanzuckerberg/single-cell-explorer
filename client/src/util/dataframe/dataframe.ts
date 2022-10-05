@@ -4,12 +4,14 @@ import {
   isAnyArray,
   AnyArray,
   GenericArrayConstructor,
+  isDictEncodedTypedArray,
 } from "../../common/types/arraytypes";
 import { IdentityInt32Index, LabelIndex, isLabelIndex } from "./labelIndex";
 import {
   summarizeContinuous as _summarizeContinuous,
   summarizeCategorical as _summarizeCategorical,
 } from "./summarize";
+
 import {
   histogramCategorical as _histogramCategorical,
   histogramCategoricalBy as _histogramCategoricalBy,
@@ -31,7 +33,6 @@ import {
   ContinuousHistogram,
   ContinuousHistogramBy,
 } from "./types";
-
 /*
 Dataframe is an immutable 2D matrix similar to Python Pandas Dataframe,
 but (currently) without all of the surrounding support functions.
@@ -101,7 +102,6 @@ export type MapColumnsCallbackFn = (
 function raiseIsNotContinuous<R = void>(): R {
   throw TypeError("Column is not a continuous data type.");
 }
-
 class Dataframe {
   /** @internal */
   private __columns: DataframeValueArray[];
@@ -155,6 +155,7 @@ class Dataframe {
     if (!colIndex) {
       colIndex = new IdentityInt32Index(nCols);
     }
+
     Dataframe.__errorChecks(dims, columnarData, rowIndex, colIndex);
 
     this.__columns = Array.from(columnarData);
@@ -163,7 +164,6 @@ class Dataframe {
     this.rowIndex = rowIndex;
     this.colIndex = colIndex;
     this.__id = __getMemoId();
-
     this.__compile(__columnsAccessor);
     Object.freeze(this);
   }
@@ -251,6 +251,8 @@ class Dataframe {
     const { length } = column;
     const __id = __getMemoId();
     const isContinuous = isTypedArray(column);
+    const isDictEncoded = isDictEncodedTypedArray(column);
+
     const memoHistogramContinuous = memoize(
       _histogramContinuous,
       hashContinuous
@@ -341,6 +343,15 @@ class Dataframe {
     get.histogramCategoricalBy = (by: DataframeColumn) =>
       memoHistogramCategoricalBy(get, by);
 
+    if (isDictEncoded) {
+      get.codeMapping = column.codeMapping;
+      get.invCodeMapping = Object.fromEntries(
+        Object.entries(column.codeMapping).map((row) => [
+          row[1],
+          parseInt(row[0], 10),
+        ])
+      );
+    }
     get.asArray = asArray;
     get.has = has;
     get.ihas = ihas;
@@ -348,7 +359,6 @@ class Dataframe {
     get.iget = iget;
     get.__id = __id;
     get.isContinuous = isContinuous;
-
     Object.freeze(get);
     return get;
   }
@@ -674,8 +684,12 @@ class Dataframe {
         >)(rowOffsets.length);
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
           const rowOffset = rowOffsets[i];
+
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
           newCol[i] = col[rowOffset];
+        }
+        if (isDictEncodedTypedArray(col) && isDictEncodedTypedArray(newCol)) {
+          newCol.setCodeMapping(col.codeMapping);
         }
         return newCol;
       });
@@ -706,6 +720,7 @@ class Dataframe {
     If withRowIndex is specified, rowLabels is ignored.
     */
     let rowIndex = null;
+
     if (withRowIndex) {
       rowIndex = withRowIndex;
     } else if (rowLabels) {
@@ -852,7 +867,12 @@ class Dataframe {
     const roff = this.rowIndex.getOffset(r);
     if (coff === undefined || roff === undefined)
       throw new RangeError("Unknown row or column label.");
-    return this.__columns[coff][roff];
+
+    const col = this.__columns[coff];
+    if (isDictEncodedTypedArray(col)) {
+      return col.vat(roff);
+    }
+    return col[roff];
   }
 
   iat(r: OffsetType, c: OffsetType): DataframeValue {
@@ -865,8 +885,13 @@ class Dataframe {
 
     const myVal = df.ihas(r, c) ? df.iat(r, c) : undefined;
     */
-    if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0])
-      return this.__columns[c][r];
+    if (c >= 0 && c < this.dims[1] && r >= 0 && r < this.dims[0]) {
+      const col = this.__columns[c];
+      if (isDictEncodedTypedArray(col)) {
+        return col.vat(r);
+      }
+      return col[r];
+    }
     throw new RangeError("Unknown row or column index.");
   }
 
@@ -934,14 +959,12 @@ class Dataframe {
 
     callback MUST not modify the column, but instead return a mutated copy.
     */
-    const columns = this.__columns.map((colData, colIdx) =>
-      callback(
+    const columns = this.__columns.map((colData, colIdx) => callback(
         colData,
         colIdx,
         this.colIndex.getLabel(colIdx) as LabelType,
         this
-      )
-    );
+      ));
     const columnsAccessor: (DataframeColumn | null)[] = columns.map((c, idx) =>
       this.__columns[idx] === c ? this.__columnsAccessor[idx] : null
     );

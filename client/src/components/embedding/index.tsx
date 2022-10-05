@@ -56,13 +56,11 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on type 'Re... Remove this comment to see the full error message
     const { layoutChoice, schema, crossfilter } = this.props;
     const { annoMatrix } = crossfilter;
+
     return (
       <ButtonGroup
         style={{
-          position: "absolute",
-          display: "inherit",
-          left: 8,
-          bottom: 8,
+          paddingTop: 8,
           zIndex: 9999,
         }}
       >
@@ -76,15 +74,13 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
               <Button
                 type="button"
                 data-testid="layout-choice"
-                icon="heatmap"
-                // minimal
                 id="embedding"
                 style={{
                   cursor: "pointer",
                 }}
                 onClick={this.handleLayoutChoiceClick}
               >
-                {layoutChoice?.current}: {crossfilter.countSelected()} out of{" "}
+                {layoutChoice?.current}: {crossfilter.countSelected()} of{" "}
                 {crossfilter.size()} cells
               </Button>
             </Tooltip>
@@ -125,7 +121,9 @@ export default Embedding;
 const loadAllEmbeddingCounts = async ({ annoMatrix, available }: any) => {
   const embeddings = await Promise.all(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    available.map((name: any) => annoMatrix.base().fetch("emb", name))
+    available.map((name: any) =>
+      annoMatrix.base().fetch("emb", name, globals.numBinsEmb)
+    )
   );
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'name' implicitly has an 'any' type.
   return available.map((name, idx) => ({

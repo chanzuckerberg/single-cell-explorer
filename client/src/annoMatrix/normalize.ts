@@ -13,6 +13,7 @@ import {
   Category,
   CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
+import { isDictEncodedTypedArray } from "../common/types/arraytypes";
 
 export function normalizeResponse(
   field: Field,
@@ -137,13 +138,7 @@ export function normalizeCategorical(
 
   // consolidate all categories from data and schema into a single list
   const colDataSummary = col.summarizeCategorical();
-  const allCategories = new Set<Category>(
-    // TODO #35: Use type guards instead of casting
-
-    colDataSummary.categories.concat(
-      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
-    )
-  );
+  const allCategories = new Set<Category>(colDataSummary.categories);
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {
@@ -169,13 +164,17 @@ export function normalizeCategorical(
   topNCategories.add(overflowCatName);
 
   // rewrite data - consolidate all excess labels into overflow label
-  const newColData = Array.from(col.asArray());
+  const colData = col.asArray();
+  const newColData = new Array(colData.length);
   for (let i = 0; i < newColData.length; i += 1) {
-    if (!topNCategories.has(newColData[i])) {
+    if (!topNCategories.has(colData[i])) {
       newColData[i] = overflowCatName;
+    } else if (isDictEncodedTypedArray(colData)) {
+      newColData[i] = colData.vat(i);
+    } else {
+      newColData[i] = colData[i];
     }
   }
-
   // replace data in dataframe
   df = df.replaceColData(colLabel, newColData);
 

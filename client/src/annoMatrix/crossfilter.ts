@@ -27,6 +27,7 @@ import {
 import { Query } from "./query";
 import { TypedArray } from "../common/types/arraytypes";
 import { LabelArray } from "../util/dataframe/types";
+import * as globals from "../globals";
 
 function _dimensionNameFromDf(field: Field, df: Dataframe): string {
   const colNames = df.colIndex.labels();
@@ -207,8 +208,26 @@ export default class AnnoMatrixObsCrossfilter {
       throw new Error("unable to obsSelect upon the var dimension");
     }
 
+    // set the correct number of bins for lossy compression of float arrays based on field
+    let nBins;
+    switch (field) {
+      case "emb": {
+        nBins = globals.numBinsEmb;
+        break;
+      }
+      case "obs":
+      case "X": {
+        nBins = globals.numBinsObsX;
+        break;
+      }
+      default: {
+        nBins = null;
+        break;
+      }
+    }
+
     // grab the data, so we can grab the index.
-    const df = await annoMatrix.fetch(field, query);
+    const df = await annoMatrix.fetch(field, query, nBins);
     if (!df) {
       throw new Error("Dataframe cannot be `undefined`");
     }

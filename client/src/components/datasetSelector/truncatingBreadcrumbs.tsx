@@ -63,14 +63,6 @@ const STYLE_MEASURE_SPAN: CSSProperties = {
   visibility: "hidden",
 };
 
-// Inline styles for breadcrumbs container
-const STYLE_WRAPPER = {
-  flex: 1,
-  flexGrow: 1,
-  marginTop: "8px", // Match margin on sibling menu buttons (TODO move to controls container and remove from here and menu)
-  overflow: "hidden",
-};
-
 /**
  * Individual Breadcrumb States
  * ----------------------------
@@ -216,7 +208,10 @@ const TruncatingBreadcrumbs = React.memo<Props>(
           text: config.displayAs,
         };
         return (
-          <li key={`bc-${config.item.shortText}`}>
+          <li
+            data-testid={`bc-${config.item.shortText}`}
+            key={`bc-${config.item.shortText}`}
+          >
             {isCurrentBreadcrumb(configs, i)
               ? currentBreadcrumbRenderer(props)
               : breadcrumbRenderer(props)}
@@ -225,7 +220,15 @@ const TruncatingBreadcrumbs = React.memo<Props>(
       });
 
     return (
-      <div style={STYLE_WRAPPER}>
+      <div
+        style={{
+          overflow: "visible",
+          position: "absolute",
+          bottom: 8,
+          left: 8,
+          width: "100%",
+        }}
+      >
         <ResizeSensor onResize={onResize}>
           <ul className={Classes.BREADCRUMBS} style={STYLE_BREADCRUMBS}>
             {renderBreadcrumbs(breadcrumbConfigs)}

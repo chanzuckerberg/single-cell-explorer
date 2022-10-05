@@ -1,8 +1,8 @@
-import genesetsUIReducer from "../../src/reducers/genesetsUI";
+import genesetsUIReducer, { GeneSetsUIState } from "../../src/reducers/genesetsUI";
 
 // Format: GeneSetsUI(state,action)
 
-const initialState = {
+const initialState: GeneSetsUIState = {
   createGenesetModeActive: false,
   isEditingGenesetName: false,
   isAddingGenesToGeneset: false,
@@ -30,7 +30,7 @@ describe("geneset UI states", () => {
   });
   test("geneset: disable create geneset mode", () => {
     expect(
-      genesetsUIReducer(undefined, { isEditingGenesetName: false })
+      genesetsUIReducer(undefined, { type: "geneset: disable rename geneset mode", isEditingGenesetName: false })
     ).toMatchObject(initialState);
   });
 

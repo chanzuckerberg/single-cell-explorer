@@ -215,7 +215,8 @@ class Category extends React.PureComponent {
         schema,
         genesets
       );
-      if (query) colorDataPromise = annoMatrix.fetch(...query);
+      if (query)
+        colorDataPromise = annoMatrix.fetch(...query, globals.numBinsObsX);
     }
     const [categoryData, colorData]: [Dataframe, Dataframe | null] =
       await Promise.all([
@@ -665,7 +666,6 @@ const CategoryValueList = React.memo(
           {tuples.map(([value, index]) => (
             <Value
               key={value}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}
@@ -688,7 +688,6 @@ const CategoryValueList = React.memo(
         {tuples.map(([value, index]) => (
           <Flipped key={value} flipId={value}>
             <Value
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isUserAnno: any; metadataField: any; categ... Remove this comment to see the full error message
               isUserAnno={isUserAnno}
               metadataField={metadataField}
               categoryIndex={index}

@@ -23,7 +23,6 @@ services:
 
   explorer:
     image: "${DOCKER_REPO}corpora-explorer"
-    platform: linux/amd64
     build:
       context: .
       dockerfile: hosted/Dockerfile

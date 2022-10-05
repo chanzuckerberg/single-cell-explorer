@@ -144,6 +144,13 @@ export function _urlEncodeLabelQuery(colKey: string, q: Query): string {
   return `${colKey}=${encodeURIComponent(q)}`;
 }
 
+export function _urlOptionalEncodeNbinsSuffix(
+  url: string,
+  nBins: number | null
+): string {
+  return nBins ? `${url}&nbins=${encodeURIComponent(nBins)}` : url;
+}
+
 /**
  * Generate the column key the server will send us for this query.
  */

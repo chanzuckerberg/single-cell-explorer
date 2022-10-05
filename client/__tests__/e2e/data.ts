@@ -1,3 +1,17 @@
+const truncate: {[key: string]: string} = {};
+const truncateLabels = [];
+for (let i = 0; i < 999; i+=1) {
+  truncateLabels.push(`CellType${i}`)
+}
+truncateLabels.push(`CellType1100`)
+truncateLabels.sort();
+truncateLabels.push("truncate: all other labels")
+for (let i = 0; i < truncateLabels.length; i+=1) {
+  truncate[truncateLabels[i]] = "1"
+}
+truncate.CellType1100 = "400";
+truncate["truncate: all other labels"] = "101";
+
 export const datasets = {
   "pbmc3k.cxg": {
     title: "pbmc3k.cxg",
@@ -83,7 +97,7 @@ export const datasets = {
           values: ["B cells", "Megakaryocytes"],
         },
       ],
-      count: "357",
+      count: "332",
       categorical: {
         louvain: {
           "B cells": "342",
@@ -98,14 +112,14 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.05, x2: 0.75, y2: 0.55 },
-        count: "331",
+        count: "357",
       },
     },
     scatter: {
       genes: { x: "S100A8", y: "FCGR3A" },
     },
     pan: {
-      "coordinates-as-percent": { x1: 0.75, y1: 0.75, x2: 0.35, y2: 0.35 },
+      "coordinates-as-percent": { x1: 0.75, y1: 0.75, x2: 0.25, y2: 0.25 },
     },
     features: {
       panzoom: {
@@ -144,4 +158,15 @@ export const datasets = {
       "gene-cell-count": "416",
     },
   },
+  "truncation-test.cxg": {
+    title: "test data",
+    dataframe: {
+      nObs: "300",
+      nVar: "2",
+      type: "float32",
+    },
+    categorical: {
+      truncate
+    }
+  },  
 };

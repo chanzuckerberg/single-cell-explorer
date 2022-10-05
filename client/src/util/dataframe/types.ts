@@ -1,4 +1,8 @@
-import { TypedArray } from "../../common/types/arraytypes";
+import { DictEncodedArray, TypedArray } from "../../common/types/arraytypes";
+import {
+  CodeMapping,
+  InvCodeMapping,
+} from "../stateManager/code_mapping_interfaces";
 
 export type LabelType = number | string;
 
@@ -44,17 +48,20 @@ export type CategoricalHistogramBy = Map<DataframeValue, CategoricalHistogram>;
 
 export type DataframeValue = number | string | boolean;
 
-export type DataframeValueArray = DataframeValue[] | TypedArray;
+export type DataframeValueArray =
+  | DataframeValue[]
+  | TypedArray
+  | DictEncodedArray;
 
 export type DataframeColumnGetter = (
   label: LabelType
 ) => DataframeValue | undefined;
 
 /**
- * Interface representing a Dataframe column.  Eg, returned by
+ * Interface representing a numeric Dataframe column.  Eg, returned by
  * Dataframe.col().
  */
-export interface DataframeColumn extends DataframeColumnGetter {
+export interface DataframeNumericColumn extends DataframeColumnGetter {
   /**
    * __id is unique per Dataframe and DataframeColumn, and is used as a memoization key.
    */
@@ -137,3 +144,24 @@ export interface DataframeColumn extends DataframeColumnGetter {
    */
   iget: (offset: OffsetType) => DataframeValue | undefined;
 }
+
+/**
+ * Sub-interface representing a Dataframe dictionary encoded column.
+ */
+export interface DataframeDictEncodedColumn extends DataframeNumericColumn {
+  codeMapping: CodeMapping;
+  invCodeMapping: InvCodeMapping;
+}
+
+/**
+ * Type guard for DataframeDictEncodedColumn
+ */
+export const isDataframeDictEncodedColumn = (
+  col: DataframeColumn
+): col is DataframeDictEncodedColumn => "codeMapping" in col;
+/**
+ * Union of numeric and dictionary-encoded column types.
+ */
+export type DataframeColumn =
+  | DataframeDictEncodedColumn
+  | DataframeNumericColumn;
