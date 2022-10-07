@@ -18,7 +18,7 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
-
+from packaging import version
 
 class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
@@ -178,12 +178,11 @@ class CxgDataset(Dataset):
             # version >0
             gmd = self.open_array("cxg_group_metadata")
             cxg_version = gmd.meta["cxg_version"]
-            # version 0.1 used a malformed/shorthand semver string.
-            if cxg_version == "0.1" or cxg_version == "0.2.0":
+            if version.parse(cxg_version) >= version.parse("0.1.0"):
                 cxg_properties = json.loads(gmd.meta["cxg_properties"])
                 title = cxg_properties.get("title", None)
                 about = cxg_properties.get("about", None)
-            if cxg_version == "0.2.0":
+            if version.parse(cxg_version) >= version.parse("0.2.0"):
                 corpora_props = json.loads(gmd.meta["corpora"]) if "corpora" in gmd.meta else None
         else:
             # version 0
