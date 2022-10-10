@@ -59,6 +59,7 @@ const Header = (props: HeaderProps) => {
                 href={ROUTES.COLLECTIONS}
                 minimal
                 text="Collections"
+                onClick={handleCollectionsClick}
               />
             </LinkWrapper>
             <LinkWrapper>
@@ -67,6 +68,7 @@ const Header = (props: HeaderProps) => {
                 href={ROUTES.DATASETS}
                 minimal
                 text="Datasets"
+                onClick={handleDatasetsClick}
               />
             </LinkWrapper>
             <LinkWrapper>
@@ -148,6 +150,12 @@ const Header = (props: HeaderProps) => {
 
   function handleWMGClick(): void {
     track(EVENTS.WMG_CLICK_NAV);
+  }
+  function handleDatasetsClick(): void {
+    track(EVENTS.DATASETS_CLICK_NAV);
+  }
+  function handleCollectionsClick(): void {
+    track(EVENTS.COLLECTIONS_CLICK_NAV);
   }
 };
 Header.defaultProps = {
