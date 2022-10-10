@@ -53,6 +53,10 @@ const skipOnActions = new Set<string>([
 
   /* dataset metadata */
   "dataset metadata load complete",
+
+  /* geneInfo actions */
+  "minimize/maximize gene info",
+  "open gene info",
 ]);
 
 /*
@@ -113,6 +117,10 @@ const saveOnActions = new Set<string>([
   "geneset: add genes",
   "geneset: delete genes",
   "geneset: set gene description",
+
+  /* geneInfo actions */
+  "load gene info",
+  "clear gene info",
 ]);
 
 /**
