@@ -3,6 +3,7 @@ import os
 import unittest
 from unittest.mock import patch
 
+from urllib.parse import quote
 
 from server.common.config.base_config import BaseConfig
 from server.common.utils.utils import find_available_port
@@ -237,17 +238,24 @@ class TestServerConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get(f"/set1/1/2/pbmc3k.cxg/api/v0.2/config")
+        def _get_v03_url(url):  # TODO inline and do not use an API call to generate
+            response = session.get(f"{url}/api/v0.3/s3_uri")
+            s3_uri = quote(quote(response.json, safe=""), safe="")
+            return f"/s3_uri/{s3_uri}/api/v0.3"
 
+        v03_url = _get_v03_url("/set1/1/2/pbmc3k.cxg")
+        response = session.get(f"{v03_url}/config")
         data_config = json.loads(response.data)
         assert data_config["config"]["displayNames"]["dataset"] == "pbmc3k"
 
-        response = session.get("/set2/pbmc3k.cxg/api/v0.2/config")
+        v03_url = _get_v03_url("/set2/pbmc3k.cxg")
+        response = session.get(f"{v03_url}/config")
 
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
 
-        response = session.get("/set3/pbmc3k.cxg/api/v0.2/config")
+        v03_url = _get_v03_url("/set3/pbmc3k.cxg")
+        response = session.get(f"{v03_url}/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
 

@@ -6,14 +6,13 @@ import os
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint, request
+from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint, request, Response
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
 from server.app.api import webbp, cache_control_always, cache_control
 from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
-from server.app.api.v2 import register_api_v2
 from server.app.api.v3 import register_api_v3
 from server.common.errors import (
     DatasetAccessError,
@@ -25,6 +24,8 @@ from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.dataset.matrix_loader import MatrixDataLoader
+
+logging.basicConfig(level=logging.INFO)
 
 
 @webbp.errorhandler(RequestException)
@@ -183,7 +184,6 @@ class Server:
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
-        register_api_v2(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
         register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
 
         if app_config.is_multi_dataset():
@@ -205,3 +205,17 @@ class Server:
         def pre_request_logging():
             message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
             self.app.logger.info(message)
+
+        @self.app.after_request
+        def post_request_logging(response: Response):
+            message = json.dumps(
+                dict(
+                    status_code=response.status_code,
+                    content_length=response.content_length,
+                    url=request.path,
+                    method=request.method,
+                    schema=request.scheme,
+                )
+            )
+            self.app.logger.info(message)
+            return response
