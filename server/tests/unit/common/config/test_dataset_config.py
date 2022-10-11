@@ -125,22 +125,20 @@ class TestDatasetConfig(ConfigTests):
             s3_uri = quote(quote(response.json, safe=""), safe="")
             return f"/s3_uri/{s3_uri}/api/v0.3"
 
-
+        v03_url = _get_v03_url("/set1/1/2/pbmc3k.cxg")
         with self.subTest("Test config for dataroot /set1/1/2/ returns the s1 config"):
-            v03_url = _get_v03_url("/set1/1/2/pbmc3k.cxg")
             response1 = session.get(f"{v03_url}/config")
             data_config_set_1 = json.loads(response1.data)
-
             self.assertEqual(data_config_set_1["config"]["displayNames"]["dataset"], "pbmc3k")
 
+        v03_url = _get_v03_url("/set2/pbmc3k.cxg")
         with self.subTest("Test config for dataroot /set2 returns the s2 config"):
-            v03_url = _get_v03_url("/set2/pbmc3k.cxg")
             response2 = session.get(f"{v03_url}/config")
             data_config_set_2 = json.loads(response2.data)
             self.assertEqual(data_config_set_2["config"]["displayNames"]["dataset"], "pbmc3k")
 
+        v03_url = _get_v03_url("/set3/pbmc3k.cxg")
         with self.subTest("Test config for dataroot /set3/ returns the default dataset config"):
-            v03_url = _get_v03_url("/set3/pbmc3k.cxg")
             response3 = session.get(f"{v03_url}/config")
             data_config_set_3 = json.loads(response3.data)
             self.assertEqual(data_config_set_3["config"]["displayNames"]["dataset"], "pbmc3k")
