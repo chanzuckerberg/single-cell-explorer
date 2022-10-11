@@ -50,7 +50,7 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        def _get_v03_url(url):
+        def _get_v03_url(url):  # TODO inline and do not use an API call to generate
             response = session.get(f"{url}/api/v0.3/s3_uri")
             s3_uri = quote(quote(response.json, safe=""), safe="")
             return f"/s3_uri/{s3_uri}/api/v0.3"
