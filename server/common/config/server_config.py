@@ -229,7 +229,7 @@ class ServerConfig(BaseConfig):
 
             # sanity check for well formed base urls
             bad = False
-            if not isinstance(base_url,str):
+            if not isinstance(base_url, str):
                 bad = True
             elif os.path.normpath(base_url) != base_url:
                 bad = True

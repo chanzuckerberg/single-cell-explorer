@@ -60,9 +60,7 @@ class BaseConfig(object):
     def validate_correct_type_of_configuration_attribute(self, attrname, vtype):
         val = getattr(self, attrname)
         if not isinstance(val, vtype):
-            tnames = ",".join([x.__name__ for x in vtype]) \
-                if isinstance(vtype, (list, tuple)) \
-                else vtype.__name__
+            tnames = ",".join([x.__name__ for x in vtype]) if isinstance(vtype, (list, tuple)) else vtype.__name__
             error = f"Invalid type for attribute: {attrname}, expected types ({tnames}), got {type(val).__name__}"
             raise ConfigurationError(error)
         self.attr_checked[attrname] = True
