@@ -54,10 +54,7 @@ class AppConfig(object):
         self.is_completed = False
 
     def get_dataset_config(self, dataroot_key):
-        if self.server_config.single_dataset__datapath:
-            return self.default_dataset_config
-        else:
-            return self.dataroot_config.get(dataroot_key, self.default_dataset_config)
+        return self.dataroot_config.get(dataroot_key, self.default_dataset_config)
 
     def check_config(self):
         """Verify all the attributes in the config have been type checked"""
@@ -231,15 +228,7 @@ class AppConfig(object):
         return self.server_config.multi_dataset__dataroot is not None
 
     def get_title(self, data_adaptor):
-        return (
-            self.server_config.single_dataset__title
-            if self.server_config.single_dataset__title
-            else data_adaptor.get_title()
-        )
+        return data_adaptor.get_title()
 
     def get_about(self, data_adaptor):
-        return (
-            self.server_config.single_dataset__about
-            if self.server_config.single_dataset__about
-            else data_adaptor.get_about()
-        )
+        return data_adaptor.get_about()

@@ -192,10 +192,9 @@ except Exception:
     logging.critical("Caught exception during initialization", exc_info=True)
     sys.exit(1)
 
-if app_config.is_multi_dataset():
-    logging.info(f"starting server with multi_dataset__dataroot={app_config.server_config.multi_dataset__dataroot}")
-else:
-    logging.info(f"starting server with single_dataset__datapath={app_config.server_config.single_dataset__datapath}")
+
+logging.info(f"starting server with multi_dataset__dataroot={app_config.server_config.multi_dataset__dataroot}")
+
 
 if __name__ == "__main__":
     try:

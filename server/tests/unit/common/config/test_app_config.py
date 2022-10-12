@@ -51,14 +51,6 @@ class AppConfigTest(ConfigTests):
         self.assertDictEqual(server_config, expected_server_config)
         self.assertDictEqual(dataset_config, expected_dataset_config)
 
-    def test_get_dataset_config_returns_default_dataset_config_for_single_datasets(self):
-        datapath = f"{FIXTURES_ROOT}/some_dataset.cxg"
-        file_name = self.custom_app_config(dataset_datapath=datapath, config_file_name=self.config_file_name)
-        config = AppConfig()
-        config.update_from_config_file(file_name)
-
-        self.assertEqual(config.get_dataset_config(""), config.default_dataset_config)
-
     def test_update_server_config_updates_server_config_and_config_status(self):
         config = self.get_config()
         config.complete_config()
@@ -140,8 +132,6 @@ class AppConfigTest(ConfigTests):
             app_config.update_from_config_file(configfile)
             server_changes = app_config.server_config.changes_from_default()
             self.assertEqual(server_changes, [])
-            single_dataset_changes = app_config.default_dataset_config.changes_from_default()
-            self.assertEqual(single_dataset_changes, [("app__about_legal_tos", "expected_value", None)])
 
     def test_simple_update_single_config_from_path_and_value(self):
         """Update a simple config parameter"""

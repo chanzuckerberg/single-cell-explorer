@@ -1,3 +1,4 @@
+import unittest
 from urllib.parse import quote
 import json
 import os
@@ -12,7 +13,7 @@ import requests
 from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
-from server.tests.unit import BaseTest as _BaseTest, skip_if
+from server.tests.unit import BaseTest as _BaseTest
 from server.common.diffexpdu import DiffExArguments
 
 
@@ -534,7 +535,7 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
 
-    @skip_if(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
+    @unittest.skipIf(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):
         endpoint = "static"
         file = "assets/favicon.ico"
