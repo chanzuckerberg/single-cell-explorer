@@ -135,7 +135,7 @@ class ServerConfig(BaseConfig):
         if self.data_locator__s3__region_name is True:
             path = self.single_dataset__datapath or self.multi_dataset__dataroot
 
-            if type(path) == dict:
+            if isinstance(path, dict):
                 # if multi_dataset__dataroot is a dict, then use the first key
                 # that is in s3.   NOTE:  it is not supported to have dataroots
                 # in different regions.
@@ -215,7 +215,7 @@ class ServerConfig(BaseConfig):
         if self.multi_dataset__dataroot is None:
             return
 
-        if type(self.multi_dataset__dataroot) == str:
+        if isinstance(self.multi_dataset__dataroot, str):
             default_dict = dict(base_url="d", dataroot=self.multi_dataset__dataroot)
             self.multi_dataset__dataroot = dict(d=default_dict)
 
@@ -229,7 +229,7 @@ class ServerConfig(BaseConfig):
 
             # sanity check for well formed base urls
             bad = False
-            if type(base_url) != str:
+            if not isinstance(base_url,str):
                 bad = True
             elif os.path.normpath(base_url) != base_url:
                 bad = True
@@ -259,7 +259,7 @@ class ServerConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("adaptor__cxg_adaptor__tiledb_ctx", dict)
         regionkey = "vfs.s3.region"
         if regionkey not in self.adaptor__cxg_adaptor__tiledb_ctx:
-            if type(self.data_locator__s3__region_name) == str:
+            if isinstance(self.data_locator__s3__region_name, str):
                 self.adaptor__cxg_adaptor__tiledb_ctx[regionkey] = self.data_locator__s3__region_name
 
         from server.dataset.cxg_dataset import CxgDataset
