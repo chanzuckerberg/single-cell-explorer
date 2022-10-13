@@ -23,9 +23,6 @@ type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
-  writableCategoriesEnabled:
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    (state as any).config?.parameters?.annotations ?? false,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   schema: (state as any).annoMatrix?.schema,
 }))
@@ -59,22 +56,6 @@ class Categories extends React.Component<{}, State> {
       newCategoryText: "",
     });
     e.preventDefault();
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleEnableAnnoMode = () => {
-    track(EVENTS.EXPLORER_OPEN_CREATE_GENESET_DIALOG_BUTTON_CLICKED);
-
-    this.setState({ createAnnoModeActive: true });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDisableAnnoMode = () => {
-    this.setState({
-      createAnnoModeActive: false,
-      categoryToDuplicate: null,
-      newCategoryText: "",
-    });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -224,67 +205,6 @@ class Categories extends React.Component<{}, State> {
           paddingBottom: 0,
         }}
       >
-        <AnnoDialog
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isActive: any; title: string; instruction:... Remove this comment to see the full error message
-          isActive={createAnnoModeActive}
-          title="Create new category"
-          instruction={this.instruction(newCategoryText)}
-          cancelTooltipContent="Close this dialog without creating a category."
-          primaryButtonText="Create new category"
-          primaryButtonProps={{ "data-testid": "submit-category" }}
-          text={newCategoryText}
-          validationError={this.categoryNameError(newCategoryText)}
-          handleSubmit={this.handleCreateUserAnno}
-          handleCancel={this.handleDisableAnnoMode}
-          annoInput={
-            <LabelInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ labelSuggestions: null; onChange: (name: a... Remove this comment to see the full error message
-              labelSuggestions={null}
-              onChange={this.handleChange}
-              onSelect={this.handleSelect}
-              inputProps={{
-                "data-testid": "new-category-name",
-                leftIcon: "tag",
-                intent: "none",
-                autoFocus: true,
-              }}
-              newLabelMessage="New category"
-            />
-          }
-          annoSelect={
-            <AnnoSelect
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ handleModalDuplicateCategorySelection: (d:... Remove this comment to see the full error message
-              handleModalDuplicateCategorySelection={
-                this.handleModalDuplicateCategorySelection
-              }
-              categoryToDuplicate={categoryToDuplicate}
-              allCategoryNames={selectableCategoryNames}
-            />
-          }
-        />
-        {writableCategoriesEnabled ? (
-          <div style={{ marginBottom: 10 }}>
-            <Tooltip
-              content="Create a new category"
-              position={Position.RIGHT}
-              boundary="viewport"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-              modifiers={{
-                preventOverflow: { enabled: false },
-                hide: { enabled: false },
-              }}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="open-annotation-dialog"
-                onClick={this.handleEnableAnnoMode}
-                intent="primary"
-              >
-                Create new <strong>category</strong>
-              </AnchorButton>
-            </Tooltip>
-          </div>
-        ) : null}
         {/* STANDARD FIELDS */}
         {/* this is duplicative but flat, could be abstracted */}
         {standardCategoryNames.length ? (
@@ -303,6 +223,7 @@ class Categories extends React.Component<{}, State> {
             ))}
           </Collapse>
         ) : null}
+        
         {/* AUTHOR FIELDS */}
         {authorCategoryNames.length ? (
           <Collapse>
