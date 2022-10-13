@@ -10,7 +10,6 @@ import {
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
 import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
-import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
@@ -496,15 +495,6 @@ export default {
   clipAction: viewActions.clipAction,
   subsetAction: viewActions.subsetAction,
   resetSubsetAction: viewActions.resetSubsetAction,
-  annotationCreateCategoryAction: annoActions.annotationCreateCategoryAction,
-  annotationRenameCategoryAction: annoActions.annotationRenameCategoryAction,
-  annotationDeleteCategoryAction: annoActions.annotationDeleteCategoryAction,
-  annotationCreateLabelInCategory: annoActions.annotationCreateLabelInCategory,
-  annotationDeleteLabelFromCategory:
-    annoActions.annotationDeleteLabelFromCategory,
-  annotationRenameLabelInCategory: annoActions.annotationRenameLabelInCategory,
-  annotationLabelCurrentSelection: annoActions.annotationLabelCurrentSelection,
-  needToSaveObsAnnotations: annoActions.needToSaveObsAnnotations,
   layoutChoiceAction: embActions.layoutChoiceAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
   genesetDelete: genesetActions.genesetDelete,
