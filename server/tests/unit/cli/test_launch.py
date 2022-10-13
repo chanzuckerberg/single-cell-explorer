@@ -5,7 +5,6 @@ import unittest
 
 import yaml
 
-from server.default_config import default_config
 from server.tests import FIXTURES_ROOT
 
 
@@ -22,6 +21,8 @@ class CLIPLaunchTests(unittest.TestCase):
 
     def test_dump_default_config(self):
         os.system(f"./launch_dev_server.sh --dump-default-config > {self.tmp_dir}/test_config_dump.txt")
+        with open("./server/default_config.yml") as default_config_fp:
+            default_config = yaml.load(default_config_fp, Loader=yaml.Loader)
         with open(f"{self.tmp_dir}/expected_config_dump.txt", "w") as expected_config:
             expected_config.write(yaml.dump(default_config))
         filecmp.cmp(f"{self.tmp_dir}/expected_config_dump.txt", f"{self.tmp_dir}/test_config_dump.txt")
