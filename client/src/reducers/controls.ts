@@ -64,6 +64,10 @@ interface ControlsState {
   graphRenderCounter: number;
   colorLoading: boolean;
   datasetDrawer: boolean;
+  geneUrl: string;
+  geneSummary: string;
+  geneName: string;
+  geneSynonyms: string[];
 }
 const Controls = (
   state: ControlsState = {
@@ -79,6 +83,10 @@ const Controls = (
     geneIsOpen: false,
     scatterplotIsMinimized: false,
     geneIsMinimized: false,
+    geneUrl: "",
+    geneSummary: "",
+    geneSynonyms: [""],
+    geneName: "",
     scatterplotLevel: "",
     scatterplotIsOpen: false,
     geneLevel: "",
@@ -93,6 +101,7 @@ const Controls = (
   /*
   For now, log anything looking like an error to the console.
   */
+
   if (action.error || /error/i.test(action.type)) {
     console.error(action.error);
   }
@@ -176,46 +185,29 @@ const Controls = (
         state.scatterplotIsMinimized = true;
         state.geneIsMinimized = false;
       }
-      state.geneIsOpen = true;
 
       const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
-        state.geneIsOpen,
+        true,
         state.scatterplotLevel,
         state.scatterplotIsMinimized,
         state.scatterplotIsOpen
       );
-      state.geneLevel = stackLevels.geneLevel;
-      state.scatterplotLevel = stackLevels.scatterplotLevel;
-      // new gene clicked in the span of loading
-      if (state.gene !== action.gene) {
-        return {
-          ...state,
-          geneIsOpen: state.geneIsOpen,
-          gene: state.gene,
-          geneUrl: "",
-          geneSummary: "",
-          geneSynonyms: [""],
-          geneName: "",
-          geneIsMinimized: state.geneIsMinimized,
-          geneLevel: state.geneLevel,
-          infoError: state.infoError,
-          showWarningBanner: action.showWarningBanner,
-        };
-      }
+
       return {
         ...state,
-        geneIsOpen: state.geneIsOpen,
+        geneIsOpen: true,
         gene: action.gene,
         geneUrl: action.url,
         geneSummary: action.summary,
         geneSynonyms: action.synonyms,
         geneName: action.name,
         geneIsMinimized: false,
-        geneLevel: state.geneLevel,
+        geneLevel: stackLevels.geneLevel,
         infoError: action.infoError,
         showWarningBanner: action.showWarningBanner,
+        scatterplotLevel: stackLevels.scatterplotLevel,
       };
     }
 
@@ -229,31 +221,28 @@ const Controls = (
         state.scatterplotIsMinimized = true;
         state.geneIsMinimized = false;
       }
-      state.geneIsOpen = true;
 
       const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
-        state.geneIsOpen,
+        true,
         state.scatterplotLevel,
         state.scatterplotIsMinimized,
         state.scatterplotIsOpen
       );
-      state.geneLevel = stackLevels.geneLevel;
-      state.scatterplotLevel = stackLevels.scatterplotLevel;
-      state.gene = action.gene;
 
       return {
         ...state,
-        geneIsOpen: state.geneIsOpen,
+        geneIsOpen: true,
         gene: action.gene,
         geneUrl: "",
         geneSummary: "",
         geneSynonyms: [""],
         geneName: "",
         geneIsMinimized: false,
-        geneLevel: state.geneLevel,
+        geneLevel: stackLevels.geneLevel,
         infoError: null,
+        scatterplotLevel: stackLevels.scatterplotLevel,
       };
     }
 
@@ -270,35 +259,33 @@ const Controls = (
         state.scatterplotIsMinimized,
         state.scatterplotIsOpen
       );
-      state.geneLevel = stackLevels.geneLevel;
-      state.scatterplotLevel = stackLevels.scatterplotLevel;
+
       return {
         ...state,
         geneIsMinimized: state.geneIsMinimized,
-        geneLevel: state.geneLevel,
+        geneLevel: stackLevels.geneLevel,
         scatterplotIsMinimized: state.scatterplotIsMinimized,
+        scatterplotLevel: stackLevels.scatterplotLevel,
         infoError: state.infoError,
       };
     }
 
     case "clear gene info": {
-      state.geneIsOpen = false;
       const stackLevels = minimizeMaximizePopUps(
         state.geneLevel,
         state.geneIsMinimized,
-        state.geneIsOpen,
+        false,
         state.scatterplotLevel,
         state.scatterplotIsMinimized,
         state.scatterplotIsOpen
       );
-      state.geneLevel = stackLevels.geneLevel;
-      state.scatterplotLevel = stackLevels.scatterplotLevel;
 
       return {
         ...state,
-        geneIsOpen: state.geneIsOpen,
+        geneIsOpen: false,
         geneIsMinimized: null,
-        geneLevel: state.geneLevel,
+        geneLevel: stackLevels.geneLevel,
+        scatterplotLevel: stackLevels.scatterplotLevel,
         infoError: action.infoError,
       };
     }
