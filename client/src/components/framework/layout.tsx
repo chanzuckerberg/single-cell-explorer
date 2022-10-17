@@ -30,7 +30,7 @@ const Layout: React.FC<Props> = (props) => {
     <div
       style={{
         display: "grid",
-        paddingTop: seamlessEnabled ? globals.HEADER_HEIGHT_PX : 0,
+        paddingTop: seamlessEnabled ?? true ? globals.HEADER_HEIGHT_PX : 0,
         gridTemplateColumns: `
         [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
         [left-sidebar-end graph-start] auto
