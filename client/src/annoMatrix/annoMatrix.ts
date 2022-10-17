@@ -3,8 +3,6 @@ import {
   IdentityInt32Index,
   dataframeMemo,
   LabelType,
-  DataframeValue,
-  DataframeValueArray,
 } from "../util/dataframe";
 import {
   _getColumnDimensionNames,
@@ -23,9 +21,7 @@ import _shallowClone from "./clone";
 import { _queryValidate, _queryCacheKey, Query } from "./query";
 import { GCHints } from "../common/types/entities";
 import {
-  AnnotationColumnSchema,
   Field,
-  EmbeddingSchema,
   Schema,
   ArraySchema,
   RawSchema,
@@ -342,142 +338,6 @@ export default abstract class AnnoMatrix {
    ** The actual implementation is in the sub-classes, which MUST override these.
    **/
 
-  /*
-  Add a new category value (aka "label") to a writable obs column, and return the new AnnoMatrix.
-  Typical use is to add a new user-created label to a user-created obs categorical
-  annotation.
-
-  Will throw column does not exist or is not writable.
-
-  Example:
-
-    addObsAnnoCategory("my cell type", "left toenail") -> AnnoMatrix
-
-  */
-  abstract addObsAnnoCategory(col: string, category: string): AnnoMatrix;
-
-  /*
-  Remove a category value from an obs column, reassign any obs having that value
-  to the 'unassignedCategory' value, and return a promise for a new AnnoMatrix.
-  Typical use is to remove a user-created label from a user-created obs categorical
-  annotation.
-
-  Will throw column does not exist or is not writable.
-
-  An `unassignedCategory` value must be provided, for assignment to any obs/cells
-  that had the now-delete category label as their value.
-
-  Example:
-    await removeObsAnnoCategory("my-tissue-type", "right earlobe", "unassigned") -> AnnoMatrix
-
-  NOTE: method is async as it may need to fetch data to provide the reassignment.
-  */
-  abstract removeObsAnnoCategory(
-    col: string,
-    category: string,
-    unassignedCategory: string
-  ): Promise<AnnoMatrix>;
-
-  /*
-  Drop an entire writable column, eg a user-created obs annotation.  Typical use
-  is to provide the "Delete Category" implementation.  Returns the new AnnoMatrix.
-  Will throw if not a writable annotation.
-
-  Will throw column does not exist or is not writable.
-
-  Example:
-
-    dropObsColumn("old annotations") ->  AnnoMatrix
-  */
-  abstract dropObsColumn(col: string): AnnoMatrix;
-
-  /*
-  Add a new writable OBS annotation column, with the caller-specified schema, initial value
-  type and value.
-
-  Value may be any one of:
-    * an array of values
-    * a primitive type, including null or undefined.
-  If an array, length must be the same as 'this.nObs', and constructor must equal 'Ctor'.
-  If a primitive, 'Ctor' will be used to create the initial value, which will be filled
-  with 'value'.
-
-  Throws if the name specified in 'colSchema' duplicates an existing obs column.
-
-  Returns a new AnnoMatrix.
-
-  Examples:
-
-    addObsColumn(
-      { name: "foo", type: "categorical", categories: "unassigned" },
-      Array,
-      "unassigned"
-    ) -> AnnoMatrix
-
-   */
-  abstract addObsColumn<T extends DataframeValueArray>(
-    colSchema: AnnotationColumnSchema,
-    Ctor: new (n: number) => T,
-    value: T
-  ): AnnoMatrix;
-
-  /*
-  Rename the obs column 'oldCol' to have name 'newCol' and returns new AnnoMatrix.
-
-  Will throw column does not exist or is not writable, or if 'newCol' is not unique.
-
-  Example:
-
-    renameObsColumn('cell type', 'old cell type') -> AnnoMatrix.
-
-  */
-  abstract renameObsColumn(oldCol: LabelType, newCol: LabelType): AnnoMatrix;
-
-  /*
-  Set all obs with label in array 'obsLabels' to have 'value'.  Typical use would be
-  to set a group of cells to have a label on a user-created categorical annotation
-  (eg set all selected cells to have a label).
-
-  NOTE: async method, as it may need to fetch.
-
-  Will throw column does not exist or is not writable.
-
-  Example:
-    await setObsColumnValues("flavor", [383, 400], "tasty") -> AnnoMatrix
-  */
-  abstract setObsColumnValues(
-    col: string,
-    obsLabels: Int32Array,
-    value: DataframeValue
-  ): Promise<AnnoMatrix>;
-
-  /*
-  Set by value - all elements in the column with value 'oldValue' are set to 'newValue'.
-  Async method - returns a promise for a new AnnoMatrix.
-
-  Typical use would be to set all labels of one value to another.
-
-  Will throw column does not exist or is not writable.
-
-  Example:
-    await resetObsColumnValues("my notes", "good", "not-good") -> AnnoMatrix
-
-    */
-  abstract resetObsColumnValues<T extends DataframeValue>(
-    col: string,
-    oldValue: T,
-    newValue: T
-  ): Promise<AnnoMatrix>;
-
-  /*
-  Add a new obs embedding to the AnnoMatrix, with provided schema.
-  Returns a new annomatrix.
-
-  Typical use will be to add a re-embedding that the server has calculated.
-
-  Will throw if the column schema is invalid (eg, duplicate name).
-  */
-  abstract addEmbedding(colSchema: EmbeddingSchema): AnnoMatrix;
 
   getCacheKeys(
     field: Field,

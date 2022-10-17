@@ -3,20 +3,11 @@ import React from "react";
 import * as d3 from "d3";
 
 import {
-  Button,
   Classes,
-  Icon,
-  Menu,
-  MenuItem,
-  Popover,
-  PopoverInteractionKind,
-  Position,
 } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
-import AnnoDialog from "../../annoDialog";
-import LabelInput from "../../labelInput";
 import Truncate from "../../util/truncate";
 
 import { AnnotationsHelpers } from "../../../util/stateManager";
@@ -24,7 +15,6 @@ import { labelPrompt, isLabelErroneous } from "../labelUtil";
 import actions from "../../../actions";
 import MiniHistogram from "../../miniHistogram";
 import MiniStackedBar from "../../miniStackedBar";
-import { CategoryCrossfilterContext } from "../categoryContext";
 import { Dataframe, ContinuousHistogram } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
@@ -137,38 +127,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       });
     }
   }
-
-  handleDeleteValue = () => {
-    const { dispatch, metadataField, label } = this.props;
-    dispatch(actions.annotationDeleteLabelFromCategory(metadataField, label));
-  };
-
-  handleAddCurrentSelectionToThisLabel = () => {
-    const { dispatch, metadataField, label } = this.props;
-    dispatch(actions.annotationLabelCurrentSelection(metadataField, label));
-  };
-
-  handleEditValue = (e: any) => {
-    const { dispatch, metadataField, label } = this.props;
-    const { editedLabelText } = this.state;
-    this.cancelEditMode();
-    dispatch(
-      actions.annotationRenameLabelInCategory(
-        metadataField,
-        label,
-        editedLabelText
-      )
-    );
-    e.preventDefault();
-  };
-
-  handleCreateArbitraryLabel = (txt: any) => {
-    const { dispatch, metadataField, label } = this.props;
-    this.cancelEditMode();
-    dispatch(
-      actions.annotationRenameLabelInCategory(metadataField, label, txt)
-    );
-  };
 
   labelNameError = (name: any) => {
     const { metadataField, schema } = this.props;
@@ -558,7 +516,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       colorAccessor,
       colorTable,
       isUserAnno,
-      annotations,
       isDilated,
       isSelected,
       categorySummary,
@@ -566,8 +523,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       colorMode,
     } = this.props;
     const colorScale = colorTable?.scale;
-
-    const { editedLabelText } = this.state;
 
     const count = categorySummary.categoryValueCounts[categoryIndex];
     const displayString = this.currentLabelAsString();
@@ -577,12 +532,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
     const { categoryValueIndices } = categorySummary;
-
-    const editModeActive =
-      isUserAnno &&
-      annotations.labelEditable.category === metadataField &&
-      annotations.isEditingLabelName &&
-      annotations.labelEditable.label === categoryIndex;
 
     const valueToggleLabel = `value-toggle-checkbox-${metadataField}-${displayString}`;
 
@@ -682,45 +631,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </span>
             </Truncate>
-            {editModeActive ? (
-              <div>
-                <AnnoDialog
-                  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isActive: any; inputProps: { "data-testid"... Remove this comment to see the full error message
-                  isActive={editModeActive}
-                  inputProps={{
-                    "data-testid": `${metadataField}:edit-label-name-dialog`,
-                  }}
-                  primaryButtonProps={{
-                    "data-testid": `${metadataField}:${displayString}:submit-label-edit`,
-                  }}
-                  title="Edit label"
-                  instruction={this.instruction(editedLabelText)}
-                  cancelTooltipContent="Close this dialog without editing label text."
-                  primaryButtonText="Change label text"
-                  text={editedLabelText}
-                  categoryToDuplicate={null}
-                  validationError={this.labelNameError(editedLabelText)}
-                  handleSubmit={this.handleEditValue}
-                  handleCancel={this.cancelEditMode}
-                  annoInput={
-                    <LabelInput
-                      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: any; labelSuggestions: null; onChan... Remove this comment to see the full error message
-                      label={editedLabelText}
-                      labelSuggestions={null}
-                      onChange={this.handleTextChange}
-                      onSelect={this.handleTextChange}
-                      inputProps={{
-                        "data-testid": `${metadataField}:${displayString}:edit-label-name`,
-                        leftIcon: "tag",
-                        intent: "none",
-                        autoFocus: true,
-                      }}
-                    />
-                  }
-                  annoSelect={null}
-                />
-              </div>
-            ) : null}
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}
@@ -760,87 +670,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                     : "inherit",
               }}
             />
-            {isUserAnno ? (
-              <span
-                onMouseEnter={this.handleMouseExit}
-                onMouseLeave={this.handleMouseEnter}
-              >
-                <Popover
-                  interactionKind={PopoverInteractionKind.HOVER}
-                  boundary="window"
-                  position={Position.RIGHT_TOP}
-                  content={
-                    <Menu>
-                      <CategoryCrossfilterContext.Consumer>
-                        {(crossfilter) => (
-                          <MenuItem
-                            icon="plus"
-                            data-testclass="handleAddCurrentSelectionToThisLabel"
-                            data-testid={`${metadataField}:${displayString}:add-current-selection-to-this-label`}
-                            onClick={this.handleAddCurrentSelectionToThisLabel}
-                            text={
-                              <span>
-                                Re-label currently selected cells as
-                                <span
-                                  style={{
-                                    fontStyle:
-                                      displayString ===
-                                      globals.unassignedCategoryLabel
-                                        ? "italic"
-                                        : "auto",
-                                  }}
-                                >
-                                  {` ${displayString}`}
-                                </span>
-                              </span>
-                            }
-                            disabled={this.isAddCurrentSelectionDisabled(
-                              crossfilter,
-                              metadataField,
-                              label
-                            )}
-                          />
-                        )}
-                      </CategoryCrossfilterContext.Consumer>
-                      {displayString !== globals.unassignedCategoryLabel ? (
-                        <MenuItem
-                          icon="edit"
-                          text="Edit this label's name"
-                          data-testclass="handleEditValue"
-                          data-testid={`${metadataField}:${displayString}:edit-label`}
-                          onClick={this.activateEditLabelMode}
-                          disabled={annotations.isEditingLabelName}
-                        />
-                      ) : null}
-                      {displayString !== globals.unassignedCategoryLabel ? (
-                        <MenuItem
-                          icon="trash"
-                          intent="danger"
-                          data-testclass="handleDeleteValue"
-                          data-testid={`${metadataField}:${displayString}:delete-label`}
-                          onClick={this.handleDeleteValue}
-                          text={`Delete this label, and reassign all cells to type '${globals.unassignedCategoryLabel}'`}
-                        />
-                      ) : null}
-                    </Menu>
-                  }
-                >
-                  <Button
-                    style={{
-                      marginLeft: 2,
-                      position: "relative",
-                      top: -1,
-                      minHeight: 16,
-                    }}
-                    data-testclass="seeActions"
-                    data-testid={`${metadataField}:${displayString}:see-actions`}
-                    icon={<Icon icon="more" iconSize={10} />}
-                    small
-                    minimal
-                  />
-                </Popover>
-              </span>
-            ) : null}
           </span>
         </div>
       </div>
