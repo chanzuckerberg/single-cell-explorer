@@ -30,6 +30,8 @@ const Layout: React.FC<Props> = (props) => {
     <div
       style={{
         display: "grid",
+        // `??` is used so when `seamlessEnabled` is `undefined` or `true`, so we can add padding to prevent
+        // unneeded scrollbar
         paddingTop: seamlessEnabled ?? true ? globals.HEADER_HEIGHT_PX : 0,
         gridTemplateColumns: `
         [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
