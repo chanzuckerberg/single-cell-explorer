@@ -26,6 +26,7 @@ import {
   flagHighlight,
 } from "../../util/glHelpers";
 import { Dataframe } from "../../util/dataframe";
+import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 
 /*
 Simple 2D transforms control all point painting.  There are three:
@@ -92,6 +93,7 @@ type GraphState = any;
   pointDilation: (state as any).pointDilation,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   genesets: (state as any).genesets.genesets,
+  seamlessEnabled: selectIsSeamlessEnabled(state),
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Graph extends React.Component<{}, GraphState> {
@@ -275,6 +277,8 @@ class Graph extends React.Component<{}, GraphState> {
       currentSelection,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on type 'R... Remove this comment to see the full error message
       graphInteractionMode,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'seamlessEnabled' does not exist on type 'R... Remove this comment to see the full error message
+      seamlessEnabled,
     } = this.props;
     const { toolSVG, viewport } = this.state;
     const hasResized =
@@ -318,6 +322,8 @@ class Graph extends React.Component<{}, GraphState> {
       // eslint-disable-next-line react/no-did-update-set-state --- Preventing update loop via stateChanges and diff checks
       this.setState(stateChanges);
     }
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'seamlessEnabled' does not exist on type... Remove this comment to see the full error message
+    if (seamlessEnabled !== prevProps.seamlessEnabled) this.handleResize();
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
