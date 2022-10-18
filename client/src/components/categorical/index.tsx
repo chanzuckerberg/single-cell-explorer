@@ -1,5 +1,4 @@
 import React from "react";
-import { AnchorButton, Tooltip, Position } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
@@ -9,12 +8,7 @@ import {
   Schema,
 } from "../../common/types/schema";
 import Collapse from "../../util/collapse";
-import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
-import AnnoDialog from "../annoDialog";
-import AnnoSelect from "./annoSelect";
-import LabelInput from "../labelInput";
-import { labelPrompt } from "./labelUtil";
-import actions from "../../actions";
+import { ControlsHelpers } from "../../util/stateManager";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 
