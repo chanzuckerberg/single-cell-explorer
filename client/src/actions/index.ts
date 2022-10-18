@@ -14,7 +14,7 @@ import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
-import { Schema } from "../common/types/schema";
+import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
 import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
@@ -28,6 +28,7 @@ import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
+import AnnoMatrix from "../annoMatrix/annoMatrix";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -159,6 +160,17 @@ async function fetchGeneInfo(
   return response;
 }
 
+function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
+  /*
+  prefetch requests for all embeddings
+  */
+  const { schema } = annoMatrix;
+  const available = schema.layout.obs.map((v: EmbeddingSchema) => v.name);
+  available.forEach((embName: EmbeddingSchema["name"]) =>
+    annoMatrix.prefetch(Field.emb, embName, globals.numBinsEmb)
+  );
+}
+
 /*
 Application bootstrap
 */
@@ -186,6 +198,7 @@ const doInitialDataLoad = (): ((
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
+      prefetchEmbeddings(annoMatrix);
 
       dispatch({
         type: "annoMatrix: init complete",
@@ -194,6 +207,14 @@ const doInitialDataLoad = (): ((
       });
       dispatch({ type: "initial data load complete" });
 
+      const defaultEmbedding = config?.parameters?.default_embedding;
+      const layoutSchema = schema?.schema?.layout?.obs ?? [];
+      if (
+        defaultEmbedding &&
+        layoutSchema.some((s: EmbeddingSchema) => s.name === defaultEmbedding)
+      ) {
+        dispatch(embActions.layoutChoiceAction(defaultEmbedding));
+      }
     } catch (error) {
       dispatch({ type: "initial data load error", error });
     }
