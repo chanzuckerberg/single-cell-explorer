@@ -53,6 +53,13 @@ const LayoutChoice = (
       };
     }
 
+    case "set layout choice": {
+      const { schema } = nextSharedState.annoMatrix;
+      const current = (action as LayoutChoiceAction).layoutChoice;
+      const currentDimNames = schema.layout.obsByName[current].dims;
+      return { ...state, current, currentDimNames };
+    }
+
     default: {
       return state;
     }
