@@ -265,7 +265,7 @@ class ContinuousLegend extends React.Component<Props> {
               }
               this.cachedAsyncProps = asyncProps;
               // if asyncProps is null (no colorAccessor), remove legend
-              console.log(asyncProps);
+              // or if colorMode is categorical, remove legend
               if (
                 !asyncProps ||
                 asyncProps.colorMode === "color by categorical metadata"
