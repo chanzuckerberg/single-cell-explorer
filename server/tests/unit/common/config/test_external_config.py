@@ -1,6 +1,7 @@
 import json
 import os
 from unittest.mock import patch
+from urllib.parse import quote
 
 import yaml
 
@@ -49,7 +50,13 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get("/d/pbmc3k.cxg/api/v0.2/config")
+        def _get_v03_url(url):  # TODO inline and do not use an API call to generate
+            response = session.get(f"{url}/api/v0.3/s3_uri")
+            s3_uri = quote(quote(response.json, safe=""), safe="")
+            return f"/s3_uri/{s3_uri}/api/v0.3"
+
+        v03_url = _get_v03_url("/d/pbmc3k.cxg")
+        response = session.get(f"{v03_url}/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertTrue(data_config["config"]["parameters"]["disable-diffexp"])
@@ -66,7 +73,8 @@ class TestExternalConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        response = session.get("/d/pbmc3k.cxg/api/v0.2/config")
+        v03_url = _get_v03_url("/d/pbmc3k.cxg")
+        response = session.get(f"{v03_url}/config")
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
         self.assertFalse(data_config["config"]["parameters"]["disable-diffexp"])
