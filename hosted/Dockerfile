@@ -28,9 +28,6 @@ RUN make build-client
 
 ADD server/ server/
 RUN mkdir -p /server/common/web/templates/
-
-WORKDIR server/eb
-RUN make build-ecs
 WORKDIR /
 
 ADD hosted/config.yaml config.yaml
