@@ -393,7 +393,7 @@ class CxgDataset(Dataset):
         for ax in ("obs", "var"):
             A = self.open_array(ax)
             schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
-            if type(schema_hints) is not dict:
+            if not isinstance(schema_hints, dict):
                 raise TypeError("Array schema was malformed.")
 
             cols = []
