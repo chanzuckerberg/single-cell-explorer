@@ -10,7 +10,7 @@ def pack_selector_from_mask(boolarray):
     if boolarray is None:
         return slice(None)
 
-    assert type(boolarray) == np.ndarray
+    assert isinstance(boolarray, np.ndarray)
     assert boolarray.dtype == bool
 
     selector = np.nonzero(boolarray)[0]

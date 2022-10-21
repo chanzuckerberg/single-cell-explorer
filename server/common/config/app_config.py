@@ -189,7 +189,7 @@ class AppConfig(object):
         """Create a new dataset config object based on the default dataset config, and kw parameters"""
         if dataroot_tag in self.dataroot_config:
             raise ConfigurationError(f"dataroot config already exists: {dataroot_tag}")
-        if type(self.server_config.multi_dataset__dataroot) != dict:
+        if not isinstance(self.server_config.multi_dataset__dataroot, dict):
             raise ConfigurationError("The server__multi_dataset__dataroot must be a dictionary")
         if dataroot_tag not in self.server_config.multi_dataset__dataroot:
             raise ConfigurationError(f"The dataroot_tag ({dataroot_tag}) not found in server__multi_dataset__dataroot")

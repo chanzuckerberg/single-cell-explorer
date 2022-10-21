@@ -33,7 +33,7 @@ class ExternalConfig(BaseConfig):
             if name is None:
                 raise ConfigurationError("environment: 'name' is missing")
             required = envdict.get("required", False)
-            if type(required) != bool:
+            if not isinstance(required, bool):
                 raise ConfigurationError("environment: 'required' must be a bool")
             path = envdict.get("path")
             if path is None:
@@ -83,7 +83,7 @@ class ExternalConfig(BaseConfig):
                 if path is None:
                     raise ConfigurationError(f"missing 'path' in secret values: {secret_name}")
                 required = value.get("required", False)
-                if type(required) != bool:
+                if not isinstance(required, bool):
                     raise ConfigurationError(f"wrong type for 'required' in secret values: {secret_name}")
 
                 secret_value = secret_dict.get(key)
