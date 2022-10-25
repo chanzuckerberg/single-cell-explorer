@@ -89,26 +89,33 @@ async function datasetMetadataFetchAndLoad(
   oldPrefix: string,
   config: Config
 ): Promise<void> {
-  const datasetMetadataResponse = await fetchJson<{
-    metadata: DatasetMetadata;
-  }>("dataset-metadata", oldPrefix);
+  try {
+    const datasetMetadataResponse = await fetchJson<{
+      metadata: DatasetMetadata;
+    }>("dataset-metadata", oldPrefix);
 
-  // Create new dataset array with large datasets removed
-  const { metadata: datasetMetadata } = datasetMetadataResponse;
-  const datasets = removeLargeDatasets(
-    datasetMetadata.collection_datasets,
-    globals.DATASET_MAX_CELL_COUNT
-  );
+    // Create new dataset array with large datasets removed
+    const { metadata: datasetMetadata } = datasetMetadataResponse;
+    const datasets = removeLargeDatasets(
+      datasetMetadata.collection_datasets,
+      globals.DATASET_MAX_CELL_COUNT
+    );
 
-  const { links } = config;
-  dispatch({
-    type: "dataset metadata load complete",
-    datasetMetadata: {
-      ...datasetMetadata,
-      collection_datasets: datasets,
-    },
-    portalUrl: links["collections-home-page"],
-  });
+    const { links } = config;
+    dispatch({
+      type: "dataset metadata load complete",
+      datasetMetadata: {
+        ...datasetMetadata,
+        collection_datasets: datasets,
+      },
+      portalUrl: links["collections-home-page"],
+    });
+  } catch (error) {
+    dispatch({
+      type: "dataset metadata load error",
+      error,
+    });
+  }
 }
 
 interface GeneInfoAPI {
