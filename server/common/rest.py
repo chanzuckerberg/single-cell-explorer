@@ -357,18 +357,6 @@ def layout_obs_get(request, data_adaptor):
         )
 
 
-# TODO: I think this is no longer useful, but it is called. So just returning an effectively empty response for now
-def genesets_get(request, data_adaptor):
-    preferred_mimetype = request.accept_mimetypes.best_match(["application/json", "text/csv"])
-    if preferred_mimetype not in ("application/json"):
-        return abort(HTTPStatus.NOT_ACCEPTABLE)
-
-    try:
-        return make_response(jsonify({"genesets": [], "tid": 0}), HTTPStatus.OK)
-    except (ValueError, KeyError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e))
-
-
 def summarize_var_helper(request, data_adaptor, key, raw_query):
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":

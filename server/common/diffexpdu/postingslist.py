@@ -106,7 +106,7 @@ def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorte
     assert 0 < len(disjoint_postings_lists) <= 8
 
     def normalize_plist(pl):
-        if type(pl) is list:
+        if isinstance(pl, list):
             pl = np.array(pl, dtype=np.uint32)
         if pl.dtype != np.uint32:
             pl = pl.astype(np.uint32)
@@ -419,7 +419,7 @@ def partition_lists(plists: DisjointPostingsLists) -> List[_ListPartition]:
     partitions = []
     for list_id in range(len(plists)):
         plist = plists[list_id]
-        if type(plist) is list:
+        if isinstance(plist, list):
             plist = np.array(plist, dtype=np.uint32)
         boundaries = _find_partition_boundaries(plist)
         partitions += [

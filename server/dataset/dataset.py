@@ -22,7 +22,7 @@ class Dataset(metaclass=ABCMeta):
     """Base class for loading and accessing matrix data"""
 
     def __init__(self, data_locator, app_config):
-        if type(app_config) != AppConfig:
+        if not isinstance(app_config, AppConfig):
             raise TypeError("config expected to be of type AppConfig")
 
         # location to the dataset
@@ -168,7 +168,7 @@ class Dataset(metaclass=ABCMeta):
     def _index_filter_to_mask(self, filter, count):
         mask = np.zeros((count,), dtype=np.bool)
         for i in filter:
-            if type(i) == list:
+            if isinstance(i, list):
                 mask[i[0] : i[1]] = True
             else:
                 mask[i] = True
