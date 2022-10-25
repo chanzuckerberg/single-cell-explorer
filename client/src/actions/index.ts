@@ -117,34 +117,6 @@ async function datasetMetadataFetchAndLoad(
     });
   }
 }
-/**
- *
- * @param dispatch Function facilitating update of store.
- * @param config Config object returned from config endpoint, notifies if genesets is enabled.
- */
-async function genesetsFetchAndLoad(
-  dispatch: AppDispatch,
-  config: Config
-): Promise<void> {
-  /* request genesets ONLY if the backend supports the feature */
-  const defaultResponse = {
-    genesets: [],
-    tid: 0,
-  };
-  if (config?.parameters?.annotations_genesets ?? false) {
-    fetchJson("genesets").then((response) => {
-      dispatch({
-        type: "geneset: initial load",
-        data: response ?? defaultResponse,
-      });
-    });
-  } else {
-    dispatch({
-      type: "geneset: initial load",
-      data: defaultResponse,
-    });
-  }
-}
 
 interface GeneInfoAPI {
   ncbi_url: string;
@@ -200,8 +172,6 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-
-      genesetsFetchAndLoad(dispatch, config);
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
