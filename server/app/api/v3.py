@@ -12,7 +12,7 @@ from flask import (
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
-from server.app.api import ONE_YEAR, cache_control
+from server.common.utils.cache import ONE_YEAR, cache_control
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.common.errors import (
     DatasetAccessError,
