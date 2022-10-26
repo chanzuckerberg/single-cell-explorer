@@ -56,7 +56,7 @@ const DatasetMetadata = (
         portalUrl,
       };
     }
-    case "initial data load error": {
+    case "dataset metadata load error": {
       const { error } = action as DatasetMetadataAction;
 
       return {
