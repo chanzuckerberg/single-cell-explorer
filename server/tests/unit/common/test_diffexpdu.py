@@ -18,7 +18,7 @@ class TestDiffexPdu(unittest.TestCase):
         )
 
         encoded = de_args.pack()
-        self.assertIs(type(encoded), bytes)
+        self.assertIsInstance(encoded, bytes)
         self.assertGreater(len(encoded), 0)
 
         decoded = DiffExArguments.unpack_from(encoded)
