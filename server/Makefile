@@ -32,3 +32,11 @@ e2e:
 	--start-directory tests/e2e \
 	--top-level-directory .. \
 	--verbose; test_result=$$?; \
+
+
+# Bundles the application so that it can be dockerized and run in ECS
+.PHONY: build-ecs
+build-ecs:
+	$(call copy_client_assets,/../client/build,/../server/common/web) ; \
+	cp /../client/build/index.html /../server/common/web/templates/index.html ; \
+	cp -r /../client/build/* /../server/common/web/. ;
