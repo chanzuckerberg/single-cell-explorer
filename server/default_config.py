@@ -24,8 +24,7 @@ server:
     web_base_url: null
 
   multi_dataset:
-    # If dataroot is set, then cellxgene may serve multiple datasets.  This parameter is not
-    # compatible with single_dataset/datapath.
+    # Dataroot must be set, then cellxgene may serve multiple datasets.
     # dataroot may be a string, representing the path to a directory or S3 prefix.  In this
     # case the datasets in that location are accessed from <server>/d/<datasetname>.
     # example:
@@ -76,20 +75,12 @@ server:
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
     allowed_matrix_types: []
 
-  single_dataset:
-    # If datapath is set, then cellxgene with serve a single dataset located at datapath.  This parameter is not
-    # compatible with multi_dataset/dataroot.
-    datapath: null
-    obs_names: null
-    var_names: null
-    about: null
-    title: null
 
   data_locator:
     api_base: null
     s3:
       # s3 region name.
-      #   if true, then the s3 location is automatically determined from the datapath or dataroot.
+      #   if true, then the s3 location is automatically determined from the dataroot.
       #   if false/null, then do not set.
       #   if a string, then use that value (e.g. us-east-1).
       region_name: true
