@@ -88,52 +88,31 @@ async function datasetMetadataFetchAndLoad(
   oldPrefix: string,
   config: Config
 ): Promise<void> {
-  const datasetMetadataResponse = await fetchJson<{
-    metadata: DatasetMetadata;
-  }>("dataset-metadata", oldPrefix);
+  try {
+    const datasetMetadataResponse = await fetchJson<{
+      metadata: DatasetMetadata;
+    }>("dataset-metadata", oldPrefix);
 
-  // Create new dataset array with large datasets removed
-  const { metadata: datasetMetadata } = datasetMetadataResponse;
-  const datasets = removeLargeDatasets(
-    datasetMetadata.collection_datasets,
-    globals.DATASET_MAX_CELL_COUNT
-  );
+    // Create new dataset array with large datasets removed
+    const { metadata: datasetMetadata } = datasetMetadataResponse;
+    const datasets = removeLargeDatasets(
+      datasetMetadata.collection_datasets,
+      globals.DATASET_MAX_CELL_COUNT
+    );
 
-  const { links } = config;
-  dispatch({
-    type: "dataset metadata load complete",
-    datasetMetadata: {
-      ...datasetMetadata,
-      collection_datasets: datasets,
-    },
-    portalUrl: links["collections-home-page"],
-  });
-}
-/**
- *
- * @param dispatch Function facilitating update of store.
- * @param config Config object returned from config endpoint, notifies if genesets is enabled.
- */
-async function genesetsFetchAndLoad(
-  dispatch: AppDispatch,
-  config: Config
-): Promise<void> {
-  /* request genesets ONLY if the backend supports the feature */
-  const defaultResponse = {
-    genesets: [],
-    tid: 0,
-  };
-  if (config?.parameters?.annotations_genesets ?? false) {
-    fetchJson("genesets").then((response) => {
-      dispatch({
-        type: "geneset: initial load",
-        data: response ?? defaultResponse,
-      });
-    });
-  } else {
+    const { links } = config;
     dispatch({
-      type: "geneset: initial load",
-      data: defaultResponse,
+      type: "dataset metadata load complete",
+      datasetMetadata: {
+        ...datasetMetadata,
+        collection_datasets: datasets,
+      },
+      portalUrl: links["collections-home-page"],
+    });
+  } catch (error) {
+    dispatch({
+      type: "dataset metadata load error",
+      error,
     });
   }
 }
@@ -192,8 +171,6 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-
-      genesetsFetchAndLoad(dispatch, config);
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);

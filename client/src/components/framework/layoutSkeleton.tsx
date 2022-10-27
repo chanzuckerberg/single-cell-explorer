@@ -20,7 +20,7 @@ const WIDTH_MENUBAR = 482;
  */
 function LayoutSkeleton(): JSX.Element {
   return (
-    <Layout>
+    <Layout datasetMetadataError={null}>
       <LeftSidebarSkeleton />
       {() => (
         <Controls>

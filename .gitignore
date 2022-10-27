@@ -23,7 +23,7 @@ server/common/web/static/*
 server/common/web/templates/
 server/common/web/csp-hashes.json
 
-# eb build
+# ecs build
 artifact.dir
 artifact.zip
 customize
