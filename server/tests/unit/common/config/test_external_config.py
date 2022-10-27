@@ -161,7 +161,7 @@ class TestExternalConfig(ConfigTests):
             app_config.complete_config()
         self.assertEqual(
             config_error.exception.message,
-            "Invalid type for attribute: aws_secrets_manager__region, expected type str, got NoneType",
+            "Invalid type for attribute: aws_secrets_manager__region, expected types (str), got NoneType",
         )
 
         # missing secret name

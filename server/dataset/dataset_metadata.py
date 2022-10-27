@@ -34,7 +34,6 @@ def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset
     Use the dataset_root, dataset_id, and the server config to infer the physical S3 URI for an Explorer dataset
     artifact
     """
-    # TODO @mdunitz remove after fork, the multiroot lookup will need to remain while we support covid 19 cell atlas.
     #   See ticket https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/corpora-data-portal/1281 # noqa
 
     for dataroot_dict in server_config.multi_dataset__dataroot.values():

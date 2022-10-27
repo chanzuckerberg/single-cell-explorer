@@ -6,7 +6,7 @@ class AugmentedEnum(Enum):
         return self.value.__hash__()
 
     def __eq__(self, other):
-        if isinstance(other, type(self)) or isinstance(other, str):
+        if isinstance(other, (type(self), str)):
             return self.value == other
         return False
 
