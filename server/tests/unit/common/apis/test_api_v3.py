@@ -557,17 +557,6 @@ class EndPoints(BaseTest):
                 self.assertTrue(annotations_genesets_readonly)
                 self.assertEqual(annotations_genesets_summary_methods, ["mean"])
 
-    def test_get_genesets(self):
-        endpoint = "genesets"
-        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):
-                url = f"{url_base}{endpoint}"
-                result = self.client.get(url, headers={"Accept": "application/json"})
-                self.assertEqual(result.status_code, HTTPStatus.OK)
-                self.assertEqual(result.headers["Content-Type"], "application/json")
-                result_data = json.loads(result.data)
-                self.assertIsNotNone(result_data["genesets"])
-
     def test_get_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
         endpoint = "summarize/var"

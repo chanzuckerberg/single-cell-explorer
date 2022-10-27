@@ -54,51 +54,6 @@ const GeneSets = (
 ): State => {
   switch (action.type) {
     /**
-     * Initial, load-time bootstrap.
-     * {
-     *    type: "geneset: initial load"
-     *    data: JSON response
-     * }
-     */
-    case "geneset: initial load": {
-      const { data } = action;
-
-      if (
-        !data ||
-        typeof data.tid !== "number" ||
-        !Array.isArray(data.genesets)
-      )
-        throw new Error("missing or malformed JSON response");
-
-      const lastTid = data.tid;
-      const genesetsData = data.genesets;
-      const genesets = new Map();
-
-      for (const gsData of genesetsData) {
-        const genes = new Map();
-        for (const gene of gsData.genes) {
-          genes.set(gene.gene_symbol, {
-            geneSymbol: gene.gene_symbol,
-            geneDescription: gene?.gene_description ?? "",
-          });
-        }
-        const gs = {
-          genesetName: gsData.geneset_name,
-          genesetDescription: gsData?.geneset_description ?? "",
-          genes,
-        };
-        genesets.set(gsData.geneset_name, gs);
-      }
-
-      return {
-        ...state,
-        initialized: true,
-        lastTid,
-        genesets,
-      };
-    }
-
-    /**
      * Creates a new & empty geneset with the given name and description.
      * {
      *    type: "geneset: create",

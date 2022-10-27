@@ -29,6 +29,7 @@ interface Props {
   tosURL: string | undefined;
   privacyURL: string | undefined;
   seamlessEnabled: boolean;
+  datasetMetadataError: string | null;
 }
 
 class App extends React.Component<Props> {
@@ -55,8 +56,8 @@ class App extends React.Component<Props> {
       tosURL,
       privacyURL,
       seamlessEnabled,
+      datasetMetadataError,
     } = this.props;
-
     return (
       <Container>
         <StylesProvider injectFirst>
@@ -76,12 +77,12 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
-              {seamlessEnabled && (
+              {(seamlessEnabled || datasetMetadataError === null) && (
                 <Header tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
                 <Layout
-                  seamlessEnabled={seamlessEnabled}
+                  datasetMetadataError={datasetMetadataError}
                   renderGraph={(viewportRef: HTMLDivElement) => (
                     <>
                       <GlobalHotkeys />
@@ -120,4 +121,5 @@ export default connect((state: RootState) => ({
   tosURL: state.config?.parameters?.about_legal_tos,
   privacyURL: state.config?.parameters?.about_legal_privacy,
   seamlessEnabled: selectIsSeamlessEnabled(state),
+  datasetMetadataError: state.datasetMetadata.error,
 }))(App);

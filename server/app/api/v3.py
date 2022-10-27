@@ -129,13 +129,6 @@ class LayoutObsAPI(S3URIResource):
         return common_rest.layout_obs_get(request, data_adaptor)
 
 
-class GenesetsAPI(S3URIResource):
-    @cache_control(immutable=True, max_age=ONE_YEAR)
-    @rest_get_s3uri_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.genesets_get(request, data_adaptor)
-
-
 class SummarizeVarAPI(S3URIResource):
     @rest_get_s3uri_data_adaptor
     @cache_control(immutable=True, max_age=ONE_YEAR)
@@ -214,7 +207,6 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(AnnotationsVarAPI, "/annotations/var")
     add_resource(DataVarAPI, "/data/var")
     add_resource(GeneInfoAPI, "/geneinfo")
-    add_resource(GenesetsAPI, "/genesets")
     add_resource(SummarizeVarAPI, "/summarize/var")
     # Display routes
     add_resource(ColorsAPI, "/colors")

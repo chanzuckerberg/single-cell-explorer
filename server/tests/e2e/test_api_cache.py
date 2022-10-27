@@ -72,7 +72,7 @@ class TestAPICache(unittest.TestCase):
         url_base = "/".join(
             [self.api_url_base, "cellxgene", "s3_uri", quote(quote(body, safe=""), safe=""), "api/v0.3"]
         )
-        endpoints = ["config", "schema", "colors", "genesets", "layout/obs", "annotations/obs", "annotations/var"]
+        endpoints = ["config", "schema", "colors", "layout/obs", "annotations/obs", "annotations/var"]
 
         for endpoint in endpoints:
             with self.subTest(endpoint):
