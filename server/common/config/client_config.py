@@ -1,5 +1,6 @@
 from server.version import display_version as cellxgene_display_version
 
+
 def get_client_config(app_config, data_adaptor, current_app):
     """
     Return the configuration as required by the /config REST route
