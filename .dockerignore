@@ -1,4 +1,5 @@
 bin
 dist
 docs
+/server/eb/customize
 /client/node_modules
