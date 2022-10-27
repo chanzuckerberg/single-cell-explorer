@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from flask import make_response, jsonify
 
-from server.common.utils.version import __version__ as cellxgene_version
+from server.version import __version__ as cellxgene_version
 from server.common.utils.data_locator import DataLocator
 
 
