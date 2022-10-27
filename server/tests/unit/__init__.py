@@ -12,8 +12,8 @@ from server.tests import FIXTURES_ROOT
 
 
 def app_config(extra_server_config=None, extra_dataset_config=None):
-    extra_server_config = extra_server_config if extra_server_config else {}
-    extra_dataset_config = extra_dataset_config if extra_dataset_config else {}
+    extra_server_config = extra_server_config or {}
+    extra_dataset_config = extra_dataset_config or {}
     config = AppConfig()
     config.update_server_config(
         app__flask_secret_key="secret",
