@@ -59,19 +59,10 @@ class BaseConfig(object):
 
     def validate_correct_type_of_configuration_attribute(self, attrname, vtype):
         val = getattr(self, attrname)
-        if type(vtype) in (list, tuple):
-            if type(val) not in vtype:
-                tnames = ",".join([x.__name__ for x in vtype])
-                raise ConfigurationError(
-                    f"Invalid type for attribute: {attrname}, expected types ({tnames}), got {type(val).__name__}"
-                )
-        else:
-            if type(val) != vtype:
-                raise ConfigurationError(
-                    f"Invalid type for attribute: {attrname}, "
-                    f"expected type {vtype.__name__}, got {type(val).__name__}"
-                )
-
+        if not isinstance(val, vtype):
+            tnames = ",".join([x.__name__ for x in vtype]) if isinstance(vtype, (list, tuple)) else vtype.__name__
+            error = f"Invalid type for attribute: {attrname}, expected types ({tnames}), got {type(val).__name__}"
+            raise ConfigurationError(error)
         self.attr_checked[attrname] = True
 
     def check_config(self):
@@ -104,7 +95,7 @@ class BaseConfig(object):
                     continue
                 raise ConfigurationError(f"unknown config parameter {key}.")
             try:
-                if type(value) == tuple:
+                if isinstance(value, tuple):
                     # convert tuple values to list values
                     value = list(value)
                 setattr(self, key, value)

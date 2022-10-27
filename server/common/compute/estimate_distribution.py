@@ -65,7 +65,7 @@ def estimate_approximate_distribution(X) -> XApproximateDistribution:
 
     if sparse.isspmatrix_csc(X) or sparse.isspmatrix_csr(X):
         Xdata = X.data
-    elif type(X) is np.ndarray:
+    elif isinstance(X, np.ndarray):
         Xdata = X.reshape(
             X.size,
         )
