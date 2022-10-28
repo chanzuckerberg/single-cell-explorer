@@ -35,8 +35,6 @@ def get_client_config(app_config, data_adaptor, current_app):
     parameters = {
         "layout": dataset_config.embeddings__names,
         "max-category-items": dataset_config.presentation__max_categories,
-        "obs_names": server_config.single_dataset__obs_names,
-        "var_names": server_config.single_dataset__var_names,
         "diffexp_lfc_cutoff": dataset_config.diffexp__lfc_cutoff,
         "disable-diffexp": not dataset_config.diffexp__enable,
         "annotations_genesets": True,  # feature flag

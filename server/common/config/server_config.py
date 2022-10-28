@@ -1,15 +1,14 @@
 import os
 import sys
 import warnings
-from os.path import basename
-from urllib.parse import urlparse, quote_plus
+from urllib.parse import quote_plus
 
-from server.common.config import DEFAULT_SERVER_PORT, BIG_FILE_SIZE_THRESHOLD
+from server.common.config import DEFAULT_SERVER_PORT
 from server.common.config.base_config import BaseConfig
-from server.common.errors import ConfigurationError, DatasetAccessError
+from server.common.errors import ConfigurationError
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
-from server.dataset.matrix_loader import MatrixDataLoader, MatrixDataType
+from server.dataset.matrix_loader import MatrixDataType
 
 
 class ServerConfig(BaseConfig):
@@ -41,12 +40,6 @@ class ServerConfig(BaseConfig):
             self.multi_dataset__index = default_config["multi_dataset"]["index"]
             self.multi_dataset__allowed_matrix_types = default_config["multi_dataset"]["allowed_matrix_types"]
 
-            self.single_dataset__datapath = default_config["single_dataset"]["datapath"]
-            self.single_dataset__obs_names = default_config["single_dataset"]["obs_names"]
-            self.single_dataset__var_names = default_config["single_dataset"]["var_names"]
-            self.single_dataset__about = default_config["single_dataset"]["about"]
-            self.single_dataset__title = default_config["single_dataset"]["title"]
-
             self.data_locator__s3__region_name = default_config["data_locator"]["s3"]["region_name"]
             self.data_locator__api_base = default_config["data_locator"]["api_base"]
             self.adaptor__cxg_adaptor__tiledb_ctx = default_config["adaptor"]["cxg_adaptor"]["tiledb_ctx"]
@@ -64,7 +57,6 @@ class ServerConfig(BaseConfig):
         self.handle_data_locator()
         self.handle_adaptor()  # may depend on data_locator
         self.handle_gene_info()
-        self.handle_single_dataset(context)  # may depend on adaptor
         self.handle_multi_dataset()  # may depend on adaptor
         self.handle_limits()
 
@@ -133,7 +125,7 @@ class ServerConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("data_locator__s3__region_name", (type(None), bool, str))
         self.validate_correct_type_of_configuration_attribute("data_locator__api_base", (type(None), str))
         if self.data_locator__s3__region_name is True:
-            path = self.single_dataset__datapath or self.multi_dataset__dataroot
+            path = self.multi_dataset__dataroot
 
             if isinstance(path, dict):
                 # if multi_dataset__dataroot is a dict, then use the first key
@@ -143,7 +135,7 @@ class ServerConfig(BaseConfig):
                 for path in paths:
                     if path.startswith("s3://"):
                         break
-            if path.startswith("s3://"):
+            if isinstance(path, str) and path.startswith("s3://"):
                 region_name = discover_s3_region_name(path)
                 if region_name is None:
                     raise ConfigurationError(f"Unable to discover s3 region name from {path}")
@@ -155,57 +147,10 @@ class ServerConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("gene_info__api_base", (type(None), str))
 
     def handle_data_source(self):
-        self.validate_correct_type_of_configuration_attribute("single_dataset__datapath", (str, type(None)))
         self.validate_correct_type_of_configuration_attribute("multi_dataset__dataroot", (type(None), dict, str))
 
-        if self.single_dataset__datapath and self.multi_dataset__dataroot:
-            raise ConfigurationError(
-                "You must supply either a datapath (for single datasets) or a dataroot (for multidatasets). Not both"
-            )
-        if self.single_dataset__datapath is None and self.multi_dataset__dataroot is None:
-            raise ConfigurationError("You must specify a datapath for a single dataset or a dataroot for multidatasets")
-
-    def handle_single_dataset(self, context):
-        self.validate_correct_type_of_configuration_attribute("single_dataset__datapath", (str, type(None)))
-        self.validate_correct_type_of_configuration_attribute("single_dataset__title", (str, type(None)))
-        self.validate_correct_type_of_configuration_attribute("single_dataset__about", (str, type(None)))
-        self.validate_correct_type_of_configuration_attribute("single_dataset__obs_names", (str, type(None)))
-        self.validate_correct_type_of_configuration_attribute("single_dataset__var_names", (str, type(None)))
-
-        if self.single_dataset__datapath is None:
-            return
-
-        # preload this data set
-        matrix_data_loader = MatrixDataLoader(location=self.single_dataset__datapath, app_config=self.app_config)
-
-        try:
-            matrix_data_loader.pre_load_validation()
-        except DatasetAccessError as e:
-            raise ConfigurationError(str(e))
-
-        file_size = matrix_data_loader.file_size()
-        file_basename = basename(self.single_dataset__datapath)
-        if file_size > BIG_FILE_SIZE_THRESHOLD:
-            context["messagefn"](f"Loading data from {file_basename}, this may take a while...")
-        else:
-            context["messagefn"](f"Loading data from {file_basename}.")
-
-        if self.single_dataset__about:
-
-            def url_check(url):
-                try:
-                    result = urlparse(url)
-                    if all([result.scheme, result.netloc]):
-                        return True
-                    else:
-                        return False
-                except ValueError:
-                    return False
-
-            if not url_check(self.single_dataset__about):
-                raise ConfigurationError(
-                    "Must provide an absolute URL for --about. (Example format: http://example.com)"
-                )
+        if self.multi_dataset__dataroot is None:
+            raise ConfigurationError("You must specify a dataroot for multidatasets")
 
     def handle_multi_dataset(self):
         self.validate_correct_type_of_configuration_attribute("multi_dataset__dataroot", (type(None), dict, str))

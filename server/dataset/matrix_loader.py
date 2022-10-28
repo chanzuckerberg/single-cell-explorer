@@ -55,8 +55,6 @@ class MatrixDataLoader(object):
 
         if not app_config:
             return True
-        if not app_config.is_multi_dataset():
-            return True
         if len(app_config.server_config.multi_dataset__allowed_matrix_types) == 0:
             return True
 

@@ -25,11 +25,8 @@ def health_check(config):
 
     checks = False
     server_config = config.server_config
-    if config.is_multi_dataset():
-        dataroots = [datapath_dict["dataroot"] for datapath_dict in server_config.multi_dataset__dataroot.values()]
-        checks = all([_is_accessible(dataroot, server_config) for dataroot in dataroots])
-    else:
-        checks = _is_accessible(server_config.single_dataset__datapath, server_config)
+    dataroots = [datapath_dict["dataroot"] for datapath_dict in server_config.multi_dataset__dataroot.values()]
+    checks = all([_is_accessible(dataroot, server_config) for dataroot in dataroots])
 
     health["status"] = "pass" if checks else "fail"
     code = HTTPStatus.OK if health["status"] == "pass" else HTTPStatus.BAD_REQUEST

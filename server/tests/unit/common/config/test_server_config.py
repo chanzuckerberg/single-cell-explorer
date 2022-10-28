@@ -48,7 +48,7 @@ class TestServerConfig(ConfigTests):
     def test_complete_config_checks_all_attr(self, mock_check_attrs):
         mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
         self.server_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 29)
+        self.assertEqual(mock_check_attrs.call_count, 23)
 
     def test_handle_app__throws_error_if_port_doesnt_exist(self):
         config = self.get_config(port=99999999)
@@ -116,22 +116,18 @@ class TestServerConfig(ConfigTests):
         config = self.get_config(web_base_url="anything.com")
         self.assertEqual(config.server_config.app__web_base_url, "anything.com")
 
-    def test_handle_data_source__errors_when_passed_zero_or_two_dataroots(self):
+    def test_handle_data_source__errors_when_passed_zero(self):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}",
             config_file_name="two_data_roots.yml",
-            dataset_datapath=f"{FIXTURES_ROOT}/some_dataset.cxg",
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
-        with self.assertRaises(ConfigurationError):
-            config.server_config.handle_data_source()
 
         file_name = self.custom_app_config(config_file_name="zero_roots.yml")
         config = AppConfig()
         config.update_from_config_file(file_name)
-        with self.assertRaises(ConfigurationError):
-            config.server_config.handle_data_source()
+        with self.subTest("zero roots"):
+            with self.assertRaises(ConfigurationError):
+                config.server_config.handle_data_source()
 
     @unittest.skip("skip when running in github action")
     def test_get_api_base_url_works(self):
@@ -175,24 +171,6 @@ class TestServerConfig(ConfigTests):
         config = self.get_config(api_base_url="www.api_base.com/")
         web_base_url = config.server_config.get_web_base_url()
         self.assertEqual(web_base_url, "www.api_base.com")
-
-    def test_config_for_single_dataset(self):
-        file_name = self.custom_app_config(
-            config_file_name="single_dataset.yml", dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k.cxg"
-        )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
-        config.server_config.handle_single_dataset(self.context)
-
-        file_name = self.custom_app_config(
-            config_file_name="single_dataset_with_about.yml",
-            about="www.cziscience.com",
-            dataset_datapath=f"{FIXTURES_ROOT}/pbmc3k.cxg",
-        )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
-        with self.assertRaises(ConfigurationError):
-            config.server_config.handle_single_dataset(self.context)
 
     def test_multi_dataset_raises_error_for_illegal_routes(self):
         # test for illegal url_dataroots
