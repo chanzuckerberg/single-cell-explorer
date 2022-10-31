@@ -9,7 +9,7 @@ clean:
 .PHONY: unit-test
 unit-test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run \
-		--source=app,common,compute,dataset,eb \
+		--source=app,common,compute,dataset \
 		--omit=.coverage,venv \
 		-m unittest discover \
 		--start-directory tests/unit \

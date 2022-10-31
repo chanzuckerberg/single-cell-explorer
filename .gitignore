@@ -23,11 +23,6 @@ server/common/web/static/*
 server/common/web/templates/
 server/common/web/csp-hashes.json
 
-# eb build
-artifact.dir
-artifact.zip
-customize
-
 # Jupyter Notebook
 .ipynb_checkpoints
 *.ipynb

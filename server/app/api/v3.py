@@ -229,32 +229,21 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
     s3uri_resources = get_api_s3uri_resources(bp_s3uri, s3uri_api_path)
     app.register_blueprint(s3uri_resources.blueprint)
 
-    if app_config.is_multi_dataset():
-        # NOTE:  These routes only allow the dataset to be in the directory
-        # of the dataroot, and not a subdirectory.  We may want to change
-        # the route format at some point
-        for dataroot_dict in server_config.multi_dataset__dataroot.values():
-            url_dataroot = dataroot_dict["base_url"]
-            bp_dataroot = Blueprint(
-                name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
-                import_name=__name__,
-                url_prefix=(f"{api_url_prefix}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
-            )
-            dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
-            app.register_blueprint(dataroot_resources.blueprint)
-            app.add_url_rule(
-                f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
-                f"static_assets_{url_dataroot}",
-                view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
-                methods=["GET"],
-            )
-    else:
-        bp_api = Blueprint("api", __name__, url_prefix=f"{api_url_prefix}{api_version.replace('.',',')}")
-        resources = get_api_dataroot_resources(bp_api)
-        app.register_blueprint(resources.blueprint)
+    # NOTE:  These routes only allow the dataset to be in the directory
+    # of the dataroot, and not a subdirectory.  We may want to change
+    # the route format at some point
+    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+        url_dataroot = dataroot_dict["base_url"]
+        bp_dataroot = Blueprint(
+            name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
+            import_name=__name__,
+            url_prefix=(f"{api_url_prefix}/{url_dataroot}/<string:dataset>" + api_version).replace("//", "/"),
+        )
+        dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
+        app.register_blueprint(dataroot_resources.blueprint)
         app.add_url_rule(
-            "/static/<path:filename>",
-            "static_assets",
-            view_func=lambda filename: send_from_directory("../common/web/static", filename),
+            f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
+            f"static_assets_{url_dataroot}",
+            view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
         )
