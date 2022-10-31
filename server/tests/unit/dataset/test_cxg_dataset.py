@@ -23,7 +23,7 @@ class TestCxgDataset(unittest.TestCase):
     def get_data(self, fixture):
         # FIXTURES_ROOT = "/home/ec2-user/server/tests/fixtures"
         data_locator = f"{FIXTURES_ROOT}/{fixture}"
-        config = app_config(data_locator)
+        config = app_config()
         return CxgDataset(DataLocator(data_locator), config)
 
     def test_tdb_bug(self):

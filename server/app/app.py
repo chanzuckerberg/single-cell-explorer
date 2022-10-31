@@ -41,12 +41,8 @@ def handle_request_exception(error):
 @cache_control_always(no_store=True)
 def dataset_index(url_dataroot=None, dataset=None):
     app_config = current_app.app_config
-    server_config = app_config.server_config
     if dataset is None:
-        if app_config.is_multi_dataset():
-            return dataroot_index()
-        else:
-            dataset = server_config.single_dataset__datapath
+        return dataroot_index()
 
     dataset_config = app_config.get_dataset_config(url_dataroot)
     scripts = dataset_config.app__scripts
@@ -186,18 +182,17 @@ class Server:
 
         register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
 
-        if app_config.is_multi_dataset():
-            # NOTE:  These routes only allow the dataset to be in the directory
-            # of the dataroot, and not a subdirectory.  We may want to change
-            # the route format at some point
-            for dataroot_dict in server_config.multi_dataset__dataroot.values():
-                url_dataroot = dataroot_dict["base_url"]
-                self.app.add_url_rule(
-                    f"/{url_dataroot}/<string:dataset>/",
-                    f"dataset_index_{url_dataroot}/",
-                    lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                    methods=["GET"],
-                )
+        # NOTE:  These routes only allow the dataset to be in the directory
+        # of the dataroot, and not a subdirectory.  We may want to change
+        # the route format at some point
+        for dataroot_dict in server_config.multi_dataset__dataroot.values():
+            url_dataroot = dataroot_dict["base_url"]
+            self.app.add_url_rule(
+                f"/{url_dataroot}/<string:dataset>/",
+                f"dataset_index_{url_dataroot}/",
+                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                methods=["GET"],
+            )
 
         self.app.app_config = app_config
 

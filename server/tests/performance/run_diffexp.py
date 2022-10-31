@@ -34,7 +34,6 @@ def main():
         return 1
 
     app_config = AppConfig()
-    app_config.update_server_config(single_dataset__datapath=args.dataset)
     app_config.update_server_config(app__verbose=True)
     app_config.update_server_config(app__flask_secret_key="howdy")
     # CXG Adaptor config - directly influences diffex performance.

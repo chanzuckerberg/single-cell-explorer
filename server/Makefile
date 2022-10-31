@@ -9,7 +9,7 @@ clean:
 .PHONY: unit-test
 unit-test:
 	PYTHONWARNINGS=ignore:ResourceWarning coverage run \
-		--source=app,common,compute,dataset,eb \
+		--source=app,common,compute,dataset \
 		--omit=.coverage,venv \
 		-m unittest discover \
 		--start-directory tests/unit \
@@ -32,11 +32,3 @@ e2e:
 	--start-directory tests/e2e \
 	--top-level-directory .. \
 	--verbose; test_result=$$?; \
-
-
-# Bundles the application so that it can be dockerized and run in ECS
-.PHONY: build-ecs
-build-ecs:
-	$(call copy_client_assets,/../client/build,/../server/common/web) ; \
-	cp /../client/build/index.html /../server/common/web/templates/index.html ; \
-	cp -r /../client/build/* /../server/common/web/. ;
