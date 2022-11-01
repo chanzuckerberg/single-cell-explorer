@@ -3,43 +3,23 @@ import unittest
 
 from os import listdir, path
 
-import pandas as pd
 from flask_compress import Compress
 from flask_cors import CORS
 
 from server.common.config.app_config import AppConfig
-from server.common.fbs.matrix import encode_matrix_fbs
 from server.app.app import Server
 from server.tests import FIXTURES_ROOT
 
 
-def make_fbs(data):
-    df = pd.DataFrame(data)
-    return encode_matrix_fbs(matrix=df, row_idx=None, col_idx=df.columns)
-
-
-def skip_if(condition, reason: str):
-    def decorator(f):
-        def wraps(self, *args, **kwargs):
-            if condition(self):
-                self.skipTest(reason)
-            else:
-                f(self, *args, **kwargs)
-
-        return wraps
-
-    return decorator
-
-
-def app_config(data_locator, extra_server_config={}, extra_dataset_config={}):
+def app_config(extra_server_config=None, extra_dataset_config=None):
+    extra_server_config = extra_server_config or {}
+    extra_dataset_config = extra_dataset_config or {}
     config = AppConfig()
     config.update_server_config(
         app__flask_secret_key="secret",
-        single_dataset__obs_names=None,
-        single_dataset__var_names=None,
-        single_dataset__datapath=data_locator,
         limits__diffexp_cellcount_max=None,
         limits__column_request_max=None,
+        multi_dataset__dataroot="/test/"
     )
     config.update_default_dataset_config(
         embeddings__names=["umap", "tsne", "pca"], presentation__max_categories=100, diffexp__lfc_cutoff=0.01

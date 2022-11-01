@@ -29,7 +29,7 @@ RUN make build-client
 ADD server/ server/
 RUN mkdir -p /server/common/web/templates/
 
-WORKDIR server/
+WORKDIR server/ecs
 RUN make build-ecs
 WORKDIR /
 

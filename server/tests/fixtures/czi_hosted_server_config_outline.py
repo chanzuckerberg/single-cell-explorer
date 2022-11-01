@@ -18,13 +18,6 @@ f"""server:
     index: {index}
     allowed_matrix_types: {allowed_matrix_types}
 
-  single_dataset:
-    datapath: {dataset_datapath}
-    obs_names: {obs_names}
-    var_names: {var_names}
-    about: {about}
-    title: {title}
-
   data_locator:
     api_base: {data_locator_api_base}
     s3:

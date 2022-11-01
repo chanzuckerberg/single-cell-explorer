@@ -124,8 +124,6 @@ class AppConfigTest(ConfigTests):
             app_config.update_from_config_file(configfile)
             server_changes = app_config.server_config.changes_from_default()
             self.assertEqual(server_changes, [])
-            single_dataset_changes = app_config.default_dataset_config.changes_from_default()
-            self.assertEqual(single_dataset_changes, [("app__about_legal_tos", "expected_value", None)])
 
     def test_simple_update_single_config_from_path_and_value(self):
         """Update a simple config parameter"""

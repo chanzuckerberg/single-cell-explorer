@@ -128,9 +128,9 @@ class TestExternalConfig(ConfigTests):
                             key="some_aws_secret_key",
                             # this config path is not really something that needs to be set by a secret, but using this
                             # for our testing purposes
-                            path=["server", "single_dataset", "title"],
+                            path=["server", "multi_dataset", "dataroot"],
                             required=True,
-                        ),
+                        )
                     ],
                 )
             ],
@@ -139,13 +139,11 @@ class TestExternalConfig(ConfigTests):
 
         app_config = AppConfig()
         app_config.update_from_config_file(configfile)
-        app_config.server_config.single_dataset__datapath = f"{FIXTURES_ROOT}/pbmc3k.cxg"
         app_config.server_config.app__flask_secret_key = "original"
 
         app_config.complete_config()
 
         self.assertEqual(app_config.server_config.app__flask_secret_key, "original")
-        self.assertEqual(app_config.server_config.single_dataset__title, "a_secret_value")
 
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):
