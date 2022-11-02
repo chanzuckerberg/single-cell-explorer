@@ -160,9 +160,7 @@ external:
   #      - key: flask_secret_key
   #        path: [server, app, flask_secret_key]
   #        required: true
-  #      - key: db_uri
-  #        path: [dataset, user_annotations, hosted_tiledb_array, db_uri]
-  #        required: true
+
 
   aws_secrets_manager:
     region: null
