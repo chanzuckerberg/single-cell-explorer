@@ -1,3 +1,6 @@
+import yaml
+
+default_config = """
 server:
   app:
     verbose: false
@@ -165,3 +168,8 @@ external:
   aws_secrets_manager:
     region: null
     secrets: []
+"""
+
+
+def get_default_config():
+    return yaml.load(default_config, Loader=yaml.Loader)

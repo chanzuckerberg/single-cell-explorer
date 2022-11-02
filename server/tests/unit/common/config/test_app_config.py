@@ -6,6 +6,7 @@ import yaml
 
 from server.common.config.app_config import AppConfig
 from server.common.errors import ConfigurationError
+from server.default_config import default_config
 from server.tests import FIXTURES_ROOT
 from server.tests.unit.common.config import ConfigTests
 
@@ -34,6 +35,21 @@ class AppConfigTest(ConfigTests):
         config = AppConfig()
         config.update_from_config_file(file_name)
         return config
+
+    def test_get_default_config_correctly_reads_default_config_file(self):
+        app_default_config = AppConfig().default_config
+
+        expected_config = yaml.load(default_config, Loader=yaml.Loader)
+
+        server_config = app_default_config["server"]
+        dataset_config = app_default_config["dataset"]
+
+        expected_server_config = expected_config["server"]
+        expected_dataset_config = expected_config["dataset"]
+
+        self.assertDictEqual(app_default_config, expected_config)
+        self.assertDictEqual(server_config, expected_server_config)
+        self.assertDictEqual(dataset_config, expected_dataset_config)
 
     def test_get_dataset_config_returns_default_dataset_config_for_single_datasets(self):
         datapath = f"{FIXTURES_ROOT}/some_dataset.cxg"

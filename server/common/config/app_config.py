@@ -5,9 +5,9 @@ from server.common.config.external_config import ExternalConfig
 from server.common.config.dataset_config import DatasetConfig
 from server.common.config.server_config import ServerConfig
 from server.common.errors import ConfigurationError
+from server.default_config import get_default_config
 
 from envyaml import EnvYAML
-import os
 
 
 class AppConfig(object):
@@ -27,8 +27,7 @@ class AppConfig(object):
         # the default configuration (see default_config.py)
         # TODO @madison -- if we always read from the default config (hard coded path) can we set those values as
         #  defaults within the config class?
-        with open(os.path.join(os.getcwd(), "server/default_config.yml")) as default_config_fp:
-            self.default_config = yaml.load(default_config_fp, Loader=yaml.Loader)
+        self.default_config = get_default_config()
         # the server configuration
         self.server_config = ServerConfig(self, self.default_config["server"])
         # the dataset config, unless overridden by an entry in dataroot_config
