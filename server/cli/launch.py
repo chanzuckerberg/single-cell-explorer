@@ -11,6 +11,7 @@ import click
 from server.common.config.app_config import AppConfig, ServerConfig
 from server.common.errors import DatasetAccessError, ConfigurationError
 from server.common.utils.utils import sort_options
+from server.default_config import default_config
 from server.tests.unit import TestServer
 
 log: Logger = getLogger("werkzeug")
@@ -224,7 +225,7 @@ def launch(
         sys.exit(1)
 
     if dump_default_config:
-        print(open(os.path.join(os.curdir, "server/default_config.yml")))
+        print(default_config)
         sys.exit(0)
     # Startup message
     click.echo("[cellxgene] Starting the development server...")
