@@ -148,7 +148,7 @@ class TestExternalConfig(ConfigTests):
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):
         mock_get_secret_key.return_value = {
-            "db_uri": "mock_db_uri",
+            "flask_secret_key": "mock_db_uri",
         }
 
         # no region
@@ -168,7 +168,7 @@ class TestExternalConfig(ConfigTests):
         app_config = AppConfig()
         app_config.external_config.aws_secrets_manager__region = "us-west-2"
         app_config.external_config.aws_secrets_manager__secrets = [
-            dict(values=[dict(key="db_uri", required=True, path=["this", "is", "my", "path"])])
+            dict(values=[dict(key="flask_secret_key", required=True, path=["this", "is", "my", "path"])])
         ]
         with self.assertRaises(ConfigurationError) as config_error:
             app_config.complete_config()
@@ -178,7 +178,7 @@ class TestExternalConfig(ConfigTests):
         app_config = AppConfig()
         app_config.external_config.aws_secrets_manager__region = "us-west-2"
         app_config.external_config.aws_secrets_manager__secrets = [
-            dict(name=1, values=[dict(key="db_uri", required=True, path=["this", "is", "my", "path"])])
+            dict(name=1, values=[dict(key="flask_secret_key", required=True, path=["this", "is", "my", "path"])])
         ]
         with self.assertRaises(ConfigurationError) as config_error:
             app_config.complete_config()
@@ -196,7 +196,7 @@ class TestExternalConfig(ConfigTests):
         app_config = AppConfig()
         app_config.external_config.aws_secrets_manager__region = "us-west-2"
         app_config.external_config.aws_secrets_manager__secrets = [
-            dict(name="mysecret", values=dict(key="db_uri", required=True, path=["this", "is", "my", "path"]))
+            dict(name="mysecret", values=dict(key="flask_secret_key", required=True, path=["this", "is", "my", "path"]))
         ]
         with self.assertRaises(ConfigurationError) as config_error:
             app_config.complete_config()
@@ -216,7 +216,7 @@ class TestExternalConfig(ConfigTests):
         app_config = AppConfig()
         app_config.external_config.aws_secrets_manager__region = "us-west-2"
         app_config.external_config.aws_secrets_manager__secrets = [
-            dict(name="mysecret", values=[dict(key="db_uri", required="optional", path=["this", "is", "my", "path"])])
+            dict(name="mysecret", values=[dict(key="flask_secret_key", required="optional", path=["this", "is", "my", "path"])])
         ]
         with self.assertRaises(ConfigurationError) as config_error:
             app_config.complete_config()
@@ -226,7 +226,7 @@ class TestExternalConfig(ConfigTests):
         app_config = AppConfig()
         app_config.external_config.aws_secrets_manager__region = "us-west-2"
         app_config.external_config.aws_secrets_manager__secrets = [
-            dict(name="mysecret", values=[dict(key="db_uri", required=True)])
+            dict(name="mysecret", values=[dict(key="flask_secret_key", required=True)])
         ]
         with self.assertRaises(ConfigurationError) as config_error:
             app_config.complete_config()
