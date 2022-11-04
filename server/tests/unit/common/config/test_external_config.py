@@ -148,7 +148,7 @@ class TestExternalConfig(ConfigTests):
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):
         mock_get_secret_key.return_value = {
-            "flask_secret_key": "mock_db_uri",
+            "flask_secret_key": "mock_flask_secret_key",
         }
 
         # no region

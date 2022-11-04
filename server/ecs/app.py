@@ -177,9 +177,6 @@ try:
         logging.info("Configuration from CXG_DATAROOT")
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
-    app_config.update_server_config(
-        multi_dataset__allowed_matrix_types=["cxg"],
-    )
 
     # complete config
     app_config.complete_config(logging.info)

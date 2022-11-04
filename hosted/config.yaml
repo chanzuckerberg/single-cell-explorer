@@ -49,7 +49,7 @@ server:
     index: https://${WEB_DOMAIN}/
 
     # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
-    allowed_matrix_types: []
+    allowed_matrix_types: [cxg]
 
   data_locator:
     api_base: https://${DATA_LOCATOR_DOMAIN}/dp/v1
