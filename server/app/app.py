@@ -11,7 +11,7 @@ from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
-from server.app.api import webbp, cache_control_always, cache_control
+from server.common.utils.http_cache import webbp, cache_control_always, cache_control
 from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
 from server.app.api.v3 import register_api_v3
 from server.common.errors import (
