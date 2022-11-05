@@ -8,9 +8,6 @@ import Async from "react-async";
 import memoize from "memoize-one";
 
 import Value from "../value";
-import AnnoMenu from "./annoMenuCategory";
-import AnnoDialogEditCategoryName from "./annoDialogEditCategoryName";
-import AnnoDialogAddLabel from "./annoDialogAddLabel";
 import Truncate from "../../util/truncate";
 import { CategoryCrossfilterContext } from "../categoryContext";
 
@@ -493,20 +490,8 @@ const CategoryHeader = React.memo(
             )}
           </span>
         </div>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; }' is not assignable t... Remove this comment to see the full error message */}
-        <AnnoDialogEditCategoryName metadataField={metadataField} />
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; }' is not assignable t... Remove this comment to see the full error message */}
-        <AnnoDialogAddLabel metadataField={metadataField} />
-        <div>
-          <AnnoMenu
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; isUserAnno: any; creat... Remove this comment to see the full error message
-            metadataField={metadataField}
-            isUserAnno={isUserAnno}
-            createText="Add a new label to this category"
-            editText="Edit this category's name"
-            deleteText="Delete this category, all associated labels, and remove all cell assignments"
-          />
 
+        <div>
           <Tooltip
             content="Use as color scale"
             position={Position.LEFT}

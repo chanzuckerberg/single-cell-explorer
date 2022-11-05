@@ -9,16 +9,13 @@ import { _whereCacheCreate, WhereCache } from "./whereCache";
 import { _isContinuousType, _getColumnSchema } from "./schema";
 import {
   Dataframe,
-  DataframeValue,
   DataframeValueArray,
   LabelType,
 } from "../util/dataframe";
 import { Query } from "./query";
 import {
-  AnnotationColumnSchema,
   ArraySchema,
   Field,
-  EmbeddingSchema,
 } from "../common/types/schema";
 import { LabelIndexBase } from "../util/dataframe/labelIndex";
 import { isTypedArray } from "../common/types/arraytypes";
@@ -37,93 +34,6 @@ abstract class AnnoMatrixView extends AnnoMatrix {
     super(viewOf.schema, nObs, viewOf.nVar, rowIndex || viewOf.rowIndex);
     this.viewOf = viewOf;
     this.isView = true;
-  }
-
-  addObsAnnoCategory(col: string, category: string): AnnoMatrix {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = this.viewOf.addObsAnnoCategory(col, category);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  async removeObsAnnoCategory(
-    col: string,
-    category: string,
-    unassignedCategory: string
-  ): Promise<AnnoMatrix> {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = await this.viewOf.removeObsAnnoCategory(
-      col,
-      category,
-      unassignedCategory
-    );
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  dropObsColumn(col: string): AnnoMatrix {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = this.viewOf.dropObsColumn(col);
-    newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  addObsColumn<T extends DataframeValueArray>(
-    colSchema: AnnotationColumnSchema,
-    Ctor: new (n: number) => T,
-    value: T
-  ): AnnoMatrix {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = this.viewOf.addObsColumn(colSchema, Ctor, value);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  renameObsColumn(oldCol: string, newCol: string): AnnoMatrix {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = this.viewOf.renameObsColumn(oldCol, newCol);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  async setObsColumnValues(
-    col: string,
-    rowLabels: Int32Array,
-    value: DataframeValue
-  ): Promise<AnnoMatrix> {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = await this.viewOf.setObsColumnValues(
-      col,
-      rowLabels,
-      value
-    );
-    newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  async resetObsColumnValues<T extends DataframeValue>(
-    col: string,
-    oldValue: T,
-    newValue: T
-  ): Promise<AnnoMatrix> {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = await this.viewOf.resetObsColumnValues(
-      col,
-      oldValue,
-      newValue
-    );
-    newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
-  }
-
-  addEmbedding(colSchema: EmbeddingSchema): AnnoMatrix {
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.viewOf = this.viewOf.addEmbedding(colSchema);
-    newAnnoMatrix.schema = newAnnoMatrix.viewOf.schema;
-    return newAnnoMatrix;
   }
 }
 

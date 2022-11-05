@@ -1,5 +1,4 @@
 import React from "react";
-import { AnchorButton, Tooltip, Position } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
@@ -9,12 +8,7 @@ import {
   Schema,
 } from "../../common/types/schema";
 import Collapse from "../../util/collapse";
-import { AnnotationsHelpers, ControlsHelpers } from "../../util/stateManager";
-import AnnoDialog from "../annoDialog";
-import AnnoSelect from "./annoSelect";
-import LabelInput from "../labelInput";
-import { labelPrompt } from "./labelUtil";
-import actions from "../../actions";
+import { ControlsHelpers } from "../../util/stateManager";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 
@@ -23,9 +17,6 @@ type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
-  writableCategoriesEnabled:
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    (state as any).config?.parameters?.annotations ?? false,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   schema: (state as any).annoMatrix?.schema,
 }))
@@ -43,77 +34,6 @@ class Categories extends React.Component<{}, State> {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleCreateUserAnno = (e: any) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
-    const { newCategoryText, categoryToDuplicate } = this.state;
-    dispatch(
-      actions.annotationCreateCategoryAction(
-        newCategoryText,
-        categoryToDuplicate
-      )
-    );
-    this.setState({
-      createAnnoModeActive: false,
-      categoryToDuplicate: null,
-      newCategoryText: "",
-    });
-    e.preventDefault();
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleEnableAnnoMode = () => {
-    track(EVENTS.EXPLORER_OPEN_CREATE_GENESET_DIALOG_BUTTON_CLICKED);
-
-    this.setState({ createAnnoModeActive: true });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleDisableAnnoMode = () => {
-    this.setState({
-      createAnnoModeActive: false,
-      categoryToDuplicate: null,
-      newCategoryText: "",
-    });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleModalDuplicateCategorySelection = (d: any) => {
-    this.setState({ categoryToDuplicate: d });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  categoryNameError = (name: any) => {
-    /*
-        return false if this is a LEGAL/acceptable category name or NULL/empty string,
-        or return an error type.
-        */
-    /* allow empty string */
-    if (name === "") return false;
-    /*
-        test for uniqueness against *all* annotation names, not just the subset
-        we render as categorical.
-        */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
-    const { schema } = this.props;
-    const allCategoryNames = schema.annotations.obs.columns.map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (c: any) => c.name
-    );
-    /* check category name syntax */
-    const error = AnnotationsHelpers.annotationNameIsErroneous(name);
-    if (error) {
-      return error;
-    }
-    /* disallow duplicates */
-    if (allCategoryNames.indexOf(name) !== -1) {
-      return "duplicate";
-    }
-    /* otherwise, no error */
-    return false;
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleChange = (name: any) => {
     this.setState({ newCategoryText: name });
   };
@@ -122,10 +42,6 @@ class Categories extends React.Component<{}, State> {
   handleSelect = (name: any) => {
     this.setState({ newCategoryText: name });
   };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  instruction = (name: any) =>
-    labelPrompt(this.categoryNameError(name), "New, unique category name", ":");
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   onExpansionChange = (catName: any) => {
@@ -190,12 +106,10 @@ class Categories extends React.Component<{}, State> {
   render() {
     const {
       createAnnoModeActive,
-      categoryToDuplicate,
-      newCategoryText,
       expandedCats,
     } = this.state;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'writableCategoriesEnabled' does not exis... Remove this comment to see the full error message
-    const { writableCategoriesEnabled, schema } = this.props;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
+    const { schema } = this.props;
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
     const selectableCategoryNames = ControlsHelpers.selectableCategoryNames(
       schema
@@ -224,67 +138,6 @@ class Categories extends React.Component<{}, State> {
           paddingBottom: 0,
         }}
       >
-        <AnnoDialog
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isActive: any; title: string; instruction:... Remove this comment to see the full error message
-          isActive={createAnnoModeActive}
-          title="Create new category"
-          instruction={this.instruction(newCategoryText)}
-          cancelTooltipContent="Close this dialog without creating a category."
-          primaryButtonText="Create new category"
-          primaryButtonProps={{ "data-testid": "submit-category" }}
-          text={newCategoryText}
-          validationError={this.categoryNameError(newCategoryText)}
-          handleSubmit={this.handleCreateUserAnno}
-          handleCancel={this.handleDisableAnnoMode}
-          annoInput={
-            <LabelInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ labelSuggestions: null; onChange: (name: a... Remove this comment to see the full error message
-              labelSuggestions={null}
-              onChange={this.handleChange}
-              onSelect={this.handleSelect}
-              inputProps={{
-                "data-testid": "new-category-name",
-                leftIcon: "tag",
-                intent: "none",
-                autoFocus: true,
-              }}
-              newLabelMessage="New category"
-            />
-          }
-          annoSelect={
-            <AnnoSelect
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ handleModalDuplicateCategorySelection: (d:... Remove this comment to see the full error message
-              handleModalDuplicateCategorySelection={
-                this.handleModalDuplicateCategorySelection
-              }
-              categoryToDuplicate={categoryToDuplicate}
-              allCategoryNames={selectableCategoryNames}
-            />
-          }
-        />
-        {writableCategoriesEnabled ? (
-          <div style={{ marginBottom: 10 }}>
-            <Tooltip
-              content="Create a new category"
-              position={Position.RIGHT}
-              boundary="viewport"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-              modifiers={{
-                preventOverflow: { enabled: false },
-                hide: { enabled: false },
-              }}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="open-annotation-dialog"
-                onClick={this.handleEnableAnnoMode}
-                intent="primary"
-              >
-                Create new <strong>category</strong>
-              </AnchorButton>
-            </Tooltip>
-          </div>
-        ) : null}
         {/* STANDARD FIELDS */}
         {/* this is duplicative but flat, could be abstracted */}
         {standardCategoryNames.length ? (
@@ -303,6 +156,7 @@ class Categories extends React.Component<{}, State> {
             ))}
           </Collapse>
         ) : null}
+
         {/* AUTHOR FIELDS */}
         {authorCategoryNames.length ? (
           <Collapse>
