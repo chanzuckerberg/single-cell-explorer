@@ -44,25 +44,7 @@ server:
     #            dataroot: /path/to/set2_datasets/
     #
     # In this case, datasets can be accessed from <server>/set1/<datasetname> or
-    # <server>/set2/subdir/<datasetname>.  It is possible to have different dataset configurations
-    # for datasets accessed through different dataroots.  For example, in one dataroot, the
-    # user annotations could be enabled, and in another dataroot they could be disabled.
-    # To specify dataroot configurations, add a new top level dictionary to the config named
-    # per_dataset_config. Within per_dataset_config create a dictionary for each dataroot to specialize
-    # ("d1" or "d2" from the example).  Each of these dictionaries has the exact same form as the "dataset"
-    # dictionary (see below).
-    # When this approach is used, the values for each configuration option are checked in
-    # this order: per_dataset_config/<key>, dataset, then the default values.
-    #
-    # example:
-    #
-    # per_dataset_config:
-    #    d1:
-    #       user_annotations:
-    #           enable:  false
-    #    d2:
-    #       user_annotations:
-    #           enable:  true
+    # <server>/set2/subdir/<datasetname>.
 
     dataroot: null
 
@@ -127,49 +109,11 @@ dataset:
 
   X_approximate_distribution: normal # currently fixed config
 
-external:
   # You can retrieve configuration parameters from this config file, the environment,
   # the AWS secrets manager, or from the "cellxgene launch" command line arguments.
   # They are applied in that order, meaning that if a parameter is defined in more
   # than one location, the last one applied takes effect.
 
-  # environment variables:
-  # This section describes how to map environment variables to configuration parameters.
-  # The format is a list defining an environment variable.
-  # Each entry in the list is a dictionary with three entries:
-  # name:  the name of the environment variable
-  # path: the path within the cellxgene configuration to update.
-  # required: (default=False) a boolean.  If true, then it is an error if the environment variable is not set.
-
-  environment:
-     - name: CXG_SECRET_KEY
-       path: [server, app, flask_secret_key]
-       required: false
-
-  # AWS Secrets Manager
-  # This section describes how to map aws secrets to configuration parameters.
-  # The format is the region for the secrets manager, then a list of secrets.
-  # each secret has a name, and a list of values.
-  # Each entry in the list of values is a dictionary with three entries:
-  # key:  the key of the aws secret.
-  # path: the path within the cellxgene configuration to update.
-  # required: (default=False) a boolean.  If true, then it is an error if the key does not exist in the secret.
-  #
-  # example:
-  # aws_secrets_manager:
-  #   region: us-west-2
-  #    - name: my_first_secret
-  #      values:
-  #      - key: flask_secret_key
-  #        path: [server, app, flask_secret_key]
-  #        required: true
-  #      - key: db_uri
-  #        path: [dataset, user_annotations, hosted_tiledb_array, db_uri]
-  #        required: true
-
-  aws_secrets_manager:
-    region: null
-    secrets: []
 """
 
 

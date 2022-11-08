@@ -1,9 +1,8 @@
 import json
 import os
+import unittest
 from unittest.mock import patch
 from urllib.parse import quote
-
-import yaml
 
 from server.common.errors import ConfigurationError
 from server.common.config.app_config import AppConfig
@@ -12,6 +11,7 @@ from server.tests import FIXTURES_ROOT
 from server.tests.unit.common.config import ConfigTests
 
 
+@unittest.skip("TODO: Might remove later")
 class TestExternalConfig(ConfigTests):
     def test_type_convert(self):
         # The values from environment variables and aws secrets are returned as strings.

@@ -162,17 +162,10 @@ class ConfigTests(BaseTest):
             X_approximate_distribution=X_approximate_distribution,
             config_file_name=f"temp_dataset_config_{random_num}.yml",
         )
-        external_config = self.custom_external_config(
-            environment=environment,
-            aws_secrets_manager_region=aws_secrets_manager_region,
-            aws_secrets_manager_secrets=aws_secrets_manager_secrets,
-            config_file_name=f"temp_external_config_{random_num}.yml",
-        )
 
         with open(configfile, "w") as app_config_file:
             app_config_file.write(open(server_config).read())
             app_config_file.write(open(dataset_config).read())
-            app_config_file.write(open(external_config).read())
 
         return configfile
 
@@ -205,28 +198,4 @@ class ConfigTests(BaseTest):
         with open(configfile, "w") as dataset_config_file:
             dataset_config_file.write(dataset_config)
 
-        return configfile
-
-    def custom_external_config(
-        self,
-        environment=None,
-        aws_secrets_manager_region=None,
-        aws_secrets_manager_secrets=[],
-        config_file_name="external_config.yaml",
-    ):
-        # set to the default if environment is None
-        if environment is None:
-            environment = [
-                dict(name="CXG_SECRET_KEY", path=["server", "app", "flask_secret_key"], required=False),
-            ]
-        external_config = {
-            "external": {
-                "environment": environment,
-                "aws_secrets_manager": {"region": aws_secrets_manager_region, "secrets": aws_secrets_manager_secrets},
-            }
-        }
-
-        configfile = os.path.join(self.tmp_fixtures_directory, config_file_name)
-        with open(configfile, "w") as external_config_file:
-            yaml.dump(external_config, external_config_file)
         return configfile

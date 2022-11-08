@@ -157,36 +157,21 @@ class AppConfigTest(ConfigTests):
         self.assertEqual(config.dataroot_config["s1"].app__about_legal_tos, "expected_value")
         self.assertEqual(config.dataroot_config["s2"].app__about_legal_tos, "expected_value")
 
-        # test simple value in specific dataset
-        config.update_single_config_from_path_and_value(
-            ["per_dataset_config", "s1", "app", "about_legal_tos"], "expected_value_s1"
-        )
-        self.assertEqual(config.default_dataset_config.app__about_legal_tos, "expected_value")
-        self.assertEqual(config.dataroot_config["s1"].app__about_legal_tos, "expected_value_s1")
-        self.assertEqual(config.dataroot_config["s2"].app__about_legal_tos, "expected_value")
-
         # error checking
         bad_paths = [
             (
                 ["dataset", "does", "not", "exist"],
                 "unknown config parameter at path: '['dataset', 'does', 'not', 'exist']'",
             ),
-            (["does", "not", "exist"], "path must start with 'server', 'dataset', or 'per_dataset_config'"),
-            ([], "path must start with 'server', 'dataset', or 'per_dataset_config'"),
-            (["per_dataset_config"], "missing dataroot when using per_dataset_config: got '['per_dataset_config']'"),
-            (
-                ["per_dataset_config", "unknown"],
-                "unknown dataroot when using per_dataset_config: got '['per_dataset_config', 'unknown']',"
-                " dataroots specified in config are ['s1', 's2']",
-            ),
             ([1, 2, 3], "path must be a list of strings, got '[1, 2, 3]'"),
             ("string", "path must be a list of strings, got 'string'"),
         ]
         for bad_path, error_message in bad_paths:
-            with self.assertRaises(ConfigurationError) as config_error:
-                config.update_single_config_from_path_and_value(bad_path, "value")
+            with self.subTest(bad_path):
+                with self.assertRaises(ConfigurationError) as config_error:
+                    config.update_single_config_from_path_and_value(bad_path, "value")
 
-            self.assertEqual(config_error.exception.message, error_message)
+                self.assertEqual(config_error.exception.message, error_message)
 
     def test_dict_update_single_config_from_path_and_value(self):
         """Update a config parameter that has a value of dict"""
