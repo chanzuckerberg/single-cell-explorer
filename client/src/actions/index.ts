@@ -10,7 +10,6 @@ import {
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
 import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
-import * as annoActions from "./annotation";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
@@ -25,11 +24,11 @@ import {
   storageSetTransient,
 } from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
-import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
+import AnnoMatrix from "../annoMatrix/annoMatrix";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -473,15 +472,6 @@ export default {
   clipAction: viewActions.clipAction,
   subsetAction: viewActions.subsetAction,
   resetSubsetAction: viewActions.resetSubsetAction,
-  annotationCreateCategoryAction: annoActions.annotationCreateCategoryAction,
-  annotationRenameCategoryAction: annoActions.annotationRenameCategoryAction,
-  annotationDeleteCategoryAction: annoActions.annotationDeleteCategoryAction,
-  annotationCreateLabelInCategory: annoActions.annotationCreateLabelInCategory,
-  annotationDeleteLabelFromCategory:
-    annoActions.annotationDeleteLabelFromCategory,
-  annotationRenameLabelInCategory: annoActions.annotationRenameLabelInCategory,
-  annotationLabelCurrentSelection: annoActions.annotationLabelCurrentSelection,
-  needToSaveObsAnnotations: annoActions.needToSaveObsAnnotations,
   layoutChoiceAction: embActions.layoutChoiceAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
   genesetDelete: genesetActions.genesetDelete,

@@ -1,18 +1,6 @@
 import { doBinaryRequest, doFetch } from "./fetchHelpers";
 import { matrixFBSToDataframe } from "../util/stateManager/matrix";
 import { _getColumnSchema } from "./schema";
-import {
-  addObsAnnoCategory,
-  addObsAnnoColumn,
-  addObsLayout,
-  removeObsAnnoCategory,
-  removeObsAnnoColumn,
-} from "../util/stateManager/schemaHelpers";
-import {
-  isAnyArray,
-  TypedArray,
-  TypedArrayConstructor,
-} from "../common/types/arraytypes";
 import { _whereCacheCreate, WhereCache } from "./whereCache";
 import AnnoMatrix from "./annoMatrix";
 import PromiseLimit from "../util/promiseLimit";
@@ -26,21 +14,13 @@ import {
   ComplexQuery,
   Query,
 } from "./query";
+import { normalizeResponse } from "./normalize";
 import {
-  normalizeResponse,
-  normalizeWritableCategoricalSchema,
-} from "./normalize";
-import {
-  AnnotationColumnSchema,
   Field,
-  EmbeddingSchema,
   RawSchema,
-  CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
 import {
   Dataframe,
-  DataframeValue,
-  DataframeValueArray,
 } from "../util/dataframe";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
@@ -68,228 +48,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     }
     this.baseURL = baseURL;
     Object.seal(this);
-  }
-
-  /**
-   ** Public.  API described in base class.
-   **/
-  addObsAnnoCategory(col: string, category: string): AnnoMatrix {
-    /*
-    Add a new category (aka label) to the schema for an obs column.
-    */
-    const colSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      col
-    ) as AnnotationColumnSchema;
-    _writableObsCategoryTypeCheck(colSchema); // throws on error
-
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.schema = addObsAnnoCategory(this.schema, col, category);
-    return newAnnoMatrix;
-  }
-
-  async removeObsAnnoCategory(
-    col: string,
-    category: string,
-    unassignedCategory: string
-  ): Promise<AnnoMatrix> {
-    /*
-    Remove a single "category" (aka "label") from the data & schema of an obs column.
-    */
-    const colSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      col
-    ) as AnnotationColumnSchema;
-    _writableObsCategoryTypeCheck(colSchema); // throws on error
-
-    const newAnnoMatrix = await this.resetObsColumnValues(
-      col,
-      category,
-      unassignedCategory
-    );
-    newAnnoMatrix.schema = removeObsAnnoCategory(
-      newAnnoMatrix.schema,
-      col,
-      category
-    );
-    return newAnnoMatrix;
-  }
-
-  dropObsColumn(col: string): AnnoMatrix {
-    /*
-		drop column from field
-		*/
-    const colSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      col
-    ) as AnnotationColumnSchema;
-    _writableObsCheck(colSchema); // throws on error
-
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
-    newAnnoMatrix.schema = removeObsAnnoColumn(this.schema, col);
-    return newAnnoMatrix;
-  }
-
-  addObsColumn<T extends DataframeValueArray>(
-    colSchema: AnnotationColumnSchema,
-    Ctor: new (n: number) => T,
-    value: T
-  ): AnnoMatrix {
-    /*
-		add a column to field, initializing with value.  Value may
-    be one of:
-      * an array of values
-      * a primitive type, including null or undefined.
-    If an array, it must be of same size as nObs and same type as Ctor
-		*/
-    colSchema.writable = true;
-    const colName = colSchema.name;
-    if (
-      _getColumnSchema(this.schema, Field.obs, colName) ||
-      this._cache.obs.hasCol(colName)
-    ) {
-      throw new Error("column already exists");
-    }
-
-    const newAnnoMatrix = this._clone();
-    let data;
-    if (isAnyArray(value)) {
-      if (value.constructor !== Ctor)
-        throw new Error("Mismatched value array type");
-      if (value.length !== this.nObs)
-        throw new Error("Value array has incorrect length");
-      data = value.slice();
-    } else {
-      data = new Ctor(this.nObs).fill(value);
-    }
-    newAnnoMatrix._cache.obs = this._cache.obs.withCol(colName, data);
-    normalizeWritableCategoricalSchema(
-      colSchema,
-      newAnnoMatrix._cache.obs.col(colName)
-    );
-    newAnnoMatrix.schema = addObsAnnoColumn(this.schema, colName, colSchema);
-    return newAnnoMatrix;
-  }
-
-  renameObsColumn(oldCol: string, newCol: string): AnnoMatrix {
-    /*
-    Rename the obs oldColName to newColName.  oldCol must be writable.
-    */
-    const oldColSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      oldCol
-    ) as AnnotationColumnSchema;
-    _writableObsCheck(oldColSchema);
-    const value = this._cache.obs.hasCol(oldCol)
-      ? this._cache.obs.col(oldCol).asArray()
-      : undefined;
-    if (value === undefined) return this;
-    return this.dropObsColumn(oldCol).addObsColumn(
-      {
-        ...oldColSchema,
-        name: newCol,
-      },
-      value.constructor as typeof value extends TypedArray
-        ? TypedArrayConstructor
-        : ArrayConstructor,
-      value
-    );
-  }
-
-  async setObsColumnValues(
-    col: string,
-    rowLabels: Int32Array,
-    value: DataframeValue
-  ): Promise<AnnoMatrix> {
-    /*
-		Set all rows identified by rowLabels to value.
-		*/
-    const colSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      col
-    ) as AnnotationColumnSchema;
-    _writableObsCategoryTypeCheck(colSchema); // throws on error
-
-    // ensure that we have the data in cache before we manipulate it
-    await this.fetch(Field.obs, col);
-    if (!this._cache.obs.hasCol(col))
-      throw new Error("Internal error - user annotation data missing");
-
-    const rowIndices = this.rowIndex.getOffsets(rowLabels);
-    const data = this._cache.obs.col(col).asArray().slice();
-    for (let i = 0, len = rowIndices.length; i < len; i += 1) {
-      const idx = rowIndices[i];
-      if (idx === -1) throw new Error("Unknown row label");
-      data[idx] = value;
-    }
-
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix._cache.obs = this._cache.obs.replaceColData(col, data);
-    // TODO: #35 Use type guards to insure type instead of casting
-    const { categories } = colSchema as CategoricalAnnotationColumnSchema;
-    if (!categories?.includes(value)) {
-      newAnnoMatrix.schema = addObsAnnoCategory(this.schema, col, value);
-    }
-    return newAnnoMatrix;
-  }
-
-  async resetObsColumnValues<T extends DataframeValue>(
-    col: string,
-    oldValue: T,
-    newValue: T
-  ): Promise<AnnoMatrix> {
-    /*
-    Set all rows with value 'oldValue' to 'newValue'.
-    */
-    // TODO: #35 Use type guards to insure type instead of casting
-    const colSchema = _getColumnSchema(
-      this.schema,
-      Field.obs,
-      col
-    ) as CategoricalAnnotationColumnSchema;
-    _writableObsCategoryTypeCheck(colSchema); // throws on error
-
-    if (!colSchema.categories?.includes(oldValue)) {
-      throw new Error("unknown category");
-    }
-
-    // ensure that we have the data in cache before we manipulate it
-    await this.fetch(Field.obs, col);
-    if (!this._cache.obs.hasCol(col))
-      throw new Error("Internal error - user annotation data missing");
-
-    const data = this._cache.obs.col(col).asArray().slice();
-    for (let i = 0, l = data.length; i < l; i += 1) {
-      if (data[i] === oldValue) data[i] = newValue;
-    }
-
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix._cache.obs = this._cache.obs.replaceColData(col, data);
-    const { categories } = colSchema;
-    if (!categories?.includes(newValue)) {
-      newAnnoMatrix.schema = addObsAnnoCategory(this.schema, col, newValue);
-    }
-    return newAnnoMatrix;
-  }
-
-  addEmbedding(colSchema: EmbeddingSchema): AnnoMatrix {
-    /*
-    add new layout to the obs embeddings
-    */
-    const { name: colName } = colSchema;
-    if (_getColumnSchema(this.schema, Field.emb, colName)) {
-      throw new Error("column already exists");
-    }
-
-    const newAnnoMatrix = this._clone();
-    newAnnoMatrix.schema = addObsLayout(this.schema, colSchema);
-    return newAnnoMatrix;
   }
 
   /**
@@ -345,21 +103,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
 /*
 Utility functions below
 */
-
-function _writableObsCheck(obsColSchema: AnnotationColumnSchema): void {
-  if (!obsColSchema?.writable) {
-    throw new Error("Unknown or readonly obs column");
-  }
-}
-
-function _writableObsCategoryTypeCheck(
-  obsColSchema: AnnotationColumnSchema
-): void {
-  _writableObsCheck(obsColSchema);
-  if (obsColSchema.type !== "categorical") {
-    throw new Error("column must be categorical");
-  }
-}
 
 function _embLoader(
   baseURL: string,

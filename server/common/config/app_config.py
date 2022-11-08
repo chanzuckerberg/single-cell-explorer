@@ -1,7 +1,6 @@
 import yaml
 from flatten_dict import unflatten
 
-from server.common.config.external_config import ExternalConfig
 from server.common.config.dataset_config import DatasetConfig
 from server.common.config.server_config import ServerConfig
 from server.common.errors import ConfigurationError
@@ -33,22 +32,10 @@ class AppConfig(object):
         # the dataset config, unless overridden by an entry in dataroot_config
         self.default_dataset_config = DatasetConfig(None, self, self.default_config["dataset"])
         # a dictionary of keys to DatasetConfig objects.  Each key must exist in the multi_dataset__dataroot
-        # attribute of the server_config. The default dataset config will apply to all datasets unless a different set
-        # of config vars was passed for a specific dataset under the multidataset config. For example:
-        """
-        per_dataset_config:
-            d1:
-               user_annotations:
-                   enable:  false
-            d2:
-               user_annotations:
-                   enable:  true
-         """
-        #   dataroot config
+        # attribute of the server_config.
         self.dataroot_config = {}
 
         #  external config
-        self.external_config = ExternalConfig(self, self.default_config["external"])
 
         # Set to true when config_completed is called
         self.is_completed = False
@@ -64,7 +51,6 @@ class AppConfig(object):
         self.default_dataset_config.check_config()
         for dataset_config in self.dataroot_config.values():
             dataset_config.check_config()
-        self.external_config.check_config()
 
     def update_server_config(self, **kw):
         self.server_config.update(**kw)
@@ -89,9 +75,6 @@ class AppConfig(object):
             if not isinstance(part, str):
                 raise ConfigurationError(f"path must be a list of strings, got '{str(path)}'")
 
-        if len(path) < 1 or path[0] not in ("server", "dataset", "per_dataset_config"):
-            raise ConfigurationError("path must start with 'server', 'dataset', or 'per_dataset_config'")
-
         if path[0] == "server":
             attr = "__".join(path[1:])
             try:
@@ -102,23 +85,6 @@ class AppConfig(object):
             attr = "__".join(path[1:])
             try:
                 self.update_default_dataset_config(**{attr: value})
-            except ConfigurationError:
-                raise ConfigurationError(f"unknown config parameter at path: '{str(path)}'")
-
-        elif path[0] == "per_dataset_config":
-            if len(path) < 2:
-                raise ConfigurationError(f"missing dataroot when using per_dataset_config: got '{path}'")
-            dataroot = path[1]
-            if dataroot not in self.dataroot_config:
-                dataroots = str(list(self.dataroot_config.keys()))
-                raise ConfigurationError(
-                    f"unknown dataroot when using per_dataset_config: got '{path}',"
-                    f" dataroots specified in config are {dataroots}"
-                )
-
-            attr = "__".join(path[2:])
-            try:
-                self.dataroot_config[dataroot].update(**{attr: value})
             except ConfigurationError:
                 raise ConfigurationError(f"unknown config parameter at path: '{str(path)}'")
 
@@ -135,36 +101,17 @@ class AppConfig(object):
         if config.get("dataset"):
             self.default_dataset_config.update_from_config(config["dataset"], "dataset")
 
-        per_dataset_config = config.get("per_dataset_config", {})
-        for key, dataroot_config in per_dataset_config.items():
-            # first create and initialize the dataroot with the default config
-            self.add_dataroot_config(key, **config["dataset"])
-            # then apply the per dataset configuration
-            self.dataroot_config[key].update_from_config(dataroot_config, f"per_dataset_config__{key}")
-
-        if config.get("external"):
-            self.external_config.update_from_config(config["external"], "external")
-
         self.is_completed = False
 
     def config_to_dict(self):
         """return the configuration as an unflattened dict"""
         server = self.server_config.create_mapping(self.server_config.default_config)
         dataset = self.default_dataset_config.create_mapping(self.default_dataset_config.default_config)
-        external = self.external_config.create_mapping(self.external_config.default_config)
         config = dict(server={}, dataset={})
         for attrname in server.keys():
             config["server__" + attrname] = getattr(self.server_config, attrname)
         for attrname in dataset.keys():
             config["dataset__" + attrname] = getattr(self.default_dataset_config, attrname)
-        if self.dataroot_config:
-            config["per_dataset_config"] = {}
-        for dataroot_tag, dataroot_config in self.dataroot_config.items():
-            dataset = dataroot_config.create_mapping(dataroot_config.default_config)
-            for attrname in dataset.keys():
-                config[f"per_dataset_config__{dataroot_tag}__" + attrname] = getattr(dataroot_config, attrname)
-        for attrname in external.keys():
-            config["external__" + attrname] = getattr(self.external_config, attrname)
 
         config = unflatten(config, splitter=lambda key: key.split("__"))
         return config
@@ -214,8 +161,6 @@ class AppConfig(object):
         # messages we can give correct context for attributes with bad value.
         context = dict(messagefn=messagefn)
 
-        # complete config for external_config first, since this may update values in the other sections
-        self.external_config.complete_config(context)
         self.server_config.complete_config(context)
         self.default_dataset_config.complete_config(context)
         for dataroot_config in self.dataroot_config.values():
