@@ -13,8 +13,6 @@ export const STANDARD_CATEGORY_NAMES = [
   "development_stage_ontology_term_id",
   "disease",
   "disease_ontology_term_id",
-  "ethnicity",
-  "ethnicity_ontology_term_id",
   "self_reported_ethnicity",
   "self_reported_ethnicity_ontology_term_id",
   "is_primary_data",
