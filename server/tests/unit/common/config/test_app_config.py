@@ -27,7 +27,6 @@ class AppConfigTest(ConfigTests):
         return config
 
     def test_get_default_config_correctly_reads_default_config_file(self):
-        self.maxDiff=None
         app_default_config = AppConfig().default_config
 
         expected_config = yaml.load(default_config, Loader=yaml.Loader)
@@ -43,24 +42,28 @@ class AppConfigTest(ConfigTests):
         self.assertDictEqual(dataset_config, expected_dataset_config)
 
     def test_update_app_config(self):
+        default_config = AppConfig()
         config = AppConfig()
         config.update_config(server__app__verbose=True, server__multi_dataset__dataroot="datadir")
-        vars = self.compare_configs(self.config, config)
-        self.assertCountEqual(vars, [("server__app__verbose", True, False), ("server__multi_dataset__dataroot", "datadir", None)])
+        vars = self.compare_configs(config, default_config)
+        self.assertCountEqual(vars, [("server__app__verbose", True, False),
+                                     ('server__multi_dataset__dataroots__d__base_url', 'd', None),
+                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None)])
 
         config = AppConfig()
         config.update_config(dataset__app__scripts=(), dataset__app__inline_scripts=())
-        vars = self.compare_configs(self.config, config)
+        vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [])
 
         config = AppConfig()
         config.update_config(dataset__app__scripts=("a", "b"), dataset__app__inline_scripts=["c", "d"])
-        vars = self.compare_configs(self.config, config)
-        self.assertCountEqual(vars, [  ('dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []), ("dataset__app__inline_scripts", ["c", "d"], [])])
+        vars = self.compare_configs(config, default_config)
+        self.assertCountEqual(vars, [('dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
+                                     ("dataset__app__inline_scripts", ["c", "d"], [])])
 
     def test_configfile_no_dataset_section(self):
         # test a config file without a dataset section
-
+        default_config = AppConfig()
         with tempfile.TemporaryDirectory() as tempdir:
             configfile = os.path.join(tempdir, "config.yaml")
             with open(configfile, "w") as fconfig:
@@ -76,13 +79,16 @@ class AppConfigTest(ConfigTests):
 
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
-            server_changes = self.compare_configs(self.config, app_config)
-            self.assertEqual(
+            server_changes = self.compare_configs(app_config, default_config)
+            self.assertCountEqual(
                 server_changes,
-                [("server__app__flask_secret_key", "secret", None), ("server__multi_dataset__dataroot", "test_dataroot", None)],
+                [('server__multi_dataset__dataroots__d__dataroot', 'test_dataroot', None),
+                 ('server__app__flask_secret_key', 'secret', None),
+                 ('server__multi_dataset__dataroots__d__base_url', 'd', None)],
             )
 
     def test_configfile_no_server_section(self):
+        default_config = AppConfig()
         with tempfile.TemporaryDirectory() as tempdir:
             configfile = os.path.join(tempdir, "config.yaml")
             with open(configfile, "w") as fconfig:
@@ -95,5 +101,5 @@ class AppConfigTest(ConfigTests):
 
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
-            changes = self.compare_configs(self.config, app_config)
-            self.assertEqual(changes, [('dataset__app__about_legal_tos', 'expected_value', None)])
+            changes = self.compare_configs(app_config, default_config)
+            self.assertCountEqual(changes, [('dataset__app__about_legal_tos', 'expected_value', None)])

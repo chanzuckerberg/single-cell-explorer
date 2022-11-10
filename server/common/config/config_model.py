@@ -103,10 +103,8 @@ class MultiDataset(BaseModel):
 
     @root_validator(skip_on_failure=True)
     def check_dataroot(cls, values):
-        dataroots = values.get("dataroots")
-        if dataroots is None:
-            return values  # dataroots failed to validate.
-        elif all([values["dataroot"], dataroots]):
+        dataroots = values["dataroots"]
+        if all([values["dataroot"], dataroots]):
             raise ValueError("Cannot set both dataroot and dataroots.")
         # elif not any([values["dataroot"],values["dataroots"]]):
         #     raise ValueError("Must set either dataroot or dataroots.")
@@ -130,7 +128,7 @@ class MultiDataset(BaseModel):
 
 
 class DataLocator(BaseModel):
-    api_base: Optional[AnyUrl]
+    api_base: Optional[str]
     s3_region_name: Union[bool, str, None]
 
 
@@ -164,13 +162,12 @@ class Server(BaseModel):
     adaptor: Adaptor
     limits: Limits
 
-    @root_validator()  # TODO try skip_on_failure=True
+    @root_validator(skip_on_failure=True)  # TODO try skip_on_failure=True
     def check_data_locator(cls, values):
         if values["data_locator"].s3_region_name is True:
-            try:
-                path = values["multi_dataset"].dataroots or values["multi_dataset"].dataroot
-            except KeyError as ex:
-                return values
+            path = values["multi_dataset"].dataroots or values["multi_dataset"].dataroot
+            # except KeyError as ex:
+            #     return values
             if isinstance(path, dict):
                 # if multi_dataset.dataroot is a dict, then use the first key
                 # that is in s3.   NOTE:  it is not supported to have dataroots

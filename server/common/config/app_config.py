@@ -26,18 +26,20 @@ class AppConfig(object):
     AppConfig has methods to initialize, modify, and access the configuration.
     """
 
-    def __init__(self):
+    def __init__(self, default_config: str = None):
 
         # the default configuration (see default_config.py)
-        self.default_config = get_default_config()
+        self.default_config = default_config if default_config else get_default_config()
         self.config = self.validate_config(self.default_config)
-        # the dataset config, unless overridden by an entry in dataroot_config
-        self.default_dataset_config = self.config.dataset.dict(by_alias=True)
         #   dataroot config
-
         self.dataroot_config = {key: value.dict() for key, value in self.config.server.multi_dataset.dataroots.items()}
         for value in self.dataroot_config.values():
             value.update(**self.default_config)
+
+    @property
+    def default_dataset_config(self):
+        # the dataset config, unless overridden by an entry in dataroot_config
+        return self.config.dataset.dict(by_alias=True)
 
     def __getattr__(self, item):
         path = item.split("__")
@@ -62,7 +64,7 @@ class AppConfig(object):
     #     node = key.replace("__", ".")
     #     setattr(node, _key, value)
 
-    def get_dataset_config(self, dataroot_key):
+    def get_dataset_config(self, dataroot_key: str) -> dict:
         return self.dataroot_config.get(dataroot_key, self.default_dataset_config)
 
     def update_server_config(self, **kw):
@@ -72,7 +74,6 @@ class AppConfig(object):
     def update_default_dataset_config(self, **kw):
         _kw = {f"dataset__{key}": value for key, value in kw.items()}
         self.update_config(**_kw)
-        self.default_dataset_config = self.config.dataset.dict(by_alias=True)
 
     def update_config(self, **kw):
         updates = flatten(kw)
@@ -81,8 +82,10 @@ class AppConfig(object):
         config.update(**updates)
         new_config = unflatten(config)
         self.config = self.validate_config(new_config)
+        self.dataroot_config = {key: value.dict() for key, value in self.config.server.multi_dataset.dataroots.items()}
         for value in self.dataroot_config.values():
             value = value.update(**new_config["dataset"])
+
 
     # def _create_updates(self, kw: dict):
     #     updates = dict()
@@ -126,7 +129,7 @@ class AppConfig(object):
     #         except ConfigurationError:
     #             raise ConfigurationError(f"unknown config parameter at path: '{str(path)}'")
 
-    def update_from_config_file(self, config_file):
+    def _open_config_file(self, config_file):
         try:
             with open(config_file) as fp:
                 config = yaml.load(fp,  Loader=yaml.Loader)
@@ -134,7 +137,16 @@ class AppConfig(object):
             raise ConfigurationError(f"The specified config file contained an error: {e}")
         except OSError as e:
             raise ConfigurationError(f"Issue retrieving the specified config file: {e}")
+        return config
+
+    def update_from_config_file(self, config_file):
+        config = self._open_config_file(config_file)
         self.update_config(**config)
+
+    def update_default_from_config_file(self, config_file):
+        config = self._open_config_file(config_file)
+        self.update_config(**config)
+        self.default_config = config
 
     def config_to_dict(self):
         """return the configuration as an unflattened dict"""

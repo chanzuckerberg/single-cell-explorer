@@ -205,9 +205,11 @@ class ConfigTests(BaseTest):
     def compare_configs(a: AppConfig, b: AppConfig):
         _a = flatten(a.config.dict(by_alias=True))
         _b = flatten(b.config.dict(by_alias=True))
+
         diff = []
-        for a_key, a_value in _a.items():
-            b_value = _b.get(a_key)
-            if b_value != a_value:
-                diff.append((a_key, b_value, a_value))
+        keys = set([*_a.keys(), *_b.keys()])
+        for key in keys:
+            value_a, value_b = _a.get(key), _b.get(key)
+            if value_a != value_b:
+                diff.append((key, value_a, value_b))
         return diff

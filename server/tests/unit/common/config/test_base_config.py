@@ -1,6 +1,6 @@
 import unittest
 
-from server.common.config.app_config import AppConfig
+from server.common.config.app_config import AppConfig, flatten
 from server.tests import FIXTURES_ROOT
 from server.common.errors import ConfigurationError
 from server.tests.unit.common.config import ConfigTests
@@ -12,7 +12,6 @@ class BaseConfigTest(ConfigTests):
         self.config = AppConfig()
         self.config.update_server_config(app__flask_secret_key="secret")
         self.config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
-        self.server_config = self.config.server_config
         self.config.complete_config()
 
         message_list = []
@@ -25,7 +24,7 @@ class BaseConfigTest(ConfigTests):
 
     def get_config(self, **kwargs):
         file_name = self.custom_app_config(
-            dataroot=f"{FIXTURES_ROOT}", config_file_name=self.config_file_name, **kwargs
+            config_file_name=self.config_file_name, **kwargs
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
@@ -33,36 +32,23 @@ class BaseConfigTest(ConfigTests):
 
     def test_mapping_creation_returns_map_of_server_and_dataset_config(self):
         config = AppConfig()
-        mapping = config.default_dataset_config.create_mapping(config.default_config)
+        mapping = flatten(config.default_config)
         self.assertIsNotNone(mapping["server__app__verbose"])
         self.assertIsNotNone(mapping["dataset__presentation__max_categories"])
         self.assertIsNotNone(mapping["server__multi_dataset__allowed_matrix_types"])
 
     def test_changes_from_default_returns_list_of_nondefault_config_values(self):
         config = self.get_config(verbose="true", lfc_cutoff=0.05)
-        server_changes = config.changes_from_default()
-        dataset_changes = config.default_dataset_config.changes_from_default()
+        changes = config.changes_from_default()
 
-        self.assertEqual(
-            server_changes,
+        self.assertCountEqual(
+            changes,
             [
-                (
-                    "adaptor__cxg_adaptor__tiledb_ctx",
-                    {"py.init_buffer_bytes": 10485760, "sm.tile_cache_size": 8589934592},
-                    {"py.init_buffer_bytes": 536870912, "sm.tile_cache_size": 8589934592},
-                ),
-                ("app__verbose", True, False),
-                ("app__flask_secret_key", "secret", None),
-                ("multi_dataset__dataroot", FIXTURES_ROOT, None),
-                ("data_locator__s3_region_name", "us-east-1", True),
+                ("server__adaptor__cxg_adaptor__tiledb_ctx__py.init_buffer_bytes", 10485760, 536870912),
+                ("server__app__verbose", True, False),
+                ("server__app__flask_secret_key", "secret", None),
+                ("server__data_locator__s3_region_name", "us-east-1", True),
+                ("dataset__diffexp__lfc_cutoff", 0.05, 0.01),
+                ('server__app__port', 5005, None)
             ],
         )
-        self.assertEqual(dataset_changes, [("diffexp__lfc_cutoff", 0.05, 0.01)])
-
-    def test_check_config_throws_error_if_attr_has_not_been_checked(self):
-        config = self.get_config(verbose="true")
-        config.complete_config()
-        config.check_config()
-        config.update_server_config(app__verbose=False)
-        with self.assertRaises(ConfigurationError):
-            config.check_config()

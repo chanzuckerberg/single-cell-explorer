@@ -45,8 +45,8 @@ def dataset_index(url_dataroot=None, dataset=None):
         return dataroot_index()
 
     dataset_config = app_config.get_dataset_config(url_dataroot)
-    scripts = dataset_config.app__scripts
-    inline_scripts = dataset_config.app__inline_scripts
+    scripts = dataset_config["app"]["scripts"]
+    inline_scripts = dataset_config["app"]["inline_scripts"]
 
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
