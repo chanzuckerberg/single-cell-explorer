@@ -724,7 +724,7 @@ class TestDatasetMetadata(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             app__web_base_url=cls.app__web_base_url,
-            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
             data_locator__s3_region_name="us-east-1",

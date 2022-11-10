@@ -150,7 +150,7 @@ class Adaptor(BaseModel):
 
 
 class Limits(BaseModel):
-    column_request_max: int
+    column_request_max: Optional[int]
     diffexp_cellcount_max: Optional[int]
 
 

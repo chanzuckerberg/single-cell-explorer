@@ -149,7 +149,7 @@ def annotations_obs_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_obs_keys()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.app_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
@@ -173,7 +173,7 @@ def annotations_var_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_var_keys()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.app_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
@@ -232,7 +232,7 @@ def data_var_get(request, data_adaptor):
 
 
 def colors_get(data_adaptor):
-    if not data_adaptor.dataset_config.presentation__custom_colors:
+    if not data_adaptor.app_config.dataset__presentation__custom_colors:
         return make_response(jsonify({}), HTTPStatus.OK)
     try:
         return make_response(jsonify(data_adaptor.get_colors()), HTTPStatus.OK)
@@ -260,7 +260,7 @@ def gene_info_get(request):
 
 
 def diffexp_obs_post(request, data_adaptor):
-    if not data_adaptor.dataset_config.diffexp__enable:
+    if not data_adaptor.app_config.dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
     args = request.get_json()
@@ -298,7 +298,7 @@ def diffexp_obs_post(request, data_adaptor):
 
 def diffex_binary_post(request, data_adaptor):
     MAX_CONTENT_LENGTH = 100 * 1024**2  # perhaps a config variable would be suitable?
-    if not data_adaptor.dataset_config.diffexp__enable:
+    if not data_adaptor.app_config.dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     if not request.content_type or "application/octet-stream" not in request.content_type:
         return abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
@@ -333,7 +333,7 @@ def layout_obs_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_embedding_names()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.app_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])

@@ -103,7 +103,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
 
 def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
-    data_locator_base_url = app_config.server__get_data_locator_api_base_url()
+    data_locator_base_url = app_config.get_data_locator_api_base_url()
 
     try:
         base_metadata = get_dataset_metadata(dataset_root, dataset_id, app_config)

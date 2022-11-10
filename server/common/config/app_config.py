@@ -295,7 +295,7 @@ class AppConfig(object):
         pass
 
     def exceeds_limit(self, limit_name, value):
-        limit_value = getattr(self, "limits__" + limit_name, None)
+        limit_value = getattr(self, "server__limits__" + limit_name, None)
         if limit_value is None:  # disabled
             return False
         return value > limit_value
