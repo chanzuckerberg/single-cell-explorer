@@ -16,7 +16,7 @@ class MatrixDataLoader(object):
         """location can be a string or DataLocator"""
         self.app_config = app_config
         self.dataset_config = self.__resolve_dataset_config()
-        region_name = None if app_config is None else app_config.server_config.data_locator__s3__region_name
+        region_name = None if app_config is None else app_config.server__data_locator__s3_region_name
         self.location = DataLocator(location, region_name=region_name)
         if not self.location.exists():
             raise DatasetAccessError("Dataset does not exist.", HTTPStatus.NOT_FOUND)
@@ -36,7 +36,7 @@ class MatrixDataLoader(object):
             self.matrix_type = CxgDataset
 
     def __resolve_dataset_config(self):
-        dataset_config = self.app_config.default_dataset_config
+        dataset_config = self.app_config.config.dataset
         if dataset_config is None:
             raise DatasetAccessError("Missing dataset config", HTTPStatus.NOT_FOUND)
         return dataset_config
@@ -55,10 +55,10 @@ class MatrixDataLoader(object):
 
         if not app_config:
             return True
-        if len(app_config.server_config.multi_dataset__allowed_matrix_types) == 0:
+        if len(app_config.server__multi_dataset__allowed_matrix_types) == 0:
             return True
 
-        for val in app_config.server_config.multi_dataset__allowed_matrix_types:
+        for val in app_config.server__multi_dataset__allowed_matrix_types:
             try:
                 if self.matrix_data_type == MatrixDataType(val):
                     return True

@@ -130,7 +130,7 @@ def s3_uri_get(app_config, url_dataroot_id, dataset_id):
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
         parent_collection_url = (
-            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            f"{current_app.app_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
     else:
@@ -149,7 +149,7 @@ def annotations_obs_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_obs_keys()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
@@ -173,7 +173,7 @@ def annotations_var_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_var_keys()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
@@ -244,7 +244,7 @@ def gene_info_get(request):
     """
     Request information about a gene from the data portal gene_info api
     """
-    api_base_url = current_app.app_config.server_config.get_gene_info_api_base_url()
+    api_base_url = current_app.app_config.get_gene_info_api_base_url()
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(
@@ -333,7 +333,7 @@ def layout_obs_get(request, data_adaptor):
         nBins = int(nBins)
 
     num_columns_requested = len(data_adaptor.get_embedding_names()) if len(fields) == 0 else len(fields)
-    if data_adaptor.server_config.exceeds_limit("column_request_max", num_columns_requested):
+    if data_adaptor.server__exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])

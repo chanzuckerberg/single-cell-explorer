@@ -3,6 +3,7 @@ import shutil
 import random
 import yaml
 
+from server.common.config.app_config import flatten, AppConfig
 from server.tests import FIXTURES_ROOT
 from server.tests.unit import BaseTest
 
@@ -39,6 +40,7 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
+        dataroots={},
         index="false",
         allowed_matrix_types=[],
         data_locator_region_name="us-east-1",
@@ -79,6 +81,7 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
+        dataroots={},
         index="false",
         allowed_matrix_types=[],
         data_locator_region_name="us-east-1",
@@ -130,6 +133,7 @@ class ConfigTests(BaseTest):
             session_cookie=session_cookie,
             cookie=cookie,
             dataroot=dataroot,
+            dataroots=dataroots,
             index=index,
             allowed_matrix_types=allowed_matrix_types,
             data_locator_region_name=data_locator_region_name,
@@ -196,3 +200,14 @@ class ConfigTests(BaseTest):
             dataset_config_file.write(dataset_config)
 
         return configfile
+
+    @staticmethod
+    def compare_configs(a: AppConfig, b: AppConfig):
+        _a = flatten(a.config.dict(by_alias=True))
+        _b = flatten(b.config.dict(by_alias=True))
+        diff = []
+        for a_key, a_value in _a.items():
+            b_value = _b.get(a_key)
+            if b_value != a_value:
+                diff.append((a_key, b_value, a_value))
+        return diff

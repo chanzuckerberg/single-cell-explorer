@@ -29,8 +29,7 @@ class Dataset(metaclass=ABCMeta):
         self.data_locator = data_locator
 
         # config is the application configuration
-        self.server_config = app_config.server_config
-        self.dataset_config = app_config.default_dataset_config
+        self.app_config = app_config
 
         # parameters set by this data adaptor based on the data.
         self.parameters = {}
@@ -251,7 +250,7 @@ class Dataset(metaclass=ABCMeta):
                 raise FilterError("filtering on obs unsupported")
 
             num_columns = self.get_shape()[1] if var_selector is None else np.count_nonzero(var_selector)
-            if self.server_config.exceeds_limit("column_request_max", num_columns):
+            if self.app_config.server__exceeds_limit("column_request_max", num_columns):
                 raise ExceedsLimitError("Requested dataframe columns exceed column request limit")
 
             X = self.get_X_array(obs_selector, var_selector)
@@ -282,9 +281,9 @@ class Dataset(metaclass=ABCMeta):
         except (KeyError, IndexError):
             raise FilterError("Error parsing filter")
         if top_n is None:
-            top_n = self.dataset_config.diffexp__top_n
+            top_n = self.app_config.dataset.diffexp__top_n
 
-        if self.server_config.exceeds_limit(
+        if self.app_config.server__exceeds_limit(
             "diffexp_cellcount_max", np.count_nonzero(obs_mask_A) + np.count_nonzero(obs_mask_B)
         ):
             raise ExceedsLimitError("Diffexp request exceeds max cell count limit")
@@ -293,7 +292,7 @@ class Dataset(metaclass=ABCMeta):
             obs_mask_A,
             obs_mask_B,
             top_n=top_n,
-            lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff,
+            lfc_cutoff=self.app_config.dataset.diffexp__lfc_cutoff,
             selector_lists=False,
         )
 
@@ -308,10 +307,10 @@ class Dataset(metaclass=ABCMeta):
         two cell sets as lists of obs indices (postings lists).
         """
         if top_n is None:
-            top_n = self.dataset_config.diffexp__top_n
+            top_n = self.app_config.dataset.diffexp__top_n
 
         result = self.compute_diffexp_ttest(
-            listA, listB, top_n=top_n, lfc_cutoff=self.dataset_config.diffexp__lfc_cutoff, selector_lists=True
+            listA, listB, top_n=top_n, lfc_cutoff=self.app_config.dataset.diffexp__lfc_cutoff, selector_lists=True
         )
 
         try:

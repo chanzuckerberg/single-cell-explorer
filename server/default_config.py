@@ -35,7 +35,7 @@ server:
     # As an alternative, dataroot can be a dictionary, where a dataset key is associated with a base_url
     # and a dataroot.
     # example:
-    #     dataroot:
+    #     dataroots:
     #         d1:
     #            base_url: set1
     #            dataroot: /path/to/set1_datasets/
@@ -60,12 +60,11 @@ server:
 
   data_locator:
     api_base: null
-    s3:
-      # s3 region name.
-      #   if true, then the s3 location is automatically determined from the dataroot.
-      #   if false/null, then do not set.
-      #   if a string, then use that value (e.g. us-east-1).
-      region_name: true
+    # s3 region name.
+    #   if true, then the s3 location is automatically determined from the dataroot.
+    #   if false/null, then do not set.
+    #   if a string, then use that value (e.g. us-east-1).
+    s3_region_name: true
 
   gene_info:
     api_base: null

@@ -40,7 +40,7 @@ class BaseConfigTest(ConfigTests):
 
     def test_changes_from_default_returns_list_of_nondefault_config_values(self):
         config = self.get_config(verbose="true", lfc_cutoff=0.05)
-        server_changes = config.server_config.changes_from_default()
+        server_changes = config.changes_from_default()
         dataset_changes = config.default_dataset_config.changes_from_default()
 
         self.assertEqual(
@@ -54,7 +54,7 @@ class BaseConfigTest(ConfigTests):
                 ("app__verbose", True, False),
                 ("app__flask_secret_key", "secret", None),
                 ("multi_dataset__dataroot", FIXTURES_ROOT, None),
-                ("data_locator__s3__region_name", "us-east-1", True),
+                ("data_locator__s3_region_name", "us-east-1", True),
             ],
         )
         self.assertEqual(dataset_changes, [("diffexp__lfc_cutoff", 0.05, 0.01)])

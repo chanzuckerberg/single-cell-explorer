@@ -139,11 +139,11 @@ class TestExternalConfig(ConfigTests):
 
         app_config = AppConfig()
         app_config.update_from_config_file(configfile)
-        app_config.server_config.app__flask_secret_key = "original"
+        app_config.server__app__flask_secret_key = "original"
 
         app_config.complete_config()
 
-        self.assertEqual(app_config.server_config.app__flask_secret_key, "original")
+        self.assertEqual(app_config.server__app__flask_secret_key, "original")
 
     @patch("server.common.config.external_config.get_secret_key")
     def test_aws_secrets_manager_error(self, mock_get_secret_key):

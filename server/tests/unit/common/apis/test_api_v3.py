@@ -727,7 +727,7 @@ class TestDatasetMetadata(BaseTest):
             multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         cls.meta_response_body = {
             "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
@@ -888,7 +888,7 @@ class TestConfigEndpoint(BaseTest):
             multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         super().setUpClass(cls.config)
 
@@ -914,10 +914,10 @@ class TestS3URI(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             app__web_base_url=cls.app__web_base_url,
-            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         super().setUpClass(cls.config)
 

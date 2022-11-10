@@ -18,7 +18,7 @@ def _cache_control(always, **cache_kwargs):
         @wraps(f)
         def wrapper(*args, **kwargs):
             response = make_response(f(*args, **kwargs))
-            if not always and not current_app.app_config.server_config.app__generate_cache_control_headers:
+            if not always and not current_app.app_config.server__app__generate_cache_control_headers:
                 return response
             if response.status_code >= 400:
                 return response

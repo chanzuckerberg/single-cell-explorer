@@ -163,7 +163,7 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
             )
         except TombstoneError as e:
             parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+                f"{current_app.app_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
             )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
@@ -217,7 +217,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     return api
 
 
-def register_api_v3(app, app_config, server_config, api_url_prefix):
+def register_api_v3(app, app_config, api_url_prefix):
     api_version = "/api/v0.3"
 
     s3uri_api_path = "s3_uri"
@@ -232,7 +232,8 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
     # NOTE:  These routes only allow the dataset to be in the directory
     # of the dataroot, and not a subdirectory.  We may want to change
     # the route format at some point
-    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+    for dataroot in app_config.server__multi_dataset__dataroots.values():
+        dataroot_dict = dataroot.dict()
         url_dataroot = dataroot_dict["base_url"]
         bp_dataroot = Blueprint(
             name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",

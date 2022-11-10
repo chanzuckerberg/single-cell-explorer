@@ -69,7 +69,7 @@ def server_args(func):
         "--debug",
         "-d",
         is_flag=True,
-        default=DEFAULT_CONFIG.server_config.app__debug,
+        default=DEFAULT_CONFIG.server__app__debug,
         show_default=True,
         help="Run in debug mode. This is helpful for cellxgene developers, "
         "or when you want more information about an error condition.",
@@ -78,7 +78,7 @@ def server_args(func):
         "--verbose",
         "-v",
         is_flag=True,
-        default=DEFAULT_CONFIG.server_config.app__verbose,
+        default=DEFAULT_CONFIG.server__app__verbose,
         show_default=True,
         help="Provide verbose output, including warnings and all server requests.",
     )
@@ -86,7 +86,7 @@ def server_args(func):
         "--port",
         "-p",
         metavar="<port>",
-        default=DEFAULT_CONFIG.server_config.app__port,
+        default=DEFAULT_CONFIG.server__app__port,
         type=int,
         show_default=True,
         help="Port to run server on. If not specified cellxgene will find an available port.",
@@ -94,7 +94,7 @@ def server_args(func):
     @click.option(
         "--host",
         metavar="<IP address>",
-        default=DEFAULT_CONFIG.server_config.app__host,
+        default=DEFAULT_CONFIG.server__app__host,
         show_default=False,
         help="Host IP address. By default cellxgene will use localhost (e.g. 127.0.0.1).",
     )
@@ -120,7 +120,7 @@ def launch_args(func):
     @server_args
     @click.option(
         "--dataroot",
-        default=DEFAULT_CONFIG.server_config.multi_dataset__dataroot,
+        default=DEFAULT_CONFIG.server__multi_dataset__dataroot,
         metavar="<data directory>",
         help="Enable cellxgene to serve multiple files. Supply path (local directory or URL)"
         " to folder containing CXG datasets.",
@@ -132,7 +132,7 @@ def launch_args(func):
         "-o",
         "open_browser",
         is_flag=True,
-        default=DEFAULT_CONFIG.server_config.app__open_browser,
+        default=DEFAULT_CONFIG.server__app__open_browser,
         show_default=True,
         help="Open web browser after launch.",
     )
@@ -232,7 +232,7 @@ def launch(
 
     # app config
     app_config: AppConfig = AppConfig()
-    server_config: ServerConfig = app_config.server_config
+    server_config: ServerConfig = app_config.server__
 
     try:
         if config_file:
@@ -258,7 +258,7 @@ def launch(
             diffexp__lfc_cutoff=diffexp_lfc_cutoff,
         )
 
-        diff: List[tuple] = cli_config.server_config.changes_from_default()
+        diff: List[tuple] = cli_config.server__changes_from_default()
         changes = {key: val for key, val, _ in diff}
         app_config.update_server_config(**changes)
 
@@ -274,7 +274,7 @@ def launch(
             click.echo("[cellxgene] " + message)
 
         # Use a default secret if one is not provided
-        if not server_config.app__flask_secret_key:
+        if not server__app__flask_secret_key:
             app_config.update_server_config(app__flask_secret_key="SparkleAndShine")
 
         app_config.complete_config(messagefn)
@@ -287,11 +287,11 @@ def launch(
     # create the server
     server: TestServer = TestServer(app_config)
 
-    if not server_config.app__verbose:
+    if not server__app__verbose:
         log.setLevel(ERROR)
 
-    cellxgene_url: str = f"http://{app_config.server_config.app__host}:{app_config.server_config.app__port}"
-    if server_config.app__open_browser:
+    cellxgene_url: str = f"http://{app_config.server__app__host}:{app_config.server__app__port}"
+    if server__app__open_browser:
         click.echo(f"[cellxgene] Launching! Opening your browser to {cellxgene_url} now.")
         webbrowser.open(cellxgene_url)
     else:
@@ -299,16 +299,16 @@ def launch(
 
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
-    if not server_config.app__verbose:
+    if not server__app__verbose:
         f = open(os.devnull, "w")
         sys.stdout = f
 
     try:
         server.app.run(
-            host=server_config.app__host,
-            debug=server_config.app__debug,
-            port=server_config.app__port,
-            threaded=not server_config.app__debug,
+            host=server__app__host,
+            debug=server__app__debug,
+            port=server__app__port,
+            threaded=not server__app__debug,
             use_debugger=False,
             use_reloader=False,
         )

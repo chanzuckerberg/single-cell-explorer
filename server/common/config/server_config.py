@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 from server.common.config import DEFAULT_SERVER_PORT
 from server.common.config.base_config import BaseConfig
 from server.common.errors import ConfigurationError
-from server.common.utils.data_locator import discover_s3_region_name
+from server.common.utils.data_locator import 0
 from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
 from server.dataset.matrix_loader import MatrixDataType
 
@@ -40,7 +40,7 @@ class ServerConfig(BaseConfig):
             self.multi_dataset__index = default_config["multi_dataset"]["index"]
             self.multi_dataset__allowed_matrix_types = default_config["multi_dataset"]["allowed_matrix_types"]
 
-            self.data_locator__s3__region_name = default_config["data_locator"]["s3"]["region_name"]
+            self.data_locator__s3_region_name = default_config["data_locator"]["s3"]["region_name"]
             self.data_locator__api_base = default_config["data_locator"]["api_base"]
             self.adaptor__cxg_adaptor__tiledb_ctx = default_config["adaptor"]["cxg_adaptor"]["tiledb_ctx"]
             self.gene_info__api_base = default_config["gene_info"]["api_base"]
@@ -122,9 +122,9 @@ class ServerConfig(BaseConfig):
             self.app__web_base_url = self.app__api_base_url
 
     def handle_data_locator(self):
-        self.validate_correct_type_of_configuration_attribute("data_locator__s3__region_name", (type(None), bool, str))
+        self.validate_correct_type_of_configuration_attribute("data_locator__s3_region_name", (type(None), bool, str))
         self.validate_correct_type_of_configuration_attribute("data_locator__api_base", (type(None), str))
-        if self.data_locator__s3__region_name is True:
+        if self.data_locator__s3_region_name is True:
             path = self.multi_dataset__dataroot
 
             if isinstance(path, dict):
@@ -141,7 +141,7 @@ class ServerConfig(BaseConfig):
                     raise ConfigurationError(f"Unable to discover s3 region name from {path}")
             else:
                 region_name = None
-            self.data_locator__s3__region_name = region_name
+            self.data_locator__s3_region_name = region_name
 
     def handle_gene_info(self):
         self.validate_correct_type_of_configuration_attribute("gene_info__api_base", (type(None), str))
@@ -204,8 +204,8 @@ class ServerConfig(BaseConfig):
         self.validate_correct_type_of_configuration_attribute("adaptor__cxg_adaptor__tiledb_ctx", dict)
         regionkey = "vfs.s3.region"
         if regionkey not in self.adaptor__cxg_adaptor__tiledb_ctx:
-            if isinstance(self.data_locator__s3__region_name, str):
-                self.adaptor__cxg_adaptor__tiledb_ctx[regionkey] = self.data_locator__s3__region_name
+            if isinstance(self.data_locator__s3_region_name, str):
+                self.adaptor__cxg_adaptor__tiledb_ctx[regionkey] = self.data_locator__s3_region_name
 
         from server.dataset.cxg_dataset import CxgDataset
 

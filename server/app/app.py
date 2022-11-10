@@ -58,7 +58,7 @@ def dataset_index(url_dataroot=None, dataset=None):
         )
     except TombstoneError as e:
         parent_collection_url = (
-            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            f"{current_app.app_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
@@ -73,13 +73,12 @@ def dataroot_test_index():
     data += "<body><H1>Welcome to cellxgene</H1>"
 
     config = current_app.app_config
-    server_config = config.server_config
 
     datasets = []
-    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+    for dataroot_dict in config.server__multi_dataset__dataroot.values():
         dataroot = dataroot_dict["dataroot"]
         url_dataroot = dataroot_dict["base_url"]
-        locator = DataLocator(dataroot, region_name=server_config.data_locator__s3__region_name)
+        locator = DataLocator(dataroot, region_name=config.server__data_locator__s3_region_name)
         for fname in locator.ls():
             location = path_join(dataroot, fname)
             try:
@@ -103,12 +102,12 @@ def dataroot_test_index():
 def dataroot_index():
     # Handle the base url for the cellxgene server when running in multi dataset mode
     config = current_app.app_config
-    if not config.server_config.multi_dataset__index:
+    if not config.server__multi_dataset__index:
         abort(HTTPStatus.NOT_FOUND)
-    elif config.server_config.multi_dataset__index is True:
+    elif config.server__multi_dataset__index is True:
         return dataroot_test_index()
     else:
-        return redirect(config.server_config.multi_dataset__index)
+        return redirect(config.server__multi_dataset__index)
 
 
 class HealthAPI(Resource):
@@ -130,7 +129,7 @@ def get_api_base_resources(bp_base):
 def handle_api_base_url(app, app_config):
     """If an api_base_url is provided, then an inline script is generated to
     handle the new API prefix"""
-    api_base_url = app_config.server_config.get_api_base_url()
+    api_base_url = app_config.get_api_base_url()
     if not api_base_url:
         return
 
@@ -157,20 +156,19 @@ class Server:
         handle_api_base_url(self.app, app_config)
         self._before_adding_routes(self.app, app_config)
         self.app.json_encoder = Float32JSONEncoder
-        server_config = app_config.server_config
-        if server_config.app__server_timing_headers:
+        if app_config.server__app__server_timing_headers:
             ServerTiming(self.app, force_debug=True)
 
         # enable session data
         self.app.permanent_session_lifetime = datetime.timedelta(days=50 * 365)
 
         # Config
-        secret_key = server_config.app__flask_secret_key
+        secret_key = app_config.server__app__flask_secret_key
         self.app.config.update(SECRET_KEY=secret_key)
 
         self.app.register_blueprint(webbp)
 
-        api_base_url = server_config.get_api_base_url()
+        api_base_url = app_config.get_api_base_url()
         if api_base_url:
             api_url_prefix = urlparse(api_base_url).path
         else:
@@ -180,12 +178,13 @@ class Server:
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
-        register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
+        register_api_v3(app=self.app, app_config=app_config, api_url_prefix=api_url_prefix)
 
         # NOTE:  These routes only allow the dataset to be in the directory
         # of the dataroot, and not a subdirectory.  We may want to change
         # the route format at some point
-        for dataroot_dict in server_config.multi_dataset__dataroot.values():
+        for dataroot in app_config.server__multi_dataset__dataroots.values():
+            dataroot_dict = dataroot.dict()
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/",

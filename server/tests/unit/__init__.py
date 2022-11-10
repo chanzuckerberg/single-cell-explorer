@@ -46,7 +46,7 @@ class TestServer(Server):
             "application/octet-stream",
         ]
         Compress(app)
-        if app_config.server_config.app__debug:
+        if app_config.server__app__debug:
             CORS(app, supports_credentials=True)
 
     @staticmethod
@@ -57,7 +57,7 @@ class TestServer(Server):
         @param app_config: the AppConfig
         @return: None
         """
-        dataroot_and_base_url_pairs: list = list(app_config.server_config.multi_dataset__dataroot.values())
+        dataroot_and_base_url_pairs: list = [dataroot.dict() for dataroot in app_config.server__multi_dataset__dataroots.values()]
         if len(dataroot_and_base_url_pairs) > 1:
             logging.warning("Found more than one dataroot -- will use first")
         first_pair: dict = dataroot_and_base_url_pairs[0]
@@ -77,7 +77,7 @@ class TestServer(Server):
                     break
 
             with open(".test_server_port.txt", "w") as dataroot_file:
-                dataroot_file.write(f"{app_config.server_config.app__port}")
+                dataroot_file.write(f"{app_config.server__app__port}")
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
