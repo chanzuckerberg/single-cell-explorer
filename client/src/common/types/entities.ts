@@ -2,7 +2,7 @@
 
 /**
  * Complete list of standard cellxgene column names.
- * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/2.0.0/schema.md#obs-cell-metadata
+ * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md#obs-cell-metadata
  */
 export const STANDARD_CATEGORY_NAMES = [
   "assay",
