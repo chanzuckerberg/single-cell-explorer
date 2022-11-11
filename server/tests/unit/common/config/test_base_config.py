@@ -35,7 +35,6 @@ class BaseConfigTest(ConfigTests):
         mapping = flatten(config.default_config)
         self.assertIsNotNone(mapping["server__app__verbose"])
         self.assertIsNotNone(mapping["dataset__presentation__max_categories"])
-        self.assertIsNotNone(mapping["server__multi_dataset__allowed_matrix_types"])
 
     def test_changes_from_default_returns_list_of_nondefault_config_values(self):
         config = self.get_config(verbose="true", lfc_cutoff=0.05)

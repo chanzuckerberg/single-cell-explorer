@@ -109,7 +109,6 @@ class TestServerConfig(ConfigTests):
             app__flask_secret_key="secret",
             app__api_base_url=f"http://localhost:{backend_port}/additional/path",
             multi_dataset__dataroot=f"{PROJECT_ROOT}/example-dataset",
-            multi_dataset__allowed_matrix_types=["cxg"],
         )
 
         config.complete_config()

@@ -54,9 +54,6 @@ server:
     #   string/URL:  redirect to this URL:  flask.redirect(config.multi_dataset__index)
     index: false
 
-    # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
-    allowed_matrix_types: []
-
 
   data_locator:
     api_base: null

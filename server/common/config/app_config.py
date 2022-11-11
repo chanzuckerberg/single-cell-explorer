@@ -279,12 +279,6 @@ class AppConfig(object):
         if len(base_urls) > len(set(base_urls)):
             raise ConfigurationError("error in multi_dataset.dataroot:  base_urls must be unique")
 
-        # error checking
-        for mtype in self.config.multi_dataset.allowed_matrix_types:
-            try:
-                MatrixDataType(mtype)
-            except ValueError:
-                raise ConfigurationError(f'Invalid matrix type in "allowed_matrix_types": {mtype}')
 
     def handle_adaptor(self):
         from server.dataset.cxg_dataset import CxgDataset

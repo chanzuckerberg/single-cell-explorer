@@ -17,7 +17,6 @@ f"""server:
     dataroot: {dataroot}
     dataroots: {dataroots}
     index: {index}
-    allowed_matrix_types: {allowed_matrix_types}
 
   data_locator:
     api_base: {data_locator_api_base}

@@ -5,17 +5,14 @@
 from __future__ import annotations
 
 import os
-import pathlib
-import sys
 import warnings
 from typing import List, Optional, Union, Dict
 from urllib.parse import quote_plus
 
-from pydantic import BaseModel, Field, BaseSettings, validator, root_validator, AnyUrl, Extra
+from pydantic import BaseModel, Field, validator, root_validator, Extra
 
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
-from server.dataset.matrix_loader import MatrixDataType
 
 
 class CspDirectives(BaseModel):
@@ -99,7 +96,6 @@ class MultiDataset(BaseModel):
     dataroot: Optional[str] = None
     dataroots: Optional[Dict[str, DatarootValue]] = {}
     index: Union[bool, str] = Field(default=False)
-    allowed_matrix_types: List[str]
 
     @root_validator(skip_on_failure=True)
     def check_dataroot(cls, values):
@@ -118,13 +114,6 @@ class MultiDataset(BaseModel):
         if len(base_urls) > len(set(base_urls)):
             raise ValueError("error in multi_dataset__dataroot:  base_urls must be unique")
         return values
-
-    @validator("allowed_matrix_types")
-    def check_allowed_matrix_types(cls, allowed_matrix_types):
-        # error checking
-        for mtype in allowed_matrix_types:
-                MatrixDataType(mtype)
-        return allowed_matrix_types
 
 
 class DataLocator(BaseModel):
