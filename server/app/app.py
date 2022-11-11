@@ -23,7 +23,7 @@ from server.common.errors import (
 from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
-from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import DataLoader
 
 logging.basicConfig(level=logging.INFO)
 
@@ -51,7 +51,7 @@ def dataset_index(url_dataroot=None, dataset=None):
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
         # Attempt to load the dataset to see if it exists at all
-        get_data_adaptor(app_config=app_config, dataset_artifact_s3_uri=dataset_artifact_s3_uri)
+        get_data_adaptor(dataset_artifact_s3_uri=dataset_artifact_s3_uri)
     except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
@@ -82,7 +82,7 @@ def dataroot_test_index():
         for fname in locator.ls():
             location = path_join(dataroot, fname)
             try:
-                MatrixDataLoader(location, app_config=config)
+                DataLoader(location, app_config=config)
                 datasets.append((url_dataroot, fname))
             except DatasetAccessError:
                 # skip over invalid datasets

@@ -10,8 +10,7 @@ class MatrixDataType(Enum):
     UNKNOWN = "unknown"
 
 
-# TODO: rename to DatasetLoader
-class MatrixDataLoader(object):
+class DataLoader(object):
     def __init__(self, location, app_config=None, matrix_data_type=None):
         """location can be a string or DataLocator"""
         self.app_config = app_config

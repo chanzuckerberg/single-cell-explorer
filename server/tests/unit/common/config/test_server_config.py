@@ -82,28 +82,6 @@ class TestServerConfig(ConfigTests):
         self.assertEqual(config.server__data_locator__s3_region_name, "us-west-2")
         mock_discover_region_name.assert_called_once_with("s3://hosted-cellxgene-dev")
 
-    @unittest.skip("no more environement varaibles")
-    def test_handle_app___can_use_envar_port(self):
-        config = self.get_config(port=24)
-        self.assertEqual(config.app__port, 24)
-
-        # Note if the port is set in the config file it will NOT be overwritten by a different envvar
-        os.environ["CXG_SERVER_PORT"] = "4008"
-        self.config = AppConfig()
-        self.config.update_server_config(app__flask_secret_key="secret")
-        self.config.handle_app(self.context)
-        self.assertEqual(self.config.app__port, 4008)
-        del os.environ["CXG_SERVER_PORT"]
-
-    @unittest.skip("Update with new extral configuration")
-    def test_handle_app__can_get_secret_key_from_envvar_or_config_file_with_envvar_given_preference(self):
-        config = self.get_config(flask_secret_key="KEY_FROM_FILE")
-        self.assertEqual(config.app__flask_secret_key, "KEY_FROM_FILE")
-
-        os.environ["CXG_SECRET_KEY"] = "KEY_FROM_ENV"
-        config.external_config.handle_environment(self.context)
-        self.assertEqual(config.app__flask_secret_key, "KEY_FROM_ENV")
-
     def test_handle_app__sets_web_base_url(self):
         config = self.get_config(web_base_url="anything.com")
         self.assertEqual(config.server__app__web_base_url, "anything.com")
@@ -121,12 +99,13 @@ class TestServerConfig(ConfigTests):
             with self.assertRaises(ConfigurationError):
                 config.handle_data_source()
 
-    @unittest.skip("skip when running in github action")
+    # @unittest.skip("skip when running in github action")
     def test_get_api_base_url_works(self):
         # test the api_base_url feature, and that it can contain a path
         config = AppConfig()
         backend_port = find_available_port("localhost", 10000)
         config.update_server_config(
+            app_port = backend_port,
             app__flask_secret_key="secret",
             app__api_base_url=f"http://localhost:{backend_port}/additional/path",
             multi_dataset__dataroot=f"{PROJECT_ROOT}/example-dataset",

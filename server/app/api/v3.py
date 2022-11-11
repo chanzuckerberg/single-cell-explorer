@@ -27,7 +27,7 @@ def rest_get_s3uri_data_adaptor(func):
     def wrapped_function(self, s3_uri=None):
         try:
             s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
+            data_adaptor = get_data_adaptor(s3_uri)
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
@@ -152,7 +152,7 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
     def wrapped_function(self, dataset=None):
         try:
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
-            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
+            data_adaptor = get_data_adaptor(s3_uri)
             # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_
             # metadata()
             data_adaptor.dataset_id = dataset
