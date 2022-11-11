@@ -105,6 +105,7 @@ dataset:
     enable: true
     lfc_cutoff: 0.01
     top_n: 10
+    count: 15
 
   X_approximate_distribution: normal # currently fixed config
 

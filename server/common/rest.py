@@ -272,9 +272,7 @@ def diffexp_obs_post(request, data_adaptor):
 
         set1_filter = args.get("set1", {"filter": {}})["filter"]
         set2_filter = args.get("set2", {"filter": {}})["filter"]
-        # TODO(#1281): When we simplify the config, we should actually use the config to determine this number,
-        #  this will also require an update in the client
-        count = 15
+        count = data_adaptor.app_config.dataset__diffexp__count = 15
 
         if set1_filter is None or set2_filter is None or count is None:
             return abort_and_log(HTTPStatus.BAD_REQUEST, "missing required parameter")

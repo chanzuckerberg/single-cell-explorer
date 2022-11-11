@@ -230,9 +230,9 @@ class Embeddings(BaseModel):
 
 class Diffexp(BaseModel):
     enable: bool
-    enable: bool
     lfc_cutoff: float
     top_n: int
+    count: int = 15
 
 
 class Dataset(BaseModel):
