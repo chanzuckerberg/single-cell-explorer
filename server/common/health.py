@@ -20,7 +20,9 @@ def health_check(config):
     """
     health = {"status": None, "version": "1", "releaseID": cellxgene_version}
 
-    dataroot_paths: list[str] = [dataroot_value.dataroot for dataroot_value in config.server__multi_dataset__dataroots.values()]
+    dataroot_paths: list[str] = [
+        dataroot_value.dataroot for dataroot_value in config.server__multi_dataset__dataroots.values()
+    ]
     checks: bool = all([_is_accessible(dataroot_path, config) for dataroot_path in dataroot_paths])
 
     health["status"] = "pass" if checks else "fail"

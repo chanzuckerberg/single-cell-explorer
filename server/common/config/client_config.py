@@ -26,7 +26,7 @@ def get_client_config(app_config, data_adaptor, current_app):
 
     # links
     links = {
-        "collections-home-page": app_config.get_web_base_url(),
+        "collections-home-page": app_config.server__app__web_base_url,
         "about-dataset": about,
     }
 

@@ -20,7 +20,6 @@ class TestServerConfig(ConfigTests):
         self.config.update_server_config(app__flask_secret_key="secret")
         self.config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
         self.server_config = self.config.server
-        self.config.complete_config()
 
         message_list = []
 
@@ -78,7 +77,6 @@ class TestServerConfig(ConfigTests):
         )
         config = AppConfig()
         config.update_from_config_file(file_name)
-        config.handle_data_locator()
         self.assertEqual(config.server__data_locator__s3_region_name, "us-west-2")
         mock_discover_region_name.assert_called_once_with("s3://hosted-cellxgene-dev")
 
@@ -99,7 +97,7 @@ class TestServerConfig(ConfigTests):
             with self.assertRaises(ConfigurationError):
                 config.handle_data_source()
 
-    # @unittest.skip("skip when running in github action")
+    @unittest.skip("skip when running in github action")
     def test_get_api_base_url_works(self):
         # test the api_base_url feature, and that it can contain a path
         config = AppConfig()
@@ -110,8 +108,6 @@ class TestServerConfig(ConfigTests):
             app__api_base_url=f"http://localhost:{backend_port}/additional/path",
             multi_dataset__dataroot=f"{PROJECT_ROOT}/example-dataset",
         )
-
-        config.complete_config()
         server = self.create_app(config)
         server.testing = True
         session = server.test_client()
@@ -135,7 +131,7 @@ class TestServerConfig(ConfigTests):
         for params, expected in tests:
             with self.subTest(params):
                 config = self.get_config(**params)
-                web_base_url = config.get_web_base_url()
+                web_base_url = config.server__app__web_base_url
                 self.assertEqual(web_base_url, expected)
 
     def test_multi_dataset_raises_error_for_illegal_routes(self):
@@ -154,7 +150,6 @@ class TestServerConfig(ConfigTests):
             self.config.update_server_config(
                 multi_dataset__dataroots={"d": {"base_url": legal, "dataroot": f"{PROJECT_ROOT}/example-dataset"}}
             )
-            self.config.complete_config()
 
     @patch("server.app.app.render_template")
     def test_mulitdatasets_work_e2e(self, mock_render_template):
@@ -177,8 +172,6 @@ class TestServerConfig(ConfigTests):
 
         # Change this default to test if the dataroot overrides below work.
         self.config.update_default_dataset_config(dataset__app__about_legal_tos="tos_default.html")
-
-        self.config.complete_config()
 
         server = self.create_app(self.config)
         server.testing = True

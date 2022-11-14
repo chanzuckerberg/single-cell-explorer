@@ -274,7 +274,7 @@ def launch(
             click.echo("[cellxgene] " + message)
 
         # Use a default secret if one is not provided
-        if not server__app__flask_secret_key:
+        if not app_config.server__app__flask_secret_key:
             app_config.update_server_config(app__flask_secret_key="SparkleAndShine")
 
         app_config.complete_config(messagefn)

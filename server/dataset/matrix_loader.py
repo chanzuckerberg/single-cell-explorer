@@ -14,6 +14,7 @@ class DataLoader(object):
             raise DatasetAccessError("Dataset does not exist.", HTTPStatus.NOT_FOUND)
 
         from server.dataset.cxg_dataset import CxgDataset
+
         self.matrix_type = CxgDataset
 
     def __resolve_dataset_config(self):

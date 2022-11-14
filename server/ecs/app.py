@@ -80,7 +80,7 @@ class WSGIServer(Server):
                 csp[k] = csp.get(k, []) + v
 
         # Add the web_base_url to the CORS header
-        web_base_url = app_config.get_web_base_url()
+        web_base_url = app_config.server__app__web_base_url
         if web_base_url:
             web_base_url_parse = urlparse(web_base_url)
             allowed_origins = [f"{web_base_url_parse.scheme}://{web_base_url_parse.netloc}"]
@@ -187,11 +187,7 @@ try:
 except Exception:
     logging.critical("Caught exception during initialization", exc_info=True)
     sys.exit(1)
-
-if app_config.is_multi_dataset():
     logging.info(f"starting server with multi_dataset__dataroot={app_config.server__multi_dataset__dataroot}")
-else:
-    logging.info(f"starting server with single_dataset__datapath={app_config.server__single_dataset__datapath}")
 
 if __name__ == "__main__":
     try:

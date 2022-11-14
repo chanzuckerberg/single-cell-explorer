@@ -2,11 +2,9 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 from urllib.parse import quote
 
 from server.common.config.app_config import AppConfig
-from server.common.config.base_config import BaseConfig
 from server.common.errors import ConfigurationError
 from server.tests import PROJECT_ROOT, FIXTURES_ROOT
 from server.tests.unit.common.config import ConfigTests
@@ -41,13 +39,6 @@ class TestDatasetConfig(ConfigTests):
         self.assertEqual(app_config.dataset__presentation__max_categories, 1000)
         self.assertEqual(app_config.dataset__diffexp__lfc_cutoff, 0.01)
 
-    # @patch("server.common.config.dataset_config.BaseConfig.validate_correct_type_of_configuration_attribute")
-    # def test_complete_config_checks_all_attr(self, mock_check_attrs):
-    #   TODO remove, no longer needed
-    #     mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
-    #     self.dataset_config.complete_config(self.context)
-    #     self.assertEqual(mock_check_attrs.call_count, 12)
-
     def test_app_sets_script_vars(self):
         app_config = self.get_config(scripts=["path/to/script"])
         # app_config.default_dataset_config.handle_app()
@@ -69,13 +60,6 @@ class TestDatasetConfig(ConfigTests):
 
         with self.assertRaises(ConfigurationError):
             app_config = self.get_config(scripts=[{"more": "different/script/path"}])
-
-    # def test_handle_diffexp__raises_warning_for_large_datasets(self):
-    #     # TODO I don't think this test does anything
-    #     app_config = self.get_config(lfc_cutoff=0.02, enable_difexp="true", top_n=15)
-    #     app_config.complete_config(self.context)
-    #     app_config.handle_diffexp(self.context)
-    #     self.assertEqual(len(self.context["messages"]), 0)
 
     def test_multi_dataset(self):
         app_config = AppConfig()
@@ -112,9 +96,6 @@ class TestDatasetConfig(ConfigTests):
 
         # Change this default to test if the dataroot overrides below work.
         app_config.update_default_dataset_config(app__about_legal_tos="tos_default.html")
-
-        app_config.complete_config()
-
         server = self.create_app(app_config)
 
         server.testing = True

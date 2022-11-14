@@ -130,7 +130,7 @@ def s3_uri_get(app_config, url_dataroot_id, dataset_id):
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
         parent_collection_url = (
-            f"{current_app.app_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
     else:
@@ -244,7 +244,7 @@ def gene_info_get(request):
     """
     Request information about a gene from the data portal gene_info api
     """
-    api_base_url = current_app.app_config.get_gene_info_api_base_url()
+    api_base_url = current_app.app_config.server__gene_info__api_base
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(

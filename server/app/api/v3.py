@@ -163,7 +163,7 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
             )
         except TombstoneError as e:
             parent_collection_url = (
-                f"{current_app.app_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+                f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # noqa E501
             )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 

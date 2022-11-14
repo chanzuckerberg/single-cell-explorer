@@ -63,7 +63,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
-    explorer_url_path = f"{app_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
+    explorer_url_path = f"{app_config.server__app__web_base_url}/{dataset_root}/{dataset_id}"
 
     if app_config.server__data_locator__api_base:
         dataset_metadata = request_dataset_metadata_from_data_portal(
@@ -89,9 +89,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
         "Falling back to deriving S3 location from request URL.",
     )
 
-    s3_uri = infer_dataset_s3_uri(
-        app_config=app_config, dataset_root=dataset_root, dataset_id=dataset_id
-    )
+    s3_uri = infer_dataset_s3_uri(app_config=app_config, dataset_root=dataset_root, dataset_id=dataset_id)
 
     return {
         "collection_id": None,
@@ -103,7 +101,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
 
 def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
-    data_locator_base_url = app_config.get_data_locator_api_base_url()
+    data_locator_base_url = app_config.server__data_locator__api_base
 
     try:
         base_metadata = get_dataset_metadata(dataset_root, dataset_id, app_config)
@@ -120,7 +118,7 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
 
         res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
-        web_base_url = app_config.get_web_base_url()
+        web_base_url = app_config.server__app__web_base_url
         metadata = {
             "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
             "dataset_id": dataset_id,
