@@ -2,7 +2,6 @@ import yaml
 from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
 from server.common.errors import ConfigurationError
-from server.common.utils.data_locator import discover_s3_region_name
 from server.common.config.config_model import Config
 from server.default_config import get_default_config
 

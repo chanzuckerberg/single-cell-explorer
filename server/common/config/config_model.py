@@ -240,34 +240,6 @@ class Dataset(BaseModel):
         return value
 
 
-class EnvironmentItem(BaseModel):
-    name: str
-    path: List[str]
-    required: bool = Field(default=False)
-
-
-class SecretItemValues(BaseModel):
-    key: str
-    path: List[str]
-    required: Optional[bool] = Field(default=False)
-
-
-class SecretsItem(BaseModel):
-    name: str
-    values: List[SecretItemValues]
-
-
-class AwsSecretsManager(BaseModel):
-    region: Optional[str]
-    secrets: List[SecretsItem]
-
-
-class External(BaseModel):
-    environment: List[EnvironmentItem]
-    aws_secrets_manager: AwsSecretsManager
-
-
 class Config(BaseModel):
     server: Optional[Server]
     dataset: Optional[Dataset]
-    # external: Optional[External]
