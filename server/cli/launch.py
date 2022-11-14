@@ -8,7 +8,7 @@ from typing import List
 
 import click
 
-from server.common.config.app_config import AppConfig, ServerConfig
+from server.common.config.app_config import AppConfig
 from server.common.errors import DatasetAccessError, ConfigurationError
 from server.common.utils.utils import sort_options
 from server.default_config import default_config
@@ -232,7 +232,6 @@ def launch(
 
     # app config
     app_config: AppConfig = AppConfig()
-    server_config: ServerConfig = app_config.server__
 
     try:
         if config_file:
@@ -287,11 +286,11 @@ def launch(
     # create the server
     server: TestServer = TestServer(app_config)
 
-    if not server__app__verbose:
+    if not app_config.server__app__verbose:
         log.setLevel(ERROR)
 
     cellxgene_url: str = f"http://{app_config.server__app__host}:{app_config.server__app__port}"
-    if server__app__open_browser:
+    if app_config.server__app__open_browser:
         click.echo(f"[cellxgene] Launching! Opening your browser to {cellxgene_url} now.")
         webbrowser.open(cellxgene_url)
     else:
@@ -299,16 +298,16 @@ def launch(
 
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
-    if not server__app__verbose:
+    if not app_config.server__app__verbose:
         f = open(os.devnull, "w")
         sys.stdout = f
 
     try:
         server.app.run(
-            host=server__app__host,
-            debug=server__app__debug,
-            port=server__app__port,
-            threaded=not server__app__debug,
+            host=app_config.server__app__host,
+            debug=app_config.server__app__debug,
+            port=app_config.server__app__port,
+            threaded=not app_config.server__app__debug,
             use_debugger=False,
             use_reloader=False,
         )

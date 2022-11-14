@@ -129,7 +129,7 @@ def get_api_base_resources(bp_base):
 def handle_api_base_url(app, app_config):
     """If an api_base_url is provided, then an inline script is generated to
     handle the new API prefix"""
-    api_base_url = app_config.get_api_base_url()
+    api_base_url = app_config.server__app__api_base_url
     if not api_base_url:
         return
 
@@ -168,7 +168,7 @@ class Server:
 
         self.app.register_blueprint(webbp)
 
-        api_base_url = app_config.get_api_base_url()
+        api_base_url = app_config.server__app__api_base_url
         if api_base_url:
             api_url_prefix = urlparse(api_base_url).path
         else:

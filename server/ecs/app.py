@@ -52,7 +52,7 @@ class WSGIServer(Server):
 
         # add the api_base_url to the connect_src csp header.
         extra_connect_src = []
-        api_base_url = app_config.get_api_base_url()
+        api_base_url = app_config.server__app__api_base_url
         if api_base_url:
             parse_api_base_url = urlparse(api_base_url)
             extra_connect_src = [f"{parse_api_base_url.scheme}://{parse_api_base_url.netloc}"]

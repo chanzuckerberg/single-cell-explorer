@@ -121,14 +121,14 @@ class AppConfig(object):
         return data_adaptor.get_about()
 
     def handle_data_source(self):
-        if self.config.server.multi_dataset.dataroot is None:
+        if not self.server__multi_dataset__dataroots:
             raise ConfigurationError("You must specify a dataroot for multidatasets")
 
     def handle_adaptor(self):
         from server.dataset.cxg_dataset import CxgDataset
 
         CxgDataset.set_tiledb_context(
-            self.config.server.adaptor.cxg_adaptor.tiledb_ctx.dict(by_alias=True, exclude_none=True)
+            self.server__adaptor__cxg_adaptor__tiledb_ctx
         )
 
     def exceeds_limit(self, limit_name, value):

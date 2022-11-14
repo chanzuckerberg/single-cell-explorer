@@ -17,8 +17,7 @@ class TestServerConfig(ConfigTests):
     def setUp(self):
         self.config_file_name = f"{unittest.TestCase.id(self).split('.')[-1]}.yml"
         self.config = AppConfig()
-        self.config.update_server_config(app__flask_secret_key="secret")
-        self.config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
+        self.config.update_server_config(app__flask_secret_key="secret", multi_dataset__dataroot=FIXTURES_ROOT)
         self.server_config = self.config.server
 
         message_list = []

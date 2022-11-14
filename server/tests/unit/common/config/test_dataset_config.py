@@ -14,8 +14,7 @@ class TestDatasetConfig(ConfigTests):
     def setUp(self):
         self.config_file_name = f"{unittest.TestCase.id(self).split('.')[-1]}.yml"
         self.app_config = AppConfig()
-        self.app_config.update_server_config(app__flask_secret_key="secret")
-        self.app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
+        self.app_config.update_server_config(app__flask_secret_key="secret", multi_dataset__dataroot=FIXTURES_ROOT)
         self.dataset_config = self.app_config.default_dataset_config
         self.app_config.complete_config()
         message_list = []
@@ -30,8 +29,7 @@ class TestDatasetConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", config_file_name=self.config_file_name, **kwargs
         )
-        app_config = AppConfig()
-        app_config.update_from_config_file(file_name)
+        app_config = AppConfig(file_name)
         return app_config
 
     def test_init_datatset_config_sets_vars_from_default_config(self):
