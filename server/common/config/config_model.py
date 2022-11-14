@@ -223,7 +223,7 @@ class Diffexp(BaseModel):
     count: int = 15
 
 
-class Dataset(BaseModel):
+class DefaultDataset(BaseModel):
     app: DatasetApp
     presentation: Presentation
     embeddings: Embeddings
@@ -239,4 +239,4 @@ class Dataset(BaseModel):
 
 class Config(BaseModel):
     server: Optional[Server]
-    dataset: Optional[Dataset]
+    default_dataset: Optional[DefaultDataset]

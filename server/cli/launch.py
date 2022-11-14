@@ -21,7 +21,7 @@ DEFAULT_CONFIG = AppConfig()
 def config_args(func):
     @click.option(
         "--max-category-items",
-        default=DEFAULT_CONFIG.dataset__presentation__max_categories,
+        default=DEFAULT_CONFIG.default_dataset__presentation__max_categories,
         metavar="<integer>",
         show_default=True,
         help="Will not display categories with more distinct values than specified.",
@@ -36,7 +36,7 @@ def config_args(func):
     @click.option(
         "--diffexp-lfc-cutoff",
         "-de",
-        default=DEFAULT_CONFIG.dataset__diffexp__lfc_cutoff,
+        default=DEFAULT_CONFIG.default_dataset__diffexp__lfc_cutoff,
         show_default=True,
         metavar="<float>",
         help="Minimum log fold change threshold for differential expression.",
@@ -44,7 +44,7 @@ def config_args(func):
     @click.option(
         "--disable-diffexp",
         is_flag=True,
-        default=not DEFAULT_CONFIG.dataset__diffexp__enable,
+        default=not DEFAULT_CONFIG.default_dataset__diffexp__enable,
         show_default=False,
         help="Disable on-demand differential expression.",
     )
@@ -101,7 +101,7 @@ def server_args(func):
     @click.option(
         "--scripts",
         "-s",
-        default=DEFAULT_CONFIG.dataset__app__scripts,
+        default=DEFAULT_CONFIG.default_dataset__app__scripts,
         multiple=True,
         metavar="<text>",
         help="Additional script files to include in HTML page. If not specified, "

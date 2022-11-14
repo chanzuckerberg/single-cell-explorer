@@ -33,7 +33,7 @@ class BaseConfigTest(ConfigTests):
         config = AppConfig()
         mapping = flatten(config.default_config)
         self.assertIsNotNone(mapping["server__app__verbose"])
-        self.assertIsNotNone(mapping["dataset__presentation__max_categories"])
+        self.assertIsNotNone(mapping["default_dataset__presentation__max_categories"])
 
     def test_changes_from_default_returns_list_of_nondefault_config_values(self):
         config = self.get_config(verbose="true", lfc_cutoff=0.05)
@@ -46,7 +46,7 @@ class BaseConfigTest(ConfigTests):
                 ("server__app__verbose", True, False),
                 ("server__app__flask_secret_key", "secret", None),
                 ("server__data_locator__s3_region_name", "us-east-1", True),
-                ("dataset__diffexp__lfc_cutoff", 0.05, 0.01),
+                ("default_dataset__diffexp__lfc_cutoff", 0.05, 0.01),
                 ('server__app__port', 5005, None)
             ],
         )

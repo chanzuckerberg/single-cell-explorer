@@ -73,7 +73,7 @@ server:
     column_request_max: 32
     diffexp_cellcount_max: 1500000
 
-dataset:
+default_dataset:
   app:
     # Scripts can be a list of either file names (string) or dicts containing keys src, integrity and crossorigin.
     # these will be injected into the index template as script tags with these attributes set.

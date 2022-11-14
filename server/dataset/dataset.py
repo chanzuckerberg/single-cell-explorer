@@ -281,7 +281,7 @@ class Dataset(metaclass=ABCMeta):
         except (KeyError, IndexError):
             raise FilterError("Error parsing filter")
         if top_n is None:
-            top_n = self.app_config.dataset__diffexp__top_n
+            top_n = self.app_config.default_dataset__diffexp__top_n
 
         if self.app_config.exceeds_limit(
             "diffexp_cellcount_max", np.count_nonzero(obs_mask_A) + np.count_nonzero(obs_mask_B)
@@ -292,7 +292,7 @@ class Dataset(metaclass=ABCMeta):
             obs_mask_A,
             obs_mask_B,
             top_n=top_n,
-            lfc_cutoff=self.app_config.dataset__diffexp__lfc_cutoff,
+            lfc_cutoff=self.app_config.default_dataset__diffexp__lfc_cutoff,
             selector_lists=False,
         )
 
@@ -307,10 +307,10 @@ class Dataset(metaclass=ABCMeta):
         two cell sets as lists of obs indices (postings lists).
         """
         if top_n is None:
-            top_n = self.app_config.dataset__diffexp__top_n
+            top_n = self.app_config.default_dataset__diffexp__top_n
 
         result = self.compute_diffexp_ttest(
-            listA, listB, top_n=top_n, lfc_cutoff=self.app_config.dataset__diffexp__lfc_cutoff, selector_lists=True
+            listA, listB, top_n=top_n, lfc_cutoff=self.app_config.default_dataset__diffexp__lfc_cutoff, selector_lists=True
         )
 
         try:

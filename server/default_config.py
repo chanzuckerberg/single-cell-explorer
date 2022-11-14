@@ -80,7 +80,7 @@ server:
     diffexp_cellcount_max: null
 
 
-dataset:
+default_dataset:
   app:
     # Scripts can be a list of either file names (string) or dicts containing keys src, integrity and crossorigin.
     # these will be injected into the index template as script tags with these attributes set.

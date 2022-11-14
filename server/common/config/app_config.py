@@ -4,7 +4,6 @@ from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
 from server.common.errors import ConfigurationError
 from server.common.config.config_model import Config
-from server.dataset.dataset import Dataset
 from server.default_config import get_default_config
 
 
@@ -40,7 +39,7 @@ class AppConfig(object):
     @property
     def default_dataset_config(self):
         # the dataset config, unless overridden by an entry in dataroot_config
-        return self.dataset
+        return self.default_dataset
 
     def __getattr__(self, item):
         path = item.split("__")
@@ -62,7 +61,7 @@ class AppConfig(object):
         self.update_config(**_kw)
 
     def update_default_dataset_config(self, **kw):
-        _kw = {f"dataset__{key}": value for key, value in kw.items()}
+        _kw = {f"default_dataset__{key}": value for key, value in kw.items()}
         self.update_config(**_kw)
 
     def update_config(self, **kw):
@@ -88,7 +87,7 @@ class AppConfig(object):
             {key: value for key, value in self.server__multi_dataset__dataroots.items()}
         )
         for value in self.dataroot_config.values():
-            value = value.update(**new_config["dataset"])
+            value = value.update(**new_config["default_dataset"])
 
     def _open_config_file(self, config_file: str):
         try:
@@ -122,10 +121,13 @@ class AppConfig(object):
         self.handle_adaptor()
         self.handle_data_source()
 
-    def get_title(self, data_adaptor: Dataset):
+    def get_dataset_config(self, dataroot_key):
+        return self.dataroot_config.get(dataroot_key, self.default_dataset)
+
+    def get_title(self, data_adaptor):
         return data_adaptor.get_title()
 
-    def get_about(self, data_adaptor: Dataset):
+    def get_about(self, data_adaptor):
         return data_adaptor.get_about()
 
     def handle_data_source(self):

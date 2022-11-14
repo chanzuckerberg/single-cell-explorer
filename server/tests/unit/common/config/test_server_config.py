@@ -166,11 +166,11 @@ class TestServerConfig(ConfigTests):
                 s2=dict(dataroot=f"{FIXTURES_ROOT}/set2", base_url="set2"),
                 s3=dict(dataroot=f"{FIXTURES_ROOT}/set3", base_url="set3"),
             ),
-            dataset__app__about_legal_tos = "tos_default.html"
+            default__dataset__app__about_legal_tos = "tos_default.html"
         )
 
         # Change this default to test if the dataroot overrides below work.
-        self.config.update_default_dataset_config(dataset__app__about_legal_tos="tos_default.html")
+        self.config.update_default_dataset_config(default__dataset__app__about_legal_tos="tos_default.html")
 
         server = self.create_app(self.config)
         server.testing = True

@@ -32,10 +32,10 @@ class AppConfigTest(ConfigTests):
         expected_config = yaml.load(default_config, Loader=yaml.Loader)
 
         server_config = app_default_config["server"]
-        dataset_config = app_default_config["dataset"]
+        dataset_config = app_default_config["default_dataset"]
 
         expected_server_config = expected_config["server"]
-        expected_dataset_config = expected_config["dataset"]
+        expected_dataset_config = expected_config["default_dataset"]
 
         self.assertDictEqual(app_default_config, expected_config)
         self.assertDictEqual(server_config, expected_server_config)
@@ -54,16 +54,16 @@ class AppConfigTest(ConfigTests):
                                      ])
 
         config = AppConfig()
-        config.update_config(dataset__app__scripts=(), dataset__app__inline_scripts=())
+        config.update_config(default_dataset__app__scripts=(), default__dataset__app__inline_scripts=())
         vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [('server__app__port', 5005, None),
                                      ('server__data_locator__s3_region_name', None, True)])
 
         config = AppConfig()
-        config.update_config(dataset__app__scripts=("a", "b"), dataset__app__inline_scripts=["c", "d"])
+        config.update_config(default_dataset__app__scripts=("a", "b"), default_dataset__app__inline_scripts=["c", "d"])
         vars = self.compare_configs(config, default_config)
-        self.assertCountEqual(vars, [('dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
-                                     ("dataset__app__inline_scripts", ["c", "d"], []), ('server__app__port', 5005, None),
+        self.assertCountEqual(vars, [('default_dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
+                                     ("default_dataset__app__inline_scripts", ["c", "d"], []), ('server__app__port', 5005, None),
                                      ('server__data_locator__s3_region_name', None, True)])
 
     def test_configfile_no_dataset_section(self):
@@ -100,7 +100,7 @@ class AppConfigTest(ConfigTests):
             configfile = os.path.join(tempdir, "config.yaml")
             with open(configfile, "w") as fconfig:
                 config = """
-                dataset:
+                default_dataset:
                   app:
                     about_legal_tos: expected_value
                 """
@@ -109,6 +109,6 @@ class AppConfigTest(ConfigTests):
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
             changes = self.compare_configs(app_config, default_config)
-            self.assertCountEqual(changes, [('dataset__app__about_legal_tos', 'expected_value', None),
+            self.assertCountEqual(changes, [('default_dataset__app__about_legal_tos', 'expected_value', None),
                                             ('server__app__port', 5005, None),
                                             ('server__data_locator__s3_region_name', None, True)])

@@ -191,9 +191,9 @@ class CxgDataset(Dataset):
 
         if cxg_version not in ["0.0", "0.1", "0.2.0", "0.3.0"]:
             raise DatasetAccessError(f"cxg matrix is not valid: {self.url}")
-        if self.app_config.dataset__X_approximate_distribution == "auto":
+        if self.app_config.default_dataset__X_approximate_distribution == "auto":
             raise ConfigurationError("X-approximate-distribution 'auto' mode unsupported.")
-        self.X_approximate_distribution = self.app_config.dataset__X_approximate_distribution
+        self.X_approximate_distribution = self.app_config.default_dataset__X_approximate_distribution
 
         self.title = title
         self.about = about
@@ -232,9 +232,9 @@ class CxgDataset(Dataset):
 
     def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, selector_lists=False):
         if top_n is None:
-            top_n = self.app_config.dataset__diffexp__top_n
+            top_n = self.app_config.default_dataset__diffexp__top_n
         if lfc_cutoff is None:
-            lfc_cutoff = self.app_config.dataset__diffexp__lfc_cutoff
+            lfc_cutoff = self.app_config.default_dataset__diffexp__lfc_cutoff
         return diffexp_cxg.diffexp_ttest(
             adaptor=self,
             setA=setA,

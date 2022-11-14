@@ -32,17 +32,17 @@ def get_client_config(app_config, data_adaptor, current_app):
 
     # parameters
     parameters = {
-        "layout": dataset_config.dataset__embeddings__names,
-        "max-category-items": dataset_config.dataset__presentation__max_categories,
-        "diffexp_lfc_cutoff": dataset_config.dataset__diffexp__lfc_cutoff,
-        "disable-diffexp": not dataset_config.dataset__diffexp__enable,
+        "layout": dataset_config.default_dataset__embeddings__names,
+        "max-category-items": dataset_config.default_dataset__presentation__max_categories,
+        "diffexp_lfc_cutoff": dataset_config.default_dataset__diffexp__lfc_cutoff,
+        "disable-diffexp": not dataset_config.default_dataset__diffexp__enable,
         "annotations_genesets": True,  # feature flag
         "annotations_genesets_readonly": True,
         "annotations_genesets_summary_methods": ["mean"],
-        "custom_colors": dataset_config.dataset__presentation__custom_colors,
+        "custom_colors": dataset_config.default_dataset__presentation__custom_colors,
         "diffexp-may-be-slow": False,
-        "about_legal_tos": dataset_config.dataset__app__about_legal_tos,
-        "about_legal_privacy": dataset_config.dataset__app__about_legal_privacy,
+        "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
+        "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
     }
 
     # corpora dataset_props

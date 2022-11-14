@@ -232,7 +232,7 @@ def data_var_get(request, data_adaptor):
 
 
 def colors_get(data_adaptor):
-    if not data_adaptor.app_config.dataset__presentation__custom_colors:
+    if not data_adaptor.app_config.default_dataset__presentation__custom_colors:
         return make_response(jsonify({}), HTTPStatus.OK)
     try:
         return make_response(jsonify(data_adaptor.get_colors()), HTTPStatus.OK)
@@ -260,7 +260,7 @@ def gene_info_get(request):
 
 
 def diffexp_obs_post(request, data_adaptor):
-    if not data_adaptor.app_config.dataset__diffexp__enable:
+    if not data_adaptor.app_config.default_dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
     args = request.get_json()
@@ -272,7 +272,7 @@ def diffexp_obs_post(request, data_adaptor):
 
         set1_filter = args.get("set1", {"filter": {}})["filter"]
         set2_filter = args.get("set2", {"filter": {}})["filter"]
-        count = data_adaptor.app_config.dataset__diffexp__count = 15
+        count = data_adaptor.app_config.default_dataset__diffexp__count = 15
 
         if set1_filter is None or set2_filter is None or count is None:
             return abort_and_log(HTTPStatus.BAD_REQUEST, "missing required parameter")
@@ -296,7 +296,7 @@ def diffexp_obs_post(request, data_adaptor):
 
 def diffex_binary_post(request, data_adaptor):
     MAX_CONTENT_LENGTH = 100 * 1024**2  # perhaps a config variable would be suitable?
-    if not data_adaptor.app_config.dataset__diffexp__enable:
+    if not data_adaptor.app_config.default_dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     if not request.content_type or "application/octet-stream" not in request.content_type:
         return abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)

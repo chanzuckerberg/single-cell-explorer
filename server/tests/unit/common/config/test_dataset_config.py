@@ -34,26 +34,23 @@ class TestDatasetConfig(ConfigTests):
 
     def test_init_datatset_config_sets_vars_from_default_config(self):
         app_config = AppConfig()
-        self.assertEqual(app_config.dataset__presentation__max_categories, 1000)
-        self.assertEqual(app_config.dataset__diffexp__lfc_cutoff, 0.01)
+        self.assertEqual(app_config.default_dataset__presentation__max_categories, 1000)
+        self.assertEqual(app_config.default_dataset__diffexp__lfc_cutoff, 0.01)
 
     def test_app_sets_script_vars(self):
         app_config = self.get_config(scripts=["path/to/script"])
-        # app_config.default_dataset_config.handle_app()
 
-        self.assertEqual(app_config.dataset__app__scripts, [{"src": "path/to/script"}])
+        self.assertEqual(app_config.default_dataset__app__scripts, [{"src": "path/to/script"}])
 
         app_config = self.get_config(scripts=[{"src": "path/to/script", "more": "different/script/path"}])
-        # app_config.default_dataset_config.handle_app()
         self.assertEqual(
-            app_config.dataset__app__scripts, [{"src": "path/to/script", "more": "different/script/path"}]
+            app_config.default_dataset__app__scripts, [{"src": "path/to/script", "more": "different/script/path"}]
         )
 
         app_config = self.get_config(scripts=["path/to/script", "different/script/path"])
-        # app_config.default_dataset_config.handle_app()
         # TODO @madison -- is this the desired functionality?
         self.assertEqual(
-            app_config.dataset__app__scripts, [{"src": "path/to/script"}, {"src": "different/script/path"}]
+            app_config.default_dataset__app__scripts, [{"src": "path/to/script"}, {"src": "different/script/path"}]
         )
 
         with self.assertRaises(ConfigurationError):
@@ -66,21 +63,6 @@ class TestDatasetConfig(ConfigTests):
             os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set3")
         except FileExistsError:
             pass
-        # test for illegal url_dataroots
-        # for illegal in ("../b", "!$*", "\\n", "", "(bad)"):
-        #
-        #     with self.assertRaises(ConfigurationError):
-        #         app_config.update_server_config(
-        #             app__flask_secret_key="secret",
-        #             multi_dataset__dataroots={"tag": {"base_url": illegal, "dataroot": f"{PROJECT_ROOT}/example-dataset"}},
-        #         )
-        #
-        # # test for legal url_dataroots
-        # for legal in ("d", "this.is-okay_", "a/b"):
-        #     app_config.update_server_config(
-        #         app__flask_secret_key="secret",
-        #         multi_dataset__dataroots={"tag": {"base_url": legal, "dataroot": f"{PROJECT_ROOT}/example-dataset"}},
-        #     )
 
         # test that multi dataroots work end to end
         app_config.update_server_config(
