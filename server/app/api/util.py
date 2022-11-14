@@ -11,5 +11,5 @@ def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None
     return dataset_artifact_s3_uri
 
 
-def get_data_adaptor(dataset_artifact_s3_uri: str):
+def get_data_adaptor(dataset_artifact_s3_uri: str) -> DataLoader:
     return DataLoader(location=dataset_artifact_s3_uri, app_config=current_app.app_config).validate_and_open()

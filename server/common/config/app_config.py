@@ -4,6 +4,7 @@ from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
 from server.common.errors import ConfigurationError
 from server.common.config.config_model import Config
+from server.dataset.dataset import Dataset
 from server.default_config import get_default_config
 
 
@@ -45,7 +46,6 @@ class AppConfig(object):
         path = item.split("__")
         node = self.config
         for p in path:
-            # _p = p.replace(".", "_")  # Handling a special case where a '.' is in the attribute name.
             node = node[p]  # if isinstance(node, dict) else getattr(node, p)
         return node
 
@@ -56,9 +56,6 @@ class AppConfig(object):
             raise ConfigurationError("Invalid configuration.") from error
         else:
             return valid_config.dict(by_alias=True)
-
-    def get_dataset_config(self, dataroot_key: str) -> dict:
-        return self.dataroot_config.get(dataroot_key, self.default_dataset_config)
 
     def update_server_config(self, **kw):
         _kw = {f"server__{key}": value for key, value in kw.items()}
@@ -125,10 +122,10 @@ class AppConfig(object):
         self.handle_adaptor()
         self.handle_data_source()
 
-    def get_title(self, data_adaptor):
+    def get_title(self, data_adaptor: Dataset):
         return data_adaptor.get_title()
 
-    def get_about(self, data_adaptor):
+    def get_about(self, data_adaptor: Dataset):
         return data_adaptor.get_about()
 
     def handle_data_source(self):
