@@ -89,7 +89,7 @@ class DatarootValue(BaseModel):
             if ".." in base_url_parts:
                 bad = True
         if bad:
-            raise ValueError(f"invalid {base_url=}")
+            raise ValueError(f"invalid base_url={base_url}")
         return base_url
 
 
@@ -101,13 +101,11 @@ class MultiDataset(BaseModel):
     @root_validator(skip_on_failure=True)
     def check_dataroot(cls, values):
         dataroots = values["dataroots"]
-        if all([values["dataroot"], dataroots]):
-            raise ValueError("Cannot set both dataroot and dataroots.")
-        # elif not any([values["dataroot"],values["dataroots"]]):
-        #     raise ValueError("Must set either dataroot or dataroots.")
+        if not any([values["dataroot"],values["dataroots"]]):
+            raise ValueError("Must set dataroot or dataroots.")
         elif values["dataroot"]:
             default = dict(base_url="d", dataroot=values["dataroot"])
-            values["dataroots"] = dict(d=DatarootValue(**default))
+            values["dataroots"]["d"] = DatarootValue(**default)
             values["dataroot"] = None
 
         # verify all the base_urls are unique
