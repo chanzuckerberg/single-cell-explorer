@@ -233,7 +233,7 @@ def register_api_v3(app, app_config, api_url_prefix):
     # of the dataroot, and not a subdirectory.  We may want to change
     # the route format at some point
     for dataroot in app_config.server__multi_dataset__dataroots.values():
-        dataroot_dict = dataroot.dict()
+        dataroot_dict = dataroot
         url_dataroot = dataroot_dict["base_url"]
         bp_dataroot = Blueprint(
             name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",

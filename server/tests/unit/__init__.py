@@ -57,7 +57,7 @@ class TestServer(Server):
         @param app_config: the AppConfig
         @return: None
         """
-        dataroot_and_base_url_pairs: list = [dataroot.dict() for dataroot in app_config.server__multi_dataset__dataroots.values()]
+        dataroot_and_base_url_pairs: list = [dataroot for dataroot in app_config.server__multi_dataset__dataroots.values()]
         if len(dataroot_and_base_url_pairs) > 1:
             logging.warning("Found more than one dataroot -- will use first")
         first_pair: dict = dataroot_and_base_url_pairs[0]

@@ -184,7 +184,7 @@ class Server:
         # of the dataroot, and not a subdirectory.  We may want to change
         # the route format at some point
         for dataroot in app_config.server__multi_dataset__dataroots.values():
-            dataroot_dict = dataroot.dict()
+            dataroot_dict = dataroot
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/",

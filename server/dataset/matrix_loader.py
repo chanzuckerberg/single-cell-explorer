@@ -18,7 +18,7 @@ class DataLoader(object):
         self.matrix_type = CxgDataset
 
     def __resolve_dataset_config(self):
-        dataset_config = self.app_config.config.dataset
+        dataset_config = self.app_config.dataset
         if dataset_config is None:
             raise DatasetAccessError("Missing dataset config", HTTPStatus.NOT_FOUND)
         return dataset_config

@@ -200,8 +200,8 @@ class ConfigTests(BaseTest):
 
     @staticmethod
     def compare_configs(a: AppConfig, b: AppConfig):
-        _a = flatten(a.config.dict(by_alias=True))
-        _b = flatten(b.config.dict(by_alias=True))
+        _a = flatten(a.config)
+        _b = flatten(b.config)
 
         diff = []
         keys = set([*_a.keys(), *_b.keys()])

@@ -1,3 +1,4 @@
+import copy
 import yaml
 from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
@@ -26,36 +27,35 @@ class AppConfig(object):
     AppConfig has methods to initialize, modify, and access the configuration.
     """
 
-    def __init__(self, default_config: str = None):
+    def __init__(self, config_file_path: str = None):
 
         # the default configuration (see default_config.py)
-        self.default_config = default_config if default_config else get_default_config()
-        self.config = self.validate_config(self.default_config)
-        #   dataroot config
-        self.dataroot_config = {key: value.dict() for key, value in self.config.server.multi_dataset.dataroots.items()}
-        for value in self.dataroot_config.values():
-            value.update(**self.default_config)
+        self.default_config: dict = get_default_config()
+        self.config: dict = copy.deepcopy(self.default_config)
+        self.valid = False
+        if config_file_path:
+            self.update_from_config_file(config_file_path)
 
     @property
     def default_dataset_config(self):
         # the dataset config, unless overridden by an entry in dataroot_config
-        return self.config.dataset.dict(by_alias=True)
+        return self.dataset
 
     def __getattr__(self, item):
         path = item.split("__")
         node = self.config
         for p in path:
-            _p = p.replace(".", "_")  # Handling a special case where a '.' is in the attribute name.
-            node = getattr(node, _p)
+            # _p = p.replace(".", "_")  # Handling a special case where a '.' is in the attribute name.
+            node = node[p]  # if isinstance(node, dict) else getattr(node, p)
         return node
 
-    def validate_config(self, config: dict):
+    def validate_config(self, config: dict) -> dict:
         try:
             valid_config = Config(**config)
         except ValueError as error:
             raise ConfigurationError("Invalid configuration.") from error
         else:
-            return valid_config
+            return valid_config.dict(by_alias=True)
 
     def get_dataset_config(self, dataroot_key: str) -> dict:
         return self.dataroot_config.get(dataroot_key, self.default_dataset_config)
@@ -69,17 +69,31 @@ class AppConfig(object):
         self.update_config(**_kw)
 
     def update_config(self, **kw):
-        updates = flatten(kw)
-        config = self.config.dict(by_alias=True)
+        updates = unflatten(kw)
+        config = copy.deepcopy(self.config)
+
+        # handle dataroots as special case
+        dataroots_updates = dict(
+            dataroot=updates.get("server", {}).get("multi_dataset", {}).pop("dataroot", ""),
+            dataroots=updates.get("server", {}).get("multi_dataset", {}).pop("dataroots", {}),
+        )
+        if any([d for d in dataroots_updates.values()]):
+            # dataroots are completely replaced if provided.
+            config["server"]["multi_dataset"].update(**dataroots_updates)
+
+        updates = flatten(updates)
         config = flatten(config)
         config.update(**updates)
         new_config = unflatten(config)
         self.config = self.validate_config(new_config)
-        self.dataroot_config = {key: value.dict() for key, value in self.config.server.multi_dataset.dataroots.items()}
+        self.valid = True
+        self.dataroot_config = copy.deepcopy(
+            {key: value for key, value in self.server__multi_dataset__dataroots.items()}
+        )
         for value in self.dataroot_config.values():
             value = value.update(**new_config["dataset"])
 
-    def _open_config_file(self, config_file):
+    def _open_config_file(self, config_file: str):
         try:
             with open(config_file) as fp:
                 config = yaml.load(fp, Loader=yaml.Loader)
@@ -89,14 +103,9 @@ class AppConfig(object):
             raise ConfigurationError(f"Issue retrieving the specified config file: {e}")
         return config
 
-    def update_from_config_file(self, config_file):
+    def update_from_config_file(self, config_file: str):
         config = self._open_config_file(config_file)
         self.update_config(**config)
-
-    def update_default_from_config_file(self, config_file):
-        config = self._open_config_file(config_file)
-        self.update_config(**config)
-        self.default_config = config
 
     def changes_from_default(self):
         """Return all the attribute that are different from the default"""
@@ -111,6 +120,8 @@ class AppConfig(object):
     def complete_config(self, messagefn=None):
         """The configure options are checked, and any additional setup based on the config
         parameters is done"""
+        if not self.valid:
+            self.config = self.validate_config(self.config)
         self.handle_adaptor()
         self.handle_data_source()
 
@@ -127,20 +138,10 @@ class AppConfig(object):
     def handle_adaptor(self):
         from server.dataset.cxg_dataset import CxgDataset
 
-        CxgDataset.set_tiledb_context(
-            self.server__adaptor__cxg_adaptor__tiledb_ctx
-        )
+        CxgDataset.set_tiledb_context(self.server__adaptor__cxg_adaptor__tiledb_ctx)
 
     def exceeds_limit(self, limit_name, value):
         limit_value = getattr(self, "server__limits__" + limit_name, None)
         if limit_value is None:  # disabled
             return False
         return value > limit_value
-
-    def get_api_base_url(self):
-        return
-        if self.config.server.app.api_base_url == "local":
-            return f"http://{self.app__host}:{self.app__port}"
-        if self.config.server.app.api_base_url and self.config.server.app.api_base_url.endswith("/"):
-            return self.config.server.app.api_base_url[:-1]
-        return self.config.server.app.api_base_url

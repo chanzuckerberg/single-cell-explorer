@@ -100,8 +100,7 @@ class MultiDataset(BaseModel):
 
     @root_validator(skip_on_failure=True)
     def check_dataroot(cls, values):
-        dataroots = values["dataroots"]
-        if not any([values["dataroot"],values["dataroots"]]):
+        if all([values["dataroot"], values["dataroots"]]):
             raise ValueError("Must set dataroot or dataroots.")
         elif values["dataroot"]:
             default = dict(base_url="d", dataroot=values["dataroot"])

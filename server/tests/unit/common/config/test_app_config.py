@@ -16,6 +16,7 @@ class AppConfigTest(ConfigTests):
         self.config = AppConfig()
         self.config.update_server_config(app__flask_secret_key="secret", multi_dataset__dataroot=FIXTURES_ROOT)
         self.config.complete_config()
+        self.maxDiff = None
 
     def get_config(self, **kwargs):
         file_name = self.custom_app_config(
@@ -47,18 +48,23 @@ class AppConfigTest(ConfigTests):
         vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [("server__app__verbose", True, False),
                                      ('server__multi_dataset__dataroots__d__base_url', 'd', None),
-                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None)])
+                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None),
+                                     ('server__app__port', 5005, None),
+                                     ('server__data_locator__s3_region_name', None, True)
+                                     ])
 
         config = AppConfig()
         config.update_config(dataset__app__scripts=(), dataset__app__inline_scripts=())
         vars = self.compare_configs(config, default_config)
-        self.assertCountEqual(vars, [])
+        self.assertCountEqual(vars, [('server__app__port', 5005, None),
+                                     ('server__data_locator__s3_region_name', None, True)])
 
         config = AppConfig()
         config.update_config(dataset__app__scripts=("a", "b"), dataset__app__inline_scripts=["c", "d"])
         vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [('dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
-                                     ("dataset__app__inline_scripts", ["c", "d"], [])])
+                                     ("dataset__app__inline_scripts", ["c", "d"], []), ('server__app__port', 5005, None),
+                                     ('server__data_locator__s3_region_name', None, True)])
 
     def test_configfile_no_dataset_section(self):
         # test a config file without a dataset section
@@ -83,7 +89,9 @@ class AppConfigTest(ConfigTests):
                 server_changes,
                 [('server__multi_dataset__dataroots__d__dataroot', 'test_dataroot', None),
                  ('server__app__flask_secret_key', 'secret', None),
-                 ('server__multi_dataset__dataroots__d__base_url', 'd', None)],
+                 ('server__multi_dataset__dataroots__d__base_url', 'd', None),
+                 ('server__app__port', 5005, None),
+                 ('server__data_locator__s3_region_name', None, True)],
             )
 
     def test_configfile_no_server_section(self):
@@ -101,4 +109,6 @@ class AppConfigTest(ConfigTests):
             app_config = AppConfig()
             app_config.update_from_config_file(configfile)
             changes = self.compare_configs(app_config, default_config)
-            self.assertCountEqual(changes, [('dataset__app__about_legal_tos', 'expected_value', None)])
+            self.assertCountEqual(changes, [('dataset__app__about_legal_tos', 'expected_value', None),
+                                            ('server__app__port', 5005, None),
+                                            ('server__data_locator__s3_region_name', None, True)])
