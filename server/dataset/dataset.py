@@ -310,7 +310,11 @@ class Dataset(metaclass=ABCMeta):
             top_n = self.app_config.default_dataset__diffexp__top_n
 
         result = self.compute_diffexp_ttest(
-            listA, listB, top_n=top_n, lfc_cutoff=self.app_config.default_dataset__diffexp__lfc_cutoff, selector_lists=True
+            listA,
+            listB,
+            top_n=top_n,
+            lfc_cutoff=self.app_config.default_dataset__diffexp__lfc_cutoff,
+            selector_lists=True,
         )
 
         try:
