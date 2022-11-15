@@ -36,11 +36,6 @@ class AppConfig(object):
         if config_file_path:
             self.update_from_config_file(config_file_path)
 
-    @property
-    def default_dataset_config(self):
-        # the dataset config, unless overridden by an entry in dataroot_config
-        return self.default_dataset
-
     def __getattr__(self, item):
         path = item.split("__")
         node = self.config

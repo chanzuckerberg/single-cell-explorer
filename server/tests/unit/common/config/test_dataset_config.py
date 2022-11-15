@@ -15,7 +15,7 @@ class TestDatasetConfig(ConfigTests):
         self.config_file_name = f"{unittest.TestCase.id(self).split('.')[-1]}.yml"
         self.app_config = AppConfig()
         self.app_config.update_server_config(app__flask_secret_key="secret", multi_dataset__dataroot=FIXTURES_ROOT)
-        self.dataset_config = self.app_config.default_dataset_config
+        self.dataset_config = self.app_config.default_dataset
         self.app_config.complete_config()
         message_list = []
 

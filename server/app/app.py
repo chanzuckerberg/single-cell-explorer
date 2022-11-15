@@ -139,7 +139,7 @@ def handle_api_base_url(app, app_config):
     with open(script_path, "w") as fout:
         fout.write("window.CELLXGENE.API.prefix = `" + api_base_url + "${location.pathname}api/`;\n")
 
-    dataset_configs = [app_config.default_dataset_config] + list(app_config.dataroot_config.values())
+    dataset_configs = [app_config.default_dataset] + list(app_config.dataroot_config.values())
     for dataset_config in dataset_configs:
         inline_scripts = dataset_config.app__inline_scripts
         inline_scripts.append(script_name)

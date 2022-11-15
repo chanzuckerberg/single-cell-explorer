@@ -118,7 +118,7 @@ class WSGIServer(Server):
 
     @staticmethod
     def compute_inline_csp_hashes(app, app_config):
-        dataset_configs = [app_config.default_dataset_config] + list(app_config.dataroot_config.values())
+        dataset_configs = [app_config.default_dataset] + list(app_config.dataroot_config.values())
         hashes = []
         for dataset_config in dataset_configs:
             inline_scripts = dataset_config.app__inline_scripts
