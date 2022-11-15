@@ -4,7 +4,6 @@ import os
 import sys
 import webbrowser
 from logging import Logger, getLogger, ERROR
-from typing import List
 
 import click
 
