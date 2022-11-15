@@ -234,49 +234,33 @@ def launch(
     app_config: AppConfig = AppConfig()
 
     try:
-        if config_file:
-            app_config.update_from_config_file(config_file)
+        app_config: AppConfig = AppConfig(config_file)
 
         # Determine which config options were give on the command line.
         # Those will override the ones provided in the config file (if provided).
-        cli_config: AppConfig = AppConfig()
-        cli_config.update_server_config(
-            app__verbose=verbose,
-            app__debug=debug,
-            app__host=host,
-            app__port=port,
-            app__open_browser=open_browser,
-            multi_dataset__dataroot=dataroot,
+        updates = dict(
+            server__app__verbose=verbose,
+            sserver__app__debug=debug,
+            server__app__host=host,
+            server__app__port=port,
+            server__app__open_browser=open_browser,
+            server__multi_dataset__dataroot=dataroot,
+            default_dataset__app__scripts=scripts,
+            default_dataset__presentation__max_categories=max_category_items,
+            default_dataset__presentation__custom_colors=not disable_custom_colors,
+            default_dataset__embeddings__names=embedding,
+            default_dataset__diffexp__enable=not disable_diffexp,
+            default_dataset__diffexp__lfc_cutoff=diffexp_lfc_cutoff,
         )
-        cli_config.update_default_dataset_config(
-            app__scripts=scripts,
-            presentation__max_categories=max_category_items,
-            presentation__custom_colors=not disable_custom_colors,
-            embeddings__names=embedding,
-            diffexp__enable=not disable_diffexp,
-            diffexp__lfc_cutoff=diffexp_lfc_cutoff,
-        )
-
-        diff: List[tuple] = cli_config.changes_from_default()
-        changes = {key: val for key, val, _ in diff}
-        app_config.update_server_config(**changes)
-
-        diff: List[tuple] = cli_config.changes_from_default()
-        changes = {key: val for key, val, _ in diff}
-        app_config.update_default_dataset_config(**changes)
-
-        # process the configuration
-        #  any errors will be thrown as an exception.
-        #  any info messages will be passed to the messagefn function.
-
-        def messagefn(message):
-            click.echo("[cellxgene] " + message)
 
         # Use a default secret if one is not provided
         if not app_config.server__app__flask_secret_key:
-            app_config.update_server_config(app__flask_secret_key="SparkleAndShine")
+            updates["app__flask_secret_key"] = "SparkleAndShine"
 
-        app_config.complete_config(messagefn)
+        app_config.update_config(**updates)
+        # process the configuration
+        #  any errors will be thrown as an exception.
+        app_config.complete_config()
 
     except (ConfigurationError, DatasetAccessError) as e:
         raise click.ClickException(e)
