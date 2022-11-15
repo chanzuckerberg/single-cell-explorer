@@ -16,8 +16,8 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
     app_config.complete_config()
 
     # display_names
-    title = app_config.get_title(data_adaptor)
-    about = app_config.get_about(data_adaptor)
+    title = data_adaptor.get_title()
+    about = data_adaptor.get_about()
 
     display_names = dict(engine=data_adaptor.get_name(), dataset=title)
 

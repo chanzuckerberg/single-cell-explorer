@@ -124,12 +124,6 @@ class AppConfig(object):
     def get_dataset_config(self, dataroot_key: str) -> dict:
         return self.dataroot_config.get(dataroot_key, self.default_dataset)
 
-    def get_title(self, data_adaptor):
-        return data_adaptor.get_title()
-
-    def get_about(self, data_adaptor):
-        return data_adaptor.get_about()
-
     def handle_data_source(self):
         if not self.server__multi_dataset__dataroots:
             raise ConfigurationError("You must specify a dataroot for multidatasets")
