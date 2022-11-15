@@ -1,4 +1,6 @@
 import copy
+import logging
+
 import yaml
 from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
@@ -18,9 +20,8 @@ def unflatten(dictionary: dict) -> dict:
 class AppConfig(object):
     """
     AppConfig stores all the configuration for cellxgene.
-    AppConfig contains one or more DatasetConfig(s) and one ServerConfig.
-    The server_config contains attributes that refer to the server process as a whole.
-    The default_dataset_config refers to attributes that are associated with the features and
+    The self.server contains attributes that refer to the server process as a whole.
+    The self.default_dataset refers to attributes that are associated with the features and
     presentations of a dataset.
     The dataset config attributes can be overridden depending on the url by which the
     dataset was accessed.  These are stored in dataroot_config.
@@ -33,6 +34,7 @@ class AppConfig(object):
         self.default_config: dict = get_default_config()
         self.config: dict = copy.deepcopy(self.default_config)
         self.valid = False
+        self.dataroot_config = {}
         if config_file_path:
             self.update_from_config_file(config_file_path)
 
@@ -83,6 +85,7 @@ class AppConfig(object):
         )
         for value in self.dataroot_config.values():
             value = value.update(**new_config["default_dataset"])
+        logging.info("Configuration updated")
 
     def _open_config_file(self, config_file: str):
         try:
@@ -115,6 +118,7 @@ class AppConfig(object):
             self.config = self.validate_config(self.config)
         self.handle_adaptor()
         self.handle_data_source()
+        logging.info("Configuration complete.")
 
     def get_dataset_config(self, dataroot_key: str) -> dict:
         return self.dataroot_config.get(dataroot_key, self.default_dataset)

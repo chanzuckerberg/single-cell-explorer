@@ -22,8 +22,7 @@ class AppConfigTest(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", config_file_name=self.config_file_name, **kwargs
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
+        config = AppConfig(file_name)
         return config
 
     def test_get_default_config_correctly_reads_default_config_file(self):
@@ -82,8 +81,7 @@ class AppConfigTest(ConfigTests):
                 """
                 fconfig.write(config)
 
-            app_config = AppConfig()
-            app_config.update_from_config_file(configfile)
+            app_config = AppConfig(configfile)
             server_changes = self.compare_configs(app_config, default_config)
             self.assertCountEqual(
                 server_changes,
@@ -106,8 +104,7 @@ class AppConfigTest(ConfigTests):
                 """
                 fconfig.write(config)
 
-            app_config = AppConfig()
-            app_config.update_from_config_file(configfile)
+            app_config = AppConfig(configfile)
             changes = self.compare_configs(app_config, default_config)
             self.assertCountEqual(changes, [('default_dataset__app__about_legal_tos', 'expected_value', None),
                                             ('server__app__port', 5005, None),

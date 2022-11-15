@@ -32,8 +32,7 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", config_file_name=self.config_file_name, **kwargs
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
+        config = AppConfig(file_name)
         return config
 
     def test_init_raises_error_if_default_config_is_invalid(self):
@@ -60,9 +59,8 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroots=dataroots, config_file_name=self.config_file_name, data_locator_region_name="true"
         )
-        config = AppConfig()
         with self.assertRaises(ConfigurationError):
-            config.update_from_config_file(file_name)
+            config = AppConfig(file_name)
 
     @patch("server.common.config.config_model.discover_s3_region_name")
     def test_handle_data_locator_can_read_from_dataroot(self, mock_discover_region_name):
@@ -74,8 +72,7 @@ class TestServerConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroots=dataroots, config_file_name=self.config_file_name, data_locator_region_name="true"
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
+        config = AppConfig(file_name)
         self.assertEqual(config.server__data_locator__s3_region_name, "us-west-2")
         mock_discover_region_name.assert_called_once_with("s3://hosted-cellxgene-dev")
 
@@ -90,8 +87,7 @@ class TestServerConfig(ConfigTests):
         )
 
         file_name = self.custom_app_config(config_file_name="zero_roots.yml")
-        config = AppConfig()
-        config.update_from_config_file(file_name)
+        config = AppConfig(file_name)
         with self.subTest("zero roots"):
             with self.assertRaises(ConfigurationError):
                 config.handle_data_source()
@@ -221,8 +217,7 @@ class TestServerConfig(ConfigTests):
             cxg_tile_cache_size=10,
             cxg_tiledb_py_init_buffer_size=10,
         )
-        config = AppConfig()
-        config.update_from_config_file(custom_config)
+        config = AppConfig(custom_config)
         config.handle_adaptor()
         mock_tiledb_context.assert_called_once_with(
             {

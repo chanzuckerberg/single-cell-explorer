@@ -25,8 +25,7 @@ class BaseConfigTest(ConfigTests):
         file_name = self.custom_app_config(
             config_file_name=self.config_file_name, **kwargs
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
+        config = AppConfig(file_name)
         return config
 
     def test_mapping_creation_returns_map_of_server_and_dataset_config(self):

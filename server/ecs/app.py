@@ -140,18 +140,14 @@ class WSGIServer(Server):
 
 
 try:
-    app_config = AppConfig()
-
-    has_config = False
+    app_config = False
     # config file: look first for "config.yaml" in the current working directory
     config_file = "config.yaml"
     config_location = DataLocator(config_file)
     if config_location.exists():
         with config_location.local_handle() as lh:
             logging.info(f"Configuration from {config_file}")
-            app_config.update_from_config_file(lh)
-            has_config = True
-
+            app_config = AppConfig(lh)
     else:
         # config file: second, use the CXG_CONFIG_FILE
         config_file = os.getenv("CXG_CONFIG_FILE")
@@ -161,13 +157,12 @@ try:
             if config_location.exists():
                 with config_location.local_handle() as lh:
                     logging.info(f"Configuration from {config_file}")
-                    app_config.update_from_config_file(lh)
-                    has_config = True
+                    app_config = AppConfig(lh)
             else:
                 logging.critical(f"Configuration file not found {config_file}")
                 sys.exit(1)
 
-    if not has_config:
+    if not app_config:
         logging.critical("No config file found")
         sys.exit(1)
 
@@ -177,7 +172,7 @@ try:
         app_config.update_server_config(multi_dataset__dataroot=dataroot)
 
     # complete config
-    app_config.complete_config(logging.info)
+    app_config.complete_config()
 
     server = WSGIServer(app_config)
     debug = False
