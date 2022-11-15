@@ -45,7 +45,7 @@ class AppConfig(object):
         path = item.split("__")
         node = self.config
         for p in path:
-            node = node[p]  # if isinstance(node, dict) else getattr(node, p)
+            node = node[p]
         return node
 
     def validate_config(self, config: dict) -> dict:
@@ -113,7 +113,7 @@ class AppConfig(object):
                 diff.append((attrname, curval, defval))
         return diff
 
-    def complete_config(self, messagefn=None):
+    def complete_config(self):
         """The configure options are checked, and any additional setup based on the config
         parameters is done"""
         if not self.valid:
@@ -121,7 +121,7 @@ class AppConfig(object):
         self.handle_adaptor()
         self.handle_data_source()
 
-    def get_dataset_config(self, dataroot_key):
+    def get_dataset_config(self, dataroot_key: str) -> dict:
         return self.dataroot_config.get(dataroot_key, self.default_dataset)
 
     def get_title(self, data_adaptor):

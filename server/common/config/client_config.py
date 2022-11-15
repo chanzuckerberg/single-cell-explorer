@@ -1,7 +1,9 @@
+from server.common.config.app_config import AppConfig
+from server.dataset.dataset import Dataset
 from server.version import display_version as cellxgene_display_version
 
 
-def get_client_config(app_config, data_adaptor, current_app):
+def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:
     """
     Return the configuration as required by the /config REST route
     """
@@ -11,7 +13,7 @@ def get_client_config(app_config, data_adaptor, current_app):
     # we have camalCase, hyphen-text, and underscore_text
 
     # make sure the configuration has been checked.
-    # app_config.check_config()
+    app_config.complete_config()
 
     # display_names
     title = app_config.get_title(data_adaptor)

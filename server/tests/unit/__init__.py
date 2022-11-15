@@ -100,7 +100,7 @@ class BaseTest(unittest.TestCase):
                 multi_dataset__dataroot=f"{FIXTURES_ROOT}",
                 multi_dataset__index=True,
             )
-        app_config.complete_config(logging.info)
+        app_config.complete_config()
 
         app = TestServer(app_config).app
 

@@ -51,7 +51,7 @@ def config_args(func):
     @click.option(
         "--embedding",
         "-e",
-        default=DEFAULT_CONFIG.default__embeddings__names,
+        default=DEFAULT_CONFIG.default_dataset__embeddings__names,
         multiple=True,
         show_default=False,
         metavar="<text>",

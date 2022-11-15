@@ -7,8 +7,9 @@ server:
 
   gene_info:
     api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"
-
-dataset:
+  multi_dataset:
+    dataroot: /
+default_dataset:
   presentation:
     max_categories: 1000
     custom_colors: true
