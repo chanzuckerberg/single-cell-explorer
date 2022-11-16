@@ -9,9 +9,6 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
     """
     dataset_config = data_adaptor.app_config
 
-    # FIXME The current set of config is not consistently presented:
-    # we have camalCase, hyphen-text, and underscore_text
-
     # make sure the configuration has been checked.
     app_config.complete_config()
 

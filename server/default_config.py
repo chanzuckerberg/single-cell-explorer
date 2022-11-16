@@ -24,15 +24,15 @@ server:
     web_base_url: null
 
   multi_dataset:
-    # Dataroot must be set, then cellxgene may serve multiple datasets.
-    # dataroot may be a string, representing the path to a directory or S3 prefix.  In this
+    # dataroot or dataroots must be set, then cellxgene may serve multiple datasets.
+    # dataroot must be a string, representing the path to a directory or S3 prefix.  In this
     # case the datasets in that location are accessed from <server>/d/<datasetname>.
     # example:
     #     dataroot:  /path/to/datasets/
     # or
     #     dataroot:  s3://bucket/prefix/
     #
-    # As an alternative, dataroot can be a dictionary, where a dataset key is associated with a base_url
+    # dataroots can be a dictionary, where a dataset key is associated with a base_url
     # and a dataroot.
     # example:
     #     dataroots:
@@ -105,12 +105,6 @@ default_dataset:
     count: 15
 
   X_approximate_distribution: normal # currently fixed config
-
-  # You can retrieve configuration parameters from this config file, the environment,
-  # the AWS secrets manager, or from the "cellxgene launch" command line arguments.
-  # They are applied in that order, meaning that if a parameter is defined in more
-  # than one location, the last one applied takes effect.
-
 """
 
 

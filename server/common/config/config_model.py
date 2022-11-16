@@ -1,6 +1,13 @@
+"""
+This module contains the configuration model used to validate the cellxgene configuration.
+
+Note: `root_validator`s and class variables are executed in the order they are defined in the class definition.
+"""
+
 from __future__ import annotations
 
 import os
+import sys
 import warnings
 from typing import List, Optional, Union, Dict
 from urllib.parse import quote_plus
@@ -67,8 +74,7 @@ class ServerApp(BaseModel):
     @validator("verbose")
     def check_verbose(cls, value):
         if not value:
-            pass
-            # sys.tracebacklimit = 0  # TODO undo
+            sys.tracebacklimit = 0
         return value
 
 
@@ -111,6 +117,7 @@ class MultiDataset(BaseModel):
         base_urls = [d.base_url for d in values["dataroots"].values()]
         if len(base_urls) > len(set(base_urls)):
             raise ValueError("error in multi_dataset__dataroot:  base_urls must be unique")
+        # TODO check that at least one dataroot is set. Then we can remove AppConfig.handle_data_source.
         return values
 
 
@@ -150,7 +157,7 @@ class Server(BaseModel):
     adaptor: Adaptor
     limits: Limits
 
-    @root_validator(skip_on_failure=True)  # TODO try skip_on_failure=True
+    @root_validator(skip_on_failure=True)
     def check_data_locator(cls, values):
         if values["data_locator"].s3_region_name is True:
             path = values["multi_dataset"].dataroots or values["multi_dataset"].dataroot
@@ -181,13 +188,11 @@ class Server(BaseModel):
         return values
 
 
-class ScriptsItem(BaseModel, extra=Extra.allow):
+class ScriptsItem(BaseModel):
     src: str
 
-    # class Config:
-    #     extra = Extra.ignore
-    # integrity: Optional[str] = None
-    # crossorigin: Optional[str] = None
+    class Config:
+        extra = Extra.allow
 
 
 class DatasetApp(BaseModel):
@@ -237,6 +242,6 @@ class DefaultDataset(BaseModel):
         return value
 
 
-class Config(BaseModel):
+class AppConfigModel(BaseModel):
     server: Optional[Server]
     default_dataset: Optional[DefaultDataset]

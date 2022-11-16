@@ -5,7 +5,7 @@ import yaml
 from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
 from server.common.errors import ConfigurationError
-from server.common.config.config_model import Config
+from server.common.config.config_model import AppConfigModel
 from server.default_config import get_default_config
 
 
@@ -47,7 +47,7 @@ class AppConfig(object):
 
     def validate_config(self, config: dict) -> dict:
         try:
-            valid_config = Config(**config)
+            valid_config = AppConfigModel(**config)
         except ValueError as error:
             raise ConfigurationError("Invalid configuration.") from error
         else:
