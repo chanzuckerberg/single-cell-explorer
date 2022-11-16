@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import sys
 import warnings
+from enum import Enum
 from typing import List, Optional, Union, Dict
 from urllib.parse import quote_plus
 
@@ -228,18 +229,17 @@ class Diffexp(BaseModel):
     count: int = 15
 
 
+class XApproximateDistributionEnum(str, Enum):
+    normal = "normal"
+    count = "count"
+
+
 class DefaultDataset(BaseModel):
     app: DatasetApp
     presentation: Presentation
     embeddings: Embeddings
     diffexp: Diffexp
-    X_approximate_distribution: str
-
-    @validator("X_approximate_distribution")
-    def check_x_approximate_distribution(cls, value):
-        if value not in ["normal", "count"]:
-            raise ValueError("X_approximate_distribution has unknown value -- must be 'normal' or 'count'.")
-        return value
+    X_approximate_distribution: XApproximateDistributionEnum = Field(default=XApproximateDistributionEnum.normal)
 
 
 class AppConfigModel(BaseModel):

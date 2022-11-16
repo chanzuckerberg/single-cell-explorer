@@ -131,3 +131,13 @@ class TestDatasetConfig(ConfigTests):
 
             # test config from specialization
             self.assertEqual(app_config.server__multi_dataset__dataroots["test"]["base_url"], "test")
+
+    def test_X_approximate_distribution(self):
+        with self.subTest("OK"):
+            self.app_config.update_default_dataset_config(X_approximate_distribution="count")
+
+        tests = ["auto", "bad"]
+        for test in tests:
+            with self.subTest(test):
+                with self.assertRaises(ConfigurationError):
+                    self.app_config.update_default_dataset_config(X_approximate_distribution=test)
