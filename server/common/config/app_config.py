@@ -19,24 +19,28 @@ def unflatten(dictionary: dict) -> dict:
 
 class AppConfig(object):
     """
-    AppConfig stores all the configuration for cellxgene.
-    The self.server contains attributes that refer to the server process as a whole.
-    The self.default_dataset refers to attributes that are associated with the features and
+    AppConfig stores all the configuration for cellxgene and has methods to initialize, modify,
+    and access the configuration.
+    The `self.server` contains attributes that refer to the server process as a whole.
+    The `self.default_dataset` refers to attributes that are associated with the features and
     presentations of a dataset.
     The dataset config attributes can be overridden depending on the url by which the
-    dataset was accessed.  These are stored in dataroot_config.
-    AppConfig has methods to initialize, modify, and access the configuration.
+    dataset was accessed.  These are stored in `self.dataroot_config`.
+    `self.default_config` is the dataset config, unless overridden by an entry in `self.dataroot_config`.
     """
 
     def __init__(self, config_file_path: str = None):
 
         # the default configuration (see default_config.py)
         self.default_config: dict = get_default_config()
+        # TODO @madison -- if we always read from the default config (hard coded path) can we set those values as
+        #  defaults within the config class?
         self.config: dict = copy.deepcopy(self.default_config)
-        self.valid = False
         self.dataroot_config = {}
         if config_file_path:
             self.update_from_config_file(config_file_path)
+        # Set to true when config_completed is called. Set to false when the config is modified.
+        self.is_completed = False
 
     def __getattr__(self, item):
         path = item.split("__")
@@ -45,7 +49,8 @@ class AppConfig(object):
             node = node[p]
         return node
 
-    def validate_config(self, config: dict) -> dict:
+    def check_config(self, config: dict) -> dict:
+        """Verify all the attributes in the config have been checked"""
         try:
             valid_config = AppConfigModel(**config)
         except ValueError as error:
@@ -62,10 +67,14 @@ class AppConfig(object):
         self.update_config(**_kw)
 
     def update_config(self, **kw):
+        """
+        Update multiple configuration parameters.
+        The key in kw should be a string using {parent}__{child}... when modifying nested configuration parameters.
+        """
         updates = unflatten(kw)
         config = copy.deepcopy(self.config)
 
-        # handle dataroots as special case
+        # handle dataroots as special case since the naming of keys are user defined.
         dataroots_updates = dict(
             dataroot=updates.get("server", {}).get("multi_dataset", {}).pop("dataroot", ""),
             dataroots=updates.get("server", {}).get("multi_dataset", {}).pop("dataroots", {}),
@@ -78,16 +87,16 @@ class AppConfig(object):
         config = flatten(config)
         config.update(**updates)
         new_config = unflatten(config)
-        self.config = self.validate_config(new_config)
-        self.valid = True
+        self.config = self.check_config(new_config)
         self.dataroot_config = copy.deepcopy(
             {key: value for key, value in self.server__multi_dataset__dataroots.items()}
         )
         for value in self.dataroot_config.values():
             value = value.update(**new_config["default_dataset"])
+        self.is_completed = False
         logging.info("Configuration updated")
 
-    def _open_config_file(self, config_file: str):
+    def update_from_config_file(self, config_file: str):
         try:
             with open(config_file) as fp:
                 config = yaml.load(fp, Loader=yaml.Loader)
@@ -95,10 +104,6 @@ class AppConfig(object):
             raise ConfigurationError(f"The specified config file contained an error: {e}")
         except OSError as e:
             raise ConfigurationError(f"Issue retrieving the specified config file: {e}")
-        return config
-
-    def update_from_config_file(self, config_file: str):
-        config = self._open_config_file(config_file)
         self.update_config(**config)
 
     def changes_from_default(self):
@@ -114,10 +119,11 @@ class AppConfig(object):
     def complete_config(self):
         """The configure options are checked, and any additional setup based on the config
         parameters is done"""
-        if not self.valid:
-            self.config = self.validate_config(self.config)
+        if not self.is_completed:
+            self.config = self.check_config(self.config)
         self.handle_adaptor()
         self.handle_data_source()
+        self.is_completed = True
         logging.info("Configuration complete.")
 
     def get_dataset_config(self, dataroot_key: str) -> dict:
