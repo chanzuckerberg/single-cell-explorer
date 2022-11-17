@@ -76,11 +76,10 @@ def dataroot_test_index():
 
     datasets = []
     for dataroot_dict in config.server__multi_dataset__dataroot.values():
-        dataroot = dataroot_dict["dataroot"]
         url_dataroot = dataroot_dict["base_url"]
-        locator = DataLocator(dataroot, region_name=config.server__data_locator__s3_region_name)
+        locator = DataLocator(dataroot_dict, region_name=config.server__data_locator__s3_region_name)
         for fname in locator.ls():
-            location = path_join(dataroot, fname)
+            location = path_join(dataroot_dict, fname)
             try:
                 DataLoader(location, app_config=config)
                 datasets.append((url_dataroot, fname))
@@ -183,8 +182,7 @@ class Server:
         # NOTE:  These routes only allow the dataset to be in the directory
         # of the dataroot, and not a subdirectory.  We may want to change
         # the route format at some point
-        for dataroot in app_config.server__multi_dataset__dataroots.values():
-            dataroot_dict = dataroot
+        for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/",

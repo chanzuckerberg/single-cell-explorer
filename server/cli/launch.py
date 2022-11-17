@@ -239,7 +239,7 @@ def launch(
         # Those will override the ones provided in the config file (if provided).
         updates = dict(
             server__app__verbose=verbose,
-            sserver__app__debug=debug,
+            server__app__debug=debug,
             server__app__host=host,
             server__app__port=port,
             server__app__open_browser=open_browser,
