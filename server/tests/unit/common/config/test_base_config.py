@@ -46,6 +46,7 @@ class BaseConfigTest(ConfigTests):
                 ("server__app__flask_secret_key", "secret", None),
                 ("server__data_locator__s3_region_name", "us-east-1", True),
                 ("default_dataset__diffexp__lfc_cutoff", 0.05, 0.01),
-                ('server__app__port', 5005, None)
+                ('server__app__port', 5005, None),
+                ('server__app__csp_directives', {}, None)
             ],
         )

@@ -20,9 +20,16 @@ from server.common.utils.utils import is_port_available, find_available_port, cu
 
 
 class CspDirectives(BaseModel):
-    img_src: List[str] = Field(..., alias="img-src")
-    script_src: List[str] = Field(..., alias="script-src")
-    connect_src: List[str] = Field(..., alias="connect-src")
+    img_src: Union[str, List[str]] = Field(default_factory=list, alias="img-src")
+    script_src: Union[str, List[str]] = Field(default_factory=list, alias="script-src")
+    connect_src: Union[str, List[str]] = Field(default_factory=list, alias="connect-src")
+
+    @root_validator(skip_on_failure=True)
+    def string_to_list(cls, values):
+        for key, value in values.items():
+            if isinstance(value, str):
+                values[key] = [value]
+        return values
 
 
 class ServerApp(BaseModel):
@@ -35,7 +42,7 @@ class ServerApp(BaseModel):
     flask_secret_key: Optional[str]
     generate_cache_control_headers: bool
     server_timing_headers: bool
-    csp_directives: Optional[CspDirectives] = Field(default_factory=dict)
+    csp_directives: Optional[CspDirectives]
     api_base_url: Optional[str]
     web_base_url: Optional[str]
 
@@ -77,6 +84,10 @@ class ServerApp(BaseModel):
         if not value:
             sys.tracebacklimit = 0
         return value
+
+    @validator("csp_directives")
+    def check_csp_directives(cls, value):
+        return {} if not value else value
 
 
 class DatarootValue(BaseModel):

@@ -20,21 +20,20 @@ server:
         - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
-
-# if env == "prod":
-#   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
-#   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
-#   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
-# else:
-#   api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
-#   web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
-#   data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
+    # if env == "prod":
+    #   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
+    #   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
+    #   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
+    # else:
+    #   api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
+    #   web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
+    #   data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
 
     api_base_url: https://${API_DOMAIN}/cellxgene/
     web_base_url: https://${WEB_DOMAIN}/
 
   multi_dataset:
-    dataroot:
+    dataroots:
       covid19:
         base_url: d
         dataroot: s3://${CXG_BUCKET_PATH}
@@ -55,7 +54,6 @@ server:
     #   if false/null, then do not set.
     #   if a string, then use that value (e.g. us-east-1).
     s3_region_name: true
-
 
   gene_info:
     api_base: https://${DATA_LOCATOR_DOMAIN}/gene_info/v1
@@ -89,7 +87,6 @@ default_dataset:
 
     about_legal_tos: /tos/
     about_legal_privacy: /privacy/
-
 
   presentation:
     max_categories: 1000

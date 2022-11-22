@@ -75,8 +75,6 @@ class WSGIServer(Server):
 
         if app_config.server__app__csp_directives:
             for k, v in app_config.server__app__csp_directives.items():
-                if not isinstance(v, list):
-                    v = [v]
                 csp[k] = csp.get(k, []) + v
 
         # Add the web_base_url to the CORS header
@@ -121,7 +119,7 @@ class WSGIServer(Server):
         dataset_configs = [app_config.default_dataset] + list(app_config.dataroot_config.values())
         hashes = []
         for dataset_config in dataset_configs:
-            inline_scripts = dataset_config.app__inline_scripts
+            inline_scripts = dataset_config["app"]["inline_scripts"]
             for script in inline_scripts:
                 with app.open_resource(f"../common/web/templates/{script}") as f:
                     content = f.read()

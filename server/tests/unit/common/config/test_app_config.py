@@ -47,23 +47,19 @@ class AppConfigTest(ConfigTests):
         vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [("server__app__verbose", True, False),
                                      ('server__multi_dataset__dataroots__d__base_url', 'd', None),
-                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None),
-                                     ('server__app__port', 5005, None),
-                                     ('server__data_locator__s3_region_name', None, True)
+                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None)
                                      ])
 
         config = AppConfig()
         config.update_config(default_dataset__app__scripts=(), default__dataset__app__inline_scripts=())
         vars = self.compare_configs(config, default_config)
-        self.assertCountEqual(vars, [('server__app__port', 5005, None),
-                                     ('server__data_locator__s3_region_name', None, True)])
+        self.assertCountEqual(vars, [])
 
         config = AppConfig()
         config.update_config(default_dataset__app__scripts=("a", "b"), default_dataset__app__inline_scripts=["c", "d"])
         vars = self.compare_configs(config, default_config)
         self.assertCountEqual(vars, [('default_dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
-                                     ("default_dataset__app__inline_scripts", ["c", "d"], []), ('server__app__port', 5005, None),
-                                     ('server__data_locator__s3_region_name', None, True)])
+                                     ("default_dataset__app__inline_scripts", ["c", "d"], [])])
 
     def test_configfile_no_dataset_section(self):
         # test a config file without a dataset section
@@ -88,8 +84,7 @@ class AppConfigTest(ConfigTests):
                 [('server__multi_dataset__dataroots__d__dataroot', 'test_dataroot', None),
                  ('server__app__flask_secret_key', 'secret', None),
                  ('server__multi_dataset__dataroots__d__base_url', 'd', None),
-                 ('server__app__port', 5005, None),
-                 ('server__data_locator__s3_region_name', None, True)],
+                 ],
             )
 
     def test_configfile_no_server_section(self):
@@ -106,6 +101,25 @@ class AppConfigTest(ConfigTests):
 
             app_config = AppConfig(configfile)
             changes = self.compare_configs(app_config, default_config)
-            self.assertCountEqual(changes, [('default_dataset__app__about_legal_tos', 'expected_value', None),
-                                            ('server__app__port', 5005, None),
-                                            ('server__data_locator__s3_region_name', None, True)])
+            self.assertCountEqual(changes, [('default_dataset__app__about_legal_tos', 'expected_value', None)])
+
+    def test_csp_directives(self):
+        default_config = AppConfig()
+        with tempfile.TemporaryDirectory() as tempdir:
+            configfile = os.path.join(tempdir, "config.yaml")
+            with open(configfile, "w") as fconfig:
+                config = """
+                    server:
+                      app:
+                        csp_directives:
+                          img-src:
+                            - test_list
+                          script-src: test_string
+                """
+                fconfig.write(config)
+
+            app_config = AppConfig(configfile)
+            changes = self.compare_configs(app_config, default_config)
+            self.assertCountEqual(changes, [('server__app__csp_directives__img-src', ["test_list"], None),
+                                            ('server__app__csp_directives__script-src', ["test_string"], None),
+                                            ('server__app__csp_directives__connect-src', [], None)])

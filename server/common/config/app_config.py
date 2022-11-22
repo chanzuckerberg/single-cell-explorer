@@ -1,7 +1,8 @@
 import copy
 import logging
-
 import yaml
+
+from envyaml import EnvYAML
 from flatten_dict import unflatten as _unflatten, flatten as _flatten
 
 from server.common.errors import ConfigurationError
@@ -35,7 +36,7 @@ class AppConfig(object):
         self.default_config: dict = get_default_config()
         # TODO @madison -- if we always read from the default config (hard coded path) can we set those values as
         #  defaults within the config class?
-        self.config: dict = copy.deepcopy(self.default_config)
+        self.config: dict = AppConfigModel(**copy.deepcopy(self.default_config)).dict(by_alias=True)
         self.dataroot_config = {}
         if config_file_path:
             self.update_from_config_file(config_file_path)
@@ -98,8 +99,7 @@ class AppConfig(object):
 
     def update_from_config_file(self, config_file: str):
         try:
-            with open(config_file) as fp:
-                config = yaml.load(fp, Loader=yaml.Loader)
+            config = EnvYAML(config_file)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}")
         except OSError as e:
