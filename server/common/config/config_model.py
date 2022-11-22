@@ -35,7 +35,7 @@ class ServerApp(BaseModel):
     flask_secret_key: Optional[str]
     generate_cache_control_headers: bool
     server_timing_headers: bool
-    csp_directives: Optional[List[CspDirectives]]
+    csp_directives: Optional[CspDirectives] = Field(default_factory=dict)
     api_base_url: Optional[str]
     web_base_url: Optional[str]
 
