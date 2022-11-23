@@ -67,6 +67,16 @@ class ServerApp(BaseModel):
         return values
 
     @root_validator(skip_on_failure=True)
+    def check_api_base_url(cls, values):
+        api_base_url = values.get("api_base_url")
+        if api_base_url == "local":
+            api_base_url = f"http://{values['host']}:{values['port']}"
+        if api_base_url and api_base_url.endswith("/"):
+            api_base_url = api_base_url[:-1]
+        values["api_base_url"] = api_base_url
+        return values
+
+    @root_validator(skip_on_failure=True)
     def check_web_base_url(cls, values):
         web_base_url = values["web_base_url"]
         if web_base_url is None:
