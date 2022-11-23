@@ -23,7 +23,7 @@ from server.common.errors import (
 from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
-from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import DataLoader
 
 logging.basicConfig(level=logging.INFO)
 
@@ -45,20 +45,20 @@ def dataset_index(url_dataroot=None, dataset=None):
         return dataroot_index()
 
     dataset_config = app_config.get_dataset_config(url_dataroot)
-    scripts = dataset_config.app__scripts
-    inline_scripts = dataset_config.app__inline_scripts
+    scripts = dataset_config["app"]["scripts"]
+    inline_scripts = dataset_config["app"]["inline_scripts"]
 
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot, dataset)
         # Attempt to load the dataset to see if it exists at all
-        get_data_adaptor(app_config=app_config, dataset_artifact_s3_uri=dataset_artifact_s3_uri)
+        get_data_adaptor(dataset_artifact_s3_uri=dataset_artifact_s3_uri)
     except (DatasetAccessError, DatasetNotFoundError) as e:
         return common_rest.abort_and_log(
             e.status_code, f"Invalid dataset {dataset}: {e.message}", loglevel=logging.INFO, include_exc_info=True
         )
     except TombstoneError as e:
         parent_collection_url = (
-            f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+            f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
@@ -73,17 +73,15 @@ def dataroot_test_index():
     data += "<body><H1>Welcome to cellxgene</H1>"
 
     config = current_app.app_config
-    server_config = config.server_config
 
     datasets = []
-    for dataroot_dict in server_config.multi_dataset__dataroot.values():
-        dataroot = dataroot_dict["dataroot"]
+    for dataroot_dict in config.server__multi_dataset__dataroot.values():
         url_dataroot = dataroot_dict["base_url"]
-        locator = DataLocator(dataroot, region_name=server_config.data_locator__s3__region_name)
+        locator = DataLocator(dataroot_dict, region_name=config.server__data_locator__s3_region_name)
         for fname in locator.ls():
-            location = path_join(dataroot, fname)
+            location = path_join(dataroot_dict, fname)
             try:
-                MatrixDataLoader(location, app_config=config)
+                DataLoader(location, app_config=config)
                 datasets.append((url_dataroot, fname))
             except DatasetAccessError:
                 # skip over invalid datasets
@@ -103,12 +101,12 @@ def dataroot_test_index():
 def dataroot_index():
     # Handle the base url for the cellxgene server when running in multi dataset mode
     config = current_app.app_config
-    if not config.server_config.multi_dataset__index:
+    if not config.server__multi_dataset__index:
         abort(HTTPStatus.NOT_FOUND)
-    elif config.server_config.multi_dataset__index is True:
+    elif config.server__multi_dataset__index is True:
         return dataroot_test_index()
     else:
-        return redirect(config.server_config.multi_dataset__index)
+        return redirect(config.server__multi_dataset__index)
 
 
 class HealthAPI(Resource):
@@ -130,7 +128,7 @@ def get_api_base_resources(bp_base):
 def handle_api_base_url(app, app_config):
     """If an api_base_url is provided, then an inline script is generated to
     handle the new API prefix"""
-    api_base_url = app_config.server_config.get_api_base_url()
+    api_base_url = app_config.server__app__api_base_url
     if not api_base_url:
         return
 
@@ -140,9 +138,9 @@ def handle_api_base_url(app, app_config):
     with open(script_path, "w") as fout:
         fout.write("window.CELLXGENE.API.prefix = `" + api_base_url + "${location.pathname}api/`;\n")
 
-    dataset_configs = [app_config.default_dataset_config] + list(app_config.dataroot_config.values())
+    dataset_configs = [app_config.default_dataset] + list(app_config.dataroot_config.values())
     for dataset_config in dataset_configs:
-        inline_scripts = dataset_config.app__inline_scripts
+        inline_scripts = dataset_config["app"]["inline_scripts"]
         inline_scripts.append(script_name)
 
 
@@ -157,20 +155,19 @@ class Server:
         handle_api_base_url(self.app, app_config)
         self._before_adding_routes(self.app, app_config)
         self.app.json_encoder = Float32JSONEncoder
-        server_config = app_config.server_config
-        if server_config.app__server_timing_headers:
+        if app_config.server__app__server_timing_headers:
             ServerTiming(self.app, force_debug=True)
 
         # enable session data
         self.app.permanent_session_lifetime = datetime.timedelta(days=50 * 365)
 
         # Config
-        secret_key = server_config.app__flask_secret_key
+        secret_key = app_config.server__app__flask_secret_key
         self.app.config.update(SECRET_KEY=secret_key)
 
         self.app.register_blueprint(webbp)
 
-        api_base_url = server_config.get_api_base_url()
+        api_base_url = app_config.server__app__api_base_url
         if api_base_url:
             api_url_prefix = urlparse(api_base_url).path
         else:
@@ -180,12 +177,12 @@ class Server:
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
-        register_api_v3(app=self.app, app_config=app_config, server_config=server_config, api_url_prefix=api_url_prefix)
+        register_api_v3(app=self.app, app_config=app_config, api_url_prefix=api_url_prefix)
 
         # NOTE:  These routes only allow the dataset to be in the directory
         # of the dataroot, and not a subdirectory.  We may want to change
         # the route format at some point
-        for dataroot_dict in server_config.multi_dataset__dataroot.values():
+        for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/",

@@ -1,7 +1,7 @@
 from flask import current_app
 
 from server.dataset.dataset_metadata import get_dataset_metadata
-from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import DataLoader
 
 
 def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None):
@@ -11,5 +11,5 @@ def get_dataset_artifact_s3_uri(url_dataroot: str = None, dataset_id: str = None
     return dataset_artifact_s3_uri
 
 
-def get_data_adaptor(dataset_artifact_s3_uri: str, app_config):
-    return MatrixDataLoader(location=dataset_artifact_s3_uri, app_config=app_config).validate_and_open()
+def get_data_adaptor(dataset_artifact_s3_uri: str) -> DataLoader:
+    return DataLoader(location=dataset_artifact_s3_uri, app_config=current_app.app_config).validate_and_open()

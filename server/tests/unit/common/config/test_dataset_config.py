@@ -2,11 +2,9 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import patch
 from urllib.parse import quote
 
 from server.common.config.app_config import AppConfig
-from server.common.config.base_config import BaseConfig
 from server.common.errors import ConfigurationError
 from server.tests import PROJECT_ROOT, FIXTURES_ROOT
 from server.tests.unit.common.config import ConfigTests
@@ -15,11 +13,10 @@ from server.tests.unit.common.config import ConfigTests
 class TestDatasetConfig(ConfigTests):
     def setUp(self):
         self.config_file_name = f"{unittest.TestCase.id(self).split('.')[-1]}.yml"
-        self.config = AppConfig()
-        self.config.update_server_config(app__flask_secret_key="secret")
-        self.config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT)
-        self.dataset_config = self.config.default_dataset_config
-        self.config.complete_config()
+        self.app_config = AppConfig()
+        self.app_config.update_server_config(app__flask_secret_key="secret", multi_dataset__dataroot=FIXTURES_ROOT)
+        self.dataset_config = self.app_config.default_dataset
+        self.app_config.complete_config()
         message_list = []
 
         def noop(message):
@@ -32,78 +29,45 @@ class TestDatasetConfig(ConfigTests):
         file_name = self.custom_app_config(
             dataroot=f"{FIXTURES_ROOT}", config_file_name=self.config_file_name, **kwargs
         )
-        config = AppConfig()
-        config.update_from_config_file(file_name)
-        return config
+        app_config = AppConfig(file_name)
+        return app_config
 
     def test_init_datatset_config_sets_vars_from_default_config(self):
-        config = AppConfig()
-        self.assertEqual(config.default_dataset_config.presentation__max_categories, 1000)
-        self.assertEqual(config.default_dataset_config.diffexp__lfc_cutoff, 0.01)
-
-    @patch("server.common.config.dataset_config.BaseConfig.validate_correct_type_of_configuration_attribute")
-    def test_complete_config_checks_all_attr(self, mock_check_attrs):
-        mock_check_attrs.side_effect = BaseConfig.validate_correct_type_of_configuration_attribute()
-        self.dataset_config.complete_config(self.context)
-        self.assertEqual(mock_check_attrs.call_count, 12)
+        app_config = AppConfig()
+        self.assertEqual(app_config.default_dataset__presentation__max_categories, 1000)
+        self.assertEqual(app_config.default_dataset__diffexp__lfc_cutoff, 0.01)
 
     def test_app_sets_script_vars(self):
-        config = self.get_config(scripts=["path/to/script"])
-        config.default_dataset_config.handle_app()
+        app_config = self.get_config(scripts=["path/to/script"])
 
-        self.assertEqual(config.default_dataset_config.app__scripts, [{"src": "path/to/script"}])
+        self.assertEqual(app_config.default_dataset__app__scripts, [{"src": "path/to/script"}])
 
-        config = self.get_config(scripts=[{"src": "path/to/script", "more": "different/script/path"}])
-        config.default_dataset_config.handle_app()
+        app_config = self.get_config(scripts=[{"src": "path/to/script", "more": "different/script/path"}])
         self.assertEqual(
-            config.default_dataset_config.app__scripts, [{"src": "path/to/script", "more": "different/script/path"}]
+            app_config.default_dataset__app__scripts, [{"src": "path/to/script", "more": "different/script/path"}]
         )
 
-        config = self.get_config(scripts=["path/to/script", "different/script/path"])
-        config.default_dataset_config.handle_app()
+        app_config = self.get_config(scripts=["path/to/script", "different/script/path"])
         # TODO @madison -- is this the desired functionality?
         self.assertEqual(
-            config.default_dataset_config.app__scripts, [{"src": "path/to/script"}, {"src": "different/script/path"}]
+            app_config.default_dataset__app__scripts, [{"src": "path/to/script"}, {"src": "different/script/path"}]
         )
 
-        config = self.get_config(scripts=[{"more": "different/script/path"}])
         with self.assertRaises(ConfigurationError):
-            config.default_dataset_config.handle_app()
-
-    def test_handle_diffexp__raises_warning_for_large_datasets(self):
-        config = self.get_config(lfc_cutoff=0.02, enable_difexp="true", top_n=15)
-        config.server_config.complete_config(self.context)
-        config.default_dataset_config.handle_diffexp(self.context)
-        self.assertEqual(len(self.context["messages"]), 0)
+            app_config = self.get_config(scripts=[{"more": "different/script/path"}])
 
     def test_multi_dataset(self):
-        config = AppConfig()
+        app_config = AppConfig()
         try:
             os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set2")
             os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set3")
         except FileExistsError:
             pass
-        # test for illegal url_dataroots
-        for illegal in ("../b", "!$*", "\\n", "", "(bad)"):
-            config.update_server_config(
-                app__flask_secret_key="secret",
-                multi_dataset__dataroot={"tag": {"base_url": illegal, "dataroot": f"{PROJECT_ROOT}/example-dataset"}},
-            )
-            with self.assertRaises(ConfigurationError):
-                config.complete_config()
-
-        # test for legal url_dataroots
-        for legal in ("d", "this.is-okay_", "a/b"):
-            config.update_server_config(
-                app__flask_secret_key="secret",
-                multi_dataset__dataroot={"tag": {"base_url": legal, "dataroot": f"{PROJECT_ROOT}/example-dataset"}},
-            )
-            config.complete_config()
 
         # test that multi dataroots work end to end
-        config.update_server_config(
+        app_config.update_server_config(
             app__flask_secret_key="secret",
-            multi_dataset__dataroot=dict(
+            multi_dataset__dataroots=dict(
                 s1=dict(dataroot=f"{PROJECT_ROOT}/example-dataset", base_url="set1/1/2"),
                 s2=dict(dataroot=f"{FIXTURES_ROOT}/set2", base_url="set2"),
                 s3=dict(dataroot=f"{FIXTURES_ROOT}/set3", base_url="set3"),
@@ -111,11 +75,8 @@ class TestDatasetConfig(ConfigTests):
         )
 
         # Change this default to test if the dataroot overrides below work.
-        config.update_default_dataset_config(app__about_legal_tos="tos_default.html")
-
-        config.complete_config()
-
-        server = self.create_app(config)
+        app_config.update_default_dataset_config(app__about_legal_tos="tos_default.html")
+        server = self.create_app(app_config)
 
         server.testing = True
         session = server.test_client()
@@ -159,16 +120,24 @@ class TestDatasetConfig(ConfigTests):
                 config = """
                 server:
                     multi_dataset:
-                        dataroot:
+                        dataroots:
                             test:
                                 base_url: test
                                 dataroot: fake_dataroot
 
                 """
                 fconfig.write(config)
-
-            app_config = AppConfig()
-            app_config.update_from_config_file(configfile)
+            app_config = AppConfig(configfile)
 
             # test config from specialization
-            self.assertEqual(app_config.server_config.multi_dataset__dataroot["test"]["base_url"], "test")
+            self.assertEqual(app_config.server__multi_dataset__dataroots["test"]["base_url"], "test")
+
+    def test_X_approximate_distribution(self):
+        with self.subTest("OK"):
+            self.app_config.update_default_dataset_config(X_approximate_distribution="count")
+
+        tests = ["auto", "bad"]
+        for test in tests:
+            with self.subTest(test):
+                with self.assertRaises(ConfigurationError):
+                    self.app_config.update_default_dataset_config(X_approximate_distribution=test)

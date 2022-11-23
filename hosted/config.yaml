@@ -20,21 +20,20 @@ server:
         - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
-
-# if env == "prod":
-#   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
-#   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
-#   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
-# else:
-#   api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
-#   web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
-#   data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
+    # if env == "prod":
+    #   api_base_url = f"https://api.cellxgene.cziscience.com/cellxgene/"
+    #   web_base_url = f"https://cellxgene.cziscience.com/" # Also used for the multi_dataset index page
+    #   data_locator_url = f"https://api.cellxgene.cziscience.com/dp/v1"
+    # else:
+    #   api_base_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/cellxgene/"
+    #   web_base_url = f"https://cellxgene.{env}.single-cell.czi.technology/" # Also used for the multi_dataset index page
+    #   data_locator_url = f"https://api.cellxgene.{env}.single-cell.czi.technology/dp/v1"
 
     api_base_url: https://${API_DOMAIN}/cellxgene/
     web_base_url: https://${WEB_DOMAIN}/
 
   multi_dataset:
-    dataroot:
+    dataroots:
       covid19:
         base_url: d
         dataroot: s3://${CXG_BUCKET_PATH}
@@ -48,17 +47,13 @@ server:
     #   string/URL:  redirect to this URL:  flask.redirect(config.multi_dataset__index)
     index: https://${WEB_DOMAIN}/
 
-    # A list of allowed matrix types.  If an empty list, then all matrix types are allowed
-    allowed_matrix_types: []
-
   data_locator:
     api_base: https://${DATA_LOCATOR_DOMAIN}/dp/v1
-    s3:
-      # s3 region name.
-      #   if true, then the s3 location is automatically determined from the datapath or dataroot.
-      #   if false/null, then do not set.
-      #   if a string, then use that value (e.g. us-east-1).
-      region_name: true
+    # s3 region name.
+    #   if true, then the s3 location is automatically determined from the datapath or dataroot.
+    #   if false/null, then do not set.
+    #   if a string, then use that value (e.g. us-east-1).
+    s3_region_name: true
 
   gene_info:
     api_base: https://${DATA_LOCATOR_DOMAIN}/gene_info/v1
@@ -76,7 +71,7 @@ server:
     column_request_max: 32
     diffexp_cellcount_max: 1500000
 
-dataset:
+default_dataset:
   app:
     # Scripts can be a list of either file names (string) or dicts containing keys src, integrity and crossorigin.
     # these will be injected into the index template as script tags with these attributes set.
@@ -92,7 +87,6 @@ dataset:
 
     about_legal_tos: /tos/
     about_legal_privacy: /privacy/
-
 
   presentation:
     max_categories: 1000

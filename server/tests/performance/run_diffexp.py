@@ -6,7 +6,7 @@ import gc
 import numpy as np
 
 from server.common.config.app_config import AppConfig
-from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import DataLoader
 from server.dataset.cxg_dataset import CxgDataset
 
 
@@ -47,7 +47,7 @@ def main():
     )
     app_config.complete_config()
 
-    loader = MatrixDataLoader(location=args.dataset, app_config=app_config)
+    loader = DataLoader(location=args.dataset, app_config=app_config)
     adaptor = loader.open()
     np.set_printoptions(edgeitems=10, linewidth=180)
     rng = np.random.default_rng(seed=args.seed)
