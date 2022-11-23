@@ -83,6 +83,8 @@ class ServerApp(BaseModel):
     def check_verbose(cls, value):
         if not value:
             sys.tracebacklimit = 0
+        else:
+            sys.tracebacklimit = 1000
         return value
 
     @validator("csp_directives")

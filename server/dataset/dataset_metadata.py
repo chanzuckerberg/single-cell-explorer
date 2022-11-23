@@ -35,9 +35,9 @@ def infer_dataset_s3_uri(app_config: AppConfig, dataset_root: str, dataset_id: s
     """
     #   See ticket https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/corpora-data-portal/1281 # noqa
 
-    for dataroot in app_config.server__multi_dataset__dataroots.values():
-        if dataroot["base_url"] == dataset_root:
-            dataroot = dataroot["dataroot"]
+    for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
+        if dataroot_dict["base_url"] == dataset_root:
+            dataroot = dataroot_dict["dataroot"]
             break
     if dataroot is None:
         raise DatasetAccessError(f"Invalid dataset root {dataset_root}")
