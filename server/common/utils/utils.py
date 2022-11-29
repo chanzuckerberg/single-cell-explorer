@@ -1,5 +1,6 @@
 import contextlib
 import errno
+import logging
 import os
 import socket
 from urllib.parse import urlsplit, urljoin
@@ -26,8 +27,8 @@ def is_port_available(host, port):
         try:
             s.bind((host, port))
             is_available = True
-        except socket.error:
-            pass
+        except (socket.error, OverflowError) as error:
+            logging.debug(error)
     return is_available
 
 

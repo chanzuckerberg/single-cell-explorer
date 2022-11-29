@@ -1,5 +1,5 @@
 f"""
-dataset:
+default_dataset:
   app:
     scripts: {scripts} #list of strs (filenames) or dicts containing keys
     inline_scripts: {inline_scripts} #list of strs (filenames)
