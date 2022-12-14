@@ -3,6 +3,7 @@ import shutil
 import random
 import yaml
 
+from server.common.config.app_config import flatten, AppConfig
 from server.tests import FIXTURES_ROOT
 from server.tests.unit import BaseTest
 
@@ -39,8 +40,8 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
+        dataroots={},
         index="false",
-        allowed_matrix_types=[],
         data_locator_region_name="us-east-1",
         data_locator_api_base="null",
         gene_info_api_base="null",
@@ -79,8 +80,8 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
+        dataroots={},
         index="false",
-        allowed_matrix_types=[],
         data_locator_region_name="us-east-1",
         data_locator_api_base="null",
         gene_info_api_base="null",
@@ -96,7 +97,6 @@ class ConfigTests(BaseTest):
         custom_colors="true",
         enable_users_annotations="true",
         annotation_type="local_file_csv",
-        db_uri="null",
         hosted_file_directory="null",
         local_file_csv_directory="null",
         local_file_csv_file="null",
@@ -131,8 +131,8 @@ class ConfigTests(BaseTest):
             session_cookie=session_cookie,
             cookie=cookie,
             dataroot=dataroot,
+            dataroots=dataroots,
             index=index,
-            allowed_matrix_types=allowed_matrix_types,
             data_locator_region_name=data_locator_region_name,
             data_locator_api_base=data_locator_api_base,
             gene_info_api_base=gene_info_api_base,
@@ -151,7 +151,6 @@ class ConfigTests(BaseTest):
             custom_colors=custom_colors,
             enable_users_annotations=enable_users_annotations,
             annotation_type=annotation_type,
-            db_uri=db_uri,
             hosted_file_directory=hosted_file_directory,
             local_file_csv_directory=local_file_csv_directory,
             local_file_csv_file=local_file_csv_file,
@@ -162,17 +161,10 @@ class ConfigTests(BaseTest):
             X_approximate_distribution=X_approximate_distribution,
             config_file_name=f"temp_dataset_config_{random_num}.yml",
         )
-        external_config = self.custom_external_config(
-            environment=environment,
-            aws_secrets_manager_region=aws_secrets_manager_region,
-            aws_secrets_manager_secrets=aws_secrets_manager_secrets,
-            config_file_name=f"temp_external_config_{random_num}.yml",
-        )
 
         with open(configfile, "w") as app_config_file:
             app_config_file.write(open(server_config).read())
             app_config_file.write(open(dataset_config).read())
-            app_config_file.write(open(external_config).read())
 
         return configfile
 
@@ -186,7 +178,6 @@ class ConfigTests(BaseTest):
         custom_colors="true",
         enable_users_annotations="true",
         annotation_type="local_file_csv",
-        db_uri="null",
         hosted_file_directory="null",
         local_file_csv_directory="null",
         local_file_csv_file="null",
@@ -207,26 +198,15 @@ class ConfigTests(BaseTest):
 
         return configfile
 
-    def custom_external_config(
-        self,
-        environment=None,
-        aws_secrets_manager_region=None,
-        aws_secrets_manager_secrets=[],
-        config_file_name="external_config.yaml",
-    ):
-        # set to the default if environment is None
-        if environment is None:
-            environment = [
-                dict(name="CXG_SECRET_KEY", path=["server", "app", "flask_secret_key"], required=False),
-            ]
-        external_config = {
-            "external": {
-                "environment": environment,
-                "aws_secrets_manager": {"region": aws_secrets_manager_region, "secrets": aws_secrets_manager_secrets},
-            }
-        }
+    @staticmethod
+    def compare_configs(a: AppConfig, b: AppConfig):
+        _a = flatten(a.config)
+        _b = flatten(b.config)
 
-        configfile = os.path.join(self.tmp_fixtures_directory, config_file_name)
-        with open(configfile, "w") as external_config_file:
-            yaml.dump(external_config, external_config_file)
-        return configfile
+        diff = []
+        keys = set([*_a.keys(), *_b.keys()])
+        for key in keys:
+            value_a, value_b = _a.get(key), _b.get(key)
+            if value_a != value_b:
+                diff.append((key, value_a, value_b))
+        return diff

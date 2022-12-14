@@ -1,8 +1,7 @@
 import { Classes, Colors } from "@blueprintjs/core";
-import { Chip } from "czifui";
 import styled from "@emotion/styled";
 import { css } from "@emotion/react";
-import { GRAY, PT_GRID_SIZE_PX, PT_TEXT_COLOR } from "./theme";
+import { GRAY, PT_TEXT_COLOR } from "./theme";
 import { HEADER_HEIGHT_PX } from "../../globals";
 
 export const Wrapper = styled.div`
@@ -80,11 +79,4 @@ export const LinkWrapper = styled.span`
 
   display: flex;
   align-items: center;
-`;
-
-export const BetaChip = styled(Chip)`
-  background: #7a41ce;
-  color: white;
-  margin-left: ${PT_GRID_SIZE_PX / 2}px;
-  height: ${PT_GRID_SIZE_PX * 2}px !important;
 `;

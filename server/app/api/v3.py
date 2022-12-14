@@ -27,7 +27,7 @@ def rest_get_s3uri_data_adaptor(func):
     def wrapped_function(self, s3_uri=None):
         try:
             s3_uri = unquote(s3_uri) if s3_uri else s3_uri
-            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
+            data_adaptor = get_data_adaptor(s3_uri)
             return func(self, data_adaptor)
         except (DatasetAccessError, DatasetNotFoundError, DatasetMetadataError) as e:
             return common_rest.abort_and_log(
@@ -152,7 +152,7 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
     def wrapped_function(self, dataset=None):
         try:
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
-            data_adaptor = get_data_adaptor(s3_uri, app_config=current_app.app_config)
+            data_adaptor = get_data_adaptor(s3_uri)
             # HACK: Used *only* to pass the dataset_explorer_location to DatasetMeta.get_dataset_and_collection_
             # metadata()
             data_adaptor.dataset_id = dataset
@@ -163,7 +163,7 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
             )
         except TombstoneError as e:
             parent_collection_url = (
-                f"{current_app.app_config.server_config.get_web_base_url()}/collections/{e.collection_id}"  # noqa E501
+                f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # noqa E501
             )
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
@@ -217,7 +217,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     return api
 
 
-def register_api_v3(app, app_config, server_config, api_url_prefix):
+def register_api_v3(app, app_config, api_url_prefix):
     api_version = "/api/v0.3"
 
     s3uri_api_path = "s3_uri"
@@ -232,7 +232,7 @@ def register_api_v3(app, app_config, server_config, api_url_prefix):
     # NOTE:  These routes only allow the dataset to be in the directory
     # of the dataroot, and not a subdirectory.  We may want to change
     # the route format at some point
-    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+    for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
         url_dataroot = dataroot_dict["base_url"]
         bp_dataroot = Blueprint(
             name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",

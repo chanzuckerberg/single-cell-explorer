@@ -6,15 +6,7 @@ import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
 import Icon from "../icon/icon";
-import {
-  BetaChip,
-  Left,
-  LinkWrapper,
-  MainWrapper,
-  Nav,
-  Right,
-  Wrapper,
-} from "./style";
+import { Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
@@ -79,7 +71,6 @@ const Header = (props: HeaderProps) => {
                 text="Gene Expression"
                 onClick={handleWMGClick}
               />
-              <BetaChip label="Beta" size="small" />
             </LinkWrapper>
           </Nav>
         </Left>
@@ -93,6 +84,7 @@ const Header = (props: HeaderProps) => {
                     target="_blank"
                     text="Documentation"
                     rel="noopener"
+                    onClick={handleDocumentationClick}
                   />
                   <MenuItem
                     href="https://join-cellxgene-users.herokuapp.com/"
@@ -156,6 +148,9 @@ const Header = (props: HeaderProps) => {
   }
   function handleCollectionsClick(): void {
     track(EVENTS.COLLECTIONS_CLICK_NAV);
+  }
+  function handleDocumentationClick(): void {
+    track(EVENTS.DOCUMENTATION_CLICK_NAV);
   }
 };
 Header.defaultProps = {
