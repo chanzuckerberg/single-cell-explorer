@@ -84,6 +84,7 @@ const Header = (props: HeaderProps) => {
                     target="_blank"
                     text="Documentation"
                     rel="noopener"
+                    onClick={handleDocumentationClick}
                   />
                   <MenuItem
                     href="https://join-cellxgene-users.herokuapp.com/"
@@ -147,6 +148,9 @@ const Header = (props: HeaderProps) => {
   }
   function handleCollectionsClick(): void {
     track(EVENTS.COLLECTIONS_CLICK_NAV);
+  }
+  function handleDocumentationClick(): void {
+    track(EVENTS.DOCUMENTATION_CLICK_NAV);
   }
 };
 Header.defaultProps = {
