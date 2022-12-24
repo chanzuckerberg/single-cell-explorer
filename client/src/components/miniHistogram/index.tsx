@@ -98,7 +98,7 @@ export default class MiniHistogram extends React.PureComponent {
         />
         <div key="text" style={{ fontSize: "14px" }}>
           <p style={{ margin: "0" }}>
-            This histograms shows the distribution of{" "}
+            This histogram shows the distribution of{" "}
             <strong>{obsOrVarContinuousFieldDisplayName}</strong> within{" "}
             <strong>{domainLabel}</strong>.
             <br />
