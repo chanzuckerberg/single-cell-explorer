@@ -2,9 +2,7 @@ import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
 
-import {
-  Classes,
-} from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
@@ -193,7 +191,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     If and only if true, update the component
     */
     const { state } = this;
-    const {props} = this;
+    const { props } = this;
     const { categoryIndex, categorySummary, isSelected } = props;
     const {
       categoryIndex: newCategoryIndex,
@@ -347,7 +345,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
         /* get all the keys d[1] as an array, then find the sum */
         .domain([0, d3.sum(Array.from(occupancy.values()))])
         .range([0, width]);
-      const {categories} = schema.annotations.obsByName[colorAccessor];
+      const { categories } = schema.annotations.obsByName[colorAccessor];
 
       const dfColumn = colorData.col(colorAccessor);
       const categoryValues = dfColumn.summarizeCategorical().categories;
@@ -502,7 +500,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
         }}
         // @ts-expect-error ts-migrate(2322) FIXME: Type '{ obsOrVarContinuousFieldDisplayName: any; d... Remove this comment to see the full error message
         obsOrVarContinuousFieldDisplayName={colorAccessor}
-        domainLabel={label}
+        domainLabel={this.currentLabelAsString()}
         height={STACKED_BAR_HEIGHT}
         width={STACKED_BAR_WIDTH}
       />
