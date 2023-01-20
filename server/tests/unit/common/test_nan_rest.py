@@ -1,5 +1,6 @@
 from http import HTTPStatus
 import math
+from urllib.parse import quote
 
 import server.tests.decode_fbs as decode_fbs
 
@@ -18,14 +19,15 @@ class WithNaNs(BaseTest):
     def setUpClass(cls):
         app_config = AppConfig()
         app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="secret")
-        app_config.update_default_dataset_config()
         super().setUpClass(app_config)
-        cls.TEST_URL_BASE = "/d/nan.cxg/api/v0.2/"
         cls.app.testing = True
         cls.client = cls.app.test_client()
 
     def setUp(self):
         self.session = self.client
+        response = self.session.get(f"/d/nan.cxg/api/v0.3/s3_uri")
+        s3_uri = quote(quote(response.json, safe=""), safe="")
+        self.TEST_URL_BASE = f"/s3_uri/{s3_uri}/api/v0.3/"
 
     def test_initialize(self):
         endpoint = "schema"

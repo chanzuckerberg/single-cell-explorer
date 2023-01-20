@@ -18,6 +18,7 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
+from packaging import version
 
 
 class CxgDataset(Dataset):
@@ -178,12 +179,11 @@ class CxgDataset(Dataset):
             # version >0
             gmd = self.open_array("cxg_group_metadata")
             cxg_version = gmd.meta["cxg_version"]
-            # version 0.1 used a malformed/shorthand semver string.
-            if cxg_version == "0.1" or cxg_version == "0.2.0":
+            if version.parse(cxg_version) >= version.parse("0.1.0"):
                 cxg_properties = json.loads(gmd.meta["cxg_properties"])
                 title = cxg_properties.get("title", None)
                 about = cxg_properties.get("about", None)
-            if cxg_version == "0.2.0":
+            if version.parse(cxg_version) >= version.parse("0.2.0"):
                 corpora_props = json.loads(gmd.meta["corpora"]) if "corpora" in gmd.meta else None
         else:
             # version 0
@@ -191,9 +191,7 @@ class CxgDataset(Dataset):
 
         if cxg_version not in ["0.0", "0.1", "0.2.0", "0.3.0"]:
             raise DatasetAccessError(f"cxg matrix is not valid: {self.url}")
-        if self.dataset_config.X_approximate_distribution == "auto":
-            raise ConfigurationError("X-approximate-distribution 'auto' mode unsupported.")
-        self.X_approximate_distribution = self.dataset_config.X_approximate_distribution
+        self.X_approximate_distribution = self.app_config.default_dataset__X_approximate_distribution
 
         self.title = title
         self.about = about
@@ -232,9 +230,9 @@ class CxgDataset(Dataset):
 
     def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, selector_lists=False):
         if top_n is None:
-            top_n = self.dataset_config.diffexp__top_n
+            top_n = self.app_config.default_dataset__diffexp__top_n
         if lfc_cutoff is None:
-            lfc_cutoff = self.dataset_config.diffexp__lfc_cutoff
+            lfc_cutoff = self.app_config.default_dataset__diffexp__lfc_cutoff
         return diffexp_cxg.diffexp_ttest(
             adaptor=self,
             setA=setA,
@@ -393,7 +391,7 @@ class CxgDataset(Dataset):
         for ax in ("obs", "var"):
             A = self.open_array(ax)
             schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
-            if type(schema_hints) is not dict:
+            if not isinstance(schema_hints, dict):
                 raise TypeError("Array schema was malformed.")
 
             cols = []

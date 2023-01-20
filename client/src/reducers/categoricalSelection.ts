@@ -44,41 +44,6 @@ const CategoricalSelection = (
       };
     }
 
-    case "annotation: create category": {
-      const name = action.data;
-      return {
-        ...state,
-        ...CH.createCategoricalSelection([name]),
-      };
-    }
-
-    case "annotation: category edited": {
-      const name = action.metadataField;
-      const newName = action.newCategoryText;
-      const { [name]: catSeln, ...newState } = state;
-      newState[newName] = catSeln;
-      return newState;
-    }
-
-    case "annotation: delete category": {
-      const name = action.metadataField;
-      const { [name]: _, ...newState } = state;
-      return newState;
-    }
-
-    case "annotation: label current cell selection":
-    case "annotation: add new label to category":
-    case "annotation: label edited":
-    case "annotation: delete label": {
-      /* need to rebuild the state for this annotation */
-      const name = action.metadataField;
-      const { [name]: _, ...partialState } = state;
-      return {
-        ...partialState,
-        ...CH.createCategoricalSelection([name]),
-      };
-    }
-
     default: {
       return state;
     }

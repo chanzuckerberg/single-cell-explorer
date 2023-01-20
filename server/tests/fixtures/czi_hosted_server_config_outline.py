@@ -15,20 +15,12 @@ f"""server:
 
   multi_dataset:
     dataroot: {dataroot}
+    dataroots: {dataroots}
     index: {index}
-    allowed_matrix_types: {allowed_matrix_types}
-
-  single_dataset:
-    datapath: {dataset_datapath}
-    obs_names: {obs_names}
-    var_names: {var_names}
-    about: {about}
-    title: {title}
 
   data_locator:
     api_base: {data_locator_api_base}
-    s3:
-      region_name: {data_locator_region_name}
+    s3_region_name: {data_locator_region_name}
 
   gene_info:
     api_base: {gene_info_api_base}

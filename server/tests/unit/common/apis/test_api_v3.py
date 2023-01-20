@@ -1,3 +1,4 @@
+import unittest
 from urllib.parse import quote
 import json
 import os
@@ -12,7 +13,7 @@ import requests
 from server.common.config.app_config import AppConfig
 from server.tests import decode_fbs, FIXTURES_ROOT
 from server.tests.fixtures.fixtures import pbmc3k_colors
-from server.tests.unit import BaseTest as _BaseTest, skip_if
+from server.tests.unit import BaseTest as _BaseTest
 from server.common.diffexpdu import DiffExArguments
 
 
@@ -534,7 +535,7 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
 
-    @skip_if(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
+    @unittest.skipIf(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):
         endpoint = "static"
         file = "assets/favicon.ico"
@@ -555,17 +556,6 @@ class EndPoints(BaseTest):
                 self.assertTrue(annotations_genesets)
                 self.assertTrue(annotations_genesets_readonly)
                 self.assertEqual(annotations_genesets_summary_methods, ["mean"])
-
-    def test_get_genesets(self):
-        endpoint = "genesets"
-        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):
-                url = f"{url_base}{endpoint}"
-                result = self.client.get(url, headers={"Accept": "application/json"})
-                self.assertEqual(result.status_code, HTTPStatus.OK)
-                self.assertEqual(result.headers["Content-Type"], "application/json")
-                result_data = json.loads(result.data)
-                self.assertIsNotNone(result_data["genesets"])
 
     def test_get_summaryvar(self):
         index_col_name = self.schema["schema"]["annotations"]["var"]["index"]
@@ -734,10 +724,10 @@ class TestDatasetMetadata(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             app__web_base_url=cls.app__web_base_url,
-            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         cls.meta_response_body = {
             "collection_id": "4f098ff4-4a12-446b-a841-91ba3d8e3fa6",
@@ -895,10 +885,10 @@ class TestConfigEndpoint(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             app__web_base_url=cls.app__web_base_url,
-            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         super().setUpClass(cls.config)
 
@@ -924,10 +914,10 @@ class TestS3URI(BaseTest):
         cls.config.update_server_config(
             data_locator__api_base=cls.data_locator_api_base,
             app__web_base_url=cls.app__web_base_url,
-            multi_dataset__dataroot={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
             app__flask_secret_key="testing",
             app__debug=True,
-            data_locator__s3__region_name="us-east-1",
+            data_locator__s3_region_name="us-east-1",
         )
         super().setUpClass(cls.config)
 

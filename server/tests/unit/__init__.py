@@ -3,43 +3,23 @@ import unittest
 
 from os import listdir, path
 
-import pandas as pd
 from flask_compress import Compress
 from flask_cors import CORS
 
 from server.common.config.app_config import AppConfig
-from server.common.fbs.matrix import encode_matrix_fbs
 from server.app.app import Server
 from server.tests import FIXTURES_ROOT
 
 
-def make_fbs(data):
-    df = pd.DataFrame(data)
-    return encode_matrix_fbs(matrix=df, row_idx=None, col_idx=df.columns)
-
-
-def skip_if(condition, reason: str):
-    def decorator(f):
-        def wraps(self, *args, **kwargs):
-            if condition(self):
-                self.skipTest(reason)
-            else:
-                f(self, *args, **kwargs)
-
-        return wraps
-
-    return decorator
-
-
-def app_config(data_locator, extra_server_config={}, extra_dataset_config={}):
+def app_config(extra_server_config=None, extra_dataset_config=None):
+    extra_server_config = extra_server_config or {}
+    extra_dataset_config = extra_dataset_config or {}
     config = AppConfig()
     config.update_server_config(
         app__flask_secret_key="secret",
-        single_dataset__obs_names=None,
-        single_dataset__var_names=None,
-        single_dataset__datapath=data_locator,
         limits__diffexp_cellcount_max=None,
         limits__column_request_max=None,
+        multi_dataset__dataroot="/test/"
     )
     config.update_default_dataset_config(
         embeddings__names=["umap", "tsne", "pca"], presentation__max_categories=100, diffexp__lfc_cutoff=0.01
@@ -66,7 +46,7 @@ class TestServer(Server):
             "application/octet-stream",
         ]
         Compress(app)
-        if app_config.server_config.app__debug:
+        if app_config.server__app__debug:
             CORS(app, supports_credentials=True)
 
     @staticmethod
@@ -77,7 +57,7 @@ class TestServer(Server):
         @param app_config: the AppConfig
         @return: None
         """
-        dataroot_and_base_url_pairs: list = list(app_config.server_config.multi_dataset__dataroot.values())
+        dataroot_and_base_url_pairs: list = [dataroot for dataroot in app_config.server__multi_dataset__dataroots.values()]
         if len(dataroot_and_base_url_pairs) > 1:
             logging.warning("Found more than one dataroot -- will use first")
         first_pair: dict = dataroot_and_base_url_pairs[0]
@@ -97,7 +77,7 @@ class TestServer(Server):
                     break
 
             with open(".test_server_port.txt", "w") as dataroot_file:
-                dataroot_file.write(f"{app_config.server_config.app__port}")
+                dataroot_file.write(f"{app_config.server__app__port}")
         except FileNotFoundError:
             logging.warning(f"Unable to access {dataroot}. Make sure your dataroot exists locally.")
 
@@ -119,9 +99,8 @@ class BaseTest(unittest.TestCase):
                 app__debug=True,
                 multi_dataset__dataroot=f"{FIXTURES_ROOT}",
                 multi_dataset__index=True,
-                multi_dataset__allowed_matrix_types=["cxg"],
             )
-        app_config.complete_config(logging.info)
+        app_config.complete_config()
 
         app = TestServer(app_config).app
 

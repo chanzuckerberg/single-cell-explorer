@@ -6,7 +6,7 @@ import numpy as np
 from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
 from server.compute import diffexp_cxg
 from server.compute.diffexp_cxg import diffexp_ttest
-from server.dataset.matrix_loader import MatrixDataLoader
+from server.dataset.matrix_loader import DataLoader
 from server.tests import FIXTURES_ROOT
 from server.tests.unit import app_config
 
@@ -17,8 +17,8 @@ class DiffExpTest(unittest.TestCase):
 
     def load_dataset(self, path, extra_server_config={}, extra_dataset_config={}):
         extra_dataset_config["X_approximate_distribution"] = "normal"  # hardwired for now
-        config = app_config(path, extra_server_config=extra_server_config, extra_dataset_config=extra_dataset_config)
-        loader = MatrixDataLoader(location=path, app_config=config)
+        config = app_config(extra_server_config=extra_server_config, extra_dataset_config=extra_dataset_config)
+        loader = DataLoader(location=path, app_config=config)
         adaptor = loader.open()
         return adaptor
 

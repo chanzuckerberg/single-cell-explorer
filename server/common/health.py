@@ -1,16 +1,13 @@
 from http import HTTPStatus
 from flask import make_response, jsonify
 
-from server import __version__ as cellxgene_version
+from server.version import __version__ as cellxgene_version
 from server.common.utils.data_locator import DataLocator
 
 
 def _is_accessible(path, config):
-    if path is None:
-        return True
-
     try:
-        dl = DataLocator(path, region_name=config.data_locator__s3__region_name)
+        dl = DataLocator(path, region_name=config.server__data_locator__s3_region_name)
         return dl.exists()
     except RuntimeError:
         return False
@@ -23,13 +20,10 @@ def health_check(config):
     """
     health = {"status": None, "version": "1", "releaseID": cellxgene_version}
 
-    checks = False
-    server_config = config.server_config
-    if config.is_multi_dataset():
-        dataroots = [datapath_dict["dataroot"] for datapath_dict in server_config.multi_dataset__dataroot.values()]
-        checks = all([_is_accessible(dataroot, server_config) for dataroot in dataroots])
-    else:
-        checks = _is_accessible(server_config.single_dataset__datapath, server_config)
+    dataroot_paths: list[str] = [
+        dataroot_value["dataroot"] for dataroot_value in config.server__multi_dataset__dataroots.values()
+    ]
+    checks: bool = all([_is_accessible(dataroot_path, config) for dataroot_path in dataroot_paths])
 
     health["status"] = "pass" if checks else "fail"
     code = HTTPStatus.OK if health["status"] == "pass" else HTTPStatus.BAD_REQUEST

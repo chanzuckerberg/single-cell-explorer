@@ -8,7 +8,6 @@ from flask import current_app
 from server.common.utils.utils import path_join
 from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
 from server.common.config.app_config import AppConfig
-from server.common.config.server_config import ServerConfig
 
 
 def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explorer_url: str):
@@ -29,18 +28,14 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
         return None
 
 
-def infer_dataset_s3_uri(server_config: ServerConfig, dataset_root: str, dataset_id: str) -> Union[str, None]:
+def infer_dataset_s3_uri(app_config: AppConfig, dataset_root: str, dataset_id: str) -> Union[str, None]:
     """
     Use the dataset_root, dataset_id, and the server config to infer the physical S3 URI for an Explorer dataset
     artifact
     """
-    # TODO @mdunitz remove after fork, update config to remove single_dataset option, the multiroot lookup will need to
-    #  remain while we support covid 19 cell atlas.
     #   See ticket https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/chanzuckerberg/corpora-data-portal/1281 # noqa
-    if server_config.single_dataset__datapath:
-        return server_config.single_dataset__datapath
 
-    for dataroot_dict in server_config.multi_dataset__dataroot.values():
+    for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
         if dataroot_dict["base_url"] == dataset_root:
             dataroot = dataroot_dict["dataroot"]
             break
@@ -68,11 +63,11 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
     In the case of a single dataset the dataset location is pulled directly from the server_config.
     """
-    explorer_url_path = f"{app_config.server_config.get_web_base_url()}/{dataset_root}/{dataset_id}"
+    explorer_url_path = f"{app_config.server__app__web_base_url}/{dataset_root}/{dataset_id}"
 
-    if app_config.server_config.data_locator__api_base:
+    if app_config.server__data_locator__api_base:
         dataset_metadata = request_dataset_metadata_from_data_portal(
-            data_portal_api_base=app_config.server_config.data_locator__api_base, explorer_url=explorer_url_path
+            data_portal_api_base=app_config.server__data_locator__api_base, explorer_url=explorer_url_path
         )
 
         if dataset_metadata:
@@ -94,9 +89,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
         "Falling back to deriving S3 location from request URL.",
     )
 
-    s3_uri = infer_dataset_s3_uri(
-        server_config=app_config.server_config, dataset_root=dataset_root, dataset_id=dataset_id
-    )
+    s3_uri = infer_dataset_s3_uri(app_config=app_config, dataset_root=dataset_root, dataset_id=dataset_id)
 
     return {
         "collection_id": None,
@@ -108,7 +101,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
 
 def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
-    data_locator_base_url = app_config.server_config.get_data_locator_api_base_url()
+    data_locator_base_url = app_config.server__data_locator__api_base
 
     try:
         base_metadata = get_dataset_metadata(dataset_root, dataset_id, app_config)
@@ -125,7 +118,7 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
 
         res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
 
-        web_base_url = app_config.server_config.get_web_base_url()
+        web_base_url = app_config.server__app__web_base_url
         metadata = {
             "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
             "dataset_id": dataset_id,

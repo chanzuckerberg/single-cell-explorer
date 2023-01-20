@@ -1,22 +1,20 @@
-from server import display_version as cellxgene_display_version
+from server.common.config.app_config import AppConfig
+from server.dataset.dataset import Dataset
+from server.version import display_version as cellxgene_display_version
 
 
-def get_client_config(app_config, data_adaptor, current_app):
+def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:
     """
     Return the configuration as required by the /config REST route
     """
-    server_config = app_config.server_config
-    dataset_config = data_adaptor.dataset_config
-
-    # FIXME The current set of config is not consistently presented:
-    # we have camalCase, hyphen-text, and underscore_text
+    dataset_config = data_adaptor.app_config
 
     # make sure the configuration has been checked.
-    app_config.check_config()
+    app_config.complete_config()
 
     # display_names
-    title = app_config.get_title(data_adaptor)
-    about = app_config.get_about(data_adaptor)
+    title = data_adaptor.get_title()
+    about = data_adaptor.get_about()
 
     display_names = dict(engine=data_adaptor.get_name(), dataset=title)
 
@@ -27,25 +25,23 @@ def get_client_config(app_config, data_adaptor, current_app):
 
     # links
     links = {
-        "collections-home-page": server_config.get_web_base_url(),
+        "collections-home-page": app_config.server__app__web_base_url,
         "about-dataset": about,
     }
 
     # parameters
     parameters = {
-        "layout": dataset_config.embeddings__names,
-        "max-category-items": dataset_config.presentation__max_categories,
-        "obs_names": server_config.single_dataset__obs_names,
-        "var_names": server_config.single_dataset__var_names,
-        "diffexp_lfc_cutoff": dataset_config.diffexp__lfc_cutoff,
-        "disable-diffexp": not dataset_config.diffexp__enable,
+        "layout": dataset_config.default_dataset__embeddings__names,
+        "max-category-items": dataset_config.default_dataset__presentation__max_categories,
+        "diffexp_lfc_cutoff": dataset_config.default_dataset__diffexp__lfc_cutoff,
+        "disable-diffexp": not dataset_config.default_dataset__diffexp__enable,
         "annotations_genesets": True,  # feature flag
         "annotations_genesets_readonly": True,
         "annotations_genesets_summary_methods": ["mean"],
-        "custom_colors": dataset_config.presentation__custom_colors,
+        "custom_colors": dataset_config.default_dataset__presentation__custom_colors,
         "diffexp-may-be-slow": False,
-        "about_legal_tos": dataset_config.app__about_legal_tos,
-        "about_legal_privacy": dataset_config.app__about_legal_privacy,
+        "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
+        "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
     }
 
     # corpora dataset_props
@@ -71,7 +67,7 @@ def get_client_config(app_config, data_adaptor, current_app):
     config["parameters"] = parameters
     config["corpora_props"] = corpora_props
     config["limits"] = {
-        "column_request_max": server_config.limits__column_request_max,
-        "diffexp_cellcount_max": server_config.limits__diffexp_cellcount_max,
+        "column_request_max": app_config.server__limits__column_request_max,
+        "diffexp_cellcount_max": app_config.server__limits__diffexp_cellcount_max,
     }
     return client_config
