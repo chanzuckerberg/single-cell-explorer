@@ -25,8 +25,8 @@ class CxgDataset(Dataset):
     # These defaults are overridden by the config variable: server.adaptor.cxg_adaptor.tiledb_cxt
     tiledb_ctx = tiledb.Ctx(
         {
-            "sm.tile_cache_size": 8 * 1024**3,
-            "py.init_buffer_bytes": 512 * 1024**2,
+            "sm.tile_cache_size": 8 * 1024 ** 3,
+            "py.init_buffer_bytes": 512 * 1024 ** 2,
             "vfs.s3.region": "us-east-1",
         }
     )
