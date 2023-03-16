@@ -14,7 +14,7 @@ Whether you need to visualize one thousand cells or one million, CELLxGENE Explo
 
 ### The comprehensive guide to CZ CELLxGENE
 
-[The CZ CELLxGENE documentation is your one-stop-shop for information about CELLxGENE](/docs)!
+[The CZ CELLxGENE documentation is your one-stop-shop for information about CELLxGENE](https://cellxgene.cziscience.com/docs/01__CellxGene)!
 
 ### Supported browsers
 
