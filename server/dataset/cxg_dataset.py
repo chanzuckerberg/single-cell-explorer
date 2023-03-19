@@ -94,7 +94,7 @@ class CxgDataset(Dataset):
         return "cellxgene cxg adaptor version"
 
     def get_library_versions(self):
-        return dict(tiledb=tiledb.__version__)
+        return dict(tiledb=tiledb.version.version)
 
     def get_path(self, *urls):
         return path_join(self.url, *urls)
