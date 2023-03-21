@@ -49,12 +49,11 @@ jobs:
             echo "DEPLOYMENT_STAGE=dev" >> $GITHUB_ENV
           fi
       - name: Install happy client
-        uses: chanzuckerberg/github-actions/.github/actions/install-happy@v1.2.1
+        uses: chanzuckerberg/github-actions/.github/actions/install-happy@install-happy-v1.4.2
       - name: Update deployment
-        uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@v1.2.1
+        uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@deploy-happy-stack-v1.7.2
         with:
           tfe-token: ${{ secrets.TFE_TOKEN }}
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
-          happy_version: "0.19.1"
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }} 
