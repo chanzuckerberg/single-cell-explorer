@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 COPY hosted/nginx.conf /etc/nginx/nginx.conf
 
-ADD hosted/requirements.txt .
+ADD server/requirements.txt .
 RUN python3 -m pip install -r requirements.txt
 
 ADD Makefile Makefile

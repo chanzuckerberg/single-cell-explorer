@@ -31,7 +31,6 @@ class AppConfig(object):
     """
 
     def __init__(self, config_file_path: str = None):
-
         # the default configuration (see default_config.py)
         self.default_config: dict = get_default_config()
         # TODO @madison -- if we always read from the default config (hard coded path) can we set those values as

@@ -385,7 +385,7 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
-    except (ValueError) as e:
+    except ValueError as e:
         return abort(HTTPStatus.NOT_FOUND, description=str(e))
     except (UnsupportedSummaryMethod, FilterError) as e:
         return abort(HTTPStatus.BAD_REQUEST, description=str(e))
