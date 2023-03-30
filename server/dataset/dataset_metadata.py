@@ -5,9 +5,16 @@ from typing import Union
 import requests
 from flask import current_app
 
-from server.common.utils.utils import path_join
-from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
 from server.common.config.app_config import AppConfig
+from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
+from server.common.utils.utils import path_join
+
+
+def log_error_response_from_data_portal(res: requests.Response) -> None:
+    logging.ERROR(
+        "Error response from Data Portal.",
+        extra=dict(type="PORTAL", response=dict(url=res.url, headers=res.headers, status_code=res.status_code)),
+    )
 
 
 def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explorer_url: str):
@@ -17,12 +24,13 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
     """
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
-        response = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
+        res = requests.get(url=f"{data_portal_api_base}/datasets/meta?url={explorer_url}/", headers=headers)
 
-        if response.status_code == 200:
-            dataset_identifiers = json.loads(response.content)
+        if res.status_code == 200:
+            dataset_identifiers = json.loads(res.content)
             return dataset_identifiers
         else:
+            log_error_response_from_data_portal(res)
             return None
     except Exception:
         return None
@@ -116,23 +124,25 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
         suffix = "?visibility=PRIVATE" if collection_visibility == "PRIVATE" else ""
         suffix_for_url = "/private" if collection_visibility == "PRIVATE" else ""
 
-        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}").json()
-
+        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}")
+        if not res.ok:
+            log_error_response_from_data_portal(res)
+        res_json = res.json()
         web_base_url = app_config.server__app__web_base_url
         metadata = {
-            "dataset_name": [dataset["name"] for dataset in res["datasets"] if dataset["id"] == dataset_id][0],
+            "dataset_name": [dataset["name"] for dataset in res_json["datasets"] if dataset["id"] == dataset_id][0],
             "dataset_id": dataset_id,
             "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
-            "collection_name": res["name"],
-            "collection_description": res["description"],
-            "collection_contact_email": res["contact_email"],
-            "collection_contact_name": res["contact_name"],
-            "collection_links": res["links"],
-            "collection_datasets": res["datasets"],
+            "collection_name": res_json["name"],
+            "collection_description": res_json["description"],
+            "collection_contact_email": res_json["contact_email"],
+            "collection_contact_name": res_json["contact_name"],
+            "collection_links": res_json["links"],
+            "collection_datasets": res_json["datasets"],
         }
 
-        if res.get("publisher_metadata"):
-            metadata["collection_publisher_metadata"] = res["publisher_metadata"]
+        if res_json.get("publisher_metadata"):
+            metadata["collection_publisher_metadata"] = res_json["publisher_metadata"]
 
         return metadata
 
