@@ -1,21 +1,20 @@
-import unittest
-from urllib.parse import quote
+import hashlib
 import json
 import os
 import time
+import unittest
 from http import HTTPStatus
-import hashlib
 from unittest.mock import patch
-import numpy as np
+from urllib.parse import quote
 
+import numpy as np
 import requests
 
 from server.common.config.app_config import AppConfig
-from server.tests import decode_fbs, FIXTURES_ROOT
+from server.common.diffexpdu import DiffExArguments
+from server.tests import FIXTURES_ROOT, decode_fbs
 from server.tests.fixtures.fixtures import pbmc3k_colors
 from server.tests.unit import BaseTest as _BaseTest
-from server.common.diffexpdu import DiffExArguments
-
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
 
@@ -52,7 +51,7 @@ class EndPoints(BaseTest):
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
-        for i in range(90):
+        for _i in range(90):
             try:
                 result = cls.client.get(f"{cls.TEST_URL_BASE}schema")
                 cls.schema = json.loads(result.data)
@@ -60,7 +59,7 @@ class EndPoints(BaseTest):
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
 
-        for i in range(90):
+        for _i in range(90):
             try:
                 result = cls.client.get(f"{cls.TEST_URL_BASE_SPARSE}schema")
                 cls.schema = json.loads(result.data)
@@ -141,7 +140,7 @@ class EndPoints(BaseTest):
                 self.assertCountEqual(
                     df["col_idx"],
                     [obs_index_col_name, "n_genes", "percent_mito", "n_counts", "louvain"],
-        )
+                )
 
     def test_get_annotations_obs_keys_fbs(self):
         endpoint = "annotations/obs"
@@ -260,7 +259,9 @@ class EndPoints(BaseTest):
                     set1=np.arange(0, 500, dtype=np.uint32),
                     set2=np.arange(500, 1000, dtype=np.uint32),
                 )
-                result = self.client.post(url, headers={"Content-Type": "application/octet-stream"}, data=de_args.pack())
+                result = self.client.post(
+                    url, headers={"Content-Type": "application/octet-stream"}, data=de_args.pack()
+                )
                 self.assertEqual(result.status_code, HTTPStatus.OK)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
                 result_data = json.loads(result.data)
@@ -342,7 +343,9 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
 
                 # missing content length
-                result = self.client.post(url, content_length=False, headers={"Content-Type": "application/octet-stream"})
+                result = self.client.post(
+                    url, content_length=False, headers={"Content-Type": "application/octet-stream"}
+                )
                 self.assertEqual(result.status_code, HTTPStatus.LENGTH_REQUIRED)
 
                 # Content-Length too large
@@ -546,7 +549,7 @@ class EndPoints(BaseTest):
     def test_genesets_config(self):
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
             with self.subTest(url_base=url_base):
-                url = f"{url_base}config"        
+                url = f"{url_base}config"
                 result = self.client.get(url)
                 config_data = json.loads(result.data)
                 params = config_data["config"]["parameters"]
@@ -584,7 +587,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):        
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
                 header = {"Accept": "application/octet-stream"}
                 result = self.client.get(url, headers=header)
@@ -606,7 +609,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):              
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?key={query_hash}"
                 result = self.client.post(url, headers=headers, data=query)
 
@@ -624,7 +627,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):               
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?key={query_hash}"
                 result = self.client.post(url, headers=headers, data=query)
                 self.assertEqual(result.status_code, HTTPStatus.OK)
@@ -644,7 +647,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):               
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
                 header = {"Accept": "application/octet-stream"}
                 result = self.client.get(url, headers=header)
@@ -662,7 +665,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):               
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
                 header = {"Accept": "application/octet-stream"}
                 result = self.client.get(url, headers=header)
@@ -684,7 +687,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):               
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?key={query_hash}"
                 result = self.client.post(url, headers=headers, data=query)
 
@@ -702,7 +705,7 @@ class EndPoints(BaseTest):
         query = f"method=mean&{filter}&nbins=500"
         query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
-            with self.subTest(url_base=url_base):               
+            with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?key={query_hash}"
                 result = self.client.post(url, headers=headers, data=query)
                 self.assertEqual(result.status_code, HTTPStatus.OK)
@@ -712,7 +715,6 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["n_cols"], 1)
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
-
 
 
 class TestDatasetMetadata(BaseTest):
@@ -984,9 +986,10 @@ class TestS3URI(BaseTest):
 
 
 class MockResponse:
-    def __init__(self, body, status_code):
+    def __init__(self, body, status_code, ok=True):
         self.content = body
         self.status_code = status_code
+        self.ok = ok
 
     def json(self):
         return json.loads(self.content)
