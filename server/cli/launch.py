@@ -68,7 +68,7 @@ def server_args(func):
         "--debug",
         "-d",
         is_flag=True,
-        default=DEFAULT_CONFIG.server__app__debug,
+        default=True,
         show_default=True,
         help="Run in debug mode. This is helpful for cellxgene developers, "
         "or when you want more information about an error condition.",
