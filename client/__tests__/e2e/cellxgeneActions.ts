@@ -46,15 +46,12 @@ export async function drag(testId: any, start: any, end: any, lasso = false) {
 export async function scroll({testId, deltaY, coords}: {testId: string, deltaY: number, coords: number[]}) {
   const layout = await waitByID(testId);
   if (layout){
-    const elBox = await layout.boxModel();
-    if (elBox) {
-      const x = coords[0];
-      const y = coords[1];
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.up();
-      await page.mouse.wheel({ deltaY });
-    }
+    const x = coords[0];
+    const y = coords[1];
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.up();
+    await page.mouse.wheel({ deltaY });
   }
 }
 
