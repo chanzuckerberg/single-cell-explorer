@@ -918,6 +918,7 @@ class Graph extends React.Component<{}, GraphState> {
           top: 0,
           left: 0,
         }}
+        data-test-id={`graph-wrapper-distance=${camera?.distance()}`}
       >
         <GraphOverlayLayer
           // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; width: any; height: any... Remove this comment to see the full error message

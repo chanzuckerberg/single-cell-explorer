@@ -4,7 +4,8 @@ import clamp from "./clamp";
 const EPSILON = 0.000001;
 
 const scaleSpeed = 0.5;
-const scaleMax = 12.0;
+// exporting this for testing
+export const scaleMax = 12.0;
 const scaleMin = 0.5;
 const panBound = 0.8;
 
