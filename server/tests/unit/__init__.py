@@ -47,7 +47,7 @@ class TestServer(Server):
         ]
         Compress(app)
         if app_config.server__app__debug:
-            CORS(app, supports_credentials=True)
+            CORS(app, supports_credentials=True, origins=[r"^http://localhost:\d+"])
 
     @staticmethod
     def _extract_base_url_and_dataset_for_api_calls(app_config: AppConfig):
