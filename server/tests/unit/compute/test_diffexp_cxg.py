@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
+from server.common.fbs.matrix import decode_matrix_fbs, encode_matrix_fbs
 from server.compute import diffexp_cxg
 from server.compute.diffexp_cxg import diffexp_ttest
 from server.dataset.matrix_loader import DataLoader
@@ -107,7 +107,7 @@ class DiffExpTest(unittest.TestCase):
         self.sparse_diffexp(adaptor_dense, adaptor_sparse)
 
     def sparse_diffexp(self, adaptor_dense, adaptor_sparse):
-        with tempfile.TemporaryDirectory() as dirname:
+        with tempfile.TemporaryDirectory():
             maskA = self.get_mask(adaptor_dense, 1, 10)
             maskB = self.get_mask(adaptor_dense, 2, 10)
 

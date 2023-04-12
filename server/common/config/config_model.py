@@ -10,13 +10,13 @@ import os
 import sys
 import warnings
 from enum import Enum
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 from urllib.parse import quote_plus
 
-from pydantic import BaseModel, Field, validator, root_validator, Extra
+from pydantic import BaseModel, Extra, Field, root_validator, validator
 
 from server.common.utils.data_locator import discover_s3_region_name
-from server.common.utils.utils import is_port_available, find_available_port, custom_format_warning
+from server.common.utils.utils import custom_format_warning, find_available_port, is_port_available
 
 
 class CspDirectives(BaseModel):
@@ -99,7 +99,7 @@ class ServerApp(BaseModel):
 
     @validator("csp_directives")
     def check_csp_directives(cls, value):
-        return {} if not value else value
+        return value if value else {}
 
 
 class DatarootValue(BaseModel):

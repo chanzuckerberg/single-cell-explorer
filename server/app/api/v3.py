@@ -3,23 +3,23 @@ from functools import wraps
 from urllib.parse import unquote
 
 from flask import (
-    current_app,
     Blueprint,
+    current_app,
+    redirect,
     request,
     send_from_directory,
-    redirect,
 )
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
-from server.common.utils.http_cache import ONE_YEAR, cache_control
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.common.errors import (
     DatasetAccessError,
-    DatasetNotFoundError,
     DatasetMetadataError,
+    DatasetNotFoundError,
     TombstoneError,
 )
+from server.common.utils.http_cache import ONE_YEAR, cache_control
 
 
 def rest_get_s3uri_data_adaptor(func):

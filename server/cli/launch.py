@@ -3,12 +3,12 @@ import functools
 import os
 import sys
 import webbrowser
-from logging import Logger, getLogger, ERROR
+from logging import ERROR, Logger, getLogger
 
 import click
 
 from server.common.config.app_config import AppConfig
-from server.common.errors import DatasetAccessError, ConfigurationError
+from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.utils.utils import sort_options
 from server.default_config import default_config
 from server.tests.unit import TestServer

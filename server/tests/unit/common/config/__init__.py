@@ -1,9 +1,8 @@
 import os
-import shutil
 import random
-import yaml
+import shutil
 
-from server.common.config.app_config import flatten, AppConfig
+from server.common.config.app_config import AppConfig, flatten
 from server.tests import FIXTURES_ROOT
 from server.tests.unit import BaseTest
 
@@ -204,7 +203,7 @@ class ConfigTests(BaseTest):
         _b = flatten(b.config)
 
         diff = []
-        keys = set([*_a.keys(), *_b.keys()])
+        keys = {*_a.keys(), *_b.keys()}
         for key in keys:
             value_a, value_b = _a.get(key), _b.get(key)
             if value_a != value_b:

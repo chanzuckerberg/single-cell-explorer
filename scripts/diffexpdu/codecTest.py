@@ -1,11 +1,11 @@
-import os
-import sys
 import argparse
-import os.path
 import gzip
+import os
+import os.path
+import sys
 
-import numpy as np
 import jsonlines
+import numpy as np
 
 from server.common.diffexpdu import DiffExArguments
 

@@ -1,13 +1,12 @@
 import logging
 import unittest
-
 from os import listdir, path
 
 from flask_compress import Compress
 from flask_cors import CORS
 
-from server.common.config.app_config import AppConfig
 from server.app.app import Server
+from server.common.config.app_config import AppConfig
 from server.tests import FIXTURES_ROOT
 
 
@@ -19,7 +18,7 @@ def app_config(extra_server_config=None, extra_dataset_config=None):
         app__flask_secret_key="secret",
         limits__diffexp_cellcount_max=None,
         limits__column_request_max=None,
-        multi_dataset__dataroot="/test/"
+        multi_dataset__dataroot="/test/",
     )
     config.update_default_dataset_config(
         embeddings__names=["umap", "tsne", "pca"], presentation__max_categories=100, diffexp__lfc_cutoff=0.01
@@ -57,7 +56,7 @@ class TestServer(Server):
         @param app_config: the AppConfig
         @return: None
         """
-        dataroot_and_base_url_pairs: list = [dataroot for dataroot in app_config.server__multi_dataset__dataroots.values()]
+        dataroot_and_base_url_pairs: list = list(app_config.server__multi_dataset__dataroots.values())
         if len(dataroot_and_base_url_pairs) > 1:
             logging.warning("Found more than one dataroot -- will use first")
         first_pair: dict = dataroot_and_base_url_pairs[0]

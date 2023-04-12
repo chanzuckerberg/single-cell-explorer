@@ -1,12 +1,13 @@
 import copy
 import logging
+
 import yaml
-
 from envyaml import EnvYAML
-from flatten_dict import unflatten as _unflatten, flatten as _flatten
+from flatten_dict import flatten as _flatten
+from flatten_dict import unflatten as _unflatten
 
-from server.common.errors import ConfigurationError
 from server.common.config.config_model import AppConfigModel
+from server.common.errors import ConfigurationError
 from server.default_config import get_default_config
 
 
@@ -79,7 +80,7 @@ class AppConfig(object):
             dataroot=updates.get("server", {}).get("multi_dataset", {}).pop("dataroot", ""),
             dataroots=updates.get("server", {}).get("multi_dataset", {}).pop("dataroots", {}),
         )
-        if any([d for d in dataroots_updates.values()]):
+        if any(list(dataroots_updates.values())):
             # dataroots are completely replaced if provided.
             config["server"]["multi_dataset"].update(**dataroots_updates)
 

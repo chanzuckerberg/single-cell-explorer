@@ -6,11 +6,12 @@ import threading
 import numpy as np
 import pandas as pd
 import tiledb
+from packaging import version
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
 from server.common.constants import XApproximateDistribution
-from server.common.errors import DatasetAccessError, ConfigurationError
+from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
 from server.common.utils.type_conversion_utils import get_schema_type_hint_from_dtype
@@ -18,7 +19,6 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
-from packaging import version
 
 
 class CxgDataset(Dataset):
@@ -139,18 +139,18 @@ class CxgDataset(Dataset):
         Return True if this looks like a valid CXG, False if not.  Just a quick/cheap
         test, not to be fully trusted.
         """
-        if not tiledb.object_type(url, ctx=CxgDataset.tiledb_ctx) == "group":
+        if tiledb.object_type(url, ctx=CxgDataset.tiledb_ctx) != "group":
             return False
-        if not tiledb.object_type(path_join(url, "obs"), ctx=CxgDataset.tiledb_ctx) == "array":
+        if tiledb.object_type(path_join(url, "obs"), ctx=CxgDataset.tiledb_ctx) != "array":
             return False
-        if not tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) == "array":
+        if tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) != "array":
             return False
-        if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array" and not (
+        if tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) != "array" and not (
             tiledb.object_type(path_join(url, "Xr"), ctx=CxgDataset.tiledb_ctx) == "array"
             and tiledb.object_type(path_join(url, "Xc"), ctx=CxgDataset.tiledb_ctx) == "array"
         ):
             return False
-        if not tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) == "group":
+        if tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) != "group":
             return False
         return True
 
@@ -432,10 +432,7 @@ class CxgDataset(Dataset):
             A = self.open_array(str(axis))
 
             try:
-                if not fields:
-                    data = A[:]
-                else:
-                    data = A.query(attrs=fields)[:]
+                data = A[:] if not fields else A.query(attrs=fields)[:]
 
                 categorical_dtypes = []
                 for c in self.get_schema()["annotations"]["obs"]["columns"]:
