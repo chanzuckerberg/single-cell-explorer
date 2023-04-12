@@ -38,4 +38,8 @@ ADD hosted/start.sh start.sh
 RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml
 
+ARG HAPPY_COMMIT=""
+LABEL commit=${HAPPY_COMMIT}
+ENV COMMIT_SHA=${HAPPY_COMMIT}
+
 CMD ["/start.sh"]

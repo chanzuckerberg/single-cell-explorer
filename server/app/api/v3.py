@@ -146,6 +146,10 @@ class GeneInfoAPI(S3URIResource):
     def get(self, data_adaptor):
         return common_rest.gene_info_get(request)
 
+class VersionAPI(Resource):
+    def get(self):
+        return common_rest.get_deployed_version(request)
+
 
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
@@ -228,6 +232,8 @@ def register_api_v3(app, app_config, api_url_prefix):
     )
     s3uri_resources = get_api_s3uri_resources(bp_s3uri, s3uri_api_path)
     app.register_blueprint(s3uri_resources.blueprint)
+
+    Api(app).add_resource(VersionAPI, "/deployed_version")
 
     # NOTE:  These routes only allow the dataset to be in the directory
     # of the dataroot, and not a subdirectory.  We may want to change
