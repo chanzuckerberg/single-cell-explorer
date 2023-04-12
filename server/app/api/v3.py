@@ -146,6 +146,7 @@ class GeneInfoAPI(S3URIResource):
     def get(self, data_adaptor):
         return common_rest.gene_info_get(request)
 
+
 class VersionAPI(Resource):
     def get(self):
         return common_rest.get_deployed_version(request)

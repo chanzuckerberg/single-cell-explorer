@@ -259,12 +259,14 @@ def gene_info_get(request):
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
+
 def get_deployed_version(request):
     """
     Returns the deployed version
     """
     version_info = {"Explorer": os.getenv("COMMIT_SHA")}
     return make_response(jsonify(version_info), 200)
+
 
 def diffexp_obs_post(request, data_adaptor):
     if not data_adaptor.app_config.default_dataset__diffexp__enable:
