@@ -262,7 +262,7 @@ def launch(
         app_config.complete_config()
 
     except (ConfigurationError, DatasetAccessError) as e:
-        raise click.ClickException(e)
+        raise click.ClickException(e) from None
 
     handle_scripts(scripts)
 
@@ -282,8 +282,8 @@ def launch(
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
     if not app_config.server__app__verbose:
-        f = open(os.devnull, "w")
-        sys.stdout = f
+        with open(os.devnull, "w") as f:
+            sys.stdout = f
 
     try:
         server.app.run(

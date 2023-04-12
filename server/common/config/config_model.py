@@ -206,9 +206,10 @@ class Server(BaseModel):
 
     @root_validator(skip_on_failure=True)
     def check_cxg_adaptor(cls, values):
-        if not values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region:
-            if isinstance(values["data_locator"].s3_region_name, str):
-                values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region = values["data_locator"].s3_region_name
+        if not values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region and isinstance(
+            values["data_locator"].s3_region_name, str
+        ):
+            values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region = values["data_locator"].s3_region_name
         return values
 
 

@@ -90,7 +90,7 @@ def _query_parameter_to_filter(args):
                 raise FilterError("badly formated filter value")
 
     except ValueError as e:
-        raise FilterError(str(e))
+        raise FilterError(str(e)) from None
 
     result = {}
     for axis in ("obs", "var"):

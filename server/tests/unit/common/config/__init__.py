@@ -39,7 +39,7 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
-        dataroots={},
+        dataroots=None,
         index="false",
         data_locator_region_name="us-east-1",
         data_locator_api_base="null",
@@ -50,6 +50,7 @@ class ConfigTests(BaseTest):
         diffexp_cellcount_max="null",
         config_file_name="server_config.yaml",
     ):
+        dataroots = {} if dataroot is None else dataroots
         configfile = os.path.join(self.tmp_fixtures_directory, config_file_name)
         server_config_outline_path = os.path.join(FIXTURES_ROOT, "czi_hosted_server_config_outline.py")
         with open(server_config_outline_path, "r") as config_skeleton:
@@ -79,7 +80,7 @@ class ConfigTests(BaseTest):
         session_cookie="true",
         cookie="null",
         dataroot="null",
-        dataroots={},
+        dataroots=None,
         index="false",
         data_locator_region_name="us-east-1",
         data_locator_api_base="null",
@@ -88,8 +89,8 @@ class ConfigTests(BaseTest):
         cxg_tiledb_py_init_buffer_size=10485760,
         column_request_max=32,
         diffexp_cellcount_max="null",
-        scripts=[],
-        inline_scripts=[],
+        scripts=None,
+        inline_scripts=None,
         about_legal_tos="null",
         about_legal_privacy="null",
         max_categories=1000,
@@ -99,16 +100,22 @@ class ConfigTests(BaseTest):
         hosted_file_directory="null",
         local_file_csv_directory="null",
         local_file_csv_file="null",
-        embedding_names=[],
+        embedding_names=None,
         enable_difexp="true",
         lfc_cutoff=0.01,
         top_n=10,
         environment=None,
         aws_secrets_manager_region=None,
-        aws_secrets_manager_secrets=[],
+        aws_secrets_manager_secrets=None,
         X_approximate_distribution="normal",
         config_file_name="app_config.yml",
     ):
+        aws_secrets_manager_secrets = [] if aws_secrets_manager_secrets is None else aws_secrets_manager_secrets
+        embedding_names = [] if embedding_names is None else embedding_names
+        inline_scripts = [] if inline_scripts is None else inline_scripts
+        scripts = [] if scripts is None else scripts
+        dataroots = {} if dataroots is None else dataroots
+
         random_num = random.randrange(999999)
         configfile = os.path.join(self.tmp_fixtures_directory, config_file_name)
         server_config = self.custom_server_config(
@@ -162,15 +169,17 @@ class ConfigTests(BaseTest):
         )
 
         with open(configfile, "w") as app_config_file:
-            app_config_file.write(open(server_config).read())
-            app_config_file.write(open(dataset_config).read())
+            with open(server_config).read() as fp:
+                app_config_file.write(fp)
+            with open(dataset_config).read() as fp:
+                app_config_file.write(fp)
 
         return configfile
 
     def custom_dataset_config(
         self,
-        scripts=[],
-        inline_scripts=[],
+        scripts=None,
+        inline_scripts=None,
         about_legal_tos="null",
         about_legal_privacy="null",
         max_categories=1000,
@@ -180,13 +189,16 @@ class ConfigTests(BaseTest):
         hosted_file_directory="null",
         local_file_csv_directory="null",
         local_file_csv_file="null",
-        embedding_names=[],
+        embedding_names=None,
         enable_difexp="true",
         lfc_cutoff=0.01,
         top_n=10,
         X_approximate_distribution="normal",
         config_file_name="dataset_config.yml",
     ):
+        script = [] if scripts is None else scripts
+        inline_scripts = [] if inline_scripts is None else inline_scripts
+        embedding_names = [] if embedding_names is None else embedding_names
         configfile = os.path.join(self.tmp_fixtures_directory, config_file_name)
         dataset_config_outline_path = os.path.join(FIXTURES_ROOT, "czi_hosted_dataset_config_outline.py")
         with open(dataset_config_outline_path, "r") as config_skeleton:

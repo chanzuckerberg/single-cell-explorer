@@ -244,7 +244,7 @@ class Dataset(metaclass=ABCMeta):
             try:
                 obs_selector, var_selector = self._filter_to_mask(filter)
             except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
-                raise FilterError("Error parsing filter")
+                raise FilterError("Error parsing filter") from None
 
             if obs_selector is not None:
                 raise FilterError("filtering on obs unsupported")
@@ -279,7 +279,7 @@ class Dataset(metaclass=ABCMeta):
             obs_mask_A = self._axis_filter_to_mask(Axis.OBS, obsFilterA["obs"], shape[0])
             obs_mask_B = self._axis_filter_to_mask(Axis.OBS, obsFilterB["obs"], shape[0])
         except (KeyError, IndexError):
-            raise FilterError("Error parsing filter")
+            raise FilterError("Error parsing filter") from None
         if top_n is None:
             top_n = self.app_config.default_dataset__diffexp__top_n
 
@@ -299,7 +299,7 @@ class Dataset(metaclass=ABCMeta):
         try:
             return jsonify_numpy(result)
         except ValueError:
-            raise JSONEncodingValueError("Error encoding differential expression to JSON")
+            raise JSONEncodingValueError("Error encoding differential expression to JSON") from None
 
     def diffexp_topN_from_list(self, listA: np.ndarray, listB: np.ndarray, top_n: int = None):
         """
@@ -320,7 +320,7 @@ class Dataset(metaclass=ABCMeta):
         try:
             return jsonify_numpy(result)
         except ValueError:
-            raise JSONEncodingValueError("Error encoding differential expression to JSON")
+            raise JSONEncodingValueError("Error encoding differential expression to JSON") from None
 
     @abstractmethod
     def compute_diffexp_ttest(self, maskA, maskB, top_n, lfc_cutoff, selector_lists=False):

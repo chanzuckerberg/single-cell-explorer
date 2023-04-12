@@ -15,7 +15,9 @@ class DiffExpTest(unittest.TestCase):
     """Tests the diffexp returns the expected results for one test case, using different
     adaptor types and different algorithms."""
 
-    def load_dataset(self, path, extra_server_config={}, extra_dataset_config={}):
+    def load_dataset(self, path, extra_server_config=None, extra_dataset_config=None):
+        extra_server_config = {} if extra_server_config is None else extra_server_config
+        extra_dataset_config = {} if extra_dataset_config is None else extra_dataset_config
         extra_dataset_config["X_approximate_distribution"] = "normal"  # hardwired for now
         config = app_config(extra_server_config=extra_server_config, extra_dataset_config=extra_dataset_config)
         loader = DataLoader(location=path, app_config=config)

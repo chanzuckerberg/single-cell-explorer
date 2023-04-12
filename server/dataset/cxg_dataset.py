@@ -62,9 +62,9 @@ class CxgDataset(Dataset):
         except tiledb.libtiledb.TileDBError as e:
             if e.message == "Global context already initialized!":
                 if tiledb.default_ctx().config().dict() != CxgDataset.tiledb_ctx.config().dict():
-                    raise ConfigurationError("Cannot change tiledb configuration once it is set")
+                    raise ConfigurationError("Cannot change tiledb configuration once it is set") from None
             else:
-                raise ConfigurationError(f"Invalid tiledb context: {str(e)}")
+                raise ConfigurationError(f"Invalid tiledb context: {str(e)}") from None
 
     @staticmethod
     def pre_load_validation(data_locator):
@@ -222,7 +222,7 @@ class CxgDataset(Dataset):
             p = self.get_path(name)
             return self.arrays[p]
         except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError(name)
+            raise DatasetAccessError(name) from None
 
     def get_embedding_array(self, ename, dims=2):
         array = self.open_array(f"emb/{ename}")
@@ -330,12 +330,15 @@ class CxgDataset(Dataset):
         try:
             data = obs.query(attrs=[term_name])[:][term_name]
             type_hint = schema.get(term_name, None)
-            if type_hint is not None:
-                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith("int"):
-                    if "categories" in type_hint[term_name]:
-                        data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
+            if (
+                type_hint is not None
+                and type_hint[term_name]["type"] == "categorical"
+                and str(data.dtype).startswith("int")
+                and "categories" in type_hint[term_name]
+            ):
+                data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError("query_obs")
+            raise DatasetAccessError("query_obs") from None
         return data
 
     def get_obs_names(self):
@@ -451,7 +454,7 @@ class CxgDataset(Dataset):
                 if fields:
                     df = df[fields]
             except TileDBError as e:
-                raise KeyError(e)
+                raise KeyError(e) from None
 
         with ServerTiming.time(f"annotations.{axis}.encode"):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, num_bins=num_bins)

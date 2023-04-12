@@ -101,9 +101,9 @@ class AppConfig(object):
         try:
             config = EnvYAML(config_file)
         except yaml.YAMLError as e:
-            raise ConfigurationError(f"The specified config file contained an error: {e}")
+            raise ConfigurationError(f"The specified config file contained an error: {e}") from None
         except OSError as e:
-            raise ConfigurationError(f"Issue retrieving the specified config file: {e}")
+            raise ConfigurationError(f"Issue retrieving the specified config file: {e}") from None
         self.update_config(**config)
 
     def changes_from_default(self):
