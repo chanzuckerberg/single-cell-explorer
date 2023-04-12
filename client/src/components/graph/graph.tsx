@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React from "react";
 import * as d3 from "d3";
 import { connect, shallowEqual } from "react-redux";
 import { mat3, vec2 } from "gl-matrix";
