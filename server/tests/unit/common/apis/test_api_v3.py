@@ -6,6 +6,8 @@ import unittest
 from http import HTTPStatus
 from unittest.mock import patch
 from urllib.parse import quote
+import os
+
 
 import numpy as np
 import requests
@@ -908,6 +910,7 @@ class TestConfigEndpoint(BaseTest):
 
 
 class TestS3URI(BaseTest):
+
     @classmethod
     def setUpClass(cls):
         cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
@@ -983,6 +986,42 @@ class TestS3URI(BaseTest):
             result.headers["Location"],
             "https://cellxgene.staging.single-cell.czi.technology/collections/4f098ff4-4a12-446b-a841-91ba3d8e3fa6?tombstoned_dataset_id=2fa37b10-ab4d-49c9-97a8-b4b3d80bf939",
         )  # noqa E501
+
+
+class TestDeployedVersion(BaseTest):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.data_locator_api_base = "api.cellxgene.staging.single-cell.czi.technology/dp/v1"
+        cls.app__web_base_url = "https://cellxgene.staging.single-cell.czi.technology/"
+        cls.config = AppConfig()
+        cls.config.update_server_config(
+            data_locator__api_base=cls.data_locator_api_base,
+            app__web_base_url=cls.app__web_base_url,
+            multi_dataset__dataroots={"e": {"base_url": "e", "dataroot": FIXTURES_ROOT}},
+            app__flask_secret_key="testing",
+            app__debug=True,
+            data_locator__s3_region_name="us-east-1",
+        )
+        super().setUpClass(cls.config)
+
+        cls.app.testing = True
+        cls.client = cls.app.test_client()
+
+        endpoint = "s3_uri"
+        test_dataset_url_base = "/e/pbmc3k_v0.cxg"
+        test_url_base = f"{test_dataset_url_base}/api/v0.3/"
+
+        cls.url = f"{test_url_base}{endpoint}"
+
+    def test_get_deployed_version(self):
+        os.environ["COMMIT_SHA"] = "123"
+        endpoint = "deployed_version"
+        url = f"/{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(json.loads(result.data), {"Explorer": "123"})
+        del os.environ["COMMIT_SHA"]
 
 
 class MockResponse:
