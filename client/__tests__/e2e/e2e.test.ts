@@ -26,6 +26,7 @@ import {
   calcDragCoordinates,
   calcTransformDragCoordinates,
   drag,
+  scroll,
   expandCategory,
   subset,
   createGeneset,
@@ -57,6 +58,8 @@ import {
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
+
+import { scaleMax } from "../../src/util/camera";
 
 const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
 
@@ -441,6 +444,32 @@ describe("graph overlay", () => {
         panCoords.end.y - panCoords.start.y
       );
     });
+  });
+});
+
+test("zoom limit is 12x", async () => {
+  await goToPage(pageUrl);
+
+  const category = Object.keys(data.categorical)[0];
+
+  await clickOn(`colorby-${category}`);
+  await clickOn("centroid-label-toggle");
+  await clickOn("mode-pan-zoom");
+
+
+  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+  const categoryValue = Object.keys(data.categorical[category])[0];
+  const initialCoordinates = await getElementCoordinates(
+    `${categoryValue}-centroid-label`
+  );
+
+  await tryUntil(async () => {
+    await scroll({testId: "layout-graph", deltaY: -10000, coords: initialCoordinates});
+    await page.waitForTimeout(1000);
+    const newGraph = await page.waitForSelector("[data-test-id^=graph-wrapper-]")
+    const newGraphTestId = await newGraph?.evaluate((el) => el.getAttribute("data-test-id"))    
+    const newDistance = newGraphTestId?.split("distance=").at(-1);
+    expect(parseFloat(newDistance)).toBe(scaleMax);
   });
 });
 
