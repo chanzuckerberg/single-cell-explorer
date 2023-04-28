@@ -18,6 +18,10 @@ env:
   COMPOSE_DOCKER_CLI_BUILD: 1
   DOCKER_REPO: ${{ secrets.ECR_REPO }}/
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-push-images:
     runs-on: ubuntu-20.04
