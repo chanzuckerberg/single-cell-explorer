@@ -62,7 +62,7 @@ const Layout: React.FC<Props> = (props) => {
           position: "relative",
           height: "inherit",
           overflowY: "auto",
-          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0,
+          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0, // add padding to bottom to account for banner height
         }}
       >
         {leftSidebar}
@@ -89,7 +89,7 @@ const Layout: React.FC<Props> = (props) => {
           position: "relative",
           height: "inherit",
           overflowY: "auto",
-          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0,
+          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0, // add padding to bottom to account for banner height
         }}
       >
         {/* The below conditional is required because the right sidebar initializes as function for some reason...*/}
