@@ -25,14 +25,6 @@ const Layout: React.FC<Props> = (props) => {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
   const [isBannerOpen, setIsBannerOpen] = useState(true);
 
-  const GRAPH_HEIGHT = useMemo(
-    () =>
-      isBannerOpen
-        ? `calc(100vh - (100vh - 100%) - ${BANNER_HEIGHT_PX}px)`
-        : `calc(100vh - (100vh - 100%)`,
-    [isBannerOpen]
-  );
-
   const { children, datasetMetadataError, renderGraph } = props;
   const [leftSidebar, rightSidebar] = Children.toArray(children);
   let graphComponent = null;
@@ -44,7 +36,7 @@ const Layout: React.FC<Props> = (props) => {
       <div
         style={{
           display: "grid",
-          paddingTop: true ? globals.HEADER_HEIGHT_PX : 0,
+          paddingTop: !datasetMetadataError ? globals.HEADER_HEIGHT_PX : 0,
           gridTemplateColumns: `
         [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
         [left-sidebar-end graph-start] auto
