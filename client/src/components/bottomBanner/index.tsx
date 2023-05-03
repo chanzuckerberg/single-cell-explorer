@@ -46,6 +46,11 @@ export default function BottomBanner({
   const [submitButtonEnabledOnce, setSubmitButtonEnabledOnce] = useState(false);
 
   function toggleNewsletterSignupModal() {
+    // Track when modal is opened
+    if (!newsletterModalIsOpen) {
+      track(EVENTS.NEWSLETTER_OPEN_MODAL_CLICKED);
+    }
+
     setError("");
     setEmail("");
     setNewsletterModalIsOpen(!newsletterModalIsOpen);
@@ -66,7 +71,7 @@ export default function BottomBanner({
             setIsSubmitted(true);
             setError("");
 
-            // track(EVENTS.NEWSLETTER_SIGNUP_SUCCESS);
+            track(EVENTS.NEWSLETTER_SIGNUP_SUCCESS);
           }
 
           // Hubspot email validation failure flow
@@ -77,7 +82,7 @@ export default function BottomBanner({
             // ex. "ashintest_04252023_invalid_email@contractor.chanzuckerberg" does not validate with Hubspot but does with HTML email validation
             setError(FAILED_EMAIL_VALIDATION_STRING);
 
-            // track(EVENTS.NEWSLETTER_SIGNUP_FAILURE);
+            track(EVENTS.NEWSLETTER_SIGNUP_FAILURE);
           }
         }
       }
@@ -109,7 +114,7 @@ export default function BottomBanner({
     if (validityState?.valueMissing || validityState?.typeMismatch) {
       setError(FAILED_EMAIL_VALIDATION_STRING);
 
-      // track(EVENTS.NEWSLETTER_SIGNUP_FAILURE);
+      track(EVENTS.NEWSLETTER_SIGNUP_FAILURE);
 
       return false;
     }
@@ -118,7 +123,7 @@ export default function BottomBanner({
   };
 
   const handleSubmit = (event: React.FormEvent) => {
-    // track(EVENTS.NEWSLETTER_EMAIL_SUBMITTED);
+    track(EVENTS.NEWSLETTER_EMAIL_SUBMITTED);
 
     event.preventDefault();
     const isValid = validate();
@@ -224,7 +229,7 @@ export default function BottomBanner({
 
                         if (!submitButtonEnabledOnce) {
                           setSubmitButtonEnabledOnce(true);
-                          // track(EVENTS.NEWSLETTER_SUBSCRIBE_BUTTON_AVAILABLE);
+                          track(EVENTS.NEWSLETTER_SUBSCRIBE_BUTTON_AVAILABLE);
                         }
 
                         setEmail(event.target.value);
