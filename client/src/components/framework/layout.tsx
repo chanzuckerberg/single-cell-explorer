@@ -1,4 +1,4 @@
-import React, { Children, useEffect, useMemo, useState } from "react";
+import React, { Children, useState } from "react";
 import * as globals from "../../globals";
 import BottomBanner from "../bottomBanner";
 import { BANNER_HEIGHT_PX } from "../bottomBanner/style";

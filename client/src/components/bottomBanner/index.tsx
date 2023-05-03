@@ -156,30 +156,32 @@ export default function BottomBanner({
             setIsBannerOpen(false);
           }}
           text={
-            <div>
-              <StyledLink
-                onClick={() => {
-                  toggleNewsletterSignupModal();
-                }}
-                data-testid="newsletter-modal-open-button"
-              >
-                Subscribe
-              </StyledLink>{" "}
-              to our newsletter to receive updates about new features.{" "}
-              {includeSurveyLink && (
-                <>
-                  Send us feedback with this{" "}
-                  <StyledLink
-                    href="https://airtable.com/shrLwepDSEX1HI6bo"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    quick survey
-                  </StyledLink>
-                  .
-                </>
-              )}
-            </div>
+            (
+              <div>
+                <StyledLink
+                  onClick={() => {
+                    toggleNewsletterSignupModal();
+                  }}
+                  data-testid="newsletter-modal-open-button"
+                >
+                  Subscribe
+                </StyledLink>{" "}
+                to our newsletter to receive updates about new features.{" "}
+                {includeSurveyLink && (
+                  <>
+                    Send us feedback with this{" "}
+                    <StyledLink
+                      href="https://airtable.com/shrLwepDSEX1HI6bo"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      quick survey
+                    </StyledLink>
+                    .
+                  </>
+                )}
+              </div>
+            ) as unknown as string // For some reason setting the "text" prop overwrites the child, so we have to set the element in the text prop but it only takes a string as the type
           }
         />
 
