@@ -126,6 +126,8 @@ class Graph extends React.Component<{}, GraphState> {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
+  private graphRef = React.createRef<HTMLDivElement>();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   cachedAsyncProps: any;
 
@@ -264,6 +266,11 @@ class Graph extends React.Component<{}, GraphState> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   componentDidMount() {
     window.addEventListener("resize", this.handleResize);
+    if (this.graphRef.current) {
+      this.graphRef.current.addEventListener("wheel", this.disableScroll, {
+        passive: false,
+      });
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -323,6 +330,9 @@ class Graph extends React.Component<{}, GraphState> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   componentWillUnmount() {
     window.removeEventListener("resize", this.handleResize);
+    if (this.graphRef.current) {
+      this.graphRef.current.removeEventListener("wheel", this.disableScroll);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
@@ -495,6 +505,11 @@ class Graph extends React.Component<{}, GraphState> {
       data: e.target.value,
     });
   }
+
+  disableScroll = (event: WheelEvent) => {
+    // disables browser scrolling behavior when hovering over the graph
+    event.preventDefault();
+  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   setReglCanvas = (canvas: any) => {
@@ -910,6 +925,7 @@ class Graph extends React.Component<{}, GraphState> {
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl } = this.state;
     const cameraTF = camera?.view()?.slice();
+
     return (
       <div
         id="graph-wrapper"
@@ -918,6 +934,8 @@ class Graph extends React.Component<{}, GraphState> {
           top: 0,
           left: 0,
         }}
+        data-test-id={`graph-wrapper-distance=${camera?.distance()}`}
+        ref={this.graphRef}
       >
         <GraphOverlayLayer
           // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; width: any; height: any... Remove this comment to see the full error message

@@ -21,3 +21,4 @@ scipy==1.10.1
 flask-server-timing==0.1.2
 s3fs==0.4.2
 tiledb==0.21.1 # Explorer's major/minor tiledb version should always be the >= Portal's tiledb major/minor version (for read/write compatibility)
+Werkzeug==2.2.3 # 2.3.0 breaks the binary endpoints
