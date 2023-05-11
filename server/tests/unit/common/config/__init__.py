@@ -169,10 +169,10 @@ class ConfigTests(BaseTest):
         )
 
         with open(configfile, "w") as app_config_file:
-            with open(server_config).read() as fp:
-                app_config_file.write(fp)
-            with open(dataset_config).read() as fp:
-                app_config_file.write(fp)
+            with open(server_config) as fp:
+                app_config_file.write(fp.read())
+            with open(dataset_config) as fp:
+                app_config_file.write(fp.read())
 
         return configfile
 
