@@ -81,6 +81,10 @@ resource aws_ecs_task_definition task_definition {
         "awslogs-region": "${data.aws_region.current.name}"
       }
     },
+    "runtimePlatform": {
+        "operatingSystemFamily": "LINUX",
+        "cpuArchitecture": "ARM64"
+    },
     "command": ${jsonencode((length(var.cmd) == 0) ? null : var.cmd)}
   }
 ]
