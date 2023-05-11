@@ -6,11 +6,12 @@ import os
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint, request, Response
+from flask import Flask, g, redirect, current_app, make_response, abort, render_template, Blueprint, request, Response
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
+from server.app.request_id import generate_request_id, get_request_id
 from server.common.utils.http_cache import webbp, cache_control_always, cache_control
 from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
 from server.app.api.v3 import register_api_v3
@@ -24,9 +25,9 @@ from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.utils import path_join, Float32JSONEncoder
 from server.dataset.matrix_loader import DataLoader
+from server.app.logging import configure_logging
 
-logging.basicConfig(level=logging.INFO)
-
+configure_logging()
 
 @webbp.errorhandler(RequestException)
 def handle_request_exception(error):
@@ -195,6 +196,7 @@ class Server:
 
         @self.app.before_request
         def pre_request_logging():
+            g.request_id = generate_request_id()
             message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
             self.app.logger.info(message)
 
@@ -209,5 +211,6 @@ class Server:
                     schema=request.scheme,
                 )
             )
+            response.headers["X-Request-Id"] = get_request_id()
             self.app.logger.info(message)
             return response
