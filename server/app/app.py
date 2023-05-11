@@ -29,6 +29,7 @@ from server.app.logging import configure_logging
 
 configure_logging()
 
+
 @webbp.errorhandler(RequestException)
 def handle_request_exception(error):
     return common_rest.abort_and_log(error.status_code, error.message, loglevel=logging.INFO, include_exc_info=True)
