@@ -195,7 +195,7 @@ class Server:
         @self.app.before_request
         def pre_request_logging():
             g.request_id = generate_request_id()
-            message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
+            message = json.dumps(dict(type="REQUEST", url=request.path, method=request.method, schema=request.scheme))
             self.app.logger.info(message)
 
         @self.app.after_request
@@ -207,6 +207,7 @@ class Server:
                     url=request.path,
                     method=request.method,
                     schema=request.scheme,
+                    type="RESPONSE",
                 )
             )
             response.headers["X-Request-Id"] = get_request_id()
