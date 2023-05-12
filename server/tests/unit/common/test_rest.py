@@ -1,6 +1,8 @@
 import unittest
 from urllib.parse import parse_qs
+
 from werkzeug.datastructures import MultiDict
+
 from server.common.errors import FilterError
 from server.common.rest import _query_parameter_to_filter
 

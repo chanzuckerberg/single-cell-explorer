@@ -3,7 +3,7 @@ import random
 
 import requests
 from config import DataSets
-from locust import HttpUser, SequentialTaskSet, task, between, TaskSet
+from locust import HttpUser, SequentialTaskSet, TaskSet, between, task
 from locust.clients import HttpSession
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 

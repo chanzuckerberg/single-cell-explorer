@@ -1,8 +1,7 @@
 import logging
-from logging.config import dictConfig
+from typing import List
 
 from pythonjsonlogger import jsonlogger
-from typing import List
 
 from server.app.request_id import RequestIdFilter
 

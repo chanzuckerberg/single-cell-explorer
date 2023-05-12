@@ -1,11 +1,11 @@
-import os
-import sys
 import argparse
-import os.path
 import gzip
+import os
+import os.path
+import sys
 
-import numpy as np
 import jsonlines
+import numpy as np
 
 from server.common.diffexpdu import DiffExArguments
 
@@ -45,26 +45,27 @@ def encode_tests(args):
         print("Binary (output) directory name already exists and is not a directory")
         return 1
 
-    with gzip.open(args.tests, mode="rb") if args.tests.endswith(".gz") else open(args.tests, mode="rb") as fp:
-        with jsonlines.Reader(fp) as tests:
-            limit = 0
-            for test in tests:
-                test_id = test["test_id"]
-                if args.verbose:
-                    print(f"{test_id}")
-                de_args = DiffExArguments(
-                    mode=DiffExArguments.DiffExMode.TopN,
-                    params=DiffExArguments.TopNParams(N=50),
-                    set1=test["set1"]["postings_list"],
-                    set2=test["set2"]["postings_list"],
-                )
-                encoded_postings = de_args.pack()
-                with open(os.path.join(bindir, f"{test_id}.bin"), mode="wb") as bin:
-                    bin.write(encoded_postings)
+    with gzip.open(args.tests, mode="rb") if args.tests.endswith(".gz") else open(
+        args.tests, mode="rb"
+    ) as fp, jsonlines.Reader(fp) as tests:
+        limit = 0
+        for test in tests:
+            test_id = test["test_id"]
+            if args.verbose:
+                print(f"{test_id}")
+            de_args = DiffExArguments(
+                mode=DiffExArguments.DiffExMode.TopN,
+                params=DiffExArguments.TopNParams(N=50),
+                set1=test["set1"]["postings_list"],
+                set2=test["set2"]["postings_list"],
+            )
+            encoded_postings = de_args.pack()
+            with open(os.path.join(bindir, f"{test_id}.bin"), mode="wb") as bin:
+                bin.write(encoded_postings)
 
-                limit += 1
-                if args.limit and limit > args.limit:
-                    break
+            limit += 1
+            if args.limit and limit > args.limit:
+                break
 
     print("All encoded.")
     return 0
@@ -76,26 +77,27 @@ def verify_tests(args):
         print("Binary file directory not found.")
         return 1
 
-    with gzip.open(args.tests, mode="rb") if args.tests.endswith(".gz") else open(args.tests, mode="rb") as fp:
-        with jsonlines.Reader(fp) as tests:
-            limit = 0
-            for test in tests:
-                test_id = test["test_id"]
-                if args.verbose:
-                    print(f"{test_id}")
+    with gzip.open(args.tests, mode="rb") if args.tests.endswith(".gz") else open(
+        args.tests, mode="rb"
+    ) as fp, jsonlines.Reader(fp) as tests:
+        limit = 0
+        for test in tests:
+            test_id = test["test_id"]
+            if args.verbose:
+                print(f"{test_id}")
 
-                with open(os.path.join(bindir, f"{test_id}.bin"), mode="rb") as bin:
-                    buf = bin.read()
+            with open(os.path.join(bindir, f"{test_id}.bin"), mode="rb") as bin:
+                buf = bin.read()
 
-                de = DiffExArguments.unpack_from(buf)
-                assert de.mode == DiffExArguments.DiffExMode.TopN
-                assert de.params.N == 50
-                assert np.array_equal(de.set1, test["set1"]["postings_list"])
-                assert np.array_equal(de.set2, test["set2"]["postings_list"])
+            de = DiffExArguments.unpack_from(buf)
+            assert de.mode == DiffExArguments.DiffExMode.TopN
+            assert de.params.N == 50
+            assert np.array_equal(de.set1, test["set1"]["postings_list"])
+            assert np.array_equal(de.set2, test["set2"]["postings_list"])
 
-                limit += 1
-                if args.limit and limit > args.limit:
-                    break
+            limit += 1
+            if args.limit and limit > args.limit:
+                break
 
     print("All verified.")
     return 0

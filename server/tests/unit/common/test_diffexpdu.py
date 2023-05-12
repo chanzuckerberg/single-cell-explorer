@@ -1,7 +1,8 @@
+import struct
 import unittest
 
-import struct
 import numpy as np
+
 from server.common.diffexpdu import DiffExArguments, deflate_postings_lists, inflate_postings_lists
 
 

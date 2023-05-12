@@ -1,6 +1,7 @@
-from server.common.utils.data_locator import DataLocator
-from server.common.errors import DatasetAccessError
 from http import HTTPStatus
+
+from server.common.errors import DatasetAccessError
+from server.common.utils.data_locator import DataLocator
 
 
 class DataLoader(object):

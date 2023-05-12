@@ -2,7 +2,6 @@ import unittest
 
 from server.common.config.app_config import AppConfig, flatten
 from server.tests import FIXTURES_ROOT
-from server.common.errors import ConfigurationError
 from server.tests.unit.common.config import ConfigTests
 
 
@@ -22,9 +21,7 @@ class BaseConfigTest(ConfigTests):
         self.context = dict(messagefn=messagefn, messages=message_list)
 
     def get_config(self, **kwargs):
-        file_name = self.custom_app_config(
-            config_file_name=self.config_file_name, **kwargs
-        )
+        file_name = self.custom_app_config(config_file_name=self.config_file_name, **kwargs)
         config = AppConfig(file_name)
         return config
 
@@ -46,7 +43,7 @@ class BaseConfigTest(ConfigTests):
                 ("server__app__flask_secret_key", "secret", None),
                 ("server__data_locator__s3_region_name", "us-east-1", True),
                 ("default_dataset__diffexp__lfc_cutoff", 0.05, 0.01),
-                ('server__app__port', 5005, None),
-                ('server__app__csp_directives', {}, None)
+                ("server__app__port", 5005, None),
+                ("server__app__csp_directives", {}, None),
             ],
         )

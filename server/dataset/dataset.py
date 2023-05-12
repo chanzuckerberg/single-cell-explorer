@@ -8,14 +8,14 @@ from server_timing import Timing as ServerTiming
 from server.common.config.app_config import AppConfig
 from server.common.constants import Axis, XApproximateDistribution
 from server.common.errors import (
+    DatasetAccessError,
+    ExceedsLimitError,
     FilterError,
     JSONEncodingValueError,
-    ExceedsLimitError,
     UnsupportedSummaryMethod,
-    DatasetAccessError,
 )
-from server.common.utils.utils import jsonify_numpy
 from server.common.fbs.matrix import encode_matrix_fbs
+from server.common.utils.utils import jsonify_numpy
 
 
 class Dataset(metaclass=ABCMeta):
@@ -244,7 +244,7 @@ class Dataset(metaclass=ABCMeta):
             try:
                 obs_selector, var_selector = self._filter_to_mask(filter)
             except (KeyError, IndexError, TypeError, AttributeError, DatasetAccessError):
-                raise FilterError("Error parsing filter")
+                raise FilterError("Error parsing filter") from None
 
             if obs_selector is not None:
                 raise FilterError("filtering on obs unsupported")
@@ -279,7 +279,7 @@ class Dataset(metaclass=ABCMeta):
             obs_mask_A = self._axis_filter_to_mask(Axis.OBS, obsFilterA["obs"], shape[0])
             obs_mask_B = self._axis_filter_to_mask(Axis.OBS, obsFilterB["obs"], shape[0])
         except (KeyError, IndexError):
-            raise FilterError("Error parsing filter")
+            raise FilterError("Error parsing filter") from None
         if top_n is None:
             top_n = self.app_config.default_dataset__diffexp__top_n
 
@@ -299,7 +299,7 @@ class Dataset(metaclass=ABCMeta):
         try:
             return jsonify_numpy(result)
         except ValueError:
-            raise JSONEncodingValueError("Error encoding differential expression to JSON")
+            raise JSONEncodingValueError("Error encoding differential expression to JSON") from None
 
     def diffexp_topN_from_list(self, listA: np.ndarray, listB: np.ndarray, top_n: int = None):
         """
@@ -320,7 +320,7 @@ class Dataset(metaclass=ABCMeta):
         try:
             return jsonify_numpy(result)
         except ValueError:
-            raise JSONEncodingValueError("Error encoding differential expression to JSON")
+            raise JSONEncodingValueError("Error encoding differential expression to JSON") from None
 
     @abstractmethod
     def compute_diffexp_ttest(self, maskA, maskB, top_n, lfc_cutoff, selector_lists=False):
@@ -372,10 +372,7 @@ class Dataset(metaclass=ABCMeta):
                 layout_data.append(pd.DataFrame(normalized_layout, columns=[f"{ename}_0", f"{ename}_1"]))
 
         with ServerTiming.time("layout.encode"):
-            if layout_data:
-                df = pd.concat(layout_data, axis=1, copy=False)
-            else:
-                df = pd.DataFrame()
+            df = pd.concat(layout_data, axis=1, copy=False) if layout_data else pd.DataFrame()
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
