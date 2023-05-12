@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from server.common.config.app_config import AppConfig
 from server.common.errors import ConfigurationError
-from server.tests import PROJECT_ROOT, FIXTURES_ROOT
+from server.tests import FIXTURES_ROOT, PROJECT_ROOT
 from server.tests.unit.common.config import ConfigTests
 
 
@@ -81,7 +81,7 @@ class TestDatasetConfig(ConfigTests):
         server.testing = True
         session = server.test_client()
 
-        def _get_v03_url(url): # TODO inline and do not use an API call to generate
+        def _get_v03_url(url):  # TODO inline and do not use an API call to generate
             response = session.get(f"{url}/api/v0.3/s3_uri")
             s3_uri = quote(quote(response.json, safe=""), safe="")
             return f"/s3_uri/{s3_uri}/api/v0.3"
@@ -138,6 +138,5 @@ class TestDatasetConfig(ConfigTests):
 
         tests = ["auto", "bad"]
         for test in tests:
-            with self.subTest(test):
-                with self.assertRaises(ConfigurationError):
-                    self.app_config.update_default_dataset_config(X_approximate_distribution=test)
+            with self.subTest(test), self.assertRaises(ConfigurationError):
+                self.app_config.update_default_dataset_config(X_approximate_distribution=test)

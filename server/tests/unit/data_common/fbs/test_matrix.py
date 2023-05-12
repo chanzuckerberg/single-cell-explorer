@@ -1,10 +1,11 @@
 import unittest
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from scipy import sparse
 
+from server.common.fbs.matrix import decode_matrix_fbs, encode_matrix_fbs
 from server.tests import decode_fbs
-from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
 
 
 class FbsTests(unittest.TestCase):
@@ -42,7 +43,7 @@ class FbsTests(unittest.TestCase):
             data={
                 "a": np.zeros((10,), dtype=np.float32),
                 "b": np.ones((10,), dtype=np.int64),
-                "c": np.array([i for i in range(0, 10)], dtype=np.uint16),
+                "c": np.array(list(range(0, 10)), dtype=np.uint16),
                 "d": pd.Series(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"], dtype="category"),
             }
         )
@@ -68,29 +69,29 @@ class FbsTests(unittest.TestCase):
         self.fbs_checks(fbs, (2, 3), expected_types, None)
 
     def test_encode_categorical_8(self):
-        cat8 = pd.DataFrame(pd.Categorical(np.arange(2 ** 7 - 2)))
+        cat8 = pd.DataFrame(pd.Categorical(np.arange(2**7 - 2)))
         expected_types = ((pd.Categorical, cat8[0].dtype),)
         fbs = encode_matrix_fbs(matrix=cat8, row_idx=None, col_idx=None)
-        self.fbs_checks(fbs, (2 ** 7 - 2, 1), expected_types, None)
+        self.fbs_checks(fbs, (2**7 - 2, 1), expected_types, None)
 
     def test_encode_categorical_16(self):
-        cat16 = pd.DataFrame(pd.Categorical(np.arange(2 ** 15 - 2)))
+        cat16 = pd.DataFrame(pd.Categorical(np.arange(2**15 - 2)))
         expected_types = ((pd.Categorical, cat16[0].dtype),)
         fbs = encode_matrix_fbs(matrix=cat16, row_idx=None, col_idx=None)
-        self.fbs_checks(fbs, (2 ** 15 - 2, 1), expected_types, None)
+        self.fbs_checks(fbs, (2**15 - 2, 1), expected_types, None)
 
     def test_encode_categorical_32(self):
-        cat32 = pd.DataFrame(pd.Categorical(np.arange(2 ** 15 - 1)))
+        cat32 = pd.DataFrame(pd.Categorical(np.arange(2**15 - 1)))
         expected_types = ((pd.Categorical, cat32[0].dtype),)
         fbs = encode_matrix_fbs(matrix=cat32, row_idx=None, col_idx=None)
-        self.fbs_checks(fbs, (2 ** 15 - 1, 1), expected_types, None)
+        self.fbs_checks(fbs, (2**15 - 1, 1), expected_types, None)
 
     def test_roundtrip(self):
         dfSrc = pd.DataFrame(
             data={
                 "a": np.zeros((10,), dtype=np.float32),
                 "b": np.ones((10,), dtype=np.int64),
-                "c": np.array([i for i in range(0, 10)], dtype=np.uint16),
+                "c": np.array(list(range(0, 10)), dtype=np.uint16),
                 "d": pd.Series(["x", "y", "z", "x", "y", "z", "a", "x", "y", "z"], dtype="category"),
             }
         )

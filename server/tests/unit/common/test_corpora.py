@@ -1,5 +1,4 @@
 import json
-import os
 from http import HTTPStatus
 
 from server.common.config.app_config import AppConfig
@@ -23,7 +22,6 @@ class CorporaRESTAPITest(BaseTest):
         cls.client = cls.app.test_client()
 
     def test_config(self):
-        endpoint = "config"
 
         test_s3_uri_encoded = self.encode_s3_uri(f"{FIXTURES_ROOT}/schema_2_0_0.cxg")
         url = f"/s3_uri/{test_s3_uri_encoded}/api/v0.3/config"
@@ -37,7 +35,7 @@ class CorporaRESTAPITest(BaseTest):
         self.assertIsInstance(result_data["config"]["parameters"], dict)
 
         corpora_props = result_data["config"]["corpora_props"]
-        parameters = result_data["config"]["parameters"]
+        result_data["config"]["parameters"]
 
         self.assertEqual(corpora_props["schema_version"], "2.0.0")
 

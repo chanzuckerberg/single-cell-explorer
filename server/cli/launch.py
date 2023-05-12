@@ -3,12 +3,12 @@ import functools
 import os
 import sys
 import webbrowser
-from logging import Logger, getLogger, ERROR
+from logging import ERROR, Logger, getLogger
 
 import click
 
 from server.common.config.app_config import AppConfig
-from server.common.errors import DatasetAccessError, ConfigurationError
+from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.utils.utils import sort_options
 from server.default_config import default_config
 from server.tests.unit import TestServer
@@ -262,7 +262,7 @@ def launch(
         app_config.complete_config()
 
     except (ConfigurationError, DatasetAccessError) as e:
-        raise click.ClickException(e)
+        raise click.ClickException(e) from None
 
     handle_scripts(scripts)
 
@@ -282,8 +282,8 @@ def launch(
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
     if not app_config.server__app__verbose:
-        f = open(os.devnull, "w")
-        sys.stdout = f
+        with open(os.devnull, "w") as f:
+            sys.stdout = f
 
     try:
         server.app.run(

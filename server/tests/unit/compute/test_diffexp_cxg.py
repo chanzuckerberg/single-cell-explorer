@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from server.common.fbs.matrix import encode_matrix_fbs, decode_matrix_fbs
+from server.common.fbs.matrix import decode_matrix_fbs, encode_matrix_fbs
 from server.compute import diffexp_cxg
 from server.compute.diffexp_cxg import diffexp_ttest
 from server.dataset.matrix_loader import DataLoader
@@ -15,7 +15,9 @@ class DiffExpTest(unittest.TestCase):
     """Tests the diffexp returns the expected results for one test case, using different
     adaptor types and different algorithms."""
 
-    def load_dataset(self, path, extra_server_config={}, extra_dataset_config={}):
+    def load_dataset(self, path, extra_server_config=None, extra_dataset_config=None):
+        extra_server_config = {} if extra_server_config is None else extra_server_config
+        extra_dataset_config = {} if extra_dataset_config is None else extra_dataset_config
         extra_dataset_config["X_approximate_distribution"] = "normal"  # hardwired for now
         config = app_config(extra_server_config=extra_server_config, extra_dataset_config=extra_dataset_config)
         loader = DataLoader(location=path, app_config=config)
@@ -107,7 +109,7 @@ class DiffExpTest(unittest.TestCase):
         self.sparse_diffexp(adaptor_dense, adaptor_sparse)
 
     def sparse_diffexp(self, adaptor_dense, adaptor_sparse):
-        with tempfile.TemporaryDirectory() as dirname:
+        with tempfile.TemporaryDirectory():
             maskA = self.get_mask(adaptor_dense, 1, 10)
             maskB = self.get_mask(adaptor_dense, 2, 10)
 

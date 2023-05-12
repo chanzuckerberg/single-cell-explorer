@@ -1,16 +1,14 @@
 import unittest
 
+import numpy as np
 from werkzeug.datastructures import MultiDict
 
 from server.common.rest import _query_parameter_to_filter
 from server.common.utils.data_locator import DataLocator
 from server.dataset.cxg_dataset import CxgDataset
-from server.tests.unit import app_config
 from server.tests import FIXTURES_ROOT, decode_fbs
 from server.tests.fixtures.fixtures import pbmc3k_colors
-
-import tiledb
-import numpy as np
+from server.tests.unit import app_config
 
 
 class TestCxgDataset(unittest.TestCase):

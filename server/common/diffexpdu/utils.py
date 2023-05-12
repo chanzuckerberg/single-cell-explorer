@@ -2,9 +2,9 @@
 Utility/helper code for diffexpdu package
 """
 
-from typing import List, Union
 import itertools
 import zlib
+from typing import List, Union
 
 
 def _nonzero_bits(mask: int) -> List[int]:
