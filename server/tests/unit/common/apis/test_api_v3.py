@@ -67,6 +67,14 @@ class EndPoints(BaseTest):
             except requests.exceptions.ConnectionError:
                 time.sleep(1)
 
+    def test_request_id(self):
+        endpoint = "schema"
+        url_base = self.TEST_URL_BASE
+        url = f"{url_base}{endpoint}"
+        result = self.client.get(url)
+        self.assertEqual(result.status_code, HTTPStatus.OK)
+        self.assertIn("X-Request-ID", result.headers)
+
     def test_initialize(self):
         endpoint = "schema"
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
