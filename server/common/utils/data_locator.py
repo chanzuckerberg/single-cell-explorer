@@ -1,10 +1,11 @@
 import os
 import tempfile
-import fsspec
 from datetime import datetime
+from urllib.parse import urlparse
+
 import boto3
 import botocore
-from urllib.parse import urlparse
+import fsspec
 
 
 class DataLocator:

@@ -1,19 +1,20 @@
+import json
+
 import numpy as np
 import pandas as pd
 from scipy import sparse as sp
-import json
 
-from server.common.utils.type_conversion_utils import get_encoding_dtype_of_array
-import server.common.fbs.NetEncoding.TypedFBArray as TypedFBArray
-import server.common.fbs.NetEncoding.Float32FBArray as Float32FBArray
-import server.common.fbs.NetEncoding.Float64FBArray as Float64FBArray
-import server.common.fbs.NetEncoding.Int32FBArray as Int32FBArray
-import server.common.fbs.NetEncoding.JSONEncodedFBArray as JSONEncodedFBArray
-import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
+import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
 import server.common.fbs.NetEncoding.DictEncoded16FBArray as DictEncoded16FBArray
 import server.common.fbs.NetEncoding.DictEncoded32FBArray as DictEncoded32FBArray
-import server.common.fbs.NetEncoding.DictEncoded8FBArray as DictEncoded8FBArray
+import server.common.fbs.NetEncoding.Float32FBArray as Float32FBArray
+import server.common.fbs.NetEncoding.Float64FBArray as Float64FBArray
 import server.common.fbs.NetEncoding.Int16EncodedXFBArray as Int16EncodedXFBArray
+import server.common.fbs.NetEncoding.Int32FBArray as Int32FBArray
+import server.common.fbs.NetEncoding.JSONEncodedFBArray as JSONEncodedFBArray
+import server.common.fbs.NetEncoding.TypedFBArray as TypedFBArray
+import server.common.fbs.NetEncoding.Uint32FBArray as Uint32FBArray
+from server.common.utils.type_conversion_utils import get_encoding_dtype_of_array
 
 
 class DenseNumericIntCoder:

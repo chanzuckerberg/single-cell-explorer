@@ -1,13 +1,14 @@
+import concurrent.futures
 import json
+import random
 import string
+import sys
 from contextlib import contextmanager
 from timeit import default_timer
-import concurrent.futures
+
 import numpy as np
-import requests
-import sys
 import pandas as pd
-import random
+import requests
 
 from server.common.fbs.matrix import encode_matrix_fbs
 
@@ -69,7 +70,7 @@ class PerformanceTestingAnnotations:
 
     def create_info_dict(self):
         request_info = {}
-        for dataset in self.test_datasets.keys():
+        for dataset in self.test_datasets:
             request_info[dataset] = {}
             for cat_count in self.annotations_category_count:
                 request_info[dataset][f"num_categories_{cat_count}"] = {}
@@ -198,7 +199,7 @@ def test_all_datasets():
      unique label counts being tested. However it generally takes a long time. I recommend running this in tmux
     """
     perf_test = PerformanceTestingAnnotations()
-    for dataset_name in perf_test.test_datasets.keys():
+    for dataset_name in perf_test.test_datasets:
         print(f"Testing annotation creation for: {dataset_name}")
         try:
             perf_test.test_categories_max_label_matrix(dataset_name)

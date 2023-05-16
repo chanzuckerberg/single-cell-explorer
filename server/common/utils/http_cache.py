@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, make_response, current_app
+from flask import Blueprint, current_app, make_response
 
 webbp = Blueprint("webapp", "server.common.web", template_folder="templates")
 ONE_WEEK = 7 * 24 * 60 * 60
