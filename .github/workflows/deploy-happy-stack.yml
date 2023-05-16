@@ -51,9 +51,9 @@ jobs:
           fi
       - name: Setup envfile
         run: |
-          mkdir /custom
-          touch /custom/envfile
-          echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" > /custom/envfile
+          mkdir ./custom
+          touch ./custom/envfile
+          echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" > ./custom/envfile
       - name: Test
         run: |
           ls -la /custom/
@@ -64,5 +64,5 @@ jobs:
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }}
-          env-file: /custom/envfile
+          env-file: ./custom/envfile
           happy_version: "0.79.1"
