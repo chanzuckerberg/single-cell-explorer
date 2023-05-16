@@ -63,4 +63,4 @@ jobs:
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }}
           env-file: envfile
-          happy_version: "0.59.0"
+          happy_version: "0.79.1"
