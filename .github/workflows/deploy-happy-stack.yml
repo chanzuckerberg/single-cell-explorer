@@ -52,7 +52,8 @@ jobs:
       - name: Setup envfile
         run: |
           touch envfile
-          echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" >> envfile
+          echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" > envfile
+          ls -la envfile
       - name: Update deployment
         uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@deploy-happy-stack-v1.7.2
         with:
