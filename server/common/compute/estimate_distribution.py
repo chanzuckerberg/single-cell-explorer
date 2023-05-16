@@ -1,7 +1,9 @@
-import numba
 import concurrent.futures
+
+import numba
 import numpy as np
 from scipy import sparse
+
 from server.common.constants import XApproximateDistribution
 
 

@@ -6,11 +6,12 @@ import threading
 import numpy as np
 import pandas as pd
 import tiledb
+from packaging import version
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
 from server.common.constants import XApproximateDistribution
-from server.common.errors import DatasetAccessError, ConfigurationError
+from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
 from server.common.utils.type_conversion_utils import get_schema_type_hint_from_dtype
@@ -18,7 +19,6 @@ from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
 from server.dataset.cxg_util import pack_selector_from_mask
 from server.dataset.dataset import Dataset
-from packaging import version
 
 
 class CxgDataset(Dataset):
@@ -62,9 +62,9 @@ class CxgDataset(Dataset):
         except tiledb.libtiledb.TileDBError as e:
             if e.message == "Global context already initialized!":
                 if tiledb.default_ctx().config().dict() != CxgDataset.tiledb_ctx.config().dict():
-                    raise ConfigurationError("Cannot change tiledb configuration once it is set")
+                    raise ConfigurationError("Cannot change tiledb configuration once it is set") from None
             else:
-                raise ConfigurationError(f"Invalid tiledb context: {str(e)}")
+                raise ConfigurationError(f"Invalid tiledb context: {str(e)}") from None
 
     @staticmethod
     def pre_load_validation(data_locator):
@@ -139,18 +139,18 @@ class CxgDataset(Dataset):
         Return True if this looks like a valid CXG, False if not.  Just a quick/cheap
         test, not to be fully trusted.
         """
-        if not tiledb.object_type(url, ctx=CxgDataset.tiledb_ctx) == "group":
+        if tiledb.object_type(url, ctx=CxgDataset.tiledb_ctx) != "group":
             return False
-        if not tiledb.object_type(path_join(url, "obs"), ctx=CxgDataset.tiledb_ctx) == "array":
+        if tiledb.object_type(path_join(url, "obs"), ctx=CxgDataset.tiledb_ctx) != "array":
             return False
-        if not tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) == "array":
+        if tiledb.object_type(path_join(url, "var"), ctx=CxgDataset.tiledb_ctx) != "array":
             return False
-        if not tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) == "array" and not (
+        if tiledb.object_type(path_join(url, "X"), ctx=CxgDataset.tiledb_ctx) != "array" and not (
             tiledb.object_type(path_join(url, "Xr"), ctx=CxgDataset.tiledb_ctx) == "array"
             and tiledb.object_type(path_join(url, "Xc"), ctx=CxgDataset.tiledb_ctx) == "array"
         ):
             return False
-        if not tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) == "group":
+        if tiledb.object_type(path_join(url, "emb"), ctx=CxgDataset.tiledb_ctx) != "group":
             return False
         return True
 
@@ -222,7 +222,7 @@ class CxgDataset(Dataset):
             p = self.get_path(name)
             return self.arrays[p]
         except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError(name)
+            raise DatasetAccessError(name) from None
 
     def get_embedding_array(self, ename, dims=2):
         array = self.open_array(f"emb/{ename}")
@@ -330,12 +330,15 @@ class CxgDataset(Dataset):
         try:
             data = obs.query(attrs=[term_name])[:][term_name]
             type_hint = schema.get(term_name, None)
-            if type_hint is not None:
-                if type_hint[term_name]["type"] == "categorical" and str(data.dtype).startswith("int"):
-                    if "categories" in type_hint[term_name]:
-                        data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
+            if (
+                type_hint is not None
+                and type_hint[term_name]["type"] == "categorical"
+                and str(data.dtype).startswith("int")
+                and "categories" in type_hint[term_name]
+            ):
+                data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
         except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError("query_obs")
+            raise DatasetAccessError("query_obs") from None
         return data
 
     def get_obs_names(self):
@@ -432,10 +435,7 @@ class CxgDataset(Dataset):
             A = self.open_array(str(axis))
 
             try:
-                if not fields:
-                    data = A[:]
-                else:
-                    data = A.query(attrs=fields)[:]
+                data = A[:] if not fields else A.query(attrs=fields)[:]
 
                 categorical_dtypes = []
                 for c in self.get_schema()["annotations"]["obs"]["columns"]:
@@ -454,7 +454,7 @@ class CxgDataset(Dataset):
                 if fields:
                     df = df[fields]
             except TileDBError as e:
-                raise KeyError(e)
+                raise KeyError(e) from None
 
         with ServerTiming.time(f"annotations.{axis}.encode"):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, num_bins=num_bins)

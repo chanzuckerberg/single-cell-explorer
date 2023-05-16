@@ -1,32 +1,32 @@
 import copy
 import hashlib
 import logging
+import os
+import struct
 import sys
 import zlib
-import requests
 from http import HTTPStatus
-import struct
-import os
 
-from flask import make_response, jsonify, current_app, abort, redirect
+import requests
+from flask import abort, current_app, jsonify, make_response, redirect
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
-    FilterError,
-    JSONEncodingValueError,
-    InvalidCxgDatasetError,
+    ColorFormatException,
+    DatasetAccessError,
     DisabledFeatureError,
     ExceedsLimitError,
-    DatasetAccessError,
-    ColorFormatException,
-    UnsupportedSummaryMethod,
+    FilterError,
+    InvalidCxgDatasetError,
+    JSONEncodingValueError,
     TombstoneError,
+    UnsupportedSummaryMethod,
 )
 from server.dataset import dataset_metadata
-from server.common.diffexpdu import DiffExArguments
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -34,10 +34,7 @@ def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
     Log the message, then abort with HTTP code. If include_exc_info is true,
     also include current exception via sys.exc_info().
     """
-    if include_exc_info:
-        exc_info = sys.exc_info()
-    else:
-        exc_info = False
+    exc_info = sys.exc_info() if include_exc_info else False
     current_app.logger.log(loglevel, logmsg, exc_info=exc_info)
     # Do NOT send log message to HTTP response.
     return abort(code)
@@ -94,13 +91,13 @@ def _query_parameter_to_filter(args):
                 raise FilterError("badly formated filter value")
 
     except ValueError as e:
-        raise FilterError(str(e))
+        raise FilterError(str(e)) from None
 
     result = {}
     for axis in ("obs", "var"):
         axis_filter = filters[axis]
         if len(axis_filter) > 0:
-            result[axis] = {"annotation_value": [val for val in axis_filter.values()]}
+            result[axis] = {"annotation_value": list(axis_filter.values())}
 
     return result
 

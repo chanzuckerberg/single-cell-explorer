@@ -1,4 +1,5 @@
 import logging
+
 from server.common.utils.utils import import_plugins
 
 # Work around bug https://github.com/pallets/werkzeug/issues/461

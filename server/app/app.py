@@ -6,26 +6,28 @@ import os
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from flask import Flask, redirect, current_app, make_response, abort, render_template, Blueprint, request, Response
+from flask import Blueprint, Flask, Response, abort, current_app, g, make_response, redirect, render_template, request
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
 import server.common.rest as common_rest
-from server.common.utils.http_cache import webbp, cache_control_always, cache_control
-from server.app.api.util import get_dataset_artifact_s3_uri, get_data_adaptor
+from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.app.api.v3 import register_api_v3
+from server.app.logging import configure_logging
+from server.app.request_id import generate_request_id, get_request_id
 from server.common.errors import (
     DatasetAccessError,
-    RequestException,
     DatasetNotFoundError,
+    RequestException,
     TombstoneError,
 )
 from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
-from server.common.utils.utils import path_join, Float32JSONEncoder
+from server.common.utils.http_cache import cache_control, cache_control_always, webbp
+from server.common.utils.utils import Float32JSONEncoder, path_join
 from server.dataset.matrix_loader import DataLoader
 
-logging.basicConfig(level=logging.INFO)
+configure_logging()
 
 
 @webbp.errorhandler(RequestException)
@@ -168,10 +170,7 @@ class Server:
         self.app.register_blueprint(webbp)
 
         api_base_url = app_config.server__app__api_base_url
-        if api_base_url:
-            api_url_prefix = urlparse(api_base_url).path
-        else:
-            api_url_prefix = "/"
+        api_url_prefix = urlparse(api_base_url).path if api_base_url else "/"
 
         bp_base = Blueprint("bp_base", __name__, url_prefix=api_url_prefix)
         base_resources = get_api_base_resources(bp_base)
@@ -195,6 +194,7 @@ class Server:
 
         @self.app.before_request
         def pre_request_logging():
+            g.request_id = generate_request_id()
             message = json.dumps(dict(url=request.path, method=request.method, schema=request.scheme))
             self.app.logger.info(message)
 
@@ -209,5 +209,6 @@ class Server:
                     schema=request.scheme,
                 )
             )
+            response.headers["X-Request-Id"] = get_request_id()
             self.app.logger.info(message)
             return response
