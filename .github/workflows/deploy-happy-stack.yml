@@ -51,6 +51,7 @@ jobs:
           fi
       - name: Setup envfile
         run: |
+          mkdir /custom
           touch /custom/envfile
           echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" > /custom/envfile
       - name: Test
