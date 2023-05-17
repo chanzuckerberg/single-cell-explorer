@@ -6,7 +6,6 @@ on:
       - main
       - staging
       - prod
-      - ebezzi/fix-envfile
 
 env:
   DOCKER_BUILDKIT: 1
@@ -54,9 +53,6 @@ jobs:
           mkdir /home/runner/work/custom
           touch /home/runner/work/custom/envfile
           echo "HAPPY_COMMIT=$(git rev-parse --verify HEAD)" > /home/runner/work/custom/envfile
-          cd /home/runner/work/custom/
-          ls -la 
-          pwd
       - name: Update deployment
         uses: chanzuckerberg/github-actions/.github/actions/deploy-happy-stack@deploy-happy-stack-v1.7.2
         with:
@@ -64,5 +60,5 @@ jobs:
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }}
-          env-file: /home/runner/work/custom/envfile
+          env-file: /home/runner/work/custom/envfile 
           happy_version: "0.79.1"
