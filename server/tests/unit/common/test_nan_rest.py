@@ -1,9 +1,8 @@
-from http import HTTPStatus
 import math
+from http import HTTPStatus
 from urllib.parse import quote
 
 import server.tests.decode_fbs as decode_fbs
-
 from server.common.config.app_config import AppConfig
 from server.tests import FIXTURES_ROOT
 from server.tests.unit import BaseTest
@@ -25,7 +24,7 @@ class WithNaNs(BaseTest):
 
     def setUp(self):
         self.session = self.client
-        response = self.session.get(f"/d/nan.cxg/api/v0.3/s3_uri")
+        response = self.session.get("/d/nan.cxg/api/v0.3/s3_uri")
         s3_uri = quote(quote(response.json, safe=""), safe="")
         self.TEST_URL_BASE = f"/s3_uri/{s3_uri}/api/v0.3/"
 

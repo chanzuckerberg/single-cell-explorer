@@ -3,12 +3,10 @@ import pandas as pd
 from flatbuffers import Builder
 from scipy import sparse
 
-from server.common.fbs.fbs_coders import serialize_typed_array
-from server.common.fbs.fbs_coders import deserialize_typed_array
 import server.common.fbs.NetEncoding.Column as Column
 import server.common.fbs.NetEncoding.Matrix as Matrix
 import server.common.fbs.NetEncoding.TypedFBArray as TypedFBArray
-
+from server.common.fbs.fbs_coders import deserialize_typed_array, serialize_typed_array
 
 # Serialization helper
 
@@ -84,10 +82,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
     for cidx in range(n_cols - 1, -1, -1):
         # serialize the typed array
 
-        if isinstance(matrix, pd.DataFrame):
-            col = matrix.iloc[:, cidx]
-        else:
-            col = matrix[:, cidx]
+        col = matrix.iloc[:, cidx] if isinstance(matrix, pd.DataFrame) else matrix[:, cidx]
 
         typed_arr = serialize_typed_array(builder, col, num_bins=num_bins)
 

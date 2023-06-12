@@ -1,12 +1,11 @@
 # Extracts CXG file metadata and outputs as json, flattening any dictionary-nested properties into dot-deliminted json key names.
 # Can be used for a single CXG file or multiple CXG files using `--url` and `--urls-file`, respectively.
 # For usage: `python cxg_inspect.py --help`
+import contextlib
 
 # To obtain URLs for CXG files "in the wild":
 # - PSQL: select distinct s3_uri from dataset_artifact where filetype= 'CXG' order by created_at;
 # - aws s3 ls --recursive s3://cellxgene-data-wrangling-prod/ | grep .cxg | awk '{ print $4 }' | awk -F / '{ print "s3://cellxgene-data-wrangling-prod/"$1"/"$2 }' | sort -u
-
-
 import json
 import os
 import pprint
@@ -50,10 +49,8 @@ def _flatten_dict(d: dict, root_prop: Optional[str] = None):
 
         # try to decode nested json dict
         if type(v) is str:
-            try:
+            with contextlib.suppress(Exception):
                 v = json.loads(v)
-            except:
-                pass
 
         if type(v) is dict:
             flattened_props.update(**_flatten_dict(v, fq_key))
@@ -73,7 +70,7 @@ def _inspect_cxg(dataset_url: str) -> Optional[dict]:
         cxg = CxgDataset(dl, app_config=AppConfig())
         metadata = cxg.open_array("cxg_group_metadata").meta
         return dict(url=dataset_url, **_flatten_dict(metadata))
-    except:
+    except Exception:
         sys.stderr.write(f"No metadata for {dataset_url}\n")
         return dict(url=dataset_url)
 

@@ -45,10 +45,14 @@ class AppConfigTest(ConfigTests):
         config = AppConfig()
         config.update_config(server__app__verbose=True, server__multi_dataset__dataroot="datadir")
         vars = self.compare_configs(config, default_config)
-        self.assertCountEqual(vars, [("server__app__verbose", True, False),
-                                     ('server__multi_dataset__dataroots__d__base_url', 'd', None),
-                                     ('server__multi_dataset__dataroots__d__dataroot', 'datadir', None)
-                                     ])
+        self.assertCountEqual(
+            vars,
+            [
+                ("server__app__verbose", True, False),
+                ("server__multi_dataset__dataroots__d__base_url", "d", None),
+                ("server__multi_dataset__dataroots__d__dataroot", "datadir", None),
+            ],
+        )
 
         config = AppConfig()
         config.update_config(default_dataset__app__scripts=(), default__dataset__app__inline_scripts=())
@@ -58,8 +62,13 @@ class AppConfigTest(ConfigTests):
         config = AppConfig()
         config.update_config(default_dataset__app__scripts=("a", "b"), default_dataset__app__inline_scripts=["c", "d"])
         vars = self.compare_configs(config, default_config)
-        self.assertCountEqual(vars, [('default_dataset__app__scripts', [{'src': 'a'}, {'src': 'b'}], []),
-                                     ("default_dataset__app__inline_scripts", ["c", "d"], [])])
+        self.assertCountEqual(
+            vars,
+            [
+                ("default_dataset__app__scripts", [{"src": "a"}, {"src": "b"}], []),
+                ("default_dataset__app__inline_scripts", ["c", "d"], []),
+            ],
+        )
 
     def test_configfile_no_dataset_section(self):
         # test a config file without a dataset section
@@ -81,10 +90,11 @@ class AppConfigTest(ConfigTests):
             server_changes = self.compare_configs(app_config, default_config)
             self.assertCountEqual(
                 server_changes,
-                [('server__multi_dataset__dataroots__d__dataroot', 'test_dataroot', None),
-                 ('server__app__flask_secret_key', 'secret', None),
-                 ('server__multi_dataset__dataroots__d__base_url', 'd', None),
-                 ],
+                [
+                    ("server__multi_dataset__dataroots__d__dataroot", "test_dataroot", None),
+                    ("server__app__flask_secret_key", "secret", None),
+                    ("server__multi_dataset__dataroots__d__base_url", "d", None),
+                ],
             )
 
     def test_configfile_no_server_section(self):
@@ -101,7 +111,7 @@ class AppConfigTest(ConfigTests):
 
             app_config = AppConfig(configfile)
             changes = self.compare_configs(app_config, default_config)
-            self.assertCountEqual(changes, [('default_dataset__app__about_legal_tos', 'expected_value', None)])
+            self.assertCountEqual(changes, [("default_dataset__app__about_legal_tos", "expected_value", None)])
 
     def test_csp_directives(self):
         default_config = AppConfig()
@@ -120,6 +130,11 @@ class AppConfigTest(ConfigTests):
 
             app_config = AppConfig(configfile)
             changes = self.compare_configs(app_config, default_config)
-            self.assertCountEqual(changes, [('server__app__csp_directives__img-src', ["test_list"], None),
-                                            ('server__app__csp_directives__script-src', ["test_string"], None),
-                                            ('server__app__csp_directives__connect-src', [], None)])
+            self.assertCountEqual(
+                changes,
+                [
+                    ("server__app__csp_directives__img-src", ["test_list"], None),
+                    ("server__app__csp_directives__script-src", ["test_string"], None),
+                    ("server__app__csp_directives__connect-src", [], None),
+                ],
+            )

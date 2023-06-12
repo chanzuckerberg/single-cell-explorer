@@ -3,23 +3,23 @@ from functools import wraps
 from urllib.parse import unquote
 
 from flask import (
-    current_app,
     Blueprint,
+    current_app,
+    redirect,
     request,
     send_from_directory,
-    redirect,
 )
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
-from server.common.utils.http_cache import ONE_YEAR, cache_control
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.common.errors import (
     DatasetAccessError,
-    DatasetNotFoundError,
     DatasetMetadataError,
+    DatasetNotFoundError,
     TombstoneError,
 )
+from server.common.utils.http_cache import ONE_YEAR, cache_control
 
 
 def rest_get_s3uri_data_adaptor(func):
@@ -147,6 +147,11 @@ class GeneInfoAPI(S3URIResource):
         return common_rest.gene_info_get(request)
 
 
+class VersionAPI(Resource):
+    def get(self):
+        return common_rest.get_deployed_version(request)
+
+
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
@@ -228,6 +233,8 @@ def register_api_v3(app, app_config, api_url_prefix):
     )
     s3uri_resources = get_api_s3uri_resources(bp_s3uri, s3uri_api_path)
     app.register_blueprint(s3uri_resources.blueprint)
+
+    Api(app).add_resource(VersionAPI, "/deployed_version")
 
     # NOTE:  These routes only allow the dataset to be in the directory
     # of the dataroot, and not a subdirectory.  We may want to change

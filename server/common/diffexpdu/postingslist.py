@@ -1,18 +1,15 @@
-from typing import Union, List, TypeVar, Type, Tuple, ClassVar
-from enum import IntEnum
-from dataclasses import dataclass
-import struct
 import itertools
+import struct
+from dataclasses import dataclass
+from enum import IntEnum
+from typing import ClassVar, List, Tuple, Type, TypeVar, Union
 
-import numpy as np
 import bitarray  # https://github.com/ilanschnell/bitarray
 import bitarray.util
 import numba as nb
+import numpy as np
 
-from .utils import _nonzero_bits
-from .utils import _blockCompress
-from .utils import _blockDecompress
-from .utils import pairwise
+from .utils import _blockCompress, _blockDecompress, _nonzero_bits, pairwise
 
 """
 The format is documented in `dev_docs/diffexpdu.md`. It is implemented in both Python
@@ -297,7 +294,7 @@ def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[Tuple[ListId
         decoded.append(_decode_uint16_inverted_block(buf, list_ids))
 
     else:
-        assert False, "Unknown block type"
+        raise AssertionError("Unknown block type")
 
     assert len(decoded) > 0
     assert sum(len(d[1]) for d in decoded) == n_elem
