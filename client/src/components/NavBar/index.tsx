@@ -7,6 +7,7 @@ import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
 import Icon from "../icon/icon";
 import { Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
+import { NavDivider } from "./NavDivider/style";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
@@ -74,6 +75,7 @@ const Header = (props: HeaderProps) => {
                 onClick={handleWMGClick}
               />
             </LinkWrapper>
+            <NavDivider />
             <LinkWrapper>
               <AnchorButton
                 href={CENSUS_LINK}
