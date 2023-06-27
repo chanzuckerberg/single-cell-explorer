@@ -7,10 +7,13 @@ import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
 import Icon from "../icon/icon";
 import { Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
+import NavDivider from "./components/NavDivider";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
 }
+
+const CENSUS_LINK = "https://cellxgene-census.readthedocs.io/en/latest";
 
 interface HeaderProps {
   tosURL?: string;
@@ -70,6 +73,17 @@ const Header = (props: HeaderProps) => {
                 minimal
                 text="Gene Expression"
                 onClick={handleWMGClick}
+              />
+            </LinkWrapper>
+            <NavDivider />
+            <LinkWrapper>
+              <AnchorButton
+                href={CENSUS_LINK}
+                minimal
+                onClick={handleCensusClick}
+                rel="noopener"
+                target="_self"
+                text="Census"
               />
             </LinkWrapper>
           </Nav>
@@ -148,6 +162,9 @@ const Header = (props: HeaderProps) => {
   }
   function handleCollectionsClick(): void {
     track(EVENTS.COLLECTIONS_CLICK_NAV);
+  }
+  function handleCensusClick(): void {
+    track(EVENTS.CENSUS_CLICK_NAV);
   }
   function handleDocumentationClick(): void {
     track(EVENTS.DOCUMENTATION_CLICK_NAV);
