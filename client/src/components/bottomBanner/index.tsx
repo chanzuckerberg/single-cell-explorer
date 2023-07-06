@@ -38,6 +38,7 @@ export default function BottomBanner({
   setIsBannerOpen,
 }: Props): JSX.Element {
   const [newsletterModalIsOpen, setNewsletterModalIsOpen] = useState(false);
+  const [isHubSpotReady, setIsHubSpotReady] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [emailValidationError, setError] = useState("");
@@ -57,6 +58,16 @@ export default function BottomBanner({
   }
 
   useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.hsforms.net/forms/v2.js";
+    script.async = true;
+
+    script.onload = () => {
+      setIsHubSpotReady(true);
+    };
+
+    document.body.appendChild(script);
+
     // Observer to observe changes in the Hubspot embedded form, which is hidden from the user in order to use our own form view
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
@@ -88,23 +99,25 @@ export default function BottomBanner({
       }
     });
 
-    hbspt.forms.create({
-      region: "na1",
-      portalId: "7272273",
-      formId: "eb65b811-0451-414d-8304-7b9b6f468ce5",
-      target: FORM_CONTAINER_ID_QUERY,
-    });
-
-    const form = document.querySelector(FORM_CONTAINER_ID_QUERY);
-    if (form) {
-      observer.observe(form, {
-        childList: true,
-        subtree: true,
+    if (isHubSpotReady) {
+      hbspt.forms.create({
+        region: "na1",
+        portalId: "7272273",
+        formId: "eb65b811-0451-414d-8304-7b9b6f468ce5",
+        target: FORM_CONTAINER_ID_QUERY,
       });
+
+      const form = document.querySelector(FORM_CONTAINER_ID_QUERY);
+      if (form) {
+        observer.observe(form, {
+          childList: true,
+          subtree: true,
+        });
+      }
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [isHubSpotReady]);
 
   const emailRef = useRef<HTMLInputElement | null>(null);
 
