@@ -59,12 +59,17 @@ class WSGIServer(Server):
 
         PLAUSIBLE_URL = "https://plausible.io"
 
+        HUBSPOT_JS_URL = "https://js.hsforms.net"
+
+        HUBSPOT_FORMS_URL = "https://forms.hsforms.com"
+
         csp = {
-            "default-src": ["'self'"],
-            "connect-src": ["'self'", PLAUSIBLE_URL] + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL] + script_hashes,
+            "default-src": ["'self'", HUBSPOT_FORMS_URL, HUBSPOT_JS_URL],
+            "form-action": ["'self'", HUBSPOT_FORMS_URL],
+            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL] + extra_connect_src,
+            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
-            "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:"],
+            "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:", HUBSPOT_FORMS_URL],
             "object-src": ["'none'"],
             "base-uri": ["'none'"],
             "frame-ancestors": ["'none'"],
