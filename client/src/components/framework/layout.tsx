@@ -1,9 +1,5 @@
 import React, { Children, useState } from "react";
 import * as globals from "../../globals";
-import BottomBanner from "../bottomBanner";
-import { BANNER_HEIGHT_PX } from "../bottomBanner/style";
-import Controls from "../controls";
-import DatasetSelector from "../datasetSelector/datasetSelector";
 
 interface Props {
   datasetMetadataError: string | null;
@@ -23,7 +19,6 @@ interface Props {
 
 const Layout: React.FC<Props> = (props) => {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
-  const [isBannerOpen, setIsBannerOpen] = useState(true);
 
   const { children, datasetMetadataError, renderGraph } = props;
   const [leftSidebar, rightSidebar] = Children.toArray(children);
@@ -37,12 +32,12 @@ const Layout: React.FC<Props> = (props) => {
         display: "grid",
         paddingTop: !datasetMetadataError ? globals.HEADER_HEIGHT_PX : 0,
         gridTemplateColumns: `
-          [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
-          [left-sidebar-end graph-start] auto
-          [graph-end right-sidebar-start] ${
-            globals.rightSidebarWidth + 1
-          }px [right-sidebar-end]
-        `,
+        [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
+        [left-sidebar-end graph-start] auto
+        [graph-end right-sidebar-start] ${
+          globals.rightSidebarWidth + 1
+        }px [right-sidebar-end]
+      `,
         gridTemplateRows: "[top] auto [bottom]",
         gridTemplateAreas: "left-sidebar | graph | right-sidebar",
         columnGap: "0px",
@@ -62,7 +57,6 @@ const Layout: React.FC<Props> = (props) => {
           position: "relative",
           height: "inherit",
           overflowY: "auto",
-          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0, // add padding to bottom to account for banner height
         }}
       >
         {leftSidebar}
@@ -79,9 +73,6 @@ const Layout: React.FC<Props> = (props) => {
         }}
       >
         {graphComponent}
-        <Controls bottom={isBannerOpen ? BANNER_HEIGHT_PX : 0}>
-          <DatasetSelector />
-        </Controls>
       </div>
       <div
         style={{
@@ -89,16 +80,11 @@ const Layout: React.FC<Props> = (props) => {
           position: "relative",
           height: "inherit",
           overflowY: "auto",
-          paddingBottom: isBannerOpen ? `${BANNER_HEIGHT_PX}px` : 0, // add padding to bottom to account for banner height
         }}
       >
         {/* The below conditional is required because the right sidebar initializes as function for some reason...*/}
         {!(rightSidebar instanceof Function) && rightSidebar}
       </div>
-      <BottomBanner
-        includeSurveyLink={false}
-        setIsBannerOpen={setIsBannerOpen}
-      />
     </div>
   );
 };
