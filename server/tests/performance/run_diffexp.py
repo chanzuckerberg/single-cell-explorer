@@ -1,13 +1,12 @@
 import argparse
+import gc
 import sys
 import time
-import gc
 
 import numpy as np
 
 from server.common.config.app_config import AppConfig
 from server.dataset.matrix_loader import DataLoader
-from server.dataset.cxg_dataset import CxgDataset
 
 
 def main():
@@ -66,7 +65,7 @@ def main():
     filterA, filterB = draw_cell_sets(args, adaptor, rng)
 
     times = []
-    for i in range(args.trials):
+    for _i in range(args.trials):
         gc.collect()
         t1 = time.time()
         if args.alg == "cxg":
@@ -111,7 +110,7 @@ def draw_cell_sets(args, adaptor, rng):
         return draw[0 : num[0]], draw[num[0] :]
 
     # error
-    assert False, "Unexpected cli arguments"
+    raise AssertionError("Unexpected cli arguments")
 
 
 def get_filter_from_obs(adaptor, obsname, obsval):

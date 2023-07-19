@@ -41,6 +41,23 @@ To launch with hot reloading, you need to launch the server and the client separ
 
 Note: in case you need to just build the client alone, you can run `make build-client`.
 
+### If you have an M1 or M2 chip...
+
+Attempting to run Explorer locally (server and/or client) will fail with something that looks like:
+```
+npm ERR! The chromium binary is not available for arm64.
+npm ERR! If you are on Ubuntu, you can install with:
+npm ERR!
+npm ERR!  sudo apt install chromium
+npm ERR!
+npm ERR!
+npm ERR!  sudo apt install chromium-browser
+```
+
+Puppeteer is a dependency for e2e tests, but it's not used for running Explorer locally. If you want to run Explorer locally, you can get around this by removing all node dependencies on Puppeteer. To do this, delete any lines in `package.json` that have `puppeteer` in it, such as: `puppeteer-fetch`, `expect-puppeteer`, etc. Then, running any of the build commands should generate a `package-lock.json` file without the Puppeteer dependencies. Just make sure to not commit any of the `package.json` or `package-lock.json` changes to your PR's.
+
+If you want to actually run e2e tests, then you'll need to set up Chromium to enable Puppeteer. [This blog post](https://broddin.be/2022/09/19/fixing-the-chromium-binary-is-not-available-for-arm64/) should show you how to do that on an M1/M2 machine.
+
 ### Before you request a PR review...
 
 Please lint and format your code before requesting a PR review. 

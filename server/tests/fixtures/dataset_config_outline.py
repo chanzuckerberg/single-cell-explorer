@@ -1,4 +1,4 @@
-f"""
+outline = """
 default_dataset:
   app:
     scripts: {scripts} #list of strs (filenames) or dicts containing keys

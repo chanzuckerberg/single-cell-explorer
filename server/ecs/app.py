@@ -3,12 +3,12 @@ import hashlib
 import logging
 import os
 import sys
+from logging.config import dictConfig
+from urllib.parse import urlparse
 
 from flask import json
 from flask_cors import CORS
 from flask_talisman import Talisman
-from logging.config import dictConfig
-from urllib.parse import urlparse
 
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
@@ -34,8 +34,8 @@ dictConfig(
 )
 
 try:
-    from server.common.config.app_config import AppConfig
     from server.app.app import Server
+    from server.common.config.app_config import AppConfig
     from server.common.utils.data_locator import DataLocator, discover_s3_region_name
 except Exception:
     logging.critical("Exception importing server modules", exc_info=True)
@@ -59,12 +59,17 @@ class WSGIServer(Server):
 
         PLAUSIBLE_URL = "https://plausible.io"
 
+        HUBSPOT_JS_URL = "https://js.hsforms.net"
+
+        HUBSPOT_FORMS_URL = "https://forms.hsforms.com"
+
         csp = {
-            "default-src": ["'self'"],
-            "connect-src": ["'self'", PLAUSIBLE_URL] + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL] + script_hashes,
+            "default-src": ["'self'", HUBSPOT_FORMS_URL, HUBSPOT_JS_URL],
+            "form-action": ["'self'", HUBSPOT_FORMS_URL],
+            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL] + extra_connect_src,
+            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
-            "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:"],
+            "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:", HUBSPOT_FORMS_URL],
             "object-src": ["'none'"],
             "base-uri": ["'none'"],
             "frame-ancestors": ["'none'"],

@@ -13,12 +13,11 @@ import time
 # 2. Wait for a port to be free - await_port will poll the address with a bind request and close it until the port is
 #    free.
 
-parser = argparse.ArgumentParser(description='Wait for a port either to be bound to or to be free.')
-parser.add_argument('port', type=int, help='port to wait for')
-parser.add_argument('--sleep-increment', type=int, default=2.0, help='sleep duration in between checks of the port')
-parser.add_argument('--timeout', type=int, default=60.0, help='How long should we wait before timing out?')
-parser.add_argument('--await-free', default=False, action='store_true',
-                    help='Wait for the port to be active or free?')
+parser = argparse.ArgumentParser(description="Wait for a port either to be bound to or to be free.")
+parser.add_argument("port", type=int, help="port to wait for")
+parser.add_argument("--sleep-increment", type=int, default=2.0, help="sleep duration in between checks of the port")
+parser.add_argument("--timeout", type=int, default=60.0, help="How long should we wait before timing out?")
+parser.add_argument("--await-free", default=False, action="store_true", help="Wait for the port to be active or free?")
 
 args = parser.parse_args()
 
@@ -26,7 +25,7 @@ start = time.time()
 
 port_in_use = None
 
-desired_state = 'free' if args.await_free else 'in use'
+desired_state = "free" if args.await_free else "in use"
 
 
 def condition_reached(port_in_use):
@@ -42,7 +41,7 @@ while True:
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.bind(('localhost', args.port))
+            s.bind(("localhost", args.port))
             port_in_use = False
         except socket.error as e:
             if e.errno != errno.EADDRINUSE:

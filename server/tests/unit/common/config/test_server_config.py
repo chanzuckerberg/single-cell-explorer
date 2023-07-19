@@ -2,14 +2,12 @@ import json
 import os
 import unittest
 from unittest.mock import patch
-
 from urllib.parse import quote
-
-from server.common.utils.utils import find_available_port
-from server.tests import PROJECT_ROOT, FIXTURES_ROOT
 
 from server.common.config.app_config import AppConfig
 from server.common.errors import ConfigurationError
+from server.common.utils.utils import find_available_port
+from server.tests import FIXTURES_ROOT, PROJECT_ROOT
 from server.tests.unit.common.config import ConfigTests
 
 
@@ -88,9 +86,8 @@ class TestServerConfig(ConfigTests):
 
         file_name = self.custom_app_config(config_file_name="zero_roots.yml")
         config = AppConfig(file_name)
-        with self.subTest("zero roots"):
-            with self.assertRaises(ConfigurationError):
-                config.handle_data_source()
+        with self.subTest("zero roots"), self.assertRaises(ConfigurationError):
+            config.handle_data_source()
 
     @unittest.skip("skip when running in github action")
     def test_get_api_base_url_works(self):
@@ -98,7 +95,7 @@ class TestServerConfig(ConfigTests):
         config = AppConfig()
         backend_port = find_available_port("localhost", 10000)
         config.update_server_config(
-            app_port = backend_port,
+            app_port=backend_port,
             app__flask_secret_key="secret",
             app__api_base_url=f"http://localhost:{backend_port}/additional/path",
             multi_dataset__dataroot=f"{PROJECT_ROOT}/example-dataset",
@@ -106,14 +103,14 @@ class TestServerConfig(ConfigTests):
         server = self.create_app(config)
         server.testing = True
         session = server.test_client()
-        response = session.get(f"/additional/path/d/pbmc3k.cxg/api/v0.2/config")
+        response = session.get("/additional/path/d/pbmc3k.cxg/api/v0.2/config")
 
         self.assertEqual(response.status_code, 200)
         data_config = json.loads(response.data)
         self.assertEqual(data_config["config"]["displayNames"]["dataset"], "pbmc3k")
 
         # test the health check at the correct url
-        response = session.get(f"/additional/path/health")
+        response = session.get("/additional/path/health")
         assert json.loads(response.data)["status"] == "pass"
 
     def test_get_web_base_url_works(self):
@@ -121,7 +118,7 @@ class TestServerConfig(ConfigTests):
             (dict(web_base_url="www.thisisawebsite.com"), "www.thisisawebsite.com"),
             (dict(web_base_url="local", port=5001), "http://localhost:5001"),
             (dict(web_base_url="www.thisisawebsite.com/"), "www.thisisawebsite.com"),
-            (dict(api_base_url="www.api_base.com/"), "www.api_base.com")
+            (dict(api_base_url="www.api_base.com/"), "www.api_base.com"),
         ]
         for params, expected in tests:
             with self.subTest(params):
@@ -130,14 +127,13 @@ class TestServerConfig(ConfigTests):
                 self.assertEqual(web_base_url, expected)
 
     def test_multi_dataset_raises_error_for_illegal_routes(self):
-        dataroot= f"{PROJECT_ROOT}/example-dataset"
+        dataroot = f"{PROJECT_ROOT}/example-dataset"
         # test for illegal url_dataroots
         for illegal in ("../b", "!$*", "\\n", "", "(bad)"):
-            with self.subTest(illegal):
-                with self.assertRaises(ConfigurationError):
-                    self.config.update_config(
-                        server__multi_dataset__dataroots={"d": {"base_url": illegal, "dataroot": dataroot}}
-                    )
+            with self.subTest(illegal), self.assertRaises(ConfigurationError):
+                self.config.update_config(
+                    server__multi_dataset__dataroots={"d": {"base_url": illegal, "dataroot": dataroot}}
+                )
 
     def test_multidataset_works_for_legal_routes(self):
         # test for legal url_dataroots
@@ -162,7 +158,7 @@ class TestServerConfig(ConfigTests):
                 s2=dict(dataroot=f"{FIXTURES_ROOT}/set2", base_url="set2"),
                 s3=dict(dataroot=f"{FIXTURES_ROOT}/set3", base_url="set3"),
             ),
-            default__dataset__app__about_legal_tos = "tos_default.html"
+            default__dataset__app__about_legal_tos="tos_default.html",
         )
 
         # Change this default to test if the dataroot overrides below work.

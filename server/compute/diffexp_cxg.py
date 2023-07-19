@@ -61,7 +61,7 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selecto
             meanA, varA, nA = A.result()
             meanB, varB, nB = B.result()
         except Exception as e:
-            raise ComputeError(str(e))
+            raise ComputeError(str(e)) from None
 
     return diffexp_ttest_from_mean_var(
         meanA=meanA.astype(dtype),

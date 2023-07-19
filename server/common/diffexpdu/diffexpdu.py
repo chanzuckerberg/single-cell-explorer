@@ -1,11 +1,11 @@
-from typing import Union, TypeVar, Type, ClassVar
 import struct
-from enum import IntEnum
 from dataclasses import dataclass
+from enum import IntEnum
+from typing import ClassVar, Type, TypeVar, Union
 
 import numpy as np
 
-from .postingslist import inflate_postings_lists, deflate_postings_lists
+from .postingslist import deflate_postings_lists, inflate_postings_lists
 
 __all__ = ["DiffExArguments"]
 
