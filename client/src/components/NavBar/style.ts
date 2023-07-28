@@ -3,6 +3,7 @@ import styled from "@emotion/styled";
 import { css } from "@emotion/react";
 import { GRAY, PT_TEXT_COLOR } from "./theme";
 import { HEADER_HEIGHT_PX } from "../../globals";
+import { Chip } from "czifui";
 
 export const Wrapper = styled.div`
   background-color: ${PT_TEXT_COLOR};
@@ -79,4 +80,11 @@ export const LinkWrapper = styled.span`
 
   display: flex;
   align-items: center;
+`;
+
+export const BetaChip = styled(Chip)`
+  background: #7a41ce;
+  color: white;
+  margin-left: 4px;
+  height: 16px !important;
 `;
