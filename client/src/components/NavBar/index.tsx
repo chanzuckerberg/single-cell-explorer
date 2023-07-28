@@ -6,7 +6,7 @@ import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
 import Icon from "../icon/icon";
-import { Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
+import { BetaChip, Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
 import NavDivider from "./components/NavDivider";
 
 function handleMenuClick() {
@@ -75,6 +75,16 @@ const Header = (props: HeaderProps) => {
                 onClick={handleWMGClick}
               />
             </LinkWrapper>
+            <LinkWrapper>
+              <AnchorButton
+                active={false}
+                href={ROUTES.CELL_GUIDE}
+                minimal
+                text="Cell Guide"
+                onClick={handleCellGuideClick}
+              />
+              <BetaChip label="Beta" size="small" />
+            </LinkWrapper>            
             <NavDivider />
             <LinkWrapper>
               <AnchorButton
@@ -157,6 +167,9 @@ const Header = (props: HeaderProps) => {
   function handleWMGClick(): void {
     track(EVENTS.WMG_CLICK_NAV);
   }
+  function handleCellGuideClick(): void {
+    track(EVENTS.CELL_GUIDE_CLICK_NAV);
+  }  
   function handleDatasetsClick(): void {
     track(EVENTS.DATASETS_CLICK_NAV);
   }
