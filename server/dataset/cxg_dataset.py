@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import threading
+from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -384,6 +385,34 @@ class CxgDataset(Dataset):
             raise DatasetAccessError("cxg matrix missing embeddings")
         return embeddings
 
+    def _get_filtered_cxg_schema_metadata(self) -> Dict[Any, Any]:
+        """
+        The cxg_schema JSON string is attached to the TileDB array metadata, and is a dictionary
+        containing the following top-level names:
+        - index: string, containing the name of the index column
+        - <column-name>: optional, a JSON dict, contain a schema definition using the same format
+          as the cellxgene REST API /schema route
+
+        For example:
+        {
+            "index": "obs_index",
+            "louvain": { "type": "categorical", "categories": [ "0", "1", "2", "3", "4" ]}
+            "is_useful": { "type": "boolean" }
+        }
+        """
+        obs = self.open_array("obs")
+        metadata = json.loads(obs.meta["cxg_schema"])
+
+        # Create a new dictionary to store filtered metadata. Start with all values
+        filtered_metadata = metadata.copy()
+
+        for key, value in metadata.items():
+            # Remove any int64 values from the obs cxg_schema metadata
+            if isinstance(value, dict) and value.get("type", None) == "int64":
+                del filtered_metadata[key]
+
+        return filtered_metadata
+
     def _get_schema(self):
         if self.schema:
             return self.schema
@@ -396,7 +425,13 @@ class CxgDataset(Dataset):
         annotations = {}
         for ax in ("obs", "var"):
             A = self.open_array(ax)
-            schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
+
+            if ax == "obs":
+                # Filter out int64 values in the obs cxg_schema metadata
+                schema_hints = self._get_filtered_cxg_schema_metadata() if "cxg_schema" in A.meta else {}
+            else:
+                schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
+
             if not isinstance(schema_hints, dict):
                 raise TypeError("Array schema was malformed.")
 
