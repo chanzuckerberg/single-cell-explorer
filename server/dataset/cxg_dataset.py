@@ -337,6 +337,9 @@ class CxgDataset(Dataset):
                 and "categories" in type_hint[term_name]
             ):
                 data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
+            elif type_hint is not None and type_hint[term_name]["type"] == "boolean":
+                # convert boolean to categorical
+                data = pd.Categorical(data)
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs") from None
         return data
@@ -404,7 +407,13 @@ class CxgDataset(Dataset):
                 # type hints take precedence
                 if "type" in type_hint:
                     schema["type"] = type_hint["type"]
-                    if schema["type"] == "categorical" and "categories" in type_hint:
+                    if schema["type"] == "boolean" and ax == "obs":
+                        # convert boolean to categorical
+                        schema["type"] = "categorical"
+                        schema["categories"] = pd.Categorical(
+                            self.open_array("obs").query(attrs=[attr.name])[:][attr.name].astype("bool")
+                        ).categories.tolist()
+                    elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
                     schema.update(get_schema_type_hint_from_dtype(attr.dtype))
