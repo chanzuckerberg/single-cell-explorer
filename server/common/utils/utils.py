@@ -6,7 +6,7 @@ import socket
 from urllib.parse import urljoin, urlsplit
 
 import numpy as np
-from flask import json
+import json
 
 
 def find_available_port(host, port=5005):
