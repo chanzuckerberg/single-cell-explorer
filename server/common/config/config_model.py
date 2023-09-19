@@ -99,7 +99,7 @@ class ServerApp(BaseModel):
 
     @validator("csp_directives")
     def check_csp_directives(cls, value):
-        return value if value else CspDirectives()
+        return value if value else {}
 
 
 class DatarootValue(BaseModel):
