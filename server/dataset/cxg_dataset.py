@@ -406,14 +406,14 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
-                    if type_hint["type"] == "boolean" and ax == "obs":
+                    schema["type"] = type_hint["type"]
+                    if schema["type"] == "boolean" and ax == "obs":
                         # convert boolean to categorical
                         schema["type"] = "categorical"
                         schema["categories"] = pd.Categorical(
                             self.open_array("obs").query(attrs=[attr.name])[:][attr.name].astype("bool")
                         ).categories.tolist()
-                    elif type_hint["type"] == "categorical" and "categories" in type_hint:
-                        schema["type"] = type_hint["type"]
+                    elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
                     schema.update(get_schema_type_hint_from_dtype(attr.dtype))
