@@ -70,7 +70,6 @@ class InfoDrawer extends PureComponent<Props> {
         singleValueCategories.set(catName, colSchema.categories[0]);
       }
     });
-
     return (
       <Drawer size={480} onClose={this.handleClose} {...{ isOpen, position }}>
         <InfoFormat
