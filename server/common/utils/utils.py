@@ -1,12 +1,11 @@
 import contextlib
 import errno
+import json
 import logging
 import os
 import socket
 from urllib.parse import urljoin, urlsplit
-
 import numpy as np
-import json
 
 
 def find_available_port(host, port=5005):
