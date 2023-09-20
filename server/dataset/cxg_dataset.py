@@ -385,7 +385,7 @@ class CxgDataset(Dataset):
             raise DatasetAccessError("cxg matrix missing embeddings")
         return embeddings
 
-    def _get_filtered_cxg_schema_metadata(self) -> Dict[Any, Any]:
+    def _get_filtered_cxg_schema_metadata(self, metadata) -> Dict[Any, Any]:
         """
         The cxg_schema JSON string is attached to the TileDB array metadata, and is a dictionary
         containing the following top-level names:
@@ -400,8 +400,7 @@ class CxgDataset(Dataset):
             "is_useful": { "type": "boolean" }
         }
         """
-        obs = self.open_array("obs")
-        metadata = json.loads(obs.meta["cxg_schema"])
+        metadata = json.loads(metadata)
 
         # Create a new dictionary to store filtered metadata. Start with all values
         filtered_metadata = metadata.copy()
@@ -428,7 +427,9 @@ class CxgDataset(Dataset):
 
             if ax == "obs":
                 # Filter out int64 values in the obs cxg_schema metadata
-                schema_hints = self._get_filtered_cxg_schema_metadata() if "cxg_schema" in A.meta else {}
+                schema_hints = (
+                    self._get_filtered_cxg_schema_metadata(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
+                )
             else:
                 schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
 
