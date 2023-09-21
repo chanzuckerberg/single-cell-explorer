@@ -28,10 +28,8 @@ class TestCxgDataset(unittest.TestCase):
     def test_schema_filters_int64(self):
         data = self.get_data("dataset_with_int64.cxg")
         schema = data.get_schema()
-        print(f"schema: {schema}")
         with open(f"{FIXTURES_ROOT}/schema_without_int64.json", "r") as json_file:
             expected_schema = json.load(json_file)
-            print(f"expected_schema: {expected_schema}")
             self.assertEqual(json.dumps(schema), json.dumps(expected_schema))
 
     def test_tdb_bug(self):
