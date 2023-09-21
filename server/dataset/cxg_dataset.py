@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import threading
-from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
@@ -385,33 +384,6 @@ class CxgDataset(Dataset):
             raise DatasetAccessError("cxg matrix missing embeddings")
         return embeddings
 
-    def _get_filtered_cxg_schema_metadata(self, metadata) -> Dict[Any, Any]:
-        """
-        The cxg_schema JSON string is attached to the TileDB array metadata, and is a dictionary
-        containing the following top-level names:
-        - index: string, containing the name of the index column
-        - <column-name>: optional, a JSON dict, contain a schema definition using the same format
-          as the cellxgene REST API /schema route
-
-        For example:
-        {
-            "index": "obs_index",
-            "louvain": { "type": "categorical", "categories": [ "0", "1", "2", "3", "4" ]}
-            "is_useful": { "type": "boolean" }
-        }
-        """
-        metadata = json.loads(metadata)
-
-        # Create a new dictionary to store filtered metadata. Start with all values
-        filtered_metadata = metadata.copy()
-
-        for key, value in metadata.items():
-            # Remove any int64 values from the obs cxg_schema metadata
-            if isinstance(value, dict) and value.get("type", None) == "int64":
-                del filtered_metadata[key]
-
-        return filtered_metadata
-
     def _get_schema(self):
         if self.schema:
             return self.schema
@@ -419,29 +391,33 @@ class CxgDataset(Dataset):
         shape = self.get_shape()
         dtype = self.get_X_array_dtype()
 
-        dataframe = {"nObs": shape[0], "nVar": shape[1], **get_schema_type_hint_from_dtype(dtype)}
+        dataframe = {
+            "nObs": shape[0],
+            "nVar": shape[1],
+            # Allow int64 fields to be generated in the schema hint so that we can filter later
+            **get_schema_type_hint_from_dtype(dtype=dtype, allow_int64=True),
+        }
 
         annotations = {}
         for ax in ("obs", "var"):
             A = self.open_array(ax)
 
-            if ax == "obs":
-                # Filter out int64 values in the obs cxg_schema metadata
-                schema_hints = (
-                    self._get_filtered_cxg_schema_metadata(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
-                )
-            else:
-                schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
+            schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
 
             if not isinstance(schema_hints, dict):
                 raise TypeError("Array schema was malformed.")
 
             cols = []
             for attr in A.schema:
+                print(f"attr before: {attr}")
                 schema = dict(name=attr.name, writable=False)
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
+                    if type_hint["type"] in ["int64", "uint64"] and ax == "obs":
+                        # Skip over int64 fields in the obs array when generating schema
+                        continue
+
                     schema["type"] = type_hint["type"]
                     if schema["type"] == "boolean" and ax == "obs":
                         # convert boolean to categorical
@@ -452,7 +428,7 @@ class CxgDataset(Dataset):
                     elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
-                    schema.update(get_schema_type_hint_from_dtype(attr.dtype))
+                    schema.update(get_schema_type_hint_from_dtype(dtype=attr.dtype))
                 cols.append(schema)
 
             annotations[ax] = dict(columns=cols)
