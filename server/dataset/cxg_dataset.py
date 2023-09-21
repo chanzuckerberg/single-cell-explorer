@@ -401,15 +401,12 @@ class CxgDataset(Dataset):
         annotations = {}
         for ax in ("obs", "var"):
             A = self.open_array(ax)
-
             schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
-
             if not isinstance(schema_hints, dict):
                 raise TypeError("Array schema was malformed.")
 
             cols = []
             for attr in A.schema:
-                print(f"attr before: {attr}")
                 schema = dict(name=attr.name, writable=False)
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
