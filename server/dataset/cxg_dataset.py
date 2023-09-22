@@ -391,7 +391,12 @@ class CxgDataset(Dataset):
         shape = self.get_shape()
         dtype = self.get_X_array_dtype()
 
-        dataframe = {"nObs": shape[0], "nVar": shape[1], **get_schema_type_hint_from_dtype(dtype)}
+        dataframe = {
+            "nObs": shape[0],
+            "nVar": shape[1],
+            # Allow int64 fields to be generated in the schema hint so that we can filter later
+            **get_schema_type_hint_from_dtype(dtype=dtype, allow_int64=True),
+        }
 
         annotations = {}
         for ax in ("obs", "var"):
@@ -406,6 +411,10 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
+                    if type_hint["type"] in ["int64", "uint64"] and ax == "obs":
+                        # Skip over int64 fields in the obs array when generating schema
+                        continue
+
                     schema["type"] = type_hint["type"]
                     if schema["type"] == "boolean" and ax == "obs":
                         # convert boolean to categorical
@@ -416,7 +425,7 @@ class CxgDataset(Dataset):
                     elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
-                    schema.update(get_schema_type_hint_from_dtype(attr.dtype))
+                    schema.update(get_schema_type_hint_from_dtype(dtype=attr.dtype))
                 cols.append(schema)
 
             annotations[ax] = dict(columns=cols)
