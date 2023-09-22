@@ -81,6 +81,9 @@ def _get_type_info_from_dtype(dtype: np.dtype, allow_int64=False) -> Union[Tuple
     _get_type_info().  The latter should be preferred if the array (values)
     are available for typing.
     """
+    if allow_int64 and dtype.kind in ["i", "u"] and np.can_cast(dtype, np.int64):
+        return (np.int64, {"type": "int64"})
+
     if dtype.kind == "b":
         return (np.uint8, {"type": "boolean"})
 
@@ -96,9 +99,6 @@ def _get_type_info_from_dtype(dtype: np.dtype, allow_int64=False) -> Union[Tuple
 
     if dtype.kind == "O" and dtype.name != "category":
         return (np.dtype(str), {"type": "string"})
-
-    if allow_int64 and dtype.kind in ["i", "u"] and np.can_cast(dtype, np.int64):
-        return (np.int64, {"type": "int64"})
 
     return None
 
