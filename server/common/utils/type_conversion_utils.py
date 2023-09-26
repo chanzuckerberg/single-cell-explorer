@@ -64,15 +64,15 @@ def get_dtype_and_schema_of_array(array: Union[np.ndarray, pd.Series, pd.Index])
     return _get_type_info(array)
 
 
-def get_schema_type_hint_from_dtype(dtype) -> dict:
-    res = _get_type_info_from_dtype(dtype)
+def get_schema_type_hint_from_dtype(dtype: np.dtype, allow_int64=False) -> dict:
+    res = _get_type_info_from_dtype(dtype=dtype, allow_int64=allow_int64)
     if res is None:
         raise TypeError(f"Annotations of type {dtype} are unsupported.")
     else:
         return res[1]
 
 
-def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
+def _get_type_info_from_dtype(dtype: np.dtype, allow_int64=False) -> Union[Tuple[np.dtype, dict], None]:
     """
     Best-effort to determine encoding type and schema hint from a dtype.
     If this is not possible, or the type is unsupported, return None.
@@ -81,6 +81,9 @@ def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
     _get_type_info().  The latter should be preferred if the array (values)
     are available for typing.
     """
+    if allow_int64 and dtype.kind in ["i", "u"] and np.can_cast(dtype, np.int64):
+        return (np.int64, {"type": "int64"})
+
     if dtype.kind == "b":
         return (np.uint8, {"type": "boolean"})
 
