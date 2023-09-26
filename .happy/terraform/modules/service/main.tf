@@ -19,10 +19,6 @@ resource aws_ecs_service service {
     subnets          = var.subnets
     assign_public_ip = false
   }
-  deployment_circuit_breaker {
-    enable   = true
-    rollback = !var.fail_fast
-  }
 
   wait_for_steady_state  = var.wait_for_steady_state
   enable_execute_command = true
