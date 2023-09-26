@@ -137,3 +137,9 @@ variable "frontend_url" {
   type        = string
   description = "URL for the frontend app."
 }
+
+variable "fail_fast" {
+  type        = bool
+  description = "Whether Terraform should fail if the desired service does not start. Opposite of rollback."
+  default     = true
+}
