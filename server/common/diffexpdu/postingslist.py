@@ -347,7 +347,7 @@ def _un_delta(arr: np.ndarray) -> np.ndarray:
     return np.cumsum(arr)
 
 
-@nb.njit
+@nb.jit
 def _interval_invert_inner(src: np.ndarray, dst: np.ndarray, interval: Tuple[int, int]) -> np.ndarray:
     src_idx = 0
     dst_idx = 0
@@ -385,7 +385,7 @@ def _interval_inverted_length(arr: np.ndarray, interval=None) -> int:
     return interval[1] - interval[0] - len(arr)
 
 
-@nb.njit
+@nb.jit
 def _find_partition_boundaries(arr: np.ndarray) -> List[int]:
     """
     Given an array of monotonically increasing unsigned ints, return the
