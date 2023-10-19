@@ -1,0 +1,30 @@
+diff --git a/.happy/terraform/envs/rdev/main.tf b/.happy/terraform/envs/rdev/main.tf
+index 2977e4d9..9b7a9f8b 100644
+--- a/.happy/terraform/envs/rdev/main.tf
++++ b/.happy/terraform/envs/rdev/main.tf
+@@ -19,2 +19,3 @@ module stack {
+-  data_locator_domain          = "${var.stack_name}-backend.internal.rdev.single-cell.czi.technology"
+-  cxg_bucket_path              = "env-rdev-cellxgene/${var.stack_name}"
++  # data_locator_domain          = "${var.stack_name}-backend.internal.rdev.single-cell.czi.technology" 
++  data_locator_domain          = "internal-happy-rdev-backend-1100870308.us-west-2.elb.amazonaws.com"
++  cxg_bucket_path              = "env-rdev-cellxgene/STACK_NAME"
+diff --git a/hosted/config.yaml b/hosted/config.yaml
+index 86f7ca7e..a2cc5ea2 100644
+--- a/hosted/config.yaml
++++ b/hosted/config.yaml
+@@ -51 +51 @@ server:
+-    api_base: https://${DATA_LOCATOR_DOMAIN}/dp/v1
++    api_base: http://${DATA_LOCATOR_DOMAIN}/dp/v1
+diff --git a/server/dataset/dataset_metadata.py b/server/dataset/dataset_metadata.py
+index 47d0e18c..87514343 100644
+--- a/server/dataset/dataset_metadata.py
++++ b/server/dataset/dataset_metadata.py
+@@ -25 +25 @@ def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explore
+-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
++    headers = {"Content-Type": "application/json", "Accept": "application/json", "Host": "STACK_NAME-backend.rdev.single-cell.czi.technology"}
+@@ -74 +74 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
+-    explorer_url_path = f"{app_config.server__app__web_base_url}/{dataset_root}/{dataset_id}"
++    explorer_url_path = f"https://STACK_NAME-explorer.rdev.single-cell.czi.technology/{dataset_root}/{dataset_id}"
+@@ -127 +127 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
+-        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}")
++        res = requests.get(f"{data_locator_base_url}/collections/{collection_id}{suffix}", headers={"Host": "STACK_NAME-backend.rdev.single-cell.czi.technology"})
