@@ -12,23 +12,23 @@ class DictEncoded32FBArray(object):
     __slots__ = ["_tab"]
 
     @classmethod
-    def GetRootAs(cls, buf, offset=0):
+    def GetRootAs(cls, buf, offset=0):  # type: ignore
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
         x = DictEncoded32FBArray()
-        x.Init(buf, n + offset)
+        x.Init(buf, n + offset)  # type: ignore
         return x
 
     @classmethod
-    def GetRootAsDictEncoded32FBArray(cls, buf, offset=0):
+    def GetRootAsDictEncoded32FBArray(cls, buf, offset=0):  # type: ignore
         """This method is deprecated. Please switch to GetRootAs."""
-        return cls.GetRootAs(buf, offset)
+        return cls.GetRootAs(buf, offset)  # type: ignore
 
     # DictEncoded32FBArray
-    def Init(self, buf, pos):
+    def Init(self, buf, pos):  # type: ignore
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # DictEncoded32FBArray
-    def Codes(self, j):
+    def Codes(self, j):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
@@ -38,26 +38,26 @@ class DictEncoded32FBArray(object):
         return 0
 
     # DictEncoded32FBArray
-    def CodesAsNumpy(self):
+    def CodesAsNumpy(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Int32Flags, o)
         return 0
 
     # DictEncoded32FBArray
-    def CodesLength(self):
+    def CodesLength(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # DictEncoded32FBArray
-    def CodesIsNone(self):
+    def CodesIsNone(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
     # DictEncoded32FBArray
-    def Dict(self, j):
+    def Dict(self, j):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             a = self._tab.Vector(o)
@@ -67,74 +67,74 @@ class DictEncoded32FBArray(object):
         return 0
 
     # DictEncoded32FBArray
-    def DictAsNumpy(self):
+    def DictAsNumpy(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
         return 0
 
     # DictEncoded32FBArray
-    def DictLength(self):
+    def DictLength(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # DictEncoded32FBArray
-    def DictIsNone(self):
+    def DictIsNone(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         return o == 0
 
 
-def Start(builder):
+def Start(builder):  # type: ignore
     builder.StartObject(2)
 
 
-def DictEncoded32FBArrayStart(builder):
+def DictEncoded32FBArrayStart(builder):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return Start(builder)
+    return Start(builder)  # type: ignore
 
 
-def AddCodes(builder, codes):
+def AddCodes(builder, codes):  # type: ignore
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
 
 
-def DictEncoded32FBArrayAddCodes(builder, codes):
+def DictEncoded32FBArrayAddCodes(builder, codes):  # type: ignore
     """This method is deprecated. Please switch to AddCodes."""
-    return AddCodes(builder, codes)
+    return AddCodes(builder, codes)  # type: ignore
 
 
-def StartCodesVector(builder, numElems):
+def StartCodesVector(builder, numElems):  # type: ignore
     return builder.StartVector(4, numElems, 4)
 
 
-def DictEncoded32FBArrayStartCodesVector(builder, numElems):
+def DictEncoded32FBArrayStartCodesVector(builder, numElems):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return StartCodesVector(builder, numElems)
+    return StartCodesVector(builder, numElems)  # type: ignore
 
 
-def AddDict(builder, dict):
+def AddDict(builder, dict):  # type: ignore
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(dict), 0)
 
 
-def DictEncoded32FBArrayAddDict(builder, dict):
+def DictEncoded32FBArrayAddDict(builder, dict):  # type: ignore
     """This method is deprecated. Please switch to AddDict."""
-    return AddDict(builder, dict)
+    return AddDict(builder, dict)  # type: ignore
 
 
-def StartDictVector(builder, numElems):
+def StartDictVector(builder, numElems):  # type: ignore
     return builder.StartVector(1, numElems, 1)
 
 
-def DictEncoded32FBArrayStartDictVector(builder, numElems):
+def DictEncoded32FBArrayStartDictVector(builder, numElems):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return StartDictVector(builder, numElems)
+    return StartDictVector(builder, numElems)  # type: ignore
 
 
-def End(builder):
+def End(builder):  # type: ignore
     return builder.EndObject()
 
 
-def DictEncoded32FBArrayEnd(builder):
+def DictEncoded32FBArrayEnd(builder):  # type: ignore
     """This method is deprecated. Please switch to End."""
-    return End(builder)
+    return End(builder)  # type: ignore

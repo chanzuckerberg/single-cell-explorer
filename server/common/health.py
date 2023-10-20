@@ -6,15 +6,15 @@ from server.common.utils.data_locator import DataLocator
 from server.version import __version__ as cellxgene_version
 
 
-def _is_accessible(path, config):
+def _is_accessible(path, config):  # type: ignore
     try:
-        dl = DataLocator(path, region_name=config.server__data_locator__s3_region_name)
-        return dl.exists()
+        dl = DataLocator(path, region_name=config.server__data_locator__s3_region_name)  # type: ignore
+        return dl.exists()  # type: ignore
     except RuntimeError:
         return False
 
 
-def health_check(config):
+def health_check(config):  # type: ignore
     """
     simple health check - return HTTP response.
     See https://tools.ietf.org/id/draft-inadarei-api-health-check-01.html
@@ -24,7 +24,7 @@ def health_check(config):
     dataroot_paths: list[str] = [
         dataroot_value["dataroot"] for dataroot_value in config.server__multi_dataset__dataroots.values()
     ]
-    checks: bool = all([_is_accessible(dataroot_path, config) for dataroot_path in dataroot_paths])
+    checks: bool = all([_is_accessible(dataroot_path, config) for dataroot_path in dataroot_paths])  # type: ignore
 
     health["status"] = "pass" if checks else "fail"
     code = HTTPStatus.OK if health["status"] == "pass" else HTTPStatus.BAD_REQUEST

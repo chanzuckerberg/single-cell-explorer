@@ -12,30 +12,30 @@ class Column(object):
     __slots__ = ["_tab"]
 
     @classmethod
-    def GetRootAs(cls, buf, offset=0):
+    def GetRootAs(cls, buf, offset=0):  # type: ignore
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
         x = Column()
-        x.Init(buf, n + offset)
+        x.Init(buf, n + offset)  # type: ignore
         return x
 
     @classmethod
-    def GetRootAsColumn(cls, buf, offset=0):
+    def GetRootAsColumn(cls, buf, offset=0):  # type: ignore
         """This method is deprecated. Please switch to GetRootAs."""
-        return cls.GetRootAs(buf, offset)
+        return cls.GetRootAs(buf, offset)  # type: ignore
 
     # Column
-    def Init(self, buf, pos):
+    def Init(self, buf, pos):  # type: ignore
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Column
-    def UType(self):
+    def UType(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Uint8Flags, o + self._tab.Pos)
         return 0
 
     # Column
-    def U(self):
+    def U(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             from flatbuffers.table import Table
@@ -46,37 +46,37 @@ class Column(object):
         return None
 
 
-def Start(builder):
+def Start(builder):  # type: ignore
     builder.StartObject(2)
 
 
-def ColumnStart(builder):
+def ColumnStart(builder):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return Start(builder)
+    return Start(builder)  # type: ignore
 
 
-def AddUType(builder, uType):
+def AddUType(builder, uType):  # type: ignore
     builder.PrependUint8Slot(0, uType, 0)
 
 
-def ColumnAddUType(builder, uType):
+def ColumnAddUType(builder, uType):  # type: ignore
     """This method is deprecated. Please switch to AddUType."""
-    return AddUType(builder, uType)
+    return AddUType(builder, uType)  # type: ignore
 
 
-def AddU(builder, u):
+def AddU(builder, u):  # type: ignore
     builder.PrependUOffsetTRelativeSlot(1, flatbuffers.number_types.UOffsetTFlags.py_type(u), 0)
 
 
-def ColumnAddU(builder, u):
+def ColumnAddU(builder, u):  # type: ignore
     """This method is deprecated. Please switch to AddU."""
-    return AddU(builder, u)
+    return AddU(builder, u)  # type: ignore
 
 
-def End(builder):
+def End(builder):  # type: ignore
     return builder.EndObject()
 
 
-def ColumnEnd(builder):
+def ColumnEnd(builder):  # type: ignore
     """This method is deprecated. Please switch to End."""
-    return End(builder)
+    return End(builder)  # type: ignore

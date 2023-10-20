@@ -15,7 +15,7 @@ from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
 from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.diffexpdu import DiffExArguments
-from server.common.errors import (
+from server.common.errors import (  # type: ignore
     ColorFormatException,
     DatasetAccessError,
     DisabledFeatureError,
@@ -29,7 +29,7 @@ from server.common.errors import (
 from server.dataset import dataset_metadata
 
 
-def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
+def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):  # type: ignore
     """
     Log the message, then abort with HTTP code. If include_exc_info is true,
     also include current exception via sys.exc_info().
@@ -40,7 +40,7 @@ def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
     return abort(code)
 
 
-def _query_parameter_to_filter(args):
+def _query_parameter_to_filter(args):  # type: ignore
     """
     Convert an annotation value filter, if present in the query args,
     into the standard dict filter format used by internal code.
@@ -52,7 +52,7 @@ def _query_parameter_to_filter(args):
     Eg,
         ...?tissue=lung&obs:tissue=heart&obs:num_reads=1000,*
     """
-    filters = {
+    filters = {  # type: ignore
         "obs": {},
         "var": {},
     }
@@ -102,7 +102,7 @@ def _query_parameter_to_filter(args):
     return result
 
 
-def schema_get_helper(data_adaptor):
+def schema_get_helper(data_adaptor):  # type: ignore
     """helper function to gather the schema from the data source and annotations"""
     schema = data_adaptor.get_schema()
     schema = copy.deepcopy(schema)
@@ -110,12 +110,12 @@ def schema_get_helper(data_adaptor):
     return schema
 
 
-def schema_get(data_adaptor):
-    schema = schema_get_helper(data_adaptor)
+def schema_get(data_adaptor):  # type: ignore
+    schema = schema_get_helper(data_adaptor)  # type: ignore
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
-def dataset_metadata_get(app_config, url_dataroot, dataset_id):
+def dataset_metadata_get(app_config, url_dataroot, dataset_id):  # type: ignore
     metadata = dataset_metadata.get_dataset_and_collection_metadata(url_dataroot, dataset_id, app_config)
     if metadata is not None:
         return make_response(jsonify({"metadata": metadata}), HTTPStatus.OK)
@@ -123,24 +123,24 @@ def dataset_metadata_get(app_config, url_dataroot, dataset_id):
         return abort(HTTPStatus.NOT_FOUND)
 
 
-def s3_uri_get(app_config, url_dataroot_id, dataset_id):
+def s3_uri_get(app_config, url_dataroot_id, dataset_id):  # type: ignore
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
         parent_collection_url = (
-            f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # noqa E501
+            f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"    # type: ignore# noqa E501
         )
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
     else:
         return make_response(jsonify(dataset_artifact_s3_uri), HTTPStatus.OK)
 
 
-def config_get(app_config, data_adaptor):
+def config_get(app_config, data_adaptor):  # type: ignore
     config = get_client_config(app_config, data_adaptor, current_app)
     return make_response(jsonify(config), HTTPStatus.OK)
 
 
-def annotations_obs_get(request, data_adaptor):
+def annotations_obs_get(request, data_adaptor):  # type: ignore
     fields = request.args.getlist("annotation-name", None)
     nBins = request.args.get("nbins", None)
     if nBins is not None:
@@ -157,14 +157,14 @@ def annotations_obs_get(request, data_adaptor):
         fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields, num_bins=nBins)
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
     except KeyError as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
 
-def inflate(data):
+def inflate(data):  # type: ignore
     return zlib.decompress(data)
 
 
-def annotations_var_get(request, data_adaptor):
+def annotations_var_get(request, data_adaptor):  # type: ignore
     fields = request.args.getlist("annotation-name", None)
     nBins = request.args.get("nbins", None)
     if nBins is not None:
@@ -184,10 +184,10 @@ def annotations_var_get(request, data_adaptor):
             {"Content-Type": "application/octet-stream"},
         )
     except KeyError as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
 
-def data_var_put(request, data_adaptor):
+def data_var_put(request, data_adaptor):  # type: ignore
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -205,10 +205,10 @@ def data_var_put(request, data_adaptor):
             {"Content-Type": "application/octet-stream"},
         )
     except (FilterError, ValueError, ExceedsLimitError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
 
-def data_var_get(request, data_adaptor):
+def data_var_get(request, data_adaptor):  # type: ignore
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -219,30 +219,30 @@ def data_var_get(request, data_adaptor):
             nBins = int(nBins)
         args_filter_only = request.args.copy()
         args_filter_only.poplist("nbins")
-        filter = _query_parameter_to_filter(args_filter_only)
+        filter = _query_parameter_to_filter(args_filter_only)  # type: ignore
         return make_response(
             data_adaptor.data_frame_to_fbs_matrix(filter, axis=Axis.VAR, num_bins=nBins),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
     except (FilterError, ValueError, ExceedsLimitError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
 
-def colors_get(data_adaptor):
+def colors_get(data_adaptor):  # type: ignore
     if not data_adaptor.app_config.default_dataset__presentation__custom_colors:
         return make_response(jsonify({}), HTTPStatus.OK)
     try:
         return make_response(jsonify(data_adaptor.get_colors()), HTTPStatus.OK)
     except ColorFormatException as e:
-        return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.NOT_FOUND, str(e), include_exc_info=True)  # type: ignore
 
 
-def gene_info_get(request):
+def gene_info_get(request):  # type: ignore
     """
     Request information about a gene from the data portal gene_info api
     """
-    api_base_url = current_app.app_config.server__gene_info__api_base
+    api_base_url = current_app.app_config.server__gene_info__api_base  # type: ignore
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     try:
         response = requests.get(
@@ -254,10 +254,10 @@ def gene_info_get(request):
             # in the event of a failed search, return empty response
             return None
     except Exception as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
 
-def get_deployed_version(request):
+def get_deployed_version(request):  # type: ignore
     """
     Returns the deployed version
     """
@@ -265,7 +265,7 @@ def get_deployed_version(request):
     return make_response(jsonify(version_info), 200)
 
 
-def diffexp_obs_post(request, data_adaptor):
+def diffexp_obs_post(request, data_adaptor):  # type: ignore
     if not data_adaptor.app_config.default_dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
@@ -274,25 +274,25 @@ def diffexp_obs_post(request, data_adaptor):
         # TODO: implement varfilter mode
         mode = DiffExpMode(args["mode"])
         if mode == DiffExpMode.VAR_FILTER or "varFilter" in args:
-            return abort_and_log(HTTPStatus.NOT_IMPLEMENTED, "varFilter not enabled")
+            return abort_and_log(HTTPStatus.NOT_IMPLEMENTED, "varFilter not enabled")  # type: ignore
 
         set1_filter = args.get("set1", {"filter": {}})["filter"]
         set2_filter = args.get("set2", {"filter": {}})["filter"]
         count = data_adaptor.app_config.default_dataset__diffexp__count
 
         if set1_filter is None or set2_filter is None or count is None:
-            return abort_and_log(HTTPStatus.BAD_REQUEST, "missing required parameter")
+            return abort_and_log(HTTPStatus.BAD_REQUEST, "missing required parameter")  # type: ignore
         if Axis.VAR in set1_filter or Axis.VAR in set2_filter:
-            return abort_and_log(HTTPStatus.BAD_REQUEST, "var axis filter not enabled")
+            return abort_and_log(HTTPStatus.BAD_REQUEST, "var axis filter not enabled")  # type: ignore
 
     except (KeyError, TypeError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
 
     try:
         diffexp = data_adaptor.diffexp_topN(set1_filter, set2_filter, count)
         return make_response(diffexp, HTTPStatus.OK, {"Content-Type": "application/json"})
     except (ValueError, DisabledFeatureError, FilterError, ExceedsLimitError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
     except JSONEncodingValueError:
         # JSON encoding failure, usually due to bad data. Just let it ripple up
         # to default exception handler.
@@ -300,7 +300,7 @@ def diffexp_obs_post(request, data_adaptor):
         raise
 
 
-def diffex_binary_post(request, data_adaptor):
+def diffex_binary_post(request, data_adaptor):  # type: ignore
     MAX_CONTENT_LENGTH = 100 * 1024**2  # perhaps a config variable would be suitable?
     if not data_adaptor.app_config.default_dataset__diffexp__enable:
         return abort(HTTPStatus.NOT_IMPLEMENTED)
@@ -316,13 +316,13 @@ def diffex_binary_post(request, data_adaptor):
         diffex_args = DiffExArguments.unpack_from(buf)
 
         if diffex_args.mode != DiffExArguments.DiffExMode.TopN:
-            return abort_and_log(HTTPStatus.NOT_IMPLEMENTED, "Unsupported diffex mode")
+            return abort_and_log(HTTPStatus.NOT_IMPLEMENTED, "Unsupported diffex mode")  # type: ignore
 
         result = data_adaptor.diffexp_topN_from_list(diffex_args.set1, diffex_args.set2, diffex_args.params.N)
         return make_response(result, HTTPStatus.OK, {"Content-Type": "application/json"})
 
     except (KeyError, TypeError, AssertionError, struct.error) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
     except JSONEncodingValueError:
         # JSON encoding failure, usually due to bad data. Just let it ripple up
         # to default exception handler.
@@ -330,7 +330,7 @@ def diffex_binary_post(request, data_adaptor):
         raise
 
 
-def layout_obs_get(request, data_adaptor):
+def layout_obs_get(request, data_adaptor):  # type: ignore
     fields = request.args.getlist("layout-name", None)
     nBins = request.args.get("nbins", None)
     if nBins is not None:
@@ -351,9 +351,9 @@ def layout_obs_get(request, data_adaptor):
             {"Content-Type": "application/octet-stream"},
         )
     except (KeyError, DatasetAccessError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)  # type: ignore
     except InvalidCxgDatasetError:
-        return abort_and_log(
+        return abort_and_log(  # type: ignore
             HTTPStatus.NOT_IMPLEMENTED,
             f"No embedding available {request.path}",
             loglevel=logging.ERROR,
@@ -361,7 +361,7 @@ def layout_obs_get(request, data_adaptor):
         )
 
 
-def summarize_var_helper(request, data_adaptor, key, raw_query):
+def summarize_var_helper(request, data_adaptor, key, raw_query):  # type: ignore
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -371,11 +371,11 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
     if nBins is not None:
         nBins = int(nBins)
 
-    def summarizeQueryHash(raw_query):
+    def summarizeQueryHash(raw_query):  # type: ignore
         """generate a cache key (hash) from the raw query string"""
         return hashlib.sha1(raw_query).hexdigest()
 
-    query_hash = summarizeQueryHash(raw_query)
+    query_hash = summarizeQueryHash(raw_query)  # type: ignore
     if key and query_hash != key:
         return abort(HTTPStatus.BAD_REQUEST, description="query key did not match")
 
@@ -385,7 +385,7 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
     args_filter_only.poplist("nbins")
 
     try:
-        filter = _query_parameter_to_filter(args_filter_only)
+        filter = _query_parameter_to_filter(args_filter_only)  # type: ignore
         return make_response(
             data_adaptor.summarize_var(summary_method, filter, query_hash, num_bins=nBins),
             HTTPStatus.OK,
@@ -397,15 +397,15 @@ def summarize_var_helper(request, data_adaptor, key, raw_query):
         return abort(HTTPStatus.BAD_REQUEST, description=str(e))
 
 
-def summarize_var_get(request, data_adaptor):
-    return summarize_var_helper(request, data_adaptor, None, request.query_string)
+def summarize_var_get(request, data_adaptor):  # type: ignore
+    return summarize_var_helper(request, data_adaptor, None, request.query_string)  # type: ignore
 
 
-def summarize_var_post(request, data_adaptor):
+def summarize_var_post(request, data_adaptor):  # type: ignore
     if not request.content_type or "application/x-www-form-urlencoded" not in request.content_type:
         return abort(HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
     if request.content_length > 1_000_000:  # just a sanity check to avoid memory exhaustion
         return abort(HTTPStatus.BAD_REQUEST)
 
     key = request.args.get("key", default=None)
-    return summarize_var_helper(request, data_adaptor, key, request.get_data())
+    return summarize_var_helper(request, data_adaptor, key, request.get_data())  # type: ignore

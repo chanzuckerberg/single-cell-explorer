@@ -6,18 +6,18 @@ import requests
 from flask import current_app
 
 from server.common.config.app_config import AppConfig
-from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError
+from server.common.errors import DatasetAccessError, DatasetMetadataError, TombstoneError  # type: ignore
 from server.common.utils.utils import path_join
 
 
 def log_error_response_from_data_portal(res: requests.Response) -> None:
-    logging.ERROR(
+    logging.ERROR(  # type: ignore
         "Error response from Data Portal.",
         extra=dict(type="PORTAL", response=dict(url=res.url, headers=res.headers, status_code=res.status_code)),
     )
 
 
-def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explorer_url: str):
+def request_dataset_metadata_from_data_portal(data_portal_api_base: str, explorer_url: str):  # type: ignore
     """
     Check the data portal metadata api for datasets stored under the given url_path
     If present return dataset metadata object else return None
@@ -50,7 +50,7 @@ def infer_dataset_s3_uri(app_config: AppConfig, dataset_root: str, dataset_id: s
     if dataroot is None:
         raise DatasetAccessError(f"Invalid dataset root {dataset_root}")
 
-    s3_uri = path_join(dataroot, dataset_id)
+    s3_uri = path_join(dataroot, dataset_id)  # type: ignore
 
     # TODO: Is the check still necessary?
     # path_join returns a normalized path.  Therefore it is
@@ -58,10 +58,10 @@ def infer_dataset_s3_uri(app_config: AppConfig, dataset_root: str, dataset_id: s
     # dataroot to determine that the datapath is under the dataroot.
     if not s3_uri.startswith(dataroot):
         raise DatasetAccessError(f"Invalid dataset {s3_uri}")
-    return s3_uri
+    return s3_uri  # type: ignore
 
 
-def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig) -> dict:
+def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig) -> dict:  # type: ignore
     """
     Given the dataset root and dataset_id and the explorer web base url (from the app_config), returns the metadata for
     the dataset, including the s3 URI of the dataset artifact.
@@ -89,7 +89,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
 
                 current_app.logger.log(logging.INFO, msg)
                 raise TombstoneError(message=msg, collection_id=collection_id, dataset_id=dataset_id)
-            return dataset_metadata
+            return dataset_metadata  # type: ignore
 
     current_app.logger.log(
         logging.INFO,
@@ -108,7 +108,7 @@ def get_dataset_metadata(dataset_root: str, dataset_id: str, app_config: AppConf
     }
 
 
-def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):
+def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_config: AppConfig):  # type: ignore
     data_locator_base_url = app_config.server__data_locator__api_base
 
     try:

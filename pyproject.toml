@@ -30,7 +30,7 @@ line-length = 120
 target-version = "py38"
 
 [tool.mypy]
-packages = ["server/common"]
+packages = ["server.common"]
 strict = true
 show_error_codes = true
 ignore_missing_imports = true

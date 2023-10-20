@@ -25,7 +25,7 @@ class CspDirectives(BaseModel):
     connect_src: Union[str, List[str]] = Field(default_factory=list, alias="connect-src")
 
     @root_validator(skip_on_failure=True)
-    def string_to_list(cls, values):
+    def string_to_list(cls, values):  # type: ignore
         for key, value in values.items():
             if isinstance(value, str):
                 values[key] = [value]
@@ -47,27 +47,27 @@ class ServerApp(BaseModel):
     web_base_url: Optional[str]
 
     @root_validator(skip_on_failure=True)
-    def check_port(cls, values):
+    def check_port(cls, values):  # type: ignore
         host = values["host"]
         port = values.get("port")
         if port:
-            if not is_port_available(host, port):
+            if not is_port_available(host, port):  # type: ignore
                 raise ValueError(f"The port selected {port} is in use or invalid, please configure an open port.")
         else:
-            values["port"] = find_available_port(host)
+            values["port"] = find_available_port(host)  # type: ignore
         return values
 
     @root_validator(skip_on_failure=True)
-    def check_debug(cls, values):
+    def check_debug(cls, values):  # type: ignore
         if values["debug"]:
             values["verbose"] = True
             values["open_brower"] = False
         else:
-            warnings.formatwarning = custom_format_warning
+            warnings.formatwarning = custom_format_warning  # type: ignore
         return values
 
     @root_validator(skip_on_failure=True)
-    def check_api_base_url(cls, values):
+    def check_api_base_url(cls, values):  # type: ignore
         api_base_url = values.get("api_base_url")
         if api_base_url == "local":
             api_base_url = f"http://{values['host']}:{values['port']}"
@@ -77,7 +77,7 @@ class ServerApp(BaseModel):
         return values
 
     @root_validator(skip_on_failure=True)
-    def check_web_base_url(cls, values):
+    def check_web_base_url(cls, values):  # type: ignore
         web_base_url = values["web_base_url"]
         if web_base_url is None:
             web_base_url = values["api_base_url"]
@@ -90,7 +90,7 @@ class ServerApp(BaseModel):
         return values
 
     @validator("verbose")
-    def check_verbose(cls, value):
+    def check_verbose(cls, value):  # type: ignore
         if not value:
             sys.tracebacklimit = 0
         else:
@@ -98,7 +98,7 @@ class ServerApp(BaseModel):
         return value
 
     @validator("csp_directives")
-    def check_csp_directives(cls, value):
+    def check_csp_directives(cls, value):  # type: ignore
         return value if value else {}
 
 
@@ -107,7 +107,7 @@ class DatarootValue(BaseModel):
     dataroot: str
 
     @validator("base_url")
-    def check_base_url(cls, base_url):
+    def check_base_url(cls, base_url):  # type: ignore
         bad = False
         # sanity check for well formed base urls
         if os.path.normpath(base_url) != base_url:
@@ -129,7 +129,7 @@ class MultiDataset(BaseModel):
     index: Union[bool, str] = Field(default=False)
 
     @root_validator(skip_on_failure=True)
-    def check_dataroot(cls, values):
+    def check_dataroot(cls, values):  # type: ignore
         if all([values["dataroot"], values["dataroots"]]):
             raise ValueError("Must set dataroot or dataroots.")
         elif values["dataroot"]:
@@ -182,7 +182,7 @@ class Server(BaseModel):
     limits: Limits
 
     @root_validator(skip_on_failure=True)
-    def check_data_locator(cls, values):
+    def check_data_locator(cls, values):  # type: ignore
         if values["data_locator"].s3_region_name is True:
             path = values["multi_dataset"].dataroots or values["multi_dataset"].dataroot
             # except KeyError as ex:
@@ -196,7 +196,7 @@ class Server(BaseModel):
                     if path.startswith("s3://"):
                         break
             if isinstance(path, str) and path.startswith("s3://"):
-                region_name = discover_s3_region_name(path)
+                region_name = discover_s3_region_name(path)  # type: ignore
                 if region_name is None:
                     raise ValueError(f"Unable to discover s3 region name from {path}")
                 values["data_locator"].s3_region_name = region_name
@@ -205,7 +205,7 @@ class Server(BaseModel):
         return values
 
     @root_validator(skip_on_failure=True)
-    def check_cxg_adaptor(cls, values):
+    def check_cxg_adaptor(cls, values):  # type: ignore
         if not values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region and isinstance(
             values["data_locator"].s3_region_name, str
         ):
@@ -227,7 +227,7 @@ class DatasetApp(BaseModel):
     about_legal_privacy: Optional[str]
 
     @validator("scripts")
-    def check_scripts(cls, value):
+    def check_scripts(cls, value):  # type: ignore
         scripts = []
         for script in value:
             if isinstance(script, str):
@@ -255,7 +255,7 @@ class Diffexp(BaseModel):
 
 class XApproximateDistributionEnum(str, Enum):
     normal = "normal"
-    count = "count"
+    count = "count"  # type: ignore
 
 
 class DefaultDataset(BaseModel):

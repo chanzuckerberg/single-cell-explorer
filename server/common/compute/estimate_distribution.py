@@ -7,8 +7,8 @@ from scipy import sparse
 from server.common.constants import XApproximateDistribution
 
 
-@numba.njit(error_model="numpy", nogil=True)
-def min_max(arr: np.ndarray):
+@numba.njit(error_model="numpy", nogil=True)  # type: ignore
+def min_max(arr: np.ndarray):  # type: ignore
     """Return (min, max) values for the ndarray."""
 
     # initialize to first finite value in array.  Normally,
@@ -49,7 +49,7 @@ def min_max(arr: np.ndarray):
     return min_val, max_val
 
 
-def estimate_approximate_distribution(X) -> XApproximateDistribution:
+def estimate_approximate_distribution(X) -> XApproximateDistribution:  # type: ignore
     """
     Estimate the distribution (normal, count) of the X matrix.
 

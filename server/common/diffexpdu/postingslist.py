@@ -47,7 +47,7 @@ class _BlockDescription:
     def from_bytes(cls: Type[T], buf: Union[bytes, bytearray]) -> T:
         assert len(buf) >= blockDescriptionPacker.size
         block_type, list_id_mask, n_elem, key, n_bytes = blockDescriptionPacker.unpack_from(buf)
-        return _BlockDescription(
+        return _BlockDescription(  # type: ignore
             block_type=block_type, list_id_mask=list_id_mask, n_elem=n_elem + 1, key=key, n_bytes=n_bytes + 1
         )
 
@@ -69,10 +69,10 @@ class _ListPartition:
     key: int
     start_idx: int
     end_idx: int  # exclusive range, eg, [start_idx, end_idx)
-    arr: np.ndarray  # the full postings list
+    arr: np.ndarray    # type: ignore# the full postings list
 
 
-def packed_length(buf: Union[bytes, bytearray, memoryview], offset=0) -> int:
+def packed_length(buf: Union[bytes, bytearray, memoryview], offset=0) -> int:  # type: ignore
     """
     Return the length of the deflated posting list encoded in buf.
 
@@ -102,7 +102,7 @@ def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorte
     """
     assert 0 < len(disjoint_postings_lists) <= 8
 
-    def normalize_plist(pl):
+    def normalize_plist(pl):  # type: ignore
         if isinstance(pl, list):
             pl = np.array(pl, dtype=np.uint32)
         if pl.dtype != np.uint32:
@@ -111,11 +111,11 @@ def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorte
             pl.sort()
         return pl
 
-    disjoint_lists = tuple((normalize_plist(plist) for plist in disjoint_postings_lists))
-    all_partitions = partition_lists(disjoint_lists)
+    disjoint_lists = tuple((normalize_plist(plist) for plist in disjoint_postings_lists))  # type: ignore
+    all_partitions = partition_lists(disjoint_lists)  # type: ignore
     all_partitions.sort(key=lambda partition: partition.key)
 
-    encoded_blocks = []
+    encoded_blocks = []  # type: ignore
     for _, parts in itertools.groupby(all_partitions, key=lambda partition: partition.key):
         # encode each list as individual blocks.
         parts_tuple = tuple(parts)
@@ -176,7 +176,7 @@ def _encode_partition(part: _ListPartition) -> Tuple[_BlockDescription, bytearra
     raise Exception("Unknown block type prediction")
 
 
-def _encode_bitarray_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_BlockDescription, bytearray]:
+def _encode_bitarray_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_BlockDescription, bytearray]:  # type: ignore
     """
     Encode as bitarray, compressed with zlib.
     """
@@ -196,10 +196,10 @@ def _encode_bitarray_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_Bloc
         key=key,
         n_bytes=len(buf),
     )
-    return (header, buf)
+    return (header, buf)  # type: ignore
 
 
-def _encode_uint16_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_BlockDescription, bytearray]:
+def _encode_uint16_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_BlockDescription, bytearray]:  # type: ignore
     """
     Encode lower two bytes only. Applies steps:
         * optional inversion
@@ -231,10 +231,10 @@ def _encode_uint16_block(part: _ListPartition, arr: np.ndarray) -> Tuple[_BlockD
     header = _BlockDescription(
         block_type=block_type, list_id_mask=(1 << part.list_id), n_elem=n_elem, key=key, n_bytes=len(buf)
     )
-    return (header, buf)
+    return (header, buf)  # type: ignore
 
 
-def inflate_postings_lists(buf: Union[bytes, bytearray, memoryview], offset=0) -> List[np.ndarray]:
+def inflate_postings_lists(buf: Union[bytes, bytearray, memoryview], offset=0) -> List[np.ndarray]:  # type: ignore
     """
     Decode a serialized postings list, returning the original list as a ``numpy.ndarray``.
     """
@@ -277,21 +277,21 @@ def _decode_header(buf: memoryview) -> Tuple[int, List[_BlockDescription]]:
     return n_lists, block_descriptions
 
 
-def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[Tuple[ListId, np.ndarray]]:
+def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[Tuple[ListId, np.ndarray]]:  # type: ignore
     block_type = desc.block_type
     n_elem = desc.n_elem
-    buf = _blockDecompress(buf)
+    buf = _blockDecompress(buf)  # type: ignore
     list_ids = desc.list_ids()
 
     decoded = []  # list of (ListId, ndarray)
     if block_type == _BlockDescription.BlockType.BitArray:
-        decoded.append(_decode_bitarray_block(buf, list_ids))
+        decoded.append(_decode_bitarray_block(buf, list_ids))  # type: ignore
 
     elif block_type == _BlockDescription.BlockType.Uint16Array:
-        decoded.append(_decode_uint16_block(buf, list_ids))
+        decoded.append(_decode_uint16_block(buf, list_ids))  # type: ignore
 
     elif block_type == _BlockDescription.BlockType.Uint16ArrayInverted:
-        decoded.append(_decode_uint16_inverted_block(buf, list_ids))
+        decoded.append(_decode_uint16_inverted_block(buf, list_ids))  # type: ignore
 
     else:
         raise AssertionError("Unknown block type")
@@ -302,7 +302,7 @@ def _decode_block(desc: _BlockDescription, buf: memoryview) -> List[Tuple[ListId
     return decoded
 
 
-def _decode_bitarray_block(buf, list_ids):
+def _decode_bitarray_block(buf, list_ids):  # type: ignore
     assert len(buf) == 8192, f"Unexpected bitarray length {len(buf)}"
     assert len(list_ids) == 1
     ba = bitarray.bitarray(endian="little")
@@ -311,13 +311,13 @@ def _decode_bitarray_block(buf, list_ids):
     return (list_ids[0], arr)
 
 
-def _decode_uint16_block(buf, list_ids):
+def _decode_uint16_block(buf, list_ids):  # type: ignore
     assert len(list_ids) == 1
     arr = _un_delta(_un_byteshuffle(buf, dtype=np.uint16))
     return (list_ids[0], arr)
 
 
-def _decode_uint16_inverted_block(buf, list_ids):
+def _decode_uint16_inverted_block(buf, list_ids):  # type: ignore
     assert len(list_ids) == 1
     interval = (
         uint16.unpack_from(buf, 0)[0],
@@ -327,28 +327,28 @@ def _decode_uint16_inverted_block(buf, list_ids):
     return (list_ids[0], arr)
 
 
-def _byteshuffle(arr: np.ndarray) -> np.ndarray:
+def _byteshuffle(arr: np.ndarray) -> np.ndarray:  # type: ignore
     """classic byteshuffle to improve compressibility.  Always in-place."""
     return arr.view(np.uint8).reshape((arr.itemsize, len(arr)), order="F").flatten()
 
 
-def _un_byteshuffle(buf: Union[bytes, bytearray, memoryview], dtype) -> np.ndarray:
+def _un_byteshuffle(buf: Union[bytes, bytearray, memoryview], dtype) -> np.ndarray:  # type: ignore
     """invert byteshuffle, in-place."""
     dtype = np.dtype(dtype)
     arr = np.frombuffer(buf, dtype=np.uint8)
     return arr.reshape(len(buf) // dtype.itemsize, dtype.itemsize, order="F").flatten().view(dtype)
 
 
-def _delta(arr: np.ndarray) -> np.ndarray:
+def _delta(arr: np.ndarray) -> np.ndarray:  # type: ignore
     return np.diff(arr, prepend=arr.dtype.type(0))
 
 
-def _un_delta(arr: np.ndarray) -> np.ndarray:
+def _un_delta(arr: np.ndarray) -> np.ndarray:  # type: ignore
     return np.cumsum(arr)
 
 
-@nb.jit
-def _interval_invert_inner(src: np.ndarray, dst: np.ndarray, interval: Tuple[int, int]) -> np.ndarray:
+@nb.jit  # type: ignore
+def _interval_invert_inner(src: np.ndarray, dst: np.ndarray, interval: Tuple[int, int]) -> np.ndarray:  # type: ignore
     src_idx = 0
     dst_idx = 0
     for i in range(interval[0], interval[1]):
@@ -360,7 +360,7 @@ def _interval_invert_inner(src: np.ndarray, dst: np.ndarray, interval: Tuple[int
     return dst
 
 
-def _interval_invert(arr: np.ndarray, interval=None) -> np.ndarray:
+def _interval_invert(arr: np.ndarray, interval=None) -> np.ndarray:  # type: ignore
     """Invert over an interval."""
     assert arr.dtype.kind == "u"
     assert interval is not None or len(arr) > 0
@@ -368,12 +368,12 @@ def _interval_invert(arr: np.ndarray, interval=None) -> np.ndarray:
         interval = (arr[0], arr[-1] + 1)
     assert len(arr) == 0 or (arr[0] >= interval[0] and arr[0] < interval[1])
     assert len(arr) == 0 or (arr[-1] >= interval[0] and arr[-1] < interval[1])
-    return _interval_invert_inner(
+    return _interval_invert_inner(  # type: ignore
         arr, np.empty_like(arr, shape=(_interval_inverted_length(arr, interval=interval),)), interval
     )
 
 
-def _interval_inverted_length(arr: np.ndarray, interval=None) -> int:
+def _interval_inverted_length(arr: np.ndarray, interval=None) -> int:  # type: ignore
     """
     For the given array, return the length if it was inverted across
     the interval of actual values.
@@ -382,18 +382,18 @@ def _interval_inverted_length(arr: np.ndarray, interval=None) -> int:
     """
     if interval is None:
         interval = (arr[0], arr[-1] + 1)
-    return interval[1] - interval[0] - len(arr)
+    return interval[1] - interval[0] - len(arr)  # type: ignore
 
 
-@nb.jit
-def _find_partition_boundaries(arr: np.ndarray) -> List[int]:
+@nb.jit  # type: ignore
+def _find_partition_boundaries(arr: np.ndarray) -> List[int]:  # type: ignore
     """
     Given an array of monotonically increasing unsigned ints, return the
     indices where the most significant 16 bits changes.
 
     Currently a simple scan.
     """
-    partitions = []
+    partitions = []  # type: ignore
     if len(arr) == 0:
         return partitions
 
@@ -423,6 +423,6 @@ def partition_lists(plists: DisjointPostingsLists) -> List[_ListPartition]:
             _ListPartition(
                 list_id=list_id, key=(plist[start_idx] >> 16), start_idx=start_idx, end_idx=end_idx, arr=plist
             )
-            for start_idx, end_idx in pairwise(boundaries)
+            for start_idx, end_idx in pairwise(boundaries)  # type: ignore
         ]
     return partitions

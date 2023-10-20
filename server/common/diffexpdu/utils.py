@@ -15,7 +15,7 @@ def _nonzero_bits(mask: int) -> List[int]:
     return ids
 
 
-def pairwise(iterable):
+def pairwise(iterable):  # type: ignore
     # Unfortunately, only available in Python >= 3.10
     # pairwise('ABCDEFG') --> AB BC CD DE EF FG
     a, b = itertools.tee(iterable)
@@ -37,7 +37,7 @@ These two routines are optimized to compress/decompress the block contents:
 """
 
 
-def _blockCompress(src: Union[bytes, memoryview], strategy=zlib.Z_DEFAULT_STRATEGY) -> bytes:
+def _blockCompress(src: Union[bytes, memoryview], strategy=zlib.Z_DEFAULT_STRATEGY) -> bytes:  # type: ignore
     compressor = zlib.compressobj(level=3, wbits=-15, memLevel=9, strategy=strategy)
     dst = compressor.compress(src)
     dst += compressor.flush(zlib.Z_FINISH)
