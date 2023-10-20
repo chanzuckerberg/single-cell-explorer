@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import List
 
 from flask import jsonify, make_response
 
@@ -21,7 +22,7 @@ def health_check(config):  # type: ignore
     """
     health = {"status": None, "version": "1", "releaseID": cellxgene_version}
 
-    dataroot_paths: list[str] = [
+    dataroot_paths: List[str] = [
         dataroot_value["dataroot"] for dataroot_value in config.server__multi_dataset__dataroots.values()
     ]
     checks: bool = all([_is_accessible(dataroot_path, config) for dataroot_path in dataroot_paths])  # type: ignore
