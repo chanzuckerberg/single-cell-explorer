@@ -83,12 +83,16 @@ lint: lint-server lint-client
 
 .PHONY: lint-server
 lint-server:
+	mypy --config-file pyproject.toml
 	black server --check --exclude "server/tests/" --extend-exclude "server/common/fbs/NetEncoding/"
 	flake8 server --exclude server/tests/,server/common/fbs/NetEncoding/
 
 .PHONY: lint-client
 lint-client:
 	cd client && $(MAKE) lint
+
+mypy:
+	mypy --config-file pyproject.toml
 
 # DEPENDENCY PACKAGE INSTALLATION COMMANDS
 
