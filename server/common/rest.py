@@ -127,9 +127,7 @@ def s3_uri_get(app_config, url_dataroot_id, dataset_id):  # type: ignore
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
-        parent_collection_url = (
-            f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"    # type: ignore# noqa E501
-        )
+        parent_collection_url = f"{current_app.app_config.server__app__web_base_url}/collections/{e.collection_id}"  # type: ignore# noqa E501
         return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
     else:
         return make_response(jsonify(dataset_artifact_s3_uri), HTTPStatus.OK)

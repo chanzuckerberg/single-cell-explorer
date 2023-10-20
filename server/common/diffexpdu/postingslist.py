@@ -69,7 +69,7 @@ class _ListPartition:
     key: int
     start_idx: int
     end_idx: int  # exclusive range, eg, [start_idx, end_idx)
-    arr: np.ndarray    # type: ignore# the full postings list
+    arr: np.ndarray  # type: ignore# the full postings list
 
 
 def packed_length(buf: Union[bytes, bytearray, memoryview], offset=0) -> int:  # type: ignore
