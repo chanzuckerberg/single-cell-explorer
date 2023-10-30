@@ -31,8 +31,24 @@ class Categories extends React.Component<{}, State> {
     this.state = {
       createAnnoModeActive: false,
       expandedCats: new Set(),
+      // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
+      newCategoryText: "",
+      // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
+      categoryToDuplicate: null,
     };
   }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  handleChange = (name: any) => {
+    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
+    this.setState({ newCategoryText: name });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  handleSelect = (name: any) => {
+    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
+    this.setState({ newCategoryText: name });
+  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   onExpansionChange = (catName: any) => {
