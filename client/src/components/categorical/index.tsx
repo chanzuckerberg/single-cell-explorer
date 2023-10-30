@@ -2,7 +2,10 @@ import React from "react";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
-import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
+import {
+  EXCLUDED_CATEGORY_NAMES,
+  STANDARD_CATEGORY_NAMES,
+} from "../../common/types/entities";
 import {
   CategoricalAnnotationColumnSchema,
   Schema,
@@ -27,21 +30,9 @@ class Categories extends React.Component<{}, State> {
     super(props);
     this.state = {
       createAnnoModeActive: false,
-      newCategoryText: "",
-      categoryToDuplicate: null,
       expandedCats: new Set(),
     };
   }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleChange = (name: any) => {
-    this.setState({ newCategoryText: name });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleSelect = (name: any) => {
-    this.setState({ newCategoryText: name });
-  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   onExpansionChange = (catName: any) => {
@@ -94,6 +85,14 @@ class Categories extends React.Component<{}, State> {
     STANDARD_CATEGORY_NAMES.includes(catName);
 
   /**
+   * Determine if category is excluded.
+   * @param catName - Name of category.
+   * @returns True if given category name is in the set of standard category names.
+   */
+  isCategoryNameExcluded = (catName: string): boolean =>
+    EXCLUDED_CATEGORY_NAMES.includes(catName);
+
+  /**
    * Returns true if category is writable.
    * @param schema - Matrix schema.
    * @param catName - Name of category.
@@ -104,10 +103,7 @@ class Categories extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    const {
-      createAnnoModeActive,
-      expandedCats,
-    } = this.state;
+    const { createAnnoModeActive, expandedCats } = this.state;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
     const { schema } = this.props;
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
@@ -121,6 +117,7 @@ class Categories extends React.Component<{}, State> {
     const authorCategoryNames = selectableCategoryNames.filter(
       (catName) =>
         !this.isCategoryNameStandard(catName) &&
+        !this.isCategoryNameExcluded(catName) &&
         (this.isCategoryDisplayable(schema, catName) ||
           this.isCategoryWritable(schema, catName))
     );
