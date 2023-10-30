@@ -30,11 +30,11 @@ class Categories extends React.Component<{}, State> {
     super(props);
     this.state = {
       createAnnoModeActive: false,
-      expandedCats: new Set(),
       // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
       newCategoryText: "",
       // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
       categoryToDuplicate: null,
+      expandedCats: new Set(),
     };
   }
 
