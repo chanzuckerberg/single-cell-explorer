@@ -26,6 +26,8 @@ export const STANDARD_CATEGORY_NAMES = [
   "donor_id",
 ];
 
+export const EXCLUDED_CATEGORY_NAMES = ["observation_joinid"];
+
 /**
  * Author of publication associated with a collection, populated from Crossref as part of collection publication
  * metadata.
