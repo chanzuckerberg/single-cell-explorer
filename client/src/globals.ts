@@ -16,7 +16,7 @@ export const DATASET_MAX_CELL_COUNT = 2_000_000;
 export const ONTOLOGY_KEY = "ontology_term_id";
 
 /* Unified navigation bar header height. */
-export const HEADER_HEIGHT_PX = 48;
+export const HEADER_HEIGHT_PX = 56;
 
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
