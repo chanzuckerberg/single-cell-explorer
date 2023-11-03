@@ -10,4 +10,5 @@ export enum ROUTES {
   WHERE_IS_MY_GENE = "/gene-expression",
   DOCS = "/docs",
   CELL_GUIDE = "/cellguide",
+  CENSUS_SPOTLIGHT = "/census-spotlight",
 }
