@@ -75,16 +75,14 @@ function QuickGene() {
           setStatus("success");
 
           if (isFiltered) {
+            const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
             setGeneNames(
               df
                 .col(varIndex)
                 .asArray()
-                .filter((_, index) => {
-                  const isFilteredValue = isFiltered
-                    .col(isFilteredCol)
-                    .asArray()[index];
-                  return !isFilteredValue;
-                }) as DataframeValue[]
+                .filter(
+                  (_, index) => !isFilteredArray[index] && _
+                ) as DataframeValue[]
             );
           } else {
             setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
