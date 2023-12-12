@@ -62,7 +62,9 @@ function QuickGene() {
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
           const isFilteredCol = "feature_is_filtered";
-          const isFiltered = await annoMatrix.fetch("var", isFilteredCol);
+          const isFiltered =
+            annoMatrix.getMatrixColumns("var").includes(isFilteredCol) &&
+            (await annoMatrix.fetch("var", isFilteredCol));
 
           // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
@@ -72,17 +74,21 @@ function QuickGene() {
 
           setStatus("success");
 
-          setGeneNames(
-            df
-              .col(varIndex)
-              .asArray()
-              .filter((_, index) => {
-                const isFilteredValue = isFiltered.col(isFilteredCol).asArray()[
-                  index
-                ];
-                return !isFilteredValue;
-              }) as DataframeValue[]
-          );
+          if (isFiltered) {
+            setGeneNames(
+              df
+                .col(varIndex)
+                .asArray()
+                .filter((_, index) => {
+                  const isFilteredValue = isFiltered
+                    .col(isFilteredCol)
+                    .asArray()[index];
+                  return !isFilteredValue;
+                }) as DataframeValue[]
+            );
+          } else {
+            setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+          }
         } catch (error) {
           setStatus("error");
           throw error;
