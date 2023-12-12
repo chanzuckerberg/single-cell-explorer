@@ -215,7 +215,7 @@ function QuickGene() {
               inputProps={{
                 // @ts-expect-error ts-migrate(2322) FIXME: Type '{ "data-testid": string; placeholder: string... Remove this comment to see the full error message
                 "data-testid": "gene-search",
-                placeholder: "Quick Gene Search!",
+                placeholder: "Quick Gene Search",
                 leftIcon: IconNames.SEARCH,
                 fill: true,
               }}
