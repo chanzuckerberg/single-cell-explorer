@@ -61,6 +61,8 @@ function QuickGene() {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
+          const isFilteredCol = "feature_is_filtered";
+          const isFiltered = await annoMatrix.fetch("var", isFilteredCol);
 
           // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
@@ -69,7 +71,16 @@ function QuickGene() {
           }
 
           setStatus("success");
-          setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+
+          setGeneNames(
+            df
+              .col(varIndex)
+              .asArray()
+              .filter((geneName) => {
+                const index = df.col(varIndex).asArray().indexOf(geneName);
+                return !isFiltered.col(isFilteredCol).asArray()[index];
+              }) as DataframeValue[]
+          );
         } catch (error) {
           setStatus("error");
           throw error;
@@ -159,7 +170,6 @@ function QuickGene() {
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
-
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
       <H4
@@ -197,7 +207,7 @@ function QuickGene() {
               inputProps={{
                 // @ts-expect-error ts-migrate(2322) FIXME: Type '{ "data-testid": string; placeholder: string... Remove this comment to see the full error message
                 "data-testid": "gene-search",
-                placeholder: "Quick Gene Search",
+                placeholder: "Quick Gene Search!",
                 leftIcon: IconNames.SEARCH,
                 fill: true,
               }}
