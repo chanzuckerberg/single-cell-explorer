@@ -76,9 +76,11 @@ function QuickGene() {
             df
               .col(varIndex)
               .asArray()
-              .filter((geneName) => {
-                const index = df.col(varIndex).asArray().indexOf(geneName);
-                return !isFiltered.col(isFilteredCol).asArray()[index];
+              .filter((_, index) => {
+                const isFilteredValue = isFiltered.col(isFilteredCol).asArray()[
+                  index
+                ];
+                return !isFilteredValue;
               }) as DataframeValue[]
           );
         } catch (error) {
