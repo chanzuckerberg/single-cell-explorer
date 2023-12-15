@@ -5,10 +5,10 @@ from numba import jit
 from scipy import stats
 
 from server.common.constants import XApproximateDistribution
-from server.common.errors import ComputeError  # type: ignore
+from server.common.errors import ComputeError
 
 
-def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selector_lists=False):  # type: ignore
+def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selector_lists=False):
     """
     Return differential expression statistics for top N variables.
 
@@ -63,7 +63,7 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selecto
         except Exception as e:
             raise ComputeError(str(e)) from None
 
-    return diffexp_ttest_from_mean_var(  # type: ignore
+    return diffexp_ttest_from_mean_var(
         meanA=meanA.astype(dtype),
         varA=varA.astype(dtype),
         nA=nA,
@@ -75,7 +75,7 @@ def diffexp_ttest(adaptor, setA, setB, top_n=8, diffexp_lfc_cutoff=0.01, selecto
     )
 
 
-def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp_lfc_cutoff):  # type: ignore
+def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp_lfc_cutoff):
     # IMPORTANT NOTE: this code assumes the data is normally distributed and/or already logged.
     n_var = meanA.shape[0]
     top_n = min(top_n, n_var)
@@ -144,7 +144,7 @@ def diffexp_ttest_from_mean_var(meanA, varA, nA, meanB, varB, nB, top_n, diffexp
     return result
 
 
-def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):  # type: ignore
+def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):
     """
     Two-pass variance calculation.  Numerically (more) stable
     than naive methods (and same method used by numpy.var())
@@ -155,7 +155,7 @@ def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):  
     # number handling.
     fp_err_occurred = False
 
-    def fp_err_set(err, flag):  # type: ignore
+    def fp_err_set(err, flag):
         nonlocal fp_err_occurred
         fp_err_occurred = True
 
@@ -179,13 +179,13 @@ def mean_var_n(X, X_approximate_distribution=XApproximateDistribution.NORMAL):  
     return mean, v, n
 
 
-def mean_var_cnt_dense(matrix, _, rows):  # type: ignore
+def mean_var_cnt_dense(matrix, _, rows):
     xslc = matrix.multi_index[rows]
-    return mean_var_n(xslc[""])  # type: ignore
+    return mean_var_n(xslc[""])
 
 
 @jit(nopython=True, nogil=True, fastmath=True)
-def _mean_var_sparse_accumulate(col_arr, val_arr, n, u, M2):  # type: ignore
+def _mean_var_sparse_accumulate(col_arr, val_arr, n, u, M2):
     """
     Incrementally accumulate mean and sum of square of distance from mean using
     Welford's online method.
@@ -199,7 +199,7 @@ def _mean_var_sparse_accumulate(col_arr, val_arr, n, u, M2):  # type: ignore
 
 
 @jit(nopython=True, nogil=True, fastmath=True)
-def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):  # type: ignore
+def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):
     """
     Finalize incremental values, acconting for missing elements (due to sparse input).
     Non-sparse and sparse combined using Chan's parallel adaptation of Welford's.
@@ -212,7 +212,7 @@ def _mean_var_sparse_finalize(n_rows, n_a, u_a, M2_a):  # type: ignore
     return u, M2
 
 
-def mean_var_cnt_sparse(matrix, n_var, rows):  # type: ignore
+def mean_var_cnt_sparse(matrix, n_var, rows):
     query_iterator = matrix.query(order="U", return_incomplete=True).multi_index[rows]
 
     # accumulators, by gene (var) for n, u (mean) and M (sum of squares of difference from mean)

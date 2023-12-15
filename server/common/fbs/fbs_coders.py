@@ -20,7 +20,7 @@ from server.common.utils.type_conversion_utils import get_encoding_dtype_of_arra
 class DenseNumericIntCoder:
     n_slots = 4
 
-    def encode_array(self, array, builder, _dtype, num_bins=None):  # type: ignore
+    def encode_array(self, array, builder, _dtype, num_bins=None):
         if num_bins is None:
             raise ValueError("num_bins must be specified for DenseNumericIntCoder")
 
@@ -42,7 +42,7 @@ class DenseNumericIntCoder:
         builder.PrependInt32Slot(3, num_bins, 0)
         return builder.EndObject()
 
-    def decode_array(self, u, TarType):  # type: ignore
+    def decode_array(self, u, TarType):
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
@@ -55,7 +55,7 @@ class DenseNumericIntCoder:
 class DenseNumericCoder:
     n_slots = 1
 
-    def encode_array(self, array, builder, dtype, **kwargs):  # type: ignore
+    def encode_array(self, array, builder, dtype, **kwargs):
         # convert pandas series to numpy array
         if isinstance(array, pd.Series):
             array = array.to_numpy()
@@ -70,7 +70,7 @@ class DenseNumericCoder:
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
         return builder.EndObject()
 
-    def decode_array(self, u, TarType):  # type: ignore
+    def decode_array(self, u, TarType):
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
         return arr.DataAsNumpy()
@@ -79,7 +79,7 @@ class DenseNumericCoder:
 class CategoricalCoder:
     n_slots = 2
 
-    def encode_array(self, array, builder, dtype, **kwargs):  # type: ignore
+    def encode_array(self, array, builder, dtype, **kwargs):
         if isinstance(array, pd.Series) and array.dtype.name == "category":
             # create the code-to-value dictionary and encode in utf-8 as a byte array
             dictionary = np.array(bytearray(json.dumps(dict(enumerate(array.cat.categories))), "utf-8"))
@@ -97,7 +97,7 @@ class CategoricalCoder:
         else:
             raise ValueError("Input array must be pandas Categorical.")
 
-    def decode_array(self, u, TarType):  # type: ignore
+    def decode_array(self, u, TarType):
         # returns a pandas Categorical
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
@@ -110,7 +110,7 @@ class CategoricalCoder:
 class PolymorphicCoder:
     n_slots = 1
 
-    def encode_array(self, array, builder, dtype=None, **kwargs):  # type: ignore
+    def encode_array(self, array, builder, dtype=None, **kwargs):
         # dtype is unused here as array is just getting slammed into a JSON
         if sp.issparse(array):
             array = array.A.flatten()
@@ -123,7 +123,7 @@ class PolymorphicCoder:
         builder.PrependUOffsetTRelativeSlot(0, vec, 0)
         return builder.EndObject()
 
-    def decode_array(self, u, TarType):  # type: ignore
+    def decode_array(self, u, TarType):
         arr = TarType()
         arr.Init(u.Bytes, u.Pos)
         narr = arr.DataAsNumpy()
@@ -173,7 +173,7 @@ TYPE_MAP = {
 }
 
 
-def _get_array_class(array, num_bins=None):  # type: ignore
+def _get_array_class(array, num_bins=None):
     # returns
     # (1) the generic type of array - category, dense, or lossy
     # this determines which coder should be used.
@@ -188,14 +188,14 @@ def _get_array_class(array, num_bins=None):  # type: ignore
         return array_class, dtype
 
 
-def serialize_typed_array(builder, source_array, num_bins=None):  # type: ignore
+def serialize_typed_array(builder, source_array, num_bins=None):
     if isinstance(source_array, pd.Index):
         source_array = source_array.to_series()
 
-    array_class, encoding_dtype = _get_array_class(source_array, num_bins=num_bins)  # type: ignore
+    array_class, encoding_dtype = _get_array_class(source_array, num_bins=num_bins)
     # the default coder will assume the data is polymorphic and yield a JSON encoded array
     defaultCoder = (PolymorphicCoder, TypedFBArray.TypedFBArray.JSONEncodedFBArray)
-    Coder, array_type = ARRAY_ENCODER[array_class].get(encoding_dtype, defaultCoder)  # type: ignore
+    Coder, array_type = ARRAY_ENCODER[array_class].get(encoding_dtype, defaultCoder)
 
     coder_obj = Coder()
     # for encoding, we require the source array, flatbuffer builder, encoding data type, and
@@ -204,13 +204,13 @@ def serialize_typed_array(builder, source_array, num_bins=None):  # type: ignore
     return (array_type, array_value)
 
 
-def deserialize_typed_array(tarr):  # type: ignore
+def deserialize_typed_array(tarr):
     (union_type, u) = tarr
     if union_type is TypedFBArray.TypedFBArray.NONE:
         return None
 
-    Coder, TarType = TYPE_MAP.get(union_type, None)  # type: ignore
+    Coder, TarType = TYPE_MAP.get(union_type, None)
     if TarType is None:
         raise TypeError(f"FBS contains unknown data type: {union_type}")
     # for decoding, we require the encoded column and the type of typed array
-    return Coder().decode_array(u, TarType)  # type: ignore
+    return Coder().decode_array(u, TarType)

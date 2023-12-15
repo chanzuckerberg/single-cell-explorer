@@ -7,16 +7,16 @@ from flatten_dict import flatten as _flatten
 from flatten_dict import unflatten as _unflatten
 
 from server.common.config.config_model import AppConfigModel
-from server.common.errors import ConfigurationError  # type: ignore
+from server.common.errors import ConfigurationError
 from server.default_config import get_default_config
 
 
-def flatten(dictionary: dict) -> dict:  # type: ignore
-    return _flatten(dictionary, reducer=lambda parent, key: f"{parent}__{key}" if parent else key)  # type: ignore
+def flatten(dictionary: dict) -> dict:
+    return _flatten(dictionary, reducer=lambda parent, key: f"{parent}__{key}" if parent else key)
 
 
-def unflatten(dictionary: dict) -> dict:  # type: ignore
-    return _unflatten(dictionary, splitter=lambda x: x.split("__"))  # type: ignore
+def unflatten(dictionary: dict) -> dict:
+    return _unflatten(dictionary, splitter=lambda x: x.split("__"))
 
 
 class AppConfig(object):
@@ -31,26 +31,26 @@ class AppConfig(object):
     `self.default_config` is the dataset config, unless overridden by an entry in `self.dataroot_config`.
     """
 
-    def __init__(self, config_file_path: str = None):  # type: ignore
+    def __init__(self, config_file_path: str = None):
         # the default configuration (see default_config.py)
-        self.default_config: dict = get_default_config()  # type: ignore
+        self.default_config: dict = get_default_config()
         # TODO @madison -- if we always read from the default config (hard coded path) can we set those values as
         #  defaults within the config class?
-        self.config: dict = AppConfigModel(**copy.deepcopy(self.default_config)).dict(by_alias=True)  # type: ignore
-        self.dataroot_config = {}  # type: ignore
+        self.config: dict = AppConfigModel(**copy.deepcopy(self.default_config)).dict(by_alias=True)
+        self.dataroot_config = {}
         if config_file_path:
             self.update_from_config_file(config_file_path)
         # Set to true when config_completed is called. Set to false when the config is modified.
         self.is_completed = False
 
-    def __getattr__(self, item):  # type: ignore
+    def __getattr__(self, item):
         path = item.split("__")
         node = self.config
         for p in path:
             node = node[p]
         return node
 
-    def check_config(self, config: dict) -> dict:  # type: ignore
+    def check_config(self, config: dict) -> dict:
         """Verify all the attributes in the config have been checked"""
         try:
             valid_config = AppConfigModel(**config)
@@ -59,15 +59,15 @@ class AppConfig(object):
         else:
             return valid_config.dict(by_alias=True)
 
-    def update_server_config(self, **kw):  # type: ignore
+    def update_server_config(self, **kw):
         _kw = {f"server__{key}": value for key, value in kw.items()}
-        self.update_config(**_kw)  # type: ignore
+        self.update_config(**_kw)
 
-    def update_default_dataset_config(self, **kw):  # type: ignore
+    def update_default_dataset_config(self, **kw):
         _kw = {f"default_dataset__{key}": value for key, value in kw.items()}
-        self.update_config(**_kw)  # type: ignore
+        self.update_config(**_kw)
 
-    def update_config(self, **kw):  # type: ignore
+    def update_config(self, **kw):
         """
         Update multiple configuration parameters.
         The key in kw should be a string using {parent}__{child}... when modifying nested configuration parameters.
@@ -97,16 +97,16 @@ class AppConfig(object):
         self.is_completed = False
         logging.info("Configuration updated")
 
-    def update_from_config_file(self, config_file: str):  # type: ignore
+    def update_from_config_file(self, config_file: str):
         try:
             config = EnvYAML(config_file)
         except yaml.YAMLError as e:
             raise ConfigurationError(f"The specified config file contained an error: {e}") from None
         except OSError as e:
             raise ConfigurationError(f"Issue retrieving the specified config file: {e}") from None
-        self.update_config(**config)  # type: ignore
+        self.update_config(**config)
 
-    def changes_from_default(self):  # type: ignore
+    def changes_from_default(self):
         """Return all the attribute that are different from the default"""
         default_mapping = flatten(self.default_config)
         diff = []
@@ -116,29 +116,29 @@ class AppConfig(object):
                 diff.append((attrname, curval, defval))
         return diff
 
-    def complete_config(self):  # type: ignore
+    def complete_config(self):
         """The configure options are checked, and any additional setup based on the config
         parameters is done"""
         if not self.is_completed:
             self.config = self.check_config(self.config)
-        self.handle_adaptor()  # type: ignore
-        self.handle_data_source()  # type: ignore
+        self.handle_adaptor()
+        self.handle_data_source()
         self.is_completed = True
         logging.info("Configuration complete.")
 
-    def get_dataset_config(self, dataroot_key: str) -> dict:  # type: ignore
-        return self.dataroot_config.get(dataroot_key, self.default_dataset)  # type: ignore
+    def get_dataset_config(self, dataroot_key: str) -> dict:
+        return self.dataroot_config.get(dataroot_key, self.default_dataset)
 
-    def handle_data_source(self):  # type: ignore
+    def handle_data_source(self):
         if not self.server__multi_dataset__dataroots:
             raise ConfigurationError("You must specify a dataroot for multidatasets")
 
-    def handle_adaptor(self):  # type: ignore
+    def handle_adaptor(self):
         from server.dataset.cxg_dataset import CxgDataset
 
-        CxgDataset.set_tiledb_context(self.server__adaptor__cxg_adaptor__tiledb_ctx)  # type: ignore
+        CxgDataset.set_tiledb_context(self.server__adaptor__cxg_adaptor__tiledb_ctx)
 
-    def exceeds_limit(self, limit_name, value):  # type: ignore
+    def exceeds_limit(self, limit_name, value):
         limit_value = getattr(self, "server__limits__" + limit_name, None)
         if limit_value is None:  # disabled
             return False

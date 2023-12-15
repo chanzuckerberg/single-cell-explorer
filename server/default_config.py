@@ -108,5 +108,5 @@ default_dataset:
 """
 
 
-def get_default_config():  # type: ignore
+def get_default_config():
     return yaml.load(default_config, Loader=yaml.Loader)
