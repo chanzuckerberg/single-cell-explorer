@@ -3,24 +3,24 @@ from server.dataset.dataset import Dataset
 from server.version import display_version as cellxgene_display_version
 
 
-def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:  # type: ignore
+def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:
     """
     Return the configuration as required by the /config REST route
     """
     dataset_config = data_adaptor.app_config
 
     # make sure the configuration has been checked.
-    app_config.complete_config()  # type: ignore
+    app_config.complete_config()
 
     # display_names
-    title = data_adaptor.get_title()  # type: ignore
-    about = data_adaptor.get_about()  # type: ignore
+    title = data_adaptor.get_title()
+    about = data_adaptor.get_about()
 
-    display_names = dict(engine=data_adaptor.get_name(), dataset=title)  # type: ignore
+    display_names = dict(engine=data_adaptor.get_name(), dataset=title)
 
     # library_versions
     library_versions = {}
-    library_versions.update(data_adaptor.get_library_versions())  # type: ignore
+    library_versions.update(data_adaptor.get_library_versions())
     library_versions["cellxgene"] = cellxgene_display_version
 
     # links
@@ -48,18 +48,18 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
     # TODO/Note: putting info from the dataset into the /config is not ideal.
     # However, it is definitely not part of /schema, and we do not have a top-level
     # route for data properties.  Consider creating one at some point.
-    corpora_props = data_adaptor.get_corpora_props()  # type: ignore
+    corpora_props = data_adaptor.get_corpora_props()
     if corpora_props and "default_embedding" in corpora_props:
         default_embedding = corpora_props["default_embedding"]
         if isinstance(default_embedding, str) and default_embedding.startswith("X_"):
             default_embedding = default_embedding[2:]  # drop X_ prefix
-        if default_embedding in data_adaptor.get_embedding_names():  # type: ignore
+        if default_embedding in data_adaptor.get_embedding_names():
             parameters["default_embedding"] = default_embedding
 
-    data_adaptor.update_parameters(parameters)  # type: ignore
+    data_adaptor.update_parameters(parameters)
 
     # gather it all together
-    client_config = {}  # type: ignore
+    client_config = {}
     config = client_config["config"] = {}
     config["displayNames"] = display_names
     config["library_versions"] = library_versions

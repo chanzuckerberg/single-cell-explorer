@@ -11,8 +11,3 @@ pytest-subtests>=0.5.0
 python-jose>=3.2.0
 twine>=1.12.1
 rsa>=4.7 # not directly required, pinned by Snyk to avoid a vulnerability
-mypy
-types-requests
-types-setuptools
-typing_extensions
-types-PyYAML

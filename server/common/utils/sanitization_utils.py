@@ -1,7 +1,7 @@
 import re
 
 
-def sanitize_values_in_list(list_of_keys: list):  # type: ignore
+def sanitize_values_in_list(list_of_keys: list):
     """
     Returns a dictionary mapping of the old keys in the list of `list_of_keys` to its new, clean name that is both
     safe and unique.
@@ -28,12 +28,12 @@ def sanitize_values_in_list(list_of_keys: list):  # type: ignore
     return dict(zip(list_of_keys, deduped_clean_keys_list))
 
 
-def sanitize_keys_in_dictionary(dict_to_sanitize: dict):  # type: ignore
+def sanitize_keys_in_dictionary(dict_to_sanitize: dict):
     """
     Clean and dedupe the keys in the given dictionary.
     """
 
-    clean_keys = sanitize_values_in_list(dict_to_sanitize.keys())  # type: ignore
+    clean_keys = sanitize_values_in_list(dict_to_sanitize.keys())
     for original_key, sanitized_key in clean_keys.items():
         if original_key != sanitized_key:
             dict_to_sanitize[sanitized_key] = dict_to_sanitize[original_key]

@@ -12,23 +12,23 @@ class JSONEncodedFBArray(object):
     __slots__ = ["_tab"]
 
     @classmethod
-    def GetRootAs(cls, buf, offset=0):  # type: ignore
+    def GetRootAs(cls, buf, offset=0):
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
         x = JSONEncodedFBArray()
-        x.Init(buf, n + offset)  # type: ignore
+        x.Init(buf, n + offset)
         return x
 
     @classmethod
-    def GetRootAsJSONEncodedFBArray(cls, buf, offset=0):  # type: ignore
+    def GetRootAsJSONEncodedFBArray(cls, buf, offset=0):
         """This method is deprecated. Please switch to GetRootAs."""
-        return cls.GetRootAs(buf, offset)  # type: ignore
+        return cls.GetRootAs(buf, offset)
 
     # JSONEncodedFBArray
-    def Init(self, buf, pos):  # type: ignore
+    def Init(self, buf, pos):
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # JSONEncodedFBArray
-    def Data(self, j):  # type: ignore
+    def Data(self, j):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
@@ -38,56 +38,56 @@ class JSONEncodedFBArray(object):
         return 0
 
     # JSONEncodedFBArray
-    def DataAsNumpy(self):  # type: ignore
+    def DataAsNumpy(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Uint8Flags, o)
         return 0
 
     # JSONEncodedFBArray
-    def DataLength(self):  # type: ignore
+    def DataLength(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # JSONEncodedFBArray
-    def DataIsNone(self):  # type: ignore
+    def DataIsNone(self):
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
 
-def Start(builder):  # type: ignore
+def Start(builder):
     builder.StartObject(1)
 
 
-def JSONEncodedFBArrayStart(builder):  # type: ignore
+def JSONEncodedFBArrayStart(builder):
     """This method is deprecated. Please switch to Start."""
-    return Start(builder)  # type: ignore
+    return Start(builder)
 
 
-def AddData(builder, data):  # type: ignore
+def AddData(builder, data):
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(data), 0)
 
 
-def JSONEncodedFBArrayAddData(builder, data):  # type: ignore
+def JSONEncodedFBArrayAddData(builder, data):
     """This method is deprecated. Please switch to AddData."""
-    return AddData(builder, data)  # type: ignore
+    return AddData(builder, data)
 
 
-def StartDataVector(builder, numElems):  # type: ignore
+def StartDataVector(builder, numElems):
     return builder.StartVector(1, numElems, 1)
 
 
-def JSONEncodedFBArrayStartDataVector(builder, numElems):  # type: ignore
+def JSONEncodedFBArrayStartDataVector(builder, numElems):
     """This method is deprecated. Please switch to Start."""
-    return StartDataVector(builder, numElems)  # type: ignore
+    return StartDataVector(builder, numElems)
 
 
-def End(builder):  # type: ignore
+def End(builder):
     return builder.EndObject()
 
 
-def JSONEncodedFBArrayEnd(builder):  # type: ignore
+def JSONEncodedFBArrayEnd(builder):
     """This method is deprecated. Please switch to End."""
-    return End(builder)  # type: ignore
+    return End(builder)

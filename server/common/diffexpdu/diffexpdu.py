@@ -55,20 +55,20 @@ class DiffExArguments:
         packed_size: ClassVar[int] = topNParamsPacker.size
 
         @classmethod
-        def unpack_from(cls: Type[T], buf: bytes, offset=0) -> T:  # type: ignore
+        def unpack_from(cls: Type[T], buf: bytes, offset=0) -> T:
             (N,) = topNParamsPacker.unpack_from(buf, offset)
-            return DiffExArguments.TopNParams(N=N)  # type: ignore
+            return DiffExArguments.TopNParams(N=N)
 
         def pack(self) -> bytes:
             return topNParamsPacker.pack(self.N)
 
     mode: DiffExMode
     params: TopNParams
-    set1: np.ndarray  # type: ignore
-    set2: np.ndarray  # type: ignore
+    set1: np.ndarray
+    set2: np.ndarray
 
     @classmethod
-    def unpack_from(cls: Type[T], buf: Union[bytes, bytearray, memoryview], offset=0) -> T:  # type: ignore
+    def unpack_from(cls: Type[T], buf: Union[bytes, bytearray, memoryview], offset=0) -> T:
         """
         Given a buffer containing encoded parameters, unpack and return an instance of DiffExArguments.
         """
@@ -81,18 +81,18 @@ class DiffExArguments:
         offset += DiffExArguments.TopNParams.packed_size
         set1, set2 = inflate_postings_lists(buf, offset=offset)
 
-        return DiffExArguments(mode=mode, params=params, set1=set1, set2=set2)  # type: ignore
+        return DiffExArguments(mode=mode, params=params, set1=set1, set2=set2)
 
-    def pack(self):  # type: ignore
+    def pack(self):
         """Pack the instance of DiffExArguments into a buffer."""
         assert self.mode == DiffExArguments.DiffExMode.TopN
         return (
             headerPacker.pack(MAGIC_NUMBER, self.mode)
             + self.params.pack()
-            + deflate_postings_lists((self.set1, self.set2))  # type: ignore
+            + deflate_postings_lists((self.set1, self.set2))
         )
 
-    def __eq__(self, other) -> bool:  # type: ignore
+    def __eq__(self, other) -> bool:
         return (
             self.mode == other.mode
             and self.params == other.params

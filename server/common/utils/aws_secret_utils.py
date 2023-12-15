@@ -3,10 +3,10 @@ import logging
 import boto3
 from flask import json
 
-from server.common.errors import SecretKeyRetrievalError  # type: ignore
+from server.common.errors import SecretKeyRetrievalError
 
 
-def get_secret_key(region_name, secret_name):  # type: ignore
+def get_secret_key(region_name, secret_name):
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
 

@@ -9,19 +9,19 @@ import numpy as np
 from flask import json
 
 
-def find_available_port(host, port=5005):  # type: ignore
+def find_available_port(host, port=5005):
     """
     Helper method to find open port on host. Tries 5000 ports incremented from the specified port
     """
     # Takes approx 2 seconds to do a scan of 5000 ports on my laptop
     num_ports_to_try = 5000
     for port_to_try in range(port, port + num_ports_to_try):
-        if is_port_available(host, port_to_try):  # type: ignore
+        if is_port_available(host, port_to_try):
             return port_to_try
     raise socket.error(errno.EADDRINUSE, f"No port in range {port} - {port + num_ports_to_try - 1} available.")
 
 
-def is_port_available(host, port):  # type: ignore
+def is_port_available(host, port):
     is_available = False
     with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
         try:
@@ -32,7 +32,7 @@ def is_port_available(host, port):  # type: ignore
     return is_available
 
 
-def sort_options(command):  # type: ignore
+def sort_options(command):
     """
     Helper for the click options - will sort options in a command, and can
     be used as a decorator.
@@ -41,7 +41,7 @@ def sort_options(command):  # type: ignore
     return command
 
 
-def path_join(base, *urls):  # type: ignore
+def path_join(base, *urls):
     """
     this is like urllib.parse.urljoin, except it works around the scheme-specific
     cleverness in the aforementioned code, ignores anything in the url except the path,
@@ -62,7 +62,7 @@ def path_join(base, *urls):  # type: ignore
 
 
 class Float32JSONEncoder(json.JSONEncoder):
-    def __init__(self, *args, **kwargs):  # type: ignore
+    def __init__(self, *args, **kwargs):
         """
         NaN/Infinities are illegal in standard JSON.  Python extends JSON with
         non-standard symbols that most JavaScript JSON parsers do not understand.
@@ -73,7 +73,7 @@ class Float32JSONEncoder(json.JSONEncoder):
         kwargs["allow_nan"] = False
         super().__init__(*args, **kwargs)
 
-    def default(self, obj):  # type: ignore
+    def default(self, obj):
         if isinstance(obj, np.float32):
             return float(obj)
         elif isinstance(obj, np.integer):
@@ -81,9 +81,9 @@ class Float32JSONEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def custom_format_warning(msg, *args, **kwargs):  # type: ignore
+def custom_format_warning(msg, *args, **kwargs):
     return f"[cellxgene] Warning: {msg} \n"
 
 
-def jsonify_numpy(data):  # type: ignore
+def jsonify_numpy(data):
     return json.dumps(data, cls=Float32JSONEncoder, allow_nan=False)
