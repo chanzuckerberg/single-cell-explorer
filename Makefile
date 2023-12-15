@@ -91,8 +91,8 @@ lint-server:
 lint-client:
 	cd client && $(MAKE) lint
 
-mypy:
-	mypy --config-file pyproject.toml
+check:
+	pre-commit run -a && mypy --config-file pyproject.toml
 
 # DEPENDENCY PACKAGE INSTALLATION COMMANDS
 
