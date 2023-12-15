@@ -33,7 +33,7 @@ target-version = "py38"
 # here is where we tell mypy to only check the scripts package. note that we're using
 # packages = ["scripts"] instead of modules = ["scripts"] because packages will recursive
 # check subdirectories, while modules does not.
-packages = ["server.web"]
+packages = ["server.common.utils"]
 strict = true
 show_error_codes = true
 ignore_missing_imports = true
