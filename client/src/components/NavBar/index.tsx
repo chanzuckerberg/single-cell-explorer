@@ -117,12 +117,12 @@ const Header = (props: HeaderProps) => {
                 </LinkWrapper>
                 <LinkWrapper>
                   <AnchorButton
-                    href={ROUTES.CENSUS_SPOTLIGHT}
+                    href={ROUTES.CENSUS_MODELS}
                     minimal
                     onClick={handleCensusSpotlightClick}
                     rel="noopener"
                     target="_self"
-                    text="Spotlight"
+                    text="Models"
                   />
                 </LinkWrapper>
               </NavItemContainer>
