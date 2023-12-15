@@ -61,6 +61,10 @@ function QuickGene() {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
+          const isFilteredCol = "feature_is_filtered";
+          const isFiltered =
+            annoMatrix.getMatrixColumns("var").includes(isFilteredCol) &&
+            (await annoMatrix.fetch("var", isFilteredCol));
 
           // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
@@ -69,7 +73,20 @@ function QuickGene() {
           }
 
           setStatus("success");
-          setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+
+          if (isFiltered) {
+            const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
+            setGeneNames(
+              df
+                .col(varIndex)
+                .asArray()
+                .filter(
+                  (_, index) => !isFilteredArray[index] && _
+                ) as DataframeValue[]
+            );
+          } else {
+            setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+          }
         } catch (error) {
           setStatus("error");
           throw error;
@@ -159,7 +176,6 @@ function QuickGene() {
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
-
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
       <H4
