@@ -2,16 +2,16 @@ from enum import Enum
 
 
 class AugmentedEnum(Enum):
-    def __hash__(self):
+    def __hash__(self):  # type: ignore
         return self.value.__hash__()
 
-    def __eq__(self, other):
+    def __eq__(self, other):  # type: ignore
         if isinstance(other, (type(self), str)):
             return self.value == other
         return False
 
     def __str__(self) -> str:
-        return self.value
+        return self.value  # type: ignore
 
 
 class Axis(AugmentedEnum):

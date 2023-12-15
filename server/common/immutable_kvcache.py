@@ -2,20 +2,20 @@ import threading
 from collections.abc import MutableMapping
 
 
-class ImmutableKVCache(MutableMapping):
+class ImmutableKVCache(MutableMapping):  # type: ignore
     """
     Guarantees that the factory will be called for each key once, and
     only once.
     """
 
-    def __init__(self, factory):
+    def __init__(self, factory):  # type: ignore
         self.factory = factory  # user-provided factory function
         self.lock = threading.Lock()  # guards factory_calls
         self.factory_calls = {}  # per-key factory condition variables
         self.cache = {}  # result cache, indexed by key
         super().__init__()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):  # type: ignore
         if key in self.cache:
             return self.cache[key]
 
@@ -52,20 +52,20 @@ class ImmutableKVCache(MutableMapping):
 
         return self.cache[key]
 
-    def __iter__(self):
+    def __iter__(self):  # type: ignore
         """weak iter, don't call factory"""
         return self.cache.__iter__()
 
-    def __len__(self):
+    def __len__(self):  # type: ignore
         return self.cache.__len__()
 
-    def __contains__(self, key):
+    def __contains__(self, key):  # type: ignore
         """weak contain - don't call factory"""
         return self.cache.__contains__(key)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key):  # type: ignore
         del self.cache[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value):  # type: ignore
         """unsupported"""
         raise NotImplementedError

@@ -12,23 +12,23 @@ class Int16EncodedXFBArray(object):
     __slots__ = ["_tab"]
 
     @classmethod
-    def GetRootAs(cls, buf, offset=0):
+    def GetRootAs(cls, buf, offset=0):  # type: ignore
         n = flatbuffers.encode.Get(flatbuffers.packer.uoffset, buf, offset)
         x = Int16EncodedXFBArray()
-        x.Init(buf, n + offset)
+        x.Init(buf, n + offset)  # type: ignore
         return x
 
     @classmethod
-    def GetRootAsInt16EncodedXFBArray(cls, buf, offset=0):
+    def GetRootAsInt16EncodedXFBArray(cls, buf, offset=0):  # type: ignore
         """This method is deprecated. Please switch to GetRootAs."""
-        return cls.GetRootAs(buf, offset)
+        return cls.GetRootAs(buf, offset)  # type: ignore
 
     # Int16EncodedXFBArray
-    def Init(self, buf, pos):
+    def Init(self, buf, pos):  # type: ignore
         self._tab = flatbuffers.table.Table(buf, pos)
 
     # Int16EncodedXFBArray
-    def Codes(self, j):
+    def Codes(self, j):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             a = self._tab.Vector(o)
@@ -38,104 +38,104 @@ class Int16EncodedXFBArray(object):
         return 0
 
     # Int16EncodedXFBArray
-    def CodesAsNumpy(self):
+    def CodesAsNumpy(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.GetVectorAsNumpy(flatbuffers.number_types.Int16Flags, o)
         return 0
 
     # Int16EncodedXFBArray
-    def CodesLength(self):
+    def CodesLength(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         if o != 0:
             return self._tab.VectorLen(o)
         return 0
 
     # Int16EncodedXFBArray
-    def CodesIsNone(self):
+    def CodesIsNone(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(4))
         return o == 0
 
     # Int16EncodedXFBArray
-    def Max(self):
+    def Max(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(6))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # Int16EncodedXFBArray
-    def Min(self):
+    def Min(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(8))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Float32Flags, o + self._tab.Pos)
         return 0.0
 
     # Int16EncodedXFBArray
-    def Nbins(self):
+    def Nbins(self):  # type: ignore
         o = flatbuffers.number_types.UOffsetTFlags.py_type(self._tab.Offset(10))
         if o != 0:
             return self._tab.Get(flatbuffers.number_types.Int32Flags, o + self._tab.Pos)
         return 0
 
 
-def Start(builder):
+def Start(builder):  # type: ignore
     builder.StartObject(4)
 
 
-def Int16EncodedXFBArrayStart(builder):
+def Int16EncodedXFBArrayStart(builder):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return Start(builder)
+    return Start(builder)  # type: ignore
 
 
-def AddCodes(builder, codes):
+def AddCodes(builder, codes):  # type: ignore
     builder.PrependUOffsetTRelativeSlot(0, flatbuffers.number_types.UOffsetTFlags.py_type(codes), 0)
 
 
-def Int16EncodedXFBArrayAddCodes(builder, codes):
+def Int16EncodedXFBArrayAddCodes(builder, codes):  # type: ignore
     """This method is deprecated. Please switch to AddCodes."""
-    return AddCodes(builder, codes)
+    return AddCodes(builder, codes)  # type: ignore
 
 
-def StartCodesVector(builder, numElems):
+def StartCodesVector(builder, numElems):  # type: ignore
     return builder.StartVector(2, numElems, 2)
 
 
-def Int16EncodedXFBArrayStartCodesVector(builder, numElems):
+def Int16EncodedXFBArrayStartCodesVector(builder, numElems):  # type: ignore
     """This method is deprecated. Please switch to Start."""
-    return StartCodesVector(builder, numElems)
+    return StartCodesVector(builder, numElems)  # type: ignore
 
 
-def AddMax(builder, max):
+def AddMax(builder, max):  # type: ignore
     builder.PrependFloat32Slot(1, max, 0.0)
 
 
-def Int16EncodedXFBArrayAddMax(builder, max):
+def Int16EncodedXFBArrayAddMax(builder, max):  # type: ignore
     """This method is deprecated. Please switch to AddMax."""
-    return AddMax(builder, max)
+    return AddMax(builder, max)  # type: ignore
 
 
-def AddMin(builder, min):
+def AddMin(builder, min):  # type: ignore
     builder.PrependFloat32Slot(2, min, 0.0)
 
 
-def Int16EncodedXFBArrayAddMin(builder, min):
+def Int16EncodedXFBArrayAddMin(builder, min):  # type: ignore
     """This method is deprecated. Please switch to AddMin."""
-    return AddMin(builder, min)
+    return AddMin(builder, min)  # type: ignore
 
 
-def AddNbins(builder, nbins):
+def AddNbins(builder, nbins):  # type: ignore
     builder.PrependInt32Slot(3, nbins, 0)
 
 
-def Int16EncodedXFBArrayAddNbins(builder, nbins):
+def Int16EncodedXFBArrayAddNbins(builder, nbins):  # type: ignore
     """This method is deprecated. Please switch to AddNbins."""
-    return AddNbins(builder, nbins)
+    return AddNbins(builder, nbins)  # type: ignore
 
 
-def End(builder):
+def End(builder):  # type: ignore
     return builder.EndObject()
 
 
-def Int16EncodedXFBArrayEnd(builder):
+def Int16EncodedXFBArrayEnd(builder):  # type: ignore
     """This method is deprecated. Please switch to End."""
-    return End(builder)
+    return End(builder)  # type: ignore
