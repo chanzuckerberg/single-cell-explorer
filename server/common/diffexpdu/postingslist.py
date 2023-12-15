@@ -16,7 +16,7 @@ The format is documented in `dev_docs/diffexpdu.md`. It is implemented in both P
 and Typescript.  Implementations must maintain compatibility.
 """
 
-PostingsList = Union[np.ndarray, List[int]]
+PostingsList = Union[np.ndarray, List[int]]  # type: ignore
 DisjointPostingsLists = Tuple[PostingsList]
 ListId = int
 
@@ -112,7 +112,7 @@ def deflate_postings_lists(disjoint_postings_lists: DisjointPostingsLists, sorte
         return pl
 
     disjoint_lists = tuple((normalize_plist(plist) for plist in disjoint_postings_lists))  # type: ignore
-    all_partitions = partition_lists(disjoint_lists)  # type: ignore
+    all_partitions = partition_lists(disjoint_lists)
     all_partitions.sort(key=lambda partition: partition.key)
 
     encoded_blocks = []  # type: ignore
