@@ -128,11 +128,12 @@ def get_dataset_and_collection_metadata(dataset_root: str, dataset_id: str, app_
         if not res.ok:
             log_error_response_from_data_portal(res)
         res_json = res.json()
+        canonical_collection_id = res_json["id"]
         web_base_url = app_config.server__app__web_base_url
         metadata = {
             "dataset_name": [dataset["name"] for dataset in res_json["datasets"] if dataset["id"] == dataset_id][0],
             "dataset_id": dataset_id,
-            "collection_url": f"{web_base_url}/collections/{collection_id}{suffix_for_url}",
+            "collection_url": f"{web_base_url}/collections/{canonical_collection_id}{suffix_for_url}",
             "collection_name": res_json["name"],
             "collection_description": res_json["description"],
             "collection_contact_email": res_json["contact_email"],
