@@ -1,9 +1,17 @@
-import { Classes, Colors } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import styled from "@emotion/styled";
 import { css } from "@emotion/react";
-import { GRAY, PT_TEXT_COLOR } from "./theme";
+import { Chip, CommonThemeProps, fontCapsXxxs } from "czifui";
+import { PT_TEXT_COLOR } from "./theme";
 import { HEADER_HEIGHT_PX } from "../../globals";
-import { Chip } from "czifui";
+import {
+  fontWeightBold,
+  fontWeightSemibold,
+  gray300,
+  gray500,
+  grayWhite,
+  spacesL,
+} from "../theme";
 
 export const Wrapper = styled.div`
   background-color: ${PT_TEXT_COLOR};
@@ -40,16 +48,16 @@ export const Right = styled.span`
 
 export const Nav = styled.span`
   display: flex;
-  gap: 16px;
+  gap: ${spacesL}px;
 `;
 
-const button = css`
+export const button = (props: CommonThemeProps) => css`
   display: inline-block; /* Wrapper to mimic line height of children. */
 
   .${Classes.BUTTON}.${Classes.MINIMAL} {
     background: none;
     border-radius: 0;
-    color: ${GRAY.D};
+    color: ${gray300(props)};
     height: 22px;
     letter-spacing: -0.1px;
     line-height: 18px;
@@ -58,11 +66,11 @@ const button = css`
 
     > span {
       font-size: 13px;
-      font-weight: 500;
+      font-weight: ${fontWeightSemibold(props)};
     }
 
     &.${Classes.ACTIVE}, &:hover {
-      color: ${Colors.WHITE};
+      color: ${grayWhite()};
     }
 
     &:focus {
@@ -73,13 +81,28 @@ const button = css`
 
 export const LinkWrapper = styled.span`
   ${button}
-
   .${Classes.BUTTON}.${Classes.MINIMAL}.${Classes.ACTIVE} {
-    box-shadow: inset 0 -2px 0 ${Colors.WHITE} !important; /* Overrides specificity of BP button active box shadow rule. */
+    box-shadow: inset 0 -2px 0 ${grayWhite} !important; /* Overrides specificity of BP button active box shadow rule. */
   }
-
-  display: flex;
   align-items: center;
+  display: flex;
+`;
+
+export const NavSection = styled.span`
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+`;
+
+export const NavSectionTitle = styled.span`
+  ${fontCapsXxxs}
+  color: ${gray500};
+  font-weight: ${fontWeightBold};
+`;
+
+export const NavItemContainer = styled.span`
+  display: flex;
+  gap: ${spacesL}px;
 `;
 
 export const BetaChip = styled(Chip)`
