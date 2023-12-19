@@ -847,7 +847,7 @@ class TestDatasetMetadata(BaseTest):
 
         self.assertEqual(response_obj["dataset_name"], "Test Dataset")
 
-        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}/private"
+        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}"
         self.assertEqual(response_obj["dataset_id"], response_body["datasets"][0]["id"])
         self.assertEqual(response_obj["collection_url"], expected_url)
         self.assertEqual(response_obj["collection_name"], response_body["name"])
