@@ -9,6 +9,10 @@ import "./index.css";
 import App from "./components/app";
 import store from "./reducers";
 
+/**
+ * These are imported for Webpack asset/resource module
+ * to bundle in order to be used in obsolete browser template
+ */
 import "./assets/img/safari.png";
 import "./assets/img/chrome.png";
 import "./assets/img/firefox.png";
