@@ -35,7 +35,7 @@ const prodConfig = {
   cache: false,
   output: {
     filename: "static/[name]-[contenthash].js",
-    assetModuleFilename: "images/[name][ext][query]",
+    assetModuleFilename: "static/images/[name][ext][query]",
   },
   optimization: {
     minimize: true,
