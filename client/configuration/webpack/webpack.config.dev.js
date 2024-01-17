@@ -31,7 +31,7 @@ const devConfig = {
     // so it ignores the base_url (/d, /e) and dataset in the url.
     // e.g., http://localhost:3000/static/assets/heatmap.svg
     publicPath: "/",
-    assetModuleFilename: "images/[name][ext][query]",
+    assetModuleFilename: "static/images/[name][ext][query]",
   },
   module: {
     rules: [
