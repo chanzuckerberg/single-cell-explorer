@@ -31,6 +31,7 @@ const devConfig = {
     // so it ignores the base_url (/d, /e) and dataset in the url.
     // e.g., http://localhost:3000/static/assets/heatmap.svg
     publicPath: "/",
+    assetModuleFilename: "images/[name][ext][query]",
   },
   module: {
     rules: [
@@ -41,12 +42,7 @@ const devConfig = {
       },
       {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
-        loader: "file-loader",
-        options: {
-          name: "static/assets/[name].[ext]",
-          // (thuang): This is needed to make sure @font url path is '/static/assets/'
-          publicPath: "/",
-        },
+        type: "asset/resource",
       },
     ],
   },
@@ -57,7 +53,7 @@ const devConfig = {
     }),
     new FaviconsWebpackPlugin({
       logo: "./favicon.png",
-      prefix: "static/img/",
+      prefix: "static/assets/",
       favicons: {
         icons: {
           android: false,
