@@ -9,6 +9,12 @@ import "./index.css";
 import App from "./components/app";
 import store from "./reducers";
 
+import "./assets/img/safari.png";
+import "./assets/img/chrome.png";
+import "./assets/img/firefox.png";
+import "./assets/img/edge.png";
+import "./assets/img/cellxgene.png";
+
 FocusStyleManager.onlyShowFocusOnTabs();
 
 ReactDOM.render(
