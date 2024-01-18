@@ -108,7 +108,8 @@ jobs:
       - name: Install dependencies
         run: |
           make dev-env-server build-for-server-dev
-          cd client && npx install playwright --with-deps
+          cd client
+          npx install playwright
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test
