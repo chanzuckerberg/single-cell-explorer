@@ -106,7 +106,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install dependencies
-        run: make dev-env-server build-for-server-dev
+        run: |
+          make dev-env-server build-for-server-dev
+          cd client && npx install playwright --with-deps
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test
