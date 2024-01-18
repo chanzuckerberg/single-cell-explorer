@@ -1,5 +1,7 @@
+import { expect, test } from "@playwright/test";
 import quantile from "../../src/util/quantile";
 
+const { describe } = test;
 describe("quantile", () => {
   test("single q", () => {
     const arr = new Float32Array([9, 3, 5, 6, 0]);
@@ -19,11 +21,7 @@ describe("quantile", () => {
   test("multi q", () => {
     const arr = new Float32Array([9, 3, 5, 6, 0]);
     expect(quantile([0, 0.25, 0.5, 0.75, 1.0], arr)).toMatchObject([
-      0,
-      3,
-      5,
-      6,
-      9,
+      0, 3, 5, 6, 9,
     ]);
   });
 });

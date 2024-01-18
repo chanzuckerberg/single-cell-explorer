@@ -934,7 +934,8 @@ class Graph extends React.Component<{}, GraphState> {
           top: 0,
           left: 0,
         }}
-        data-test-id={`graph-wrapper-distance=${camera?.distance()}`}
+        data-test-id="graph-wrapper"
+        data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
         <GraphOverlayLayer

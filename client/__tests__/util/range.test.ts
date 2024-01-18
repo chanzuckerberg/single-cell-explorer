@@ -1,4 +1,7 @@
+import { expect, test } from "@playwright/test";
 import { range, rangeFill, linspace } from "../../src/util/range";
+
+const { describe } = test;
 
 describe("range", () => {
   test("no defaults", () => {

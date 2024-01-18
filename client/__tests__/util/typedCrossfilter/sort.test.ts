@@ -1,8 +1,11 @@
+import { expect, test } from "@playwright/test";
 import {
   sortArray,
   sortIndex,
   lowerBound,
 } from "../../../src/util/typedCrossfilter/sort";
+
+const { describe } = test;
 
 /*
 Sort tests should keep in mind that there are separate code

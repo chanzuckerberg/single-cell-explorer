@@ -1,5 +1,8 @@
+import { expect, test } from "@playwright/test";
 import { makeSortIndex } from "../../../src/util/typedCrossfilter/util";
 import { rangeFill as fillRange } from "../../../src/util/range";
+
+const { describe } = test;
 
 describe("fillRange", () => {
   test("Array", () => {

@@ -1,6 +1,7 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
 import { shouldUseRdevToken } from "./__tests__/util/helpers";
 import { COMMON_PLAYWRIGHT_CONTEXT } from "./__tests__/common/playwrightContext";
+import { TEST_URL } from "./__tests__/common/constants";
 
 /**
  * (thuang): Add `czi-checker`, so Plausible will ignore it.
@@ -73,7 +74,7 @@ export default defineConfig({
   use: {
     ...COMMON_PLAYWRIGHT_CONTEXT,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: TEST_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -92,6 +93,7 @@ export default defineConfig({
     {
       name: "chromium",
       dependencies: ["setup"],
+      testMatch: "**/e2e.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,

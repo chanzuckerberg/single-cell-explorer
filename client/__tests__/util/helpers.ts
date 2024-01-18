@@ -27,14 +27,7 @@ export const isDevStagingRdev = TEST_ENVS_DEV_STAGING.includes(TEST_ENV);
 
 const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
 
-export async function goToPage(
-  url: string = TEST_URL,
-  page: Page
-): Promise<void> {
-  if (!url) {
-    throw Error("goToPage() requires TEST_URL");
-  }
-
+export async function goToPage(page: Page, url = ""): Promise<void> {
   await tryUntil(
     async () => {
       await Promise.all([

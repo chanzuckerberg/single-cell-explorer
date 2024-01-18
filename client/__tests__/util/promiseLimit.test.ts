@@ -1,5 +1,8 @@
+import { expect, test } from "@playwright/test";
 import PromiseLimit from "../../src/util/promiseLimit";
 import { range } from "../../src/util/range";
+
+const { describe } = test;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const delay = (t: any) => new Promise((resolve) => setTimeout(resolve, t));

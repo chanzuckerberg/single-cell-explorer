@@ -1,11 +1,14 @@
 /*
 test FBS encode/decode API
 */
+import { expect, test } from "@playwright/test";
 import { Dataframe, KeyIndex } from "../../../src/util/dataframe";
 import {
   decodeMatrixFBS,
   encodeMatrixFBS,
 } from "../../../src/util/stateManager/matrix";
+
+const { describe } = test;
 
 describe("encode/decode", () => {
   test("round trip", () => {
