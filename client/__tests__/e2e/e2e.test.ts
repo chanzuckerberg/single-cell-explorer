@@ -8,6 +8,7 @@ import { test, expect, Page } from "@playwright/test";
 import { Classes } from "@blueprintjs/core";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
+import mockSetup from "./playwright.global.setup";
 
 import {
   calcDragCoordinates,
@@ -92,6 +93,8 @@ const genesetToCheckForDescription = "fourth_gene_set";
 
 const data = datasets[DATASET];
 const dataTruncate = datasets[DATASET_TRUNCATE];
+
+test.beforeEach(mockSetup);
 
 describe("did launch", () => {
   test("page launched", async ({ page }) => {
