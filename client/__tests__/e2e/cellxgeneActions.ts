@@ -15,7 +15,9 @@ export async function drag(
   lasso = false
 ): Promise<void> {
   const layout = await page.getByTestId(testId);
-  const box = (await layout.boundingBox()) ?? { x: 0, y: 0 };
+  const box = await layout.boundingBox();
+  if (!box) throw new Error("bounding box not found");
+
   const x1 = box.x + start.x;
   const x2 = box.x + end.x;
   const y1 = box.y + start.y;
@@ -179,9 +181,10 @@ export async function calcCoordinate(
 ): Promise<Coordinate> {
   const el = await page.getByTestId(testId);
   const size = await el.boundingBox();
+  if (!size) throw new Error("bounding box not found");
   return {
-    x: Math.floor(size?.width ?? 0 * xAsPercent),
-    y: Math.floor(size?.height ?? 0 * yAsPercent),
+    x: Math.floor(size.width * xAsPercent),
+    y: Math.floor(size.height * yAsPercent),
   };
 }
 
