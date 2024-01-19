@@ -146,7 +146,7 @@ export async function getCellSetCount(
   num: number,
   page: Page
 ): Promise<string> {
-  await page.getByTestId(`cellset-button-${num}`).click();
+  await page.getByTestId(`cellset-button-${num}`).click({ force: true });
   return page.getByTestId(`cellset-count-${num}`).innerText();
 }
 

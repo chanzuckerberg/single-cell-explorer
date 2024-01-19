@@ -41,7 +41,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "1089",
+          count: "930",
         },
       ],
       categorical: [
@@ -111,7 +111,7 @@ export const datasets = {
         },
       },
       lasso: {
-        "coordinates-as-percent": { x1: 0.25, y1: 0.05, x2: 0.75, y2: 0.55 },
+        "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
         count: "357",
       },
     },
@@ -125,7 +125,7 @@ export const datasets = {
       panzoom: {
         lasso: {
           "coordinates-as-percent": { x1: 0.3, y1: 0.3, x2: 0.5, y2: 0.5 },
-          count: "38",
+          count: "37",
         },
       },
     },

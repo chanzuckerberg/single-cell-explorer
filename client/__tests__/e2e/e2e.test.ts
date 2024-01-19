@@ -414,7 +414,7 @@ describe("graph overlay", () => {
     await page.getByTestId("centroid-label-toggle").click();
     await page.getByTestId("mode-pan-zoom").click();
 
-    const panCoords = await calcTransformDragCoordinates(
+    const panCoords = await calcDragCoordinates(
       "layout-graph",
       data.pan["coordinates-as-percent"],
       page

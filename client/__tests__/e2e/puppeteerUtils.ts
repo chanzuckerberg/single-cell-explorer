@@ -41,7 +41,10 @@ export async function getElementCoordinates(
   page: Page
 ): Promise<[number, number]> {
   const box = await page.getByTestId(testId).getByText(label).boundingBox();
-  return [box?.x ?? -1, box?.y ?? -1];
+  if (!box) {
+    throw new Error(`Could not find element with text "${label}"`);
+  }
+  return [box.x, box.y];
 }
 
 interface TryUntilConfigs {
