@@ -90,30 +90,6 @@ export async function clickOnCoordinate(
   await page.mouse.click(x, y);
 }
 
-// export async function getAllHistograms(
-//   testClass: string,
-//   testIds: string[],
-//   page: Page
-// ): Promise<string[]> {
-//   const histTestIds = testIds.map((tid: string) => `histogram-${tid}`);
-
-//   // these load asynchronously, so we need to wait for each histogram individually,
-//   // and they may be quite slow in some cases.
-//   for (const id of histTestIds) {
-//     expect(page.getByTestId(id)).toBeVisible();
-//   }
-
-//   const allHistograms = await page.getByTestId(testClass);
-
-//   const testIDs = await Promise.all(
-//     allHistograms.map((hist) =>
-//       page.evaluate((elem) => elem.dataset.testid, hist)
-//     )
-//   );
-
-//   return testIDs.map((id) => id.replace(/^histogram-/, ""));
-// }
-
 export async function getAllCategoriesAndCounts(
   category: string,
   page: Page
