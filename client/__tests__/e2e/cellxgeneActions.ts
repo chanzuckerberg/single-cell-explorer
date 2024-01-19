@@ -559,83 +559,6 @@ export async function duplicateCategory(
   );
 }
 
-// export async function renameCategory(
-//   oldCategoryName: any,
-
-//   newCategoryName: any
-// ) {
-//   await page.getByTestId(`${oldCategoryName}:see-actions`).click();
-//   await page.getByTestId(`${oldCategoryName}:edit-category-mode`).click();
-//   await clearInputAndTypeInto(
-//     `${oldCategoryName}:edit-category-name-text`,
-//     newCategoryName
-//   );
-//   await page.getByTestId(`${oldCategoryName}:submit-category-edit`).click();
-// }
-
-// export async function deleteCategory(categoryName: any) {
-//   const targetId = `${categoryName}:delete-category`;
-
-//   await clickOnUntil(`${categoryName}:see-actions`, async () => {
-//     await expect(page).toMatchElement(getTestId(targetId));
-//   });
-
-//   await page.getByTestId(targetId).click();
-
-//   // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-//   await assertCategoryDoesNotExist();
-// }
-
-// export async function createLabel(categoryName: any, labelName: any) {
-//   /**
-//    * (thuang): This explicit wait is needed, since currently showing
-//    * the modal again quickly after the previous action dismissing the
-//    * modal will persist the input value from the previous action.
-//    *
-//    * To reproduce:
-//    * 1. Click on the plus sign to show the modal to add a new label to the category
-//    * 2. Type `123` in the input box
-//    * 3. Hover over your mouse over the plus sign and double click to quickly dismiss and
-//    * invoke the modal again
-//    * 4. You will see `123` is persisted in the input box
-//    * 5. Expected behavior is to get an empty input box
-//    */
-//   await page.waitForTimeout(500);
-
-//   await page.getByTestId(`${categoryName}:see-actions`).click();
-
-//   await page.getByTestId(`${categoryName}:add-new-label-to-category`).click();
-
-//   await typeInto(`${categoryName}:new-label-name`, labelName, page);
-
-//   await page.getByTestId(`${categoryName}:submit-label`).click();
-// }
-
-// export async function deleteLabel(categoryName: any, labelName: any) {
-//   await expandCategory(categoryName);
-//   await page.getByTestId(`${categoryName}:${labelName}:see-actions`).click();
-//   await page.getByTestId(`${categoryName}:${labelName}:delete-label`).click();
-// }
-
-// export async function renameLabel(
-//   categoryName: any,
-
-//   oldLabelName: any,
-
-//   newLabelName: any
-// ) {
-//   await expandCategory(categoryName);
-//   await page.getByTestId(`${categoryName}:${oldLabelName}:see-actions`).click();
-//   await page.getByTestId(`${categoryName}:${oldLabelName}:edit-label`).click();
-//   await clearInputAndTypeInto(
-//     `${categoryName}:${oldLabelName}:edit-label-name`,
-//     newLabelName
-//   );
-//   await page
-//     .getByTestId(`${categoryName}:${oldLabelName}:submit-label-edit`)
-//     .click();
-// }
-
 export async function addGeneToSearch(
   geneName: string,
   page: Page
@@ -671,26 +594,6 @@ export async function subset(
   await clickOnCoordinate("layout-graph", clearCoordinate, page);
 }
 
-// export async function setSellSet(
-//   cellSet: {}[],
-//   cellSetNum: string,
-//   page: Page
-// ): Promise<void> {
-//   const selections = cellSet.filter((sel: any) => sel.kind === "categorical");
-
-//   for (const selection of selections) {
-//     await selectCategory(selection.metadata, selection.values, true);
-//   }
-
-//   await getCellSetCount(cellSetNum, page);
-// }
-
-// export async function runDiffExp(cellSet1: any, cellSet2: any) {
-//   await setSellSet(cellSet1, 1);
-//   await setSellSet(cellSet2, 2);
-//   await page.getByTestId("diffexp-button").click();
-// }
-
 export async function bulkAddGenes(
   geneNames: string[],
   page: Page
@@ -699,15 +602,5 @@ export async function bulkAddGenes(
   await page.getByTestId("input-bulk-add").fill(geneNames.join(","));
   await page.keyboard.press("Enter");
 }
-
-// export async function assertCategoryDoesNotExist(
-//   categoryName: string
-// ): Promise<void> {
-//   const result = await isElementPresent(
-//     getTestId(`${categoryName}:category-label`)
-//   );
-
-//   await expect(result).toBe(false);
-// }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
