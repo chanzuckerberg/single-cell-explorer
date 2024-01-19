@@ -726,7 +726,7 @@ for (const option of options) {
     });
   });
 
-  describe(`GENE crud operations and interactions${option.tag}`, () => {
+  describe(`GENE crud operations and interactions ${option.tag}`, () => {
     test("add a gene to geneset and undo/redo", async ({ page }) => {
       await setup(option, page);
       await createGeneset(setToAddGeneTo, page);

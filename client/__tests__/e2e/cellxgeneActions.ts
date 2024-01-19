@@ -326,21 +326,18 @@ export async function addGeneToSetAndExpand(
   //  * this is an awful hack but for some reason, the add gene to set
   //  * doesn't work each time. must repeat to get it to trigger.
   //  * */
-  // let z = 0;
-  // while (z < 10) {
-  //   await addGeneToSet(genesetName, geneSymbol, page);
-  //   await expandGeneset(genesetName);
-  //   try {
-  //     await waitByClass("geneset-expand-is-expanded");
-  //     break;
-  //   } catch (TimeoutError) {
-  //     z += 1;
-  //     console.log(`trying again - ${z}`);
-  //   }
-  // }
-  await addGeneToSet(genesetName, geneSymbol, page);
-  await expandGeneset(genesetName, page);
-  expect(page.getByTestId("geneset-expand-is-expanded")).toBeVisible();
+  let z = 0;
+  while (z < 10) {
+    await addGeneToSet(genesetName, geneSymbol, page);
+    await expandGeneset(genesetName, page);
+    try {
+      await page.getByTestId("geneset-expand-is-expanded").waitFor();
+      break;
+    } catch (TimeoutError) {
+      z += 1;
+      console.log(`trying again - ${z}`);
+    }
+  }
 }
 
 export async function expandGeneset(
@@ -420,15 +417,10 @@ export async function addGeneToSet(
   page: Page
 ): Promise<void> {
   const submitButton = `${genesetName}:submit-gene`;
-  tryUntil(
-    async () => {
-      page.getByTestId(`${genesetName}:add-new-gene-to-geneset`).click();
-      await page.getByTestId("add-genes").fill(geneToAddToSet);
-      await expect(page.getByTestId(submitButton)).toBeEnabled();
-      await page.getByTestId(submitButton).click();
-    },
-    { page }
-  );
+  await page.getByTestId(`${genesetName}:add-new-gene-to-geneset`).click();
+  await page.getByTestId("add-genes-to-geneset-dialog").click();
+  await page.getByTestId("add-genes-to-geneset-dialog").fill(geneToAddToSet);
+  await page.getByTestId(submitButton).click();
 }
 
 export async function removeGene(
