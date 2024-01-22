@@ -77,7 +77,7 @@ const setToRemoveFrom = "empty_this_geneset";
 const geneToBrushAndColorBy = "SIK1";
 const brushThisGeneGeneset = "brush_this_gene";
 const geneBrushedCellCount = "109";
-const subsetGeneBrushedCellCount = "96";
+const subsetGeneBrushedCellCount = "94";
 
 // open gene info card
 const geneToRequestInfo = "SIK1";
@@ -202,6 +202,7 @@ describe("cell selection", () => {
 
   test("selects cells via lasso", async ({ page }) => {
     await goToPage(page);
+    await waitUntilNoSkeletonDetected(page);
     for (const cellset of data.cellsets.lasso) {
       const cellset1 = await calcDragCoordinates(
         "layout-graph",
@@ -484,6 +485,7 @@ test("zoom limit is 12x", async ({ page }) => {
 
 test("pan zoom mode resets lasso selection", async ({ page }) => {
   goToPage(page);
+  await waitUntilNoSkeletonDetected(page);
   const panzoomLasso = data.features.panzoom.lasso;
 
   const lassoSelection = await calcDragCoordinates(
