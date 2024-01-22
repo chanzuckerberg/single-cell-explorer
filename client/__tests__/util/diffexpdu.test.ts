@@ -20,7 +20,7 @@ describe("diffexpdu", () => {
     };
     const buf = packDiffExPdu(deArgs);
     const decoded = unpackDiffExPdu(buf);
-    expect(decoded).toMatchObject(deArgs);
+    expect(decoded).toEqual(deArgs);
   });
 
   test("vary density", () => {
@@ -50,7 +50,7 @@ describe("diffexpdu", () => {
 
         const buf = packDiffExPdu(deArgs);
         const decoded = unpackDiffExPdu(buf);
-        expect(decoded).toMatchObject(deArgs);
+        expect(decoded).toEqual(deArgs);
       }
     }
   });

@@ -2,8 +2,6 @@
 
 import { Page } from "@playwright/test";
 
-const TEST_TIMEOUT = 5000;
-
 export async function typeInto(
   testId: string,
   text: string,

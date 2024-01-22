@@ -1,5 +1,4 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
-import { shouldUseRdevToken } from "./__tests__/util/helpers";
 import { COMMON_PLAYWRIGHT_CONTEXT } from "./__tests__/common/playwrightContext";
 import { testURL } from "./__tests__/common/constants";
 
@@ -40,8 +39,6 @@ const PLAYWRIGHT_REPORTER = process.env.CI
         },
       ],
     ] as ReporterDescription[]);
-
-const extraHTTPHeaders = getExtraHTTPHeaders();
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -84,16 +81,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,
-        extraHTTPHeaders,
       },
     },
   ],
 });
-
-function getExtraHTTPHeaders(): { [key: string]: string } {
-  if (!shouldUseRdevToken) return {};
-
-  return {
-    Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-  };
-}

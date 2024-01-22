@@ -5,14 +5,12 @@
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { test, expect, Page } from "@playwright/test";
-import { Classes } from "@blueprintjs/core";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
 
 import {
   calcDragCoordinates,
-  calcTransformDragCoordinates,
   drag,
   scroll,
   expandCategory,

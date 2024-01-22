@@ -214,7 +214,6 @@ const Label = ({
   opacity,
   colorAccessor,
   displayLabel,
-  fullDisplayLabel,
   onMouseEnter,
   onMouseOut, // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 }: any) => {
