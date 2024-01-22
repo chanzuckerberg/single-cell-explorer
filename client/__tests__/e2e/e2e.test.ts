@@ -6,6 +6,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { test, expect, Page } from "@playwright/test";
 
+import { time } from "console";
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
 
@@ -42,6 +43,7 @@ import {
   keyboardUndo,
   keyboardRedo,
   waitUntilNoSkeletonDetected,
+  checkGenesetDescription,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -618,6 +620,7 @@ for (const option of options) {
       if (option.withSubset) return;
 
       await setup(option, page);
+      await waitUntilNoSkeletonDetected(page);
 
       // set the two cell sets to b cells vs nk cells
       await expandCategory(`louvain`, page);
@@ -655,7 +658,6 @@ for (const option of options) {
 
           expect(page.getByTestId("geneset")).toBeTruthy();
 
-          expect(page.getByTestId("geneset")).toBeVisible();
           // (thuang): Assumes Pop2 geneset has NKG7 gene
           expect(page.getByTestId("NKG7:gene-label")).toBeVisible();
         },
@@ -672,10 +674,11 @@ for (const option of options) {
 
       await setup(option, page);
 
+      waitUntilNoSkeletonDetected(page);
+
       const genesetName = `test-geneset-foo-123`;
       await assertGenesetDoesNotExist(genesetName, page);
       await createGeneset(genesetName, page);
-      /* note: as of June 2021, the aria label is in the truncate component which clones the element */
       await assertGenesetExists(genesetName, page);
       await keyboardUndo(page);
       await assertGenesetDoesNotExist(genesetName, page);
@@ -707,15 +710,16 @@ for (const option of options) {
       if (option.withSubset) return;
 
       await setup(option, page);
-      await createGeneset(genesetToCheckForDescription, page);
-      await page
-        .getByTestId(`${genesetToCheckForDescription}:geneset-expand`)
-        .click();
-      expect(
+      await createGeneset(
+        genesetToCheckForDescription,
+        page,
+        genesetDescriptionString
+      );
+      await checkGenesetDescription(
+        genesetToCheckForDescription,
+        genesetDescriptionString,
         page
-          .getByTestId(genesetDescriptionID)
-          .getByText(genesetDescriptionString)
-      ).not.toBeEmpty();
+      );
     });
   });
 

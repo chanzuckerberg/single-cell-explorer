@@ -323,12 +323,18 @@ export async function expandGeneset(
 
 export async function createGeneset(
   genesetName: string,
-  page: Page
+  page: Page,
+  genesetDescription?: string
 ): Promise<void> {
   await page.getByTestId("open-create-geneset-dialog").click();
   await tryUntil(
     async () => {
       await page.getByTestId("create-geneset-input").fill(genesetName);
+      if (genesetDescription) {
+        await page
+          .getByTestId("add-geneset-description")
+          .fill(genesetDescription);
+      }
       expect(page.getByTestId("submit-geneset")).toBeEnabled();
     },
     { page }
@@ -353,6 +359,18 @@ export async function editGenesetName(
     { page }
   );
   await page.getByTestId(submitButton).click();
+}
+
+export async function checkGenesetDescription(
+  genesetName: string,
+  descriptionText: string,
+  page: Page
+): Promise<void> {
+  const editButton = `${genesetName}:edit-genesetName-mode`;
+  await page.getByTestId(`${genesetName}:see-actions`).click();
+  await page.getByTestId(editButton).click();
+  const description = page.getByTestId("change-geneset-description");
+  await expect(description).toHaveValue(descriptionText);
 }
 
 export async function deleteGeneset(
