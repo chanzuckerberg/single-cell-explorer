@@ -178,6 +178,7 @@ describe("metadata loads", () => {
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
+    await waitUntilNoSkeletonDetected(page);
     for (const label of Object.keys(data.continuous)) {
       expect(await page.getByTestId(`histogram-${label}-plot`)).not.toHaveCount(
         0
@@ -514,6 +515,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
 
 test("lasso moves after pan", async ({ page }) => {
   goToPage(page);
+  await waitUntilNoSkeletonDetected(page);
   const panzoomLasso = data.features.panzoom.lasso;
   const coordinatesAsPercent = panzoomLasso["coordinates-as-percent"];
 
