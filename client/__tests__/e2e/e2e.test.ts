@@ -6,7 +6,6 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { test, expect, Page } from "@playwright/test";
 
-import { time } from "console";
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
 
@@ -84,8 +83,6 @@ const subsetGeneBrushedCellCount = "94";
 // open gene info card
 const geneToRequestInfo = "SIK1";
 
-const genesetDescriptionID =
-  "geneset-description-tooltip-fourth_gene_set: fourth description";
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
