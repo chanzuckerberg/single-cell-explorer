@@ -564,7 +564,8 @@ Tests included below are specific to annotation features
 async function setup(config: { withSubset: boolean; tag: string }, page: Page) {
   await goToPage(page);
   if (config.withSubset) {
-    await subset({ x1: 0.1, y1: 0.1, x2: 0.8, y2: 0.8 }, page);
+    await waitUntilNoSkeletonDetected(page);
+    await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page);
   }
 }
 
@@ -598,7 +599,7 @@ for (const option of options) {
 
       // (seve): the withSubset version of this test is resulting in the unsubsetted value
       if (option.withSubset) {
-        expect(cellCount).toBe("113");
+        expect(cellCount).toBe("111");
       } else {
         expect(cellCount).toBe("131");
       }
