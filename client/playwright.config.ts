@@ -1,7 +1,7 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
 import { shouldUseRdevToken } from "./__tests__/util/helpers";
 import { COMMON_PLAYWRIGHT_CONTEXT } from "./__tests__/common/playwrightContext";
-import { TEST_URL } from "./__tests__/common/constants";
+import { testURL } from "./__tests__/common/constants";
 
 /**
  * (thuang): Add `czi-checker`, so Plausible will ignore it.
@@ -69,7 +69,7 @@ export default defineConfig({
   use: {
     ...COMMON_PLAYWRIGHT_CONTEXT,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: TEST_URL,
+    baseURL: testURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",

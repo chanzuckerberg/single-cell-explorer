@@ -3,7 +3,7 @@ import { ElementHandle, expect, Locator, Page } from "@playwright/test";
 import {
   ERROR_NO_TEST_ID_OR_LOCATOR,
   TEST_ENV,
-  TEST_URL,
+  testURL,
 } from "../common/constants";
 
 export const shouldUseRdevToken =

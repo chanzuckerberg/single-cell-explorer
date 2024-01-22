@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Page, expect } from "@playwright/test";
+import { Classes } from "@blueprintjs/core";
 import { clearInputAndTypeInto, tryUntil, typeInto } from "./puppeteerUtils";
 
 interface Coordinate {
@@ -48,29 +49,35 @@ export async function scroll({
   coords: number[];
   page: Page;
 }): Promise<void> {
-  const layout = await page.getByTestId(testId);
-  if (layout) {
-    const x = coords[0];
-    const y = coords[1];
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    await page.mouse.up();
-    await page.mouse.wheel(0, deltaY);
-  }
+  await page.getByTestId(testId).waitFor();
+  const x = coords[0];
+  const y = coords[1];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.up();
+  await page.mouse.wheel(0, deltaY);
 }
 
 export async function keyboardUndo(page: Page): Promise<void> {
-  await page.keyboard.down("MetaLeft");
-  await page.keyboard.press("KeyZ");
-  await page.keyboard.up("MetaLeft");
+  await page.getByTestId("layout-graph").press("Meta+Z");
 }
 
 export async function keyboardRedo(page: Page): Promise<void> {
-  await page.keyboard.down("MetaLeft");
-  await page.keyboard.down("ShiftLeft");
-  await page.keyboard.press("KeyZ");
-  await page.keyboard.up("ShiftLeft");
-  await page.keyboard.up("MetaLeft");
+  await page.getByTestId("layout-graph").press("Meta+Shift+Z");
+}
+
+const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
+
+export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
+  await tryUntil(
+    async () => {
+      const skeleton = await page
+        .locator(`.${BLUEPRINT_SKELETON_CLASS_NAME}`)
+        .all();
+      expect(skeleton).toHaveLength(0);
+    },
+    { page, timeoutMs: 10000 }
+  );
 }
 
 export async function clickOnCoordinate(
@@ -78,8 +85,7 @@ export async function clickOnCoordinate(
   coord: Coordinate,
   page: Page
 ): Promise<void> {
-  const layout = await page.getByTestId(testId);
-  const elBox = await layout.boundingBox();
+  const elBox = await page.getByTestId(testId).boundingBox();
 
   if (!elBox) {
     throw Error("Layout's boxModel is not available!");
@@ -93,7 +99,7 @@ export async function clickOnCoordinate(
 export async function getAllCategoriesAndCounts(
   category: string,
   page: Page
-): Promise<[string, string][]> {
+): Promise<{ [cat: string]: string }[]> {
   // these load asynchronously, so we have to wait for the specific category.
   const categoryRows = await page
     .getByTestId(`category-${category}`)
@@ -103,10 +109,9 @@ export async function getAllCategoriesAndCounts(
   return Object.fromEntries(
     await Promise.all(
       categoryRows.map(async (row) => {
-        const cat =
-          (await row
-            .getByTestId("categorical-value")
-            .getAttribute("aria-label")) ?? "";
+        const cat = await row
+          .getByTestId("categorical-value")
+          .getAttribute("aria-label");
 
         const count = await row
           .getByTestId("categorical-value-count")
@@ -130,20 +135,13 @@ export async function resetCategory(
   category: string,
   page: Page
 ): Promise<void> {
-  const checkboxId = `${category}:category-select`;
-  await page.getByTestId(checkboxId);
-  const checkedPseudoClass = await page.$eval(
-    `[data-testid='${checkboxId}']`,
-    (el) => el.matches(":checked")
-  );
-  if (!checkedPseudoClass)
-    await page.getByTestId(checkboxId).click({ force: true });
+  const checkbox = await page.getByTestId(`${category}:category-select`);
+  const checkedPseudoClass = checkbox.isChecked();
+  if (!checkedPseudoClass) await checkbox.click({ force: true });
 
-  const categoryRow = await page.getByTestId(`${category}:category-expand`);
+  const categoryRow = page.getByTestId(`${category}:category-expand`);
 
-  const isExpanded = await categoryRow.getByTestId(
-    "category-expand-is-expanded"
-  );
+  const isExpanded = categoryRow.getByTestId("category-expand-is-expanded");
 
   if (await isExpanded.isVisible())
     await page.getByTestId(`${category}:category-expand`).click();
@@ -155,8 +153,7 @@ export async function calcCoordinate(
   yAsPercent: number,
   page: Page
 ): Promise<Coordinate> {
-  const el = await page.getByTestId(testId);
-  const size = await el.boundingBox();
+  const size = await page.getByTestId(testId).boundingBox();
   if (!size) throw new Error("bounding box not found");
   return {
     x: Math.floor(size.width * xAsPercent),
@@ -170,8 +167,7 @@ export async function calcTransformCoordinate(
   yAsPercent: number,
   page: Page
 ): Promise<Coordinate> {
-  const el = await page.getByTestId(testId);
-  const size = await el.boundingBox();
+  const size = await page.getByTestId(testId).boundingBox();
   if (!size) throw new Error("bounding box not found");
   const height = size.height - size.y;
   return {
@@ -251,12 +247,11 @@ export async function expandCategory(
   category: string,
   page: Page
 ): Promise<void> {
-  const expand = await page.getByTestId(`${category}:category-expand`);
-  const notExpanded = await expand.getByTestId(
-    "category-expand-is-not-expanded"
-  );
-  if (await notExpanded.isVisible())
-    await page.getByTestId(`${category}:category-expand`).click();
+  const expand = page.getByTestId(`${category}:category-expand`);
+  const notExpanded = expand.getByTestId("category-expand-is-not-expanded");
+  if (await notExpanded.isVisible()) {
+    await expand.click();
+  }
 }
 
 export async function clip(min = "0", max = "100", page: Page): Promise<void> {
@@ -285,11 +280,9 @@ export async function assertColorLegendLabel(
   label: string,
   page: Page
 ): Promise<void> {
-  const handle = await page.getByTestId("continuous_legend_color_by_label");
-
-  const result = await handle.evaluate((node) =>
-    node.getAttribute("aria-label")
-  );
+  const result = await page
+    .getByTestId("continuous_legend_color_by_label")
+    .getAttribute("aria-label");
 
   return expect(result).toBe(label);
 }
@@ -320,10 +313,8 @@ export async function expandGeneset(
   genesetName: string,
   page: Page
 ): Promise<void> {
-  const expand = await page.getByTestId(`${genesetName}:geneset-expand`);
-  const notExpanded = await expand?.getByTestId(
-    "geneset-expand-is-not-expanded"
-  );
+  const expand = page.getByTestId(`${genesetName}:geneset-expand`);
+  const notExpanded = expand.getByTestId("geneset-expand-is-not-expanded");
   if (await notExpanded.isVisible())
     await page
       .getByTestId(`${genesetName}:geneset-expand`)
@@ -335,7 +326,13 @@ export async function createGeneset(
   page: Page
 ): Promise<void> {
   await page.getByTestId("open-create-geneset-dialog").click();
-  await page.getByTestId("create-geneset-input").fill(genesetName);
+  await tryUntil(
+    async () => {
+      await page.getByTestId("create-geneset-input").fill(genesetName);
+      expect(page.getByTestId("submit-geneset")).toBeEnabled();
+    },
+    { page }
+  );
   await page.getByTestId("submit-geneset").click();
 }
 
@@ -348,7 +345,13 @@ export async function editGenesetName(
   const submitButton = `${genesetName}:submit-geneset`;
   await page.getByTestId(`${genesetName}:see-actions`).click();
   await page.getByTestId(editButton).click();
-  await page.getByTestId("rename-geneset-modal").fill(editText);
+  await tryUntil(
+    async () => {
+      await page.getByTestId("rename-geneset-modal").fill(editText);
+      expect(page.getByTestId(submitButton)).toBeEnabled();
+    },
+    { page }
+  );
   await page.getByTestId(submitButton).click();
 }
 
@@ -367,18 +370,21 @@ export async function assertGenesetDoesNotExist(
   genesetName: string,
   page: Page
 ): Promise<void> {
-  await expect(page.getByTestId(`${genesetName}:geneset-name`)).toBeFalsy();
+  await tryUntil(
+    () => {
+      expect(page.getByTestId(`${genesetName}:geneset-name`)).toBeHidden();
+    },
+    { page }
+  );
 }
 
 export async function assertGenesetExists(
   genesetName: string,
   page: Page
 ): Promise<void> {
-  const handle = await page.getByTestId(`${genesetName}:geneset-name`);
-
-  const result = await handle.evaluate((node) =>
-    node.getAttribute("aria-label")
-  );
+  const result = await page
+    .getByTestId(`${genesetName}:geneset-name`)
+    .getAttribute("aria-label");
 
   expect(result).toBe(genesetName);
 }
@@ -394,8 +400,15 @@ export async function addGeneToSet(
 ): Promise<void> {
   const submitButton = `${genesetName}:submit-gene`;
   await page.getByTestId(`${genesetName}:add-new-gene-to-geneset`).click();
-  await page.getByTestId("add-genes-to-geneset-dialog").click();
-  await page.getByTestId("add-genes-to-geneset-dialog").fill(geneToAddToSet);
+  await tryUntil(
+    async () => {
+      await page
+        .getByTestId("add-genes-to-geneset-dialog")
+        .fill(geneToAddToSet);
+      expect(page.getByTestId(submitButton)).toBeEnabled();
+    },
+    { page }
+  );
   await page.getByTestId(submitButton).click();
 }
 
@@ -412,8 +425,9 @@ export async function assertGeneExistsInGeneset(
   geneSymbol: string,
   page: Page
 ): Promise<void> {
-  const handle = await page.getByTestId(`${geneSymbol}:gene-label`);
-  const result = handle.getAttribute("aria-label");
+  const result = await page
+    .getByTestId(`${geneSymbol}:gene-label`)
+    .getAttribute("aria-label");
 
   return expect(result).toBe(geneSymbol);
 }
@@ -422,7 +436,14 @@ export async function assertGeneDoesNotExist(
   geneSymbol: string,
   page: Page
 ): Promise<void> {
-  await expect(page.getByTestId(`${geneSymbol}:gene-label`)).toBeFalsy();
+  await tryUntil(
+    async () => {
+      const geneLabel = await page.getByTestId(`${geneSymbol}:gene-label`);
+      await geneLabel.waitFor({ state: "hidden" });
+      await expect(geneLabel).toBeHidden();
+    },
+    { page }
+  );
 }
 
 export async function expandGene(
