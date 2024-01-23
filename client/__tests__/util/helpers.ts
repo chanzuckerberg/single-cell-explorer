@@ -1,6 +1,7 @@
 import { ElementHandle, expect, Locator, Page } from "@playwright/test";
 
 import { ERROR_NO_TEST_ID_OR_LOCATOR } from "../common/constants";
+import { waitUntilNoSkeletonDetected } from "../e2e/cellxgeneActions";
 
 export const TIMEOUT_MS = 3 * 1000;
 export const WAIT_FOR_TIMEOUT_MS = 3 * 1000;
@@ -19,6 +20,7 @@ export async function goToPage(page: Page, url = ""): Promise<void> {
     },
     { page }
   );
+  await waitUntilNoSkeletonDetected(page);
 }
 
 export async function scrollToPageBottom(page: Page): Promise<void> {

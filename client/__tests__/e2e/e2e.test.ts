@@ -177,7 +177,6 @@ describe("metadata loads", () => {
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
-    await waitUntilNoSkeletonDetected(page);
     for (const label of Object.keys(data.continuous)) {
       expect(await page.getByTestId(`histogram-${label}-plot`)).not.toHaveCount(
         0
@@ -201,7 +200,6 @@ describe("cell selection", () => {
 
   test("selects cells via lasso", async ({ page }) => {
     await goToPage(page);
-    await waitUntilNoSkeletonDetected(page);
     for (const cellset of data.cellsets.lasso) {
       const cellset1 = await calcDragCoordinates(
         "layout-graph",
@@ -484,7 +482,6 @@ test("zoom limit is 12x", async ({ page }) => {
 
 test("pan zoom mode resets lasso selection", async ({ page }) => {
   goToPage(page);
-  await waitUntilNoSkeletonDetected(page);
   const panzoomLasso = data.features.panzoom.lasso;
 
   const lassoSelection = await calcDragCoordinates(
@@ -516,7 +513,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
 
 test("lasso moves after pan", async ({ page }) => {
   goToPage(page);
-  await waitUntilNoSkeletonDetected(page);
+
   const panzoomLasso = data.features.panzoom.lasso;
   const coordinatesAsPercent = panzoomLasso["coordinates-as-percent"];
 
@@ -565,7 +562,6 @@ Tests included below are specific to annotation features
 async function setup(config: { withSubset: boolean; tag: string }, page: Page) {
   await goToPage(page);
   if (config.withSubset) {
-    await waitUntilNoSkeletonDetected(page);
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page);
   }
 }
@@ -617,7 +613,6 @@ for (const option of options) {
       if (option.withSubset) return;
 
       await setup(option, page);
-      await waitUntilNoSkeletonDetected(page);
 
       // set the two cell sets to b cells vs nk cells
       await expandCategory(`louvain`, page);
@@ -682,7 +677,7 @@ for (const option of options) {
       await keyboardRedo(page);
       await assertGenesetExists(genesetName, page);
     });
-    // (seve): failing on GHA
+    // (seve): undo redo tests are failing on GHA
     test.fixme("edit geneset name and undo/redo", async ({ page }) => {
       await setup(option, page);
       await createGeneset(editableGenesetName, page);
@@ -726,7 +721,6 @@ for (const option of options) {
       await setup(option, page);
       await createGeneset(setToAddGeneTo, page);
       await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
-      await waitUntilNoSkeletonDetected(page);
       await assertGeneExistsInGeneset(geneToAddToSet, page);
       await keyboardUndo(page);
       await assertGeneDoesNotExist(geneToAddToSet, page);
@@ -793,7 +787,6 @@ for (const option of options) {
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
-      await waitUntilNoSkeletonDetected(page);
       await addGeneToSearch(geneToRequestInfo, page);
       await requestGeneInfo(geneToRequestInfo, page);
       await assertGeneInfoCardExists(geneToRequestInfo, page);
