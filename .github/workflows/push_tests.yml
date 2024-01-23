@@ -67,13 +67,11 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
       - name: Install dependencies
         run: make dev-env-server build-for-server-dev
       - name: Unit tests
