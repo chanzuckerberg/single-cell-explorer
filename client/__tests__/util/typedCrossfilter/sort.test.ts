@@ -1,8 +1,11 @@
+import { expect, test } from "@playwright/test";
 import {
   sortArray,
   sortIndex,
   lowerBound,
 } from "../../../src/util/typedCrossfilter/sort";
+
+const { describe } = test;
 
 /*
 Sort tests should keep in mind that there are separate code
@@ -74,34 +77,34 @@ describe("sortArray", () => {
 
   describe("non-finite numbers", () => {
     test("infinity", () => {
-      expect(sortArray(new Float32Array([pInf, nInf, 0, 1, 2]))).toMatchObject(
+      expect(sortArray(new Float32Array([pInf, nInf, 0, 1, 2]))).toEqual(
         new Float32Array([nInf, 0, 1, 2, pInf])
       );
-      expect(
-        sortArray(new Float32Array([pInf, nInf, pInf, nInf]))
-      ).toMatchObject(new Float32Array([nInf, nInf, pInf, pInf]));
+      expect(sortArray(new Float32Array([pInf, nInf, pInf, nInf]))).toEqual(
+        new Float32Array([nInf, nInf, pInf, pInf])
+      );
       expect(
         sortArray(new Float32Array([pInf, nInf, pInf, nInf, pInf]))
-      ).toMatchObject(new Float32Array([nInf, nInf, pInf, pInf, pInf]));
+      ).toEqual(new Float32Array([nInf, nInf, pInf, pInf, pInf]));
       expect(
         sortArray(
           new Float32Array(100).fill(Infinity, 0, 50).fill(-Infinity, 50, 100)
         )
-      ).toMatchObject(
+      ).toEqual(
         new Float32Array(100).fill(-Infinity, 0, 50).fill(Infinity, 50, 100)
       );
     });
     test("NaN", () => {
-      expect(sortArray(new Float64Array([NaN, 2, 1, 0]))).toMatchObject(
+      expect(sortArray(new Float64Array([NaN, 2, 1, 0]))).toEqual(
         new Float64Array([0, 1, 2, NaN])
       );
-      expect(sortArray(new Float32Array([NaN, 2, 1, 0]))).toMatchObject(
+      expect(sortArray(new Float32Array([NaN, 2, 1, 0]))).toEqual(
         new Float32Array([0, 1, 2, NaN])
       );
-      expect(sortArray(new Float32Array([NaN, 2, NaN, 1, 0]))).toMatchObject(
+      expect(sortArray(new Float32Array([NaN, 2, NaN, 1, 0]))).toEqual(
         new Float32Array([0, 1, 2, NaN, NaN])
       );
-      expect(sortArray(new Float32Array([NaN, 2, 1, NaN, 0]))).toMatchObject(
+      expect(sortArray(new Float32Array([NaN, 2, 1, NaN, 0]))).toEqual(
         new Float32Array([0, 1, 2, NaN, NaN])
       );
       expect(
@@ -110,15 +113,15 @@ describe("sortArray", () => {
     });
 
     test("mixed numbers", () => {
-      expect(
-        sortArray(new Float32Array([NaN, pInf, nInf, NaN, NaN]))
-      ).toMatchObject(new Float32Array([nInf, pInf, NaN, NaN, NaN]));
+      expect(sortArray(new Float32Array([NaN, pInf, nInf, NaN, NaN]))).toEqual(
+        new Float32Array([nInf, pInf, NaN, NaN, NaN])
+      );
       expect(
         sortArray(new Float32Array([NaN, pInf, nInf, NaN, 1, NaN, 2]))
-      ).toMatchObject(new Float32Array([nInf, 1, 2, pInf, NaN, NaN, NaN]));
+      ).toEqual(new Float32Array([nInf, 1, 2, pInf, NaN, NaN, NaN]));
       expect(
         sortArray(new Float32Array([NaN, pInf, nInf, 0, 1, NaN, 2]))
-      ).toMatchObject(new Float32Array([nInf, 0, 1, 2, pInf, NaN, NaN]));
+      ).toEqual(new Float32Array([nInf, 0, 1, 2, pInf, NaN, NaN]));
       expect(
         sortArray(
           fillRange(new Float32Array(100))
@@ -168,13 +171,13 @@ describe("sortIndex", () => {
     test("mixed numbers", () => {
       const source1 = new Float32Array([NaN, pInf, nInf, NaN, 1, NaN, 2]);
       const index1 = fillRange(new Uint32Array(source1.length));
-      expect(sortIndex(index1, source1)).toMatchObject(
+      expect(sortIndex(index1, source1)).toEqual(
         new Uint32Array([2, 4, 6, 1, 0, 3, 5])
       );
 
       const source2 = new Float32Array([NaN, pInf, nInf, 0, 1, NaN, 2]);
       const index2 = fillRange(new Uint32Array(source2.length));
-      expect(sortIndex(index2, source2)).toMatchObject(
+      expect(sortIndex(index2, source2)).toEqual(
         new Uint32Array([2, 3, 4, 6, 1, 0, 5])
       );
     });

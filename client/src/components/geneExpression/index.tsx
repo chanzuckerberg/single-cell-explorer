@@ -137,7 +137,7 @@ class GeneExpression extends React.Component<{}, State> {
               role="menuitem"
               // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
               tabIndex="0"
-              data-testclass="geneset-heading-expand"
+              data-testid="geneset-heading-expand"
               onKeyPress={this.handleExpandGeneSets}
               style={{
                 cursor: "pointer",

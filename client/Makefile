@@ -39,7 +39,7 @@ smoke-test:
 	start_server_and_test \
 		'../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --verbose --no-cache false'
+		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e'
 
 .PHONY: unit-test
 unit-test:

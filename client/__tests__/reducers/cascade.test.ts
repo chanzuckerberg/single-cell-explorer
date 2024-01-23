@@ -1,4 +1,8 @@
+import { expect, test } from "@playwright/test";
+
 import cascadeReducers from "../../src/reducers/cascade";
+
+const { describe } = test;
 
 describe("create", () => {
   test("from Array", () => {

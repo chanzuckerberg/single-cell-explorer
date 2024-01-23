@@ -8,6 +8,7 @@
     "build": "npm run clean && npm run create-supported-browsers-regex && webpack --config",
     "clean": "rimraf build",
     "dev": "npm run build -- configuration/webpack/webpack.config.dev.js",
+    "e2e": "playwright test",
     "fmt": "eslint --fix src __tests__",
     "lint": "eslint src __tests__ & npm run type-check",
     "prod": "npm run build -- configuration/webpack/webpack.config.prod.js",

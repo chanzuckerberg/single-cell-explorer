@@ -1,25 +1,20 @@
-type TestEnv =
-  | "local"
-  | "localProd"
-  | "staging"
-  | "prod"
-  | "rdev"
-  | "happy"
-  | "dev";
+import * as ENV_DEFAULT from "../../../environment.default.json";
 
-export const TEST_ENV: TestEnv = (process.env.TEST_ENV as TestEnv) || "local";
+export const DATASET = "pbmc3k.cxg";
+export const DATASET_TRUNCATE = "truncation-test.cxg";
 
-const TEST_ENV_TO_TEST_URL = {
-  dev: "https://cellxgene.dev.single-cell.czi.technology",
-  happy: "https://frontend.corporanet.local:3000",
-  local: "https://localhost:3000",
-  localProd: "http://localhost:9000",
-  prod: "https://cellxgene.cziscience.com",
-  rdev: process.env.RDEV_LINK || "",
-  staging: "https://cellxgene.staging.single-cell.czi.technology",
-};
+export const APP_URL_BASE =
+  process.env.CXG_URL_BASE || `http://localhost:${ENV_DEFAULT.CXG_CLIENT_PORT}`;
 
-export const TEST_URL = TEST_ENV_TO_TEST_URL[TEST_ENV];
+const DEFAULT_BASE_PATH = "d";
+export const testURL = APP_URL_BASE.includes("localhost")
+  ? [APP_URL_BASE, DEFAULT_BASE_PATH, DATASET].join("/")
+  : APP_URL_BASE;
+export const pageURLTruncate = [
+  APP_URL_BASE,
+  DEFAULT_BASE_PATH,
+  DATASET_TRUNCATE,
+].join("/");
 
 export const BLUEPRINT_SAFE_TYPE_OPTIONS = { delay: 50 };
 

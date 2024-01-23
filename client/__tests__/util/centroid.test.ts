@@ -1,4 +1,5 @@
 import cloneDeep from "lodash.clonedeep";
+import { expect, test } from "@playwright/test";
 
 import { NumberArray } from "../../src/common/types/arraytypes";
 import calcCentroid from "../../src/util/centroid";
@@ -9,6 +10,8 @@ import { indexEntireSchema } from "../../src/util/stateManager/schemaHelpers";
 import { normalizeWritableCategoricalSchema } from "../../src/annoMatrix/normalize";
 import { Dataframe } from "../../src/util/dataframe";
 import type { Schema } from "../../src/common/types/schema";
+
+const { describe, beforeAll } = test;
 
 describe("centroid", () => {
   let schema: Schema;

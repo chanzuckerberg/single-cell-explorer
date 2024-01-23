@@ -37,7 +37,7 @@ class DuplicateCategorySelect extends React.PureComponent<{}, State> {
           filterable={false}
           itemRenderer={(d, { handleClick }) => (
             <MenuItem
-              data-testclass="duplicate-category-dropdown-option"
+              data-testid="duplicate-category-dropdown-option"
               onClick={handleClick}
               // @ts-expect-error ts-migrate(2322) FIXME: Type 'unknown' is not assignable to type 'Key | nu... Remove this comment to see the full error message
               key={d}

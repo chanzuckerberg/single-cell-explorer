@@ -1,6 +1,6 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
-import { shouldUseRdevToken } from "./__tests__/util/helpers";
 import { COMMON_PLAYWRIGHT_CONTEXT } from "./__tests__/common/playwrightContext";
+import { testURL } from "./__tests__/common/constants";
 
 /**
  * (thuang): Add `czi-checker`, so Plausible will ignore it.
@@ -26,12 +26,7 @@ const CICD_MAX_FAILURE = 5;
 
 // 'github' for GitHub Actions CI to generate annotations, default otherwise
 const PLAYWRIGHT_REPORTER = process.env.CI
-  ? ([
-      ["blob"],
-      ["github"],
-      ["line"],
-      ["allure-playwright"],
-    ] as ReporterDescription[])
+  ? ([["blob"], ["github"], ["line"]] as ReporterDescription[])
   : ([
       ["list"],
       [
@@ -44,8 +39,6 @@ const PLAYWRIGHT_REPORTER = process.env.CI
         },
       ],
     ] as ReporterDescription[]);
-
-const extraHTTPHeaders = getExtraHTTPHeaders();
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -73,7 +66,7 @@ export default defineConfig({
   use: {
     ...COMMON_PLAYWRIGHT_CONTEXT,
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: testURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -83,28 +76,12 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: "setup",
-      testMatch: "**/*.setup.ts",
-      use: {
-        extraHTTPHeaders,
-      },
-    },
-    {
       name: "chromium",
-      dependencies: ["setup"],
+      testMatch: "**/e2e.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,
-        extraHTTPHeaders,
       },
     },
   ],
 });
-
-function getExtraHTTPHeaders(): { [key: string]: string } {
-  if (!shouldUseRdevToken) return {};
-
-  return {
-    Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
-  };
-}

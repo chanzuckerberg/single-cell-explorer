@@ -1,40 +1,16 @@
 import { ElementHandle, expect, Locator, Page } from "@playwright/test";
 
-import {
-  ERROR_NO_TEST_ID_OR_LOCATOR,
-  TEST_ENV,
-  TEST_URL,
-} from "../common/constants";
-
-export const shouldUseRdevToken =
-  process.env.RDEV_TOKEN === "true" || TEST_ENV === "rdev";
+import { ERROR_NO_TEST_ID_OR_LOCATOR } from "../common/constants";
+import { waitUntilNoSkeletonDetected } from "../e2e/cellxgeneActions";
 
 export const TIMEOUT_MS = 3 * 1000;
 export const WAIT_FOR_TIMEOUT_MS = 3 * 1000;
 
 // (seve): We use TEST_ENV to describe the environment that playwright is running against. Sometimes the FE tests are run against a local instance of the app which points at a deployed instance of the backend.
 
-// (thuang): BE API doesn't work in local happy
-const TEST_ENVS_DEV_STAGING_PROD = ["dev", "staging", "prod"];
-
-export const isDevStagingProd = TEST_ENVS_DEV_STAGING_PROD.includes(TEST_ENV);
-
-// Skip tests unless environment is dev, rdev, or staging; used by tests that require a deployed environment but also modify
-// environment data (e.g. creating collections, which should be avoided in prod).
-const TEST_ENVS_DEV_STAGING = ["dev", "staging", "rdev"];
-
-export const isDevStagingRdev = TEST_ENVS_DEV_STAGING.includes(TEST_ENV);
-
 const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
 
-export async function goToPage(
-  url: string = TEST_URL,
-  page: Page
-): Promise<void> {
-  if (!url) {
-    throw Error("goToPage() requires TEST_URL");
-  }
-
+export async function goToPage(page: Page, url = ""): Promise<void> {
   await tryUntil(
     async () => {
       await Promise.all([
@@ -44,6 +20,7 @@ export async function goToPage(
     },
     { page }
   );
+  await waitUntilNoSkeletonDetected(page);
 }
 
 export async function scrollToPageBottom(page: Page): Promise<void> {
