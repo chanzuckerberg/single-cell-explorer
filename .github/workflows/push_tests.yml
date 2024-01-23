@@ -112,3 +112,18 @@ jobs:
         run: |
           cd client && make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
+      - name: Upload FE test results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: /home/runner/work/single-cell-data-portal/single-cell-data-portal/frontend/playwright-report
+          retention-days: 14
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-blob-reports
+          path: /home/runner/work/single-cell-data-portal/single-cell-data-portal/frontend/blob-report
+          retention-days: 1
