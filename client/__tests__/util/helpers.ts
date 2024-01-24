@@ -6,8 +6,6 @@ import { waitUntilNoSkeletonDetected } from "../e2e/cellxgeneActions";
 export const TIMEOUT_MS = 3 * 1000;
 export const WAIT_FOR_TIMEOUT_MS = 3 * 1000;
 
-// (seve): We use TEST_ENV to describe the environment that playwright is running against. Sometimes the FE tests are run against a local instance of the app which points at a deployed instance of the backend.
-
 const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
 
 export async function goToPage(page: Page, url = ""): Promise<void> {

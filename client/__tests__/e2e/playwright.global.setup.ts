@@ -1,6 +1,8 @@
 import { Page } from "@playwright/test";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
 
+// (seve): mocking required to simulate metadata coming from data-portal needed for navigation header and breadcrumbs
+
 const setup = async ({ page }: { page: Page }) => {
   await page.route("**/*/dataset-metadata", (route, request) => {
     const { referer } = request.headers();
