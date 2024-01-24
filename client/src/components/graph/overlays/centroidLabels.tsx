@@ -214,7 +214,6 @@ const Label = ({
   opacity,
   colorAccessor,
   displayLabel,
-  fullDisplayLabel,
   onMouseEnter,
   onMouseOut, // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 }: any) => {
@@ -233,8 +232,7 @@ const Label = ({
       key={label}
       className="centroid-label"
       transform={`translate(${coords[0]}, ${coords[1]})`}
-      data-testclass="centroid-label"
-      data-testid={`${fullDisplayLabel}-centroid-label`}
+      data-testid="centroid-label"
     >
       {/* eslint-disable-next-line jsx-a11y/mouse-events-have-key-events --- the mouse actions for centroid labels do not have a screen reader alternative*/}
       <text

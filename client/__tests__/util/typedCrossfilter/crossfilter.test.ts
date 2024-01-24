@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-loop-func -- beforeEach is rewriting the variable */
 import filter from "lodash.filter";
 import zip from "lodash.zip";
+import { expect, test } from "@playwright/test";
 
 import Crossfilter, {
   CrossfilterSelector,
 } from "../../../src/util/typedCrossfilter";
 
+const { describe, beforeEach } = test;
 const someData = [
   {
     date: "2011-11-14T16:17:54Z",
@@ -277,28 +280,30 @@ describe("ImmutableTypedCrossfilter", () => {
     test("none", () => {
       expect(p.select("quantity", { mode: "none" }).countSelected()).toEqual(0);
     });
-    test.each([[[]], [[2]], [[2, 1]], [[9, 82]], [[0, 1]]])("exact: %p", (v) =>
-      expect(
-        p.select("quantity", { mode: "exact", values: v }).countSelected()
-      ).toEqual(filter(someData, (d) => v.includes(d.quantity)).length)
-    );
+    for (const [v] of [[[]], [[2]], [[2, 1]], [[9, 82]], [[0, 1]]]) {
+      test(`exact: ${v}`, () =>
+        expect(
+          p.select("quantity", { mode: "exact", values: v }).countSelected()
+        ).toEqual(filter(someData, (d) => v.includes(d.quantity)).length));
+    }
     test("single value exact", () => {
       expect(
         p.select("quantity", { mode: "exact", values: 2 }).countSelected()
       ).toEqual(filter(someData, (d) => d.quantity === 2).length);
     });
-    test.each([
+    for (const [lo, hi] of [
       [0, 1],
       [1, 2],
       [0, 99],
       [99, 100000],
-    ])("range %p", (lo, hi) =>
-      expect(
-        p.select("quantity", { mode: "range", lo, hi }).countSelected()
-      ).toEqual(
-        filter(someData, (d) => d.quantity >= lo && d.quantity < hi).length
-      )
-    );
+    ]) {
+      test(`range ${[lo, hi]}`, () =>
+        expect(
+          p.select("quantity", { mode: "range", lo, hi }).countSelected()
+        ).toEqual(
+          filter(someData, (d) => d.quantity >= lo && d.quantity < hi).length
+        ));
+    }
     test("bad mode", () => {
       expect(() =>
         p.select("type", { mode: "bad mode" } as unknown as CrossfilterSelector)
@@ -323,17 +328,18 @@ describe("ImmutableTypedCrossfilter", () => {
     test("none", () => {
       expect(p.select("type", { mode: "none" }).countSelected()).toEqual(0);
     });
-    test.each([
+    for (const [v] of [
       [[]],
       [["tab"]],
       [["visa"]],
       [["visa", "tab"]],
       [["cash", "tab", "visa"]],
-    ])("exact: %p", (v) =>
-      expect(
-        p.select("type", { mode: "exact", values: v }).countSelected()
-      ).toEqual(filter(someData, (d) => v.includes(d.type)).length)
-    );
+    ]) {
+      test(`exact: ${v}`, () =>
+        expect(
+          p.select("type", { mode: "exact", values: v }).countSelected()
+        ).toEqual(filter(someData, (d) => v.includes(d.type)).length));
+    }
     test("single value exact", () => {
       expect(
         p.select("type", { mode: "exact", values: "tab" }).countSelected()
@@ -367,24 +373,26 @@ describe("ImmutableTypedCrossfilter", () => {
     test("none", () => {
       expect(p.select("coords", { mode: "none" }).countSelected()).toEqual(0);
     });
-    test.each([
+    for (const [minX, minY, maxX, maxY] of [
       [0, 0, 1, 1],
       [0, 0, 0.5, 0.5],
       [0.5, 0.5, 1, 1],
-    ])("within-rect %d %d %d %d", (minX, minY, maxX, maxY) => {
-      expect(
-        p
-          .select("coords", { mode: "within-rect", minX, minY, maxX, maxY })
-          .allSelected()
-      ).toEqual(
-        filter(someData, (d) => {
-          const [x, y] = d.coords;
-          return minX <= x && x < maxX && minY <= y && y < maxY;
-        })
-      );
-    });
+    ]) {
+      test(`within-rect ${minX}, ${minY}, ${maxX}, ${maxY}, `, () => {
+        expect(
+          p
+            .select("coords", { mode: "within-rect", minX, minY, maxX, maxY })
+            .allSelected()
+        ).toEqual(
+          filter(someData, (d) => {
+            const [x, y] = d.coords;
+            return minX <= x && x < maxX && minY <= y && y < maxY;
+          })
+        );
+      });
+    }
 
-    test.each([
+    const config: [[number, number][], boolean[]][] = [
       [
         [
           [0, 0],
@@ -429,20 +437,24 @@ describe("ImmutableTypedCrossfilter", () => {
           false,
         ],
       ],
-    ])("within-polygon %p", (polygon, expected) => {
-      expect(
-        p
-          .select("coords", {
-            mode: "within-polygon",
-            polygon: polygon as [number, number][],
-          })
-          .allSelected()
-      ).toEqual(
-        zip(someData, expected)
-          .filter((x) => x[1])
-          .map((x) => x[0])
-      );
-    });
+    ];
+
+    for (const [polygon, expected] of config) {
+      test(`within-polygon ${polygon}`, () => {
+        expect(
+          p
+            .select("coords", {
+              mode: "within-polygon",
+              polygon: polygon as [number, number][],
+            })
+            .allSelected()
+        ).toEqual(
+          zip(someData, expected)
+            .filter((x) => x[1])
+            .map((x) => x[0])
+        );
+      });
+    }
   });
 
   describe("non-finite scalars", () => {
@@ -540,3 +552,5 @@ describe("ImmutableTypedCrossfilter", () => {
     });
   });
 });
+
+/* eslint-enable @typescript-eslint/no-loop-func -- beforeEach is rewriting the variable */

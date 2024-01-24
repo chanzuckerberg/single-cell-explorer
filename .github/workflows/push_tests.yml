@@ -67,13 +67,11 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
       - name: Install dependencies
         run: make dev-env-server build-for-server-dev
       - name: Unit tests
@@ -98,16 +96,32 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
       - name: Install dependencies
-        run: make dev-env-server build-for-server-dev
+        run: |
+          make dev-env-server build-for-server-dev
+          cd client
+          npx playwright install
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
+      - name: Upload FE test results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          retention-days: 14
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-blob-reports
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+          retention-days: 1

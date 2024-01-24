@@ -21,16 +21,6 @@ module.exports = {
     polyfills: ["Headers", "AbortController"],
   },
   env: { browser: true, commonjs: true, es6: true },
-  globals: {
-    expect: true,
-    jest: true,
-    jestPuppeteer: true,
-    it: true,
-    page: true,
-    browser: true,
-    context: true,
-    beforeEach: true,
-  },
   parserOptions: {
     ecmaVersion: 2017,
     sourceType: "module",

@@ -44,7 +44,7 @@ const HistogramFooter = React.memo(
           min {rangeMin.toPrecision(4)}
         </span>
         <span
-          data-testclass="brushable-histogram-field-name"
+          data-testid="brushable-histogram-field-name"
           style={{ fontStyle: "italic" }}
         >
           {isObs && displayName}
