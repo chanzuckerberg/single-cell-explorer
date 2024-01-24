@@ -135,7 +135,7 @@ export async function resetCategory(
   category: string,
   page: Page
 ): Promise<void> {
-  const checkbox = await page.getByTestId(`${category}:category-select`);
+  const checkbox = page.getByTestId(`${category}:category-select`);
   const checkedPseudoClass = checkbox.isChecked();
   if (!checkedPseudoClass) await checkbox.click({ force: true });
 
