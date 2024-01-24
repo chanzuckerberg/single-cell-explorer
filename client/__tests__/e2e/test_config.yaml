@@ -3,7 +3,7 @@ server:
     force_https: true
     port: 5005
     debug: true
-    verbose: false
+    verbose: true
 
   gene_info:
     api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"
