@@ -3,7 +3,7 @@ import functools
 import os
 import sys
 import webbrowser
-from logging import ERROR, Logger, getLogger
+from logging import Logger, getLogger
 
 import click
 
@@ -229,9 +229,6 @@ def launch(
     # Startup message
     click.echo("[cellxgene] Starting the development server...")
 
-    # app config
-    app_config: AppConfig = AppConfig()
-
     try:
         app_config: AppConfig = AppConfig(config_file)
 
@@ -268,9 +265,6 @@ def launch(
 
     # create the server
     server: TestServer = TestServer(app_config)
-
-    if not app_config.server__app__verbose:
-        log.setLevel(ERROR)
 
     cellxgene_url: str = f"http://{app_config.server__app__host}:{app_config.server__app__port}"
     if app_config.server__app__open_browser:

@@ -15,6 +15,7 @@ from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.app.api.v3 import register_api_v3
 from server.app.logging import configure_logging
 from server.app.request_id import generate_request_id, get_request_id
+from server.common.config.app_config import AppConfig
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
@@ -26,8 +27,6 @@ from server.common.utils.data_locator import DataLocator
 from server.common.utils.http_cache import cache_control, cache_control_always, webbp
 from server.common.utils.utils import Float32JSONEncoder, path_join
 from server.dataset.matrix_loader import DataLoader
-
-configure_logging()
 
 
 @webbp.errorhandler(RequestException)
@@ -152,7 +151,8 @@ class Server:
         """will be called before routes are added, during __init__.  Subclass protocol"""
         pass
 
-    def __init__(self, app_config):
+    def __init__(self, app_config: AppConfig):
+        configure_logging(app_config)
         self.app = Flask(__name__, static_folder=None)
         handle_api_base_url(self.app, app_config)
         self._before_adding_routes(self.app, app_config)
