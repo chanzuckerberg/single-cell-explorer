@@ -76,7 +76,7 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
         .all();
       expect(skeleton).toHaveLength(0);
     },
-    { page, timeoutMs: 10000 }
+    { page, timeoutMs: 10_000 }
   );
 }
 
