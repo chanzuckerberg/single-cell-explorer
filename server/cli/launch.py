@@ -68,16 +68,16 @@ def server_args(func):
         "--debug",
         "-d",
         is_flag=True,
-        default=DEFAULT_CONFIG.server__app__debug,
+        default=False,
         show_default=True,
         help="Run in debug mode. This is helpful for cellxgene developers, "
-        "or when you want more information about an error condition.",
+        "or when you want more information about an error condition. This will automatically set verbose mode.",
     )
     @click.option(
         "--verbose",
         "-v",
         is_flag=True,
-        default=DEFAULT_CONFIG.server__app__verbose,
+        default=False,
         show_default=True,
         help="Provide verbose output, including warnings and all server requests.",
     )
