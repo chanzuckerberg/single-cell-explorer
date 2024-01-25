@@ -213,7 +213,6 @@ const Histogram = ({
       width={width}
       height={height}
       id={`histogram_${fieldForId}_svg`}
-      data-testclass="histogram-plot"
       data-testid={`histogram-${field}-plot`}
       ref={svgRef}
     />

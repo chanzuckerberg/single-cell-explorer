@@ -1,4 +1,5 @@
 /* eslint-disable no-bitwise -- unsigned right shift better than Math.round */
+import { expect, test } from "@playwright/test";
 
 /*
 test color helpers
@@ -8,6 +9,8 @@ import {
   loadUserColorConfig,
 } from "../../../src/util/stateManager/colorHelpers";
 import * as Dataframe from "../../../src/util/dataframe";
+
+const { describe } = test;
 
 describe("categorical color helpers", () => {
   /*

@@ -83,7 +83,9 @@ export const globalConfig = {
 };
 
 /* is mac os? */
-export const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+export const isMac =
+  typeof navigator !== "undefined" &&
+  navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 /* colors */
 export const blue = Colors.BLUE3;
@@ -175,7 +177,7 @@ declare global {
   }
 }
 
-if (window?.CELLXGENE?.API) {
+if (typeof window !== "undefined" && window?.CELLXGENE?.API) {
   _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";

@@ -1,4 +1,7 @@
+import { expect, test } from "@playwright/test";
 import * as Dataframe from "../../../src/util/dataframe";
+
+const { describe, beforeEach } = test;
 
 describe("dataframe constructor", () => {
   test("empty dataframe", () => {

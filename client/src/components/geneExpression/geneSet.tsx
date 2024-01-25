@@ -59,7 +59,7 @@ class GeneSet extends React.Component<{}, State> {
     const { setName, setGenes, geneIds, geneNames } = this.props;
     const setGenesNames = [...setGenes.keys()];
     return (
-      <div data-testclass="gene-set-genes">
+      <div data-testid="gene-set-genes">
         {setGenesNames.map((gene) => {
           const { geneDescription } = setGenes.get(gene);
           const geneId = geneIds[geneNames.indexOf(gene)];
@@ -87,15 +87,15 @@ class GeneSet extends React.Component<{}, State> {
     const { isOpen } = this.state;
     const genesetNameLengthVisible = 150; /* this magic number determines how much of a long geneset name we see */
     const genesetIsEmpty = setGenes.size === 0;
-    let testClass = "geneset-expand";
+    let testid = `${setName}:geneset-expand`;
 
     if (setName.includes(diffexpPopNamePrefix1))
-      testClass = "pop-1-geneset-expand";
+      testid = "pop-1-geneset-expand";
     else if (setName.includes(diffexpPopNamePrefix2))
-      testClass = "pop-2-geneset-expand";
+      testid = "pop-2-geneset-expand";
 
     return (
-      <div data-testclass="geneset" style={{ marginBottom: 3 }}>
+      <div data-testid="geneset" style={{ marginBottom: 3 }}>
         <div
           style={{
             display: "flex",
@@ -107,8 +107,7 @@ class GeneSet extends React.Component<{}, State> {
             role="menuitem"
             // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
             tabIndex="0"
-            data-testclass={testClass}
-            data-testid={`${setName}:geneset-expand`}
+            data-testid={testid}
             onKeyPress={
               /* TODO(colinmegill): #2101: click handler on span */ () => {}
             }
@@ -135,12 +134,12 @@ class GeneSet extends React.Component<{}, State> {
             </Truncate>
             {isOpen ? (
               <FaChevronDown
-                data-testclass="geneset-expand-is-expanded"
+                data-testid="geneset-expand-is-expanded"
                 style={{ fontSize: 10, marginLeft: 5 }}
               />
             ) : (
               <FaChevronRight
-                data-testclass="geneset-expand-is-not-expanded"
+                data-testid="geneset-expand-is-not-expanded"
                 style={{ fontSize: 10, marginLeft: 5 }}
               />
             )}

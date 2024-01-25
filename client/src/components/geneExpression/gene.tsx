@@ -170,7 +170,6 @@ class Gene extends React.Component<Props, State> {
             role="menuitem"
             // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
             tabIndex="0"
-            data-testclass="gene-expand"
             data-testid={`${gene}:gene-expand`}
             onKeyPress={() => {}}
             style={{
@@ -275,7 +274,6 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testclass="maximize"
               data-testid={`maximize-${gene}`}
               onClick={this.handleGeneExpandClick}
               active={geneIsExpanded}
@@ -286,7 +284,6 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testclass="colorby"
               data-testid={`colorby-${gene}`}
               onClick={this.onColorChangeClick}
               active={isColorAccessor}

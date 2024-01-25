@@ -1,4 +1,7 @@
+import { expect, test } from "@playwright/test";
 import * as Dataframe from "../../../src/util/dataframe";
+
+const { describe } = test;
 
 describe("Dataframe column histogram", () => {
   test("categorical by categorical", () => {
@@ -11,16 +14,14 @@ describe("Dataframe column histogram", () => {
 
     const h1 = df.col("cat").histogramCategoricalBy(df.col("name"));
     expect(h1).toMatchObject(
-      new Map([
-        ["n1", new Map([["c1", 1]])],
-        ["n2", new Map([["c2", 1]])],
-        ["n3", new Map([["c3", 1]])],
+      Object.fromEntries([
+        ["n1", Object.fromEntries([["c1", 1]])],
+        ["n2", Object.fromEntries([["c2", 1]])],
+        ["n3", Object.fromEntries([["c3", 1]])],
       ])
     );
     // memoized?
-    expect(df.col("cat").histogramCategoricalBy(df.col("name"))).toMatchObject(
-      h1
-    );
+    expect(df.col("cat").histogramCategoricalBy(df.col("name"))).toBe(h1);
   });
 
   test("continuous by categorical", () => {
@@ -33,7 +34,7 @@ describe("Dataframe column histogram", () => {
 
     const h1 = df.col("value").histogramContinuousBy(3, [0, 2], df.col("name"));
     expect(h1).toMatchObject(
-      new Map([
+      Object.fromEntries([
         ["n1", [1, 0, 0]],
         ["n2", [0, 1, 0]],
         ["n3", [0, 0, 1]],
@@ -42,7 +43,7 @@ describe("Dataframe column histogram", () => {
     // memoized?
     expect(
       df.col("value").histogramContinuousBy(3, [0, 2], df.col("name"))
-    ).toMatchObject(h1);
+    ).toBe(h1);
   });
 
   test("categorical", () => {
@@ -55,14 +56,14 @@ describe("Dataframe column histogram", () => {
 
     const h1 = df.col("cat").histogramCategorical();
     expect(h1).toMatchObject(
-      new Map([
+      Object.fromEntries([
         ["c1", 1],
         ["c2", 1],
         ["c3", 1],
       ])
     );
     // memoized?
-    expect(df.col("cat").histogramCategorical()).toMatchObject(h1);
+    expect(df.col("cat").histogramCategorical()).toBe(h1);
   });
 
   test("continuous", () => {

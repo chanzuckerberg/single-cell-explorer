@@ -1,4 +1,8 @@
+import { expect, test } from "@playwright/test";
+
 import genesetsReducer from "../../src/reducers/genesets";
+
+const { describe } = test;
 
 describe("initial reducer state", () => {
   test("some other action", () => {
