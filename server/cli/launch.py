@@ -1,9 +1,9 @@
 import errno
 import functools
+import logging
 import os
 import sys
 import webbrowser
-from logging import Logger, getLogger
 
 import click
 
@@ -13,7 +13,6 @@ from server.common.utils.utils import sort_options
 from server.default_config import default_config
 from server.tests.unit import TestServer
 
-log: Logger = getLogger("werkzeug")
 DEFAULT_CONFIG = AppConfig()
 
 
@@ -220,7 +219,7 @@ def launch(
     config_file: str = config_file if config_file else test_config_file
 
     if not os.path.isdir(dataroot):
-        log.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
+        logging.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
         sys.exit(1)
 
     if dump_default_config:

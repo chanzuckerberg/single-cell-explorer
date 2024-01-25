@@ -25,3 +25,5 @@ def configure_logging(app_config: AppConfig):
     logHandler.addFilter(RequestIdFilter())
     log_level = logging.INFO if not app_config.server__app__verbose else logging.ERROR
     logging.basicConfig(level=log_level, handlers=[logHandler], force=True)
+    logging.getLogger("werkzeug").setLevel(log_level)
+    logging.info(f"{log_level=}")
