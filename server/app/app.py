@@ -152,7 +152,7 @@ class Server:
         pass
 
     def __init__(self, app_config: AppConfig):
-        log_level = logging.INFO if not app_config.server__app__verbose else logging.ERROR
+        log_level = logging.INFO if app_config.server__app__verbose else logging.ERROR
         configure_logging(log_level)
         self.app = Flask(__name__, static_folder=None)
         handle_api_base_url(self.app, app_config)
