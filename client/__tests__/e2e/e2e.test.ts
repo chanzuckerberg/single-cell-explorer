@@ -152,31 +152,34 @@ describe("metadata loads", () => {
     }
   });
 
-  // (seve): This test is identical to the above test other than the dataset used. Not sure what is causing the failure
-  test.fixme(
-    "categories and values from dataset appear and properly truncate if applicable",
-    async ({ page }) => {
-      await goToPage(page, pageURLTruncate);
+  test("categories and values from dataset appear and properly truncate if applicable", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLTruncate);
 
-      for (const label of Object.keys(dataTruncate.categorical)) {
-        const element = await page.getByTestId(`category-${label}`).innerHTML();
+    for (const label of Object.keys(
+      dataTruncate.categorical
+    ) as (keyof typeof dataTruncate.categorical)[]) {
+      const element = await page.getByTestId(`category-${label}`).innerHTML();
 
-        expect(element).toMatchSnapshot();
+      expect(element).toMatchSnapshot();
 
-        await page.getByTestId(`${label}:category-expand`).click();
+      await page.getByTestId(`${label}:category-expand`).click();
 
-        const categories = await getAllCategoriesAndCounts(label, page);
+      const categories = await getAllCategoriesAndCounts(label, page);
 
-        expect(Object.keys(categories)).toMatchObject(
-          Object.keys(dataTruncate.categorical.truncate[label])
-        );
+      console.log(categories);
+      console.log(dataTruncate.categorical[label]);
 
-        expect(Object.values(categories)).toMatchObject(
-          Object.values(dataTruncate.categorical.truncate[label])
-        );
-      }
+      expect(Object.keys(categories)).toMatchObject(
+        Object.keys(dataTruncate.categorical[label])
+      );
+
+      expect(Object.values(categories)).toMatchObject(
+        Object.values(dataTruncate.categorical[label])
+      );
     }
-  );
+  });
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
