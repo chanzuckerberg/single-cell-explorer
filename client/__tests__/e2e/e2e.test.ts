@@ -7,7 +7,8 @@
  */
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
-import { test, expect, Page } from "@playwright/test";
+import { Page } from "@playwright/test";
+import { test, expect } from "@chromaui/test-archiver";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
