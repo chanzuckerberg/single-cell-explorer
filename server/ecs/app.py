@@ -3,7 +3,6 @@ import hashlib
 import logging
 import os
 import sys
-from logging.config import dictConfig
 from urllib.parse import urlparse
 
 from flask import json
@@ -13,28 +12,9 @@ from flask_talisman import Talisman
 SERVERDIR = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SERVERDIR)
 
-
-dictConfig(
-    {
-        "version": 1,
-        "formatters": {
-            "default": {
-                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
-        },
-        "handlers": {
-            "wsgi": {
-                "class": "logging.StreamHandler",
-                "stream": "ext://flask.logging.wsgi_errors_stream",
-                "formatter": "default",
-            }
-        },
-        "root": {"level": "INFO", "handlers": ["wsgi"]},
-    }
-)
-
 try:
     from server.app.app import Server
+    from server.app.logging import configure_logging
     from server.common.config.app_config import AppConfig
     from server.common.utils.data_locator import DataLocator, discover_s3_region_name
 except Exception:
@@ -143,7 +123,7 @@ class WSGIServer(Server):
 
 
 try:
-    app_config = False
+    configure_logging()
     # config file: look first for "config.yaml" in the current working directory
     config_file = "config.yaml"
     config_location = DataLocator(config_file)

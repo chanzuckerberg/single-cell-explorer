@@ -5,6 +5,7 @@ server:
   app:
     verbose: false
     debug: false
+    # if debug mode is enabled, then the server will not open a browser, and verbose mode will be enabled.
     host: localhost
     port : null
     open_browser: false
