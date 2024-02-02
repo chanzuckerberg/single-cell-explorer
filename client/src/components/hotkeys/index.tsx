@@ -31,7 +31,6 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
         global: true,
         label: "Undo.",
         onKeyDown: () => {
-          console.log("UNDO");
           undo();
         },
       },
@@ -40,7 +39,6 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
         global: true,
         label: "Redo.",
         onKeyDown: () => {
-          console.log("REDO");
           redo();
         },
       },
