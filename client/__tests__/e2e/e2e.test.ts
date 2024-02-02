@@ -168,9 +168,6 @@ describe("metadata loads", () => {
 
       const categories = await getAllCategoriesAndCounts(label, page);
 
-      console.log(categories);
-      console.log(dataTruncate.categorical[label]);
-
       expect(Object.keys(categories)).toMatchObject(
         Object.keys(dataTruncate.categorical[label])
       );
@@ -452,7 +449,7 @@ describe("graph overlay", () => {
 });
 
 test("zoom limit is 12x", async ({ page }) => {
-  goToPage(page);
+  await goToPage(page);
   const category = Object.keys(
     data.categorical
   )[0] as keyof typeof data.categorical;
@@ -487,7 +484,7 @@ test("zoom limit is 12x", async ({ page }) => {
 });
 
 test("pan zoom mode resets lasso selection", async ({ page }) => {
-  goToPage(page);
+  await goToPage(page);
   const panzoomLasso = data.features.panzoom.lasso;
 
   const lassoSelection = await calcDragCoordinates(
@@ -667,8 +664,7 @@ for (const option of options) {
       expect(genesHTML).toMatchSnapshot();
     });
 
-    //  (seve)undo/redo tests are failing on GHA
-    test.fixme("create a new geneset and undo/redo", async ({ page }) => {
+    test("create a new geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
@@ -681,22 +677,24 @@ for (const option of options) {
       await assertGenesetExists(genesetName, page);
       await keyboardUndo(page);
       await assertGenesetDoesNotExist(genesetName, page);
+      // if we redo too quickly after undo, the shortcut handler capture the action
+      await page.waitForTimeout(500);
       await keyboardRedo(page);
       await assertGenesetExists(genesetName, page);
     });
-    // (seve): undo redo tests are failing on GHA
-    test.fixme("edit geneset name and undo/redo", async ({ page }) => {
+    test("edit geneset name and undo/redo", async ({ page }) => {
       await setup(option, page);
       await createGeneset(editableGenesetName, page);
       await editGenesetName(editableGenesetName, newGenesetName, page);
       await assertGenesetExists(newGenesetName, page);
       await keyboardUndo(page);
       await assertGenesetExists(editableGenesetName, page);
+      // if we redo too quickly after undo, the shortcut handler capture the action
+      await page.waitForTimeout(500);
       await keyboardRedo(page);
       await assertGenesetExists(newGenesetName, page);
     });
-    // (seve): undo redo tests are failing on GHA
-    test.fixme("delete a geneset and undo/redo", async ({ page }) => {
+    test("delete a geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
@@ -704,6 +702,8 @@ for (const option of options) {
       await deleteGeneset(genesetToDeleteName, page);
       await keyboardUndo(page);
       await assertGenesetExists(genesetToDeleteName, page);
+      // if we redo too quickly after undo, the shortcut handler capture the action
+      await page.waitForTimeout(500);
       await keyboardRedo(page);
       await assertGenesetDoesNotExist(genesetToDeleteName, page);
     });
@@ -732,13 +732,10 @@ for (const option of options) {
       await assertGeneExistsInGeneset(geneToAddToSet, page);
       await keyboardUndo(page);
       await assertGeneDoesNotExist(geneToAddToSet, page);
-      await await tryUntil(
-        async () => {
-          await keyboardRedo(page);
-          await assertGeneExistsInGeneset(geneToAddToSet, page);
-        },
-        { page }
-      );
+      // if we redo too quickly after undo, the shortcut handler capture the action
+      await page.waitForTimeout(500);
+      await keyboardRedo(page);
+      await assertGeneExistsInGeneset(geneToAddToSet, page);
     });
     test("expand gene and brush", async ({ page }) => {
       await setup(option, page);
@@ -777,18 +774,18 @@ for (const option of options) {
       await colorByGene("SIK1", page);
       await assertColorLegendLabel("SIK1", page);
     });
-    //  (seve)undo/redo tests are failing on GHA
-    test.fixme("delete gene from geneset and undo/redo", async ({ page }) => {
+    test("delete gene from geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
       await createGeneset(setToRemoveFrom, page);
       await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-
       await removeGene(geneToRemove, page);
       await assertGeneDoesNotExist(geneToRemove, page);
       await keyboardUndo(page);
       await assertGeneExistsInGeneset(geneToRemove, page);
+      // if we redo too quickly after undo, the shortcut handler capture the action
+      await page.waitForTimeout(500);
       await keyboardRedo(page);
       await assertGeneDoesNotExist(geneToRemove, page);
     });
