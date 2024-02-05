@@ -14,7 +14,6 @@ sys.path.append(SERVERDIR)
 
 try:
     from server.app.app import Server
-    from server.app.logging import configure_logging
     from server.common.config.app_config import AppConfig
     from server.common.utils.data_locator import DataLocator, discover_s3_region_name
 except Exception:
@@ -123,7 +122,7 @@ class WSGIServer(Server):
 
 
 try:
-    configure_logging()
+    # configure_logging()
     # config file: look first for "config.yaml" in the current working directory
     config_file = "config.yaml"
     config_location = DataLocator(config_file)
