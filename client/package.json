@@ -5,7 +5,7 @@
   "description": "cellxgene is a web application for the interactive exploration of single cell sequence data.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chanzuckerberg/cellxgene.git"
+    "url": "git+https://github.com/chanzuckerberg/single-cell-explorer.git"
   },
   "scripts": {
     "build": "npm run clean && npm run create-supported-browsers-regex && webpack --config",
