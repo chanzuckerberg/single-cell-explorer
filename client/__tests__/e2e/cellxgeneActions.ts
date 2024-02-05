@@ -350,7 +350,7 @@ export async function editGenesetName(
   const editButton = `${genesetName}:edit-genesetName-mode`;
   const submitButton = `${genesetName}:submit-geneset`;
   await page.getByTestId(`${genesetName}:see-actions`).click();
-  await page.getByTestId(editButton).click();
+  await page.getByTestId(editButton).click({ force: true });
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
@@ -616,6 +616,19 @@ export async function bulkAddGenes(
   await page.getByTestId("section-bulk-add").click();
   await page.getByTestId("input-bulk-add").fill(geneNames.join(","));
   await page.keyboard.press("Enter");
+}
+
+export async function assertUndoRedo(
+  page: Page,
+  assertOne: () => Promise<void>,
+  assertTwo: () => Promise<void>
+): Promise<void> {
+  await keyboardUndo(page);
+  await assertOne();
+  // if we redo too quickly after undo, the shortcut handler capture the action
+  await page.waitForTimeout(500);
+  await keyboardRedo(page);
+  await assertTwo();
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

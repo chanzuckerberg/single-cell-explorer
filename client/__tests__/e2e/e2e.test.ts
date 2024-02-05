@@ -46,6 +46,7 @@ import {
   keyboardRedo,
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
+  assertUndoRedo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -675,24 +676,22 @@ for (const option of options) {
       await assertGenesetDoesNotExist(genesetName, page);
       await createGeneset(genesetName, page);
       await assertGenesetExists(genesetName, page);
-      await keyboardUndo(page);
-      await assertGenesetDoesNotExist(genesetName, page);
-      // if we redo too quickly after undo, the shortcut handler capture the action
-      await page.waitForTimeout(500);
-      await keyboardRedo(page);
-      await assertGenesetExists(genesetName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetDoesNotExist(genesetName, page),
+        async () => assertGenesetExists(genesetName, page)
+      );
     });
     test("edit geneset name and undo/redo", async ({ page }) => {
       await setup(option, page);
       await createGeneset(editableGenesetName, page);
       await editGenesetName(editableGenesetName, newGenesetName, page);
       await assertGenesetExists(newGenesetName, page);
-      await keyboardUndo(page);
-      await assertGenesetExists(editableGenesetName, page);
-      // if we redo too quickly after undo, the shortcut handler capture the action
-      await page.waitForTimeout(500);
-      await keyboardRedo(page);
-      await assertGenesetExists(newGenesetName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetExists(editableGenesetName, page),
+        async () => assertGenesetExists(newGenesetName, page)
+      );
     });
     test("delete a geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
@@ -700,12 +699,11 @@ for (const option of options) {
       await setup(option, page);
       await createGeneset(genesetToDeleteName, page);
       await deleteGeneset(genesetToDeleteName, page);
-      await keyboardUndo(page);
-      await assertGenesetExists(genesetToDeleteName, page);
-      // if we redo too quickly after undo, the shortcut handler capture the action
-      await page.waitForTimeout(500);
-      await keyboardRedo(page);
-      await assertGenesetDoesNotExist(genesetToDeleteName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetExists(genesetToDeleteName, page),
+        async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+      );
     });
     test("geneset description", async ({ page }) => {
       if (option.withSubset) return;
@@ -730,12 +728,11 @@ for (const option of options) {
       await createGeneset(setToAddGeneTo, page);
       await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
       await assertGeneExistsInGeneset(geneToAddToSet, page);
-      await keyboardUndo(page);
-      await assertGeneDoesNotExist(geneToAddToSet, page);
-      // if we redo too quickly after undo, the shortcut handler capture the action
-      await page.waitForTimeout(500);
-      await keyboardRedo(page);
-      await assertGeneExistsInGeneset(geneToAddToSet, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGeneDoesNotExist(geneToAddToSet, page),
+        async () => assertGeneExistsInGeneset(geneToAddToSet, page)
+      );
     });
     test("expand gene and brush", async ({ page }) => {
       await setup(option, page);
@@ -782,12 +779,11 @@ for (const option of options) {
       await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
       await removeGene(geneToRemove, page);
       await assertGeneDoesNotExist(geneToRemove, page);
-      await keyboardUndo(page);
-      await assertGeneExistsInGeneset(geneToRemove, page);
-      // if we redo too quickly after undo, the shortcut handler capture the action
-      await page.waitForTimeout(500);
-      await keyboardRedo(page);
-      await assertGeneDoesNotExist(geneToRemove, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGeneExistsInGeneset(geneToRemove, page),
+        async () => assertGeneDoesNotExist(geneToRemove, page)
+      );
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
