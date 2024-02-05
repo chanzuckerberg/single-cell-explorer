@@ -368,7 +368,7 @@ export async function checkGenesetDescription(
 ): Promise<void> {
   const editButton = `${genesetName}:edit-genesetName-mode`;
   await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(editButton).click();
+  await page.getByTestId(editButton).click({ force: true });
   const description = page.getByTestId("change-geneset-description");
   await expect(description).toHaveValue(descriptionText);
 }
