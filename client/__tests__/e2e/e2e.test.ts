@@ -42,8 +42,6 @@ import {
   removeGeneInfo,
   addGeneToSearch,
   assertGeneInfoDoesNotExist,
-  keyboardUndo,
-  keyboardRedo,
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
   assertUndoRedo,
