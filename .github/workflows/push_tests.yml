@@ -121,8 +121,9 @@ jobs:
           # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           workingDir: ./client
-          # This is `npm run build-archive-storybook`
-          buildScriptName: "build-archive-storybook"
+          playwright: true
+        env:
+          CHROMATIC_ARCHIVE_LOCATION: "playwright-report/"
 
       - name: Upload FE test results as an artifact
         if: always()
