@@ -16,7 +16,8 @@
     "lint": "eslint src __tests__ & npm run type-check",
     "prod": "npm run build -- configuration/webpack/webpack.config.prod.js",
     "type-check": "tsc --noEmit",
-    "create-supported-browsers-regex": "echo \"module.exports = $(browserslist-useragent-regexp --allowHigherVersions);\" > configuration/webpack/SUPPORTED_BROWSERS_REGEX.js"
+    "create-supported-browsers-regex": "echo \"module.exports = $(browserslist-useragent-regexp --allowHigherVersions);\" > configuration/webpack/SUPPORTED_BROWSERS_REGEX.js",
+    "chromatic": "CHROMATIC_ARCHIVE_LOCATION=playwright-report/ npx chromatic --playwright --exit-zero-on-changes --exit-once-uploaded"
   },
   "engineStrict": true,
   "engines": {
