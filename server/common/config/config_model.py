@@ -60,7 +60,6 @@ class ServerApp(BaseModel):
     @root_validator(skip_on_failure=True)
     def check_debug(cls, values):
         if values["debug"]:
-            values["verbose"] = True
             values["open_brower"] = False
         else:
             warnings.formatwarning = custom_format_warning

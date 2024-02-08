@@ -2,7 +2,7 @@ server:
   app:
     force_https: true
     port: 5005
-    debug: false
+    debug: true
     verbose: false
 
   gene_info:
