@@ -274,7 +274,6 @@ def launch(
 
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
-
     try:
         server.app.run(
             host=app_config.server__app__host,
