@@ -378,7 +378,7 @@ export async function deleteGeneset(
   page: Page
 ): Promise<void> {
   const targetId = `${genesetName}:delete-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click();
+  await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
   await page.getByTestId(targetId).click();
 
   await assertGenesetDoesNotExist(genesetName, page);
