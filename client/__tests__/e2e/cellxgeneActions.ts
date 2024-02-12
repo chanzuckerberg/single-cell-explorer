@@ -379,7 +379,7 @@ export async function deleteGeneset(
 ): Promise<void> {
   const targetId = `${genesetName}:delete-geneset`;
   await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(targetId).click();
+  await page.getByTestId(targetId).click({ force: true });
 
   await assertGenesetDoesNotExist(genesetName, page);
 }
