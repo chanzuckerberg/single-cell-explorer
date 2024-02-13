@@ -59,11 +59,11 @@ export async function scroll({
 }
 
 export async function keyboardUndo(page: Page): Promise<void> {
-  await page.getByTestId("layout-graph").press("Meta+Z");
+  await page.keyboard.press("Meta+Z");
 }
 
 export async function keyboardRedo(page: Page): Promise<void> {
-  await page.getByTestId("layout-graph").press("Meta+Shift+Z");
+  await page.keyboard.press("Meta+Shift+Z");
 }
 
 const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
@@ -350,7 +350,7 @@ export async function editGenesetName(
   const editButton = `${genesetName}:edit-genesetName-mode`;
   const submitButton = `${genesetName}:submit-geneset`;
   await page.getByTestId(`${genesetName}:see-actions`).click();
-  await page.getByTestId(editButton).click();
+  await page.getByTestId(editButton).click({ force: true });
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
@@ -368,7 +368,7 @@ export async function checkGenesetDescription(
 ): Promise<void> {
   const editButton = `${genesetName}:edit-genesetName-mode`;
   await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(editButton).click();
+  await page.getByTestId(editButton).click({ force: true });
   const description = page.getByTestId("change-geneset-description");
   await expect(description).toHaveValue(descriptionText);
 }
@@ -378,8 +378,8 @@ export async function deleteGeneset(
   page: Page
 ): Promise<void> {
   const targetId = `${genesetName}:delete-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click();
-  await page.getByTestId(targetId).click();
+  await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
+  await page.getByTestId(targetId).click({ force: true });
 
   await assertGenesetDoesNotExist(genesetName, page);
 }
@@ -616,6 +616,19 @@ export async function bulkAddGenes(
   await page.getByTestId("section-bulk-add").click();
   await page.getByTestId("input-bulk-add").fill(geneNames.join(","));
   await page.keyboard.press("Enter");
+}
+
+export async function assertUndoRedo(
+  page: Page,
+  assertOne: () => Promise<void>,
+  assertTwo: () => Promise<void>
+): Promise<void> {
+  await keyboardUndo(page);
+  await assertOne();
+  // if we redo too quickly after undo, the shortcut handler capture the action
+  await page.waitForTimeout(500);
+  await keyboardRedo(page);
+  await assertTwo();
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

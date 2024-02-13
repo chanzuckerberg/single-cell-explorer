@@ -13,7 +13,7 @@ const CZI_CHECKER = " czi-checker";
 /**
  * Set this environment variable to enable retry
  */
-const SHOULD_RETRY = process.env.RETRY !== "false";
+const SHOULD_RETRY = process.env.RETRY?.toLowerCase() !== "false";
 if (!SHOULD_RETRY) {
   console.log('Skipping retry because "RETRY" is set to false');
 }

@@ -43,10 +43,9 @@ import {
   removeGeneInfo,
   addGeneToSearch,
   assertGeneInfoDoesNotExist,
-  keyboardUndo,
-  keyboardRedo,
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
+  assertUndoRedo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -56,6 +55,7 @@ import {
   DATASET,
   DATASET_TRUNCATE,
   pageURLTruncate,
+  testURL,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
@@ -93,6 +93,7 @@ const genesetToCheckForDescription = "fourth_gene_set";
 const data = datasets[DATASET];
 const dataTruncate = datasets[DATASET_TRUNCATE];
 
+// TODO #754
 test.beforeEach(mockSetup);
 
 describe("did launch", () => {
@@ -153,13 +154,15 @@ describe("metadata loads", () => {
     }
   });
 
-  // (seve): This test is identical to the above test other than the dataset used. Not sure what is causing the failure
+  // TODO(seve) #753
   test.fixme(
     "categories and values from dataset appear and properly truncate if applicable",
     async ({ page }) => {
       await goToPage(page, pageURLTruncate);
 
-      for (const label of Object.keys(dataTruncate.categorical)) {
+      for (const label of Object.keys(
+        dataTruncate.categorical
+      ) as (keyof typeof dataTruncate.categorical)[]) {
         const element = await page.getByTestId(`category-${label}`).innerHTML();
 
         expect(element).toMatchSnapshot();
@@ -169,11 +172,11 @@ describe("metadata loads", () => {
         const categories = await getAllCategoriesAndCounts(label, page);
 
         expect(Object.keys(categories)).toMatchObject(
-          Object.keys(dataTruncate.categorical.truncate[label])
+          Object.keys(dataTruncate.categorical[label])
         );
 
         expect(Object.values(categories)).toMatchObject(
-          Object.values(dataTruncate.categorical.truncate[label])
+          Object.values(dataTruncate.categorical[label])
         );
       }
     }
@@ -450,7 +453,7 @@ describe("graph overlay", () => {
 });
 
 test("zoom limit is 12x", async ({ page }) => {
-  goToPage(page);
+  await goToPage(page);
   const category = Object.keys(
     data.categorical
   )[0] as keyof typeof data.categorical;
@@ -485,7 +488,7 @@ test("zoom limit is 12x", async ({ page }) => {
 });
 
 test("pan zoom mode resets lasso selection", async ({ page }) => {
-  goToPage(page);
+  await goToPage(page);
   const panzoomLasso = data.features.panzoom.lasso;
 
   const lassoSelection = await calcDragCoordinates(
@@ -616,6 +619,11 @@ for (const option of options) {
     test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
 
+      const runningAgainstDeployment = !testURL.includes("localhost");
+
+      // this test will take longer if we're running against a deployment
+      if (runningAgainstDeployment) test.slow();
+
       await setup(option, page);
 
       // set the two cell sets to b cells vs nk cells
@@ -657,7 +665,7 @@ for (const option of options) {
           // (thuang): Assumes Pop2 geneset has NKG7 gene
           expect(page.getByTestId("NKG7:gene-label")).toBeVisible();
         },
-        { page }
+        { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
       );
 
       genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
@@ -665,8 +673,7 @@ for (const option of options) {
       expect(genesHTML).toMatchSnapshot();
     });
 
-    //  (seve)undo/redo tests are failing on GHA
-    test.fixme("create a new geneset and undo/redo", async ({ page }) => {
+    test("create a new geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
@@ -677,33 +684,34 @@ for (const option of options) {
       await assertGenesetDoesNotExist(genesetName, page);
       await createGeneset(genesetName, page);
       await assertGenesetExists(genesetName, page);
-      await keyboardUndo(page);
-      await assertGenesetDoesNotExist(genesetName, page);
-      await keyboardRedo(page);
-      await assertGenesetExists(genesetName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetDoesNotExist(genesetName, page),
+        async () => assertGenesetExists(genesetName, page)
+      );
     });
-    // (seve): undo redo tests are failing on GHA
-    test.fixme("edit geneset name and undo/redo", async ({ page }) => {
+    test("edit geneset name and undo/redo", async ({ page }) => {
       await setup(option, page);
       await createGeneset(editableGenesetName, page);
       await editGenesetName(editableGenesetName, newGenesetName, page);
       await assertGenesetExists(newGenesetName, page);
-      await keyboardUndo(page);
-      await assertGenesetExists(editableGenesetName, page);
-      await keyboardRedo(page);
-      await assertGenesetExists(newGenesetName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetExists(editableGenesetName, page),
+        async () => assertGenesetExists(newGenesetName, page)
+      );
     });
-    // (seve): undo redo tests are failing on GHA
-    test.fixme("delete a geneset and undo/redo", async ({ page }) => {
+    test("delete a geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
       await createGeneset(genesetToDeleteName, page);
       await deleteGeneset(genesetToDeleteName, page);
-      await keyboardUndo(page);
-      await assertGenesetExists(genesetToDeleteName, page);
-      await keyboardRedo(page);
-      await assertGenesetDoesNotExist(genesetToDeleteName, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGenesetExists(genesetToDeleteName, page),
+        async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+      );
     });
     test("geneset description", async ({ page }) => {
       if (option.withSubset) return;
@@ -728,14 +736,10 @@ for (const option of options) {
       await createGeneset(setToAddGeneTo, page);
       await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
       await assertGeneExistsInGeneset(geneToAddToSet, page);
-      await keyboardUndo(page);
-      await assertGeneDoesNotExist(geneToAddToSet, page);
-      await await tryUntil(
-        async () => {
-          await keyboardRedo(page);
-          await assertGeneExistsInGeneset(geneToAddToSet, page);
-        },
-        { page }
+      await assertUndoRedo(
+        page,
+        async () => assertGeneDoesNotExist(geneToAddToSet, page),
+        async () => assertGeneExistsInGeneset(geneToAddToSet, page)
       );
     });
     test("expand gene and brush", async ({ page }) => {
@@ -775,20 +779,19 @@ for (const option of options) {
       await colorByGene("SIK1", page);
       await assertColorLegendLabel("SIK1", page);
     });
-    //  (seve)undo/redo tests are failing on GHA
-    test.fixme("delete gene from geneset and undo/redo", async ({ page }) => {
+    test("delete gene from geneset and undo/redo", async ({ page }) => {
       if (option.withSubset) return;
 
       await setup(option, page);
       await createGeneset(setToRemoveFrom, page);
       await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-
       await removeGene(geneToRemove, page);
       await assertGeneDoesNotExist(geneToRemove, page);
-      await keyboardUndo(page);
-      await assertGeneExistsInGeneset(geneToRemove, page);
-      await keyboardRedo(page);
-      await assertGeneDoesNotExist(geneToRemove, page);
+      await assertUndoRedo(
+        page,
+        async () => assertGeneExistsInGeneset(geneToRemove, page),
+        async () => assertGeneDoesNotExist(geneToRemove, page)
+      );
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
