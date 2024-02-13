@@ -10,6 +10,7 @@ import {
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
 import { removeLargeDatasets } from "../util/stateManager/datasetMetadataHelpers";
 import * as selnActions from "./selection";
+import * as spatialActions from "./spatial";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
@@ -477,4 +478,5 @@ export default {
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
   genesetDeleteGenes: genesetActions.genesetDeleteGenes,
+  requestSpatialMetadata: spatialActions.requestSpatialMetadata,
 };

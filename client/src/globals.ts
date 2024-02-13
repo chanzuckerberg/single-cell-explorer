@@ -3,6 +3,9 @@ import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
 import { DataPortalProps, S3URI } from "./common/types/entities";
 
+// visium embedding word, spatial image underlay
+export const spatialEmbeddingKeyword = "spatial";
+
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
 

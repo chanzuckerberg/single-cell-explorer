@@ -35,6 +35,8 @@ interface Props {
 class App extends React.Component<Props> {
   componentDidMount(): void {
     const { dispatch } = this.props;
+
+    dispatch(actions.requestSpatialMetadata());
     /* listen for url changes, fire one when we start the app up */
     window.addEventListener("popstate", this._onURLChanged);
     this._onURLChanged();

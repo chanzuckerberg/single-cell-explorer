@@ -1,9 +1,11 @@
+import json
 import logging
 from functools import wraps
 from urllib.parse import unquote
 
 from flask import (
     Blueprint,
+    Response,
     current_app,
     redirect,
     request,
@@ -140,6 +142,15 @@ class SummarizeVarAPI(S3URIResource):
     def post(self, data_adaptor):
         return common_rest.summarize_var_post(request, data_adaptor)
 
+class SpatialImageAPI(Resource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.spatial_image_get(request, data_adaptor)
+
+class SpatialMetaAPI(Resource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return data_adaptor.get_spatial_metadata()
 
 class GeneInfoAPI(S3URIResource):
     @rest_get_s3uri_data_adaptor
@@ -173,6 +184,16 @@ def rest_get_dataset_explorer_location_data_adaptor(func):
             return redirect(f"{parent_collection_url}?tombstoned_dataset_id={e.dataset_id}")
 
     return wrapped_function
+
+# class DatasetMetadataAPI(DatasetResource):
+#     @cache_control(public=True, no_store=True, max_age=0)
+#     @rest_get_dataset_explorer_location_data_adaptor
+#     def get(self, data_adaptor):
+#         with open("server/tests/fixtures/liver_dataset_metadata_response.json", "r") as file:
+#             mock_response = json.load(file)
+
+#         json_response = json.dumps(mock_response)
+#         return Response(json_response, content_type='application/json')
 
 
 class DatasetMetadataAPI(DatasetResource):
@@ -219,6 +240,9 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DiffExpObsAPI, "/diffexp/obs")
     add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
+    # Spatial routes
+    add_resource(SpatialImageAPI, "/spatial/image")
+    add_resource(SpatialMetaAPI, "/spatial/meta")
     return api
 
 

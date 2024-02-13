@@ -1,6 +1,5 @@
 import { doBinaryRequest, doFetch } from "./fetchHelpers";
 import { matrixFBSToDataframe } from "../util/stateManager/matrix";
-import { _getColumnSchema } from "./schema";
 import { _whereCacheCreate, WhereCache } from "./whereCache";
 import AnnoMatrix from "./annoMatrix";
 import PromiseLimit from "../util/promiseLimit";
@@ -15,13 +14,8 @@ import {
   Query,
 } from "./query";
 import { normalizeResponse } from "./normalize";
-import {
-  Field,
-  RawSchema,
-} from "../common/types/schema";
-import {
-  Dataframe,
-} from "../util/dataframe";
+import { Field, RawSchema } from "../common/types/schema";
+import { Dataframe } from "../util/dataframe";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 

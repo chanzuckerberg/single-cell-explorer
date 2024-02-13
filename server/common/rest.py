@@ -8,7 +8,7 @@ import zlib
 from http import HTTPStatus
 
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect
+from flask import abort, current_app, jsonify, make_response, redirect, send_file
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
@@ -23,6 +23,7 @@ from server.common.errors import (
     FilterError,
     InvalidCxgDatasetError,
     JSONEncodingValueError,
+    PrepareError,
     TombstoneError,
     UnsupportedSummaryMethod,
 )
@@ -106,6 +107,12 @@ def schema_get_helper(data_adaptor):
     """helper function to gather the schema from the data source and annotations"""
     schema = data_adaptor.get_schema()
     schema = copy.deepcopy(schema)
+    
+    # add label obs annotations as needed
+    # annotations = data_adaptor.dataset_config.user_annotations
+    # if annotations.user_annotations_enabled():
+    #     label_schema = annotations.get_schema(data_adaptor)
+    #     schema["annotations"]["obs"]["columns"].extend(label_schema)
 
     return schema
 
@@ -409,3 +416,42 @@ def summarize_var_post(request, data_adaptor):
 
     key = request.args.get("key", default=None)
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
+
+def spatial_image_get(request, data_adaptor):
+    import io
+    import matplotlib.pyplot
+
+    resolution = "hires"
+    spatial = data_adaptor.get_spxatial()
+
+    if len(list(spatial)) == 0:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, "uns does not have spatial information")
+
+    library_id = list(spatial)[0]
+    if len(spatial) > 1:
+        current_app.logger.warning(f"More than one library found under uns.spatial, using library '{library_id}'")
+
+    if "images" not in spatial[library_id]:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, "spatial information does not contain images")
+
+    if resolution not in spatial[library_id]["images"]:
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST, f"spatial information does not contain requested resolution '{resolution}'"
+        )
+
+    response_image = io.BytesIO()
+    img = spatial[library_id]["images"][resolution]
+    matplotlib.pyplot.imsave(response_image, img)
+    response_image.seek(0)
+
+    try:
+        return send_file(response_image, download_name=f"{library_id}-{resolution}.png", mimetype="image/png")
+    except (KeyError, DatasetAccessError) as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+    except PrepareError:
+        return abort_and_log(
+            HTTPStatus.NOT_IMPLEMENTED,
+            f"No spatial image available {request.path}",
+            loglevel=logging.ERROR,
+            include_exc_info=True,
+        )

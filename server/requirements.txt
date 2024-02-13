@@ -12,6 +12,7 @@ flatbuffers>=1.11.0,<2.0.0 # cellxgene is not compatible with 2.0.0. Requires mi
 flatten_dict==0.4.2
 fsspec>=0.4.4,<0.8.0
 gunicorn[gevent]==20.0.4
+matplotlib==3.8.2
 numba==0.56.4
 numpy==1.23.5
 pandas==1.5.3
