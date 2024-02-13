@@ -274,6 +274,10 @@ def launch(
 
     click.echo("[cellxgene] Type CTRL-C at any time to exit.")
 
+    if not app_config.server__app__verbose:
+        with open(os.devnull, "w") as f:
+            sys.stdout = f
+
     try:
         server.app.run(
             host=app_config.server__app__host,
