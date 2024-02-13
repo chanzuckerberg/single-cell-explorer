@@ -526,7 +526,7 @@ class ImmutableScalarDimension extends _ImmutableBaseDimension {
         // only by enumerated dimensions.  May be overridden in subclass.
         array = new ValueArrayCtor(length);
         for (let i = 0; i < length; i += 1) {
-          array[i] = value[i];
+          array[i] = Number(value[i]);
         }
       }
     }

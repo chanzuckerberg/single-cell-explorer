@@ -18,6 +18,7 @@ import continuousSelection from "./continuousSelection";
 import graphSelection from "./graphSelection";
 import colors from "./colors";
 import differential from "./differential";
+import spatial from "./spatial";
 import layoutChoice from "./layoutChoice";
 import controls from "./controls";
 import annotations from "./annotations";
@@ -25,6 +26,7 @@ import genesets from "./genesets";
 import genesetsUI from "./genesetsUI";
 import centroidLabels from "./centroidLabels";
 import pointDialation from "./pointDilation";
+import imageUnderlay from "./imageUnderlay";
 import quickGenes from "./quickGenes";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
@@ -47,7 +49,9 @@ const AppReducer = undoable(
     ["controls", controls],
     ["quickGenes", quickGenes],
     ["differential", differential],
+    ["spatial", spatial],
     ["centroidLabels", centroidLabels],
+    ["imageUnderlay", imageUnderlay],
     ["pointDilation", pointDialation],
     ["datasetMetadata", datasetMetadata],
   ]),
@@ -61,6 +65,7 @@ const AppReducer = undoable(
     "controls",
     "quickGenes",
     "differential",
+    "spatial",
     "layoutChoice",
     "centroidLabels",
     "genesets",

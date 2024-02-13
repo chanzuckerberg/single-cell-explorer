@@ -374,6 +374,13 @@ class CxgDataset(Dataset):
         schema = var.schema
         return [attr.name for attr in schema]
 
+    def get_uns_values(self):
+        uns = self.open_array("uns")
+        metadata_dict = {}
+        for key in uns.meta:
+            metadata_dict[key] = uns.meta[key]
+        return metadata_dict
+
     # function to get the embedding
     # this function to iterate through embeddings.
     def get_embedding_names(self):
@@ -399,7 +406,7 @@ class CxgDataset(Dataset):
         }
 
         annotations = {}
-        for ax in ("obs", "var"):
+        for ax in ("obs", "var", "uns"):
             A = self.open_array(ax)
             schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
             if not isinstance(schema_hints, dict):
@@ -478,3 +485,46 @@ class CxgDataset(Dataset):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, num_bins=num_bins)
 
         return fbs
+
+
+    def get_spatial(self):
+        pemb = self.get_path("uns")
+        embeddings = [os.path.basename(p) for (p, t) in self.lsuri(pemb) if t == "array"]
+        print(embeddings)
+        return self.data.uns["spatial"]
+
+    def get_spatial_metadata(self):
+
+        spatial = self.get_spatial()
+
+        resolution = "hires"
+
+        if len(list(spatial)) == 0:
+            raise Exception("uns does not have spatial information")
+
+        library_id = list(spatial)[0]
+
+        if "images" not in spatial[library_id]:
+            raise Exception("spatial information does not contain images")
+
+        if resolution not in spatial[library_id]["images"]:
+            raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
+
+        scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
+        (h, w, _) = spatial[library_id]["images"][resolution].shape
+
+        A = self.data.obsm["X_spatial"]
+        min = np.nanmin(A, axis=0)
+        max = np.nanmax(A, axis=0)
+        scale = np.amax(max - min)
+        translate = 0.5 - ((max - min) / scale / 2)
+
+        return {
+            "imageWidth": w,
+            "imageHeight": h,
+            "scaleref": scaleref,
+            "inverseScale": int(scale),
+            "inverseTranslate": translate.tolist(),
+            "inverseMin": min.tolist(),
+        }
+

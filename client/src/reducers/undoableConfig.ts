@@ -57,6 +57,9 @@ const skipOnActions = new Set<string>([
   /* geneInfo actions */
   "minimize/maximize gene info",
   "open gene info",
+
+  /* spatial */
+  "toggle image underlay",
 ]);
 
 /*
