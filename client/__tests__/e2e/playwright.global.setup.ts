@@ -42,6 +42,15 @@ const setup = async ({ page }: { page: Page }) => {
       },
     });
   });
+
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      throw new Error(`CLIENT SIDE ERROR: ${  message.text()}`);
+    }
+  });
+  page.on("pageerror", (error) => {
+    throw new Error(`UNCAUGHT CLIENT ERROR: ${  error}`);
+  });
 };
 
 export default setup;
