@@ -7,13 +7,12 @@ export const APP_URL_BASE =
   process.env.CXG_URL_BASE || `http://localhost:${ENV_DEFAULT.CXG_CLIENT_PORT}`;
 
 const DEFAULT_BASE_PATH = "d";
-export const testURL = APP_URL_BASE.includes("localhost")
-  ? [APP_URL_BASE, DEFAULT_BASE_PATH, DATASET].join("/")
-  : APP_URL_BASE;
+export const testURL = [APP_URL_BASE, DEFAULT_BASE_PATH, DATASET, ""].join("/");
 export const pageURLTruncate = [
   APP_URL_BASE,
   DEFAULT_BASE_PATH,
   DATASET_TRUNCATE,
+  "",
 ].join("/");
 
 export const BLUEPRINT_SAFE_TYPE_OPTIONS = { delay: 50 };

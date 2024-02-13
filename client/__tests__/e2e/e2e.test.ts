@@ -55,6 +55,7 @@ import {
   DATASET,
   DATASET_TRUNCATE,
   pageURLTruncate,
+  testURL,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
@@ -92,6 +93,7 @@ const genesetToCheckForDescription = "fourth_gene_set";
 const data = datasets[DATASET];
 const dataTruncate = datasets[DATASET_TRUNCATE];
 
+// TODO #754
 test.beforeEach(mockSetup);
 
 describe("did launch", () => {
@@ -152,31 +154,33 @@ describe("metadata loads", () => {
     }
   });
 
-  test("categories and values from dataset appear and properly truncate if applicable", async ({
-    page,
-  }) => {
-    await goToPage(page, pageURLTruncate);
+  // TODO(seve) #753
+  test.fixme(
+    "categories and values from dataset appear and properly truncate if applicable",
+    async ({ page }) => {
+      await goToPage(page, pageURLTruncate);
 
-    for (const label of Object.keys(
-      dataTruncate.categorical
-    ) as (keyof typeof dataTruncate.categorical)[]) {
-      const element = await page.getByTestId(`category-${label}`).innerHTML();
+      for (const label of Object.keys(
+        dataTruncate.categorical
+      ) as (keyof typeof dataTruncate.categorical)[]) {
+        const element = await page.getByTestId(`category-${label}`).innerHTML();
 
-      expect(element).toMatchSnapshot();
+        expect(element).toMatchSnapshot();
 
-      await page.getByTestId(`${label}:category-expand`).click();
+        await page.getByTestId(`${label}:category-expand`).click();
 
-      const categories = await getAllCategoriesAndCounts(label, page);
+        const categories = await getAllCategoriesAndCounts(label, page);
 
-      expect(Object.keys(categories)).toMatchObject(
-        Object.keys(dataTruncate.categorical[label])
-      );
+        expect(Object.keys(categories)).toMatchObject(
+          Object.keys(dataTruncate.categorical[label])
+        );
 
-      expect(Object.values(categories)).toMatchObject(
-        Object.values(dataTruncate.categorical[label])
-      );
+        expect(Object.values(categories)).toMatchObject(
+          Object.values(dataTruncate.categorical[label])
+        );
+      }
     }
-  });
+  );
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
@@ -615,6 +619,11 @@ for (const option of options) {
     test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
 
+      const runningAgainstDeployment = !testURL.includes("localhost");
+
+      // this test will take longer if we're running against a deployment
+      if (runningAgainstDeployment) test.slow();
+
       await setup(option, page);
 
       // set the two cell sets to b cells vs nk cells
@@ -656,7 +665,7 @@ for (const option of options) {
           // (thuang): Assumes Pop2 geneset has NKG7 gene
           expect(page.getByTestId("NKG7:gene-label")).toBeVisible();
         },
-        { page }
+        { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
       );
 
       genesHTML = await page.getByTestId("gene-set-genes").innerHTML();

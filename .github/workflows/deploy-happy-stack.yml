@@ -11,6 +11,7 @@ env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
   DOCKER_REPO: ${{ secrets.ECR_REPO }}/
+  DEPLOYMENT_STAGE: ${{ github.ref == 'refs/heads/prod' && 'prod' || github.ref == 'refs/heads/staging' && 'stage' || 'dev' }}
 
 permissions:
   id-token: write
@@ -39,15 +40,6 @@ jobs:
         with:
           registry: ${{ secrets.ECR_REPO }}
       - uses: actions/checkout@v2
-      - name: Set deployment stage variable
-        run : |
-          if [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
-            echo "DEPLOYMENT_STAGE=prod" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
-            echo "DEPLOYMENT_STAGE=stage" >> $GITHUB_ENV
-          else
-            echo "DEPLOYMENT_STAGE=dev" >> $GITHUB_ENV
-          fi
       - name: Setup envfile
         run: |
           mkdir /home/runner/work/custom
@@ -60,5 +52,56 @@ jobs:
           stack-name: explorer-${{ env.DEPLOYMENT_STAGE }}stack
           create-tag: "true"
           env: ${{ env.DEPLOYMENT_STAGE }}
-          env-file: /home/runner/work/custom/envfile 
+          env-file: /home/runner/work/custom/envfile
           happy_version: "0.79.1"
+  smoke-test:
+    timeout-minutes: 30
+    runs-on: ubuntu-22.04
+    needs:
+      - upgrade
+    strategy:
+      fail-fast: false
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      # Run e2e tests
+      - name: Run e2e tests
+        run: npm run e2e-${DEPLOYMENT_STAGE}
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # This is `npm run build-archive-storybook`
+          buildScriptName: "build-archive-storybook"
+
+      - name: Upload FE test results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          retention-days: 14
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-blob-reports
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+        retention-days: 1
