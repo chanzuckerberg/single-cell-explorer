@@ -11,7 +11,6 @@ env:
   DOCKER_BUILDKIT: 1
   COMPOSE_DOCKER_CLI_BUILD: 1
   DOCKER_REPO: ${{ secrets.ECR_REPO }}/
-  GITHUB_BRANCH: ${{ github.ref }}
   DEPLOYMENT_STAGE: ${{ github.ref == 'refs/heads/prod' && 'prod' || github.ref == 'refs/heads/staging' && 'stage' || 'dev' }}
 
 permissions:
@@ -73,7 +72,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
           cache: "npm"
-          cache-dependency-path: "client/package-lock.json"
+          cache-dependency-path: "package-lock.json"
       - name: Install dependencies
         run: |
           npm ci
@@ -83,12 +82,20 @@ jobs:
       - name: Run e2e tests
         run: npm run e2e-${DEPLOYMENT_STAGE}
 
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # This is `npm run build-archive-storybook`
+          buildScriptName: "build-archive-storybook"
+
       - name: Upload FE test results as an artifact
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: playwright-report ${{ matrix.project }} ${{ matrix.shardCurrent }} of ${{ matrix.shardTotal }}
-          path: /home/runner/work/single-cell-data-portal/single-cell-data-portal/frontend/playwright-report
+          name: playwright-report
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
           retention-days: 14
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -96,5 +103,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: /home/runner/work/single-cell-data-portal/single-cell-data-portal/frontend/blob-report
-          retention-days: 1
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+        retention-days: 1
