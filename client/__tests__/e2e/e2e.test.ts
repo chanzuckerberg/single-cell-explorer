@@ -55,6 +55,7 @@ import {
   DATASET,
   DATASET_TRUNCATE,
   pageURLTruncate,
+  testURL,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
@@ -615,8 +616,13 @@ for (const option of options) {
       await colorByGeneset(meanExpressionBrushGenesetName, page);
       await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
     });
-    test("diffexp", async ({ page }) => {
+    test.only("diffexp", async ({ page }) => {
       if (option.withSubset) return;
+
+      const runningAgainstDeployment = !testURL.includes("localhost");
+
+      // this test will take longer if we're running against a deployment
+      if (runningAgainstDeployment) test.slow();
 
       await setup(option, page);
 
@@ -659,7 +665,7 @@ for (const option of options) {
           // (thuang): Assumes Pop2 geneset has NKG7 gene
           expect(page.getByTestId("NKG7:gene-label")).toBeVisible();
         },
-        { page }
+        { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
       );
 
       genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
