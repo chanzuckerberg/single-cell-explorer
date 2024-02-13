@@ -616,7 +616,7 @@ for (const option of options) {
       await colorByGeneset(meanExpressionBrushGenesetName, page);
       await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
     });
-    test.only("diffexp", async ({ page }) => {
+    test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
 
       const runningAgainstDeployment = !testURL.includes("localhost");
