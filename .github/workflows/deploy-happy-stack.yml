@@ -104,4 +104,4 @@ jobs:
         with:
           name: all-blob-reports
           path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
-        retention-days: 1
+          retention-days: 1
