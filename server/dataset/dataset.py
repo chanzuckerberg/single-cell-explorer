@@ -405,3 +405,13 @@ class Dataset(metaclass=ABCMeta):
             col_idx = pd.Index([query_hash])
             fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
         return fbs
+
+    def get_spatial(self):
+        try: 
+            uns = self.open_array("uns")
+        except KeyError as e:
+            return e
+        metadata_dict = {}
+        for key in uns.meta:
+            metadata_dict[key] = uns.meta[key]
+        return metadata_dict
