@@ -156,13 +156,13 @@ class SpatialImageAPI(DatasetResource):
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.spatial_image_get(request, data_adaptor)
-    
+
 
 class SpatialMetaAPI(DatasetResource):
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.spatial_meta_get(request, data_adaptor)
-    
+
 
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)

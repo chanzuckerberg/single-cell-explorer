@@ -421,13 +421,13 @@ def spatial_image_get(request, data_adaptor):
     """
 
     resolution = "hires"
-    
+
     spatial = data_adaptor.get_spatial()
     response_image = io.BytesIO()
     img = spatial[resolution]
     plt.imsave(response_image, img)
     response_image.seek(0)
-    library_id = 'test_library_id'
+    library_id = "test_library_id"
 
     try:
         return send_file(response_image, download_name=f"{library_id}-{resolution}.png", mimetype="image/png")
@@ -448,16 +448,16 @@ def spatial_meta_get(request, data_adaptor):
     scale reference, inverse scale, inverse translate, and inverse min
     """
     spatial = data_adaptor.get_spatial()
-    
+
     resolution = "hires"
-    
+
     if resolution not in spatial:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
-   
+
     scaleref = spatial[f"tissue_{resolution}_scalef"]
     (h, w, _) = spatial[resolution].shape
 
-    A = data_adaptor.get_embedding_array('spatial')
+    A = data_adaptor.get_embedding_array("spatial")
 
     min = np.nanmin(A, axis=0)
     max = np.nanmax(A, axis=0)
