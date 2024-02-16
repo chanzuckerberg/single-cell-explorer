@@ -1,6 +1,8 @@
 import copy
 import hashlib
+import io
 import logging
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import struct
@@ -417,14 +419,13 @@ def spatial_image_get(request, data_adaptor):
     """
     Retrieve a spatial image from the data adaptor and return it as a PNG file
     """
-    import io
-    import matplotlib.pyplot
+
     resolution = "hires"
     
     spatial = data_adaptor.get_spatial()
     response_image = io.BytesIO()
     img = spatial[resolution]
-    matplotlib.pyplot.imsave(response_image, img)
+    plt.imsave(response_image, img)
     response_image.seek(0)
     library_id = 'test_library_id'
 
