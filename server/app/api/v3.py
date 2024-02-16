@@ -152,6 +152,18 @@ class VersionAPI(Resource):
         return common_rest.get_deployed_version(request)
 
 
+class SpatialImageAPI(DatasetResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.spatial_image_get(request, data_adaptor)
+    
+
+class SpatialMetaAPI(DatasetResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.spatial_meta_get(request, data_adaptor)
+    
+
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
@@ -219,6 +231,8 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DiffExpObsAPI, "/diffexp/obs")
     add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
+    add_resource(SpatialImageAPI, "/spatial/image")
+    add_resource(SpatialMetaAPI, "/spatial/meta")
     return api
 
 

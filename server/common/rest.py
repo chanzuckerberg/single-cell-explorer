@@ -1,6 +1,7 @@
 import copy
 import hashlib
 import logging
+import numpy as np
 import os
 import struct
 import sys
@@ -8,7 +9,7 @@ import zlib
 from http import HTTPStatus
 
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect
+from flask import abort, current_app, jsonify, make_response, redirect, send_file
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
@@ -23,6 +24,7 @@ from server.common.errors import (
     FilterError,
     InvalidCxgDatasetError,
     JSONEncodingValueError,
+    PrepareError,
     TombstoneError,
     UnsupportedSummaryMethod,
 )
@@ -409,3 +411,63 @@ def summarize_var_post(request, data_adaptor):
 
     key = request.args.get("key", default=None)
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
+
+
+def spatial_image_get(request, data_adaptor):
+    """
+    Retrieve a spatial image from the data adaptor and return it as a PNG file
+    """
+    import io
+    import matplotlib.pyplot
+    resolution = "hires"
+    
+    spatial = data_adaptor.get_spatial()
+    response_image = io.BytesIO()
+    img = spatial[resolution]
+    matplotlib.pyplot.imsave(response_image, img)
+    response_image.seek(0)
+    library_id = 'test_library_id'
+
+    try:
+        return send_file(response_image, download_name=f"{library_id}-{resolution}.png", mimetype="image/png")
+    except (KeyError, DatasetAccessError) as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+    except PrepareError:
+        return abort_and_log(
+            HTTPStatus.NOT_IMPLEMENTED,
+            f"No spatial image available {request.path}",
+            loglevel=logging.ERROR,
+            include_exc_info=True,
+        )
+
+
+def spatial_meta_get(request, data_adaptor):
+    """
+    Returns an object containing the spatial metadata, including image width, image height,
+    scale reference, inverse scale, inverse translate, and inverse min
+    """
+    spatial = data_adaptor.get_spatial()
+    
+    resolution = "hires"
+    
+    if resolution not in spatial:
+        raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
+   
+    scaleref = spatial[f"tissue_{resolution}_scalef"]
+    (h, w, _) = spatial[resolution].shape
+
+    A = data_adaptor.get_embedding_array('spatial')
+
+    min = np.nanmin(A, axis=0)
+    max = np.nanmax(A, axis=0)
+    scale = np.amax(max - min)
+    translate = 0.5 - ((max - min) / scale / 2)
+
+    return {
+        "imageWidth": w,
+        "imageHeight": h,
+        "scaleref": scaleref,
+        "inverseScale": int(scale),
+        "inverseTranslate": translate.tolist(),
+        "inverseMin": min.tolist(),
+    }
