@@ -76,7 +76,12 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
         .all();
       expect(skeleton).toHaveLength(0);
     },
-    { page, timeoutMs: 10_000 }
+    { page,
+      /**
+       * (thuang): The diff exp test needs more retry, since the API call takes
+       * some time to complete.
+       */
+      maxRetry: 200}
   );
 }
 
