@@ -82,8 +82,6 @@ jobs:
       - name: Run e2e tests
         run: |
           npm run e2e-${DEPLOYMENT_STAGE}
-          pwd
-          ls
 
       - name: Publish to Chromatic
         uses: chromaui/action@latest
