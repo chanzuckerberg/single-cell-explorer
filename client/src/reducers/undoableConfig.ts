@@ -15,7 +15,6 @@ these actions will not affect history
 */
 const skipOnActions = new Set<string>([
   "annoMatrix: init complete",
-  "url changed",
   "initial data load start",
   "universe: user color load success",
   "configuration load complete",
