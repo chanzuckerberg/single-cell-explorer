@@ -80,7 +80,10 @@ jobs:
 
       # Run e2e tests
       - name: Run e2e tests
-        run: npm run e2e-${DEPLOYMENT_STAGE}
+        run: |
+          npm run e2e-${DEPLOYMENT_STAGE}
+          pwd
+          ls
 
       - name: Publish to Chromatic
         uses: chromaui/action@latest
@@ -95,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: playwright-report
-          path: playwright-report
+          path: **/playwright-report/*
           retention-days: 14
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -103,5 +106,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: blob-report
+          path: **/blob-report/*
           retention-days: 1
