@@ -95,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: playwright-report
-          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          path: playwright-report
           retention-days: 14
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -103,5 +103,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+          path: blob-report
           retention-days: 1
