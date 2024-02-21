@@ -63,16 +63,16 @@ jobs:
       fail-fast: false
     defaults:
       run:
-        working-directory: client
+        working-directory: ./client
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version-file: "client/.nvmrc"
+          node-version-file: ".nvmrc"
           cache: "npm"
-          cache-dependency-path: "client/package-lock.json"
+          cache-dependency-path: "package-lock.json"
       - name: Install dependencies
         run: |
           npm ci
