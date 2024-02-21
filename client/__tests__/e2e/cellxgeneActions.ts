@@ -76,7 +76,12 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
         .all();
       expect(skeleton).toHaveLength(0);
     },
-    { page, timeoutMs: 10_000 }
+    { page,
+      /**
+       * (thuang): The diff exp test needs more retry, since the API call takes
+       * some time to complete.
+       */
+      maxRetry: 300}
   );
 }
 
@@ -626,7 +631,7 @@ export async function assertUndoRedo(
   await keyboardUndo(page);
   await assertOne();
   // if we redo too quickly after undo, the shortcut handler capture the action
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1000);
   await keyboardRedo(page);
   await assertTwo();
 }
