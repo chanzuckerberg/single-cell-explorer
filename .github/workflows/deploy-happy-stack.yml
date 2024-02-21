@@ -55,7 +55,7 @@ jobs:
           env-file: /home/runner/work/custom/envfile
           happy_version: "0.79.1"
   smoke-test:
-    timeout-minutes: 30
+    timeout-minutes: 25
     runs-on: ubuntu-22.04
     needs:
       - upgrade
