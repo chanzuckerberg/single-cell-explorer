@@ -695,6 +695,7 @@ for (const option of options) {
         );
       }, { page })
     });
+
     test("edit geneset name and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
