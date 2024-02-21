@@ -191,6 +191,13 @@ class Server:
                 methods=["GET"],
             )
 
+            self.app.add_url_rule(
+                f"/{url_dataroot}/cellguide-cxgs/<path:dataset>/",
+                f"dataset_index_{url_dataroot}_cellguide_cxgs/",
+                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                methods=["GET"],
+            )
+
         self.app.app_config = app_config
 
         @self.app.before_request
