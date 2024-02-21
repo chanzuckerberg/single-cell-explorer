@@ -76,12 +76,14 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
         .all();
       expect(skeleton).toHaveLength(0);
     },
-    { page,
+    {
+      page,
       /**
        * (thuang): The diff exp test needs more retry, since the API call takes
        * some time to complete.
        */
-      maxRetry: 300}
+      maxRetry: 300
+    }
   );
 }
 
@@ -628,12 +630,18 @@ export async function assertUndoRedo(
   assertOne: () => Promise<void>,
   assertTwo: () => Promise<void>
 ): Promise<void> {
-  await keyboardUndo(page);
-  await assertOne();
+  await tryUntil(async () => {
+    await keyboardUndo(page);
+    await assertOne();
+  }, { page });
+
   // if we redo too quickly after undo, the shortcut handler capture the action
   await page.waitForTimeout(1000);
-  await keyboardRedo(page);
-  await assertTwo();
+
+  await tryUntil(async () => {
+    await keyboardRedo(page);
+    await assertTwo();
+  }, { page });
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
