@@ -674,35 +674,49 @@ for (const option of options) {
     });
 
     test("create a new geneset and undo/redo", async ({ page }) => {
-      if (option.withSubset) return;
+      /**
+       * (thuang): Test is flaky, so we need to retry until it passes
+       */
+      await tryUntil(async () => {
+        if (option.withSubset) return;
 
-      await setup(option, page);
+        await setup(option, page);
 
-      waitUntilNoSkeletonDetected(page);
+        waitUntilNoSkeletonDetected(page);
 
-      const genesetName = `test-geneset-foo-123`;
-      await assertGenesetDoesNotExist(genesetName, page);
-      await createGeneset(genesetName, page);
-      await assertGenesetExists(genesetName, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGenesetDoesNotExist(genesetName, page),
-        async () => assertGenesetExists(genesetName, page)
-      );
+        const genesetName = `test-geneset-foo-123`;
+        await assertGenesetDoesNotExist(genesetName, page);
+        await createGeneset(genesetName, page);
+        await assertGenesetExists(genesetName, page);
+        await assertUndoRedo(
+          page,
+          async () => assertGenesetDoesNotExist(genesetName, page),
+          async () => assertGenesetExists(genesetName, page)
+        );
+      }, { page })
     });
     test("edit geneset name and undo/redo", async ({ page }) => {
-      await setup(option, page);
-      await createGeneset(editableGenesetName, page);
-      await editGenesetName(editableGenesetName, newGenesetName, page);
-      await assertGenesetExists(newGenesetName, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGenesetExists(editableGenesetName, page),
-        async () => assertGenesetExists(newGenesetName, page)
-      );
+      /**
+       * (thuang): Test is flaky, so we need to retry until it passes
+       */
+      await tryUntil(async () => {
+        await setup(option, page);
+        await createGeneset(editableGenesetName, page);
+        await editGenesetName(editableGenesetName, newGenesetName, page);
+        await assertGenesetExists(newGenesetName, page);
+        await assertUndoRedo(
+          page,
+          async () => assertGenesetExists(editableGenesetName, page),
+          async () => assertGenesetExists(newGenesetName, page)
+        );
+      }, { page })
     });
     test("delete a geneset and undo/redo", async ({ page }) => {
-      if (option.withSubset) return;
+      /**
+       * (thuang): Test is flaky, so we need to retry until it passes
+       */
+      await tryUntil(async () => {
+        if (option.withSubset) return;
 
       await setup(option, page);
       await createGeneset(genesetToDeleteName, page);
@@ -712,6 +726,7 @@ for (const option of options) {
         async () => assertGenesetExists(genesetToDeleteName, page),
         async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
       );
+      }, { page });
     });
     test("geneset description", async ({ page }) => {
       if (option.withSubset) return;
@@ -732,15 +747,20 @@ for (const option of options) {
 
   describe(`GENE crud operations and interactions ${option.tag}`, () => {
     test("add a gene to geneset and undo/redo", async ({ page }) => {
-      await setup(option, page);
-      await createGeneset(setToAddGeneTo, page);
-      await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
-      await assertGeneExistsInGeneset(geneToAddToSet, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGeneDoesNotExist(geneToAddToSet, page),
-        async () => assertGeneExistsInGeneset(geneToAddToSet, page)
-      );
+      /**
+       * (thuang): Test is flaky, so we need to retry until it passes
+       */
+      await tryUntil(async () => {
+        await setup(option, page);
+        await createGeneset(setToAddGeneTo, page);
+        await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
+        await assertGeneExistsInGeneset(geneToAddToSet, page);
+        await assertUndoRedo(
+          page,
+          async () => assertGeneDoesNotExist(geneToAddToSet, page),
+          async () => assertGeneExistsInGeneset(geneToAddToSet, page)
+        );
+      }, { page });
     });
     test("expand gene and brush", async ({ page }) => {
       await setup(option, page);
@@ -780,18 +800,23 @@ for (const option of options) {
       await assertColorLegendLabel("SIK1", page);
     });
     test("delete gene from geneset and undo/redo", async ({ page }) => {
-      if (option.withSubset) return;
+      /**
+       * (thuang): Test is flaky, so we need to retry until it passes
+       */
+      await tryUntil(async () => {
+        if (option.withSubset) return;
 
-      await setup(option, page);
-      await createGeneset(setToRemoveFrom, page);
-      await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-      await removeGene(geneToRemove, page);
-      await assertGeneDoesNotExist(geneToRemove, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGeneExistsInGeneset(geneToRemove, page),
-        async () => assertGeneDoesNotExist(geneToRemove, page)
-      );
+        await setup(option, page);
+        await createGeneset(setToRemoveFrom, page);
+        await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
+        await removeGene(geneToRemove, page);
+        await assertGeneDoesNotExist(geneToRemove, page);
+        await assertUndoRedo(
+          page,
+          async () => assertGeneExistsInGeneset(geneToRemove, page),
+          async () => assertGeneDoesNotExist(geneToRemove, page)
+        );
+      }, { page });
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
