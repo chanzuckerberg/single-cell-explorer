@@ -409,7 +409,12 @@ export async function assertGenesetExists(
 ): Promise<void> {
   const result = await page
     .getByTestId(`${genesetName}:geneset-name`)
-    .getAttribute("aria-label");
+    .getAttribute("aria-label", {
+      /**
+       * (thuang): Don't wait for the default timeout, since we want to fail fast
+       */
+      timeout: 1 * 1000
+    });
 
   expect(result).toBe(genesetName);
 }
