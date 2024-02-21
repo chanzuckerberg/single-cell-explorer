@@ -206,6 +206,9 @@ function QuickGene() {
               itemDisabled={userDefinedGenesLoading ? () => true : () => false}
               noResults={<MenuItem disabled text="No matching genes." />}
               onItemSelect={(g) => {
+                // (seve): I made an attempt at typing this, but it looks like the type of g is not consistent with the type of the argument in onItemSelect
+                //          onItemSelect's arguments are typed as (DataframeValue, Event), but this expects and receives just the Event
+
                 /* this happens on 'enter' */
                 handleClick(g);
               }}

@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
+import { noop } from "lodash";
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
@@ -17,6 +18,8 @@ import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -280,6 +283,7 @@ class MenuBar extends React.PureComponent<{}, State> {
 
     const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
 
+    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] =
       selectionTool === "brush"
@@ -329,6 +333,23 @@ class MenuBar extends React.PureComponent<{}, State> {
               />
             </ButtonGroup>
           ) : null}
+          {isSpatial && (
+            <Tooltip
+              content="🌊"
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <AnchorButton
+                className={styles.menubarButton}
+                type="button"
+                icon={IconNames.TRAIN}
+                style={{
+                  cursor: "pointer",
+                }}
+                onClick={noop}
+              />
+            </Tooltip>
+          )}
           <Clip
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
             pendingClipPercentiles={pendingClipPercentiles}
@@ -350,6 +371,7 @@ class MenuBar extends React.PureComponent<{}, State> {
             content="When a category is colored by, show labels on the graph"
             position="bottom"
             disabled={graphInteractionMode === "zoom"}
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
           >
             <AnchorButton
               className={styles.menubarButton}
