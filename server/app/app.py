@@ -185,15 +185,8 @@ class Server:
         for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
-                f"/{url_dataroot}/<string:dataset>/",
+                f"/{url_dataroot}/<path:dataset>/",
                 f"dataset_index_{url_dataroot}/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                methods=["GET"],
-            )
-
-            self.app.add_url_rule(
-                f"/{url_dataroot}/cellguide-cxgs/<path:dataset>/",
-                f"dataset_index_{url_dataroot}_cellguide_cxgs/",
                 lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
                 methods=["GET"],
             )
