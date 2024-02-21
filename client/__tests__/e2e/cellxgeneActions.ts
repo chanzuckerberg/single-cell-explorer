@@ -628,16 +628,12 @@ export async function assertUndoRedo(
   assertOne: () => Promise<void>,
   assertTwo: () => Promise<void>
 ): Promise<void> {
-  await tryUntil(async () => {
-    await keyboardUndo(page);
-    await assertOne();
-    // if we redo too quickly after undo, the shortcut handler capture the action
-    await page.waitForTimeout(500);
-    await keyboardRedo(page);
-    await assertTwo();
-  }, {
-    page
-  })
+  await keyboardUndo(page);
+  await assertOne();
+  // if we redo too quickly after undo, the shortcut handler capture the action
+  await page.waitForTimeout(1000);
+  await keyboardRedo(page);
+  await assertTwo();
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
