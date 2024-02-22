@@ -59,11 +59,19 @@ export async function scroll({
 }
 
 export async function keyboardUndo(page: Page): Promise<void> {
-  await page.keyboard.press("Meta+Z");
+  if (process.platform === "darwin") {
+    await page.keyboard.press("Meta+KeyZ");
+  } else {
+    await page.keyboard.press("Control+KeyZ");
+  }
 }
 
 export async function keyboardRedo(page: Page): Promise<void> {
-  await page.keyboard.press("Meta+Shift+Z");
+  if (process.platform === "darwin") {
+    await page.keyboard.press("Meta+Shift+KeyZ");
+  } else {
+    await page.keyboard.press("Control+Shift+KeyZ");
+  }
 }
 
 const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
@@ -76,7 +84,14 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
         .all();
       expect(skeleton).toHaveLength(0);
     },
-    { page, timeoutMs: 10_000 }
+    {
+      page,
+      /**
+       * (thuang): The diff exp test needs more retry, since the API call takes
+       * some time to complete.
+       */
+      maxRetry: 300
+    }
   );
 }
 
@@ -402,7 +417,12 @@ export async function assertGenesetExists(
 ): Promise<void> {
   const result = await page
     .getByTestId(`${genesetName}:geneset-name`)
-    .getAttribute("aria-label");
+    .getAttribute("aria-label", {
+      /**
+       * (thuang): Don't wait for the default timeout, since we want to fail fast
+       */
+      timeout: 1 * 1000
+    });
 
   expect(result).toBe(genesetName);
 }
@@ -623,12 +643,18 @@ export async function assertUndoRedo(
   assertOne: () => Promise<void>,
   assertTwo: () => Promise<void>
 ): Promise<void> {
-  await keyboardUndo(page);
-  await assertOne();
+  await tryUntil(async () => {
+    await keyboardUndo(page);
+    await assertOne();
+  }, { page });
+
   // if we redo too quickly after undo, the shortcut handler capture the action
-  await page.waitForTimeout(500);
-  await keyboardRedo(page);
-  await assertTwo();
+  await page.waitForTimeout(1000);
+
+  await tryUntil(async () => {
+    await keyboardRedo(page);
+    await assertTwo();
+  }, { page });
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

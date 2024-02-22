@@ -55,7 +55,7 @@ jobs:
           env-file: /home/runner/work/custom/envfile
           happy_version: "0.79.1"
   smoke-test:
-    timeout-minutes: 30
+    timeout-minutes: 25
     runs-on: ubuntu-22.04
     needs:
       - upgrade
@@ -63,7 +63,7 @@ jobs:
       fail-fast: false
     defaults:
       run:
-        working-directory: client
+        working-directory: ./client
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,13 +80,15 @@ jobs:
 
       # Run e2e tests
       - name: Run e2e tests
-        run: npm run e2e-${DEPLOYMENT_STAGE}
+        run: |
+          npm run e2e-${DEPLOYMENT_STAGE}
 
       - name: Publish to Chromatic
         uses: chromaui/action@latest
         with:
           # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: ./client
           # This is `npm run build-archive-storybook`
           buildScriptName: "build-archive-storybook"
 
@@ -95,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: playwright-report
-          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          path: ~/**/playwright-report/*
           retention-days: 14
 
       - name: Upload blob report to GitHub Actions Artifacts
@@ -103,5 +105,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: all-blob-reports
-          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+          path: ~/**/blob-report/*
           retention-days: 1

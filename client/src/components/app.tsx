@@ -35,17 +35,9 @@ interface Props {
 class App extends React.Component<Props> {
   componentDidMount(): void {
     const { dispatch } = this.props;
-    /* listen for url changes, fire one when we start the app up */
-    window.addEventListener("popstate", this._onURLChanged);
-    this._onURLChanged();
     dispatch(actions.doInitialDataLoad());
     dispatch(actions.checkExplainNewTab());
     this.forceUpdate();
-  }
-
-  _onURLChanged(): void {
-    const { dispatch } = this.props;
-    dispatch({ type: "url changed", url: document.location.href });
   }
 
   render(): JSX.Element {

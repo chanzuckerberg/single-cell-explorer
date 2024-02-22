@@ -29,6 +29,7 @@ import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
+import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -160,6 +161,9 @@ const doInitialDataLoad = (): ((
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
     if (!globals.API) throw new Error("API not set");
+
+    // check URL for feature flags
+    checkFeatureFlags();
 
     try {
       const s3URI = await s3URIFetch();
