@@ -29,6 +29,14 @@ export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
  */
 const REGEX_PATHNAME = /(?<=\/)\w+(\/[^/]+)*\/[^/]+\/(?=api)/;
 
+/**
+ * This regular expression is designed to match specific API path patterns. It looks for a leading slash "/",
+ * followed by any number of characters until another slash "/", then any characters except for a forward slash "/",
+ * ending with another slash "/" and the string "api". The pattern is careful to exclude forward slashes in certain
+ * positions to avoid matching across multiple path segments, such as in the example path "/cellxgene/d/uuid.cxg".
+ */
+const REGEX_PATHNAME_FOR_S3 = /(?<=\/)\w+(\/[^/]+)*\/[^/]+\/(?=api)/;
+
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
 
@@ -218,6 +226,6 @@ export function updateAPIWithS3(s3URI: S3URI): string {
   // must be double quoted so slashes are not decoded early by flask WSGI.
   const URISafeS3URI = encodeURIComponent(s3URI);
   const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
-  API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
+  API.prefix = API.prefix.replace(REGEX_PATHNAME_FOR_S3, flaskSafeS3URI);
   return oldAPI;
 }
