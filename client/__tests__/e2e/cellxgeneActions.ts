@@ -59,11 +59,19 @@ export async function scroll({
 }
 
 export async function keyboardUndo(page: Page): Promise<void> {
-  await page.keyboard.press("Meta+Z");
+  if (process.platform === "darwin") {
+    await page.keyboard.press("Meta+KeyZ");
+  } else {
+    await page.keyboard.press("Control+KeyZ");
+  }
 }
 
 export async function keyboardRedo(page: Page): Promise<void> {
-  await page.keyboard.press("Meta+Shift+Z");
+  if (process.platform === "darwin") {
+    await page.keyboard.press("Meta+Shift+KeyZ");
+  } else {
+    await page.keyboard.press("Control+Shift+KeyZ");
+  }
 }
 
 const BLUEPRINT_SKELETON_CLASS_NAME = Classes.SKELETON;
