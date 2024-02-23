@@ -38,7 +38,6 @@ const Lasso = () => {
     const lassoPathColor = Colors.BLUE5;
 
     const handleDragStart = () => {
-      if (!(lassoPath && closePath)) return;
       const point = d3.mouse(svgNode);
       lassoPolygon = [point]; // current x y of mouse within element
 
