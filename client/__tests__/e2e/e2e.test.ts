@@ -154,31 +154,32 @@ describe("metadata loads", () => {
     }
   });
 
-  // TODO(seve) #753
-  test.fixme(
+  test(
     "categories and values from dataset appear and properly truncate if applicable",
     async ({ page }) => {
       await goToPage(page, pageURLTruncate);
 
-      for (const label of Object.keys(
-        dataTruncate.categorical
-      ) as (keyof typeof dataTruncate.categorical)[]) {
-        const element = await page.getByTestId(`category-${label}`).innerHTML();
+      await tryUntil(async () => {
+        for (const label of Object.keys(
+          dataTruncate.categorical
+        ) as (keyof typeof dataTruncate.categorical)[]) {
+          const element = await page.getByTestId(`category-${label}`).innerHTML();
 
-        expect(element).toMatchSnapshot();
+          expect(element).toMatchSnapshot();
 
-        await page.getByTestId(`${label}:category-expand`).click();
+          await page.getByTestId(`${label}:category-expand`).click();
 
-        const categories = await getAllCategoriesAndCounts(label, page);
+          const categories = await getAllCategoriesAndCounts(label, page);
 
-        expect(Object.keys(categories)).toMatchObject(
-          Object.keys(dataTruncate.categorical[label])
-        );
+          expect(Object.keys(categories)).toMatchObject(
+            Object.keys(dataTruncate.categorical[label])
+          );
 
-        expect(Object.values(categories)).toMatchObject(
-          Object.values(dataTruncate.categorical[label])
-        );
-      }
+          expect(Object.values(categories)).toMatchObject(
+            Object.values(dataTruncate.categorical[label])
+          );
+        }
+      }, { page });
     }
   );
 
@@ -695,6 +696,7 @@ for (const option of options) {
         );
       }, { page })
     });
+
     test("edit geneset name and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
