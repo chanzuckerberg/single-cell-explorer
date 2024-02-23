@@ -188,7 +188,7 @@ def get_api_dataroot_resources(bp_dataroot, url_dataroot=None):
 
     def add_resource(resource, url):
         """convenience function to make the outer function less verbose"""
-        api.add_resource(resource, url, resource_class_args=(url_dataroot,), strict_slashes=False)
+        api.add_resource(resource, url, resource_class_args=(url_dataroot,))
 
     # Initialization routes
     add_resource(S3URIAPI, "/s3_uri")
@@ -202,7 +202,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
 
     def add_resource(resource, url):
         """convenience function to make the outer function less verbose"""
-        api.add_resource(resource, url, resource_class_args=(s3uri_path,), strict_slashes=False)
+        api.add_resource(resource, url, resource_class_args=(s3uri_path,))
 
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
