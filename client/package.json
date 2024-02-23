@@ -127,7 +127,7 @@
     "@storybook/react-webpack5": "^7.6.12",
     "@storybook/server-webpack5": "^7.6.12",
     "@storybook/test": "^7.6.12",
-    "@types/d3": "^7.0.0",
+    "@types/d3": "^4.0.0",
     "@types/d3-scale-chromatic": "^3.0.0",
     "@types/flatbuffers": "^1.10.0",
     "@types/is-number": "^7.0.1",

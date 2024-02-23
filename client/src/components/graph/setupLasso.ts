@@ -1,28 +1,36 @@
 import * as d3 from "d3";
 import { Colors } from "@blueprintjs/core";
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+type LassoFunction = (
+  svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>
+) => void;
+
+export type LassoFunctionWithAttributes = LassoFunction & {
+  move: (polygon: [number, number][]) => void;
+  reset: () => void;
+  on: (
+    type: string,
+    callback: (polygon: [number, number][]) => void | (() => void)
+  ) => LassoFunctionWithAttributes;
+};
+
 const Lasso = () => {
   const dispatch = d3.dispatch("start", "end", "cancel");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const lasso = (svg: any) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let lassoPolygon: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let lassoPath: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let closePath: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    let lassoInProgress: any;
+  // (seve): I really can't seem to correctly type this function with dynamic attributes
+  const lasso: LassoFunctionWithAttributes = <LassoFunctionWithAttributes>((
+    svg
+  ) => {
+    const svgNode = svg.node()!;
+    let lassoPolygon: [number, number][] | null;
+    let lassoPath: d3.Selection<SVGPathElement, any, any, any> | null;
+    let closePath: d3.Selection<SVGLineElement, any, any, any> | null;
+    let lassoInProgress: boolean;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const polygonToPath = (polygon: any) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      `M${polygon.map((d: any) => d.join(",")).join("L")}`;
+    const polygonToPath = (polygon: number[][]) =>
+      `M${polygon.map((d) => d.join(",")).join("L")}`;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    const distance = (pt1: any, pt2: any) =>
+    const distance = (pt1: [number, number], pt2: [number, number]) =>
       Math.sqrt((pt2[0] - pt1[0]) ** 2 + (pt2[1] - pt1[1]) ** 2);
 
     // distance last point has to be to first point before it auto closes when mouse is released
@@ -30,14 +38,14 @@ const Lasso = () => {
     const lassoPathColor = Colors.BLUE5;
 
     const handleDragStart = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      lassoPolygon = [(d3 as any).mouse(svg.node())]; // current x y of mouse within element
+      if (!(lassoPath && closePath)) return;
+      const point = d3.mouse(svgNode);
+      lassoPolygon = [point]; // current x y of mouse within element
 
       if (lassoPath) {
         // If the existing path is in progress
         if (lassoInProgress) {
           // cancel the existing lasso
-          // eslint-disable-next-line @typescript-eslint/no-use-before-define --- handleCancel used before defined
           handleCancel();
           // Don't continue with current drag start
           return;
@@ -48,14 +56,12 @@ const Lasso = () => {
       // We're starting a new drag
       lassoInProgress = true;
 
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define --- g used before defined
       lassoPath = g
         .append("path")
         .attr("data-testid", "lasso-element")
         .attr("fill-opacity", 0.1)
         .attr("stroke-dasharray", "3, 3");
 
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define --- g used before defined
       closePath = g
         .append("line")
         .attr("x2", lassoPolygon[0][0])
@@ -66,8 +72,8 @@ const Lasso = () => {
     };
 
     const handleDrag = () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      const point = (d3 as any).mouse(svg.node());
+      if (!(lassoPath && closePath && lassoPolygon)) return;
+      const point = d3.mouse(svgNode);
       lassoPolygon.push(point);
       lassoPath.attr("d", polygonToPath(lassoPolygon));
 
@@ -91,6 +97,7 @@ const Lasso = () => {
     };
 
     const handleCancel = () => {
+      if (!(lassoPath && closePath && lassoPolygon)) return;
       lassoPath.remove();
       closePath = closePath?.remove();
       lassoPath = null;
@@ -100,6 +107,7 @@ const Lasso = () => {
     };
 
     const handleDragEnd = () => {
+      if (!(lassoPath && closePath && lassoPolygon)) return;
       // remove the close path
       closePath.remove();
       closePath = null;
@@ -122,23 +130,21 @@ const Lasso = () => {
 
     // append a <g> with a rect
     const g = svg.append("g").attr("class", "lasso-group");
-    const bbox = svg.node().getBoundingClientRect();
+    const bbox = svgNode.getBoundingClientRect();
     const area = g
       .append("rect")
       .attr("width", bbox.width)
       .attr("height", bbox.height)
       .attr("opacity", 0);
-
     const drag = d3
-      .drag()
+      .drag<SVGRectElement, any, any>()
       .on("start", handleDragStart)
       .on("drag", handleDrag)
       .on("end", handleDragEnd);
 
     area.call(drag);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    (lasso as any).reset = () => {
+    lasso.reset = () => {
       if (lassoPath) {
         lassoPath.remove();
         lassoPath = null;
@@ -150,10 +156,8 @@ const Lasso = () => {
       }
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    (lasso as any).move = (polygon: any) => {
-      if (polygon !== lassoPolygon || polygon.length !== lassoPolygon.length) {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'reset' does not exist on type '(svg: any... Remove this comment to see the full error message
+    lasso.move = (polygon: [number, number][]) => {
+      if (polygon !== lassoPolygon || polygon.length !== lassoPolygon?.length) {
         lasso.reset();
         lassoPolygon = polygon;
         lassoPath = g
@@ -163,13 +167,15 @@ const Lasso = () => {
           .attr("fill-opacity", 0.1)
           .attr("stroke", lassoPathColor)
           .attr("stroke-dasharray", "3, 3");
+        if (!lassoPath) return;
         lassoPath.attr("d", `${polygonToPath(lassoPolygon)}Z`);
       }
     };
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  lasso.on = (type: any, callback: any) => {
+  });
+  lasso.on = (
+    type: string,
+    callback: (polygon: [number, number][]) => void | (() => void)
+  ) => {
     dispatch.on(type, callback);
     return lasso;
   };
