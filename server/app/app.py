@@ -6,18 +6,7 @@ import os
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from flask import (
-    Blueprint,
-    Flask,
-    Response,
-    abort,
-    current_app,
-    g,
-    make_response,
-    redirect,
-    render_template,
-    request,
-)
+from flask import Blueprint, Flask, Response, abort, current_app, g, make_response, redirect, render_template, request
 from flask_restful import Api, Resource
 from server_timing import Timing as ServerTiming
 
@@ -188,25 +177,17 @@ class Server:
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
-        register_api_v3(
-            app=self.app,
-            app_config=app_config,
-            api_url_prefix=api_url_prefix,
-            cellguide_api_url_prefix=f"{api_url_prefix}cellguide-cxgs/",
-        )
+        register_api_v3(app=self.app, app_config=app_config, api_url_prefix=api_url_prefix)
 
+        # NOTE:  These routes only allow the dataset to be in the directory
+        # of the dataroot, and not a subdirectory.  We may want to change
+        # the route format at some point
         for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
             url_dataroot = dataroot_dict["base_url"]
             self.app.add_url_rule(
                 f"/{url_dataroot}/<string:dataset>/",
                 f"dataset_index_{url_dataroot}/",
                 lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                methods=["GET"],
-            )
-            self.app.add_url_rule(
-                f"/{url_dataroot}/<path:dataset>.cxg/",
-                f"dataset_index_{url_dataroot}_cellguide_cxgs/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, f"{dataset}.cxg"),
                 methods=["GET"],
             )
 

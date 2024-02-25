@@ -22,12 +22,10 @@ export const HEADER_HEIGHT_PX = 56;
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
 /**
- * This regular expression is designed to match specific API path patterns. It looks for a leading slash "/",
- * followed by any number of characters until another slash "/", then any characters except for a forward slash "/",
- * ending with another slash "/" and the string "api". The pattern is careful to exclude forward slashes in certain
- * positions to avoid matching across multiple path segments, such as in the example path "/cellxgene/d/uuid.cxg".
+ * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
+ * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
  */
-const REGEX_PATHNAME = /(?<=\/)\w+(\/[^/]+)*\/[^/]+\/(?=api)/;
+const REGEX_PATHNAME = /(?<=\/)\w+\/[^/]+\/(?=api)/;
 
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
