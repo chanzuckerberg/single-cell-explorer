@@ -27,6 +27,7 @@ from server.app.api.v3 import register_api_v3
 from server.app.logging import configure_logging
 from server.app.request_id import generate_request_id, get_request_id
 from server.common.config.app_config import AppConfig
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
@@ -192,7 +193,6 @@ class Server:
             app=self.app,
             app_config=app_config,
             api_url_prefix=api_url_prefix,
-            cellguide_api_url_prefix=f"{api_url_prefix}cellguide-cxgs/",
         )
 
         for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
@@ -204,9 +204,11 @@ class Server:
                 methods=["GET"],
             )
             self.app.add_url_rule(
-                f"/{url_dataroot}/<path:dataset>.cxg/",
+                f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/",
                 f"dataset_index_{url_dataroot}_cellguide_cxgs/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, f"{dataset}.cxg"),
+                lambda dataset, url_dataroot=url_dataroot: dataset_index(
+                    url_dataroot, f"{CELLGUIDE_CXG_KEY_NAME}/{dataset}.cxg"
+                ),
                 methods=["GET"],
             )
 

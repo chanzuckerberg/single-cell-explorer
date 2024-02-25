@@ -1,49 +1,51 @@
 {
-    "config_version": "v1",
-    "terraform_version": "0.13.5",
-    "default_env": "rdev",
-    "app": "explorer",
-    "default_compose_env_file": ".env.ecr",
-    "services": [
-        "explorer"
-    ],
-    "environments": {
-        "rdev": {
-            "aws_profile": "single-cell-dev",
-            "secret_arn": "happy/env-explorer-dev-config",
-            "terraform_directory": ".happy/terraform/envs/rdev",
-            "log_group_prefix": "/explorer/rdev"
-        },
-        "dev": {
-            "aws_profile": "single-cell-dev",
-            "secret_arn": "happy/env-explorer-dev-config",
-            "terraform_directory": ".happy/terraform/envs/dev",
-            "delete_protected": false,
-            "auto_run_migrations": false,
-            "log_group_prefix": "/explorer/dev"
-        },
-        "stage": {
-            "aws_profile": "single-cell-dev",
-            "secret_arn": "happy/env-explorer-staging-config",
-            "terraform_directory": ".happy/terraform/envs/staging",
-            "delete_protected": false,
-            "auto_run_migrations": false,
-            "log_group_prefix": "/explorer/staging"
-        },
-        "prod": {
-            "aws_profile": "single-cell-prod",
-            "secret_arn": "happy/env-explorer-prod-config",
-            "terraform_directory": ".happy/terraform/envs/prod",
-            "delete_protected": false,
-            "auto_run_migrations": false,
-            "log_group_prefix": "/explorer/prod"
-        }
+  "config_version": "v1",
+  "terraform_version": "0.13.5",
+  "default_env": "rdev",
+  "app": "explorer",
+  "default_compose_env_file": ".env.ecr",
+  "services": ["explorer"],
+  "environments": {
+    "rdev": {
+      "aws_profile": "single-cell-dev",
+      "secret_arn": "happy/env-explorer-dev-config",
+      "terraform_directory": ".happy/terraform/envs/rdev",
+      "task_launch_type": "ec2",
+      "log_group_prefix": "/explorer/rdev"
     },
-    "tasks": {
-        "migrate": [],
-        "delete": []
+    "dev": {
+      "aws_profile": "single-cell-dev",
+      "secret_arn": "happy/env-explorer-dev-config",
+      "terraform_directory": ".happy/terraform/envs/dev",
+      "task_launch_type": "ec2",
+      "delete_protected": false,
+      "auto_run_migrations": false,
+      "log_group_prefix": "/explorer/dev"
     },
-    "features": {
-        "enable_dynamo_locking": true
+    "stage": {
+      "aws_profile": "single-cell-dev",
+      "secret_arn": "happy/env-explorer-staging-config",
+      "terraform_directory": ".happy/terraform/envs/staging",
+      "task_launch_type": "ec2",
+      "delete_protected": false,
+      "auto_run_migrations": false,
+      "log_group_prefix": "/explorer/staging"
+    },
+    "prod": {
+      "aws_profile": "single-cell-prod",
+      "secret_arn": "happy/env-explorer-prod-config",
+      "terraform_directory": ".happy/terraform/envs/prod",
+      "task_launch_type": "ec2",
+      "delete_protected": false,
+      "auto_run_migrations": false,
+      "log_group_prefix": "/explorer/prod"
     }
+  },
+  "tasks": {
+    "migrate": [],
+    "delete": []
+  },
+  "features": {
+    "enable_dynamo_locking": true
+  }
 }
