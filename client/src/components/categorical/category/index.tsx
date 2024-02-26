@@ -48,6 +48,7 @@ type CategoryProps = PureCategoryProps & {
   crossfilter: any;
   isUserAnno: boolean;
   genesets: any;
+  isCellGuideCxg: boolean;
 };
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -65,6 +66,7 @@ type CategoryProps = PureCategoryProps & {
     crossfilter: state.obsCrossfilter,
     isUserAnno,
     genesets: state.genesets.genesets,
+    isCellGuideCxg: state.controls.isCellGuideCxg,
   };
 })
 class Category extends React.PureComponent {
@@ -162,7 +164,7 @@ class Category extends React.PureComponent {
   fetchAsyncProps = async (props: any) => {
     const { annoMatrix, metadataField, colors } = props.watchProps;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on type 'Rea... Remove this comment to see the full error message
-    const { crossfilter } = this.props;
+    const { crossfilter, isCellGuideCxg } = this.props;
 
     const [categoryData, categorySummary, colorData] = await this.fetchData(
       annoMatrix,
@@ -174,6 +176,7 @@ class Category extends React.PureComponent {
       categoryData,
       categorySummary,
       colorData,
+      isCellGuideCxg,
       crossfilter,
       ...this.updateColorTable(colorData),
       handleCategoryToggleAllClick: () =>
@@ -332,6 +335,7 @@ class Category extends React.PureComponent {
                 isColorAccessor,
                 handleCategoryToggleAllClick,
                 colorMode,
+                isCellGuideCxg,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
               return (
@@ -353,6 +357,7 @@ class Category extends React.PureComponent {
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
                   colorMode={colorMode}
+                  isCellGuideCxg={isCellGuideCxg}
                 />
               );
             }}
@@ -548,6 +553,8 @@ const CategoryRender = React.memo(
     onCategoryToggleAllClick,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist... Remove this comment to see the full error message
     colorMode,
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist... Remove this comment to see the full error message
+    isCellGuideCxg,
   }) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
@@ -555,7 +562,7 @@ const CategoryRender = React.memo(
     const { numCategoryValues } = categorySummary;
     const isSingularValue = !isUserAnno && numCategoryValues === 1;
 
-    if (isSingularValue) {
+    if (isSingularValue && !isCellGuideCxg) {
       /*
       Entire category has a single value, special case.
       */
