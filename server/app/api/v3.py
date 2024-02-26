@@ -266,7 +266,7 @@ def register_api_v3(app, app_config, api_url_prefix):
             methods=["GET"],
         )
         app.add_url_rule(
-            f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/static/<path:filename>/",
+            f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/static/<path:filename>",
             f"static_assets_{url_dataroot}_cellguide_cxgs/",
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
