@@ -406,7 +406,7 @@ class CxgDataset(Dataset):
         }
 
         annotations = {}
-        for ax in ("obs", "var"):
+        for ax in ("obs", "var", "uns"):
             A = self.open_array(ax)
             schema_hints = json.loads(A.meta["cxg_schema"]) if "cxg_schema" in A.meta else {}
             if not isinstance(schema_hints, dict):
