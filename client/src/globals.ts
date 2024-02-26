@@ -16,16 +16,17 @@ export const DATASET_MAX_CELL_COUNT = 2_000_000;
 export const ONTOLOGY_KEY = "ontology_term_id";
 
 /* Unified navigation bar header height. */
-export const HEADER_HEIGHT_PX = 48;
+export const HEADER_HEIGHT_PX = 56;
 
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
 /**
- * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
- * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
+ * Matches a path starting with "/" followed by any single character (as the dataroot), followed by a slash, then captures
+ * any sequence of characters (representing optional subdirectories) followed by another sequence of characters (the target directory)
+ * and ending with "api". This setup ensures it starts capturing at the single-character dataroot and includes any optional subpaths.
  */
-const REGEX_PATHNAME = /(?<=\/)\w+\/[^/]+\/(?=api)/;
+const REGEX_PATHNAME = /(?<=\/)[^/]{1}\/(?:[^/]+\/)*[^/]+\/(?=api)/;
 
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
@@ -83,7 +84,9 @@ export const globalConfig = {
 };
 
 /* is mac os? */
-export const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+export const isMac =
+  typeof navigator !== "undefined" &&
+  navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 /* colors */
 export const blue = Colors.BLUE3;
@@ -175,7 +178,7 @@ declare global {
   }
 }
 
-if (window?.CELLXGENE?.API) {
+if (typeof window !== "undefined" && window?.CELLXGENE?.API) {
   _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";

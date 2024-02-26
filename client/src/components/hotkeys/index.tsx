@@ -49,6 +49,7 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
 
   return (
     <div
+      data-testid="hotkey-input-group"
       role="tab"
       tabIndex={0}
       onKeyDown={handleKeyDown}

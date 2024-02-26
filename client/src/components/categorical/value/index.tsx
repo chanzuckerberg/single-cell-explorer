@@ -561,7 +561,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           /* This code is to change the styles on centroid label hover is causing over-rendering */
           `${styles.value}${isDilated ? ` ${styles.hover}` : ""}`
         }
-        data-testclass="categorical-row"
+        data-testid="categorical-row"
         style={{
           padding: "4px 0px 4px 7px",
           display: "flex",
@@ -592,7 +592,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
               <input
                 id={valueToggleLabel}
                 onChange={isSelected ? this.toggleOff : this.toggleOn}
-                data-testclass="categorical-value-select"
                 data-testid={`categorical-value-select-${metadataField}-${displayString}`}
                 checked={isSelected}
                 type="checkbox"
@@ -605,8 +604,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             </label>
             <Truncate>
               <span
-                data-testid={`categorical-value-${metadataField}-${displayString}`}
-                data-testclass="categorical-value"
+                data-testid="categorical-value"
                 tabIndex={-1}
                 style={{
                   width: labelWidth,
@@ -638,8 +636,8 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
         <div>
           <span>
             <span
-              data-testclass="categorical-value-count"
-              data-testid={`categorical-value-count-${metadataField}-${displayString}`}
+              data-testid="categorical-value-count"
+              data-testfield={`${metadataField}-${displayString}`}
               style={{
                 color:
                   displayString === globals.unassignedCategoryLabel

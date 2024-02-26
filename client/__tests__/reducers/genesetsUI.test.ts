@@ -1,5 +1,9 @@
-import genesetsUIReducer, { GeneSetsUIState } from "../../src/reducers/genesetsUI";
+import { expect, test } from "@playwright/test";
+import genesetsUIReducer, {
+  GeneSetsUIState,
+} from "../../src/reducers/genesetsUI";
 
+const { describe } = test;
 // Format: GeneSetsUI(state,action)
 
 const initialState: GeneSetsUIState = {
@@ -15,7 +19,7 @@ describe("geneset UI states", () => {
       genesetsUIReducer(undefined, {
         type: "foo",
       })
-    ).toMatchObject(initialState);
+    ).toEqual(initialState);
   });
   test("geneset: activate add new geneset mode", () => {
     expect(
@@ -30,8 +34,11 @@ describe("geneset UI states", () => {
   });
   test("geneset: disable create geneset mode", () => {
     expect(
-      genesetsUIReducer(undefined, { type: "geneset: disable rename geneset mode", isEditingGenesetName: false })
-    ).toMatchObject(initialState);
+      genesetsUIReducer(undefined, {
+        type: "geneset: disable rename geneset mode",
+        isEditingGenesetName: false,
+      })
+    ).toEqual(initialState);
   });
 
   test("activate add new genes mode", () => {
@@ -51,7 +58,7 @@ describe("geneset UI states", () => {
       genesetsUIReducer(undefined, {
         type: "geneset: disable create geneset mode",
       })
-    ).toMatchObject(initialState);
+    ).toEqual(initialState);
   });
   test("activate rename geneset mode", () => {
     expect(
@@ -70,6 +77,6 @@ describe("geneset UI states", () => {
       genesetsUIReducer(undefined, {
         type: "geneset: disable rename geneset mode",
       })
-    ).toMatchObject(initialState);
+    ).toEqual(initialState);
   });
 });

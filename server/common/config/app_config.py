@@ -55,6 +55,7 @@ class AppConfig(object):
         try:
             valid_config = AppConfigModel(**config)
         except ValueError as error:
+            print(error)
             raise ConfigurationError("Invalid configuration.") from error
         else:
             return valid_config.dict(by_alias=True)

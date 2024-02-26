@@ -444,7 +444,6 @@ const CategoryHeader = React.memo(
           >
             <input
               id={checkboxID}
-              data-testclass="category-select"
               data-testid={`${metadataField}:category-select`}
               onChange={onCategoryToggleAllClick}
               ref={checkboxRef}
@@ -457,7 +456,6 @@ const CategoryHeader = React.memo(
             role="menuitem"
             // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
             tabIndex="0"
-            data-testclass="category-expand"
             data-testid={`${metadataField}:category-expand`}
             onKeyPress={onCategoryMenuKeyPress}
             style={{
@@ -479,12 +477,12 @@ const CategoryHeader = React.memo(
             </Truncate>
             {isExpanded ? (
               <FaChevronDown
-                data-testclass="category-expand-is-expanded"
+                data-testid="category-expand-is-expanded"
                 style={{ fontSize: 10, marginLeft: 5 }}
               />
             ) : (
               <FaChevronRight
-                data-testclass="category-expand-is-not-expanded"
+                data-testid="category-expand-is-not-expanded"
                 style={{ fontSize: 10, marginLeft: 5 }}
               />
             )}
@@ -503,7 +501,6 @@ const CategoryHeader = React.memo(
             }}
           >
             <AnchorButton
-              data-testclass="colorby"
               data-testid={`colorby-${metadataField}`}
               onClick={onColorChangeClick}
               active={isColorAccessor}
@@ -573,7 +570,6 @@ const CategoryRender = React.memo(
         style={{
           maxWidth: globals.maxControlsWidth,
         }}
-        data-testclass="category"
         data-testid={`category-${metadataField}`}
       >
         <div

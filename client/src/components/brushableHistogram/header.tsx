@@ -98,7 +98,6 @@ const HistogramHeader = React.memo(
             onClick={memoizedColorByCallback}
             active={isColorBy}
             intent={isColorBy ? "primary" : "none"}
-            data-testclass="colorby"
             data-testid={`colorby-${fieldId}`}
             icon="tint"
           />

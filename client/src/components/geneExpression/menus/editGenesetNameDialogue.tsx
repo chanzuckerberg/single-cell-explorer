@@ -138,7 +138,7 @@ class RenameGeneset extends React.PureComponent<{}, State> {
               // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: any; onChange: (e: any) => void; in... Remove this comment to see the full error message
               label={newGenesetDescription}
               onChange={this.handleChangeDescription}
-              inputProps={{ "data-testid": "change geneset description" }}
+              inputProps={{ "data-testid": "change-geneset-description" }}
               intent="none"
               autoFocus={false}
             />

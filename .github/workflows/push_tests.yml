@@ -32,7 +32,7 @@ jobs:
             ${{ runner.os }}-node-
       - name: Run pre-commit checks
         uses: pre-commit/action@v3.0.0
-      - name: Install dependencies
+      - name: Install client dependencies
         run: |
           cd client
           npm install
@@ -40,6 +40,17 @@ jobs:
         working-directory: ./client
         run: |
           npm run lint
+      - name: Install dev dependencies
+        run: |
+          cd server
+          pip install -r requirements-dev.txt
+      # We can't have mypy in the pre-commit hook without having it run on all files
+      # in the repo, because (probably) the --all-files argument in pre-commit overrides
+      # the more narrow specifying of files in pyproject.toml
+      # TODO: Remove this if/when all files are mypy-compliant
+      - name: Run mypy
+        run: |
+          mypy --config-file pyproject.toml
 
   unit-test:
     runs-on: ubuntu-latest
@@ -56,13 +67,11 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
       - name: Install dependencies
         run: make dev-env-server build-for-server-dev
       - name: Unit tests
@@ -72,10 +81,13 @@ jobs:
           cd client && ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,unitTest
 
   smoke-tests:
-    runs-on: macos-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+        with:
+          # Chromatic needs full Git history graph
+          fetch-depth: 0
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
@@ -87,16 +99,43 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v1
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
       - name: Install dependencies
-        run: make dev-env-server build-for-server-dev
+        run: |
+          make dev-env-server build-for-server-dev
+          cd client
+          npx playwright install
+
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          workingDir: ./client
+          # This is `npm run build-archive-storybook`
+          buildScriptName: "build-archive-storybook"
+
+      - name: Upload FE test results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          retention-days: 14
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-blob-reports
+          path: /Users/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+          retention-days: 1

@@ -6,11 +6,25 @@ import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { ROUTES } from "./routes";
 import Icon from "../icon/icon";
-import { Left, LinkWrapper, MainWrapper, Nav, Right, Wrapper } from "./style";
+import {
+  BetaChip,
+  Left,
+  LinkWrapper,
+  MainWrapper,
+  Nav,
+  NavItemContainer,
+  NavSection,
+  NavSectionTitle,
+  Right,
+  Wrapper,
+} from "./style";
+import NavDivider from "./components/NavDivider";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
 }
+
+const CENSUS_DOCS_LINK = "https://cellxgene-census.readthedocs.io/en/latest";
 
 interface HeaderProps {
   tosURL?: string;
@@ -45,33 +59,74 @@ const Header = (props: HeaderProps) => {
             </svg>
           </a>
           <Nav>
-            <LinkWrapper>
-              <AnchorButton
-                active={false}
-                href={ROUTES.COLLECTIONS}
-                minimal
-                text="Collections"
-                onClick={handleCollectionsClick}
-              />
-            </LinkWrapper>
-            <LinkWrapper>
-              <AnchorButton
-                active={false}
-                href={ROUTES.DATASETS}
-                minimal
-                text="Datasets"
-                onClick={handleDatasetsClick}
-              />
-            </LinkWrapper>
-            <LinkWrapper>
-              <AnchorButton
-                active={false}
-                href={ROUTES.WHERE_IS_MY_GENE}
-                minimal
-                text="Gene Expression"
-                onClick={handleWMGClick}
-              />
-            </LinkWrapper>
+            <NavSection>
+              <NavSectionTitle>Application</NavSectionTitle>
+              <NavItemContainer>
+                <LinkWrapper>
+                  <AnchorButton
+                    active={false}
+                    href={ROUTES.COLLECTIONS}
+                    minimal
+                    text="Collections"
+                    onClick={handleCollectionsClick}
+                  />
+                </LinkWrapper>
+                <LinkWrapper>
+                  <AnchorButton
+                    active={false}
+                    href={ROUTES.DATASETS}
+                    minimal
+                    text="Datasets"
+                    onClick={handleDatasetsClick}
+                  />
+                </LinkWrapper>
+                <LinkWrapper>
+                  <AnchorButton
+                    active={false}
+                    href={ROUTES.WHERE_IS_MY_GENE}
+                    minimal
+                    text="Gene Expression"
+                    onClick={handleWMGClick}
+                  />
+                </LinkWrapper>
+                <LinkWrapper>
+                  <AnchorButton
+                    active={false}
+                    href={ROUTES.CELL_GUIDE}
+                    minimal
+                    text="Cell Guide"
+                    onClick={handleCellGuideClick}
+                  />
+                  <BetaChip label="Beta" size="small" />
+                </LinkWrapper>
+              </NavItemContainer>
+            </NavSection>
+            <NavDivider />
+            <NavSection>
+              <NavSectionTitle>Census</NavSectionTitle>
+              <NavItemContainer>
+                <LinkWrapper>
+                  <AnchorButton
+                    href={CENSUS_DOCS_LINK}
+                    minimal
+                    onClick={handleCensusClick}
+                    rel="noopener"
+                    target="_self"
+                    text="API"
+                  />
+                </LinkWrapper>
+                <LinkWrapper>
+                  <AnchorButton
+                    href={ROUTES.CENSUS_MODELS}
+                    minimal
+                    onClick={handleCensusSpotlightClick}
+                    rel="noopener"
+                    target="_self"
+                    text="Models"
+                  />
+                </LinkWrapper>
+              </NavItemContainer>
+            </NavSection>
           </Nav>
         </Left>
         <Right>
@@ -143,11 +198,20 @@ const Header = (props: HeaderProps) => {
   function handleWMGClick(): void {
     track(EVENTS.WMG_CLICK_NAV);
   }
+  function handleCellGuideClick(): void {
+    track(EVENTS.CELL_GUIDE_CLICK_NAV);
+  }
   function handleDatasetsClick(): void {
     track(EVENTS.DATASETS_CLICK_NAV);
   }
   function handleCollectionsClick(): void {
     track(EVENTS.COLLECTIONS_CLICK_NAV);
+  }
+  function handleCensusClick(): void {
+    track(EVENTS.CENSUS_DOCUMENTATION_CLICK_NAV);
+  }
+  function handleCensusSpotlightClick(): void {
+    track(EVENTS.CENSUS_DIRECTORY_CLICK_NAV);
   }
   function handleDocumentationClick(): void {
     track(EVENTS.DOCUMENTATION_CLICK_NAV);

@@ -13,6 +13,7 @@ from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME
 from server.common.errors import (
     DatasetAccessError,
     DatasetMetadataError,
@@ -236,11 +237,9 @@ def register_api_v3(app, app_config, api_url_prefix):
 
     Api(app).add_resource(VersionAPI, "/deployed_version")
 
-    # NOTE:  These routes only allow the dataset to be in the directory
-    # of the dataroot, and not a subdirectory.  We may want to change
-    # the route format at some point
     for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
         url_dataroot = dataroot_dict["base_url"]
+
         bp_dataroot = Blueprint(
             name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
             import_name=__name__,
@@ -248,9 +247,27 @@ def register_api_v3(app, app_config, api_url_prefix):
         )
         dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
         app.register_blueprint(dataroot_resources.blueprint)
+
+        bp_dataroot_cg = Blueprint(
+            name=f"api_dataset_{url_dataroot}_cellguide_cxgs_{api_version.replace('.',',')}",
+            import_name=__name__,
+            url_prefix=(
+                f"{api_url_prefix}/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg" + api_version
+            ).replace("//", "/"),
+        )
+
+        dataroot_resources_cg = get_api_dataroot_resources(bp_dataroot_cg, url_dataroot)
+        app.register_blueprint(dataroot_resources_cg.blueprint)
+
         app.add_url_rule(
             f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
             f"static_assets_{url_dataroot}",
+            view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
+            methods=["GET"],
+        )
+        app.add_url_rule(
+            f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/static/<path:filename>",
+            f"static_assets_{url_dataroot}_cellguide_cxgs/",
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
         )

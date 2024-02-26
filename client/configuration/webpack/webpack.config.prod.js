@@ -35,6 +35,7 @@ const prodConfig = {
   cache: false,
   output: {
     filename: "static/[name]-[contenthash].js",
+    assetModuleFilename: "static/images/[name][ext][query]",
   },
   optimization: {
     minimize: true,
@@ -55,10 +56,7 @@ const prodConfig = {
       },
       {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
-        loader: "file-loader",
-        options: {
-          name: "static/assets/[name]-[contenthash].[ext]",
-        },
+        type: "asset/resource",
       },
     ],
   },

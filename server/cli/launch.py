@@ -1,9 +1,9 @@
 import errno
 import functools
+import logging
 import os
 import sys
 import webbrowser
-from logging import ERROR, Logger, getLogger
 
 import click
 
@@ -13,7 +13,6 @@ from server.common.utils.utils import sort_options
 from server.default_config import default_config
 from server.tests.unit import TestServer
 
-log: Logger = getLogger("werkzeug")
 DEFAULT_CONFIG = AppConfig()
 
 
@@ -68,16 +67,16 @@ def server_args(func):
         "--debug",
         "-d",
         is_flag=True,
-        default=DEFAULT_CONFIG.server__app__debug,
+        default=False,
         show_default=True,
         help="Run in debug mode. This is helpful for cellxgene developers, "
-        "or when you want more information about an error condition.",
+        "or when you want more information about an error condition. This will automatically set verbose mode.",
     )
     @click.option(
         "--verbose",
         "-v",
         is_flag=True,
-        default=DEFAULT_CONFIG.server__app__verbose,
+        default=False,
         show_default=True,
         help="Provide verbose output, including warnings and all server requests.",
     )
@@ -220,7 +219,7 @@ def launch(
     config_file: str = config_file if config_file else test_config_file
 
     if not os.path.isdir(dataroot):
-        log.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
+        logging.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
         sys.exit(1)
 
     if dump_default_config:
@@ -228,9 +227,6 @@ def launch(
         sys.exit(0)
     # Startup message
     click.echo("[cellxgene] Starting the development server...")
-
-    # app config
-    app_config: AppConfig = AppConfig()
 
     try:
         app_config: AppConfig = AppConfig(config_file)
@@ -268,9 +264,6 @@ def launch(
 
     # create the server
     server: TestServer = TestServer(app_config)
-
-    if not app_config.server__app__verbose:
-        log.setLevel(ERROR)
 
     cellxgene_url: str = f"http://{app_config.server__app__host}:{app_config.server__app__port}"
     if app_config.server__app__open_browser:
