@@ -33,6 +33,7 @@ from server.common.errors import (
     RequestException,
     TombstoneError,
 )
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME
 from server.common.health import health_check
 from server.common.utils.data_locator import DataLocator
 from server.common.utils.http_cache import cache_control, cache_control_always, webbp
@@ -188,11 +189,12 @@ class Server:
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
 
+        cellguide_api_url_prefix = f"{api_url_prefix}{CELLGUIDE_CXG_KEY_NAME}/"
         register_api_v3(
             app=self.app,
             app_config=app_config,
             api_url_prefix=api_url_prefix,
-            cellguide_api_url_prefix=f"{api_url_prefix}cellguide-cxgs/",
+            cellguide_api_url_prefix=cellguide_api_url_prefix,
         )
 
         for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
@@ -204,9 +206,11 @@ class Server:
                 methods=["GET"],
             )
             self.app.add_url_rule(
-                f"/{url_dataroot}/<path:dataset>.cxg/",
+                f"/{url_dataroot}{cellguide_api_url_prefix}<path:dataset>.cxg/",
                 f"dataset_index_{url_dataroot}_cellguide_cxgs/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, f"{dataset}.cxg"),
+                lambda dataset, url_dataroot=url_dataroot: dataset_index(
+                    url_dataroot, f"{CELLGUIDE_CXG_KEY_NAME}/{dataset}.cxg"
+                ),
                 methods=["GET"],
             )
 
