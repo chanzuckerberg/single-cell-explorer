@@ -124,6 +124,13 @@ def dataset_metadata_get(app_config, url_dataroot, dataset_id):
 
 
 def s3_uri_get(app_config, url_dataroot_id, dataset_id):
+    # This is a hack to work around the fact that the flask routes
+    # need to hardcode `cellguide-cxgs/` in the blueprint, but the
+    # s3_uri must include that prefix.
+    # TODO: make this less hacky.
+    if not dataset_id.endswith(".cxg"):
+        dataset_id = f"cellguide-cxgs/{dataset_id}.cxg"
+
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:

@@ -250,7 +250,9 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
         bp_dataroot_cg = Blueprint(
             name=f"api_dataset_{url_dataroot}_cellguide_cxgs_{api_version.replace('.',',')}",
             import_name=__name__,
-            url_prefix=(f"{api_url_prefix}/{url_dataroot}/<path:dataset>" + api_version).replace("//", "/"),
+            url_prefix=(
+                f"{api_url_prefix}/{url_dataroot}{cellguide_api_url_prefix}<path:dataset>.cxg" + api_version
+            ).replace("//", "/"),
         )
 
         dataroot_resources_cg = get_api_dataroot_resources(bp_dataroot_cg, url_dataroot)
@@ -262,9 +264,9 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
         )
-        # app.add_url_rule(
-        #     f"/{url_dataroot}/<path:dataset>.cxg/static/<path:filename>/",
-        #     f"static_assets_{url_dataroot}_cellguide_cxgs/",
-        #     view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
-        #     methods=["GET"],
-        # )
+        app.add_url_rule(
+            f"/{url_dataroot}{cellguide_api_url_prefix}/<path:dataset>.cxg/static/<path:filename>/",
+            f"static_assets_{url_dataroot}_cellguide_cxgs/",
+            view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
+            methods=["GET"],
+        )
