@@ -13,7 +13,7 @@ from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
-from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME, Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
     ColorFormatException,
@@ -124,6 +124,13 @@ def dataset_metadata_get(app_config, url_dataroot, dataset_id):
 
 
 def s3_uri_get(app_config, url_dataroot_id, dataset_id):
+    # This is a hack to work around the fact that the flask routes
+    # need to hardcode `{CELLGUIDE_CXG_KEY_NAME}/` in the blueprint, but the
+    # s3_uri must include that prefix.
+    # TODO: make this less hacky.
+    if not dataset_id.endswith(".cxg"):
+        dataset_id = f"{CELLGUIDE_CXG_KEY_NAME}/{dataset_id}.cxg"
+
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
