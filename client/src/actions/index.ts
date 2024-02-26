@@ -13,10 +13,16 @@ import * as selnActions from "./selection";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
+import * as spatialActions from "./spatial";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
+import type {
+  DatasetMetadata,
+  Dataset,
+  S3URI,
+  DatasetSpatialMetadata,
+} from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -117,6 +123,36 @@ async function datasetMetadataFetchAndLoad(
   }
 }
 
+/**
+ docs
+ */
+async function datasetSpatialMetadataFetchAndLoad(
+  dispatch: AppDispatch,
+  oldPrefix: string
+): Promise<void> {
+  try {
+    const datasetSpatialMetadataResponse = await fetchJson<{
+      metadata: DatasetSpatialMetadata;
+    }>(
+      "spatial/meta",
+      "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api/"
+    );
+
+    // const { metadata: datasetSpatialMetadata } = datasetSpatialMetadataResponse;
+    // console.log("datasetSpatialMetadata", datasetSpatialMetadataResponse);
+
+    dispatch({
+      type: "request spatial metadata success",
+      data: datasetSpatialMetadataResponse,
+    });
+  } catch (error) {
+    dispatch({
+      type: "request spatial metadata error",
+      error,
+    });
+  }
+}
+
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -171,7 +207,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-
+      datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
@@ -477,4 +513,5 @@ export default {
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
   genesetDeleteGenes: genesetActions.genesetDeleteGenes,
+  requestSpatialMetadata: spatialActions.requestSpatialMetadata,
 };

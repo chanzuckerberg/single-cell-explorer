@@ -69,7 +69,12 @@ type State = any;
     privacyURL: (state as any).config?.parameters?.about_legal_privacy,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: (state as any).categoricalSelection,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     seamlessEnabled: selectIsSeamlessEnabled(state),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    imageUnderlay: (state as any).imageUnderlay,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    layoutChoice: (state as any).layoutChoice,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -275,6 +280,10 @@ class MenuBar extends React.PureComponent<{}, State> {
       subsetResetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       seamlessEnabled,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
+      imageUnderlay,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
+      layoutChoice,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -362,6 +371,28 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
+          {layoutChoice?.current?.includes(globals.spatialEmbeddingKeyword) && (
+            <ButtonGroup className={styles.menubarButton}>
+              <Tooltip
+                content="Toggle image"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="toggle-image-underlay"
+                  icon="media"
+                  intent={imageUnderlay.isActive ? "primary" : "none"}
+                  active={imageUnderlay.isActive}
+                  onClick={() => {
+                    dispatch({
+                      type: "toggle image underlay",
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+          )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}

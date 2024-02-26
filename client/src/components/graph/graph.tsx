@@ -5,10 +5,12 @@ import { mat3, vec2 } from "gl-matrix";
 import _regl from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
+import { Button } from "@blueprintjs/core";
 
 import setupSVGandBrushElements from "./setupSVGandBrush";
 import _camera from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
+import _drawSpatialImage from "./drawSpatialImageRegl";
 import {
   createColorTable,
   createColorQuery,
@@ -92,6 +94,10 @@ type GraphState = any;
   pointDilation: (state as any).pointDilation,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   genesets: (state as any).genesets.genesets,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  spatial: (state as any).spatial.metadata,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  imageUnderlay: (state as any).imageUnderlay,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Graph extends React.Component<{}, GraphState> {
@@ -104,6 +110,8 @@ class Graph extends React.Component<{}, GraphState> {
     const camera = _camera(canvas);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
+    const drawSpatialImage = _drawSpatialImage(regl);
+
     // preallocate webgl buffers
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const pointBuffer = regl.buffer();
@@ -118,6 +126,7 @@ class Graph extends React.Component<{}, GraphState> {
       pointBuffer,
       colorBuffer,
       flagBuffer,
+      drawSpatialImage,
     };
   }
 
@@ -126,7 +135,12 @@ class Graph extends React.Component<{}, GraphState> {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  spatialImage: any;
+
   private graphRef = React.createRef<HTMLDivElement>();
+
+  private downloadedImg: HTMLImageElement;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   cachedAsyncProps: any;
@@ -146,6 +160,17 @@ class Graph extends React.Component<{}, GraphState> {
       positions[2 * i + 1] = p[1];
     }
     return positions;
+  });
+
+  computePointColors = memoize((rgb) => {
+    /*
+    compute webgl colors for each point
+    */
+    const colors = new Float32Array(3 * rgb.length);
+    for (let i = 0, len = rgb.length; i < len; i += 1) {
+      colors.set(rgb[i], 3 * i);
+    }
+    return colors;
   });
 
   computeSelectedFlags = memoize(
@@ -245,6 +270,8 @@ class Graph extends React.Component<{}, GraphState> {
       pointBuffer: null,
       colorBuffer: null,
       flagBuffer: null,
+      drawSpatialImage: null,
+      spatial: null,
       // component rendering derived state - these must stay synchronized
       // with the reducer state they were generated from.
       layoutState: {
@@ -582,6 +609,59 @@ class Graph extends React.Component<{}, GraphState> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  loadTextureFromUrl = (src: string): any =>
+    new Promise((resolve, reject) => {
+      this.downloadedImg = new Image();
+      this.downloadedImg.crossOrigin = "anonymous";
+      this.downloadedImg.addEventListener("load", this.imageReceived, false);
+      this.downloadedImg.onload = () => resolve(this.downloadedImg);
+      this.downloadedImg.onerror = reject;
+      this.downloadedImg.src = src;
+    });
+
+  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  // loadTextureFromUrl = (src: string): any => {
+  //   const imageURL = src;
+  //   const imageDescription = "Spatial Image";
+
+  //   this.downloadedImg = new Image();
+  //   this.downloadedImg.crossOrigin = "anonymous";
+  // this.downloadedImg.addEventListener("load", this.imageReceived, false);
+  //   this.downloadedImg.alt = imageDescription;
+  //   this.downloadedImg.src = imageURL;
+  // };
+
+  imageReceived = (): any => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    canvas.width = this.downloadedImg.width;
+    canvas.height = this.downloadedImg.height;
+    canvas.innerText = this.downloadedImg.alt;
+
+    context?.drawImage(this.downloadedImg, 0, 0);
+    // imageBox.appendChild(canvas);
+
+    try {
+      localStorage.setItem(
+        "saved-image-example",
+        canvas.toDataURL("image/png")
+      );
+    } catch (err) {
+      console.error(`Error: ${err}`);
+    }
+  };
+
+  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  // loadTextureFromUrl = (src: string): any =>
+  //   new Promise((resolve, reject) => {
+  //     const img = new Image();
+  //     img.onload = () => resolve(img);
+  //     img.onerror = reject;
+  //     img.src = src;
+  //   });
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   fetchAsyncProps = async (props: any) => {
     const {
       annoMatrix,
@@ -590,6 +670,8 @@ class Graph extends React.Component<{}, GraphState> {
       crossfilter,
       pointDilation,
       viewport,
+      spatial,
+      imageUnderlay,
     } = props.watchProps;
     const { modelTF } = this.state;
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
@@ -603,6 +685,7 @@ class Graph extends React.Component<{}, GraphState> {
     const Y = layoutDf.col(currentDimNames[1]).asArray();
     const positions = this.computePointPositions(X, Y, modelTF);
     const colorTable = this.updateColorTable(colorsProp, colorDf);
+    const colors = this.computePointColors(colorTable.rgb);
     const colorByData = colorDf?.icol(0)?.asArray();
     const {
       metadataField: pointDilationCategory,
@@ -617,13 +700,20 @@ class Graph extends React.Component<{}, GraphState> {
       pointDilationData,
       pointDilationLabel
     );
+
+    this.spatialImage = await this.loadTextureFromUrl(
+      "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api//v0.3/spatial/image"
+    );
+
     const { width, height } = viewport;
     return {
       positions,
-      colors: colorTable.rgb,
+      colors,
       flags,
       width,
       height,
+      spatial,
+      imageUnderlay,
     };
   };
 
@@ -795,6 +885,7 @@ class Graph extends React.Component<{}, GraphState> {
       flagBuffer,
       camera,
       projectionTF,
+      drawSpatialImage,
     } = this.state;
     this.renderPoints(
       regl,
@@ -803,13 +894,15 @@ class Graph extends React.Component<{}, GraphState> {
       pointBuffer,
       flagBuffer,
       camera,
-      projectionTF
+      projectionTF,
+      drawSpatialImage
     );
   });
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   updateReglAndRender(asyncProps: any, prevAsyncProps: any) {
-    const { positions, colors, flags, height, width } = asyncProps;
+    const { positions, colors, flags, height, width, imageUnderlay } =
+      asyncProps;
     this.cachedAsyncProps = asyncProps;
     const { pointBuffer, colorBuffer, flagBuffer } = this.state;
     let needToRenderCanvas = false;
@@ -826,6 +919,9 @@ class Graph extends React.Component<{}, GraphState> {
     }
     if (flags !== prevAsyncProps?.flags) {
       flagBuffer({ data: flags, dimension: 1 });
+      needToRenderCanvas = true;
+    }
+    if (imageUnderlay !== prevAsyncProps?.imageUnderlay) {
       needToRenderCanvas = true;
     }
     if (needToRenderCanvas) this.renderCanvas();
@@ -880,15 +976,21 @@ class Graph extends React.Component<{}, GraphState> {
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     camera: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    projectionTF: any
+    projectionTF: any,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    drawSpatialImage: any
   ) {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix } = this.props;
+    const { annoMatrix, spatial, imageUnderlay } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera.view();
+    const scaleref = spatial?.scaleref;
+
     const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
     const { width, height } = this.reglCanvas;
+    const imW = spatial.imageWidth;
+    const imH = spatial.imageHeight;
     regl.poll();
     regl.clear({
       depth: 1,
@@ -904,6 +1006,19 @@ class Graph extends React.Component<{}, GraphState> {
       nPoints: schema.dataframe.nObs,
       minViewportDimension: Math.min(width, height),
     });
+    if (imageUnderlay?.isActive) {
+      drawSpatialImage({
+        projView,
+        imageWidth: imW,
+        imageHeight: imH,
+        rectCoords: [0, 0, imW, 0, 0, imH, 0, imH, imW, 0, imW, imH],
+        spatialImageAsTexture: regl.texture({
+          data: this.spatialImage,
+          wrapS: "clamp",
+          wrapT: "clamp",
+        }),
+      });
+    }
     regl._gl.flush();
   }
 
@@ -922,6 +1037,10 @@ class Graph extends React.Component<{}, GraphState> {
       pointDilation,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on ... Remove this comment to see the full error message
       crossfilter,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on ... Remove this comment to see the full error message
+      spatial,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on ... Remove this comment to see the full error message
+      imageUnderlay,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl } = this.state;
     const cameraTF = camera?.view()?.slice();
@@ -996,6 +1115,8 @@ class Graph extends React.Component<{}, GraphState> {
             pointDilation,
             crossfilter,
             viewport,
+            spatial,
+            imageUnderlay,
           }}
         >
           <Async.Pending initial>
@@ -1069,6 +1190,7 @@ const StillLoading = ({ displayName, width, height }: any) => (
         alignItems: "center",
       }}
     >
+      <Button minimal loading intent="primary" />
       <span style={{ fontStyle: "italic" }}>Loading {displayName}</span>
     </div>
   </div>
