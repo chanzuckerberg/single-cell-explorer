@@ -227,7 +227,7 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
 
     s3uri_api_path = "s3_uri"
     bp_s3uri = Blueprint(
-        f"api_{s3uri_api_path}_{api_version.replace('.',',')}",
+        f"api_dataset_{s3uri_api_path}_{api_version.replace('.',',')}",
         __name__,
         url_prefix=(f"{api_url_prefix}/{s3uri_api_path}/<s3_uri>" + api_version).replace("//", "/"),
     )
@@ -262,9 +262,9 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
         )
-        app.add_url_rule(
-            f"/{url_dataroot}/<path:dataset>.cxg/static/<path:filename>/",
-            f"static_assets_{url_dataroot}_cellguide_cxgs/",
-            view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
-            methods=["GET"],
-        )
+        # app.add_url_rule(
+        #     f"/{url_dataroot}/<path:dataset>.cxg/static/<path:filename>/",
+        #     f"static_assets_{url_dataroot}_cellguide_cxgs/",
+        #     view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
+        #     methods=["GET"],
+        # )
