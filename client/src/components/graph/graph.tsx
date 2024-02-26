@@ -613,23 +613,11 @@ class Graph extends React.Component<{}, GraphState> {
     new Promise((resolve, reject) => {
       this.downloadedImg = new Image();
       this.downloadedImg.crossOrigin = "anonymous";
-      this.downloadedImg.addEventListener("load", this.imageReceived, false);
+      // this.downloadedImg.addEventListener("load", this.imageReceived, false);
       this.downloadedImg.onload = () => resolve(this.downloadedImg);
       this.downloadedImg.onerror = reject;
       this.downloadedImg.src = src;
     });
-
-  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  // loadTextureFromUrl = (src: string): any => {
-  //   const imageURL = src;
-  //   const imageDescription = "Spatial Image";
-
-  //   this.downloadedImg = new Image();
-  //   this.downloadedImg.crossOrigin = "anonymous";
-  // this.downloadedImg.addEventListener("load", this.imageReceived, false);
-  //   this.downloadedImg.alt = imageDescription;
-  //   this.downloadedImg.src = imageURL;
-  // };
 
   imageReceived = (): any => {
     const canvas = document.createElement("canvas");
@@ -640,7 +628,6 @@ class Graph extends React.Component<{}, GraphState> {
     canvas.innerText = this.downloadedImg.alt;
 
     context?.drawImage(this.downloadedImg, 0, 0);
-    // imageBox.appendChild(canvas);
 
     try {
       localStorage.setItem(
@@ -651,15 +638,6 @@ class Graph extends React.Component<{}, GraphState> {
       console.error(`Error: ${err}`);
     }
   };
-
-  // // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  // loadTextureFromUrl = (src: string): any =>
-  //   new Promise((resolve, reject) => {
-  //     const img = new Image();
-  //     img.onload = () => resolve(img);
-  //     img.onerror = reject;
-  //     img.src = src;
-  //   });
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   fetchAsyncProps = async (props: any) => {
