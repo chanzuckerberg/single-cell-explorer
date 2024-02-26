@@ -19,6 +19,7 @@ from server.common.errors import (
     DatasetNotFoundError,
     TombstoneError,
 )
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME
 from server.common.utils.http_cache import ONE_YEAR, cache_control
 
 
@@ -222,7 +223,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     return api
 
 
-def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
+def register_api_v3(app, app_config, api_url_prefix):
     api_version = "/api/v0.3"
 
     s3uri_api_path = "s3_uri"
@@ -251,7 +252,7 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
             name=f"api_dataset_{url_dataroot}_cellguide_cxgs_{api_version.replace('.',',')}",
             import_name=__name__,
             url_prefix=(
-                f"{api_url_prefix}/{url_dataroot}{cellguide_api_url_prefix}<path:dataset>.cxg" + api_version
+                f"{api_url_prefix}/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg" + api_version
             ).replace("//", "/"),
         )
 
@@ -265,7 +266,7 @@ def register_api_v3(app, app_config, api_url_prefix, cellguide_api_url_prefix):
             methods=["GET"],
         )
         app.add_url_rule(
-            f"/{url_dataroot}{cellguide_api_url_prefix}<path:dataset>.cxg/static/<path:filename>/",
+            f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/static/<path:filename>/",
             f"static_assets_{url_dataroot}_cellguide_cxgs/",
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
