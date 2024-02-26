@@ -68,6 +68,7 @@ interface ControlsState {
   geneSummary: string;
   geneName: string;
   geneSynonyms: string[];
+  isCellGuideCxg: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -95,6 +96,7 @@ const Controls = (
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
     colorLoading: false,
     datasetDrawer: false,
+    isCellGuideCxg: false,
   },
   action: AnyAction
 ) => {
@@ -117,6 +119,7 @@ const Controls = (
         loading: false,
         error: null,
         resettingInterface: false,
+        isCellGuideCxg: action.isCellGuideCxg,
       };
     }
     case "reset subset": {
