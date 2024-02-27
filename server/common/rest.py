@@ -345,12 +345,15 @@ def layout_obs_get(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
+
+    spatial = data_adaptor.get_spatial()
+
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
         return make_response(
-            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins),
+            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins, spatial=spatial),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )

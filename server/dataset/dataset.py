@@ -327,31 +327,50 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def normalize_embedding(embedding):
+    def normalize_embedding(embedding, ename, spatial=None):
         """Normalize embedding layout to meet client assumptions.
         Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
         """
 
-        # scale isotropically
-        try:
-            min = np.nanmin(embedding, axis=0)
-            max = np.nanmax(embedding, axis=0)
-        except RuntimeError:
-            # indicates entire array was NaN, which should propagate
-            min = np.NaN
-            max = np.NaN
+        if  spatial is not None and ename in "spatial":
+        
+            resolution = "hires"
 
-        scale = np.amax(max - min)
-        normalized_layout = (embedding - min) / scale
+            if not spatial:
+                raise Exception("uns does not have spatial information")
 
-        # translate to center on both axis
-        translate = 0.5 - ((max - min) / scale / 2)
-        normalized_layout = normalized_layout + translate
+            if resolution not in spatial:
+                raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
-        normalized_layout = normalized_layout.astype(dtype=np.float32)
+            scaleref = spatial[f"tissue_{resolution}_scalef"]
+            (h, w, _) = spatial[resolution].shape
+
+            A = embedding * scaleref
+            A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
+            normalized_layout = A.astype(dtype=np.float32)
+
+        else:
+
+            # scale isotropically
+            try:
+                min = np.nanmin(embedding, axis=0)
+                max = np.nanmax(embedding, axis=0)
+            except RuntimeError:
+                # indicates entire array was NaN, which should propagate
+                min = np.NaN
+                max = np.NaN
+
+            scale = np.amax(max - min)
+            normalized_layout = (embedding - min) / scale
+
+            # translate to center on both axis
+            translate = 0.5 - ((max - min) / scale / 2)
+            normalized_layout = normalized_layout + translate
+
+            normalized_layout = normalized_layout.astype(dtype=np.float32)
         return normalized_layout
 
-    def layout_to_fbs_matrix(self, fields, num_bins=None):
+    def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None):
         """
         :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         return specified embeddings as a flatbuffer, using the cellxgene matrix fbs encoding.
@@ -368,7 +387,7 @@ class Dataset(metaclass=ABCMeta):
         with ServerTiming.time("layout.query"):
             for ename in embeddings:
                 embedding = self.get_embedding_array(ename, 2)
-                normalized_layout = Dataset.normalize_embedding(embedding)
+                normalized_layout = Dataset.normalize_embedding(embedding, ename, spatial)
                 layout_data.append(pd.DataFrame(normalized_layout, columns=[f"{ename}_0", f"{ename}_1"]))
 
         with ServerTiming.time("layout.encode"):
@@ -407,7 +426,7 @@ class Dataset(metaclass=ABCMeta):
         return fbs
 
     def get_spatial(self):
-        try: 
+        try:
             uns = self.open_array("uns")
         except KeyError as e:
             return e
