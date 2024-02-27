@@ -83,8 +83,6 @@ class App extends React.Component<Props> {
                       </Controls>
                       <Legend />
                       <Graph
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore
-                        // @ts-ignore FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
