@@ -68,6 +68,7 @@ interface ControlsState {
   geneName: string;
   geneSynonyms: string[];
   isCellGuideCxg: boolean;
+  screenCap: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -95,6 +96,7 @@ const Controls = (
     colorLoading: false,
     datasetDrawer: false,
     isCellGuideCxg: false,
+    screenCap: false,
   },
   action: AnyAction
 ) => {
@@ -402,6 +404,22 @@ const Controls = (
      **************************/
     case "toggle dataset drawer":
       return { ...state, datasetDrawer: !state.datasetDrawer };
+
+    /**************************
+         Screen Capture
+    **************************/
+    case "graph: screencap start": {
+      return {
+        ...state,
+        screenCap: true,
+      };
+    }
+    case "graph: screencap end": {
+      return {
+        ...state,
+        screenCap: false,
+      };
+    }
 
     default:
       return state;

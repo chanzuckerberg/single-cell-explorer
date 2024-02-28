@@ -1,5 +1,7 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import * as d3 from "d3";
+import { toPng } from "html-to-image";
+
 import { connect, shallowEqual } from "react-redux";
 import { ReadonlyMat3, mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
@@ -98,7 +100,15 @@ type GraphState = {
   };
   modelTF: ReadonlyMat3;
   modelInvTF: ReadonlyMat3;
+  testImageSrc: string | null;
 };
+interface GraphAsyncProps {
+  positions: Float32Array;
+  colors: Float32Array;
+  flags: Float32Array;
+  width: number;
+  height: number;
+}
 
 type GraphProps = Partial<RootState>;
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -112,6 +122,7 @@ type GraphProps = Partial<RootState>;
   colors: state.colors,
   pointDilation: state.pointDilation,
   genesets: state.genesets.genesets,
+  screenCap: state.controls.screenCap,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement) {
@@ -142,7 +153,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   private graphRef = React.createRef<HTMLDivElement>();
 
-  cachedAsyncProps: GraphProps | null;
+  cachedAsyncProps: GraphAsyncProps | null;
 
   reglCanvas: HTMLCanvasElement | null;
 
@@ -271,6 +282,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         pointDilationDf: null,
       },
       updateOverlay: false,
+      testImageSrc: null,
     };
   }
 
@@ -553,7 +565,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  fetchAsyncProps = async (props: GraphProps) => {
+  fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
     const {
       annoMatrix,
       colors: colorsProp,
@@ -770,8 +782,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
     );
   });
 
-  updateReglAndRender(asyncProps: any, prevAsyncProps: any) {
+  updateReglAndRender(
+    asyncProps: GraphAsyncProps,
+    prevAsyncProps: GraphAsyncProps | null
+  ) {
     const { positions, colors, flags, height, width } = asyncProps;
+    const { screenCap } = this.props;
+
     this.cachedAsyncProps = asyncProps;
     const { pointBuffer, colorBuffer, flagBuffer } = this.state;
     let needToRenderCanvas = false;
@@ -791,6 +808,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (flags !== prevAsyncProps?.flags) {
       // @ts-expect-error (seve): need to look into arg mismatch
       flagBuffer!({ data: flags, dimension: 1 });
+      needToRenderCanvas = true;
+    }
+    if (screenCap) {
       needToRenderCanvas = true;
     }
     if (needToRenderCanvas) this.renderCanvas();
@@ -826,7 +846,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
-  renderPoints(
+  async renderPoints(
     regl: GraphState["regl"],
     drawPoints: GraphState["drawPoints"],
     colorBuffer: GraphState["colorBuffer"],
@@ -835,7 +855,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     camera: GraphState["camera"],
     projectionTF: GraphState["projectionTF"]
   ) {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, dispatch, screenCap } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera!.view();
@@ -856,6 +876,38 @@ class Graph extends React.Component<GraphProps, GraphState> {
       nPoints: schema.dataframe.nObs,
       minViewportDimension: Math.min(width, height),
     });
+
+    if (screenCap && regl) {
+      const graph = regl._gl.canvas;
+      const imageURI = await toPng(graph as HTMLCanvasElement, {
+        backgroundColor: "white",
+        height,
+        width,
+      });
+      this.setState({ testImageSrc: imageURI });
+      try {
+        // TODO: DOWNLOAD IMAGE
+        // const a = document.createElement("a");
+        // a.href = imageURL;
+        // a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
+        // a.style.display = "none";
+        // document.body.append(a);
+        // a.click();
+        // // Revoke the blob URL and remove the element.
+        // setTimeout(() => {
+        //   URL.revokeObjectURL(imageURL);
+        //   a.remove();
+        // }, 1000);
+      } catch (err) {
+        // Fail silently if the user has simply canceled the dialog.
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.error(err.name, err.message);
+        }
+      } finally {
+        dispatch({ type: "graph: screencap end" });
+      }
+    }
+
     regl!._gl.flush();
   }
 
@@ -867,8 +919,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       layoutChoice,
       pointDilation,
       crossfilter,
+      screenCap,
     } = this.props;
-    const { modelTF, projectionTF, camera, viewport, regl } = this.state;
+    const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
+      this.state;
     const cameraTF = camera?.view()?.slice();
 
     return (
@@ -930,6 +984,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
           onDoubleClick={this.handleCanvasEvent}
           onWheel={this.handleCanvasEvent}
         />
+        {testImageSrc && (
+          <img
+            width={viewport.width}
+            height={viewport.height}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              padding: 0,
+              margin: 0,
+            }}
+            alt=""
+            data-testid="graph-image"
+            src={testImageSrc}
+          />
+        )}
         <Async
           watchFn={Graph.watchAsync}
           promiseFn={this.fetchAsyncProps}
@@ -940,6 +1010,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             pointDilation,
             crossfilter,
             viewport,
+            screenCap,
           }}
         >
           <Async.Pending initial>
@@ -960,8 +1031,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
             )}
           </Async.Rejected>
           <Async.Fulfilled>
-            {(asyncProps) => {
-              if (regl && !shallowEqual(asyncProps, this.cachedAsyncProps)) {
+            {(asyncProps: GraphAsyncProps) => {
+              if (
+                regl &&
+                (!shallowEqual(asyncProps, this.cachedAsyncProps) || screenCap)
+              ) {
                 this.updateReglAndRender(asyncProps, this.cachedAsyncProps);
               }
               return null;
