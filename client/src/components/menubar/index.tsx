@@ -73,6 +73,7 @@ type State = any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: (state as any).categoricalSelection,
     seamlessEnabled: selectIsSeamlessEnabled(state),
+    screenCap: (state as any).controls.screenCap,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -278,12 +279,15 @@ class MenuBar extends React.PureComponent<{}, State> {
       subsetResetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       seamlessEnabled,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
+      screenCap,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
     const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
 
     const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+    const isTest = getFeatureFlag(FEATURES.TEST);
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] =
       selectionTool === "brush"
@@ -347,6 +351,24 @@ class MenuBar extends React.PureComponent<{}, State> {
                   cursor: "pointer",
                 }}
                 onClick={noop}
+              />
+            </Tooltip>
+          )}
+          {isTest && (
+            <Tooltip
+              content="🌊"
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <AnchorButton
+                className={styles.menubarButton}
+                type="button"
+                icon={IconNames.TORCH}
+                style={{
+                  cursor: "pointer",
+                }}
+                loading={screenCap}
+                onClick={() => dispatch({ type: "graph: screencap start" })}
               />
             </Tooltip>
           )}
