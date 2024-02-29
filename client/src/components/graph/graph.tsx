@@ -140,7 +140,7 @@ class Graph extends React.Component<{}, GraphState> {
 
   private graphRef = React.createRef<HTMLDivElement>();
 
-  private downloadedImg: HTMLImageElement;
+  private downloadedImg: HTMLImageElement = new Image();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   cachedAsyncProps: any;
@@ -166,11 +166,19 @@ class Graph extends React.Component<{}, GraphState> {
     /*
     compute webgl colors for each point
     */
+    console.log("rgb", rgb);
+
     const colors = new Float32Array(3 * rgb.length);
     for (let i = 0, len = rgb.length; i < len; i += 1) {
+      console.log("rgb[i]", rgb[i]);
+      console.log("rgb.length", rgb.length);
+
       colors.set(rgb[i], 3 * i);
+      // console.log("colors333", colors);
     }
-    return colors;
+    console.log("colors!!", colors);
+
+    return rgb;
   });
 
   computeSelectedFlags = memoize(
@@ -611,33 +619,11 @@ class Graph extends React.Component<{}, GraphState> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   loadTextureFromUrl = (src: string): any =>
     new Promise((resolve, reject) => {
-      this.downloadedImg = new Image();
       this.downloadedImg.crossOrigin = "anonymous";
-      // this.downloadedImg.addEventListener("load", this.imageReceived, false);
       this.downloadedImg.onload = () => resolve(this.downloadedImg);
       this.downloadedImg.onerror = reject;
       this.downloadedImg.src = src;
     });
-
-  imageReceived = (): any => {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-
-    canvas.width = this.downloadedImg.width;
-    canvas.height = this.downloadedImg.height;
-    canvas.innerText = this.downloadedImg.alt;
-
-    context?.drawImage(this.downloadedImg, 0, 0);
-
-    try {
-      localStorage.setItem(
-        "saved-image-example",
-        canvas.toDataURL("image/png")
-      );
-    } catch (err) {
-      console.error(`Error: ${err}`);
-    }
-  };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   fetchAsyncProps = async (props: any) => {
@@ -659,8 +645,10 @@ class Graph extends React.Component<{}, GraphState> {
       pointDilation
     );
     const { currentDimNames } = layoutChoice;
+
     const X = layoutDf.col(currentDimNames[0]).asArray();
     const Y = layoutDf.col(currentDimNames[1]).asArray();
+
     const positions = this.computePointPositions(X, Y, modelTF);
     const colorTable = this.updateColorTable(colorsProp, colorDf);
     const colors = this.computePointColors(colorTable.rgb);
@@ -682,6 +670,8 @@ class Graph extends React.Component<{}, GraphState> {
     this.spatialImage = await this.loadTextureFromUrl(
       "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api//v0.3/spatial/image"
     );
+
+    console.log("flags", flags);
 
     const { width, height } = viewport;
     return {
@@ -963,7 +953,6 @@ class Graph extends React.Component<{}, GraphState> {
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera.view();
-    const scaleref = spatial?.scaleref;
 
     const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
     const { width, height } = this.reglCanvas;
@@ -974,6 +963,7 @@ class Graph extends React.Component<{}, GraphState> {
       depth: 1,
       color: [1, 1, 1, 1],
     });
+
     drawPoints({
       distance: camera.distance(),
       color: colorBuffer,
