@@ -46,6 +46,7 @@ import {
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
   assertUndoRedo,
+  snapshotTestGraph,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -359,7 +360,7 @@ describe("clipping", () => {
 
 // interact with UI elements just that they do not break
 describe("ui elements don't error", () => {
-  test("color by", async ({ page }) => {
+  test("color by", async ({ page }, testInfo) => {
     await goToPage(page);
     const allLabels = [
       ...Object.keys(data.categorical),
@@ -369,9 +370,10 @@ describe("ui elements don't error", () => {
     for (const label of allLabels) {
       await page.getByTestId(`colorby-${label}`).click();
     }
+    await snapshotTestGraph(page, testInfo);
   });
 
-  test("pan and zoom", async ({ page }) => {
+  test("pan and zoom", async ({ page }, testInfo) => {
     await goToPage(page);
     await page.getByTestId("mode-pan-zoom").click();
     const panCoords = await calcDragCoordinates(
@@ -383,6 +385,7 @@ describe("ui elements don't error", () => {
     await drag("layout-graph", panCoords.start, panCoords.end, page);
 
     await page.evaluate("window.scrollBy(0, 1000);");
+    await snapshotTestGraph(page, testInfo);
   });
 });
 
@@ -613,13 +616,14 @@ for (const option of options) {
         expect(cellCount).toBe("131");
       }
     });
-    test("color by mean expression", async ({ page }) => {
+    test("color by mean expression", async ({ page }, testInfo) => {
       await setup(option, page);
       await createGeneset(meanExpressionBrushGenesetName, page);
       await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1", page);
 
       await colorByGeneset(meanExpressionBrushGenesetName, page);
       await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
+      await snapshotTestGraph(page, testInfo);
     });
     test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
