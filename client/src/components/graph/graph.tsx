@@ -1,13 +1,15 @@
-import React from "react";
+import React, { MouseEvent, MouseEventHandler } from "react";
 import * as d3 from "d3";
+import { toPng } from "html-to-image";
+
 import { connect, shallowEqual } from "react-redux";
-import { mat3, vec2 } from "gl-matrix";
-import _regl from "regl";
+import { ReadonlyMat3, mat3, vec2 } from "gl-matrix";
+import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
 
-import setupSVGandBrushElements from "./setupSVGandBrush";
-import _camera from "../../util/camera";
+import { setupBrush, setupLasso } from "./setupSVGandBrush";
+import _camera, { Camera } from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
 import {
   createColorTable,
@@ -26,6 +28,8 @@ import {
   flagHighlight,
 } from "../../util/glHelpers";
 import { Dataframe } from "../../util/dataframe";
+import { RootState } from "../../reducers";
+import { LassoFunctionWithAttributes } from "./setupLasso";
 
 /*
 Simple 2D transforms control all point painting.  There are three:
@@ -34,8 +38,7 @@ Simple 2D transforms control all point painting.  There are three:
   * camera - apply a 2D camera transformation (pan, zoom)
   * projection - apply any transformation required for screen size and layout
 */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function createProjectionTF(viewportWidth: any, viewportHeight: any) {
+function createProjectionTF(viewportWidth: number, viewportHeight: number) {
   /*
   the projection transform accounts for the screen size & other layout
   */
@@ -45,16 +48,15 @@ function createProjectionTF(viewportWidth: any, viewportHeight: any) {
   const heightMinusGutter =
     viewportHeight - topGutterSizePx - bottomGutterSizePx;
   const minDim = Math.min(viewportWidth, heightMinusGutter);
-  const aspectScale = [
+  const aspectScale = new Float32Array([
     (fractionToUse * minDim) / viewportWidth,
     (fractionToUse * minDim) / viewportHeight,
-  ];
+  ]);
   const m = mat3.create();
   mat3.fromTranslation(m, [
     0,
     (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
   ]);
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'number[]' is not assignable to p... Remove this comment to see the full error message
   mat3.scale(m, m, aspectScale);
   return m;
 }
@@ -69,34 +71,61 @@ function createModelTF() {
   return m;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type GraphState = any;
+type GraphState = {
+  regl: Regl | null;
+  drawPoints: DrawCommand | null;
+  colorBuffer: _regl.Buffer | null;
+  pointBuffer: _regl.Buffer | null;
+  flagBuffer: _regl.Buffer | null;
+  camera: Camera | null;
+  projectionTF: mat3;
+  tool: LassoFunctionWithAttributes | d3.BrushBehavior<unknown> | null;
+  container: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
+  // used?
+  updateOverlay: boolean;
+  toolSVG: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
+  viewport: { width: number; height: number };
+  layoutState: {
+    layoutDf: Dataframe | null;
+    layoutChoice: string | null;
+  };
+  colorState: {
+    colors: string[] | null;
+    colorDf: Dataframe | null;
+    colorTable: any | null;
+  };
+  pointDilationState: {
+    pointDilation: string | null;
+    pointDilationDf: Dataframe | null;
+  };
+  modelTF: ReadonlyMat3;
+  modelInvTF: ReadonlyMat3;
+  testImageSrc: string | null;
+};
+interface GraphAsyncProps {
+  positions: Float32Array;
+  colors: Float32Array;
+  flags: Float32Array;
+  width: number;
+  height: number;
+}
 
+type GraphProps = Partial<RootState>;
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  annoMatrix: (state as any).annoMatrix,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  crossfilter: (state as any).obsCrossfilter,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  selectionTool: (state as any).graphSelection.tool,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  currentSelection: (state as any).graphSelection.selection,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: (state as any).layoutChoice,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  graphInteractionMode: (state as any).controls.graphInteractionMode,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  colors: (state as any).colors,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  pointDilation: (state as any).pointDilation,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  genesets: (state as any).genesets.genesets,
+@connect((state: RootState) => ({
+  annoMatrix: state.annoMatrix,
+  crossfilter: state.obsCrossfilter,
+  selectionTool: state.graphSelection.tool,
+  currentSelection: state.graphSelection.selection,
+  layoutChoice: state.layoutChoice,
+  graphInteractionMode: state.controls.graphInteractionMode,
+  colors: state.colors,
+  pointDilation: state.pointDilation,
+  genesets: state.genesets.genesets,
+  screenCap: state.controls.screenCap,
 }))
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class Graph extends React.Component<{}, GraphState> {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static createReglState(canvas: any) {
+class Graph extends React.Component<GraphProps, GraphState> {
+  static createReglState(canvas: HTMLCanvasElement) {
     /*
         Must be created for each canvas
         */
@@ -105,12 +134,9 @@ class Graph extends React.Component<{}, GraphState> {
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
     // preallocate webgl buffers
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    const pointBuffer = regl.buffer();
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    const colorBuffer = regl.buffer();
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    const flagBuffer = regl.buffer();
+    const pointBuffer = regl.buffer(0);
+    const colorBuffer = regl.buffer(0);
+    const flagBuffer = regl.buffer(0);
     return {
       camera,
       regl,
@@ -121,18 +147,15 @@ class Graph extends React.Component<{}, GraphState> {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static watchAsync(props: any, prevProps: any) {
+  static watchAsync(props: GraphProps, prevProps: GraphProps) {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
   private graphRef = React.createRef<HTMLDivElement>();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  cachedAsyncProps: any;
+  cachedAsyncProps: GraphAsyncProps | null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  reglCanvas: any;
+  reglCanvas: HTMLCanvasElement | null;
 
   computePointPositions = memoize((X, Y, modelTF) => {
     /*
@@ -221,8 +244,7 @@ class Graph extends React.Component<{}, GraphState> {
     }
   );
 
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
+  constructor(props: GraphProps) {
     super(props);
     const viewport = this.getViewportDimensions();
     this.reglCanvas = null;
@@ -236,8 +258,7 @@ class Graph extends React.Component<{}, GraphState> {
       // projection
       camera: null,
       modelTF,
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '[]' is not assignable to paramet... Remove this comment to see the full error message
-      modelInvTF: mat3.invert([], modelTF),
+      modelInvTF: mat3.invert(mat3.create(), modelTF),
       projectionTF: createProjectionTF(viewport.width, viewport.height),
       // regl state
       regl: null,
@@ -260,6 +281,8 @@ class Graph extends React.Component<{}, GraphState> {
         pointDilation: null,
         pointDilationDf: null,
       },
+      updateOverlay: false,
+      testImageSrc: null,
     };
   }
 
@@ -273,27 +296,18 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  componentDidUpdate(prevProps: {}, prevState: GraphState) {
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
-      selectionTool,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'currentSelection' does not exist on type 'R... Remove this comment to see the full error message
-      currentSelection,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on type 'R... Remove this comment to see the full error message
-      graphInteractionMode,
-    } = this.props;
+  componentDidUpdate(prevProps: GraphProps, prevState: GraphState) {
+    const { selectionTool, currentSelection, graphInteractionMode } =
+      this.props;
     const { toolSVG, viewport } = this.state;
     const hasResized =
       prevState.viewport.height !== viewport.height ||
       prevState.viewport.width !== viewport.width;
-    let stateChanges = {};
+    let stateChanges: Partial<GraphState> = {};
     if (
       (viewport.height && viewport.width && !toolSVG) || // first time init
       hasResized || //  window size has changed we want to recreate all SVGs
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type '{... Remove this comment to see the full error message
       selectionTool !== prevProps.selectionTool || // change of selection tool
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on ... Remove this comment to see the full error message
       prevProps.graphInteractionMode !== graphInteractionMode // lasso/zoom mode is switched
     ) {
       stateChanges = {
@@ -306,28 +320,21 @@ class Graph extends React.Component<{}, GraphState> {
         tool correctly reflects the underlying selection.
         */
     if (
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'currentSelection' does not exist on type... Remove this comment to see the full error message
       currentSelection !== prevProps.currentSelection ||
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on ... Remove this comment to see the full error message
       graphInteractionMode !== prevProps.graphInteractionMode ||
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'toolSVG' does not exist on type '{}'.
       stateChanges.toolSVG
     ) {
       const { tool, container } = this.state;
       this.selectionToolUpdate(
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'tool' does not exist on type '{}'.
-        stateChanges.tool ? stateChanges.tool : tool,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'container' does not exist on type '{}'.
-        stateChanges.container ? stateChanges.container : container
+        stateChanges.tool ? stateChanges.tool : tool!,
+        stateChanges.container ? stateChanges.container : container!
       );
     }
     if (Object.keys(stateChanges).length > 0) {
-      // eslint-disable-next-line react/no-did-update-set-state --- Preventing update loop via stateChanges and diff checks
-      this.setState(stateChanges);
+      this.setState((state) => ({ ...state, ...stateChanges }));
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   componentWillUnmount() {
     window.removeEventListener("resize", this.handleResize);
     if (this.graphRef.current) {
@@ -335,33 +342,36 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleResize = () => {
-    const { state } = this.state;
     const viewport = this.getViewportDimensions();
     const projectionTF = createProjectionTF(viewport.width, viewport.height);
-    this.setState({
+    this.setState((state) => ({
       ...state,
       viewport,
       projectionTF,
-    });
+    }));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleCanvasEvent = (e: any) => {
+  handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
-    if (camera.handleEvent(e, projectionTF)) {
+    if (
+      camera!.handleEvent(
+        e as unknown as MouseEvent<
+          HTMLCanvasElement,
+          MouseEvent<Element, MouseEvent>
+        >,
+        projectionTF
+      )
+    ) {
       this.renderCanvas();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      this.setState((state: any) => ({
+      this.setState((state: GraphState) => ({
         ...state,
         updateOverlay: !state.updateOverlay,
       }));
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleBrushDragAction() {
     /*
           event describing brush position:
@@ -370,12 +380,15 @@ class Graph extends React.Component<{}, GraphState> {
           |       |
           |-------@
         */
-    // ignore programatically generated events
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'event' does not exist on type 'typeof im... Remove this comment to see the full error message
-    if (d3.event.sourceEvent === null || !d3.event.selection) return;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+    // ignore programmatically generated events
+    const { camera } = this.state;
+    if (
+      d3.event.sourceEvent === null ||
+      !d3.event.selection ||
+      !camera // ignore if camera not initialized
+    )
+      return;
     const { dispatch, layoutChoice } = this.props;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'event' does not exist on type 'typeof im... Remove this comment to see the full error message
     const s = d3.event.selection;
     const northwest = this.mapScreenToPoint(s[0]);
     const southeast = this.mapScreenToPoint(s[1]);
@@ -393,28 +406,22 @@ class Graph extends React.Component<{}, GraphState> {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleBrushStartAction() {
-    // Ignore programatically generated events.
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'event' does not exist on type 'typeof im... Remove this comment to see the full error message
+    // Ignore programmatically generated events.
     if (!d3.event.sourceEvent) return;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
     dispatch(actions.graphBrushStartAction());
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleBrushEndAction() {
-    // Ignore programatically generated events.
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'event' does not exist on type 'typeof im... Remove this comment to see the full error message
-    if (!d3.event.sourceEvent) return;
+    const { camera } = this.state;
+    // Ignore programmatically generated events. Also abort if camera not initialized.
+    if (!d3.event.sourceEvent || !camera) return;
     /*
         coordinates will be included if selection made, null
         if selection cleared.
         */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, layoutChoice } = this.props;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'event' does not exist on type 'typeof im... Remove this comment to see the full error message
     const s = d3.event.selection;
     if (s) {
       const northwest = this.mapScreenToPoint(s[0]);
@@ -436,26 +443,19 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleBrushDeselectAction() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleLassoStart() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, layoutChoice } = this.props;
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
-    dispatch(actions.graphLassoStartAction(layoutChoice.current));
+    const { dispatch } = this.props;
+    dispatch(actions.graphLassoStartAction());
   }
 
   // when a lasso is completed, filter to the points within the lasso polygon
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleLassoEnd(polygon: any) {
+  handleLassoEnd(polygon: [number, number][]) {
     const minimumPolygonArea = 10;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, layoutChoice } = this.props;
     if (
       polygon.length < 3 ||
@@ -467,43 +467,26 @@ class Graph extends React.Component<{}, GraphState> {
       dispatch(
         actions.graphLassoEndAction(
           layoutChoice.current,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-          polygon.map((xy: any) => this.mapScreenToPoint(xy))
+          polygon.map((xy) => this.mapScreenToPoint(xy))
         )
       );
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleLassoCancel() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphLassoCancelAction(layoutChoice.current));
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleLassoDeselectAction() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleDeselectAction() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
     const { selectionTool } = this.props;
     if (selectionTool === "brush") this.handleBrushDeselectAction();
     if (selectionTool === "lasso") this.handleLassoDeselectAction();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleOpacityRangeChange(e: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
-    dispatch({
-      type: "change opacity deselected cells in 2d graph background",
-      data: e.target.value,
-    });
   }
 
   disableScroll = (event: WheelEvent) => {
@@ -511,8 +494,7 @@ class Graph extends React.Component<{}, GraphState> {
     event.preventDefault();
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  setReglCanvas = (canvas: any) => {
+  setReglCanvas = (canvas: HTMLCanvasElement) => {
     // Ignore null canvas on unmount
     if (!canvas) {
       return;
@@ -523,9 +505,7 @@ class Graph extends React.Component<{}, GraphState> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   getViewportDimensions = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'viewportRef' does not exist on type 'Rea... Remove this comment to see the full error message
     const { viewportRef } = this.props;
     return {
       height: viewportRef.clientHeight,
@@ -533,13 +513,11 @@ class Graph extends React.Component<{}, GraphState> {
     };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   createToolSVG = () => {
     /*
         Called from componentDidUpdate. Create the tool SVG, and return any
         state changes that should be passed to setState().
         */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
     const { selectionTool, graphInteractionMode } = this.props;
     const { viewport } = this.state;
     /* clear out whatever was on the div, even if nothing, but usually the brushes etc */
@@ -557,32 +535,37 @@ class Graph extends React.Component<{}, GraphState> {
     let handleDrag;
     let handleEnd;
     let handleCancel;
+    let ret;
+
     if (selectionTool === "brush") {
       handleStart = this.handleBrushStartAction.bind(this);
       handleDrag = this.handleBrushDragAction.bind(this);
       handleEnd = this.handleBrushEndAction.bind(this);
+      ret = setupBrush({
+        selectionToolType: selectionTool,
+        handleStartAction: handleStart,
+        handleDragAction: handleDrag,
+        handleEndAction: handleEnd,
+        handleCancelAction: handleCancel,
+        viewport,
+      });
     } else {
       handleStart = this.handleLassoStart.bind(this);
       handleEnd = this.handleLassoEnd.bind(this);
       handleCancel = this.handleLassoCancel.bind(this);
+      ret = setupLasso({
+        selectionToolType: selectionTool,
+        handleStartAction: handleStart,
+        handleEndAction: handleEnd,
+        handleCancelAction: handleCancel,
+      });
     }
-    const {
-      svg: newToolSVG,
-      tool,
-      container,
-    } = setupSVGandBrushElements(
-      selectionTool,
-      handleStart,
-      handleDrag,
-      handleEnd,
-      handleCancel,
-      viewport
-    );
+    if (!ret) return {};
+    const { svg: newToolSVG, container, tool } = ret;
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  fetchAsyncProps = async (props: any) => {
+  fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
     const {
       annoMatrix,
       colors: colorsProp,
@@ -627,16 +610,11 @@ class Graph extends React.Component<{}, GraphState> {
     };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   async fetchData(
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    annoMatrix: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    layoutChoice: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    colors: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    pointDilation: any
+    annoMatrix: RootState["annoMatrix"],
+    layoutChoice: RootState["layoutChoice"],
+    colors: RootState["colors"],
+    pointDilation: RootState["pointDilation"]
   ): Promise<[Dataframe, Dataframe | null, Dataframe | null]> {
     /*
         fetch all data needed.  Includes:
@@ -662,16 +640,18 @@ class Graph extends React.Component<{}, GraphState> {
     return Promise.all(promises);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  brushToolUpdate(tool: any, container: any) {
+  brushToolUpdate(
+    tool: d3.BrushBehavior<unknown>,
+    container: d3.Selection<SVGGElement, unknown, HTMLElement, any>
+  ) {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
         */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'currentSelection' does not exist on type... Remove this comment to see the full error message
     const { currentSelection } = this.props;
-    if (container) {
-      const toolCurrentSelection = d3.brushSelection(container.node());
+    const node = container.node();
+    if (node) {
+      const toolCurrentSelection = d3.brushSelection(node);
       if (currentSelection.mode === "within-rect") {
         /*
                 if there is a selection, make sure the brush tool matches
@@ -690,8 +670,8 @@ class Graph extends React.Component<{}, GraphState> {
           for (let x = 0; x < 2; x += 1) {
             for (let y = 0; y < 2; y += 1) {
               delta += Math.abs(
-                // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-                screenCoords[x][y] - toolCurrentSelection[x][y]
+                screenCoords[x][y] -
+                  (toolCurrentSelection as [number, number][])[x][y]
               );
             }
           }
@@ -706,19 +686,16 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  lassoToolUpdate(tool: any) {
+  lassoToolUpdate(tool: LassoFunctionWithAttributes) {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
         */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'currentSelection' does not exist on type... Remove this comment to see the full error message
     const { currentSelection } = this.props;
     if (currentSelection.mode === "within-polygon") {
       /*
             if there is a current selection, make sure the lasso tool matches
             */
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
       const polygon = currentSelection.polygon.map((p: any) =>
         this.mapPointToScreen(p)
       );
@@ -728,21 +705,21 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  selectionToolUpdate(tool: any, container: any) {
+  selectionToolUpdate(
+    tool: GraphState["tool"],
+    container: d3.Selection<SVGGElement, unknown, HTMLElement, any>
+  ) {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
         */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
     const { selectionTool } = this.props;
     switch (selectionTool) {
       case "brush":
-        this.brushToolUpdate(tool, container);
+        this.brushToolUpdate(tool as d3.BrushBehavior<unknown>, container);
         break;
       case "lasso":
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 2.
-        this.lassoToolUpdate(tool, container);
+        this.lassoToolUpdate(tool as LassoFunctionWithAttributes);
         break;
       default:
         /* punt? */
@@ -750,14 +727,13 @@ class Graph extends React.Component<{}, GraphState> {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  mapScreenToPoint(pin: any) {
+  mapScreenToPoint(pin: [number, number]) {
     /*
         Map an XY coordinates from screen domain to cell/point range,
         accounting for current pan/zoom camera.
         */
     const { camera, projectionTF, modelInvTF, viewport } = this.state;
-    const cameraInvTF = camera.invView();
+    const cameraInvTF = camera!.invView();
     /* screen -> gl */
     const x = (2 * pin[0]) / viewport.width - 1;
     const y = 2 * (1 - pin[1] / viewport.height) - 1;
@@ -769,14 +745,13 @@ class Graph extends React.Component<{}, GraphState> {
     return xy;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  mapPointToScreen(xyCell: any) {
+  mapPointToScreen(xyCell: [number, number]) {
     /*
         Map an XY coordinate from cell/point domain to screen range.  Inverse
         of mapScreenToPoint()
         */
     const { camera, projectionTF, modelTF, viewport } = this.state;
-    const cameraTF = camera.view();
+    const cameraTF = camera!.view();
     const xy = vec2.transformMat3(vec2.create(), xyCell, modelTF);
     vec2.transformMat3(xy, xy, cameraTF);
     vec2.transformMat3(xy, xy, projectionTF);
@@ -807,9 +782,13 @@ class Graph extends React.Component<{}, GraphState> {
     );
   });
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  updateReglAndRender(asyncProps: any, prevAsyncProps: any) {
+  updateReglAndRender(
+    asyncProps: GraphAsyncProps,
+    prevAsyncProps: GraphAsyncProps | null
+  ) {
     const { positions, colors, flags, height, width } = asyncProps;
+    const { screenCap } = this.props;
+
     this.cachedAsyncProps = asyncProps;
     const { pointBuffer, colorBuffer, flagBuffer } = this.state;
     let needToRenderCanvas = false;
@@ -817,23 +796,27 @@ class Graph extends React.Component<{}, GraphState> {
       needToRenderCanvas = true;
     }
     if (positions !== prevAsyncProps?.positions) {
-      pointBuffer({ data: positions, dimension: 2 });
+      // @ts-expect-error (seve): need to look into arg mismatch
+      pointBuffer!({ data: positions, dimension: 2 });
       needToRenderCanvas = true;
     }
     if (colors !== prevAsyncProps?.colors) {
-      colorBuffer({ data: colors, dimension: 3 });
+      // @ts-expect-error (seve): need to look into arg mismatch
+      colorBuffer!({ data: colors, dimension: 3 });
       needToRenderCanvas = true;
     }
     if (flags !== prevAsyncProps?.flags) {
-      flagBuffer({ data: flags, dimension: 1 });
+      // @ts-expect-error (seve): need to look into arg mismatch
+      flagBuffer!({ data: flags, dimension: 1 });
+      needToRenderCanvas = true;
+    }
+    if (screenCap) {
       needToRenderCanvas = true;
     }
     if (needToRenderCanvas) this.renderCanvas();
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   updateColorTable(colors: any, colorDf: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     /* update color table state */
@@ -856,46 +839,35 @@ class Graph extends React.Component<{}, GraphState> {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   createColorByQuery(colors: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
     const { annoMatrix, genesets } = this.props;
     const { schema } = annoMatrix;
     const { colorMode, colorAccessor } = colors;
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  renderPoints(
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    regl: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    drawPoints: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    colorBuffer: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    pointBuffer: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    flagBuffer: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    camera: any,
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    projectionTF: any
+  async renderPoints(
+    regl: GraphState["regl"],
+    drawPoints: GraphState["drawPoints"],
+    colorBuffer: GraphState["colorBuffer"],
+    pointBuffer: GraphState["pointBuffer"],
+    flagBuffer: GraphState["flagBuffer"],
+    camera: GraphState["camera"],
+    projectionTF: GraphState["projectionTF"]
   ) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix } = this.props;
+    const { annoMatrix, dispatch, screenCap } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
-    const cameraTF = camera.view();
+    const cameraTF = camera!.view();
     const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
     const { width, height } = this.reglCanvas;
-    regl.poll();
-    regl.clear({
+    regl!.poll();
+    regl!.clear({
       depth: 1,
       color: [1, 1, 1, 1],
     });
-    drawPoints({
-      distance: camera.distance(),
+    drawPoints!({
+      distance: camera!.distance(),
       color: colorBuffer,
       position: pointBuffer,
       flag: flagBuffer,
@@ -904,26 +876,53 @@ class Graph extends React.Component<{}, GraphState> {
       nPoints: schema.dataframe.nObs,
       minViewportDimension: Math.min(width, height),
     });
-    regl._gl.flush();
+
+    if (screenCap && regl) {
+      const graph = regl._gl.canvas;
+      const imageURI = await toPng(graph as HTMLCanvasElement, {
+        backgroundColor: "white",
+        height,
+        width,
+      });
+      this.setState({ testImageSrc: imageURI });
+      try {
+        // TODO: DOWNLOAD IMAGE
+        // const a = document.createElement("a");
+        // a.href = imageURL;
+        // a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
+        // a.style.display = "none";
+        // document.body.append(a);
+        // a.click();
+        // // Revoke the blob URL and remove the element.
+        // setTimeout(() => {
+        //   URL.revokeObjectURL(imageURL);
+        //   a.remove();
+        // }, 1000);
+      } catch (err) {
+        // Fail silently if the user has simply canceled the dialog.
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.error(err.name, err.message);
+        }
+      } finally {
+        dispatch({ type: "graph: screencap end" });
+      }
+    }
+
+    regl!._gl.flush();
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on ... Remove this comment to see the full error message
       graphInteractionMode,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on ... Remove this comment to see the full error message
       annoMatrix,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colors' does not exist on ... Remove this comment to see the full error message
       colors,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on ... Remove this comment to see the full error message
       layoutChoice,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'pointDilation' does not exist on ... Remove this comment to see the full error message
       pointDilation,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on ... Remove this comment to see the full error message
       crossfilter,
+      screenCap,
     } = this.props;
-    const { modelTF, projectionTF, camera, viewport, regl } = this.state;
+    const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
+      this.state;
     const cameraTF = camera?.view()?.slice();
 
     return (
@@ -939,7 +938,7 @@ class Graph extends React.Component<{}, GraphState> {
         ref={this.graphRef}
       >
         <GraphOverlayLayer
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; width: any; height: any... Remove this comment to see the full error message
+          /**  @ts-expect-error TODO: type GraphOverlayLayer**/
           width={viewport.width}
           height={viewport.height}
           cameraTF={cameraTF}
@@ -985,7 +984,22 @@ class Graph extends React.Component<{}, GraphState> {
           onDoubleClick={this.handleCanvasEvent}
           onWheel={this.handleCanvasEvent}
         />
-
+        {testImageSrc && (
+          <img
+            width={viewport.width}
+            height={viewport.height}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              padding: 0,
+              margin: 0,
+            }}
+            alt=""
+            data-testid="graph-image"
+            src={testImageSrc}
+          />
+        )}
         <Async
           watchFn={Graph.watchAsync}
           promiseFn={this.fetchAsyncProps}
@@ -996,10 +1010,10 @@ class Graph extends React.Component<{}, GraphState> {
             pointDilation,
             crossfilter,
             viewport,
+            screenCap,
           }}
         >
           <Async.Pending initial>
-            {/* eslint-disable-next-line @typescript-eslint/no-use-before-define --- StillLoading used before defined */}
             <StillLoading
               displayName={layoutChoice.current}
               width={viewport.width}
@@ -1008,7 +1022,6 @@ class Graph extends React.Component<{}, GraphState> {
           </Async.Pending>
           <Async.Rejected>
             {(error) => (
-              // eslint-disable-next-line @typescript-eslint/no-use-before-define --- ErrorLoading used before defined
               <ErrorLoading
                 displayName={layoutChoice.current}
                 error={error}
@@ -1018,8 +1031,11 @@ class Graph extends React.Component<{}, GraphState> {
             )}
           </Async.Rejected>
           <Async.Fulfilled>
-            {(asyncProps) => {
-              if (regl && !shallowEqual(asyncProps, this.cachedAsyncProps)) {
+            {(asyncProps: GraphAsyncProps) => {
+              if (
+                regl &&
+                (!shallowEqual(asyncProps, this.cachedAsyncProps) || screenCap)
+              ) {
                 this.updateReglAndRender(asyncProps, this.cachedAsyncProps);
               }
               return null;
@@ -1031,9 +1047,8 @@ class Graph extends React.Component<{}, GraphState> {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const ErrorLoading = ({ displayName, error, width, height }: any) => {
-  console.log(error); // log to console as this is an unepected error
+  console.error(error); // log to console as this is an unexpected error
   return (
     <div
       style={{
@@ -1048,7 +1063,6 @@ const ErrorLoading = ({ displayName, error, width, height }: any) => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const StillLoading = ({ displayName, width, height }: any) => (
   /*
   Render a busy/loading indicator

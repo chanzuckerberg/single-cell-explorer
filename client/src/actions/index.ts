@@ -151,9 +151,15 @@ function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   );
 }
 
+function checkIfCellGuideCxg() {
+  const urlPath = window.location.pathname;
+  return urlPath.includes("/cellguide-cxgs");
+}
+
 /*
 Application bootstrap
 */
+
 const doInitialDataLoad = (): ((
   dispatch: AppDispatch,
   getState: GetState
@@ -181,12 +187,16 @@ const doInitialDataLoad = (): ((
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
       prefetchEmbeddings(annoMatrix);
 
+      const isCellGuideCxg = checkIfCellGuideCxg();
       dispatch({
         type: "annoMatrix: init complete",
         annoMatrix,
         obsCrossfilter,
+        isCellGuideCxg,
       });
-      dispatch({ type: "initial data load complete" });
+
+      // save isCellGuideCxg to the reducer store
+      dispatch({ type: "initial data load complete", isCellGuideCxg });
 
       const defaultEmbedding = config?.parameters?.default_embedding;
       const layoutSchema = schema?.schema?.layout?.obs ?? [];

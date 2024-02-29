@@ -95,7 +95,9 @@ function _defaultColors(nObs: number): ColorTable {
 const defaultColors = memoize(_defaultColors);
 
 export type ColorRange =
+  // @ts-expect-error need to retype d3 types
   | d3.ScaleSequentialBase<string, never>["range"]
+  // @ts-expect-error need to retype d3 types
   | d3.ScaleQuantile<number, never>["range"];
 export interface ColorTable {
   rgb: Float32Array;
@@ -105,7 +107,9 @@ export interface ColorTable {
         range?(): ColorRange;
         domain(): number[];
       }
+    // @ts-expect-error need to retype d3 types
     | d3.ScaleQuantile<number, never>
+    // @ts-expect-error need to retype d3 types
     | d3.ScaleSequential<string, never>
     | undefined;
 }

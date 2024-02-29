@@ -12,6 +12,7 @@ import significantDigits from "./significantDigits";
  */
 
 export default function maybeScientific(
+  // @ts-expect-error need to retype some d3 types
   x: ScaleLinear<number, number, never>
 ): string {
   let format = ",";

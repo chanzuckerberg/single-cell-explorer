@@ -1,4 +1,5 @@
 import { vec2, mat3 } from "gl-matrix";
+import { MouseEvent } from "react";
 import clamp from "./clamp";
 
 const EPSILON = 0.000001;
@@ -13,7 +14,7 @@ const panBound = 0.8;
 const scratch0 = new Float32Array(16);
 const scratch1 = new Float32Array(16);
 
-class Camera {
+export class Camera {
   canvas: HTMLCanvasElement;
 
   prevEvent: {
@@ -92,7 +93,7 @@ class Camera {
   Event handling
   */
 
-  flush(e: MouseEvent) {
+  flush(e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>) {
     this.prevEvent.type = e.type;
     this.prevEvent.clientX = e.clientX;
     this.prevEvent.clientY = e.clientY;
@@ -123,7 +124,10 @@ class Camera {
     return pos;
   }
 
-  mousePan(e: MouseEvent, projectionTF: mat3): true {
+  mousePan(
+    e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>,
+    projectionTF: mat3
+  ): true {
     const projectionInvTF = mat3.invert(scratch0, projectionTF);
     const pos = this.localPosition(
       this.canvas,
@@ -159,7 +163,10 @@ class Camera {
     return true;
   }
 
-  handleEvent(e: MouseEvent, projectionTF: mat3): boolean {
+  handleEvent(
+    e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>,
+    projectionTF: mat3
+  ): boolean {
     /*
     process the event, and return true if camera view changed
     */
@@ -175,7 +182,7 @@ class Camera {
       }
 
       case "wheel": {
-        viewChanged = this.wheelZoom(e as WheelEvent, projectionTF);
+        viewChanged = this.wheelZoom(e as unknown as WheelEvent, projectionTF);
         this.flush(e);
         break;
       }

@@ -1,7 +1,18 @@
+import { Regl } from "regl";
 import { glPointFlags, glPointSize } from "../../util/glHelpers";
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-export default function drawPointsRegl(regl: any) {
+interface ReglProps {
+  position: Float32Array;
+  color: Float32Array;
+  flag: Float32Array;
+  distance: number;
+  projView: number[];
+  nPoints: number;
+  minViewportDimension: number;
+  count: number;
+}
+
+export default function drawPointsRegl(regl: Regl) {
   return regl({
     vert: `
     precision mediump float;
@@ -53,19 +64,21 @@ export default function drawPointsRegl(regl: any) {
     }`,
 
     attributes: {
-      position: regl.prop("position"),
-      color: regl.prop("color"),
-      flag: regl.prop("flag"),
+      position: regl.prop<ReglProps, "position">("position"),
+      color: regl.prop<ReglProps, "color">("color"),
+      flag: regl.prop<ReglProps, "flag">("flag"),
     },
 
     uniforms: {
-      distance: regl.prop("distance"),
-      projView: regl.prop("projView"),
-      nPoints: regl.prop("nPoints"),
-      minViewportDimension: regl.prop("minViewportDimension"),
+      distance: regl.prop<ReglProps, "distance">("distance"),
+      projView: regl.prop<ReglProps, "projView">("projView"),
+      nPoints: regl.prop<ReglProps, "nPoints">("nPoints"),
+      minViewportDimension: regl.prop<ReglProps, "minViewportDimension">(
+        "minViewportDimension"
+      ),
     },
 
-    count: regl.prop("count"),
+    count: regl.prop<ReglProps, "count">("count"),
 
     primitive: "points",
 

@@ -50,7 +50,6 @@ interface ControlsState {
   error: Error | string | null;
   resettingInterface: boolean;
   graphInteractionMode: "zoom" | "select";
-  opacityForDeselectedCells: number;
   scatterplotXXaccessor: string | false;
   scatterplotYYaccessor: string | false;
   geneIsOpen: boolean;
@@ -68,6 +67,8 @@ interface ControlsState {
   geneSummary: string;
   geneName: string;
   geneSynonyms: string[];
+  isCellGuideCxg: boolean;
+  screenCap: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -77,7 +78,6 @@ const Controls = (
     // all of the data + selection state
     resettingInterface: false,
     graphInteractionMode: "select",
-    opacityForDeselectedCells: 0.2,
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     geneIsOpen: false,
@@ -95,6 +95,8 @@ const Controls = (
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
     colorLoading: false,
     datasetDrawer: false,
+    isCellGuideCxg: false,
+    screenCap: false,
   },
   action: AnyAction
 ) => {
@@ -117,6 +119,7 @@ const Controls = (
         loading: false,
         error: null,
         resettingInterface: false,
+        isCellGuideCxg: action.isCellGuideCxg,
       };
     }
     case "reset subset": {
@@ -158,11 +161,6 @@ const Controls = (
       return {
         ...state,
         graphInteractionMode: action.data,
-      };
-    case "change opacity deselected cells in 2d graph background":
-      return {
-        ...state,
-        opacityForDeselectedCells: action.data,
       };
     case "increment graph render counter": {
       const c = state.graphRenderCounter + 1;
@@ -406,6 +404,22 @@ const Controls = (
      **************************/
     case "toggle dataset drawer":
       return { ...state, datasetDrawer: !state.datasetDrawer };
+
+    /**************************
+         Screen Capture
+    **************************/
+    case "graph: screencap start": {
+      return {
+        ...state,
+        screenCap: true,
+      };
+    }
+    case "graph: screencap end": {
+      return {
+        ...state,
+        screenCap: false,
+      };
+    }
 
     default:
       return state;
