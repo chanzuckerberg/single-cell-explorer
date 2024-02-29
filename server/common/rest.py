@@ -433,9 +433,9 @@ def spatial_image_get(request, data_adaptor):
     library_id = "test_library_id"
 
     try:
-        response = send_file(response_image, download_name=f"{library_id}-{resolution}.png", mimetype="image/png")
+        response = send_file(response_image, download_name=f"{library_id}-{resolution}.jpg", mimetype="image/jpg")
         response.headers['Access-Control-Allow-Origin'] = '*'
-        return send_file(response_image, download_name=f"{library_id}-{resolution}.png", mimetype="image/png")
+        return response
     except (KeyError, DatasetAccessError) as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
     except PrepareError:
