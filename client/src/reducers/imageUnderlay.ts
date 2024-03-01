@@ -6,7 +6,7 @@ interface ImageUnderlayState {
 
 const ImageUnderlay = (
   state: ImageUnderlayState = {
-    isActive: true,
+    isActive: false,
   },
   action: Action
 ): ImageUnderlayState => {

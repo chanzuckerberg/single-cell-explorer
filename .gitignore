@@ -40,6 +40,7 @@ __pycache__
 data
 tags
 myconfig.yaml
+example-dataset/ba*
 
 # Jekyll
 docs/_site/

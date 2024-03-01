@@ -166,17 +166,11 @@ class Graph extends React.Component<{}, GraphState> {
     /*
     compute webgl colors for each point
     */
-    console.log("rgb", rgb);
 
     const colors = new Float32Array(3 * rgb.length);
     for (let i = 0, len = rgb.length; i < len; i += 1) {
-      console.log("rgb[i]", rgb[i]);
-      console.log("rgb.length", rgb.length);
-
       colors.set(rgb[i], 3 * i);
-      // console.log("colors333", colors);
     }
-    console.log("colors!!", colors);
 
     return rgb;
   });
@@ -670,8 +664,6 @@ class Graph extends React.Component<{}, GraphState> {
     this.spatialImage = await this.loadTextureFromUrl(
       "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api//v0.3/spatial/image"
     );
-
-    console.log("flags", flags);
 
     const { width, height } = viewport;
     return {
