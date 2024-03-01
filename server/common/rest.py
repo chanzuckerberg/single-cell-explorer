@@ -9,6 +9,7 @@ import zlib
 from http import HTTPStatus
 
 import matplotlib.pyplot as plt
+from PIL import Image
 import numpy as np
 import requests
 from flask import abort, current_app, jsonify, make_response, redirect, send_file
@@ -428,12 +429,15 @@ def spatial_image_get(request, data_adaptor):
     spatial = data_adaptor.get_spatial()
     response_image = io.BytesIO()
     img = spatial[resolution]
-    plt.imsave(response_image, img)
+
+    pil_img = Image.fromarray(np.uint8(img * 255))
+    pil_img.save(response_image, format='WEBP', quality=100)
+
     response_image.seek(0)
     library_id = "test_library_id"
 
     try:
-        response = send_file(response_image, download_name=f"{library_id}-{resolution}.jpg", mimetype="image/jpg")
+        response = send_file(response_image, download_name=f"{library_id}-{resolution}.webp", mimetype="image/webp")
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
     except (KeyError, DatasetAccessError) as e:
