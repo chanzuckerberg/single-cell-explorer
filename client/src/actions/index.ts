@@ -124,23 +124,23 @@ async function datasetMetadataFetchAndLoad(
 }
 
 /**
- docs
+ * Fetches and loads dataset spatial metadata.
+ * @param dispatch - Function facilitating update of store.
+ * @param oldPrefix - API prefix with dataset path that dataset metadata lives on. (Not S3 URI)
  */
 async function datasetSpatialMetadataFetchAndLoad(
   dispatch: AppDispatch,
   oldPrefix: string
 ): Promise<void> {
+  // TODO: remove post schema 5.1 migration
+  // temporary workaround to fetch spatial metadata for the test dataset
+  const testDatasetUrl =
+    "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api/";
+
   try {
     const datasetSpatialMetadataResponse = await fetchJson<{
       metadata: DatasetSpatialMetadata;
-    }>(
-      "spatial/meta",
-      "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api/"
-    );
-
-    // const { metadata: datasetSpatialMetadata } = datasetSpatialMetadataResponse;
-    // console.log("datasetSpatialMetadata", datasetSpatialMetadataResponse);
-
+    }>("spatial/meta", testDatasetUrl ?? oldPrefix);
     dispatch({
       type: "request spatial metadata success",
       data: datasetSpatialMetadataResponse,
