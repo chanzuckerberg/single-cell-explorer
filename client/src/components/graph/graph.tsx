@@ -162,19 +162,6 @@ class Graph extends React.Component<{}, GraphState> {
     return positions;
   });
 
-  computePointColors = memoize((rgb) => {
-    /*
-    compute webgl colors for each point
-    */
-
-    const colors = new Float32Array(3 * rgb.length);
-    for (let i = 0, len = rgb.length; i < len; i += 1) {
-      colors.set(rgb[i], 3 * i);
-    }
-
-    return rgb;
-  });
-
   computeSelectedFlags = memoize(
     (crossfilter, _flagSelected, _flagUnselected) => {
       const x = crossfilter.fillByIsSelected(
@@ -645,7 +632,6 @@ class Graph extends React.Component<{}, GraphState> {
 
     const positions = this.computePointPositions(X, Y, modelTF);
     const colorTable = this.updateColorTable(colorsProp, colorDf);
-    const colors = this.computePointColors(colorTable.rgb);
     const colorByData = colorDf?.icol(0)?.asArray();
     const {
       metadataField: pointDilationCategory,
@@ -668,7 +654,7 @@ class Graph extends React.Component<{}, GraphState> {
     const { width, height } = viewport;
     return {
       positions,
-      colors,
+      colors: colorTable.rgb,
       flags,
       width,
       height,
