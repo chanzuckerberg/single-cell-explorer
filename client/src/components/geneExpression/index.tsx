@@ -198,7 +198,7 @@ class GeneExpression extends React.Component<{}, State> {
           }}
           onClick={this.handleExpandMarkerGeneSets}
         >
-          CellGuide Marker Gene Sets{" "}
+          Marker Gene Sets{" "}
           {markerGeneSetsExpanded ? (
             <Icon icon={IconNames.CHEVRON_DOWN} />
           ) : (
