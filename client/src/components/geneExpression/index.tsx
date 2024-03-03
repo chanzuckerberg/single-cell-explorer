@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Button, H4, Icon } from "@blueprintjs/core";
+import { Button, H4, H5, Icon } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 import GeneSet from "./geneSet";
@@ -25,6 +25,7 @@ class GeneExpression extends React.Component<{}, State> {
     super(props);
     this.state = {
       geneSetsExpanded: true,
+      markerGeneSetsExpanded: false,
       geneIds: null,
       geneNames: null,
     };
@@ -53,39 +54,44 @@ class GeneExpression extends React.Component<{}, State> {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  renderGeneSets = () => {
+  renderGeneSets = (getMarkerGeneSets: boolean) => {
     const sets = [];
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesets' does not exist on type 'Readon... Remove this comment to see the full error message
     const { genesets } = this.props;
     const { geneIds, geneNames } = this.state;
 
     for (const [name, geneset] of genesets) {
-      const genesetIds = [];
-      const genesetNames = [];
+      if (
+        (!name.includes(" - marker genes") && !getMarkerGeneSets) ||
+        (name.includes(" - marker genes") && getMarkerGeneSets)
+      ) {
+        const genesetIds = [];
+        const genesetNames = [];
 
-      // find ensembl IDs for each gene in the geneset
-      for (const gene of geneset.genes) {
-        let geneId;
-        if (geneIds) {
-          geneId = geneIds[geneNames.indexOf(gene[0])];
-        } else {
-          geneId = "";
+        // find ensembl IDs for each gene in the geneset
+        for (const gene of geneset.genes) {
+          let geneId;
+          if (geneIds) {
+            geneId = geneIds[geneNames.indexOf(gene[0])];
+          } else {
+            geneId = "";
+          }
+          genesetIds.push(geneId);
+          genesetNames.push(gene[0]);
         }
-        genesetIds.push(geneId);
-        genesetNames.push(gene[0]);
-      }
 
-      sets.push(
-        <GeneSet
-          key={name}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; setGenes: any; setName: any; gen... Remove this comment to see the full error message
-          setGenes={geneset.genes}
-          setName={name}
-          genesetDescription={geneset.genesetDescription}
-          geneIds={genesetIds}
-          geneNames={genesetNames}
-        />
-      );
+        sets.push(
+          <GeneSet
+            key={name}
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; setGenes: any; setName: any; gen... Remove this comment to see the full error message
+            setGenes={geneset.genes}
+            setName={name}
+            genesetDescription={geneset.genesetDescription}
+            geneIds={genesetIds}
+            geneNames={genesetNames}
+          />
+        );
+      }
     }
     return sets;
   };
@@ -120,8 +126,23 @@ class GeneExpression extends React.Component<{}, State> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
+  handleExpandMarkerGeneSets = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    this.setState((state: any) => {
+      if (!state.markerGeneSetsExpanded) {
+        track(EVENTS.EXPLORER_MARKER_GENESET_HEADING_EXPAND_BUTTON_CLICKED);
+      }
+
+      return {
+        ...state,
+        markerGeneSetsExpanded: !state.markerGeneSetsExpanded,
+      };
+    });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    const { geneSetsExpanded } = this.state;
+    const { geneSetsExpanded, markerGeneSetsExpanded } = this.state;
     return (
       <div>
         <QuickGene />
@@ -165,7 +186,26 @@ class GeneExpression extends React.Component<{}, State> {
           <CreateGenesetDialogue />
         </div>
 
-        {geneSetsExpanded && <div>{this.renderGeneSets()}</div>}
+        {geneSetsExpanded && <div>{this.renderGeneSets(false)}</div>}
+        <H5
+          role="menuitem"
+          // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
+          tabIndex="0"
+          data-testid="cellguide-marker-geneset-heading-expand"
+          onKeyPress={this.handleExpandMarkerGeneSets}
+          style={{
+            cursor: "pointer",
+          }}
+          onClick={this.handleExpandMarkerGeneSets}
+        >
+          CellGuide Marker Gene Sets{" "}
+          {markerGeneSetsExpanded ? (
+            <Icon icon={IconNames.CHEVRON_DOWN} />
+          ) : (
+            <Icon icon={IconNames.CHEVRON_RIGHT} />
+          )}
+        </H5>
+        {markerGeneSetsExpanded && <div>{this.renderGeneSets(true)}</div>}
       </div>
     );
   }
