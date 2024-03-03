@@ -642,8 +642,44 @@ const CategoryValueList = React.memo(
     colorTable,
     colorMode,
   }: CategoryValueListProps) => {
-    const tuples = [...categorySummary.categoryValueIndices];
+    const tuples = [...categorySummary.categoryValueIndices].filter(
+      ([value, index]) => categorySummary.categoryValueCounts[index] > 0
+    );
 
+    if (
+      colorMode === "color by continuous metadata" ||
+      colorMode === "color by expression" ||
+      colorMode === "color by geneset mean expression"
+    ) {
+      const categoryDataArray = categoryData.col(metadataField).asArray();
+      const colorDataArray = colorData.icol(0).asArray();
+      const categoryColorMap = new Map();
+      categoryDataArray.forEach((category: string, index: number) => {
+        if (!categoryColorMap.has(category)) {
+          categoryColorMap.set(category, { sum: 0, count: 0 });
+        }
+        const colorValue = colorDataArray[index];
+        const categoryColor = categoryColorMap.get(category);
+        categoryColor.sum += colorValue;
+        categoryColor.count += 1;
+      });
+
+      const categoryAverageColor = new Map();
+      categoryColorMap.forEach((value, key) => {
+        categoryAverageColor.set(key, value.sum / value.count);
+      });
+      tuples.sort((a, b) => {
+        const colorA = categoryAverageColor.get(a[0]);
+        const colorB = categoryAverageColor.get(b[0]);
+        return colorB - colorA;
+      });
+    } else {
+      tuples.sort(
+        (a, b) =>
+          categorySummary.categoryValueCounts[b[1]] -
+          categorySummary.categoryValueCounts[a[1]]
+      );
+    }
     /*
     Render the value list.  If this is a user annotation, we use a flipper
     animation, if read-only, we don't bother and save a few bits of perf.
