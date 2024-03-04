@@ -55,3 +55,5 @@ html-reports/
 playwright-report/
 blob-report/
 playwright/.cache/
+# Per Chromatic https://chanzuckerbergteam.slack.com/archives/C05L6F1TYEA/p1707420194826149?thread_ts=1707258335.050639&cid=C05L6F1TYEA
+build-storybook.log
