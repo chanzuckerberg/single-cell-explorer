@@ -28,6 +28,15 @@ export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
  */
 const REGEX_PATHNAME = /(?<=\/)[^/]{1}\/(?:[^/]+\/)*[^/]+\/(?=api)/;
 
+/**
+ * This regex is used to update the API prefix when the dataset selector is used.
+ * It matches the previous two segments (demarcated by `/`) leading up to `/api`.
+ * In deployed environments, these segments will be `s3_uri` and the S3 URI of the dataset.
+ * We require a separate REGEX because the dataset selector is applied to an API prefix that
+ * has already been updated with the S3 URI of the dataset.
+ */
+const REGEX_PATHNAME_FOR_DATASET_SELECTOR = /(?<=\/)\w+\/[^/]+\/(?=api)/;
+
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
 
@@ -201,7 +210,10 @@ export function updateApiPrefix(): void {
   const pathname = location.pathname.substring(1);
   // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
   // path segments taken from the pathname.
-  API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
+  API.prefix = API.prefix.replace(
+    REGEX_PATHNAME_FOR_DATASET_SELECTOR,
+    pathname
+  );
 }
 
 /**
