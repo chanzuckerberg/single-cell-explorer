@@ -673,13 +673,16 @@ const CategoryValueList = React.memo(
         const colorB = categoryAverageColor.get(b[0]);
         return colorB - colorA;
       });
-    } else {
-      tuples.sort(
-        (a, b) =>
-          categorySummary.categoryValueCounts[b[1]] -
-          categorySummary.categoryValueCounts[a[1]]
-      );
     }
+    // (alec): This is to sort the categories by the number of cells in each category
+    // Disabling for now, but it could be useful.
+    // else {
+    //   tuples.sort(
+    //     (a, b) =>
+    //       categorySummary.categoryValueCounts[b[1]] -
+    //       categorySummary.categoryValueCounts[a[1]]
+    //   );
+    // }
     /*
     Render the value list.  If this is a user annotation, we use a flipper
     animation, if read-only, we don't bother and save a few bits of perf.

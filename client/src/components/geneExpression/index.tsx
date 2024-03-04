@@ -17,6 +17,7 @@ type State = any;
 @connect((state: RootState) => ({
   genesets: state.genesets.genesets,
   annoMatrix: state.annoMatrix,
+  isCellGuideCxg: state.controls.isCellGuideCxg,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneExpression extends React.Component<{}, State> {
@@ -57,13 +58,18 @@ class GeneExpression extends React.Component<{}, State> {
   renderGeneSets = (getMarkerGeneSets: boolean) => {
     const sets = [];
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesets' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { genesets } = this.props;
+    const { genesets, isCellGuideCxg } = this.props;
     const { geneIds, geneNames } = this.state;
 
     for (const [name, geneset] of genesets) {
       if (
-        (!name.includes(" - marker genes") && !getMarkerGeneSets) ||
-        (name.includes(" - marker genes") && getMarkerGeneSets)
+        (!name.includes(" - marker genes") &&
+          !getMarkerGeneSets &&
+          isCellGuideCxg) ||
+        (name.includes(" - marker genes") &&
+          getMarkerGeneSets &&
+          isCellGuideCxg) ||
+        !isCellGuideCxg // if not a CellGuide CXG, don't do any filtering or grouping
       ) {
         const genesetIds = [];
         const genesetNames = [];
@@ -142,6 +148,8 @@ class GeneExpression extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { isCellGuideCxg } = this.props;
     const { geneSetsExpanded, markerGeneSetsExpanded } = this.state;
     return (
       <div>
@@ -187,25 +195,29 @@ class GeneExpression extends React.Component<{}, State> {
         </div>
 
         {geneSetsExpanded && <div>{this.renderGeneSets(false)}</div>}
-        <H5
-          role="menuitem"
-          // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-          tabIndex="0"
-          data-testid="cellguide-marker-geneset-heading-expand"
-          onKeyPress={this.handleExpandMarkerGeneSets}
-          style={{
-            cursor: "pointer",
-          }}
-          onClick={this.handleExpandMarkerGeneSets}
-        >
-          Marker Gene Sets{" "}
-          {markerGeneSetsExpanded ? (
-            <Icon icon={IconNames.CHEVRON_DOWN} />
-          ) : (
-            <Icon icon={IconNames.CHEVRON_RIGHT} />
-          )}
-        </H5>
-        {markerGeneSetsExpanded && <div>{this.renderGeneSets(true)}</div>}
+        {isCellGuideCxg && (
+          <>
+            <H5
+              role="menuitem"
+              // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
+              tabIndex="0"
+              data-testid="cellguide-marker-geneset-heading-expand"
+              onKeyPress={this.handleExpandMarkerGeneSets}
+              style={{
+                cursor: "pointer",
+              }}
+              onClick={this.handleExpandMarkerGeneSets}
+            >
+              Marker Gene Sets{" "}
+              {markerGeneSetsExpanded ? (
+                <Icon icon={IconNames.CHEVRON_DOWN} />
+              ) : (
+                <Icon icon={IconNames.CHEVRON_RIGHT} />
+              )}
+            </H5>
+            {markerGeneSetsExpanded && <div>{this.renderGeneSets(true)}</div>}
+          </>
+        )}
       </div>
     );
   }
