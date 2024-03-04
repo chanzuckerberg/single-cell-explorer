@@ -201,6 +201,7 @@ export function updateApiPrefix(): void {
   const pathname = location.pathname.substring(1);
   // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
   // path segments taken from the pathname.
+  console.log("DEBUG", API.prefix, pathname);
   API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
 }
 
@@ -217,6 +218,7 @@ export function updateAPIWithS3(s3URI: S3URI): string {
   // must be double quoted so slashes are not decoded early by flask WSGI.
   const URISafeS3URI = encodeURIComponent(s3URI);
   const flaskSafeS3URI = `s3_uri/${encodeURIComponent(URISafeS3URI)}/`;
+  console.log("DEBUG", API.prefix, flaskSafeS3URI);
   API.prefix = API.prefix.replace(REGEX_PATHNAME, flaskSafeS3URI);
   return oldAPI;
 }
