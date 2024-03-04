@@ -8,10 +8,11 @@ import sys
 import zlib
 from http import HTTPStatus
 
-from PIL import Image
 import numpy as np
 import requests
+
 from flask import abort, current_app, jsonify, make_response, redirect, send_file
+from PIL import Image
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
