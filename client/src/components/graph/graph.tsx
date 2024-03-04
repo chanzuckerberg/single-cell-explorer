@@ -23,7 +23,8 @@ import GraphOverlayLayer from "./overlays/graphOverlayLayer";
 import CentroidLabels from "./overlays/centroidLabels";
 import actions from "../../actions";
 import renderThrottle from "../../util/renderThrottle";
-
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 import {
   flagBackground,
   flagSelected,
@@ -914,6 +915,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       depth: 1,
       color: [1, 1, 1, 1],
     });
+    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     drawPoints!({
       distance: camera!.distance(),
@@ -925,11 +927,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       nPoints: schema.dataframe.nObs,
       minViewportDimension: Math.min(width, height),
     });
-    console.log("imageUnderlay?.isActive", imageUnderlay?.isActive);
-    console.log("drawSpatialImage", drawSpatialImage);
-    console.log("spatial?.image", spatial?.image);
-
-    if (imageUnderlay?.isActive && drawSpatialImage) {
+    if (imageUnderlay?.isActive && drawSpatialImage && isSpatial) {
       drawSpatialImage({
         projView,
         imageWidth: imW,

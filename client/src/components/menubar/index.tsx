@@ -360,23 +360,6 @@ class MenuBar extends React.PureComponent<{}, State> {
               />
             </ButtonGroup>
           ) : null}
-          {isSpatial && (
-            <Tooltip
-              content="🌊"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                type="button"
-                icon={IconNames.TRAIN}
-                style={{
-                  cursor: "pointer",
-                }}
-                onClick={noop}
-              />
-            </Tooltip>
-          )}
           {isTest && (
             <Tooltip
               content="🌊"
@@ -429,28 +412,29 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          {layoutChoice?.current?.includes(globals.spatialEmbeddingKeyword) && (
-            <ButtonGroup className={styles.menubarButton}>
-              <Tooltip
-                content="Toggle image"
-                position="bottom"
-                hoverOpenDelay={globals.tooltipHoverOpenDelay}
-              >
-                <AnchorButton
-                  type="button"
-                  data-testid="toggle-image-underlay"
-                  icon="media"
-                  intent={imageUnderlay.isActive ? "primary" : "none"}
-                  active={imageUnderlay.isActive}
-                  onClick={() => {
-                    dispatch({
-                      type: "toggle image underlay",
-                    });
-                  }}
-                />
-              </Tooltip>
-            </ButtonGroup>
-          )}
+          {layoutChoice?.current?.includes(globals.spatialEmbeddingKeyword) &&
+            isSpatial && (
+              <ButtonGroup className={styles.menubarButton}>
+                <Tooltip
+                  content="Toggle image"
+                  position="bottom"
+                  hoverOpenDelay={globals.tooltipHoverOpenDelay}
+                >
+                  <AnchorButton
+                    type="button"
+                    data-testid="toggle-image-underlay"
+                    icon="media"
+                    intent={imageUnderlay.isActive ? "primary" : "none"}
+                    active={imageUnderlay.isActive}
+                    onClick={() => {
+                      dispatch({
+                        type: "toggle image underlay",
+                      });
+                    }}
+                  />
+                </Tooltip>
+              </ButtonGroup>
+            )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}
