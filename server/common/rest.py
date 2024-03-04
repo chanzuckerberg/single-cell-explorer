@@ -454,8 +454,8 @@ def spatial_image_get(request, data_adaptor):
             loglevel=logging.ERROR,
             include_exc_info=True,
         )
-    
-    
+
+
 def spatial_meta_get(request, data_adaptor):
     """
     Returns an object containing the spatial metadata, including image width, image height,
@@ -463,7 +463,7 @@ def spatial_meta_get(request, data_adaptor):
     """
     spatial = data_adaptor.get_spatial()
 
-    resolution = "hires"  
+    resolution = "hires"
 
     if resolution not in spatial:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")

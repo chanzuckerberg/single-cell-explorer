@@ -341,7 +341,7 @@ class Dataset(metaclass=ABCMeta):
 
             if resolution not in spatial:
                 raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
-            
+
             scaleref = spatial[f"tissue_{resolution}_scalef"]
             (h, w, _) = spatial[resolution].shape
 
@@ -349,7 +349,7 @@ class Dataset(metaclass=ABCMeta):
             A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
             normalized_layout = A.astype(dtype=np.float32)
         else:
-        # scale isotropically
+            # scale isotropically
             try:
                 min = np.nanmin(embedding, axis=0)
                 max = np.nanmax(embedding, axis=0)
@@ -432,4 +432,3 @@ class Dataset(metaclass=ABCMeta):
         for key in uns.meta:
             metadata_dict[key] = uns.meta[key]
         return metadata_dict
-    
