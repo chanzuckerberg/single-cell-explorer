@@ -1,5 +1,6 @@
 import copy
 import hashlib
+import io
 import logging
 import os
 import struct
@@ -7,8 +8,10 @@ import sys
 import zlib
 from http import HTTPStatus
 
+from PIL import Image
+import numpy as np
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect
+from flask import abort, current_app, jsonify, make_response, redirect, send_file
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
@@ -23,6 +26,7 @@ from server.common.errors import (
     FilterError,
     InvalidCxgDatasetError,
     JSONEncodingValueError,
+    PrepareError,
     TombstoneError,
     UnsupportedSummaryMethod,
 )
@@ -348,12 +352,15 @@ def layout_obs_get(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
+
+    spatial = data_adaptor.get_spatial()
+
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
         return make_response(
-            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins),
+            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins, spatial=spatial),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
@@ -416,3 +423,66 @@ def summarize_var_post(request, data_adaptor):
 
     key = request.args.get("key", default=None)
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
+
+
+def spatial_image_get(request, data_adaptor):
+    """
+    Retrieve a spatial image from the data adaptor and return it as a PNG file
+    """
+
+    resolution = "hires"
+
+    spatial = data_adaptor.get_spatial()
+    response_image = io.BytesIO()
+    img = spatial[resolution]
+
+    pil_img = Image.fromarray(np.uint8(img * 255))
+    pil_img.save(response_image, format="WEBP", quality=100)
+
+    response_image.seek(0)
+
+    library_id = "test_library_id"
+
+    try:
+        return send_file(response_image, download_name=f"{library_id}-{resolution}.webp", mimetype="image/webp")
+    except (KeyError, DatasetAccessError) as e:
+        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+    except PrepareError:
+        return abort_and_log(
+            HTTPStatus.NOT_IMPLEMENTED,
+            f"No spatial image available {request.path}",
+            loglevel=logging.ERROR,
+            include_exc_info=True,
+        )
+    
+    
+def spatial_meta_get(request, data_adaptor):
+    """
+    Returns an object containing the spatial metadata, including image width, image height,
+    scale reference, inverse scale, inverse translate, and inverse min
+    """
+    spatial = data_adaptor.get_spatial()
+
+    resolution = "hires"  
+
+    if resolution not in spatial:
+        raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
+
+    scaleref = spatial[f"tissue_{resolution}_scalef"]
+    (h, w, _) = spatial[resolution].shape
+
+    A = data_adaptor.get_embedding_array("spatial")
+
+    min = np.nanmin(A, axis=0)
+    max = np.nanmax(A, axis=0)
+    scale = np.amax(max - min)
+    translate = 0.5 - ((max - min) / scale / 2)
+
+    return {
+        "imageWidth": w,
+        "imageHeight": h,
+        "scaleref": scaleref,
+        "inverseScale": int(scale),
+        "inverseTranslate": translate.tolist(),
+        "inverseMin": min.tolist(),
+    }

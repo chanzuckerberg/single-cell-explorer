@@ -16,7 +16,12 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
+import type {
+  DatasetMetadata,
+  Dataset,
+  S3URI,
+  DatasetSpatialMetadata,
+} from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -118,6 +123,35 @@ async function datasetMetadataFetchAndLoad(
   }
 }
 
+/**
+ * Fetches and loads dataset spatial metadata.
+ * @param dispatch - Function facilitating update of store.
+ * @param oldPrefix - API prefix with dataset path that dataset metadata lives on. (Not S3 URI)
+ */
+async function datasetSpatialMetadataFetchAndLoad(
+  dispatch: AppDispatch,
+  oldPrefix: string
+): Promise<void> {
+  // TODO: remove testDatasetUrl post schema 5.1 migration
+  // temporary workaround to fetch spatial metadata from the test dataset
+  const testDatasetUrl = `${globals.API?.prefix}`;
+
+  try {
+    const datasetSpatialMetadataResponse = await fetchJson<{
+      metadata: DatasetSpatialMetadata;
+    }>("spatial/meta", testDatasetUrl ?? oldPrefix);
+    dispatch({
+      type: "request spatial metadata success",
+      data: datasetSpatialMetadataResponse,
+    });
+  } catch (error) {
+    dispatch({
+      type: "request spatial metadata error",
+      error,
+    });
+  }
+}
+
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -181,7 +215,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-
+      datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);

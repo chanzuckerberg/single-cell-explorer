@@ -7,10 +7,12 @@ import { ReadonlyMat3, mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
+import { Button } from "@blueprintjs/core";
 
 import { setupBrush, setupLasso } from "./setupSVGandBrush";
 import _camera, { Camera } from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
+import _drawSpatialImage from "./drawSpatialImageRegl";
 import {
   createColorTable,
   createColorQuery,
@@ -101,6 +103,8 @@ type GraphState = {
   modelTF: ReadonlyMat3;
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
+  drawSpatialImage: DrawCommand | null;
+  spatial: any;
 };
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -108,6 +112,8 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
+  spatial: any;
+  imageUnderlay: any;
 }
 
 type GraphProps = Partial<RootState>;
@@ -123,6 +129,8 @@ type GraphProps = Partial<RootState>;
   pointDilation: state.pointDilation,
   genesets: state.genesets.genesets,
   screenCap: state.controls.screenCap,
+  spatial: state.spatial.metadata,
+  imageUnderlay: state.imageUnderlay,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement) {
@@ -133,6 +141,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const camera = _camera(canvas);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
+    const drawSpatialImage = _drawSpatialImage(regl);
     // preallocate webgl buffers
     const pointBuffer = regl.buffer(0);
     const colorBuffer = regl.buffer(0);
@@ -144,6 +153,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointBuffer,
       colorBuffer,
       flagBuffer,
+      drawSpatialImage,
     };
   }
 
@@ -151,7 +161,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  spatialImage: any;
+
   private graphRef = React.createRef<HTMLDivElement>();
+
+  private downloadedImg: HTMLImageElement = new Image();
 
   cachedAsyncProps: GraphAsyncProps | null;
 
@@ -266,6 +281,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointBuffer: null,
       colorBuffer: null,
       flagBuffer: null,
+      drawSpatialImage: null,
+      spatial: null,
       // component rendering derived state - these must stay synchronized
       // with the reducer state they were generated from.
       layoutState: {
@@ -565,6 +582,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  loadTextureFromUrl = (src: string): any =>
+    new Promise((resolve, reject) => {
+      this.downloadedImg.crossOrigin = "anonymous";
+      this.downloadedImg.onload = () => resolve(this.downloadedImg);
+      this.downloadedImg.onerror = reject;
+      this.downloadedImg.src = src;
+    });
+
   fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
     const {
       annoMatrix,
@@ -573,6 +599,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       pointDilation,
       viewport,
+      spatial,
+      imageUnderlay,
     } = props.watchProps;
     const { modelTF } = this.state;
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
@@ -582,8 +610,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilation
     );
     const { currentDimNames } = layoutChoice;
+
     const X = layoutDf.col(currentDimNames[0]).asArray();
     const Y = layoutDf.col(currentDimNames[1]).asArray();
+
     const positions = this.computePointPositions(X, Y, modelTF);
     const colorTable = this.updateColorTable(colorsProp, colorDf);
     const colorByData = colorDf?.icol(0)?.asArray();
@@ -600,6 +630,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilationData,
       pointDilationLabel
     );
+
+    this.spatialImage = await this.loadTextureFromUrl(
+      `${globals.API?.prefix}${globals.API?.version}spatial/image`
+    );
+
     const { width, height } = viewport;
     return {
       positions,
@@ -607,6 +642,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       flags,
       width,
       height,
+      spatial,
+      imageUnderlay,
     };
   };
 
@@ -770,6 +807,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       flagBuffer,
       camera,
       projectionTF,
+      drawSpatialImage,
     } = this.state;
     this.renderPoints(
       regl,
@@ -778,7 +816,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointBuffer,
       flagBuffer,
       camera,
-      projectionTF
+      projectionTF,
+      drawSpatialImage
     );
   });
 
@@ -786,7 +825,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     asyncProps: GraphAsyncProps,
     prevAsyncProps: GraphAsyncProps | null
   ) {
-    const { positions, colors, flags, height, width } = asyncProps;
+    const { positions, colors, flags, height, width, imageUnderlay } =
+      asyncProps;
     const { screenCap } = this.props;
 
     this.cachedAsyncProps = asyncProps;
@@ -808,6 +848,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (flags !== prevAsyncProps?.flags) {
       // @ts-expect-error (seve): need to look into arg mismatch
       flagBuffer!({ data: flags, dimension: 1 });
+      needToRenderCanvas = true;
+    }
+    if (imageUnderlay !== prevAsyncProps?.imageUnderlay) {
       needToRenderCanvas = true;
     }
     if (screenCap) {
@@ -853,19 +896,25 @@ class Graph extends React.Component<GraphProps, GraphState> {
     pointBuffer: GraphState["pointBuffer"],
     flagBuffer: GraphState["flagBuffer"],
     camera: GraphState["camera"],
-    projectionTF: GraphState["projectionTF"]
-  ) {
-    const { annoMatrix, dispatch, screenCap } = this.props;
+    projectionTF: GraphState["projectionTF"],
+    drawSpatialImage: GraphState["drawSpatialImage"]
+  ): Promise<void> {
+    const { annoMatrix, dispatch, screenCap, spatial, imageUnderlay } =
+      this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera!.view();
+
     const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
     const { width, height } = this.reglCanvas;
+    const imW = spatial.imageWidth;
+    const imH = spatial.imageHeight;
     regl!.poll();
     regl!.clear({
       depth: 1,
       color: [1, 1, 1, 1],
     });
+
     drawPoints!({
       distance: camera!.distance(),
       color: colorBuffer,
@@ -876,7 +925,23 @@ class Graph extends React.Component<GraphProps, GraphState> {
       nPoints: schema.dataframe.nObs,
       minViewportDimension: Math.min(width, height),
     });
+    console.log("imageUnderlay?.isActive", imageUnderlay?.isActive);
+    console.log("drawSpatialImage", drawSpatialImage);
+    console.log("spatial?.image", spatial?.image);
 
+    if (imageUnderlay?.isActive && drawSpatialImage) {
+      drawSpatialImage({
+        projView,
+        imageWidth: imW,
+        imageHeight: imH,
+        rectCoords: [0, 0, imW, 0, 0, imH, 0, imH, imW, 0, imW, imH],
+        spatialImageAsTexture: regl?.texture({
+          data: this.spatialImage,
+          wrapS: "clamp",
+          wrapT: "clamp",
+        }),
+      });
+    }
     if (screenCap && regl) {
       const graph = regl._gl.canvas;
       const imageURI = await toPng(graph as HTMLCanvasElement, {
@@ -920,6 +985,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilation,
       crossfilter,
       screenCap,
+      spatial,
+      imageUnderlay,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
       this.state;
@@ -1011,6 +1078,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
             crossfilter,
             viewport,
             screenCap,
+            spatial,
+            imageUnderlay,
           }}
         >
           <Async.Pending initial>
@@ -1083,6 +1152,7 @@ const StillLoading = ({ displayName, width, height }: any) => (
         alignItems: "center",
       }}
     >
+      <Button minimal loading intent="primary" />
       <span style={{ fontStyle: "italic" }}>Loading {displayName}</span>
     </div>
   </div>

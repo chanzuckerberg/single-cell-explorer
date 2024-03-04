@@ -374,6 +374,13 @@ class CxgDataset(Dataset):
         schema = var.schema
         return [attr.name for attr in schema]
 
+    def get_uns_values(self):
+        uns = self.open_array("uns")
+        metadata_dict = {}
+        for key in uns.meta:
+            metadata_dict[key] = uns.meta[key]
+        return metadata_dict
+
     # function to get the embedding
     # this function to iterate through embeddings.
     def get_embedding_names(self):
