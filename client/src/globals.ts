@@ -27,6 +27,14 @@ export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
  * and ending with "api". This setup ensures it starts capturing at the single-character dataroot and includes any optional subpaths.
  */
 const REGEX_PATHNAME = /(?<=\/)[^/]{1}\/(?:[^/]+\/)*[^/]+\/(?=api)/;
+
+/**
+ * This regex is used to update the API prefix when the dataset selector is used.
+ * It matches the previous two segments (demarcated by `/`) leading up to `/api`.
+ * In deployed environments, these segments will be `s3_uri` and the S3 URI of the dataset.
+ * We require a separate REGEX because the dataset selector is applied to an API prefix that
+ * has already been updated with the S3 URI of the dataset.
+ */
 const REGEX_PATHNAME_FOR_DATASET_SELECTOR = /(?<=\/)\w+\/[^/]+\/(?=api)/;
 
 /* Config links types */
