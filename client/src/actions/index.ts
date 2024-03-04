@@ -13,7 +13,6 @@ import * as selnActions from "./selection";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
-import * as spatialActions from "./spatial";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
@@ -132,10 +131,9 @@ async function datasetSpatialMetadataFetchAndLoad(
   dispatch: AppDispatch,
   oldPrefix: string
 ): Promise<void> {
-  // TODO: remove post schema 5.1 migration
-  // temporary workaround to fetch spatial metadata for the test dataset
-  const testDatasetUrl =
-    "http://localhost:5005/s3_uri/%252FUsers%252Frkalo%252FProjects%252Fsingle-cell-explorer%252Fexample-dataset%252Fba344978-e1aa-40db-a611-b952c10df148.cxg/api/";
+  // TODO: remove testDatasetUrl post schema 5.1 migration
+  // temporary workaround to fetch spatial metadata from the test dataset
+  const testDatasetUrl = `${globals.API?.prefix}`;
 
   try {
     const datasetSpatialMetadataResponse = await fetchJson<{
@@ -513,5 +511,4 @@ export default {
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
   genesetDeleteGenes: genesetActions.genesetDeleteGenes,
-  requestSpatialMetadata: spatialActions.requestSpatialMetadata,
 };
