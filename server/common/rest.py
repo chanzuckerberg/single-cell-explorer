@@ -10,7 +10,6 @@ from http import HTTPStatus
 
 import numpy as np
 import requests
-
 from flask import abort, current_app, jsonify, make_response, redirect, send_file
 from PIL import Image
 from werkzeug.urls import url_unquote
