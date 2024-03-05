@@ -142,6 +142,7 @@ type GraphProps = Partial<RootState>;
   pointDilation: state.pointDilation,
   genesets: state.genesets.genesets,
   screenCap: state.controls.screenCap,
+  mountCapture: state.controls.mountCapture,
   spatial: state.spatial.metadata,
   imageUnderlay: state.imageUnderlay,
 }))
@@ -939,8 +940,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
     projectionTF: GraphState["projectionTF"],
     drawSpatialImage: GraphState["drawSpatialImage"]
   ): Promise<void> {
-    const { annoMatrix, dispatch, screenCap, spatial, imageUnderlay } =
-      this.props;
+    const {
+      annoMatrix,
+      dispatch,
+      screenCap,
+      mountCapture,
+      layoutChoice,
+      spatial,
+      imageUnderlay,
+    } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera?.view();
@@ -999,26 +1007,21 @@ class Graph extends React.Component<GraphProps, GraphState> {
         // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
         skipFonts: true,
       });
-      this.setState({ testImageSrc: imageURI });
-      try {
-        // TODO: DOWNLOAD IMAGE
-        // const a = document.createElement("a");
-        // a.href = imageURL;
-        // a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
-        // a.style.display = "none";
-        // document.body.append(a);
-        // a.click();
-        // // Revoke the blob URL and remove the element.
-        // setTimeout(() => {
-        //   URL.revokeObjectURL(imageURL);
-        //   a.remove();
-        // }, 1000);
-      } catch (err) {
-        // Fail silently if the user has simply canceled the dialog.
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.error(err.name, err.message);
-        }
-      } finally {
+      if (mountCapture) {
+        this.setState({ testImageSrc: imageURI });
+        dispatch({ type: "test: screencap end" });
+      } else {
+        const a = document.createElement("a");
+        a.href = imageURI;
+        a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
+        a.style.display = "none";
+        document.body.append(a);
+        a.click();
+        // Revoke the blob URL and remove the element.
+        setTimeout(() => {
+          URL.revokeObjectURL(imageURI);
+          a.remove();
+        }, 1000);
         dispatch({ type: "graph: screencap end" });
       }
     }

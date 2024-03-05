@@ -295,6 +295,8 @@ class MenuBar extends React.PureComponent<{}, State> {
 
     const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
     const isTest = getFeatureFlag(FEATURES.TEST);
+    const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
+    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] =
       selectionTool === "brush"
@@ -344,6 +346,23 @@ class MenuBar extends React.PureComponent<{}, State> {
               />
             </ButtonGroup>
           ) : null}
+          {isDownload && (
+            <Tooltip
+              content="Download the current graph view as a PNG"
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <AnchorButton
+                className={styles.menubarButton}
+                type="button"
+                icon={IconNames.CAMERA}
+                style={{
+                  cursor: "pointer",
+                }}
+                onClick={() => dispatch({ type: "graph: screencap start" })}
+              />
+            </Tooltip>
+          )}
           {isTest && (
             <Tooltip
               content="🌊"
@@ -359,7 +378,7 @@ class MenuBar extends React.PureComponent<{}, State> {
                 }}
                 data-testid="capture-and-display-graph"
                 loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
+                onClick={() => dispatch({ type: "test: screencap start" })}
               />
             </Tooltip>
           )}

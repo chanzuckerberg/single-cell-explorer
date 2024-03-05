@@ -69,6 +69,8 @@ interface ControlsState {
   geneSynonyms: string[];
   isCellGuideCxg: boolean;
   screenCap: boolean;
+  mountCapture: boolean;
+  showWarningBanner: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -97,9 +99,11 @@ const Controls = (
     datasetDrawer: false,
     isCellGuideCxg: false,
     screenCap: false,
+    mountCapture: false,
+    showWarningBanner: false,
   },
   action: AnyAction
-) => {
+): ControlsState => {
   /*
   For now, log anything looking like an error to the console.
   */
@@ -418,6 +422,21 @@ const Controls = (
       return {
         ...state,
         screenCap: false,
+      };
+    }
+
+    case "test: screencap start": {
+      return {
+        ...state,
+        screenCap: true,
+        mountCapture: true,
+      };
+    }
+    case "test: screencap end": {
+      return {
+        ...state,
+        screenCap: false,
+        mountCapture: false,
       };
     }
 
