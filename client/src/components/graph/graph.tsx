@@ -1,10 +1,10 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import * as d3 from "d3";
 import { toPng } from "html-to-image";
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as @connect
 import { connect, shallowEqual } from "react-redux";
 import { ReadonlyMat3, mat3, vec2 } from "gl-matrix";
-import _regl, { DrawCommand, Regl } from "regl";
+import _regl, { DrawCommand, Regl, TextureImageData } from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
 import { Button } from "@blueprintjs/core";
@@ -16,6 +16,7 @@ import _drawSpatialImage from "./drawSpatialImageRegl";
 import {
   createColorTable,
   createColorQuery,
+  ColorTable,
 } from "../../util/stateManager/colorHelpers";
 import * as globals from "../../globals";
 
@@ -33,6 +34,8 @@ import {
 import { Dataframe } from "../../util/dataframe";
 import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
+import { Field } from "../../common/types/schema";
+import { Query } from "../../annoMatrix/query";
 
 /*
 Simple 2D transforms control all point painting.  There are three:
@@ -74,6 +77,15 @@ function createModelTF() {
   return m;
 }
 
+interface SpatialProps {
+  imaageWidth: number;
+  imageHeight: number;
+}
+
+interface ImageUnderlay {
+  isActive: boolean;
+}
+
 type GraphState = {
   regl: Regl | null;
   drawPoints: DrawCommand | null;
@@ -83,10 +95,15 @@ type GraphState = {
   camera: Camera | null;
   projectionTF: mat3;
   tool: LassoFunctionWithAttributes | d3.BrushBehavior<unknown> | null;
-  container: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
+  container: d3.Selection<
+    SVGGElement,
+    unknown,
+    HTMLElement,
+    SVGGElement
+  > | null;
   // used?
   updateOverlay: boolean;
-  toolSVG: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
+  toolSVG: d3.Selection<SVGGElement, number, HTMLElement, SVGGElement> | null;
   viewport: { width: number; height: number };
   layoutState: {
     layoutDf: Dataframe | null;
@@ -95,7 +112,7 @@ type GraphState = {
   colorState: {
     colors: string[] | null;
     colorDf: Dataframe | null;
-    colorTable: any | null;
+    colorTable: Dataframe | null;
   };
   pointDilationState: {
     pointDilation: string | null;
@@ -105,7 +122,7 @@ type GraphState = {
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
   drawSpatialImage: DrawCommand | null;
-  spatial: any;
+  spatial: SpatialProps | null;
 };
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -113,8 +130,8 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: any;
-  imageUnderlay: any;
+  spatial: SpatialProps;
+  imageUnderlay: ImageUnderlay;
 }
 
 type GraphProps = Partial<RootState>;
@@ -134,7 +151,15 @@ type GraphProps = Partial<RootState>;
   imageUnderlay: state.imageUnderlay,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
-  static createReglState(canvas: HTMLCanvasElement) {
+  static createReglState(canvas: HTMLCanvasElement): {
+    camera: Camera;
+    regl: Regl;
+    drawPoints: DrawCommand;
+    pointBuffer: _regl.Buffer;
+    colorBuffer: _regl.Buffer;
+    flagBuffer: _regl.Buffer;
+    drawSpatialImage: DrawCommand;
+  } {
     /*
         Must be created for each canvas
         */
@@ -158,12 +183,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
     };
   }
 
-  static watchAsync(props: GraphProps, prevProps: GraphProps) {
+  static watchAsync(props: GraphProps, prevProps: GraphProps): boolean {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  spatialImage: any;
+  spatialImage: TextureImageData | null = null;
 
   private graphRef = React.createRef<HTMLDivElement>();
 
@@ -314,7 +338,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  componentDidUpdate(prevProps: GraphProps, prevState: GraphState) {
+  componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
     const { selectionTool, currentSelection, graphInteractionMode } =
       this.props;
     const { toolSVG, viewport } = this.state;
@@ -343,9 +367,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       stateChanges.toolSVG
     ) {
       const { tool, container } = this.state;
+      if (!tool || !container) return;
       this.selectionToolUpdate(
-        stateChanges.tool ? stateChanges.tool : tool!,
-        stateChanges.container ? stateChanges.container : container!
+        stateChanges.tool ?? tool,
+        stateChanges.container ?? container
       );
     }
     if (Object.keys(stateChanges).length > 0) {
@@ -353,14 +378,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  componentWillUnmount() {
+  componentWillUnmount(): void {
     window.removeEventListener("resize", this.handleResize);
     if (this.graphRef.current) {
       this.graphRef.current.removeEventListener("wheel", this.disableScroll);
     }
   }
 
-  handleResize = () => {
+  handleResize = (): void => {
     const viewport = this.getViewportDimensions();
     const projectionTF = createProjectionTF(viewport.width, viewport.height);
     this.setState((state) => ({
@@ -374,7 +399,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
     if (
-      camera!.handleEvent(
+      camera?.handleEvent(
         e as unknown as MouseEvent<
           HTMLCanvasElement,
           MouseEvent<Element, MouseEvent>
@@ -390,7 +415,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   };
 
-  handleBrushDragAction() {
+  handleBrushDragAction(): void {
     /*
           event describing brush position:
           @-------|
@@ -424,14 +449,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
     );
   }
 
-  handleBrushStartAction() {
+  handleBrushStartAction(): void {
     // Ignore programmatically generated events.
     if (!d3.event.sourceEvent) return;
     const { dispatch } = this.props;
     dispatch(actions.graphBrushStartAction());
   }
 
-  handleBrushEndAction() {
+  handleBrushEndAction(): void {
     const { camera } = this.state;
     // Ignore programmatically generated events. Also abort if camera not initialized.
     if (!d3.event.sourceEvent || !camera) return;
@@ -461,18 +486,18 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  handleBrushDeselectAction() {
+  handleBrushDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
   }
 
-  handleLassoStart() {
+  handleLassoStart(): void {
     const { dispatch } = this.props;
     dispatch(actions.graphLassoStartAction());
   }
 
   // when a lasso is completed, filter to the points within the lasso polygon
-  handleLassoEnd(polygon: [number, number][]) {
+  handleLassoEnd(polygon: [number, number][]): void {
     const minimumPolygonArea = 10;
     const { dispatch, layoutChoice } = this.props;
     if (
@@ -491,28 +516,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  handleLassoCancel() {
+  handleLassoCancel(): void {
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphLassoCancelAction(layoutChoice.current));
   }
 
-  handleLassoDeselectAction() {
+  handleLassoDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
     dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
   }
 
-  handleDeselectAction() {
+  handleDeselectAction(): void {
     const { selectionTool } = this.props;
     if (selectionTool === "brush") this.handleBrushDeselectAction();
     if (selectionTool === "lasso") this.handleLassoDeselectAction();
   }
 
-  disableScroll = (event: WheelEvent) => {
+  disableScroll = (event: WheelEvent): void => {
     // disables browser scrolling behavior when hovering over the graph
     event.preventDefault();
   };
 
-  setReglCanvas = (canvas: HTMLCanvasElement) => {
+  setReglCanvas = (canvas: HTMLCanvasElement): void => {
     // Ignore null canvas on unmount
     if (!canvas) {
       return;
@@ -523,7 +548,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     });
   };
 
-  getViewportDimensions = () => {
+  getViewportDimensions = (): { height: number; width: number } => {
     const { viewportRef } = this.props;
     return {
       height: viewportRef.clientHeight,
@@ -531,7 +556,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     };
   };
 
-  createToolSVG = () => {
+  createToolSVG = (): Record<string, unknown> => {
     /*
         Called from componentDidUpdate. Create the tool SVG, and return any
         state changes that should be passed to setState().
@@ -680,8 +705,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   brushToolUpdate(
     tool: d3.BrushBehavior<unknown>,
-    container: d3.Selection<SVGGElement, unknown, HTMLElement, any>
-  ) {
+    container: d3.Selection<SVGGElement, unknown, HTMLElement, d3.BaseType>
+  ): void {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
@@ -724,7 +749,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  lassoToolUpdate(tool: LassoFunctionWithAttributes) {
+  lassoToolUpdate(tool: LassoFunctionWithAttributes): void {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
@@ -734,7 +759,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       /*
             if there is a current selection, make sure the lasso tool matches
             */
-      const polygon = currentSelection.polygon.map((p: any) =>
+      const polygon = currentSelection.polygon.map((p: [number, number]) =>
         this.mapPointToScreen(p)
       );
       tool.move(polygon);
@@ -745,8 +770,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   selectionToolUpdate(
     tool: GraphState["tool"],
-    container: d3.Selection<SVGGElement, unknown, HTMLElement, any>
-  ) {
+    container: d3.Selection<SVGGElement, unknown, HTMLElement, SVGGElement>
+  ): void {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
@@ -765,33 +790,37 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  mapScreenToPoint(pin: [number, number]) {
+  mapScreenToPoint(pin: [number, number]): vec2 {
     /*
         Map an XY coordinates from screen domain to cell/point range,
         accounting for current pan/zoom camera.
         */
     const { camera, projectionTF, modelInvTF, viewport } = this.state;
-    const cameraInvTF = camera!.invView();
+    const cameraInvTF = camera ? camera.invView() : null;
     /* screen -> gl */
     const x = (2 * pin[0]) / viewport.width - 1;
     const y = 2 * (1 - pin[1] / viewport.height) - 1;
     const xy = vec2.fromValues(x, y);
     const projectionInvTF = mat3.invert(mat3.create(), projectionTF);
     vec2.transformMat3(xy, xy, projectionInvTF);
-    vec2.transformMat3(xy, xy, cameraInvTF);
+    if (cameraInvTF) {
+      vec2.transformMat3(xy, xy, cameraInvTF);
+    }
     vec2.transformMat3(xy, xy, modelInvTF);
     return xy;
   }
 
-  mapPointToScreen(xyCell: [number, number]) {
+  mapPointToScreen(xyCell: [number, number]): [number, number] {
     /*
         Map an XY coordinate from cell/point domain to screen range.  Inverse
         of mapScreenToPoint()
         */
     const { camera, projectionTF, modelTF, viewport } = this.state;
-    const cameraTF = camera!.view();
+    const cameraTF = camera?.view() || undefined;
     const xy = vec2.transformMat3(vec2.create(), xyCell, modelTF);
-    vec2.transformMat3(xy, xy, cameraTF);
+    if (cameraTF) {
+      vec2.transformMat3(xy, xy, cameraTF);
+    }
     vec2.transformMat3(xy, xy, projectionTF);
     return [
       Math.round(((xy[0] + 1) * viewport.width) / 2),
@@ -825,7 +854,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   updateReglAndRender(
     asyncProps: GraphAsyncProps,
     prevAsyncProps: GraphAsyncProps | null
-  ) {
+  ): void {
     const { positions, colors, flags, height, width, imageUnderlay } =
       asyncProps;
     const { screenCap } = this.props;
@@ -838,17 +867,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
     if (positions !== prevAsyncProps?.positions) {
       // @ts-expect-error (seve): need to look into arg mismatch
-      pointBuffer!({ data: positions, dimension: 2 });
+      pointBuffer?.({ data: positions, dimension: 2 });
       needToRenderCanvas = true;
     }
     if (colors !== prevAsyncProps?.colors) {
       // @ts-expect-error (seve): need to look into arg mismatch
-      colorBuffer!({ data: colors, dimension: 3 });
+      colorBuffer?.({ data: colors, dimension: 3 });
       needToRenderCanvas = true;
     }
     if (flags !== prevAsyncProps?.flags) {
       // @ts-expect-error (seve): need to look into arg mismatch
-      flagBuffer!({ data: flags, dimension: 1 });
+      flagBuffer?.({ data: flags, dimension: 1 });
       needToRenderCanvas = true;
     }
     if (imageUnderlay !== prevAsyncProps?.imageUnderlay) {
@@ -860,7 +889,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (needToRenderCanvas) this.renderCanvas();
   }
 
-  updateColorTable(colors: any, colorDf: any) {
+  updateColorTable(
+    colors: RootState["colors"],
+    colorDf: Dataframe | null
+  ): ColorTable {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     /* update color table state */
@@ -883,7 +915,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     );
   }
 
-  createColorByQuery(colors: any) {
+  createColorByQuery(colors: RootState["colors"]): [Field, Query] | null {
     const { annoMatrix, genesets } = this.props;
     const { schema } = annoMatrix;
     const { colorMode, colorAccessor } = colors;
@@ -904,29 +936,35 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
-    const cameraTF = camera!.view();
+    const cameraTF = camera?.view();
 
-    const projView = mat3.multiply(mat3.create(), projectionTF, cameraTF);
+    const projView = mat3.multiply(
+      mat3.create(),
+      projectionTF,
+      cameraTF || mat3.create()
+    );
     const { width, height } = this.reglCanvas;
     const imW = spatial.imageWidth;
     const imH = spatial.imageHeight;
-    regl!.poll();
-    regl!.clear({
+    regl?.poll();
+    regl?.clear({
       depth: 1,
       color: [1, 1, 1, 1],
     });
     const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
-    drawPoints!({
-      distance: camera!.distance(),
-      color: colorBuffer,
-      position: pointBuffer,
-      flag: flagBuffer,
-      count: annoMatrix.nObs,
-      projView,
-      nPoints: schema.dataframe.nObs,
-      minViewportDimension: Math.min(width, height),
-    });
+    if (drawPoints) {
+      drawPoints({
+        distance: camera?.distance(),
+        color: colorBuffer,
+        position: pointBuffer,
+        flag: flagBuffer,
+        count: annoMatrix.nObs,
+        projView,
+        nPoints: schema.dataframe.nObs,
+        minViewportDimension: Math.min(width, height),
+      });
+    }
     if (imageUnderlay?.isActive && drawSpatialImage && isSpatial) {
       drawSpatialImage({
         projView,
@@ -971,10 +1009,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       }
     }
 
-    regl!._gl.flush();
+    regl?._gl.flush();
   }
 
-  render() {
+  render(): JSX.Element {
     const {
       graphInteractionMode,
       annoMatrix,
@@ -1114,7 +1152,19 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 }
 
-const ErrorLoading = ({ displayName, error, width, height }: any) => {
+type ErrorLoadingProps = {
+  displayName: string;
+  error: Error;
+  width: number;
+  height: number;
+};
+
+const ErrorLoading = ({
+  displayName,
+  error,
+  width,
+  height,
+}: ErrorLoadingProps) => {
   console.error(error); // log to console as this is an unexpected error
   return (
     <div
@@ -1130,7 +1180,13 @@ const ErrorLoading = ({ displayName, error, width, height }: any) => {
   );
 };
 
-const StillLoading = ({ displayName, width, height }: any) => (
+type StillLoadingProps = {
+  displayName: string;
+  width: number;
+  height: number;
+};
+
+const StillLoading = ({ displayName, width, height }: StillLoadingProps) => (
   /*
   Render a busy/loading indicator
   */
