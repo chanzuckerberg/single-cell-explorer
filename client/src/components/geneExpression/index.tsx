@@ -61,7 +61,7 @@ class GeneExpression extends React.Component<{}, State> {
     const { genesets, isCellGuideCxg } = this.props;
     const { geneIds, geneNames } = this.state;
 
-    for (let [name, geneset] of genesets) {
+    for (const [name, geneset] of genesets) {
       if (
         (!name.includes(" - marker genes") &&
           !getMarkerGeneSets &&
@@ -73,9 +73,7 @@ class GeneExpression extends React.Component<{}, State> {
       ) {
         const genesetIds = [];
         const genesetNames = [];
-        if (name.includes(" - marker genes")) {
-          name = name.replace(" - marker genes", "");
-        }
+        const displayName = name.replace(" - marker genes", "");
 
         // find ensembl IDs for each gene in the geneset
         for (const gene of geneset.genes) {
@@ -95,6 +93,7 @@ class GeneExpression extends React.Component<{}, State> {
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; setGenes: any; setName: any; gen... Remove this comment to see the full error message
             setGenes={geneset.genes}
             setName={name}
+            displayName={displayName}
             genesetDescription={geneset.genesetDescription}
             geneIds={genesetIds}
             geneNames={genesetNames}
