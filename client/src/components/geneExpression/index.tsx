@@ -61,7 +61,7 @@ class GeneExpression extends React.Component<{}, State> {
     const { genesets, isCellGuideCxg } = this.props;
     const { geneIds, geneNames } = this.state;
 
-    for (const [name, geneset] of genesets) {
+    for (let [name, geneset] of genesets) {
       if (
         (!name.includes(" - marker genes") &&
           !getMarkerGeneSets &&
@@ -73,6 +73,9 @@ class GeneExpression extends React.Component<{}, State> {
       ) {
         const genesetIds = [];
         const genesetNames = [];
+        if (name.includes(" - marker genes")) {
+          name = name.replace(" - marker genes", "");
+        }
 
         // find ensembl IDs for each gene in the geneset
         for (const gene of geneset.genes) {
@@ -98,6 +101,9 @@ class GeneExpression extends React.Component<{}, State> {
           />
         );
       }
+    }
+    if (getMarkerGeneSets) {
+      sets.sort((a, b) => a.props.setName.localeCompare(b.props.setName));
     }
     return sets;
   };
