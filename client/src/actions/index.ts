@@ -30,6 +30,7 @@ import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
+import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -89,33 +90,40 @@ async function datasetMetadataFetchAndLoad(
   oldPrefix: string,
   config: Config
 ): Promise<void> {
+  let datasetMetadataResponse;
   try {
-    const datasetMetadataResponse = await fetchJson<{
+    datasetMetadataResponse = await fetchJson<{
       metadata: DatasetMetadata;
     }>("dataset-metadata", oldPrefix);
-
-    // Create new dataset array with large datasets removed
-    const { metadata: datasetMetadata } = datasetMetadataResponse;
-    const datasets = removeLargeDatasets(
-      datasetMetadata.collection_datasets,
-      globals.DATASET_MAX_CELL_COUNT
-    );
-
-    const { links } = config;
-    dispatch({
-      type: "dataset metadata load complete",
-      datasetMetadata: {
-        ...datasetMetadata,
-        collection_datasets: datasets,
-      },
-      portalUrl: links["collections-home-page"],
-    });
   } catch (error) {
-    dispatch({
-      type: "dataset metadata load error",
-      error,
-    });
+    // mock the endpoint for local development
+    if (globals.API?.prefix.includes("http://localhost:5005")) {
+      datasetMetadataResponse = DATASET_METADATA_RESPONSE;
+    } else {
+      dispatch({
+        type: "dataset metadata load error",
+        error,
+      });
+      return;
+    }
   }
+
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
+  );
+
+  const { links } = config;
+  dispatch({
+    type: "dataset metadata load complete",
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
+    portalUrl: links["collections-home-page"],
+  });
 }
 
 interface GeneInfoAPI {
