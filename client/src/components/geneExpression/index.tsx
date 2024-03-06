@@ -62,6 +62,20 @@ class GeneExpression extends React.Component<{}, State> {
     const { geneIds, geneNames } = this.state;
 
     for (const [name, geneset] of genesets) {
+      /**
+       * This conditional checks if the current geneset should be displayed based on the following criteria:
+       * 1. If the geneset name does not include " - marker genes", it's not a marker geneset and we're not
+       * looking for marker genesets,and it's a CellGuide CXG dataset, then it should be displayed.
+       * This yields non-marker genesets in CellGuide Explorer instances.
+       *
+       * 2. If the geneset name includes " - marker genes", it's a marker geneset and we're looking for marker
+       * genesets, and it's a CellGuide CXG dataset, then it should be displayed.
+       * This yields marker genesets in CellGuide Explorer instances.
+       *
+       * 3. If it's not a CellGuide CXG dataset, then there's no filtering or grouping based on geneset type,
+       * so it should be displayed.
+       * This is the behavior for genesets in non-CellGuide Explorer instances.
+       */
       if (
         (!name.includes(" - marker genes") &&
           !getMarkerGeneSets &&
@@ -204,8 +218,6 @@ class GeneExpression extends React.Component<{}, State> {
           <>
             <H5
               role="menuitem"
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-              tabIndex="0"
               data-testid="cellguide-marker-geneset-heading-expand"
               onKeyPress={this.handleExpandMarkerGeneSets}
               style={{
