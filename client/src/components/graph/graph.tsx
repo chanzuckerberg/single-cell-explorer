@@ -187,6 +187,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
+  isSpatial = false;
+
   spatialImage: TextureImageData | null = null;
 
   private graphRef = React.createRef<HTMLDivElement>();
@@ -657,9 +659,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilationLabel
     );
 
-    this.spatialImage = await this.loadTextureFromUrl(
-      `${globals.API?.prefix}${globals.API?.version}spatial/image`
-    );
+    this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+
+    this.spatialImage = this.isSpatial
+      ? await this.loadTextureFromUrl(
+          `${globals.API?.prefix}${globals.API?.version}spatial/image`
+        )
+      : null;
 
     const { width, height } = viewport;
     return {
@@ -944,14 +950,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
       cameraTF || mat3.create()
     );
     const { width, height } = this.reglCanvas;
-    const imW = spatial.imageWidth;
-    const imH = spatial.imageHeight;
+
     regl?.poll();
     regl?.clear({
       depth: 1,
       color: [1, 1, 1, 1],
     });
-    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     if (drawPoints) {
       drawPoints({
@@ -965,7 +969,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
         minViewportDimension: Math.min(width, height),
       });
     }
-    if (imageUnderlay?.isActive && drawSpatialImage && isSpatial) {
+    if (
+      imageUnderlay?.isActive &&
+      drawSpatialImage &&
+      this.isSpatial &&
+      spatial
+    ) {
+      const imW = spatial.imageWidth;
+      const imH = spatial.imageHeight;
       drawSpatialImage({
         projView,
         imageWidth: imW,

@@ -34,7 +34,11 @@ import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
+import {
+  checkFeatureFlags,
+  getFeatureFlag,
+} from "../util/featureFlags/featureFlags";
+import { FEATURES } from "../util/featureFlags/features";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -132,6 +136,10 @@ async function datasetSpatialMetadataFetchAndLoad(
   dispatch: AppDispatch,
   oldPrefix: string
 ): Promise<void> {
+  // TODO: remove testDatasetUrl post schema 5.1 migration
+  // temporary workaround to fetch spatial metadata from the test dataset
+  // const testDatasetUrl = `${globals.API?.prefix}`;
+
   try {
     const datasetSpatialMetadataResponse = await fetchJson<{
       metadata: DatasetSpatialMetadata;
@@ -200,6 +208,7 @@ const doInitialDataLoad = (): ((
 
     // check URL for feature flags
     checkFeatureFlags();
+    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     try {
       const s3URI = await s3URIFetch();
@@ -211,7 +220,9 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
+      if (isSpatial) {
+        datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
+      }
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
