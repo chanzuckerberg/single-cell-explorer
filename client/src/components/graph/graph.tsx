@@ -95,15 +95,10 @@ type GraphState = {
   camera: Camera | null;
   projectionTF: mat3;
   tool: LassoFunctionWithAttributes | d3.BrushBehavior<unknown> | null;
-  container: d3.Selection<
-    SVGGElement,
-    unknown,
-    HTMLElement,
-    SVGGElement
-  > | null;
+  container: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
   // used?
   updateOverlay: boolean;
-  toolSVG: d3.Selection<SVGGElement, number, HTMLElement, SVGGElement> | null;
+  toolSVG: d3.Selection<SVGGElement, number, HTMLElement, any> | null;
   viewport: { width: number; height: number };
   layoutState: {
     layoutDf: Dataframe | null;
@@ -369,10 +364,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       stateChanges.toolSVG
     ) {
       const { tool, container } = this.state;
-      if (!tool || !container) return;
       this.selectionToolUpdate(
-        stateChanges.tool ?? tool,
-        stateChanges.container ?? container
+        stateChanges.tool ? stateChanges.tool : tool!,
+        stateChanges.container ? stateChanges.container : container!
       );
     }
     if (Object.keys(stateChanges).length > 0) {
