@@ -648,7 +648,7 @@ const CategoryValueList = React.memo(
     let tuples = [...categorySummary.categoryValueIndices];
     if (isCellGuideCxg) {
       tuples = tuples.filter(
-        ([value, index]) => categorySummary.categoryValueCounts[index] > 0
+        ([, index]) => categorySummary.categoryValueCounts[index] > 0
       );
 
       if (
