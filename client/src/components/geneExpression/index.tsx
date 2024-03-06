@@ -10,6 +10,8 @@ import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
 
+const MARKER_GENE_SUFFIX_IDENTIFIER = " - marker genes";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
@@ -64,11 +66,11 @@ class GeneExpression extends React.Component<{}, State> {
     for (const [name, geneset] of genesets) {
       /**
        * This conditional checks if the current geneset should be displayed based on the following criteria:
-       * 1. If the geneset name does not include " - marker genes", it's not a marker geneset and we're not
+       * 1. If the geneset name does not include MARKER_GENE_SUFFIX_IDENTIFIER, it's not a marker geneset and we're not
        * looking for marker genesets,and it's a CellGuide CXG dataset, then it should be displayed.
        * This yields non-marker genesets in CellGuide Explorer instances.
        *
-       * 2. If the geneset name includes " - marker genes", it's a marker geneset and we're looking for marker
+       * 2. If the geneset name includes MARKER_GENE_SUFFIX_IDENTIFIER, it's a marker geneset and we're looking for marker
        * genesets, and it's a CellGuide CXG dataset, then it should be displayed.
        * This yields marker genesets in CellGuide Explorer instances.
        *
@@ -77,17 +79,17 @@ class GeneExpression extends React.Component<{}, State> {
        * This is the behavior for genesets in non-CellGuide Explorer instances.
        */
       if (
-        (!name.includes(" - marker genes") &&
+        (!name.includes(MARKER_GENE_SUFFIX_IDENTIFIER) &&
           !getMarkerGeneSets &&
           isCellGuideCxg) ||
-        (name.includes(" - marker genes") &&
+        (name.includes(MARKER_GENE_SUFFIX_IDENTIFIER) &&
           getMarkerGeneSets &&
           isCellGuideCxg) ||
         !isCellGuideCxg // if not a CellGuide CXG, don't do any filtering or grouping
       ) {
         const genesetIds = [];
         const genesetNames = [];
-        const displayName = name.replace(" - marker genes", "");
+        const displayName = name.replace(MARKER_GENE_SUFFIX_IDENTIFIER, "");
 
         // find ensembl IDs for each gene in the geneset
         for (const gene of geneset.genes) {
