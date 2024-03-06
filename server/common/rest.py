@@ -123,6 +123,25 @@ def schema_get(data_adaptor):
 
 
 def genesets_get(data_adaptor):
+    """
+    The genesets endpoint returns the genesets present in the obs metadata.
+
+    The genesets dictionary must be in the following format:
+        {
+            <string, a gene set name>: {
+                "geneset_name": <string, a gene set name>,
+                "geneset_description": <a string or None>,
+                "genes": [
+                    {
+                        "gene_symbol": <string, a gene symbol or name>,
+                        "gene_description": <a string or None>
+                    },
+                    ...
+                ]
+            },
+            ...
+        }
+    """
     genesets = genesets_get_helper(data_adaptor)
     return make_response(jsonify({"genesets": list(genesets.values())}), HTTPStatus.OK)
 
