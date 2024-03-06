@@ -154,16 +154,19 @@ describe("metadata loads", () => {
     }
   });
 
-  test(
-    "categories and values from dataset appear and properly truncate if applicable",
-    async ({ page }) => {
-      await goToPage(page, pageURLTruncate);
+  test("categories and values from dataset appear and properly truncate if applicable", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLTruncate);
 
-      await tryUntil(async () => {
+    await tryUntil(
+      async () => {
         for (const label of Object.keys(
           dataTruncate.categorical
         ) as (keyof typeof dataTruncate.categorical)[]) {
-          const element = await page.getByTestId(`category-${label}`).innerHTML();
+          const element = await page
+            .getByTestId(`category-${label}`)
+            .innerHTML();
 
           expect(element).toMatchSnapshot();
 
@@ -179,9 +182,10 @@ describe("metadata loads", () => {
             Object.values(dataTruncate.categorical[label])
           );
         }
-      }, { page });
-    }
-  );
+      },
+      { page }
+    );
+  });
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
@@ -505,7 +509,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
     page,
     true
   );
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  expect(await page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -539,7 +543,7 @@ test("lasso moves after pan", async ({ page }) => {
     true
   );
 
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  expect(await page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -678,57 +682,66 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-        await setup(option, page);
+          await setup(option, page);
 
-        waitUntilNoSkeletonDetected(page);
+          waitUntilNoSkeletonDetected(page);
 
-        const genesetName = `test-geneset-foo-123`;
-        await assertGenesetDoesNotExist(genesetName, page);
-        await createGeneset(genesetName, page);
-        await assertGenesetExists(genesetName, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGenesetDoesNotExist(genesetName, page),
-          async () => assertGenesetExists(genesetName, page)
-        );
-      }, { page })
+          const genesetName = `test-geneset-foo-123`;
+          await assertGenesetDoesNotExist(genesetName, page);
+          await createGeneset(genesetName, page);
+          await assertGenesetExists(genesetName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetDoesNotExist(genesetName, page),
+            async () => assertGenesetExists(genesetName, page)
+          );
+        },
+        { page }
+      );
     });
 
     test("edit geneset name and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        await setup(option, page);
-        await createGeneset(editableGenesetName, page);
-        await editGenesetName(editableGenesetName, newGenesetName, page);
-        await assertGenesetExists(newGenesetName, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGenesetExists(editableGenesetName, page),
-          async () => assertGenesetExists(newGenesetName, page)
-        );
-      }, { page })
+      await tryUntil(
+        async () => {
+          await setup(option, page);
+          await createGeneset(editableGenesetName, page);
+          await editGenesetName(editableGenesetName, newGenesetName, page);
+          await assertGenesetExists(newGenesetName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetExists(editableGenesetName, page),
+            async () => assertGenesetExists(newGenesetName, page)
+          );
+        },
+        { page }
+      );
     });
     test("delete a geneset and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-      await setup(option, page);
-      await createGeneset(genesetToDeleteName, page);
-      await deleteGeneset(genesetToDeleteName, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGenesetExists(genesetToDeleteName, page),
-        async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+          await setup(option, page);
+          await createGeneset(genesetToDeleteName, page);
+          await deleteGeneset(genesetToDeleteName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetExists(genesetToDeleteName, page),
+            async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+          );
+        },
+        { page }
       );
-      }, { page });
     });
     test("geneset description", async ({ page }) => {
       if (option.withSubset) return;
@@ -752,17 +765,20 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        await setup(option, page);
-        await createGeneset(setToAddGeneTo, page);
-        await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
-        await assertGeneExistsInGeneset(geneToAddToSet, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGeneDoesNotExist(geneToAddToSet, page),
-          async () => assertGeneExistsInGeneset(geneToAddToSet, page)
-        );
-      }, { page });
+      await tryUntil(
+        async () => {
+          await setup(option, page);
+          await createGeneset(setToAddGeneTo, page);
+          await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
+          await assertGeneExistsInGeneset(geneToAddToSet, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGeneDoesNotExist(geneToAddToSet, page),
+            async () => assertGeneExistsInGeneset(geneToAddToSet, page)
+          );
+        },
+        { page }
+      );
     });
     test("expand gene and brush", async ({ page }) => {
       await setup(option, page);
@@ -805,20 +821,23 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-        await setup(option, page);
-        await createGeneset(setToRemoveFrom, page);
-        await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-        await removeGene(geneToRemove, page);
-        await assertGeneDoesNotExist(geneToRemove, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGeneExistsInGeneset(geneToRemove, page),
-          async () => assertGeneDoesNotExist(geneToRemove, page)
-        );
-      }, { page });
+          await setup(option, page);
+          await createGeneset(setToRemoveFrom, page);
+          await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
+          await removeGene(geneToRemove, page);
+          await assertGeneDoesNotExist(geneToRemove, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGeneExistsInGeneset(geneToRemove, page),
+            async () => assertGeneDoesNotExist(geneToRemove, page)
+          );
+        },
+        { page }
+      );
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
