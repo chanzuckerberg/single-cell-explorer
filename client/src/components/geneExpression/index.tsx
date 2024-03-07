@@ -78,27 +78,23 @@ class GeneExpression extends React.Component<{}, State> {
        * so it should be displayed.
        * This is the behavior for genesets in non-CellGuide Explorer instances.
        */
-      if (
-        (!name.includes(MARKER_GENE_SUFFIX_IDENTIFIER) &&
-          !getMarkerGeneSets &&
-          isCellGuideCxg) ||
-        (name.includes(MARKER_GENE_SUFFIX_IDENTIFIER) &&
-          getMarkerGeneSets &&
-          isCellGuideCxg) ||
-        !isCellGuideCxg // if not a CellGuide CXG, don't do any filtering or grouping
-      ) {
+      const isMarkerGeneSet = name.includes(MARKER_GENE_SUFFIX_IDENTIFIER);
+
+      const condition1 =
+        !isMarkerGeneSet && !getMarkerGeneSets && isCellGuideCxg;
+      const condition2 = isMarkerGeneSet && getMarkerGeneSets && isCellGuideCxg;
+      const condition3 = !isCellGuideCxg;
+
+      if (condition1 || condition2 || condition3) {
         const genesetIds = [];
         const genesetNames = [];
         const displayName = name.replace(MARKER_GENE_SUFFIX_IDENTIFIER, "");
 
         // find ensembl IDs for each gene in the geneset
         for (const gene of geneset.genes) {
-          let geneId;
-          if (geneIds) {
-            geneId = geneIds[geneNames.indexOf(gene[0])];
-          } else {
-            geneId = "";
-          }
+          const geneId = geneIds
+            ? geneIds[geneNames.indexOf(gene[0])] || ""
+            : "";
           genesetIds.push(geneId);
           genesetNames.push(gene[0]);
         }

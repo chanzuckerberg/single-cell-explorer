@@ -651,6 +651,8 @@ const CategoryValueList = React.memo(
         ([, index]) => categorySummary.categoryValueCounts[index] > 0
       );
 
+      // sort categorical labels in descending order by average values of whatever
+      // continuous metadata is currently being colored by
       if (
         colorMode === "color by continuous metadata" ||
         colorMode === "color by expression" ||

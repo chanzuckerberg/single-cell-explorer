@@ -252,14 +252,14 @@ const dispatchDiffExpErrors = (
   }
 };
 
+const DEFAULT_GENESETS_RESPONSE = {
+  genesets: [],
+};
 const genesetsFetch = (dispatch: AppDispatch) => {
-  const defaultResponse = {
-    genesets: [],
-  };
   fetchJson("genesets").then((response) => {
     dispatch({
       type: "geneset: initial load",
-      data: response ?? defaultResponse,
+      data: response ?? DEFAULT_GENESETS_RESPONSE,
     });
   });
 };
