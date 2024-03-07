@@ -69,6 +69,13 @@ class SchemaAPI(S3URIResource):
         return common_rest.schema_get(data_adaptor)
 
 
+class GenesetsAPI(S3URIResource):
+    @cache_control(immutable=True, max_age=ONE_YEAR)
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.genesets_get(data_adaptor)
+
+
 class ConfigAPI(S3URIResource):
     @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_s3uri_data_adaptor
@@ -208,6 +215,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     # Initialization routes
     add_resource(SchemaAPI, "/schema")
     add_resource(ConfigAPI, "/config")
+    add_resource(GenesetsAPI, "/genesets")
     # Data routes
     add_resource(AnnotationsObsAPI, "/annotations/obs")
     add_resource(AnnotationsVarAPI, "/annotations/var")

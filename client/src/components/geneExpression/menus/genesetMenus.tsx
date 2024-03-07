@@ -61,7 +61,9 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     });
   };
 
-  handleColorByEntireGeneset = (): void => {
+  handleColorByEntireGeneset = (event: React.MouseEvent): void => {
+    event.preventDefault();
+
     track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
 
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
