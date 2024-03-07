@@ -552,7 +552,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
     };
   };
 
-  createToolSVG = (): Record<string, unknown> => {
+  createToolSVG = ():
+    | d3.Selection<SVGGElement, unknown, HTMLElement, any>
+    | undefined
+    | object => {
     /*
         Called from componentDidUpdate. Create the tool SVG, and return any
         state changes that should be passed to setState().
@@ -800,7 +803,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         accounting for current pan/zoom camera.
         */
     const { camera, projectionTF, modelInvTF, viewport } = this.state;
-    const cameraInvTF = camera ? camera.invView() : null;
+    const cameraInvTF = camera!.invView();
     /* screen -> gl */
     const x = (2 * pin[0]) / viewport.width - 1;
     const y = 2 * (1 - pin[1] / viewport.height) - 1;

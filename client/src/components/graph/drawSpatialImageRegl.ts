@@ -1,4 +1,15 @@
-export default function drawSpatialImageRegl(regl: any): any {
+import { Regl, Texture2D } from "regl";
+
+interface ReglProps {
+  rectCoords: Float32Array;
+  spatialImageAsTexture: Texture2D;
+  projView: number[];
+  imageWidth: number;
+  imageHeight: number;
+  count: number;
+}
+
+export default function drawSpatialImageRegl(regl: Regl) {
   return regl({
     frag: `
             precision mediump float;
@@ -33,15 +44,20 @@ export default function drawSpatialImageRegl(regl: any): any {
 
     attributes: {
       a_texCoord: [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0],
-      a_position: regl.prop("rectCoords"),
+      a_position: regl.prop<ReglProps, "rectCoords">("rectCoords"),
     },
 
     uniforms: {
-      projView: regl.prop("projView"),
-      u_image: regl.prop("spatialImageAsTexture"),
+      projView: regl.prop<ReglProps, "projView">("projView"),
+      u_image: regl.prop<ReglProps, "spatialImageAsTexture">(
+        "spatialImageAsTexture"
+      ),
       color: [1, 0, 0, 1],
-      u_resolution: [regl.prop("imageWidth"), regl.prop("imageHeight")],
-      image_width: regl.prop("imageWidth"),
+      u_resolution: [
+        regl.prop<ReglProps, "imageWidth">("imageWidth"),
+        regl.prop<ReglProps, "imageHeight">("imageHeight"),
+      ],
+      image_width: regl.prop<ReglProps, "imageWidth">("imageWidth"),
     },
     // This tells regl the number of vertices to draw in this command
     // https://github.com/regl-project/regl

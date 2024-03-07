@@ -24,11 +24,9 @@ import { FEATURES } from "../../util/featureFlags/features";
 type State = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Defa... Remove this comment to see the full error message
+@connect((state: State) => {
   const { annoMatrix } = state;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const crossfilter = (state as any).obsCrossfilter;
+  const crossfilter = state.obsCrossfilter;
   const selectedCount = crossfilter.countSelected();
 
   const subsetPossible =
@@ -42,39 +40,26 @@ type State = any;
     subsetPossible,
     subsetResetPossible,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    graphInteractionMode: (state as any).controls.graphInteractionMode,
+    graphInteractionMode: state.controls.graphInteractionMode,
     clipPercentileMin: Math.round(100 * (annoMatrix?.clipRange?.[0] ?? 0)),
     clipPercentileMax: Math.round(100 * (annoMatrix?.clipRange?.[1] ?? 1)),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    userDefinedGenes: (state as any).quickGenes.userDefinedGenes,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    colorAccessor: (state as any).colors.colorAccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    scatterplotXXaccessor: (state as any).controls.scatterplotXXaccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    libraryVersions: (state as any).config?.library_versions,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    aboutLink: (state as any).config?.links?.["about-dataset"],
-    disableDiffexp:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).config?.parameters?.["disable-diffexp"] ?? false,
+    userDefinedGenes: state.quickGenes.userDefinedGenes,
+    colorAccessor: state.colors.colorAccessor,
+    scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
+    scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+    libraryVersions: state.config?.library_versions,
+    aboutLink: state.config?.links?.["about-dataset"],
+    disableDiffexp: state.config?.parameters?.["disable-diffexp"] ?? false,
     diffexpMayBeSlow:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).config?.parameters?.["diffexp-may-be-slow"] ?? false,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    showCentroidLabels: (state as any).centroidLabels.showLabels,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    tosURL: (state as any).config?.parameters?.about_legal_tos,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    privacyURL: (state as any).config?.parameters?.about_legal_privacy,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    categoricalSelection: (state as any).categoricalSelection,
+      state.config?.parameters?.["diffexp-may-be-slow"] ?? false,
+    showCentroidLabels: state.centroidLabels.showLabels,
+    tosURL: state.config?.parameters?.about_legal_tos,
+    privacyURL: state.config?.parameters?.about_legal_privacy,
+    categoricalSelection: state.categoricalSelection,
     seamlessEnabled: selectIsSeamlessEnabled(state),
-    screenCap: (state as any).controls.screenCap,
-    imageUnderlay: (state as any).imageUnderlay,
-    layoutChoice: (state as any).layoutChoice,
+    screenCap: state.controls.screenCap,
+    imageUnderlay: state.imageUnderlay,
+    layoutChoice: state.layoutChoice,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -115,12 +100,12 @@ class MenuBar extends React.PureComponent<{}, State> {
   componentDidUpdate(prevProps: any): void {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { layoutChoice, dispatch } = this.props;
-    const prevConditionMet =
-      prevProps.layoutChoice &&
-      prevProps.layoutChoice.current?.includes(globals.spatialEmbeddingKeyword);
-    const currentConditionMet =
-      layoutChoice &&
-      layoutChoice.current?.includes(globals.spatialEmbeddingKeyword);
+    const prevConditionMet = prevProps.layoutChoice?.current?.includes(
+      globals.spatialEmbeddingKeyword
+    );
+    const currentConditionMet = layoutChoice?.current?.includes(
+      globals.spatialEmbeddingKeyword
+    );
 
     if (!prevConditionMet && currentConditionMet) {
       dispatch({
