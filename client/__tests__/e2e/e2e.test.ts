@@ -509,7 +509,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
     page,
     true
   );
-  expect(await page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -543,7 +543,7 @@ test("lasso moves after pan", async ({ page }) => {
     true
   );
 
-  expect(await page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -688,7 +688,7 @@ for (const option of options) {
 
           await setup(option, page);
 
-          waitUntilNoSkeletonDetected(page);
+          await waitUntilNoSkeletonDetected(page);
 
           const genesetName = `test-geneset-foo-123`;
           await assertGenesetDoesNotExist(genesetName, page);

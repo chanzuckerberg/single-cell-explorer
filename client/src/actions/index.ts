@@ -136,10 +136,6 @@ async function datasetSpatialMetadataFetchAndLoad(
   dispatch: AppDispatch,
   oldPrefix: string
 ): Promise<void> {
-  // TODO: remove testDatasetUrl post schema 5.1 migration
-  // temporary workaround to fetch spatial metadata from the test dataset
-  // const testDatasetUrl = `${globals.API?.prefix}`;
-
   try {
     const datasetSpatialMetadataResponse = await fetchJson<{
       metadata: DatasetSpatialMetadata;
@@ -220,6 +216,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      // TODO: add logic to ensure this is working for spatial datasets when flag removed
       if (isSpatial) {
         datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
       }

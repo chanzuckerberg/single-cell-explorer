@@ -605,13 +605,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  loadTextureFromUrl = (src: string): any =>
-    new Promise((resolve, reject) => {
-      this.downloadedImg.crossOrigin = "anonymous";
+  loadTextureFromUrl = async (src: string): Promise<any> => {
+    this.downloadedImg.crossOrigin = "anonymous";
+    this.downloadedImg.src = src;
+
+    await new Promise((resolve, reject) => {
       this.downloadedImg.onload = () => resolve(this.downloadedImg);
       this.downloadedImg.onerror = reject;
-      this.downloadedImg.src = src;
     });
+
+    return this.downloadedImg;
+  };
 
   fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
     const {

@@ -42,9 +42,9 @@ export default function drawSpatialImageRegl(regl: any): any {
       color: [1, 0, 0, 1],
       u_resolution: [regl.prop("imageWidth"), regl.prop("imageHeight")],
       image_width: regl.prop("imageWidth"),
-      //   translate:
     },
-
+    // This tells regl the number of vertices to draw in this command
+    // https://github.com/regl-project/regl
     count: 6,
   });
 }
