@@ -3,12 +3,15 @@ import React, { FC, useMemo } from "react";
 import { connect } from "react-redux";
 import { AppDispatch } from "../../reducers";
 import { track } from "../../analytics";
+import { subsetAction, resetSubsetAction } from "../../actions/viewStack";
 import { EVENTS } from "../../analytics/events";
 import * as globals from "../../globals";
 
 interface DispatchProps {
   undo: () => void;
   redo: () => void;
+  subset: () => void;
+  unsubset: () => void;
 }
 type Props = DispatchProps;
 
@@ -21,9 +24,17 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
     track(EVENTS.EXPLORER_REDO_BUTTON_CLICKED);
     dispatch({ type: "@@undoable/redo" });
   },
+  subset: () => {
+    track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
+    dispatch(subsetAction());
+  },
+  unsubset: () => {
+    track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
+    dispatch(resetSubsetAction());
+  },
 });
 
-const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
+const GlobalHotkeys: FC<Props> = ({ undo, redo, subset, unsubset }) => {
   const hotkeys = useMemo(
     () => [
       {
@@ -40,6 +51,22 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo }) => {
         label: "Redo.",
         onKeyDown: () => {
           redo();
+        },
+      },
+      {
+        combo: "SHIFT+W",
+        global: true,
+        label: "Subset to selection.",
+        onKeyDown: () => {
+          subset();
+        },
+      },
+      {
+        combo: "SHIFT+E",
+        global: true,
+        label: "Unsubset selection.",
+        onKeyDown: () => {
+          unsubset();
         },
       },
     ],

@@ -151,6 +151,13 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_genesets(self):
+        """
+        Return genesets in the obs metadata
+        """
+        pass
+
+    @abstractmethod
     def annotation_to_fbs_matrix(self, axis, field=None, uid=None, num_bins=None):
         """
         Gets annotation value for each observation
