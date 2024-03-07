@@ -9,8 +9,7 @@ import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
-
-const MARKER_GENE_SUFFIX_IDENTIFIER = " - marker genes";
+import { MARKER_GENE_SUFFIX_IDENTIFIER } from "./constants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -153,7 +152,7 @@ class GeneExpression extends React.Component<{}, State> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     this.setState((state: any) => {
       if (!state.markerGeneSetsExpanded) {
-        track(EVENTS.EXPLORER_MARKER_GENESET_HEADING_EXPAND_BUTTON_CLICKED);
+        track(EVENTS.EXPLORER_CG_MARKER_GENE_SETS_HEADING_EXPANDED);
       }
 
       return {
