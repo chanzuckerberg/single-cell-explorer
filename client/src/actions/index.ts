@@ -212,6 +212,7 @@ const doInitialDataLoad = (): ((
       const [config, schema] = await Promise.all([
         configFetchAndLoad(dispatch),
         schemaFetch(),
+        genesetsFetch(dispatch),
         userColorsFetchAndLoad(dispatch),
       ]);
 
@@ -287,6 +288,18 @@ const dispatchDiffExpErrors = (
       });
     }
   }
+};
+
+const DEFAULT_GENESETS_RESPONSE = {
+  genesets: [],
+};
+const genesetsFetch = (dispatch: AppDispatch) => {
+  fetchJson("genesets").then((response) => {
+    dispatch({
+      type: "geneset: initial load",
+      data: response ?? DEFAULT_GENESETS_RESPONSE,
+    });
+  });
 };
 
 const requestDifferentialExpression =

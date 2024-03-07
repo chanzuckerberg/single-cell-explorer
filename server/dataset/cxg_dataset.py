@@ -43,6 +43,7 @@ class CxgDataset(Dataset):
         self.lsuri_results = ImmutableKVCache(lambda key: self._lsuri(uri=key, tiledb_ctx=self.tiledb_ctx))
         self.arrays = ImmutableKVCache(lambda key: self._open_array(uri=key, tiledb_ctx=self.tiledb_ctx))
         self.schema = None
+        self.genesets = None
         self.X_approximate_distribution = None
 
         self._validate_and_initialize()
@@ -454,6 +455,18 @@ class CxgDataset(Dataset):
             with self.lock:
                 self.schema = self._get_schema()
         return self.schema
+
+    def _get_genesets(self):
+        if self.genesets:
+            return self.genesets
+        A = self.open_array("obs")
+        return json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+
+    def get_genesets(self):
+        if self.genesets is None:
+            with self.lock:
+                self.genesets = self._get_genesets()
+        return self.genesets
 
     def annotation_to_fbs_matrix(self, axis, fields=None, num_bins=None):
         with ServerTiming.time(f"annotations.{axis}.query"):

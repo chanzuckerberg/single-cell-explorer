@@ -851,3 +851,17 @@ for (const option of options) {
     });
   });
 }
+
+// TODO(atarashansky): write this test suite
+// https://github.com/chanzuckerberg/single-cell-explorer/issues/811
+// async function goToCellGuideCxg(page: Page) {
+//   await goToPage(page, "http://localhost:3000/d/cellguide-cxgs/example.cxg/");
+// }
+
+// describe(`CellGuide CXG tests`, () => {
+//   test.only("author and standard category headers are not present", async ({
+//     page,
+//   }) => {
+//     await goToPage(page);
+//   });
+// });
