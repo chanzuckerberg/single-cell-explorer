@@ -110,9 +110,40 @@ def schema_get_helper(data_adaptor):
     return schema
 
 
+def genesets_get_helper(data_adaptor):
+    """helper function to get genesets present in the obs metadata"""
+    genesets = data_adaptor.get_genesets()
+    genesets = copy.deepcopy(genesets)
+    return genesets
+
+
 def schema_get(data_adaptor):
     schema = schema_get_helper(data_adaptor)
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
+
+
+def genesets_get(data_adaptor):
+    """
+    The genesets endpoint returns the genesets present in the obs metadata.
+
+    The genesets dictionary must be in the following format:
+        {
+            <string, a gene set name>: {
+                "geneset_name": <string, a gene set name>,
+                "geneset_description": <a string or None>,
+                "genes": [
+                    {
+                        "gene_symbol": <string, a gene symbol or name>,
+                        "gene_description": <a string or None>
+                    },
+                    ...
+                ]
+            },
+            ...
+        }
+    """
+    genesets = genesets_get_helper(data_adaptor)
+    return make_response(jsonify({"genesets": list(genesets.values())}), HTTPStatus.OK)
 
 
 def dataset_metadata_get(app_config, url_dataroot, dataset_id):
