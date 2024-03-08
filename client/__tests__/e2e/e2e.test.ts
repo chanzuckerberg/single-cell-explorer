@@ -52,12 +52,7 @@ import {
 import { datasets } from "./data";
 
 import { scaleMax } from "../../src/util/camera";
-import {
-  DATASET,
-  DATASET_TRUNCATE,
-  pageURLTruncate,
-  testURL,
-} from "../common/constants";
+import { DATASET, pageURLTruncate, testURL } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
 const { describe } = test;
