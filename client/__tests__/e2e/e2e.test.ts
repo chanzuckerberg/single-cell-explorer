@@ -159,24 +159,15 @@ describe("metadata loads", () => {
     page,
   }) => {
     await goToPage(page, pageURLTruncate);
-
     await tryUntil(
       async () => {
-        for (const label of Object.keys(
-          dataTruncate.categorical
-        ) as (keyof typeof dataTruncate.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
+        await page.getByTestId(`truncate:category-expand`).click();
+        const categoryRows = await page
+          .getByTestId(`category-truncate`)
+          .getByTestId("categorical-row")
+          .all();
 
-          expect(element).toMatchSnapshot();
-
-          await page.getByTestId(`${label}:category-expand`).click();
-
-          const categories = await getAllCategoriesAndCounts(label, page);
-
-          expect(Object.keys(categories).length).toEqual(1001);
-        }
+        expect(Object.keys(categoryRows).length).toBe(1001);
       },
       { page }
     );

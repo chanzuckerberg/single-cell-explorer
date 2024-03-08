@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Page, TestInfo, expect } from "@playwright/test";
 import { Classes } from "@blueprintjs/core";
-import { takeSnapshot } from "@chromatic-com/playwright";
+import { takeSnapshot, test } from "@chromatic-com/playwright";
 import { clearInputAndTypeInto, tryUntil, typeInto } from "./puppeteerUtils";
 
 interface Coordinate {
@@ -115,28 +115,30 @@ export async function clickOnCoordinate(
 export async function getAllCategoriesAndCounts(
   category: string,
   page: Page
-): Promise<{ [cat: string]: string }[]> {
+): Promise<{ [cat: string]: string }> {
   // these load asynchronously, so we have to wait for the specific category.
   const categoryRows = await page
     .getByTestId(`category-${category}`)
     .getByTestId("categorical-row")
     .all();
 
-  return Object.fromEntries(
-    await Promise.all(
-      categoryRows.map(async (row) => {
-        const cat = await row
-          .getByTestId("categorical-value")
-          .getAttribute("aria-label");
+  const arrayOfLabelsAndCounts = await Promise.all(
+    categoryRows.map(async (row): Promise<[string, string]> => {
+      const cat = await row
+        .getByTestId("categorical-value")
+        .getAttribute("aria-label");
 
-        const count = await row
-          .getByTestId("categorical-value-count")
-          .innerText();
+      if (!cat) throw new Error("category value not found");
 
-        return [cat, count];
-      })
-    )
+      const count: string = await row
+        .getByTestId("categorical-value-count")
+        .innerText();
+
+      return [cat, count];
+    })
   );
+
+  return Object.fromEntries(arrayOfLabelsAndCounts);
 }
 
 export async function getCellSetCount(
