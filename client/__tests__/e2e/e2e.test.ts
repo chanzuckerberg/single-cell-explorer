@@ -491,7 +491,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
     page,
     true
   );
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -525,7 +525,7 @@ test("lasso moves after pan", async ({ page }) => {
     true
   );
 
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
