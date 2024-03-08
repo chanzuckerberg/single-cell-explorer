@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Page, TestInfo, expect } from "@playwright/test";
 import { Classes } from "@blueprintjs/core";
-import { takeSnapshot, test } from "@chromatic-com/playwright";
+import { takeSnapshot } from "@chromatic-com/playwright";
 import { clearInputAndTypeInto, tryUntil, typeInto } from "./puppeteerUtils";
 
 interface Coordinate {
