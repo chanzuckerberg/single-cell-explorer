@@ -293,7 +293,6 @@ class MenuBar extends React.PureComponent<{}, State> {
 
     const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
 
-    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
     const isTest = getFeatureFlag(FEATURES.TEST);
     const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
     const isSpatial = getFeatureFlag(FEATURES.SPATIAL);

@@ -396,9 +396,9 @@ const Controls = (
 
       return {
         ...state,
-        scatterplotXXaccessor: null,
-        scatterplotYYaccessor: null,
-        scatterplotIsMinimized: null,
+        scatterplotXXaccessor: false,
+        scatterplotYYaccessor: false,
+        scatterplotIsMinimized: false,
         scatterplotLevel: state.scatterplotLevel,
       };
     }
