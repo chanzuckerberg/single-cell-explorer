@@ -285,7 +285,7 @@ const Controls = (
       return {
         ...state,
         geneIsOpen: false,
-        geneIsMinimized: null,
+        geneIsMinimized: false,
         geneLevel: stackLevels.geneLevel,
         scatterplotLevel: stackLevels.scatterplotLevel,
         infoError: action.infoError,
