@@ -46,17 +46,13 @@ import {
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
   assertUndoRedo,
+  snapshotTestGraph,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
 
 import { scaleMax } from "../../src/util/camera";
-import {
-  DATASET,
-  DATASET_TRUNCATE,
-  pageURLTruncate,
-  testURL,
-} from "../common/constants";
+import { DATASET, pageURLTruncate, testURL } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
 const { describe } = test;
@@ -91,7 +87,6 @@ const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
 const data = datasets[DATASET];
-const dataTruncate = datasets[DATASET_TRUNCATE];
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -158,30 +153,15 @@ describe("metadata loads", () => {
     page,
   }) => {
     await goToPage(page, pageURLTruncate);
-
     await tryUntil(
       async () => {
-        for (const label of Object.keys(
-          dataTruncate.categorical
-        ) as (keyof typeof dataTruncate.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
+        await page.getByTestId(`truncate:category-expand`).click();
+        const categoryRows = await page
+          .getByTestId(`category-truncate`)
+          .getByTestId("categorical-row")
+          .all();
 
-          expect(element).toMatchSnapshot();
-
-          await page.getByTestId(`${label}:category-expand`).click();
-
-          const categories = await getAllCategoriesAndCounts(label, page);
-
-          expect(Object.keys(categories)).toMatchObject(
-            Object.keys(dataTruncate.categorical[label])
-          );
-
-          expect(Object.values(categories)).toMatchObject(
-            Object.values(dataTruncate.categorical[label])
-          );
-        }
+        expect(Object.keys(categoryRows).length).toBe(1001);
       },
       { page }
     );
@@ -359,7 +339,7 @@ describe("clipping", () => {
 
 // interact with UI elements just that they do not break
 describe("ui elements don't error", () => {
-  test("color by", async ({ page }) => {
+  test("color by", async ({ page }, testInfo) => {
     await goToPage(page);
     const allLabels = [
       ...Object.keys(data.categorical),
@@ -369,9 +349,10 @@ describe("ui elements don't error", () => {
     for (const label of allLabels) {
       await page.getByTestId(`colorby-${label}`).click();
     }
+    await snapshotTestGraph(page, testInfo);
   });
 
-  test("pan and zoom", async ({ page }) => {
+  test("pan and zoom", async ({ page }, testInfo) => {
     await goToPage(page);
     await page.getByTestId("mode-pan-zoom").click();
     const panCoords = await calcDragCoordinates(
@@ -383,6 +364,7 @@ describe("ui elements don't error", () => {
     await drag("layout-graph", panCoords.start, panCoords.end, page);
 
     await page.evaluate("window.scrollBy(0, 1000);");
+    await snapshotTestGraph(page, testInfo);
   });
 });
 
@@ -613,13 +595,14 @@ for (const option of options) {
         expect(cellCount).toBe("131");
       }
     });
-    test("color by mean expression", async ({ page }) => {
+    test("color by mean expression", async ({ page }, testInfo) => {
       await setup(option, page);
       await createGeneset(meanExpressionBrushGenesetName, page);
       await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1", page);
 
       await colorByGeneset(meanExpressionBrushGenesetName, page);
       await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
+      await snapshotTestGraph(page, testInfo);
     });
     test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
