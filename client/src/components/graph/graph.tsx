@@ -996,6 +996,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
         backgroundColor: "white",
         height,
         width,
+        // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
+        skipFonts: true,
       });
       this.setState({ testImageSrc: imageURI });
       try {

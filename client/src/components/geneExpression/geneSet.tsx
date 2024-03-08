@@ -128,6 +128,7 @@ class GeneSet extends React.Component<{}, State> {
                   maxWidth: globals.leftSidebarWidth - genesetNameLengthVisible,
                 }}
                 data-testid={`${setName}:geneset-name`}
+                data-chromatic="ignore"
               >
                 {displayName}
               </span>
