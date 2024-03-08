@@ -803,7 +803,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         accounting for current pan/zoom camera.
         */
     const { camera, projectionTF, modelInvTF, viewport } = this.state;
-    const cameraInvTF = camera!.invView();
+    const cameraInvTF = camera ? camera.invView() : null;
     /* screen -> gl */
     const x = (2 * pin[0]) / viewport.width - 1;
     const y = 2 * (1 - pin[1] / viewport.height) - 1;

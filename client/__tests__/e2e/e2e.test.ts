@@ -688,7 +688,7 @@ for (const option of options) {
 
           await setup(option, page);
 
-          await waitUntilNoSkeletonDetected(page);
+          waitUntilNoSkeletonDetected(page);
 
           const genesetName = `test-geneset-foo-123`;
           await assertGenesetDoesNotExist(genesetName, page);
