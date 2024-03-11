@@ -11,13 +11,9 @@ server:
     server_timing_headers: true
     csp_directives:
       img-src:
-        - https://www.google-analytics.com
       script-src:
-        - https://www.google-analytics.com
-        - https://ssl.google-analytics.com
         - browser.sentry-cdn.com
       connect-src:
-        - https://www.google-analytics.com
         - sentry.prod.si.czi.technology
 
     # if env == "prod":
