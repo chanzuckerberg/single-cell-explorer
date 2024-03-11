@@ -10,7 +10,6 @@ server:
     generate_cache_control_headers: true
     server_timing_headers: true
     csp_directives:
-      img-src:
       script-src:
         - browser.sentry-cdn.com
       connect-src:
