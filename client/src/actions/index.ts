@@ -138,16 +138,14 @@ async function datasetMetadataFetchAndLoad(
 /**
  * Fetches and loads dataset spatial metadata.
  * @param dispatch - Function facilitating update of store.
- * @param oldPrefix - API prefix with dataset path that dataset metadata lives on. (Not S3 URI)
  */
 async function datasetSpatialMetadataFetchAndLoad(
-  dispatch: AppDispatch,
-  oldPrefix: string
+  dispatch: AppDispatch
 ): Promise<void> {
   try {
     const datasetSpatialMetadataResponse = await fetchJson<{
       metadata: DatasetSpatialMetadata;
-    }>("spatial/meta", oldPrefix);
+    }>("spatial/meta");
     dispatch({
       type: "request spatial metadata success",
       data: datasetSpatialMetadataResponse,
