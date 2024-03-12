@@ -225,7 +225,7 @@ const doInitialDataLoad = (): ((
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
       // TODO: add logic to ensure this is working for spatial datasets when flag removed
       if (isSpatial) {
-        datasetSpatialMetadataFetchAndLoad(dispatch, oldPrefix);
+        datasetSpatialMetadataFetchAndLoad(dispatch);
       }
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
