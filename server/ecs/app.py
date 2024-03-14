@@ -49,7 +49,9 @@ class WSGIServer(Server):
             "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL] + extra_connect_src,
             "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
-            "img-src": ["'self'", "https://cellxgene.cziscience.com", "data:", HUBSPOT_FORMS_URL],
+            "img-src": ["'self'", "https://cellxgene.cziscience.com"]
+            + extra_connect_src
+            + ["data:", HUBSPOT_FORMS_URL],
             "object-src": ["'none'"],
             "base-uri": ["'none'"],
             "frame-ancestors": ["'none'"],

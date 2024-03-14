@@ -1,5 +1,4 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
-import { COMMON_PLAYWRIGHT_CONTEXT } from "./__tests__/common/playwrightContext";
 import { testURL } from "./__tests__/common/constants";
 
 /**
@@ -18,6 +17,12 @@ if (!SHOULD_RETRY) {
   console.log('Skipping retry because "RETRY" is set to false');
 }
 
+const isHeadful =
+  process.env.HEADFUL === "true" || process.env.HEADLESS === "false";
+
+if (isHeadful) {
+  console.log("Running tests in headful mode");
+}
 /**
  * (thuang): Playwright takes retries as part of the maxFailures count, so we
  * need to set maxFailures to a high number to allow retries.
@@ -64,12 +69,36 @@ export default defineConfig({
   reporter: PLAYWRIGHT_REPORTER,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    ...COMMON_PLAYWRIGHT_CONTEXT,
+    acceptDownloads: true,
+    /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
+    actionTimeout: 0,
+    headless: !isHeadful,
+    ignoreHTTPSErrors: true,
+    screenshot: "only-on-failure",
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: "retain-on-failure",
+    video: {
+      mode: "retain-on-failure",
+      size: {
+        height: 960,
+        width: 1280,
+      },
+    },
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          localStorage: [{ name: "cxg-ff-test", value: "yes" }],
+          origin: testURL,
+        },
+      ],
+    },
+    viewport: {
+      height: 960,
+      width: 1280,
+    },
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: testURL,
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
   },
   maxFailures: process.env.CI ? CICD_MAX_FAILURE : undefined,
 

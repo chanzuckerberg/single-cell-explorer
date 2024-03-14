@@ -36,13 +36,13 @@ const mw = devMiddleware(compiler, {
 });
 
 // Configure visitUrlMessage
-const localUrl = "http://" + fs.readFileSync("../.test_base_url.txt");
-const fingerPointingRightEmoji = String.fromCodePoint(0x1F449);
-const starEmoji = String.fromCodePoint(0x2B50);
-const clipboardEmoji = String.fromCodePoint(0x1F4CB);
+const localUrl = `http://${fs.readFileSync("../.test_base_url.txt")}`;
+const fingerPointingRightEmoji = String.fromCodePoint(0x1f449);
+const starEmoji = String.fromCodePoint(0x2b50);
+const clipboardEmoji = String.fromCodePoint(0x1f4cb);
 // pbcopy only works on MacOS ("darwin")
-const isCopiedMessage = 
-  process.platform == "darwin"
+const isCopiedMessage =
+  process.platform === "darwin"
     ? `  ${starEmoji} copied to clipboard! ${clipboardEmoji}`
     : "";
 const visitUrlMessage = `\n\n${fingerPointingRightEmoji} Visit ${localUrl}${isCopiedMessage}\n`;
@@ -55,8 +55,10 @@ mw.waitUntilValid(() => {
 app.use(mw);
 
 // Serve the built index file from url that allows extraction of the base_url and dataset for api calls
-app.get("/:baseUrl/:dataset", (_, res) => {
-  res.sendFile(path.join(path.dirname(__dirname), "build/index.html")); // same location as prod index
+app.get("/:baseUrl/:dataset/", (_, res) => {
+  res
+    .set("Cache-Control", "no-store") // prevents ERR_CONTENT_LENGTH_MISMATCH
+    .sendFile(path.join(path.dirname(__dirname), "build/index.html")); // same location as prod index
 });
 
 // Same as above but for datasets located in cellguide-cxgs/ subdirectory
@@ -68,21 +70,13 @@ app.use(express.static("/build"));
 
 app.use(favicon("./favicon.png"));
 
-app.get("/login", async (req, res) => {
-  try {
-    res.redirect(`${API.prefix}login?dataset=http://localhost:${CLIENT_PORT}`);
-  } catch (err) {
-    console.error(err);
-  }
-});
+function mockJS(_, res) {
+  res.set("Content-Type", "application/javascript");
+  res.send("");
+}
 
-app.get("/logout", async (req, res) => {
-  try {
-    res.redirect(`${API.prefix}logout?dataset=http://localhost:${CLIENT_PORT}`);
-  } catch (err) {
-    console.error(err);
-  }
-});
+app.get("/:baseUrl/static/obsoleteBrowsers.js", mockJS);
+app.get("/:baseUrl/:dataset/static/obsoleteBrowsers.js", mockJS);
 
 app.listen(CLIENT_PORT, (err) => {
   if (err) {

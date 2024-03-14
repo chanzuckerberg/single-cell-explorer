@@ -23,7 +23,8 @@
     "src/**/*",
     "configuration/**/*",
     "__tests__/**/*",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "server/**/*"
   ],
   "exclude": ["node_modules", "__tests__/e2e/__snapshots__/**/*"]
 }
