@@ -92,7 +92,8 @@ export default (props: any) => {
   // we need an ID to check for this content, since this is the only place the geneset description appears
   const descriptionContent = (
     <span
-      test-id={`geneset-description-tooltip-${originalString}${tooltipAddendum}`}
+      data-testid={`geneset-description-tooltip-${originalString}${tooltipAddendum}`}
+      data-chromatic="ignore"
     >
       {originalString}
       {tooltipAddendum}

@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
-import { Page, expect } from "@playwright/test";
+import { Page, TestInfo, expect } from "@playwright/test";
 import { Classes } from "@blueprintjs/core";
+import { takeSnapshot } from "@chromatic-com/playwright";
 import { clearInputAndTypeInto, tryUntil, typeInto } from "./puppeteerUtils";
 
 interface Coordinate {
@@ -90,7 +91,7 @@ export async function waitUntilNoSkeletonDetected(page: Page): Promise<void> {
        * (thuang): The diff exp test needs more retry, since the API call takes
        * some time to complete.
        */
-      maxRetry: 300
+      maxRetry: 300,
     }
   );
 }
@@ -114,28 +115,30 @@ export async function clickOnCoordinate(
 export async function getAllCategoriesAndCounts(
   category: string,
   page: Page
-): Promise<{ [cat: string]: string }[]> {
+): Promise<{ [cat: string]: string }> {
   // these load asynchronously, so we have to wait for the specific category.
   const categoryRows = await page
     .getByTestId(`category-${category}`)
     .getByTestId("categorical-row")
     .all();
 
-  return Object.fromEntries(
-    await Promise.all(
-      categoryRows.map(async (row) => {
-        const cat = await row
-          .getByTestId("categorical-value")
-          .getAttribute("aria-label");
+  const arrayOfLabelsAndCounts = await Promise.all(
+    categoryRows.map(async (row): Promise<[string, string]> => {
+      const cat = await row
+        .getByTestId("categorical-value")
+        .getAttribute("aria-label");
 
-        const count = await row
-          .getByTestId("categorical-value-count")
-          .innerText();
+      if (!cat) throw new Error("category value not found");
 
-        return [cat, count];
-      })
-    )
+      const count: string = await row
+        .getByTestId("categorical-value-count")
+        .innerText();
+
+      return [cat, count];
+    })
   );
+
+  return Object.fromEntries(arrayOfLabelsAndCounts);
 }
 
 export async function getCellSetCount(
@@ -421,7 +424,7 @@ export async function assertGenesetExists(
       /**
        * (thuang): Don't wait for the default timeout, since we want to fail fast
        */
-      timeout: 1 * 1000
+      timeout: 1 * 1000,
     });
 
   expect(result).toBe(genesetName);
@@ -643,18 +646,32 @@ export async function assertUndoRedo(
   assertOne: () => Promise<void>,
   assertTwo: () => Promise<void>
 ): Promise<void> {
-  await tryUntil(async () => {
-    await keyboardUndo(page);
-    await assertOne();
-  }, { page });
+  await tryUntil(
+    async () => {
+      await keyboardUndo(page);
+      await assertOne();
+    },
+    { page }
+  );
 
   // if we redo too quickly after undo, the shortcut handler capture the action
   await page.waitForTimeout(1000);
 
-  await tryUntil(async () => {
-    await keyboardRedo(page);
-    await assertTwo();
-  }, { page });
+  await tryUntil(
+    async () => {
+      await keyboardRedo(page);
+      await assertTwo();
+    },
+    { page }
+  );
+}
+
+export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
+  const buttonID = "capture-and-display-graph";
+  const imageID = "graph-image";
+  await page.getByTestId(buttonID).click();
+  page.getByTestId(imageID).waitFor();
+  await takeSnapshot(page, testInfo);
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

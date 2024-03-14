@@ -16,7 +16,12 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
+import type {
+  DatasetMetadata,
+  Dataset,
+  S3URI,
+  DatasetSpatialMetadata,
+} from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -29,7 +34,12 @@ import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
+import {
+  checkFeatureFlags,
+  getFeatureFlag,
+} from "../util/featureFlags/featureFlags";
+import { FEATURES } from "../util/featureFlags/features";
+import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -89,30 +99,60 @@ async function datasetMetadataFetchAndLoad(
   oldPrefix: string,
   config: Config
 ): Promise<void> {
+  let datasetMetadataResponse;
   try {
-    const datasetMetadataResponse = await fetchJson<{
+    datasetMetadataResponse = await fetchJson<{
       metadata: DatasetMetadata;
     }>("dataset-metadata", oldPrefix);
+  } catch (error) {
+    // mock the endpoint for local development
+    if (globals.API?.prefix.includes("http://localhost:5005")) {
+      datasetMetadataResponse = DATASET_METADATA_RESPONSE;
+    } else {
+      dispatch({
+        type: "dataset metadata load error",
+        error,
+      });
+      return;
+    }
+  }
 
-    // Create new dataset array with large datasets removed
-    const { metadata: datasetMetadata } = datasetMetadataResponse;
-    const datasets = removeLargeDatasets(
-      datasetMetadata.collection_datasets,
-      globals.DATASET_MAX_CELL_COUNT
-    );
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
+  );
 
-    const { links } = config;
+  const { links } = config;
+  dispatch({
+    type: "dataset metadata load complete",
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
+    portalUrl: links["collections-home-page"],
+  });
+}
+
+/**
+ * Fetches and loads dataset spatial metadata.
+ * @param dispatch - Function facilitating update of store.
+ */
+async function datasetSpatialMetadataFetchAndLoad(
+  dispatch: AppDispatch
+): Promise<void> {
+  try {
+    const datasetSpatialMetadataResponse = await fetchJson<{
+      metadata: DatasetSpatialMetadata;
+    }>("spatial/meta");
     dispatch({
-      type: "dataset metadata load complete",
-      datasetMetadata: {
-        ...datasetMetadata,
-        collection_datasets: datasets,
-      },
-      portalUrl: links["collections-home-page"],
+      type: "request spatial metadata success",
+      data: datasetSpatialMetadataResponse,
     });
   } catch (error) {
     dispatch({
-      type: "dataset metadata load error",
+      type: "request spatial metadata error",
       error,
     });
   }
@@ -170,6 +210,7 @@ const doInitialDataLoad = (): ((
 
     // check URL for feature flags
     checkFeatureFlags();
+    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     try {
       const s3URI = await s3URIFetch();
@@ -182,7 +223,10 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-
+      // TODO: add logic to ensure this is working for spatial datasets when flag removed
+      if (isSpatial) {
+        datasetSpatialMetadataFetchAndLoad(dispatch);
+      }
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
