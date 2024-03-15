@@ -437,5 +437,5 @@ class Dataset(metaclass=ABCMeta):
             for key in uns.meta:
                 metadata_dict[key] = uns.meta[key]
             return metadata_dict
-        except KeyError as _:
+        except KeyError:
             return None
