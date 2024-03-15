@@ -433,9 +433,9 @@ class Dataset(metaclass=ABCMeta):
     def get_spatial(self):
         try:
             uns = self.open_array("uns")
-        except KeyError as e:
-            return e
-        metadata_dict = {}
-        for key in uns.meta:
-            metadata_dict[key] = uns.meta[key]
-        return metadata_dict
+            metadata_dict = {}
+            for key in uns.meta:
+                metadata_dict[key] = uns.meta[key]
+            return metadata_dict
+        except KeyError as _:
+            return None
