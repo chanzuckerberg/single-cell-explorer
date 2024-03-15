@@ -54,6 +54,10 @@ jobs:
           env: ${{ env.DEPLOYMENT_STAGE }}
           env-file: /home/runner/work/custom/envfile
           happy_version: "0.79.1"
+      - name: Wait for ECS deployment
+        run: |
+          CLUSTER_NAME=if [ "${{ env.DEPLOYMENT_STAGE }}" == "stage" ]; then echo "happy-explorer-staging"; else echo "happy-explorer-$DEPLOYMENT_STAGE"; fi
+          aws ecs wait services-stable --cluster $CLUSTER_NAME --services explorer-${{ env.DEPLOYMENT_STAGE }}stack
   smoke-test:
     timeout-minutes: 25
     runs-on: ubuntu-22.04
