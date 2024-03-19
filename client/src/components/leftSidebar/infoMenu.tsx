@@ -26,7 +26,7 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
       content={
         <Menu>
           <MenuItem
-            href="https://join-cellxgene-users.herokuapp.com/"
+            href="https://czi.co/science-slack"
             icon={<Icon icon={CXGIconNames.SLACK} />}
             target="_blank"
             text="Chat"
