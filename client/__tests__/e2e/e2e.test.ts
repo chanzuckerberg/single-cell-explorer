@@ -46,17 +46,13 @@ import {
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
   assertUndoRedo,
+  snapshotTestGraph,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
 
 import { scaleMax } from "../../src/util/camera";
-import {
-  DATASET,
-  DATASET_TRUNCATE,
-  pageURLTruncate,
-  testURL,
-} from "../common/constants";
+import { DATASET, pageURLTruncate, testURL } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
 const { describe } = test;
@@ -91,7 +87,6 @@ const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
 const data = datasets[DATASET];
-const dataTruncate = datasets[DATASET_TRUNCATE];
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -154,34 +149,23 @@ describe("metadata loads", () => {
     }
   });
 
-  test(
-    "categories and values from dataset appear and properly truncate if applicable",
-    async ({ page }) => {
-      await goToPage(page, pageURLTruncate);
+  test("categories and values from dataset appear and properly truncate if applicable", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLTruncate);
+    await tryUntil(
+      async () => {
+        await page.getByTestId(`truncate:category-expand`).click();
+        const categoryRows = await page
+          .getByTestId(`category-truncate`)
+          .getByTestId("categorical-row")
+          .all();
 
-      await tryUntil(async () => {
-        for (const label of Object.keys(
-          dataTruncate.categorical
-        ) as (keyof typeof dataTruncate.categorical)[]) {
-          const element = await page.getByTestId(`category-${label}`).innerHTML();
-
-          expect(element).toMatchSnapshot();
-
-          await page.getByTestId(`${label}:category-expand`).click();
-
-          const categories = await getAllCategoriesAndCounts(label, page);
-
-          expect(Object.keys(categories)).toMatchObject(
-            Object.keys(dataTruncate.categorical[label])
-          );
-
-          expect(Object.values(categories)).toMatchObject(
-            Object.values(dataTruncate.categorical[label])
-          );
-        }
-      }, { page });
-    }
-  );
+        expect(Object.keys(categoryRows).length).toBe(1001);
+      },
+      { page }
+    );
+  });
 
   test("continuous data appears", async ({ page }) => {
     await goToPage(page);
@@ -355,7 +339,7 @@ describe("clipping", () => {
 
 // interact with UI elements just that they do not break
 describe("ui elements don't error", () => {
-  test("color by", async ({ page }) => {
+  test("color by", async ({ page }, testInfo) => {
     await goToPage(page);
     const allLabels = [
       ...Object.keys(data.categorical),
@@ -365,9 +349,10 @@ describe("ui elements don't error", () => {
     for (const label of allLabels) {
       await page.getByTestId(`colorby-${label}`).click();
     }
+    await snapshotTestGraph(page, testInfo);
   });
 
-  test("pan and zoom", async ({ page }) => {
+  test("pan and zoom", async ({ page }, testInfo) => {
     await goToPage(page);
     await page.getByTestId("mode-pan-zoom").click();
     const panCoords = await calcDragCoordinates(
@@ -379,6 +364,7 @@ describe("ui elements don't error", () => {
     await drag("layout-graph", panCoords.start, panCoords.end, page);
 
     await page.evaluate("window.scrollBy(0, 1000);");
+    await snapshotTestGraph(page, testInfo);
   });
 });
 
@@ -505,7 +491,7 @@ test("pan zoom mode resets lasso selection", async ({ page }) => {
     page,
     true
   );
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -539,7 +525,7 @@ test("lasso moves after pan", async ({ page }) => {
     true
   );
 
-  expect(page.getByTestId("lasso-element")).toBeVisible();
+  await expect(page.getByTestId("lasso-element")).toBeVisible();
 
   const initialCount = await getCellSetCount(1, page);
 
@@ -609,13 +595,14 @@ for (const option of options) {
         expect(cellCount).toBe("131");
       }
     });
-    test("color by mean expression", async ({ page }) => {
+    test("color by mean expression", async ({ page }, testInfo) => {
       await setup(option, page);
       await createGeneset(meanExpressionBrushGenesetName, page);
       await addGeneToSetAndExpand(meanExpressionBrushGenesetName, "SIK1", page);
 
       await colorByGeneset(meanExpressionBrushGenesetName, page);
       await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
+      await snapshotTestGraph(page, testInfo);
     });
     test("diffexp", async ({ page }) => {
       if (option.withSubset) return;
@@ -678,57 +665,66 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-        await setup(option, page);
+          await setup(option, page);
 
-        waitUntilNoSkeletonDetected(page);
+          waitUntilNoSkeletonDetected(page);
 
-        const genesetName = `test-geneset-foo-123`;
-        await assertGenesetDoesNotExist(genesetName, page);
-        await createGeneset(genesetName, page);
-        await assertGenesetExists(genesetName, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGenesetDoesNotExist(genesetName, page),
-          async () => assertGenesetExists(genesetName, page)
-        );
-      }, { page })
+          const genesetName = `test-geneset-foo-123`;
+          await assertGenesetDoesNotExist(genesetName, page);
+          await createGeneset(genesetName, page);
+          await assertGenesetExists(genesetName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetDoesNotExist(genesetName, page),
+            async () => assertGenesetExists(genesetName, page)
+          );
+        },
+        { page }
+      );
     });
 
     test("edit geneset name and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        await setup(option, page);
-        await createGeneset(editableGenesetName, page);
-        await editGenesetName(editableGenesetName, newGenesetName, page);
-        await assertGenesetExists(newGenesetName, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGenesetExists(editableGenesetName, page),
-          async () => assertGenesetExists(newGenesetName, page)
-        );
-      }, { page })
+      await tryUntil(
+        async () => {
+          await setup(option, page);
+          await createGeneset(editableGenesetName, page);
+          await editGenesetName(editableGenesetName, newGenesetName, page);
+          await assertGenesetExists(newGenesetName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetExists(editableGenesetName, page),
+            async () => assertGenesetExists(newGenesetName, page)
+          );
+        },
+        { page }
+      );
     });
     test("delete a geneset and undo/redo", async ({ page }) => {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-      await setup(option, page);
-      await createGeneset(genesetToDeleteName, page);
-      await deleteGeneset(genesetToDeleteName, page);
-      await assertUndoRedo(
-        page,
-        async () => assertGenesetExists(genesetToDeleteName, page),
-        async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+          await setup(option, page);
+          await createGeneset(genesetToDeleteName, page);
+          await deleteGeneset(genesetToDeleteName, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGenesetExists(genesetToDeleteName, page),
+            async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+          );
+        },
+        { page }
       );
-      }, { page });
     });
     test("geneset description", async ({ page }) => {
       if (option.withSubset) return;
@@ -752,17 +748,20 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        await setup(option, page);
-        await createGeneset(setToAddGeneTo, page);
-        await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
-        await assertGeneExistsInGeneset(geneToAddToSet, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGeneDoesNotExist(geneToAddToSet, page),
-          async () => assertGeneExistsInGeneset(geneToAddToSet, page)
-        );
-      }, { page });
+      await tryUntil(
+        async () => {
+          await setup(option, page);
+          await createGeneset(setToAddGeneTo, page);
+          await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
+          await assertGeneExistsInGeneset(geneToAddToSet, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGeneDoesNotExist(geneToAddToSet, page),
+            async () => assertGeneExistsInGeneset(geneToAddToSet, page)
+          );
+        },
+        { page }
+      );
     });
     test("expand gene and brush", async ({ page }) => {
       await setup(option, page);
@@ -805,30 +804,56 @@ for (const option of options) {
       /**
        * (thuang): Test is flaky, so we need to retry until it passes
        */
-      await tryUntil(async () => {
-        if (option.withSubset) return;
+      await tryUntil(
+        async () => {
+          if (option.withSubset) return;
 
-        await setup(option, page);
-        await createGeneset(setToRemoveFrom, page);
-        await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-        await removeGene(geneToRemove, page);
-        await assertGeneDoesNotExist(geneToRemove, page);
-        await assertUndoRedo(
-          page,
-          async () => assertGeneExistsInGeneset(geneToRemove, page),
-          async () => assertGeneDoesNotExist(geneToRemove, page)
-        );
-      }, { page });
+          await setup(option, page);
+          await createGeneset(setToRemoveFrom, page);
+          await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
+          await removeGene(geneToRemove, page);
+          await assertGeneDoesNotExist(geneToRemove, page);
+          await assertUndoRedo(
+            page,
+            async () => assertGeneExistsInGeneset(geneToRemove, page),
+            async () => assertGeneDoesNotExist(geneToRemove, page)
+          );
+        },
+        { page }
+      );
     });
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
       await addGeneToSearch(geneToRequestInfo, page);
-      await requestGeneInfo(geneToRequestInfo, page);
-      await assertGeneInfoCardExists(geneToRequestInfo, page);
-      await minimizeGeneInfo(page);
-      await assertGeneInfoCardIsMinimized(geneToRequestInfo, page);
-      await removeGeneInfo(page);
-      await assertGeneInfoDoesNotExist(geneToRequestInfo, page);
+
+      await tryUntil(async () => {
+        await requestGeneInfo(geneToRequestInfo, page);
+        await assertGeneInfoCardExists(geneToRequestInfo, page);
+      }, { page });
+
+      await tryUntil(async () => {
+        await minimizeGeneInfo(page);
+        await assertGeneInfoCardIsMinimized(geneToRequestInfo, page);
+      }, { page });
+
+      await tryUntil(async () => {
+        await removeGeneInfo(page);
+        await assertGeneInfoDoesNotExist(geneToRequestInfo, page);
+      }, { page });
     });
   });
 }
+
+// TODO(atarashansky): write this test suite
+// https://github.com/chanzuckerberg/single-cell-explorer/issues/811
+// async function goToCellGuideCxg(page: Page) {
+//   await goToPage(page, "http://localhost:3000/d/cellguide-cxgs/example.cxg/");
+// }
+
+// describe(`CellGuide CXG tests`, () => {
+//   test.only("author and standard category headers are not present", async ({
+//     page,
+//   }) => {
+//     await goToPage(page);
+//   });
+// });

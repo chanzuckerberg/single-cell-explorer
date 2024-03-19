@@ -40,13 +40,20 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
+      crossorigin="anonymous"
     />
   </head>
   <body>
     <script type="text/javascript">
       window.CELLXGENE = {};
       window.CELLXGENE.API = {
-        prefix: `http://localhost:<%= CXG_SERVER_PORT %>${location.pathname}/api/`,
+        // When there's a trailing slash on location.pathname, local e2e tests fail because
+        // they attempt to access http://localhost:3000//pbmc3k.cxg/api/ instead of
+        // http://localhost:3000/pbmc3k.cxg/api/. This is a workaround for that issue.
+        prefix: `http://localhost:<%= CXG_SERVER_PORT %>${location.pathname.replace(
+          /\/$/,
+          ""
+        )}/api/`,
         version: "v0.3/",
       };
     </script>

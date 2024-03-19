@@ -21,13 +21,11 @@ import { EVENTS } from "../../analytics/events";
 type EmbeddingState = any;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: (state as any).layoutChoice,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: (state as any).annoMatrix?.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  crossfilter: (state as any).obsCrossfilter,
+@connect((state: RootState) => ({
+  layoutChoice: state.layoutChoice,
+  schema: state.annoMatrix?.schema,
+  crossfilter: state.obsCrossfilter,
+  imageUnderlay: state.imageUnderlay,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Embedding extends React.PureComponent<{}, EmbeddingState> {
@@ -41,14 +39,21 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleLayoutChoiceChange = (e: any) => {
+  handleLayoutChoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
+    const { dispatch, imageUnderlay } = this.props;
 
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
 
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
+    if (
+      imageUnderlay.isActive &&
+      e.target.value !== globals.spatialEmbeddingKeyword
+    ) {
+      dispatch({
+        type: "toggle image underlay",
+      });
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

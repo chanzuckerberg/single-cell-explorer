@@ -83,7 +83,7 @@ class GeneSet extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setName' does not exist on type 'Readonl... Remove this comment to see the full error message
-    const { setName, genesetDescription, setGenes } = this.props;
+    const { setName, genesetDescription, setGenes, displayName } = this.props;
     const { isOpen } = this.state;
     const genesetNameLengthVisible = 150; /* this magic number determines how much of a long geneset name we see */
     const genesetIsEmpty = setGenes.size === 0;
@@ -128,8 +128,9 @@ class GeneSet extends React.Component<{}, State> {
                   maxWidth: globals.leftSidebarWidth - genesetNameLengthVisible,
                 }}
                 data-testid={`${setName}:geneset-name`}
+                data-chromatic="ignore"
               >
-                {setName}
+                {displayName}
               </span>
             </Truncate>
             {isOpen ? (
