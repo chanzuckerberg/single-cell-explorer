@@ -188,6 +188,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   spatialImage: TextureImageData | null = null;
 
+  /**
+   * (thuang): This prevents re-rendering causes a second image download
+   */
+  private isDownloadingImage = false;
+
   private graphRef = React.createRef<HTMLDivElement>();
 
   private downloadedImg: HTMLImageElement = new Image();
@@ -1010,7 +1015,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
         }),
       });
     }
-    if (screenCap && regl) {
+    if (screenCap && regl && !this.isDownloadingImage) {
+      /**
+       * (thuang): This prevents re-rendering causes a second image download
+       */
+      this.isDownloadingImage = true;
+
       const graph = regl._gl.canvas;
       const imageURI = await toPng(graph as HTMLCanvasElement, {
         backgroundColor: "white",
@@ -1035,6 +1045,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           a.remove();
         }, 1000);
         dispatch({ type: "graph: screencap end" });
+        this.isDownloadingImage = false;
       }
     }
 
