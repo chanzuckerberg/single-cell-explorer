@@ -29,7 +29,7 @@ Please [file an issue](https://github.com/chanzuckerberg/single-cell-explorer/is
 ### Finding help
 
 We'd love to hear from you!
-For questions, suggestions, or accolades, [join the `#cellxgene-users` channel on the CZI Science Slack](https://join-cellxgene-users.herokuapp.com/) and say "hi!".
+For questions, suggestions, or accolades, join the `#cellxgene-users` channel on the [CZI Science Community Slack](https://czi.co/science-slack) and say "hi!".
 
 For any errors, [report bugs on Github](https://github.com/chanzuckerberg/single-cell-explorer/issues/new/choose).
 
