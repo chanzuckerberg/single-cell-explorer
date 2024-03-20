@@ -467,6 +467,21 @@ def spatial_image_get(request, data_adaptor):
     response_image = io.BytesIO()
     img = spatial[resolution]
 
+    # detect img dimensions and pad the short side with white to make it square
+    (h, w, _) = img.shape
+
+    print(f"🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥BEFORE spatial image shape: {img.shape}")
+
+    if h > w:
+        pad = (h - w) // 2
+        img = np.pad(img, ((0, 0), (pad, pad), (0, 0)), mode="constant", constant_values=1)
+
+    elif w > h:
+        pad = (w - h) // 2
+        img = np.pad(img, ((pad, pad), (0, 0), (0, 0)), mode="constant", constant_values=1)
+
+    print(f"🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏🙏AFTER spatial image shape: {img.shape}")
+
     pil_img = Image.fromarray(np.uint8(img * 255))
     pil_img.save(response_image, format="WEBP", quality=100)
 
@@ -500,7 +515,20 @@ def spatial_meta_get(request, data_adaptor):
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
     scaleref = spatial[f"tissue_{resolution}_scalef"]
-    (h, w, _) = spatial[resolution].shape
+
+    img = spatial[resolution]
+
+    (h, w, _) = img.shape
+
+    if h > w:
+        pad = (h - w) // 2
+        img = np.pad(img, ((0, 0), (pad, pad), (0, 0)), mode="constant", constant_values=1)
+
+    elif w > h:
+        pad = (w - h) // 2
+        img = np.pad(img, ((pad, pad), (0, 0), (0, 0)), mode="constant", constant_values=1)
+
+    (h, w, _) = img.shape
 
     A = data_adaptor.get_embedding_array("spatial")
 
