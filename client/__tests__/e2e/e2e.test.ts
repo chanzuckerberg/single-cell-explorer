@@ -825,12 +825,21 @@ for (const option of options) {
     test("open gene info card and hide/remove", async ({ page }) => {
       await setup(option, page);
       await addGeneToSearch(geneToRequestInfo, page);
-      await requestGeneInfo(geneToRequestInfo, page);
-      await assertGeneInfoCardExists(geneToRequestInfo, page);
-      await minimizeGeneInfo(page);
-      await assertGeneInfoCardIsMinimized(geneToRequestInfo, page);
-      await removeGeneInfo(page);
-      await assertGeneInfoDoesNotExist(geneToRequestInfo, page);
+
+      await tryUntil(async () => {
+        await requestGeneInfo(geneToRequestInfo, page);
+        await assertGeneInfoCardExists(geneToRequestInfo, page);
+      }, { page });
+
+      await tryUntil(async () => {
+        await minimizeGeneInfo(page);
+        await assertGeneInfoCardIsMinimized(geneToRequestInfo, page);
+      }, { page });
+
+      await tryUntil(async () => {
+        await removeGeneInfo(page);
+        await assertGeneInfoDoesNotExist(geneToRequestInfo, page);
+      }, { page });
     });
   });
 }
