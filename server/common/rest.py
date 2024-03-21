@@ -16,7 +16,7 @@ from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
-from server.common.constants import CELLGUIDE_CXG_KEY_NAME, Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME, SPATIAL_IMAGE_DEFAULT_RES, Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
 from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
     ColorFormatException,
@@ -30,6 +30,7 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
+from server.common.utils.utils import crop_box
 from server.dataset import dataset_metadata
 
 
@@ -384,7 +385,7 @@ def layout_obs_get(request, data_adaptor):
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
 
-    spatial = data_adaptor.get_spatial()
+    spatial = data_adaptor.get_uns("spatial")
 
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -461,18 +462,21 @@ def spatial_image_get(request, data_adaptor):
     Retrieve a spatial image from the data adaptor and return it as a PNG file
     """
 
-    resolution = "hires"
+    resolution = SPATIAL_IMAGE_DEFAULT_RES
 
-    spatial = data_adaptor.get_spatial()
+    spatial = data_adaptor.get_uns("spatial")
+    library_id = list(spatial.keys())[0]
+    img = spatial[library_id]['images'][SPATIAL_IMAGE_DEFAULT_RES]
+        
     response_image = io.BytesIO()
-    img = spatial[resolution]
 
     pil_img = Image.fromarray(np.uint8(img * 255))
-    pil_img.save(response_image, format="WEBP", quality=100)
+    pil_img = pil_img.crop(crop_box(pil_img.size))
+    pil_img.save(response_image, format="WEBP", quality=90)
 
     response_image.seek(0)
 
-    library_id = "test_library_id"
+    print("SPATIAL", spatial)
 
     try:
         return send_file(response_image, download_name=f"{library_id}-{resolution}.webp", mimetype="image/webp")
@@ -489,31 +493,22 @@ def spatial_image_get(request, data_adaptor):
 
 def spatial_meta_get(request, data_adaptor):
     """
-    Returns an object containing the spatial metadata, including image width, image height,
-    scale reference, inverse scale, inverse translate, and inverse min
+    Returns an object containing spatial metadata, including image width and image height
     """
-    spatial = data_adaptor.get_spatial()
+    resolution = SPATIAL_IMAGE_DEFAULT_RES
 
-    resolution = "hires"
-
-    if resolution not in spatial:
+    spatial = data_adaptor.get_uns("spatial")
+    library_id = list(spatial.keys())[0]
+    
+    try:
+        (h, w, _) = spatial[library_id]['images'][resolution].shape
+    except KeyError:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
-    scaleref = spatial[f"tissue_{resolution}_scalef"]
-    (h, w, _) = spatial[resolution].shape
-
-    A = data_adaptor.get_embedding_array("spatial")
-
-    min = np.nanmin(A, axis=0)
-    max = np.nanmax(A, axis=0)
-    scale = np.amax(max - min)
-    translate = 0.5 - ((max - min) / scale / 2)
+    h = w = min(h, w) # adjust for 1:1 aspect ratio
 
     return {
-        "imageWidth": w,
-        "imageHeight": h,
-        "scaleref": scaleref,
-        "inverseScale": int(scale),
-        "inverseTranslate": translate.tolist(),
-        "inverseMin": min.tolist(),
+        "imageWidth": h,
+        "imageHeight": w,
+        "libraryId": library_id,
     }
