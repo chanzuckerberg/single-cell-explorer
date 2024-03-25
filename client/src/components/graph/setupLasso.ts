@@ -96,9 +96,9 @@ const Lasso = () => {
     };
 
     const handleCancel = () => {
-      if (!(lassoPath && closePath && lassoPolygon)) return;
+      if (!(lassoPath && lassoPolygon)) return;
       lassoPath.remove();
-      closePath = closePath?.remove();
+      if (closePath) closePath = closePath?.remove();
       lassoPath = null;
       lassoPolygon = null;
       closePath = null;
