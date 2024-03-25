@@ -221,7 +221,6 @@ class Gene extends React.Component<Props, State> {
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
                 <HistogramBrush
-                  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
                   isUserDefined
                   field={gene}
                   mini
@@ -294,7 +293,6 @@ class Gene extends React.Component<Props, State> {
         </div>
         {geneIsExpanded && (
           <HistogramBrush
-            // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
             isUserDefined
             field={gene}
             onGeneExpressionComplete={() => {}}
