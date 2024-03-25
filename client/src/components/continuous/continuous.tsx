@@ -11,10 +11,12 @@ import { AnnotationColumnSchema } from "../../common/types/schema";
 interface ContinuousProps {
   schema: AnnoMatrix["schema"];
 }
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState) => ({
-  schema: state.annoMatrix?.schema,
-}))
+
+function mapStateToProps(state: RootState) {
+  return {
+    schema: state.annoMatrix?.schema,
+  };
+}
 class Continuous extends React.PureComponent<ContinuousProps, never> {
   render() {
     /* initial value for iterator to simulate index, ranges is an object */
@@ -48,4 +50,4 @@ class Continuous extends React.PureComponent<ContinuousProps, never> {
   }
 }
 
-export default Continuous;
+export default connect(mapStateToProps)(Continuous);

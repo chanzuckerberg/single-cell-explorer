@@ -34,7 +34,7 @@ const WIDTH_MINI = 120 - MARGIN_MINI.LEFT - MARGIN_MINI.RIGHT;
 const HEIGHT_MINI = 15 - MARGIN_MINI.TOP - MARGIN_MINI.BOTTOM;
 
 interface BrushableHistogramOwnProps {
-  isObs: boolean;
+  isObs?: boolean;
   isUserDefined?: boolean;
   isGeneSetSummary?: boolean;
   field: string;
@@ -239,6 +239,17 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     const { isClipped } = annoMatrix;
 
     const query = this.createQuery();
+    if (!query) {
+      return {
+        histogram: null,
+        miniHistogram: null,
+        range: null,
+        unclippedRange: null,
+        unclippedRangeColor: null,
+        isSingleValue: null,
+        OK2Render: false,
+      };
+    }
     const df: Dataframe = await annoMatrix.fetch(...query, globals.numBinsObsX);
     const column = df.icol(0);
 
