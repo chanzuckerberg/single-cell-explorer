@@ -8,6 +8,7 @@ import InfoFormat, { SingleValueCategories } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
 import { DatasetMetadata } from "../../common/types/entities";
+import { Schema } from "../../common/types/schema";
 
 /**
  * Actions dispatched by info drawer.
@@ -29,8 +30,7 @@ interface OwnProps {
 interface StateProps {
   datasetMetadata: DatasetMetadata;
   isOpen: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: any;
+  schema: Schema;
 }
 
 type Props = DispatchProps & OwnProps & StateProps;
