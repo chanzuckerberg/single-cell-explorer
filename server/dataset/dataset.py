@@ -1,12 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from os.path import basename, splitext
+import pickle
 
 import numpy as np
 import pandas as pd
 from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig
-from server.common.constants import Axis, XApproximateDistribution
+from server.common.constants import SPATIAL_IMAGE_DEFAULT_RES, Axis, XApproximateDistribution
 from server.common.errors import (
     DatasetAccessError,
     ExceedsLimitError,
@@ -15,7 +16,7 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
-from server.common.utils.utils import jsonify_numpy
+from server.common.utils.utils import jsonify_numpy, crop_box
 
 
 class Dataset(metaclass=ABCMeta):
@@ -165,6 +166,14 @@ class Dataset(metaclass=ABCMeta):
         :param fields: list of keys for annotation to return, returns all annotation values if not set.
         :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         :return: flatbuffer: in fbs/matrix.fbs encoding
+        """
+        pass
+
+
+    @abstractmethod
+    def get_uns(self, metadata_key):
+        """
+        Extracts a metadata_key object from the uns array in a TileDB container.
         """
         pass
 
@@ -341,35 +350,47 @@ class Dataset(metaclass=ABCMeta):
 
         if spatial is not None and ename in "spatial":
 
-            resolution = "hires"
-
             if not spatial:
                 raise Exception("uns does not have spatial information")
 
-            if resolution not in spatial:
+            resolution = SPATIAL_IMAGE_DEFAULT_RES
+
+            library_id = list(spatial.keys())[0]
+
+            try:
+                (h, w, _) = spatial[library_id]['images'][resolution].shape
+            except KeyError:
                 raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
-            scaleref = spatial[f"tissue_{resolution}_scalef"]
-            (h, w, _) = spatial[resolution].shape
+
+            scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
+
+            left, upper, _, _ = crop_box((w, h))
+
+            # adjust for 1:1 aspect ratio
+            h = w = min(h, w)
 
             A = embedding * scaleref
+            A[:, 0] -= left
+            A[:, 1] -= upper
             A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
             normalized_layout = A.astype(dtype=np.float32)
+            
         else:
             # scale isotropically
             try:
-                min = np.nanmin(embedding, axis=0)
-                max = np.nanmax(embedding, axis=0)
+                min_emb = np.nanmin(embedding, axis=0)
+                max_emb = np.nanmax(embedding, axis=0)
             except RuntimeError:
                 # indicates entire array was NaN, which should propagate
-                min = np.NaN
-                max = np.NaN
+                min_emb = np.NaN
+                max_emb = np.NaN
 
-            scale = np.amax(max - min)
-            normalized_layout = (embedding - min) / scale
+            scale = np.amax(max_emb - min_emb)
+            normalized_layout = (embedding - min_emb) / scale
 
             # translate to center on both axis
-            translate = 0.5 - ((max - min) / scale / 2)
+            translate = 0.5 - ((max_emb - min_emb) / scale / 2)
             normalized_layout = normalized_layout + translate
 
             normalized_layout = normalized_layout.astype(dtype=np.float32)
@@ -400,6 +421,18 @@ class Dataset(metaclass=ABCMeta):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
+    
+    
+    def uns_to_fbs_matrix(self, uns_data):
+        """
+        Return specified uns as a flatbuffer, using the matrix fbs encoding
+        """
+        df = pd.DataFrame([uns_data])
+        with ServerTiming.time("layout.encode"):
+            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=None)
+
+        return fbs
+
 
     def get_last_mod_time(self):
         try:
@@ -429,13 +462,3 @@ class Dataset(metaclass=ABCMeta):
             col_idx = pd.Index([query_hash])
             fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
         return fbs
-
-    def get_spatial(self):
-        try:
-            uns = self.open_array("uns")
-            metadata_dict = {}
-            for key in uns.meta:
-                metadata_dict[key] = uns.meta[key]
-            return metadata_dict
-        except KeyError:
-            return None

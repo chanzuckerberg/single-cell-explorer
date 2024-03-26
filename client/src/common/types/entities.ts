@@ -62,8 +62,10 @@ export interface DatasetMetadata {
   s3_URI: S3URI;
 }
 
-// TODO: proper typing after migration and final CXG schema
-export type DatasetSpatialMetadata = any;
+export type DatasetSpatialMetadata = {
+  imageWidth: number;
+  imageHeight: number;
+};
 
 export type S3URI = string;
 

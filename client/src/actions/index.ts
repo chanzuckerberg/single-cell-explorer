@@ -20,7 +20,7 @@ import type {
   DatasetMetadata,
   Dataset,
   S3URI,
-  DatasetSpatialMetadata,
+  // DatasetSpatialMetadata,
 } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
@@ -29,7 +29,12 @@ import {
   storageSetTransient,
 } from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
-import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
+import {
+  DataframeValue,
+  LabelArray,
+  LabelIndex,
+  Dataframe,
+} from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
@@ -135,28 +140,28 @@ async function datasetMetadataFetchAndLoad(
   });
 }
 
-/**
- * Fetches and loads dataset spatial metadata.
- * @param dispatch - Function facilitating update of store.
- */
-async function datasetSpatialMetadataFetchAndLoad(
-  dispatch: AppDispatch
-): Promise<void> {
-  try {
-    const datasetSpatialMetadataResponse = await fetchJson<{
-      metadata: DatasetSpatialMetadata;
-    }>("spatial/meta");
-    dispatch({
-      type: "request spatial metadata success",
-      data: datasetSpatialMetadataResponse,
-    });
-  } catch (error) {
-    dispatch({
-      type: "request spatial metadata error",
-      error,
-    });
-  }
-}
+// /**
+//  * Fetches and loads dataset spatial metadata.
+//  * @param dispatch - Function facilitating update of store.
+//  */
+// async function datasetSpatialMetadataFetchAndLoad(
+//   dispatch: AppDispatch
+// ): Promise<void> {
+//   try {
+//     const datasetSpatialMetadataResponse = await fetchJson<{
+//       metadata: DatasetSpatialMetadata;
+//     }>("spatial/meta?meta=spatial");
+//     dispatch({
+//       type: "request spatial metadata success",
+//       data: datasetSpatialMetadataResponse,
+//     });
+//   } catch (error) {
+//     dispatch({
+//       type: "request spatial metadata error",
+//       error,
+//     });
+//   }
+// }
 
 interface GeneInfoAPI {
   ncbi_url: string;
@@ -210,7 +215,7 @@ const doInitialDataLoad = (): ((
 
     // check URL for feature flags
     checkFeatureFlags();
-    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+    // const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     try {
       const s3URI = await s3URIFetch();
@@ -223,10 +228,10 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      // TODO: add logic to ensure this is working for spatial datasets when flag removed
-      if (isSpatial) {
-        datasetSpatialMetadataFetchAndLoad(dispatch);
-      }
+      // // TODO: add logic to ensure this is working for spatial datasets when flag removed
+      // if (isSpatial) {
+      //   datasetSpatialMetadataFetchAndLoad(dispatch);
+      // }
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
