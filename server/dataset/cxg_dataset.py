@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import pickle
 import threading
 
 import numpy as np
@@ -375,12 +376,27 @@ class CxgDataset(Dataset):
         schema = var.schema
         return [attr.name for attr in schema]
 
-    def get_uns_values(self):
-        uns = self.open_array("uns")
-        metadata_dict = {}
-        for key in uns.meta:
-            metadata_dict[key] = uns.meta[key]
-        return metadata_dict
+    def get_uns(self, metadata_key):
+            """
+            Extracts a metadata_key object from the uns array in a TileDB container.
+
+            Parameters:
+            - metadata_key: The key prefix used to identify objects in the metadata
+            Returns:
+            - The deserialized spatial object, or None if not found.
+            """        
+            uns = self.open_array("uns") # Iterate through metadata keys to find the metadata_key object
+            for key in uns.meta.keys():
+                if key.startswith(metadata_key):
+                    # Deserialize the spatial object stored as a serialized pickle object
+                    spatial_data_serialized = uns.meta[key]
+                    try:
+                        spatial_data = pickle.loads(spatial_data_serialized)
+                        return spatial_data
+                    except Exception as e:
+                        print(f"Error deserializing uns data for key {key}: {e}")
+                        return None
+            return None
 
     # function to get the embedding
     # this function to iterate through embeddings.
@@ -446,8 +462,9 @@ class CxgDataset(Dataset):
         for ename in embeddings:
             A = self.open_array(f"emb/{ename}")
             obs_layout.append({"name": ename, "type": "float32", "dims": [f"{ename}_{d}" for d in range(0, A.ndim)]})
+        uns = {'spatial': {'columns': [{'name': 'imageWidth', 'writable': False, 'type': 'number'},{'name': 'imageHeight', 'writable': False, 'type': 'number'},{'name': 'libraryId', 'writable': False, 'type': 'string'},{'name': 'image', 'writable': False, 'type': 'string'}]}}
 
-        schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}}
+        schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}, "uns": uns}
         return schema
 
     def get_schema(self):

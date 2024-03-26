@@ -686,7 +686,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     layoutChoice: RootState["layoutChoice"],
     colors: RootState["colors"],
     pointDilation: RootState["pointDilation"]
-  ): Promise<[Dataframe, Dataframe | null, Dataframe | null]> {
+  ): Promise<[Dataframe, Dataframe, Dataframe | null, Dataframe | null]> {
     /*
         fetch all data needed.  Includes:
           - the color by dataframe
@@ -697,10 +697,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const query = this.createColorByQuery(colors);
     const promises: [
       Promise<Dataframe>,
+      Promise<Dataframe>,
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
       annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
+      annoMatrix.fetch("uns", layoutChoice.current, globals.numBinsEmb),
       query
         ? annoMatrix.fetch(...query, globals.numBinsObsX)
         : Promise.resolve(null),

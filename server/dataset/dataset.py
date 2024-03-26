@@ -169,6 +169,14 @@ class Dataset(metaclass=ABCMeta):
         """
         pass
 
+
+    @abstractmethod
+    def get_uns(self, metadata_key):
+        """
+        Extracts a metadata_key object from the uns array in a TileDB container.
+        """
+        pass
+
     def update_parameters(self, parameters):
         parameters.update(self.parameters)
 
@@ -413,6 +421,18 @@ class Dataset(metaclass=ABCMeta):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
+    
+    
+    def uns_to_fbs_matrix(self, uns_data):
+        """
+        Return specified uns as a flatbuffer, using the matrix fbs encoding
+        """
+        df = pd.DataFrame([uns_data])
+        with ServerTiming.time("layout.encode"):
+            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=None)
+
+        return fbs
+
 
     def get_last_mod_time(self):
         try:
@@ -443,24 +463,24 @@ class Dataset(metaclass=ABCMeta):
             fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
         return fbs
 
-    def get_uns(self, metadata_key):
-        """
-        Extracts a metadata_key object from the uns array in a TileDB container.
+    # def get_uns(self, metadata_key):
+    #     """
+    #     Extracts a metadata_key object from the uns array in a TileDB container.
 
-        Parameters:
-        - metadata_key: The key prefix used to identify objects in the metadata
-        Returns:
-        - The deserialized spatial object, or None if not found.
-        """        
-        uns = self.open_array("uns") # Iterate through metadata keys to find the metadata_key object
-        for key in uns.meta.keys():
-            if key.startswith(metadata_key):
-                # Deserialize the spatial object stored as a serialized pickle object
-                spatial_data_serialized = uns.meta[key]
-                try:
-                    spatial_data = pickle.loads(spatial_data_serialized)
-                    return spatial_data
-                except Exception as e:
-                    print(f"Error deserializing spatial data for key {key}: {e}")
-                    return None
-        return None
+    #     Parameters:
+    #     - metadata_key: The key prefix used to identify objects in the metadata
+    #     Returns:
+    #     - The deserialized spatial object, or None if not found.
+    #     """        
+    #     uns = self.open_array("uns") # Iterate through metadata keys to find the metadata_key object
+    #     for key in uns.meta.keys():
+    #         if key.startswith(metadata_key):
+    #             # Deserialize the spatial object stored as a serialized pickle object
+    #             spatial_data_serialized = uns.meta[key]
+    #             try:
+    #                 spatial_data = pickle.loads(spatial_data_serialized)
+    #                 return spatial_data
+    #             except Exception as e:
+    #                 print(f"Error deserializing uns data for key {key}: {e}")
+    #                 return None
+    #     return None

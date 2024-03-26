@@ -20,12 +20,7 @@ import {
 import _shallowClone from "./clone";
 import { _queryValidate, _queryCacheKey, Query } from "./query";
 import { GCHints } from "../common/types/entities";
-import {
-  Field,
-  Schema,
-  ArraySchema,
-  RawSchema,
-} from "../common/types/schema";
+import { Field, Schema, ArraySchema, RawSchema } from "../common/types/schema";
 import { LabelArray } from "../util/dataframe/types";
 import { LabelIndexBase } from "../util/dataframe/labelIndex";
 
@@ -36,6 +31,7 @@ interface Cache {
   [Field.var]: Dataframe;
   [Field.emb]: Dataframe;
   [Field.X]: Dataframe;
+  [Field.uns]: Dataframe;
 }
 
 interface PendingLoad {
@@ -43,6 +39,7 @@ interface PendingLoad {
   [Field.var]: { [key: string]: Promise<void> };
   [Field.emb]: { [key: string]: Promise<void> };
   [Field.X]: { [key: string]: Promise<void> };
+  [Field.uns]: { [key: string]: Promise<void> };
 }
 
 export interface UserFlags {
@@ -107,7 +104,7 @@ export default abstract class AnnoMatrix {
     /*
     return the fields present in the AnnoMatrix instance.
     */
-    return [Field.obs, Field.var, Field.emb, Field.X];
+    return [Field.obs, Field.var, Field.emb, Field.X, Field.uns];
   }
 
   constructor(
@@ -156,12 +153,14 @@ export default abstract class AnnoMatrix {
       var: Dataframe.empty(this.rowIndex),
       emb: Dataframe.empty(this.rowIndex),
       X: Dataframe.empty(this.rowIndex),
+      uns: Dataframe.empty(this.rowIndex),
     };
     this._pendingLoad = {
       obs: {},
       var: {},
       emb: {},
       X: {},
+      uns: {},
     };
     this._whereCache = {} as WhereCache;
     this._gcInfo = new Map();
@@ -338,7 +337,6 @@ export default abstract class AnnoMatrix {
    ** The actual implementation is in the sub-classes, which MUST override these.
    **/
 
-
   getCacheKeys(
     field: Field,
     query: Query
@@ -356,10 +354,8 @@ export default abstract class AnnoMatrix {
   _resolveCachedQueries(field: Field, queries: Query[]): LabelType[] {
     return queries
       .map((query: Query) =>
-        // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
-        // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
         _whereCacheGet(this._whereCache, this.schema, field, query).filter(
-          (cacheKey: LabelType | undefined) =>
+          (cacheKey: LabelType | undefined): cacheKey is LabelType =>
             cacheKey !== undefined && this._cache[field].hasCol(cacheKey)
         )
       )
@@ -595,6 +591,7 @@ export default abstract class AnnoMatrix {
       var: {},
       emb: {},
       X: {},
+      uns: {},
     };
     return clone;
   }

@@ -1,3 +1,4 @@
+import base64
 import copy
 import hashlib
 import io
@@ -491,17 +492,26 @@ def spatial_image_get(request, data_adaptor):
         )
 
 
-def spatial_meta_get(request, data_adaptor):
+def spatial_metadata_get(spatial):
     """
     Returns an object containing spatial metadata, including image width and image height
     """
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
-    spatial = data_adaptor.get_uns("spatial")
     library_id = list(spatial.keys())[0]
     
+    image_array = spatial[library_id]['images'][resolution]
+
+    response_image = io.BytesIO()
+
+    image = Image.fromarray(np.uint8(image_array * 255))
+    image = image.crop(crop_box(image.size))
+    image.save(response_image, format="WEBP", quality=90)
+
+    image_str = base64.b64encode(response_image.getvalue()).decode()
+
     try:
-        (h, w, _) = spatial[library_id]['images'][resolution].shape
+        (h, w, _) = image_array.shape
     except KeyError:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
@@ -511,4 +521,27 @@ def spatial_meta_get(request, data_adaptor):
         "imageWidth": h,
         "imageHeight": w,
         "libraryId": library_id,
+        "image": image_str,
     }
+
+
+def uns_metadata_get(request, data_adaptor):
+    """
+    Returns uns metadata for the requested metadata key
+    """
+    metadata_key = request.args.get("key", None)
+
+    if metadata_key is None:
+        return "No metadata key provided", 400
+    
+    uns_metadata = data_adaptor.get_uns(metadata_key)
+
+    # Spatial metadata is handled separately
+    if metadata_key == "spatial":
+        # return make_response(jsonify(spatial_metadata_get(uns_metadata)), HTTPStatus.OK)
+        return make_response(
+            data_adaptor.uns_to_fbs_matrix(spatial_metadata_get(uns_metadata)),
+            HTTPStatus.OK,
+            {"Content-Type": "application/octet-stream"})
+    else:
+        return data_adaptor.get_uns(metadata_key)
