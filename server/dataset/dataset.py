@@ -462,25 +462,3 @@ class Dataset(metaclass=ABCMeta):
             col_idx = pd.Index([query_hash])
             fbs = encode_matrix_fbs(mean, col_idx=col_idx, row_idx=None, num_bins=num_bins)
         return fbs
-
-    # def get_uns(self, metadata_key):
-    #     """
-    #     Extracts a metadata_key object from the uns array in a TileDB container.
-
-    #     Parameters:
-    #     - metadata_key: The key prefix used to identify objects in the metadata
-    #     Returns:
-    #     - The deserialized spatial object, or None if not found.
-    #     """        
-    #     uns = self.open_array("uns") # Iterate through metadata keys to find the metadata_key object
-    #     for key in uns.meta.keys():
-    #         if key.startswith(metadata_key):
-    #             # Deserialize the spatial object stored as a serialized pickle object
-    #             spatial_data_serialized = uns.meta[key]
-    #             try:
-    #                 spatial_data = pickle.loads(spatial_data_serialized)
-    #                 return spatial_data
-    #             except Exception as e:
-    #                 print(f"Error deserializing uns data for key {key}: {e}")
-    #                 return None
-    #     return None
