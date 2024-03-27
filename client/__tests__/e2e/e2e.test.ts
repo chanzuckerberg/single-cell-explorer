@@ -319,13 +319,7 @@ for (const testDataset of testDatasets) {
 
           const categories = await getAllCategoriesAndCounts(label, page);
 
-          expect(Object.keys(categories)).toMatchObject(
-            Object.keys(data.categorical[label])
-          );
-
-          expect(Object.values(categories)).toMatchObject(
-            Object.values(data.categorical[label])
-          );
+          expect(categories).toMatchObject(data.categorical[label]);
         }
       });
     });
