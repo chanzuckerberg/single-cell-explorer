@@ -532,15 +532,18 @@ export async function assertGeneInfoCardIsMinimized(
     "clear-gene-info",
   ];
 
-  await tryUntil(async () => {
-    for (const id of testIds) {
-      const result = await page.getByTestId(id).isVisible();
-      await expect(result).toBe(true);
-    }
+  await tryUntil(
+    async () => {
+      for (const id of testIds) {
+        const result = await page.getByTestId(id).isVisible();
+        await expect(result).toBe(true);
+      }
 
-    const result = await page.getByTestId("gene-info-symbol").isVisible();
-    await expect(result).toBe(false);
-  }, {page});
+      const result = await page.getByTestId("gene-info-symbol").isVisible();
+      await expect(result).toBe(false);
+    },
+    { page }
+  );
 }
 
 export async function removeGeneInfo(page: Page): Promise<void> {
@@ -557,12 +560,15 @@ export async function assertGeneInfoDoesNotExist(
     "min-gene-info",
     "clear-gene-info",
   ];
-  await tryUntil(async () => {
-    for (const id of testIds) {
-      const result = await page.getByTestId(id).isVisible();
-      await expect(result).toBe(false);
-    }
-  }, {page});
+  await tryUntil(
+    async () => {
+      for (const id of testIds) {
+        const result = await page.getByTestId(id).isVisible();
+        await expect(result).toBe(false);
+      }
+    },
+    { page }
+  );
 }
 
 /**
@@ -675,9 +681,17 @@ export async function assertUndoRedo(
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   const buttonID = "capture-and-display-graph";
   const imageID = "graph-image";
-  await page.getByTestId(buttonID).click();
-  page.getByTestId(imageID).waitFor();
-  await takeSnapshot(page, testInfo);
+
+  await tryUntil(
+    async () => {
+      await page.getByTestId(buttonID).click({ force: true });
+
+      page.getByTestId(imageID).waitFor();
+
+      await takeSnapshot(page, testInfo);
+    },
+    { page }
+  );
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
