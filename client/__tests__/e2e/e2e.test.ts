@@ -615,8 +615,6 @@ for (const testDataset of testDatasets) {
 
           await setup({ option, page, url });
 
-          // set the two cell sets to b cells vs nk cells
-
           const { category, cellset1, cellset2 } = data.diffexp;
 
           await expandCategory(category, page);
