@@ -518,11 +518,13 @@ def spatial_metadata_get(spatial):
     h = w = min(h, w) # adjust for 1:1 aspect ratio
 
     return {
-        "imageWidth": h,
-        "imageHeight": w,
-        "libraryId": library_id,
-        "image": image_str,
-    }
+            'spatial': {
+                "imageWidth": float(h),
+                "imageHeight": float(w),
+                "libraryId": library_id,
+                "image": image_str,
+            }
+        }   
 
 
 def uns_metadata_get(request, data_adaptor):

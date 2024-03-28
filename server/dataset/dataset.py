@@ -418,6 +418,7 @@ class Dataset(metaclass=ABCMeta):
 
         with ServerTiming.time("layout.encode"):
             df = pd.concat(layout_data, axis=1, copy=False) if layout_data else pd.DataFrame()
+
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
@@ -427,9 +428,9 @@ class Dataset(metaclass=ABCMeta):
         """
         Return specified uns as a flatbuffer, using the matrix fbs encoding
         """
-        df = pd.DataFrame([uns_data])
+        df = pd.DataFrame(uns_data)
         with ServerTiming.time("layout.encode"):
-            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=None)
+            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=5000)
 
         return fbs
 
