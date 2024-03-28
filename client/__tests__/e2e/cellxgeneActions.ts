@@ -686,7 +686,7 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
     async () => {
       await page.getByTestId(buttonID).click({ force: true });
 
-      page.getByTestId(imageID).waitFor();
+      await page.getByTestId(imageID).waitFor();
 
       await takeSnapshot(page, testInfo);
     },
