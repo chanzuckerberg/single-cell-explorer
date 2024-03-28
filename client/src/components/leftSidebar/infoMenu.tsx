@@ -17,16 +17,16 @@ interface Props {
 const InformationMenu = React.memo<Props>((props): JSX.Element => {
   const { tosURL, privacyURL } = props;
 
-  function handleMenuClick() {
+  const handleMenuClick = () => {
     track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
-  }
+  };
 
   return (
     <Popover
       content={
         <Menu>
           <MenuItem
-            href="https://join-cellxgene-users.herokuapp.com/"
+            href="https://czi.co/science-slack"
             icon={<Icon icon={CXGIconNames.SLACK} />}
             target="_blank"
             text="Chat"

@@ -51,9 +51,9 @@ const Clip = React.memo((props) => {
         (Intent as any).INTENT_WARNING
       : Intent.NONE;
 
-  function handleVizSettingsClick() {
+  const handleVizSettingsClick = () => {
     track(EVENTS.EXPLORER_VISUALIZATION_SETTINGS_BUTTON_CLICKED);
-  }
+  };
 
   return (
     <ButtonGroup className={`${styles.menubarButton}`}>

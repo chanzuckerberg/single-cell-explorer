@@ -127,6 +127,7 @@ interface GraphAsyncProps {
   height: number;
   spatial: SpatialProps;
   imageUnderlay: ImageUnderlay;
+  screenCap: boolean;
 }
 
 type GraphProps = Partial<RootState>;
@@ -186,6 +187,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
   isSpatial = false;
 
   spatialImage: TextureImageData | null = null;
+
+  /**
+   * (thuang): This prevents re-rendering causes a second image download
+   */
+  private isDownloadingImage = false;
 
   private graphRef = React.createRef<HTMLDivElement>();
 
@@ -631,6 +637,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       spatial,
       imageUnderlay,
+      screenCap,
     } = props.watchProps;
     const { modelTF } = this.state;
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
@@ -678,6 +685,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       spatial,
       imageUnderlay,
+      screenCap,
     };
   };
 
@@ -865,9 +873,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
     asyncProps: GraphAsyncProps,
     prevAsyncProps: GraphAsyncProps | null
   ): void {
-    const { positions, colors, flags, height, width, imageUnderlay } =
-      asyncProps;
-    const { screenCap } = this.props;
+    const {
+      positions,
+      colors,
+      flags,
+      height,
+      width,
+      imageUnderlay,
+      screenCap,
+    } = asyncProps;
 
     this.cachedAsyncProps = asyncProps;
     const { pointBuffer, colorBuffer, flagBuffer } = this.state;
@@ -893,10 +907,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (imageUnderlay !== prevAsyncProps?.imageUnderlay) {
       needToRenderCanvas = true;
     }
-    if (screenCap) {
+    if (screenCap && screenCap !== prevAsyncProps?.screenCap) {
       needToRenderCanvas = true;
     }
-    if (needToRenderCanvas) this.renderCanvas();
+
+    if (needToRenderCanvas) {
+      this.renderCanvas();
+    }
   }
 
   updateColorTable(
@@ -1000,7 +1017,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
         }),
       });
     }
-    if (screenCap && regl) {
+    if (screenCap && regl && !this.isDownloadingImage) {
+      /**
+       * (thuang): This prevents re-rendering causes a second image download
+       */
+      this.isDownloadingImage = true;
+
       const graph = regl._gl.canvas;
       const imageURI = await toPng(graph as HTMLCanvasElement, {
         backgroundColor: "white",
@@ -1025,6 +1047,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           a.remove();
         }, 1000);
         dispatch({ type: "graph: screencap end" });
+        this.isDownloadingImage = false;
       }
     }
 
@@ -1156,10 +1179,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           </Async.Rejected>
           <Async.Fulfilled>
             {(asyncProps: GraphAsyncProps) => {
-              if (
-                regl &&
-                (!shallowEqual(asyncProps, this.cachedAsyncProps) || screenCap)
-              ) {
+              if (regl && !shallowEqual(asyncProps, this.cachedAsyncProps)) {
                 this.updateReglAndRender(asyncProps, this.cachedAsyncProps);
               }
               return null;
