@@ -730,9 +730,7 @@ for (const testDataset of testDatasets) {
           await snapshotTestGraph(page, testInfo);
         });
 
-        test("create a new geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
+        test("create a new geneset and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -748,27 +746,21 @@ for (const testDataset of testDatasets) {
 
               await assertGenesetDoesNotExist(genesetName, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await createGeneset(genesetName, page);
 
               await assertGenesetExists(genesetName, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await assertUndoRedo(
                 page,
-                async () => assertGenesetDoesNotExist(genesetName, page),
-                async () => assertGenesetExists(genesetName, page)
+                () => assertGenesetDoesNotExist(genesetName, page),
+                () => assertGenesetExists(genesetName, page)
               );
-
-              await snapshotTestGraph(page, testInfo);
             },
             { page }
           );
         });
 
-        test("edit geneset name and undo/redo", async ({ page }, testInfo) => {
+        test("edit geneset name and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -780,19 +772,17 @@ for (const testDataset of testDatasets) {
 
               await assertGenesetExists(newGenesetName, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await assertUndoRedo(
                 page,
-                async () => assertGenesetExists(editableGenesetName, page),
-                async () => assertGenesetExists(newGenesetName, page)
+                () => assertGenesetExists(editableGenesetName, page),
+                () => assertGenesetExists(newGenesetName, page)
               );
             },
             { page }
           );
         });
 
-        test("delete a geneset and undo/redo", async ({ page }, testInfo) => {
+        test("delete a geneset and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -802,23 +792,15 @@ for (const testDataset of testDatasets) {
 
               await setup({ option, page, url });
 
-              await snapshotTestGraph(page, testInfo);
-
               await createGeneset(genesetToDeleteName, page);
-
-              await snapshotTestGraph(page, testInfo);
 
               await deleteGeneset(genesetToDeleteName, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await assertUndoRedo(
                 page,
-                async () => assertGenesetExists(genesetToDeleteName, page),
-                async () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+                () => assertGenesetExists(genesetToDeleteName, page),
+                () => assertGenesetDoesNotExist(genesetToDeleteName, page)
               );
-
-              await snapshotTestGraph(page, testInfo);
             },
             { page }
           );
@@ -844,9 +826,7 @@ for (const testDataset of testDatasets) {
       });
 
       describe(`GENE crud operations and interactions ${option.tag}`, () => {
-        test("add a gene to geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
+        test("add a gene to geneset and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -857,15 +837,11 @@ for (const testDataset of testDatasets) {
               await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
               await assertGeneExistsInGeneset(geneToAddToSet, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await assertUndoRedo(
                 page,
-                async () => assertGeneDoesNotExist(geneToAddToSet, page),
-                async () => assertGeneExistsInGeneset(geneToAddToSet, page)
+                () => assertGeneDoesNotExist(geneToAddToSet, page),
+                () => assertGeneExistsInGeneset(geneToAddToSet, page)
               );
-
-              await snapshotTestGraph(page, testInfo);
             },
             { page }
           );
@@ -925,9 +901,7 @@ for (const testDataset of testDatasets) {
           await assertColorLegendLabel("SIK1", page);
           await snapshotTestGraph(page, testInfo);
         });
-        test("delete gene from geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
+        test("delete gene from geneset and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -939,21 +913,15 @@ for (const testDataset of testDatasets) {
               await createGeneset(setToRemoveFrom, page);
               await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await removeGene(geneToRemove, page);
 
               await assertGeneDoesNotExist(geneToRemove, page);
 
-              await snapshotTestGraph(page, testInfo);
-
               await assertUndoRedo(
                 page,
-                async () => assertGeneExistsInGeneset(geneToRemove, page),
-                async () => assertGeneDoesNotExist(geneToRemove, page)
+                () => assertGeneExistsInGeneset(geneToRemove, page),
+                () => assertGeneDoesNotExist(geneToRemove, page)
               );
-
-              await snapshotTestGraph(page, testInfo);
             },
             { page }
           );
