@@ -89,7 +89,7 @@ export class IdentityInt32Index extends LabelIndexBase {
 
   getOffset(label: LabelType): number {
     // label to offset
-    return Number.isInteger(label) && label >= 0 && label < this.maxOffset
+    return typeof label === "number" && label >= 0 && label < this.maxOffset
       ? (label as number)
       : -1;
   }
@@ -137,7 +137,7 @@ export class IdentityInt32Index extends LabelIndexBase {
     const { maxOffset } = this;
     for (let i = 0, l = labels.length; i < l; i += 1) {
       const label = labels[i];
-      if (!Number.isInteger(label) || label < 0 || label >= maxOffset)
+      if (typeof label !== "number" || label < 0 || label >= maxOffset)
         throw new RangeError(`label: ${label}`);
     }
     return this.__promote(labels, true);
@@ -190,7 +190,7 @@ export class IdentityInt32Index extends LabelIndexBase {
   }
 
   dropLabel(label: LabelType): LabelIndexBase {
-    if (!Number.isInteger(label) || label < 0 || label > this.maxOffset - 1)
+    if (typeof label !== "number" || label < 0 || label > this.maxOffset - 1)
       throw new RangeError("Invalid label.");
     if (label === this.maxOffset - 1) {
       return new IdentityInt32Index(label);
