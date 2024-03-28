@@ -92,9 +92,22 @@ class MenuBar extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { layoutChoice, dispatch } = this.props;
     this.state = {
       pendingClipPercentiles: null,
     };
+    const currentConditionMet = layoutChoice?.current?.includes(
+      globals.spatialEmbeddingKeyword
+    );
+    // (seve): On some datasets, the app initially loads with a different layout selected, then switches to spatial.
+    //  This triggers the componentDidUpdate, which toggles the image underlay.
+    //  Other datasets correctly load with the spatial layout initially selected, but then don't trigger the componentDidUpdate.
+    if (currentConditionMet) {
+      dispatch({
+        type: "toggle image underlay",
+      });
+    }
   }
 
   componentDidUpdate(prevProps: any): void {
