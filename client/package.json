@@ -16,7 +16,7 @@
     "e2e-stage": "CXG_URL_BASE=https://cellxgene.staging.single-cell.czi.technology playwright test",
     "e2e-prod": "CXG_URL_BASE=https://cellxgene.cziscience.com playwright test",
     "fmt": "eslint --fix src __tests__",
-    "lint": "eslint src __tests__ & npm run type-check",
+    "lint": "eslint src __tests__ && npm run type-check",
     "prod": "npm run build -- configuration/webpack/webpack.config.prod.js",
     "type-check": "tsc --noEmit",
     "create-supported-browsers-regex": "echo \"module.exports = $(browserslist-useragent-regexp --allowHigherVersions);\" > configuration/webpack/SUPPORTED_BROWSERS_REGEX.js",

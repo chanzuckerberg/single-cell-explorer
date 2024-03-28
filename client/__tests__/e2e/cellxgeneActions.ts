@@ -531,12 +531,16 @@ export async function assertGeneInfoCardIsMinimized(
     "min-gene-info",
     "clear-gene-info",
   ];
-  for (const id of testIds) {
-    const result = await page.getByTestId(id).isVisible();
-    await expect(result).toBe(true);
-  }
-  const result = await page.getByTestId("gene-info-symbol").isVisible();
-  await expect(result).toBe(false);
+
+  await tryUntil(async () => {
+    for (const id of testIds) {
+      const result = await page.getByTestId(id).isVisible();
+      await expect(result).toBe(true);
+    }
+
+    const result = await page.getByTestId("gene-info-symbol").isVisible();
+    await expect(result).toBe(false);
+  }, {page});
 }
 
 export async function removeGeneInfo(page: Page): Promise<void> {
@@ -553,10 +557,12 @@ export async function assertGeneInfoDoesNotExist(
     "min-gene-info",
     "clear-gene-info",
   ];
-  for (const id of testIds) {
-    const result = await page.getByTestId(id).isVisible();
-    await expect(result).toBe(false);
-  }
+  await tryUntil(async () => {
+    for (const id of testIds) {
+      const result = await page.getByTestId(id).isVisible();
+      await expect(result).toBe(false);
+    }
+  }, {page});
 }
 
 /**

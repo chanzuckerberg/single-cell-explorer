@@ -160,7 +160,6 @@ class GeneSet extends React.Component<{}, State> {
         </div>
         {isOpen && !genesetIsEmpty && (
           <HistogramBrush
-            // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
             isGeneSetSummary
             field={setName}
             setGenes={setGenes}

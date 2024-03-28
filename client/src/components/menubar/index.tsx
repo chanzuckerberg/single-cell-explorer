@@ -330,21 +330,19 @@ class MenuBar extends React.PureComponent<{}, State> {
             justifyContent: "right",
           }}
         >
-          {seamlessEnabled ? (
-            <ButtonGroup className={styles.menubarButton}>
-              <AnchorButton
-                type="button"
-                icon={IconNames.INFO_SIGN}
-                onClick={() => {
-                  dispatch({ type: "toggle dataset drawer" });
-                }}
-                style={{
-                  cursor: "pointer",
-                }}
-                data-testid="drawer"
-              />
-            </ButtonGroup>
-          ) : null}
+          <ButtonGroup className={styles.menubarButton}>
+            <AnchorButton
+              type="button"
+              icon={IconNames.INFO_SIGN}
+              onClick={() => {
+                dispatch({ type: "toggle dataset drawer" });
+              }}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid="drawer"
+            />
+          </ButtonGroup>
           {isDownload && (
             <Tooltip
               content="Download the current graph view as a PNG"

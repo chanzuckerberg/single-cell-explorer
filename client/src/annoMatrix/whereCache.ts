@@ -76,7 +76,7 @@ export function _whereCacheGet(
   field: Field,
   query: Query
 ): LabelType[] | [undefined] {
-  /* 
+  /*
 	query will either be an where query (object) or a column name (string).
 
 	Return array of column labels or undefined.
@@ -209,5 +209,6 @@ function __whereCacheMerge(
 }
 
 export function _whereCacheMerge(...caches: (WhereCache | null)[]): WhereCache {
+  // eslint-disable-next-line compat/compat -- internal caches, not webAPI
   return caches.reduce(__whereCacheMerge, {} as WhereCache);
 }
