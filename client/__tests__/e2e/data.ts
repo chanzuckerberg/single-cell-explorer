@@ -317,7 +317,7 @@ export const datasets = {
       "gene-cell-count": "416",
     },
     brushOnGenesetMean: {
-      default: "74",
+      default: "701",
       withSubset: "634",
     },
     expandGeneAndBrush: {

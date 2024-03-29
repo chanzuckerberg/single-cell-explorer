@@ -42,18 +42,14 @@ const setup = async ({ page }: { page: Page }) => {
       },
     });
   });
-  // DEBUG
-  // DEBUG
-  // DEBUG
-  // DEBUG
-  // page.on("console", (message) => {
-  //   if (message.type() === "error") {
-  //     throw new Error(`CLIENT SIDE ERROR: ${JSON.stringify(message)}`);
-  //   }
-  // });
-  // page.on("pageerror", (error) => {
-  //   throw new Error(`UNCAUGHT CLIENT ERROR: ${error}`);
-  // });
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      throw new Error(`CLIENT SIDE ERROR: ${JSON.stringify(message)}`);
+    }
+  });
+  page.on("pageerror", (error) => {
+    throw new Error(`UNCAUGHT CLIENT ERROR: ${error}`);
+  });
 };
 
 export default setup;
