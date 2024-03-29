@@ -225,6 +225,7 @@ const doInitialDataLoad = (): ((
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
       // TODO: add logic to ensure this is working for spatial datasets when flag removed
       if (isSpatial) {
+        // (seve): maybe we should be fetching spatial images here too as well
         datasetSpatialMetadataFetchAndLoad(dispatch);
       }
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;

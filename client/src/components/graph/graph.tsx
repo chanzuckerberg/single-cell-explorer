@@ -670,6 +670,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
+    // (seve): this is leading to multiple image downloads, if this isn't large, maybe we should do it as part of the initial load and store it in redux
     this.spatialImage = this.isSpatial
       ? await this.loadTextureFromUrl(
           `${globals.API?.prefix}${globals.API?.version}spatial/image`
