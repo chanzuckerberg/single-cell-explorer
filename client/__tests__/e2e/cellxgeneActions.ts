@@ -367,8 +367,15 @@ export async function editGenesetName(
 ): Promise<void> {
   const editButton = `${genesetName}:edit-genesetName-mode`;
   const submitButton = `${genesetName}:submit-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click();
-  await page.getByTestId(editButton).click({ force: true });
+
+  await tryUntil(
+    async () => {
+      await page.getByTestId(`${genesetName}:see-actions`).click();
+      await page.getByTestId(editButton).click({ force: true });
+    },
+    { page }
+  );
+
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
@@ -406,10 +413,17 @@ export async function deleteGeneset(
   page: Page
 ): Promise<void> {
   const targetId = `${genesetName}:delete-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(targetId).click({ force: true });
+  await tryUntil(
+    async () => {
+      await page
+        .getByTestId(`${genesetName}:see-actions`)
+        .click({ force: true });
+      await page.getByTestId(targetId).click({ force: true });
 
-  await assertGenesetDoesNotExist(genesetName, page);
+      await assertGenesetDoesNotExist(genesetName, page);
+    },
+    { page }
+  );
 }
 
 export async function assertGenesetDoesNotExist(
