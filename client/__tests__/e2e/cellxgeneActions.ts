@@ -371,7 +371,13 @@ export async function editGenesetName(
   await tryUntil(
     async () => {
       await page.getByTestId(`${genesetName}:see-actions`).click();
-      await page.getByTestId(editButton).click({ force: true });
+      await page.getByTestId(editButton).click({
+        force: true,
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */
+        timeout: 1 * 1000,
+      });
     },
     { page }
   );
@@ -398,7 +404,13 @@ export async function checkGenesetDescription(
         .click({ force: true });
 
       const editButton = `${genesetName}:edit-genesetName-mode`;
-      await page.getByTestId(editButton).click({ force: true });
+      await page.getByTestId(editButton).click({
+        force: true
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */,
+        timeout: 1 * 1000,
+      });
 
       const description = page.getByTestId("change-geneset-description");
 
@@ -418,7 +430,13 @@ export async function deleteGeneset(
       await page
         .getByTestId(`${genesetName}:see-actions`)
         .click({ force: true });
-      await page.getByTestId(targetId).click({ force: true });
+
+      await page.getByTestId(targetId).click({
+        force: true,
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */ timeout: 1 * 1000,
+      });
 
       await assertGenesetDoesNotExist(genesetName, page);
     },
