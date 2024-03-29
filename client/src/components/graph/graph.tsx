@@ -78,12 +78,10 @@ function createModelTF() {
 }
 
 interface SpatialProps {
-  imaageWidth: number;
+  imageWidth: number;
   imageHeight: number;
-}
-
-interface ImageUnderlay {
-  isActive: boolean;
+  image: string;
+  libraryId: string;
 }
 
 type GraphState = {
@@ -117,7 +115,6 @@ type GraphState = {
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
   drawSpatialImage: DrawCommand | null;
-  spatial: SpatialProps | null;
 };
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -125,8 +122,7 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: SpatialProps;
-  imageUnderlay: ImageUnderlay;
+  imageUnderlay: boolean;
   screenCap: boolean;
 }
 
@@ -144,7 +140,6 @@ type GraphProps = Partial<RootState>;
   genesets: state.genesets.genesets,
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
-  spatial: state.spatial.metadata,
   imageUnderlay: state.imageUnderlay,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
@@ -188,6 +183,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   spatialImage: TextureImageData | null = null;
 
+  spatialProps: SpatialProps | null = null;
+
   /**
    * (thuang): This prevents re-rendering causes a second image download
    */
@@ -195,7 +192,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   private graphRef = React.createRef<HTMLDivElement>();
 
-  private downloadedImg: HTMLImageElement = new Image();
+  private underlayImage: HTMLImageElement = new Image();
 
   cachedAsyncProps: GraphAsyncProps | null;
 
@@ -311,7 +308,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       colorBuffer: null,
       flagBuffer: null,
       drawSpatialImage: null,
-      spatial: null,
       // component rendering derived state - these must stay synchronized
       // with the reducer state they were generated from.
       layoutState: {
@@ -616,15 +612,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   loadTextureFromUrl = async (src: string): Promise<any> => {
-    this.downloadedImg.crossOrigin = "anonymous";
-    this.downloadedImg.src = src;
+    this.underlayImage.crossOrigin = "anonymous";
+    this.underlayImage.src = src;
 
     await new Promise((resolve, reject) => {
-      this.downloadedImg.onload = () => resolve(this.downloadedImg);
-      this.downloadedImg.onerror = reject;
+      this.underlayImage.onload = () => resolve(this.underlayImage);
+      this.underlayImage.onerror = reject;
     });
 
-    return this.downloadedImg;
+    return this.underlayImage;
   };
 
   fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
@@ -635,18 +631,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       pointDilation,
       viewport,
-      spatial,
       imageUnderlay,
       screenCap,
     } = props.watchProps;
     const { modelTF } = this.state;
-    const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
+    const [layoutDf, colorDf, pointDilationDf, spatial] = await this.fetchData(
       annoMatrix,
       layoutChoice,
       colorsProp,
       pointDilation
     );
     const { currentDimNames } = layoutChoice;
+
+    // This  accessor will be cleaned up post schema migration
+    this.spatialProps =
+      (spatial?.col("spatial").asArray().at(0) as unknown as SpatialProps) ??
+      [];
 
     const X = layoutDf.col(currentDimNames[0]).asArray();
     const Y = layoutDf.col(currentDimNames[1]).asArray();
@@ -672,7 +672,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.spatialImage = this.isSpatial
       ? await this.loadTextureFromUrl(
-          `${globals.API?.prefix}${globals.API?.version}spatial/image`
+          `data:image/webp;base64,${this.spatialProps.image}`
         )
       : null;
 
@@ -683,7 +683,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       flags,
       width,
       height,
-      spatial,
       imageUnderlay,
       screenCap,
     };
@@ -694,7 +693,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     layoutChoice: RootState["layoutChoice"],
     colors: RootState["colors"],
     pointDilation: RootState["pointDilation"]
-  ): Promise<[Dataframe, Dataframe, Dataframe | null, Dataframe | null]> {
+  ): Promise<
+    [Dataframe, Dataframe | null, Dataframe | null, Dataframe | null]
+  > {
     /*
         fetch all data needed.  Includes:
           - the color by dataframe
@@ -705,18 +706,18 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const query = this.createColorByQuery(colors);
     const promises: [
       Promise<Dataframe>,
-      Promise<Dataframe>,
+      Promise<Dataframe | null>,
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
       annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
-      annoMatrix.fetch("uns", layoutChoice.current, globals.numBinsEmb),
       query
         ? annoMatrix.fetch(...query, globals.numBinsObsX)
         : Promise.resolve(null),
       pointDilationAccessor
         ? annoMatrix.fetch("obs", pointDilationAccessor)
         : Promise.resolve(null),
+      annoMatrix.fetch("uns", "spatial"),
     ];
     return Promise.all(promises);
   }
@@ -965,7 +966,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       screenCap,
       mountCapture,
       layoutChoice,
-      spatial,
       imageUnderlay,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
@@ -1001,10 +1001,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay?.isActive &&
       drawSpatialImage &&
       this.isSpatial &&
-      spatial
+      this.spatialProps
     ) {
-      const imW = spatial.imageWidth;
-      const imH = spatial.imageHeight;
+      const imW = this.spatialProps.imageWidth;
+      const imH = this.spatialProps.imageHeight;
       drawSpatialImage({
         projView,
         imageWidth: imW,
@@ -1017,6 +1017,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         }),
       });
     }
+
     if (screenCap && regl && !this.isDownloadingImage) {
       /**
        * (thuang): This prevents re-rendering causes a second image download
@@ -1063,7 +1064,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilation,
       crossfilter,
       screenCap,
-      spatial,
       imageUnderlay,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
@@ -1156,7 +1156,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
             crossfilter,
             viewport,
             screenCap,
-            spatial,
             imageUnderlay,
           }}
         >

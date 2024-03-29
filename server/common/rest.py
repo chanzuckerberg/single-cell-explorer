@@ -17,7 +17,13 @@ from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
-from server.common.constants import CELLGUIDE_CXG_KEY_NAME, SPATIAL_IMAGE_DEFAULT_RES, Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.constants import (
+    CELLGUIDE_CXG_KEY_NAME,
+    SPATIAL_IMAGE_DEFAULT_RES,
+    Axis,
+    DiffExpMode,
+    JSON_NaN_to_num_warning_msg,
+)
 from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
     ColorFormatException,
@@ -458,40 +464,6 @@ def summarize_var_post(request, data_adaptor):
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
 
 
-def spatial_image_get(request, data_adaptor):
-    """
-    Retrieve a spatial image from the data adaptor and return it as a PNG file
-    """
-
-    resolution = SPATIAL_IMAGE_DEFAULT_RES
-
-    spatial = data_adaptor.get_uns("spatial")
-    library_id = list(spatial.keys())[0]
-    img = spatial[library_id]['images'][SPATIAL_IMAGE_DEFAULT_RES]
-        
-    response_image = io.BytesIO()
-
-    pil_img = Image.fromarray(np.uint8(img * 255))
-    pil_img = pil_img.crop(crop_box(pil_img.size))
-    pil_img.save(response_image, format="WEBP", quality=90)
-
-    response_image.seek(0)
-
-    print("SPATIAL", spatial)
-
-    try:
-        return send_file(response_image, download_name=f"{library_id}-{resolution}.webp", mimetype="image/webp")
-    except (KeyError, DatasetAccessError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
-    except PrepareError:
-        return abort_and_log(
-            HTTPStatus.NOT_IMPLEMENTED,
-            f"No spatial image available {request.path}",
-            loglevel=logging.ERROR,
-            include_exc_info=True,
-        )
-
-
 def spatial_metadata_get(spatial):
     """
     Returns an object containing spatial metadata, including image width and image height
@@ -499,8 +471,8 @@ def spatial_metadata_get(spatial):
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
     library_id = list(spatial.keys())[0]
-    
-    image_array = spatial[library_id]['images'][resolution]
+
+    image_array = spatial[library_id]["images"][resolution]
 
     response_image = io.BytesIO()
 
@@ -515,16 +487,16 @@ def spatial_metadata_get(spatial):
     except KeyError:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
 
-    h = w = min(h, w) # adjust for 1:1 aspect ratio
+    h = w = min(h, w)  # adjust for 1:1 aspect ratio
 
     return {
-            'spatial': {
-                "imageWidth": float(h),
-                "imageHeight": float(w),
-                "libraryId": library_id,
-                "image": image_str,
-            }
-        }   
+        "spatial": {
+            "imageWidth": h,
+            "imageHeight": w,
+            "libraryId": library_id,
+            "image": image_str,
+        }
+    }
 
 
 def uns_metadata_get(request, data_adaptor):
@@ -535,15 +507,16 @@ def uns_metadata_get(request, data_adaptor):
 
     if metadata_key is None:
         return "No metadata key provided", 400
-    
+
     uns_metadata = data_adaptor.get_uns(metadata_key)
 
     # Spatial metadata is handled separately
     if metadata_key == "spatial":
-        # return make_response(jsonify(spatial_metadata_get(uns_metadata)), HTTPStatus.OK)
+
         return make_response(
             data_adaptor.uns_to_fbs_matrix(spatial_metadata_get(uns_metadata)),
             HTTPStatus.OK,
-            {"Content-Type": "application/octet-stream"})
+            {"Content-Type": "application/octet-stream"},
+        )
     else:
         return data_adaptor.get_uns(metadata_key)

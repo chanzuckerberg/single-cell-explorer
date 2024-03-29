@@ -169,7 +169,6 @@ class Dataset(metaclass=ABCMeta):
         """
         pass
 
-
     @abstractmethod
     def get_uns(self, metadata_key):
         """
@@ -358,10 +357,9 @@ class Dataset(metaclass=ABCMeta):
             library_id = list(spatial.keys())[0]
 
             try:
-                (h, w, _) = spatial[library_id]['images'][resolution].shape
+                (h, w, _) = spatial[library_id]["images"][resolution].shape
             except KeyError:
                 raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
-
 
             scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
 
@@ -375,7 +373,7 @@ class Dataset(metaclass=ABCMeta):
             A[:, 1] -= upper
             A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
             normalized_layout = A.astype(dtype=np.float32)
-            
+
         else:
             # scale isotropically
             try:
@@ -422,18 +420,18 @@ class Dataset(metaclass=ABCMeta):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
-    
-    
+
     def uns_to_fbs_matrix(self, uns_data):
         """
         Return specified uns as a flatbuffer, using the matrix fbs encoding
         """
-        df = pd.DataFrame(uns_data)
-        with ServerTiming.time("layout.encode"):
+        df = pd.DataFrame()
+        for col in uns_data:
+            df[col] = [uns_data[col]]
+        with ServerTiming.time("uns.encode"):
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=5000)
 
         return fbs
-
 
     def get_last_mod_time(self):
         try:

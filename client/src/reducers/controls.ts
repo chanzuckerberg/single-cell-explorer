@@ -71,6 +71,7 @@ interface ControlsState {
   screenCap: boolean;
   mountCapture: boolean;
   showWarningBanner: boolean;
+  imageUnderlay: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -101,6 +102,7 @@ const Controls = (
     screenCap: false,
     mountCapture: false,
     showWarningBanner: false,
+    imageUnderlay: false,
   },
   action: AnyAction
 ): ControlsState => {
@@ -439,7 +441,14 @@ const Controls = (
         mountCapture: false,
       };
     }
-
+    /**************************
+         Uns/Spatial
+    **************************/
+    case "toggle image underlay":
+      return {
+        ...state,
+        imageUnderlay: !state.imageUnderlay,
+      };
     default:
       return state;
   }
