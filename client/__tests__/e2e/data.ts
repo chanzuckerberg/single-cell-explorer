@@ -223,7 +223,7 @@ export const datasets = {
       cellset2: {
         cellType: "glial cell",
       },
-      pop2Gene: "TSC2",
+      pop2Gene: "ARF4",
     },
 
     genes: {
