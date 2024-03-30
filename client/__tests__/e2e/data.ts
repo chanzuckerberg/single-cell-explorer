@@ -218,12 +218,12 @@ export const datasets = {
     diffexp: {
       category: "cell_type",
       cellset1: {
-        cellType: "glial cell",
+        cellType: "B cell",
       },
       cellset2: {
-        cellType: "mast cell",
+        cellType: "glial cell",
       },
-      pop2Gene: "WBP1L",
+      pop2Gene: "ARF4",
     },
 
     genes: {
@@ -235,13 +235,13 @@ export const datasets = {
         {
           kind: "categorical",
           metadata: "cell_type",
-          values: ["glial cell", "mast cell"],
+          values: ["glial cell", "B cell"],
         },
       ],
       count: "332",
       categorical: {
         cell_type: {
-          "B cell": "0",
+          "B cell": "1",
           "CD14-low, CD16-positive monocyte": "0",
           "CD14-positive monocyte": "0",
           "CD8-positive, alpha-beta cytotoxic T cell": "0",
@@ -256,7 +256,7 @@ export const datasets = {
           "fibroblast of cardiac tissue": "0",
           "glial cell": "43",
           macrophage: "0",
-          "mast cell": "19",
+          "mast cell": "0",
           monocyte: "0",
           "mucosal invariant T cell": "0",
           "naive thymus-derived CD4-positive, alpha-beta T cell": "0",
@@ -271,7 +271,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "62",
+        count: "44",
       },
     },
     scatter: {
