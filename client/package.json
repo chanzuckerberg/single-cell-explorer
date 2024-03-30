@@ -15,7 +15,6 @@
     "e2e-dev": "CXG_URL_BASE=https://cellxgene.dev.single-cell.czi.technology playwright test",
     "e2e-stage": "CXG_URL_BASE=https://cellxgene.staging.single-cell.czi.technology playwright test",
     "e2e-prod": "CXG_URL_BASE=https://cellxgene.cziscience.com playwright test",
-    "e2e-copy-snapshots-to-linux": "for file in __tests__/e2e/e2e.test.ts-snapshots/*-darwin.txt; do cp \"$file\" \"${file/-darwin.txt/-linux.txt}\"; done",
     "fmt": "eslint --fix src __tests__",
     "lint": "eslint src __tests__ && npm run type-check",
     "prod": "npm run build -- configuration/webpack/webpack.config.prod.js",
