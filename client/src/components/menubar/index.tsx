@@ -374,23 +374,18 @@ class MenuBar extends React.PureComponent<{}, State> {
             </Tooltip>
           )}
           {isTest && (
-            <Tooltip
-              content="🌊"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                type="button"
-                icon={IconNames.TORCH}
-                style={{
-                  cursor: "pointer",
-                }}
-                data-testid="capture-and-display-graph"
-                loading={screenCap}
-                onClick={() => dispatch({ type: "test: screencap start" })}
-              />
-            </Tooltip>
+            <AnchorButton
+              className={styles.menubarButton}
+              type="button"
+              icon={IconNames.TORCH}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid="capture-and-display-graph"
+              data-chromatic="ignore"
+              loading={screenCap}
+              onClick={() => dispatch({ type: "test: screencap start" })}
+            />
           )}
           <Clip
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
