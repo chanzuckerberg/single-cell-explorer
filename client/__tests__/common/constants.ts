@@ -11,6 +11,8 @@ const DEFAULT_BASE_PATH = "d";
 
 export const testURL = [APP_URL_BASE, DEFAULT_BASE_PATH, DATASET, ""].join("/");
 
+export const runningAgainstDeployment = !testURL.includes("localhost");
+
 export const pageURLTruncate = [
   APP_URL_BASE,
   DEFAULT_BASE_PATH,

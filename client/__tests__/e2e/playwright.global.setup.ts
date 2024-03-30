@@ -1,7 +1,10 @@
 import { Page } from "@playwright/test";
 import { DATASET_METADATA_RESPONSE } from "../__mocks__/apiMock";
+import { runningAgainstDeployment } from "../common/constants";
 
 // (seve): mocking required to simulate metadata coming from data-portal needed for navigation header and breadcrumbs
+
+const LOCAL_HOST_PLAUSIBLE_ERROR = "window.plausible is not a function";
 
 const setup = async ({ page }: { page: Page }) => {
   await page.route("**/*/dataset-metadata", (route, request) => {
@@ -44,6 +47,10 @@ const setup = async ({ page }: { page: Page }) => {
   });
   page.on("console", (message) => {
     if (message.type() === "error") {
+      if (!runningAgainstDeployment) {
+        if (message.text().includes(LOCAL_HOST_PLAUSIBLE_ERROR)) return;
+      }
+
       throw new Error(`CLIENT SIDE ERROR: ${JSON.stringify(message)}`);
     }
   });

@@ -218,12 +218,12 @@ export const datasets = {
     diffexp: {
       category: "cell_type",
       cellset1: {
-        cellType: "glial cell",
+        cellType: "B cell",
       },
       cellset2: {
-        cellType: "mast cell",
+        cellType: "glial cell",
       },
-      pop2Gene: "WBP1L",
+      pop2Gene: "TSC2",
     },
 
     genes: {

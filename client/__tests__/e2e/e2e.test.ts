@@ -57,6 +57,7 @@ import {
   pageURLTruncate,
   testURL,
   pageURLSpatial,
+  runningAgainstDeployment,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
@@ -607,8 +608,6 @@ for (const testDataset of testDatasets) {
 
         test("diffexp", async ({ page }) => {
           if (option.withSubset) return;
-
-          const runningAgainstDeployment = !testURL.includes("localhost");
 
           // this test will take longer if we're running against a deployment
           if (runningAgainstDeployment) test.slow();
