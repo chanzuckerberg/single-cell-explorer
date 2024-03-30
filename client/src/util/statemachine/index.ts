@@ -121,12 +121,31 @@ export class StateMachine<ActionReturnType> {
   next(event: FsmEvent, data: unknown): ActionReturnType {
     const { graph, state } = this;
     const tsnMap = graph.get(event);
-    if (!tsnMap) return this.onError(this, event, state);
+
+    if (!tsnMap) {
+      console.log("!!!!!!!!!!!!! FSM ERROR !!!!!!!!!!!!!!!");
+      console.log("--------no tsnMap");
+      console.log("------this, event, state", this, event, state);
+
+      return this.onError(this, event, state);
+    }
 
     const transition = tsnMap.get(state);
-    if (!transition) return this.onError(this, event, state);
+
+    if (!transition) {
+      // DEBUG
+      // DEBUG
+      // DEBUG
+      console.log("!!!!!!!!!!!!! FSM ERROR !!!!!!!!!!!!!!!");
+      console.log("--------no transition");
+      console.log("------this, event, state", this, event, state);
+      console.log("-----tsnMap", tsnMap);
+
+      return this.onError(this, event, state);
+    }
 
     this.state = transition.to;
+
     return transition.action(this, transition, data);
   }
 }
