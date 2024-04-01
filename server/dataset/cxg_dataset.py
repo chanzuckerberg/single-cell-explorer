@@ -387,7 +387,7 @@ class CxgDataset(Dataset):
         """
         try:
             uns = self.open_array("uns")  # Iterate through metadata keys to find the metadata_key object
-        except KeyError as e:
+        except KeyError:
             return None
 
         for key in uns.meta:
