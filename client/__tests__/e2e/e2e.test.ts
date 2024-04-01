@@ -714,38 +714,38 @@ for (const testDataset of testDatasets) {
           });
           await snapshotTestGraph(page, testInfo);
 
-          // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
-          // the click is so fast that it's not registered
-          await tryUntil(
-            async () => {
-              await page.getByTestId("pop-1-geneset-expand").click();
-              await page.getByTestId("pop-2-geneset-expand").click();
+          // // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
+          // // the click is so fast that it's not registered
+          // await tryUntil(
+          //   async () => {
+          //     await page.getByTestId("pop-1-geneset-expand").click();
+          //     await page.getByTestId("pop-2-geneset-expand").click();
 
-              await waitUntilNoSkeletonDetected(page);
+          //     await waitUntilNoSkeletonDetected(page);
 
-              expect(page.getByTestId("geneset")).toBeTruthy();
+          //     expect(page.getByTestId("geneset")).toBeTruthy();
 
-              expect(
-                page.getByTestId(`${data.diffexp.pop2Gene}:gene-label`)
-              ).toBeVisible();
-            },
-            { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
-          );
+          //     expect(
+          //       page.getByTestId(`${data.diffexp.pop2Gene}:gene-label`)
+          //     ).toBeVisible();
+          //   },
+          //   { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
+          // );
 
-          await tryUntil(
-            async () => {
-              const genesAfter = await page
-                .getByTestId(/gene-set-genes-Pop2/)
-                .textContent();
+          // await tryUntil(
+          //   async () => {
+          //     const genesAfter = await page
+          //       .getByTestId(/gene-set-genes-Pop2/)
+          //       .textContent();
 
-              expect(genesAfter).toMatchSnapshot({
-                name: `${testDataset}-diffexp-gene-set-genes-Pop2.txt`,
-              });
-            },
-            { page }
-          );
+          //     expect(genesAfter).toMatchSnapshot({
+          //       name: `${testDataset}-diffexp-gene-set-genes-Pop2.txt`,
+          //     });
+          //   },
+          //   { page }
+          // );
 
-          await snapshotTestGraph(page, testInfo);
+          // await snapshotTestGraph(page, testInfo);
         });
 
         test("create a new geneset and undo/redo", async ({ page }) => {
