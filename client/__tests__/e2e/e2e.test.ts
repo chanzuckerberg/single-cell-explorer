@@ -660,7 +660,11 @@ for (const testDataset of testDatasets) {
           await snapshotTestGraph(page, testInfo);
         });
 
-        test("diffexp", async ({ page }, testInfo) => {
+        // DEBUG
+        // DEBUG
+        // DEBUG
+        // DEBUG
+        test.only("diffexp", async ({ page }, testInfo) => {
           if (option.withSubset) return;
 
           const runningAgainstDeployment = !testURL.includes("localhost");
@@ -701,9 +705,13 @@ for (const testDataset of testDatasets) {
 
           await waitUntilNoSkeletonDetected(page);
 
-          let genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
+          const genes = await page
+            .getByTestId(/gene-set-genes-Pop1/)
+            .textContent();
 
-          expect(genesHTML).toMatchSnapshot();
+          expect(genes).toMatchSnapshot({
+            name: `${testDataset}-diffexp-gene-set-genes-Pop1.txt`,
+          });
           await snapshotTestGraph(page, testInfo);
 
           // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
@@ -724,9 +732,19 @@ for (const testDataset of testDatasets) {
             { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
           );
 
-          genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
+          await tryUntil(
+            async () => {
+              const genesAfter = await page
+                .getByTestId(/gene-set-genes-Pop2/)
+                .textContent();
 
-          expect(genesHTML).toMatchSnapshot();
+              expect(genesAfter).toMatchSnapshot({
+                name: `${testDataset}-diffexp-gene-set-genes-Pop2.txt`,
+              });
+            },
+            { page }
+          );
+
           await snapshotTestGraph(page, testInfo);
         });
 

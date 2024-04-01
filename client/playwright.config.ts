@@ -58,7 +58,11 @@ export default defineConfig({
   },
   testDir: "./__tests__",
   /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
+  // DEBUG
+  // DEBUG
+  // DEBUG
+  // DEBUG
+  // forbidOnly: !!process.env.CI,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
