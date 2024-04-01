@@ -357,8 +357,8 @@ class Dataset(metaclass=ABCMeta):
 
             try:
                 (h, w, _) = spatial[library_id]["images"][resolution].shape
-            except KeyError as err:
-                raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from err
+            except KeyError as e:
+                raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
 
             scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
 
