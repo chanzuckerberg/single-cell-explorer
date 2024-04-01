@@ -483,8 +483,8 @@ def spatial_metadata_get(spatial):
 
     try:
         (h, w, _) = image_array.shape
-    except KeyError:
-        raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
+    except KeyError as e:
+        raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
 
     h = w = min(h, w)  # adjust for 1:1 aspect ratio
 
