@@ -39,6 +39,7 @@ export interface UnsSchema {
   };
   type: "spatial";
 }
+
 interface RawLayoutSchema {
   obs: EmbeddingSchema[];
   var?: EmbeddingSchema[];
