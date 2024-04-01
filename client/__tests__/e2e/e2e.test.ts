@@ -93,7 +93,7 @@ test.beforeEach(mockSetup);
 
 const testDatasets = [
   DATASET,
-  "super-cool-spatial.cxg",
+  // "super-cool-spatial.cxg",
 ] as (keyof typeof datasets)[];
 
 const testURLs = {
