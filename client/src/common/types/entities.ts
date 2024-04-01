@@ -62,11 +62,6 @@ export interface DatasetMetadata {
   s3_URI: S3URI;
 }
 
-export type DatasetSpatialMetadata = {
-  imageWidth: number;
-  imageHeight: number;
-};
-
 export type S3URI = string;
 
 /**
