@@ -11,7 +11,7 @@ from http import HTTPStatus
 
 import numpy as np
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect, send_file
+from flask import abort, current_app, jsonify, make_response, redirect
 from PIL import Image
 from werkzeug.urls import url_unquote
 
@@ -33,7 +33,6 @@ from server.common.errors import (
     FilterError,
     InvalidCxgDatasetError,
     JSONEncodingValueError,
-    PrepareError,
     TombstoneError,
     UnsupportedSummaryMethod,
 )

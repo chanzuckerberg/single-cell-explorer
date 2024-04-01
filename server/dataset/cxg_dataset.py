@@ -386,7 +386,7 @@ class CxgDataset(Dataset):
         - The deserialized spatial object, or None if not found.
         """
         uns = self.open_array("uns")  # Iterate through metadata keys to find the metadata_key object
-        for key in uns.meta.keys():
+        for key in uns.meta:
             if key.startswith(metadata_key):
                 # Deserialize the spatial object stored as a serialized pickle object
                 spatial_data_serialized = uns.meta[key]

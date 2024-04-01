@@ -1,6 +1,5 @@
 from abc import ABCMeta, abstractmethod
 from os.path import basename, splitext
-import pickle
 
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
-from server.common.utils.utils import jsonify_numpy, crop_box
+from server.common.utils.utils import crop_box, jsonify_numpy
 
 
 class Dataset(metaclass=ABCMeta):
