@@ -53,9 +53,6 @@ interface RawAnnotationsSchema {
     columns: AnnotationColumnSchema[];
     index: string;
   };
-  uns: {
-    columns: UnsSchema;
-  };
 }
 
 export interface RawSchema {

@@ -501,22 +501,20 @@ def spatial_metadata_get(spatial):
 
 def uns_metadata_get(request, data_adaptor):
     """
-    Returns uns metadata for the requested metadata key
+    Returns uns metadata for the requested key
     """
     metadata_key = request.args.get("key", None)
 
     if metadata_key is None:
-        return "No metadata key provided", 400
+        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
+    else:
+        uns_metadata = data_adaptor.get_uns(metadata_key)
 
-    uns_metadata = data_adaptor.get_uns(metadata_key)
-
-    # Spatial metadata is handled separately
     if metadata_key == "spatial":
-
         return make_response(
             data_adaptor.uns_to_fbs_matrix(spatial_metadata_get(uns_metadata)),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )
     else:
-        return data_adaptor.get_uns(metadata_key)
+        return uns_metadata

@@ -140,7 +140,7 @@ type GraphProps = Partial<RootState>;
   genesets: state.genesets.genesets,
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
-  imageUnderlay: state.imageUnderlay,
+  imageUnderlay: state.controls.imageUnderlay,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
@@ -998,7 +998,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       });
     }
     if (
-      imageUnderlay?.isActive &&
+      imageUnderlay &&
       drawSpatialImage &&
       this.isSpatial &&
       this.spatialProps

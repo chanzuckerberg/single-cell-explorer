@@ -444,11 +444,12 @@ const Controls = (
     /**************************
          Uns/Spatial
     **************************/
-    case "toggle image underlay":
+    case "toggle image underlay": {
       return {
         ...state,
         imageUnderlay: !state.imageUnderlay,
       };
+    }
     default:
       return state;
   }

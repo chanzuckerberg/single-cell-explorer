@@ -354,6 +354,8 @@ export default abstract class AnnoMatrix {
   _resolveCachedQueries(field: Field, queries: Query[]): LabelType[] {
     return queries
       .map((query: Query) =>
+        // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
+        // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
         _whereCacheGet(this._whereCache, this.schema, field, query).filter(
           (cacheKey: LabelType | undefined): cacheKey is LabelType =>
             cacheKey !== undefined && this._cache[field].hasCol(cacheKey)

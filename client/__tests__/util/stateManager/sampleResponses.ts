@@ -75,6 +75,15 @@ const aSchemaResponse: { schema: RawSchema } = {
       obs: [{ name: "umap", type: "float32", dims: ["umap_0", "umap_1"] }],
       var: [],
     },
+    uns: {
+      spatial: {
+        imageWidth: 0,
+        imageHeight: 0,
+        libraryId: "",
+        image: "",
+      },
+      type: "spatial",
+    },
   },
 };
 
@@ -170,10 +179,7 @@ function encodeMatrix(columns: any, colIndex = undefined) {
   Matrix.addNCols(builder, columns.length);
   Matrix.addColumns(builder, encColumns);
   if (colIndex) {
-    Matrix.addColIndexType(
-      builder,
-      TypedFBArray.JSONEncodedFBArray
-    );
+    Matrix.addColIndexType(builder, TypedFBArray.JSONEncodedFBArray);
     Matrix.addColIndex(builder, encColIndex);
   }
   const root = Matrix.endMatrix(builder);
