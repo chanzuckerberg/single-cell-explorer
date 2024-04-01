@@ -390,8 +390,10 @@ def layout_obs_get(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
-
-    spatial = data_adaptor.get_uns("spatial")
+    try:
+        spatial = data_adaptor.get_uns("spatial")
+    except KeyError:
+        spatial = None
 
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -467,6 +469,19 @@ def spatial_metadata_get(spatial):
     """
     Returns an object containing spatial metadata, including image width and image height
     """
+
+    # if no spatial metadata is present, return default values
+    # this is the case for datasets with no spatial data
+    if spatial is None:
+        return {
+        "spatial": {
+            "imageWidth": 0,
+            "imageHeight": 0,
+            "libraryId": "",
+            "image": "",
+        }
+    }
+
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
     library_id = list(spatial.keys())[0]
@@ -488,7 +503,7 @@ def spatial_metadata_get(spatial):
 
     h = w = min(h, w)  # adjust for 1:1 aspect ratio
 
-    return {
+    spatial_metadata ={
         "spatial": {
             "imageWidth": h,
             "imageHeight": w,
@@ -497,6 +512,8 @@ def spatial_metadata_get(spatial):
         }
     }
 
+    return spatial_metadata
+
 
 def uns_metadata_get(request, data_adaptor):
     """
@@ -504,10 +521,10 @@ def uns_metadata_get(request, data_adaptor):
     """
     metadata_key = request.args.get("key", None)
 
-    if metadata_key is None:
-        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
-    else:
+    if metadata_key is not None:
         uns_metadata = data_adaptor.get_uns(metadata_key)
+    else:
+        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
 
     if metadata_key == "spatial":
         return make_response(

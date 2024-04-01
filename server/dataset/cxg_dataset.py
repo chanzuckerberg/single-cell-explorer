@@ -385,9 +385,13 @@ class CxgDataset(Dataset):
         Returns:
         - The deserialized spatial object, or None if not found.
         """
-        uns = self.open_array("uns")  # Iterate through metadata keys to find the metadata_key object
+        try:
+            uns = self.open_array("uns")  # Iterate through metadata keys to find the metadata_key object
+        except KeyError as e:
+            return None
+
         for key in uns.meta:
-            if key.startswith(metadata_key):
+            if key == metadata_key:
                 # Deserialize the spatial object stored as a serialized pickle object
                 spatial_data_serialized = uns.meta[key]
                 try:
@@ -396,7 +400,7 @@ class CxgDataset(Dataset):
                 except Exception as e:
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
-        return None
+                    
 
     # function to get the embedding
     # this function to iterate through embeddings.

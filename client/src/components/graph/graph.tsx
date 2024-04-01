@@ -1002,7 +1002,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay &&
       drawSpatialImage &&
       this.isSpatial &&
-      this.spatialProps
+      this.spatialProps &&
+      this.spatialImage
     ) {
       const imW = this.spatialProps.imageWidth;
       const imH = this.spatialProps.imageHeight;
