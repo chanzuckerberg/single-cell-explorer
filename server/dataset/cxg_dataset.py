@@ -400,7 +400,6 @@ class CxgDataset(Dataset):
                 except Exception as e:
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
-                    
 
     # function to get the embedding
     # this function to iterate through embeddings.

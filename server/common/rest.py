@@ -474,13 +474,13 @@ def spatial_metadata_get(spatial):
     # this is the case for datasets with no spatial data
     if spatial is None:
         return {
-        "spatial": {
-            "imageWidth": 0,
-            "imageHeight": 0,
-            "libraryId": "",
-            "image": "",
+            "spatial": {
+                "imageWidth": 0,
+                "imageHeight": 0,
+                "libraryId": "",
+                "image": "",
+            }
         }
-    }
 
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
@@ -503,7 +503,7 @@ def spatial_metadata_get(spatial):
 
     h = w = min(h, w)  # adjust for 1:1 aspect ratio
 
-    spatial_metadata ={
+    spatial_metadata = {
         "spatial": {
             "imageWidth": h,
             "imageHeight": w,

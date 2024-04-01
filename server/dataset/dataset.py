@@ -347,7 +347,7 @@ class Dataset(metaclass=ABCMeta):
         """
 
         if spatial is not None and ename in "spatial":
-            
+
             if not spatial:
                 raise Exception("uns does not have spatial information")
 
