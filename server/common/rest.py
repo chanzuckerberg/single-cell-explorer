@@ -475,10 +475,10 @@ def spatial_metadata_get(spatial):
     if spatial is None:
         return {
             "spatial": {
-                "imageWidth": 0,
-                "imageHeight": 0,
-                "libraryId": "",
-                "image": "",
+                "imageWidth": None,
+                "imageHeight": None,
+                "libraryId": None,
+                "image": None,
             }
         }
 

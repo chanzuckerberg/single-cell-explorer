@@ -670,12 +670,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
-    // (seve): this is leading to multiple image downloads, if this isn't large, maybe we should do it as part of the initial load and store it in redux
-    this.spatialImage = this.isSpatial
-      ? await this.loadTextureFromUrl(
-          `data:image/webp;base64,${this.spatialProps.image}`
-        )
-      : null;
+    this.spatialImage =
+      this.isSpatial && this.spatialProps?.image
+        ? await this.loadTextureFromUrl(
+            `data:image/webp;base64,${this.spatialProps.image}`
+          )
+        : null;
 
     const { width, height } = viewport;
     return {
@@ -1001,6 +1001,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (
       imageUnderlay &&
       drawSpatialImage &&
+      layoutChoice.current === "spatial" &&
       this.isSpatial &&
       this.spatialProps &&
       this.spatialImage

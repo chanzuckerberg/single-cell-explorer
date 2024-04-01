@@ -725,11 +725,10 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["n_cols"], 1)
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
-    
+
     def test_uns_metadata_get(self):
         endpoint = "uns/meta"
         query = "key=spatial"
-        query_hash = hashlib.sha1(query.encode()).hexdigest()
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
@@ -739,6 +738,7 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
                 df = decode_fbs.decode_matrix_FBS(result.data)
                 self.assertEqual(df["n_rows"], 1)
+
 
 class TestDatasetMetadata(BaseTest):
     @classmethod
