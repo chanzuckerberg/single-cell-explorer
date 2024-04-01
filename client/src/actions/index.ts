@@ -16,12 +16,7 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type {
-  DatasetMetadata,
-  Dataset,
-  S3URI,
-  // DatasetSpatialMetadata,
-} from "../common/types/entities";
+import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
