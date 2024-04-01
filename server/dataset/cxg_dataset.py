@@ -378,25 +378,17 @@ class CxgDataset(Dataset):
 
     def get_uns(self, metadata_key):
         """
-        Extracts a metadata_key object from the uns array in a TileDB container.
-
-        Parameters:
-        - metadata_key: The key prefix used to identify objects in the metadata
-        Returns:
-        - The deserialized spatial object, or None if not found.
+        Extracts an object from the uns array in a TileDB container
         """
         try:
-            uns = self.open_array("uns")  # Iterate through metadata keys to find the metadata_key object
+            uns = self.open_array("uns")
         except KeyError:
             return None
 
         for key in uns.meta:
             if key == metadata_key:
-                # Deserialize the spatial object stored as a serialized pickle object
-                spatial_data_serialized = uns.meta[key]
                 try:
-                    spatial_data = pickle.loads(spatial_data_serialized)
-                    return spatial_data
+                    return pickle.loads(uns.meta[key])
                 except Exception as e:
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
