@@ -683,8 +683,12 @@ class Dataframe {
           typeof col
         >)(rowOffsets.length);
         for (let i = 0, l = rowOffsets.length; i < l; i += 1) {
-          const rowOffset = rowOffsets[i];
+          let rowOffset = rowOffsets[i];
 
+          // skip condition for uns metadata
+          if (rowOffset === -1 && !newColIndex) {
+            rowOffset = 0;
+          }
           if (rowOffset === -1) throw new RangeError("Unexpected row offset.");
           newCol[i] = col[rowOffset];
         }
