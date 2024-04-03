@@ -62,7 +62,10 @@ export interface DatasetMetadata {
   s3_URI: S3URI;
 }
 
-// TODO: proper typing after migration and final CXG schema
+/**
+ * Represents the metadata for a dataset's uns (unstructured) data.
+ * Currently only contains spatial metadata.
+ */
 export type DatasetUnsMetadata = {
   spatial: {
     imageWidth: number;

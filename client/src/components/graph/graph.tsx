@@ -604,7 +604,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  loadTextureFromUrl = async (src: string): Promise<HTMLImageElement> => {
+  loadTextureFromProp = async (src: string): Promise<HTMLImageElement> => {
     this.underlayImage.crossOrigin = "anonymous";
     this.underlayImage.src = src;
 
@@ -659,11 +659,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
-    console.log("unsMetadata", unsMetadata);
-
     this.spatialImage =
       this.isSpatial && unsMetadata.spatial.image
-        ? await this.loadTextureFromUrl(
+        ? await this.loadTextureFromProp(
             `data:image/webp;base64,${unsMetadata.spatial.image}`
           )
         : null;
@@ -961,7 +959,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera?.view();
-    console.log("drawSpatialImage", unsMetadata);
 
     const projView = mat3.multiply(
       mat3.create(),
