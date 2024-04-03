@@ -604,15 +604,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  loadTextureFromProp = async (src: string): Promise<HTMLImageElement> => {
-    this.underlayImage.crossOrigin = "anonymous";
+  loadTextureFromProp = (src: string): HTMLImageElement => {
     this.underlayImage.src = src;
-
-    await new Promise((resolve, reject) => {
-      this.underlayImage.onload = () => resolve(this.underlayImage);
-      this.underlayImage.onerror = reject;
-    });
-
     return this.underlayImage;
   };
 

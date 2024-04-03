@@ -470,7 +470,10 @@ const Controls = (
       return {
         ...state,
         loading: false,
-        unsMetadata: action.data,
+        unsMetadata: {
+          ...state.unsMetadata,
+          ...action.data,
+        },
       };
     case "request uns metadata error":
       return {
