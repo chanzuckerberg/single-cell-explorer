@@ -136,12 +136,13 @@ async function datasetMetadataFetchAndLoad(
  * @param dispatch - Function facilitating update of store.
  */
 async function datasetUnsMetadataFetchAndLoad(
-  dispatch: AppDispatch
+  dispatch: AppDispatch,
+  metadataKey: string
 ): Promise<void> {
   try {
     const datasetUnsMetadataResponse = await fetchJson<{
       metadata: DatasetUnsMetadata;
-    }>("uns/meta?key=spatial");
+    }>(`uns/meta?key=${metadataKey}`);
     dispatch({
       type: "request uns metadata success",
       data: datasetUnsMetadataResponse,
@@ -218,7 +219,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      datasetUnsMetadataFetchAndLoad(dispatch);
+      datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
