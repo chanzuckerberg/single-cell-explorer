@@ -64,7 +64,6 @@ export interface DatasetMetadata {
 
 /**
  * Represents the metadata for a dataset's uns (unstructured) data.
- * Currently only contains spatial metadata.
  */
 export type DatasetUnsMetadata = {
   spatial: {

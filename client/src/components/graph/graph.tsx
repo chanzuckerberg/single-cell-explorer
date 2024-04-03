@@ -116,7 +116,7 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  unsMetadata: DatasetUnsMetadata;
+  spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
 }
@@ -136,7 +136,7 @@ type GraphProps = Partial<RootState>;
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
-  unsMetadata: state.controls.unsMetadata,
+  spatial: state.controls.unsMetadata.spatial,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
@@ -619,7 +619,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
-      unsMetadata,
+      spatial,
     } = props.watchProps;
     const { modelTF } = this.state;
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
@@ -653,9 +653,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
     this.spatialImage =
-      this.isSpatial && unsMetadata.spatial.image
+      this.isSpatial && spatial.image
         ? await this.loadTextureFromProp(
-            `data:image/webp;base64,${unsMetadata.spatial.image}`
+            `data:image/webp;base64,${spatial.image}`
           )
         : null;
 
@@ -668,7 +668,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
-      unsMetadata,
+      spatial,
     };
   };
 
@@ -947,7 +947,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       mountCapture,
       layoutChoice,
       imageUnderlay,
-      unsMetadata,
+      spatial,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
@@ -983,11 +983,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       drawSpatialImage &&
       layoutChoice.current === "spatial" &&
       this.isSpatial &&
-      unsMetadata.spatial &&
+      spatial &&
       this.spatialImage
     ) {
-      const imW = unsMetadata.spatial.imageWidth;
-      const imH = unsMetadata.spatial.imageHeight;
+      const imW = spatial.imageWidth;
+      const imH = spatial.imageHeight;
       drawSpatialImage({
         projView,
         imageWidth: imW,
@@ -1048,7 +1048,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       screenCap,
       imageUnderlay,
-      unsMetadata,
+      spatial,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
       this.state;
@@ -1141,7 +1141,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             viewport,
             screenCap,
             imageUnderlay,
-            unsMetadata,
+            spatial,
           }}
         >
           <Async.Pending initial>
