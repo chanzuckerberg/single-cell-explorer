@@ -166,13 +166,13 @@ export const datasets = {
         "CD14-positive monocyte": "1",
         "CD8-positive, alpha-beta cytotoxic T cell": "8",
         "activated CD4-positive, alpha-beta T cell": "1",
+        adipocyte: "76",
         "cardiac pacemaker cell of sinoatrial node": "100",
         "dendritic cell, human": "7",
         "endocardial cell": "31",
         "endothelial cell": "15",
         "endothelial cell of artery": "14",
         "endothelial cell of lymphatic vessel": "2",
-        "fat cell": "76",
         "fibroblast of cardiac tissue": "842",
         "glial cell": "43",
         macrophage: "72",
@@ -191,21 +191,19 @@ export const datasets = {
     },
     continuous: {
       n_genes_by_counts: "int32",
-      log1p_n_genes_by_counts: "int32",
-      total_counts: "int32",
     },
     cellsets: {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "2156",
+          count: "2114",
         },
       ],
       categorical: [
         {
           metadata: "cell_type",
-          values: ["B cell", "fat cell"],
-          count: "77", // B cell 1 + fat cell 76
+          values: ["B cell", "glial cell"],
+          count: "44", // B cell 1 + glial cell 43
         },
       ],
       continuous: [
@@ -220,12 +218,12 @@ export const datasets = {
     diffexp: {
       category: "cell_type",
       cellset1: {
-        cellType: "fat cell",
+        cellType: "B cell",
       },
       cellset2: {
-        cellType: "mast cell",
+        cellType: "glial cell",
       },
-      pop2Gene: "TPSB2",
+      pop2Gene: "RACK1",
     },
 
     genes: {
@@ -237,28 +235,28 @@ export const datasets = {
         {
           kind: "categorical",
           metadata: "cell_type",
-          values: ["fat cell", "mast cell"],
+          values: ["glial cell", "B cell"],
         },
       ],
       count: "332",
       categorical: {
         cell_type: {
-          "B cell": "0",
+          "B cell": "1",
           "CD14-low, CD16-positive monocyte": "0",
           "CD14-positive monocyte": "0",
           "CD8-positive, alpha-beta cytotoxic T cell": "0",
           "activated CD4-positive, alpha-beta T cell": "0",
+          adipocyte: "0",
           "cardiac pacemaker cell of sinoatrial node": "0",
           "dendritic cell, human": "0",
           "endocardial cell": "0",
           "endothelial cell": "0",
           "endothelial cell of artery": "0",
           "endothelial cell of lymphatic vessel": "0",
-          "fat cell": "76",
           "fibroblast of cardiac tissue": "0",
-          "glial cell": "0",
+          "glial cell": "43",
           macrophage: "0",
-          "mast cell": "19",
+          "mast cell": "0",
           monocyte: "0",
           "mucosal invariant T cell": "0",
           "naive thymus-derived CD4-positive, alpha-beta T cell": "0",
@@ -273,7 +271,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "95",
+        count: "44",
       },
     },
     scatter: {

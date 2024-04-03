@@ -58,7 +58,7 @@ type State = any;
     categoricalSelection: state.categoricalSelection,
     seamlessEnabled: selectIsSeamlessEnabled(state),
     screenCap: state.controls.screenCap,
-    imageUnderlay: state.imageUnderlay,
+    imageUnderlay: state.controls.imageUnderlay,
     layoutChoice: state.layoutChoice,
   };
 })
@@ -433,8 +433,8 @@ class MenuBar extends React.PureComponent<{}, State> {
                     type="button"
                     data-testid="toggle-image-underlay"
                     icon="media"
-                    intent={imageUnderlay.isActive ? "primary" : "none"}
-                    active={imageUnderlay.isActive}
+                    intent={imageUnderlay ? "primary" : "none"}
+                    active={imageUnderlay}
                     onClick={() => {
                       dispatch({
                         type: "toggle image underlay",

@@ -29,6 +29,7 @@ export interface EmbeddingSchema {
   // TODO(thuang): Not sure what other types are available
   type: "float32";
 }
+
 interface RawLayoutSchema {
   obs: EmbeddingSchema[];
   var?: EmbeddingSchema[];

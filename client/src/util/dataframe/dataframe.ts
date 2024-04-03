@@ -959,12 +959,14 @@ class Dataframe {
 
     callback MUST not modify the column, but instead return a mutated copy.
     */
-    const columns = this.__columns.map((colData, colIdx) => callback(
+    const columns = this.__columns.map((colData, colIdx) =>
+      callback(
         colData,
         colIdx,
         this.colIndex.getLabel(colIdx) as LabelType,
         this
-      ));
+      )
+    );
     const columnsAccessor: (DataframeColumn | null)[] = columns.map((c, idx) =>
       this.__columns[idx] === c ? this.__columnsAccessor[idx] : null
     );

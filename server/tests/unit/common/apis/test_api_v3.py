@@ -726,6 +726,20 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
+    def test_uns_metadata_get(self):
+        endpoint = "uns/meta"
+        query = "key=spatial"
+        expected_data = {"spatial": {"image": None, "imageHeight": None, "imageWidth": None, "libraryId": None}}
+        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/ojson"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data, expected_data)
+
 
 class TestDatasetMetadata(BaseTest):
     @classmethod

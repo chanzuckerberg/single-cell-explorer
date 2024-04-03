@@ -1,4 +1,5 @@
 import { AnyAction } from "redux";
+import { DatasetUnsMetadata } from "../common/types/entities";
 
 type Level = "top" | "bottom" | "";
 
@@ -71,6 +72,8 @@ interface ControlsState {
   screenCap: boolean;
   mountCapture: boolean;
   showWarningBanner: boolean;
+  imageUnderlay: boolean;
+  unsMetadata: DatasetUnsMetadata;
 }
 const Controls = (
   state: ControlsState = {
@@ -101,6 +104,15 @@ const Controls = (
     screenCap: false,
     mountCapture: false,
     showWarningBanner: false,
+    imageUnderlay: false,
+    unsMetadata: {
+      spatial: {
+        imageWidth: 0,
+        imageHeight: 0,
+        libraryId: "",
+        image: "",
+      },
+    },
   },
   action: AnyAction
 ): ControlsState => {
@@ -439,7 +451,36 @@ const Controls = (
         mountCapture: false,
       };
     }
-
+    /**************************
+         Uns/Spatial
+    **************************/
+    case "toggle image underlay": {
+      return {
+        ...state,
+        imageUnderlay: !state.imageUnderlay,
+      };
+    }
+    case "request uns metadata started":
+      return {
+        ...state,
+        loading: true,
+        error: null,
+      };
+    case "request uns metadata success":
+      return {
+        ...state,
+        loading: false,
+        unsMetadata: {
+          ...state.unsMetadata,
+          ...action.data,
+        },
+      };
+    case "request uns metadata error":
+      return {
+        ...state,
+        loading: false,
+        error: action.error,
+      };
     default:
       return state;
   }

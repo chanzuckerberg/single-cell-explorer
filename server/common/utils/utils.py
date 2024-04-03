@@ -87,3 +87,21 @@ def custom_format_warning(msg, *args, **kwargs):  # type: ignore
 
 def jsonify_numpy(data):  # type: ignore
     return json.dumps(data, cls=Float32JSONEncoder, allow_nan=False)
+
+
+def crop_box(image_size):  # type: ignore
+    """
+    Calculate the cropping box for a 1:1 aspect ratio for spatial images
+    """
+    width, height = image_size
+
+    # The new dimensions will be the smaller of the width or height
+    new_dimension = min(width, height)
+
+    # Calculate the cropping box (left, upper, right, lower)
+    left = (width - new_dimension) / 2
+    upper = (height - new_dimension) / 2
+    right = (width + new_dimension) / 2
+    lower = (height + new_dimension) / 2
+
+    return (left, upper, right, lower)
