@@ -420,18 +420,6 @@ class Dataset(metaclass=ABCMeta):
 
         return fbs
 
-    def uns_to_fbs_matrix(self, uns_data):
-        """
-        Return specified uns as a flatbuffer, using the matrix fbs encoding
-        """
-        df = pd.DataFrame()
-        for col in uns_data:
-            df[col] = [uns_data[col]]
-        with ServerTiming.time("uns.encode"):
-            fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=5000)
-
-        return fbs
-
     def get_last_mod_time(self):
         try:
             lastmod = self.get_data_locator().lastmodtime()

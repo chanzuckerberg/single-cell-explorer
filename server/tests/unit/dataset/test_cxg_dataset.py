@@ -30,9 +30,6 @@ class TestCxgDataset(unittest.TestCase):
         schema = data.get_schema()
         with open(f"{FIXTURES_ROOT}/schema_without_int64.json", "r") as json_file:
             expected_schema = json.load(json_file)
-
-            # remove uns from schema comparison until test dataset is updated
-            schema.pop("uns", None)
             self.assertEqual(json.dumps(schema), json.dumps(expected_schema))
 
     def test_tdb_bug(self):

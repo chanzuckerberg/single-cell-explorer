@@ -469,8 +469,7 @@ def spatial_metadata_get(spatial):
     """
     Returns an object containing spatial metadata, including image width and image height
     """
-
-    # if no spatial metadata is present, return default values
+    # if no spatial metadata present, return default values
     # this is the case for datasets with no spatial data
     if spatial is None:
         return {
@@ -484,9 +483,11 @@ def spatial_metadata_get(spatial):
 
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
-    library_id = list(spatial.keys())[0]
-
-    image_array = spatial[library_id]["images"][resolution]
+    try:
+        library_id = list(spatial.keys())[0]
+        image_array = spatial[library_id]["images"][resolution]
+    except KeyError as e:
+        raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
 
     response_image = io.BytesIO()
 
@@ -496,11 +497,7 @@ def spatial_metadata_get(spatial):
 
     image_str = base64.b64encode(response_image.getvalue()).decode()
 
-    try:
-        (h, w, _) = image_array.shape
-    except KeyError as e:
-        raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
-
+    (h, w, _) = image_array.shape
     h = w = min(h, w)  # adjust for 1:1 aspect ratio
 
     spatial_metadata = {
@@ -523,14 +520,19 @@ def uns_metadata_get(request, data_adaptor):
 
     if metadata_key is not None:
         uns_metadata = data_adaptor.get_uns(metadata_key)
+
+        if metadata_key == "spatial":
+            return make_response(
+                spatial_metadata_get(uns_metadata),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"},
+            )
+        else:
+            return (
+                make_response(uns_metadata),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"},
+            )
+
     else:
         return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
-
-    if metadata_key == "spatial":
-        return make_response(
-            data_adaptor.uns_to_fbs_matrix(spatial_metadata_get(uns_metadata)),
-            HTTPStatus.OK,
-            {"Content-Type": "application/octet-stream"},
-        )
-    else:
-        return uns_metadata

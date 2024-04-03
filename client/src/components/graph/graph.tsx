@@ -36,6 +36,7 @@ import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
+import { DatasetUnsMetadata } from "../../common/types/entities";
 
 /*
 Simple 2D transforms control all point painting.  There are three:
@@ -77,13 +78,6 @@ function createModelTF() {
   return m;
 }
 
-interface SpatialProps {
-  imageWidth: number;
-  imageHeight: number;
-  image: string;
-  libraryId: string;
-}
-
 type GraphState = {
   regl: Regl | null;
   drawPoints: DrawCommand | null;
@@ -122,6 +116,7 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
+  unsMetadata: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
 }
@@ -141,6 +136,7 @@ type GraphProps = Partial<RootState>;
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
+  unsMetadata: state.controls.unsMetadata,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
@@ -182,8 +178,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
   isSpatial = false;
 
   spatialImage: TextureImageData | null = null;
-
-  spatialProps: SpatialProps | null = null;
 
   /**
    * (thuang): This prevents re-rendering causes a second image download
@@ -610,8 +604,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  loadTextureFromUrl = async (src: string): Promise<any> => {
+  loadTextureFromUrl = async (src: string): Promise<HTMLImageElement> => {
     this.underlayImage.crossOrigin = "anonymous";
     this.underlayImage.src = src;
 
@@ -633,20 +626,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     } = props.watchProps;
     const { modelTF } = this.state;
-    const [layoutDf, colorDf, pointDilationDf, spatial] = await this.fetchData(
+    const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
       annoMatrix,
       layoutChoice,
       colorsProp,
       pointDilation
     );
     const { currentDimNames } = layoutChoice;
-
-    // This  accessor will be cleaned up post schema migration
-    this.spatialProps =
-      (spatial?.col("spatial").asArray().at(0) as unknown as SpatialProps) ??
-      [];
 
     const X = layoutDf.col(currentDimNames[0]).asArray();
     const Y = layoutDf.col(currentDimNames[1]).asArray();
@@ -670,10 +659,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
+    console.log("unsMetadata", unsMetadata);
+
     this.spatialImage =
-      this.isSpatial && this.spatialProps?.image
+      this.isSpatial && unsMetadata.spatial.image
         ? await this.loadTextureFromUrl(
-            `data:image/webp;base64,${this.spatialProps.image}`
+            `data:image/webp;base64,${unsMetadata.spatial.image}`
           )
         : null;
 
@@ -686,6 +677,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     };
   };
 
@@ -694,9 +686,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     layoutChoice: RootState["layoutChoice"],
     colors: RootState["colors"],
     pointDilation: RootState["pointDilation"]
-  ): Promise<
-    [Dataframe, Dataframe | null, Dataframe | null, Dataframe | null]
-  > {
+  ): Promise<[Dataframe, Dataframe | null, Dataframe | null]> {
     /*
         fetch all data needed.  Includes:
           - the color by dataframe
@@ -708,7 +698,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const promises: [
       Promise<Dataframe>,
       Promise<Dataframe | null>,
-      Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
       annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
@@ -718,7 +707,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilationAccessor
         ? annoMatrix.fetch("obs", pointDilationAccessor)
         : Promise.resolve(null),
-      annoMatrix.fetch("uns", "spatial"),
     ];
     return Promise.all(promises);
   }
@@ -968,10 +956,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
       mountCapture,
       layoutChoice,
       imageUnderlay,
+      unsMetadata,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
     const cameraTF = camera?.view();
+    console.log("drawSpatialImage", unsMetadata);
 
     const projView = mat3.multiply(
       mat3.create(),
@@ -1003,11 +993,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       drawSpatialImage &&
       layoutChoice.current === "spatial" &&
       this.isSpatial &&
-      this.spatialProps &&
+      unsMetadata.spatial &&
       this.spatialImage
     ) {
-      const imW = this.spatialProps.imageWidth;
-      const imH = this.spatialProps.imageHeight;
+      const imW = unsMetadata.spatial.imageWidth;
+      const imH = unsMetadata.spatial.imageHeight;
       drawSpatialImage({
         projView,
         imageWidth: imW,
@@ -1068,6 +1058,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       screenCap,
       imageUnderlay,
+      unsMetadata,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
       this.state;
@@ -1160,6 +1151,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             viewport,
             screenCap,
             imageUnderlay,
+            unsMetadata,
           }}
         >
           <Async.Pending initial>

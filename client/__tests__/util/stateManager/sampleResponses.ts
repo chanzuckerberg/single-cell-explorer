@@ -75,15 +75,6 @@ const aSchemaResponse: { schema: RawSchema } = {
       obs: [{ name: "umap", type: "float32", dims: ["umap_0", "umap_1"] }],
       var: [],
     },
-    uns: {
-      spatial: {
-        imageWidth: 0,
-        imageHeight: 0,
-        libraryId: "",
-        image: "",
-      },
-      type: "spatial",
-    },
   },
 };
 

@@ -30,8 +30,6 @@ export function _getColumnSchema(
       return schema.layout.obsByName[col];
     case Field.X:
       return schema.dataframe;
-    case Field.uns:
-      return schema.uns;
     default:
       throw new Error(`unknown field name: ${field}`);
   }
@@ -74,8 +72,6 @@ export function _schemaColumns(schema: Schema, field: Field): string[] {
       return Object.keys(schema.annotations.varByName);
     case Field.emb:
       return Object.keys(schema.layout.obsByName);
-    case Field.uns:
-      return Object.keys(schema.uns);
     default:
       throw new Error(`unknown field name: ${field}`);
   }

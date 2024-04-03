@@ -76,10 +76,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
         priority = 0; // high prio load for embeddings
         break;
       }
-      case "uns": {
-        doRequest = _unsLoader(this.baseURL, field, query);
-        break;
-      }
       default:
         throw new Error("Unknown field name");
     }
@@ -113,19 +109,6 @@ function _embLoader(
   const urlBase = `${baseURL}layout/obs`;
   const urlQuery = _urlEncodeLabelQuery("layout-name", query);
   const url = _urlOptionalEncodeNbinsSuffix(`${urlBase}?${urlQuery}`, nBins);
-  return () => doBinaryRequest(url);
-}
-
-function _unsLoader(
-  baseURL: string,
-  _field: Field,
-  query: Query
-): () => Promise<ArrayBuffer> {
-  _expectSimpleQuery(query);
-
-  const urlBase = `${baseURL}uns/meta`;
-  const urlQuery = _urlEncodeLabelQuery("key", query);
-  const url = _urlOptionalEncodeNbinsSuffix(`${urlBase}?${urlQuery}`, null);
   return () => doBinaryRequest(url);
 }
 

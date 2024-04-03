@@ -30,16 +30,6 @@ export interface EmbeddingSchema {
   type: "float32";
 }
 
-export interface UnsSchema {
-  spatial: {
-    imageWidth: number;
-    imageHeight: number;
-    libraryId: string;
-    image: string;
-  };
-  type: "spatial";
-}
-
 interface RawLayoutSchema {
   obs: EmbeddingSchema[];
   var?: EmbeddingSchema[];
@@ -60,7 +50,6 @@ export interface RawSchema {
   annotations: RawAnnotationsSchema;
   dataframe: XMatrixSchema;
   layout: RawLayoutSchema;
-  uns: UnsSchema;
 }
 
 interface AnnotationsSchema extends RawAnnotationsSchema {
@@ -76,7 +65,6 @@ interface LayoutSchema extends RawLayoutSchema {
 export interface Schema extends RawSchema {
   annotations: AnnotationsSchema;
   layout: LayoutSchema;
-  uns: UnsSchema;
 }
 
 /**
@@ -85,8 +73,7 @@ export interface Schema extends RawSchema {
 export type ArraySchema =
   | AnnotationColumnSchema
   | EmbeddingSchema
-  | XMatrixSchema
-  | UnsSchema;
+  | XMatrixSchema;
 
 /**
  * Set of data / metadata objects that must be specified in a CXG.
@@ -96,5 +83,4 @@ export enum Field {
   "var" = "var",
   "emb" = "emb",
   "X" = "X",
-  "uns" = "uns",
 }

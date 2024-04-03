@@ -457,18 +457,8 @@ class CxgDataset(Dataset):
         for ename in embeddings:
             A = self.open_array(f"emb/{ename}")
             obs_layout.append({"name": ename, "type": "float32", "dims": [f"{ename}_{d}" for d in range(0, A.ndim)]})
-        uns = {
-            "spatial": {
-                "columns": [
-                    {"name": "imageWidth", "writable": False, "type": "number"},
-                    {"name": "imageHeight", "writable": False, "type": "number"},
-                    {"name": "libraryId", "writable": False, "type": "string"},
-                    {"name": "image", "writable": False, "type": "string"},
-                ]
-            }
-        }
 
-        schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}, "uns": uns}
+        schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}}
         return schema
 
     def get_schema(self):

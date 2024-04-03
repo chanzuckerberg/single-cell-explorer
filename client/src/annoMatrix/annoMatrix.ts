@@ -31,7 +31,6 @@ interface Cache {
   [Field.var]: Dataframe;
   [Field.emb]: Dataframe;
   [Field.X]: Dataframe;
-  [Field.uns]: Dataframe;
 }
 
 interface PendingLoad {
@@ -39,7 +38,6 @@ interface PendingLoad {
   [Field.var]: { [key: string]: Promise<void> };
   [Field.emb]: { [key: string]: Promise<void> };
   [Field.X]: { [key: string]: Promise<void> };
-  [Field.uns]: { [key: string]: Promise<void> };
 }
 
 export interface UserFlags {
@@ -104,7 +102,7 @@ export default abstract class AnnoMatrix {
     /*
     return the fields present in the AnnoMatrix instance.
     */
-    return [Field.obs, Field.var, Field.emb, Field.X, Field.uns];
+    return [Field.obs, Field.var, Field.emb, Field.X];
   }
 
   constructor(
@@ -153,14 +151,12 @@ export default abstract class AnnoMatrix {
       var: Dataframe.empty(this.rowIndex),
       emb: Dataframe.empty(this.rowIndex),
       X: Dataframe.empty(this.rowIndex),
-      uns: Dataframe.empty(this.rowIndex),
     };
     this._pendingLoad = {
       obs: {},
       var: {},
       emb: {},
       X: {},
-      uns: {},
     };
     this._whereCache = {} as WhereCache;
     this._gcInfo = new Map();
@@ -593,7 +589,6 @@ export default abstract class AnnoMatrix {
       var: {},
       emb: {},
       X: {},
-      uns: {},
     };
     return clone;
   }

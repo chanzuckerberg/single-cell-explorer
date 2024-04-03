@@ -732,12 +732,10 @@ class EndPoints(BaseTest):
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
-                header = {"Accept": "application/octet-stream"}
+                header = {"Accept": "application/ojson"}
                 result = self.client.get(url, headers=header)
                 self.assertEqual(result.status_code, HTTPStatus.OK)
-                self.assertEqual(result.headers["Content-Type"], "application/octet-stream")
-                df = decode_fbs.decode_matrix_FBS(result.data)
-                self.assertEqual(df["n_rows"], 1)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
 
 
 class TestDatasetMetadata(BaseTest):
