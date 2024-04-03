@@ -729,14 +729,7 @@ class EndPoints(BaseTest):
     def test_uns_metadata_get(self):
         endpoint = "uns/meta"
         query = "key=spatial"
-        expected_data = {
-            'spatial': {
-                'image': None, 
-                'imageHeight': None, 
-                'imageWidth': None, 
-                'libraryId': None
-                }
-            }
+        expected_data = {"spatial": {"image": None, "imageHeight": None, "imageWidth": None, "libraryId": None}}
         for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
