@@ -457,7 +457,7 @@ const Controls = (
     case "toggle image underlay": {
       return {
         ...state,
-        imageUnderlay: !state.imageUnderlay,
+        imageUnderlay: action.toggle,
       };
     }
     case "request uns metadata started":
