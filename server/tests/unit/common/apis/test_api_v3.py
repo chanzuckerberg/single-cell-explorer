@@ -14,7 +14,7 @@ import requests
 
 from server.common.config.app_config import AppConfig
 from server.common.diffexpdu import DiffExArguments
-from server.tests import FIXTURES_ROOT, decode_fbs
+from server.tests import FIXTURES_ROOT, FIXTURES_ROOT_UNS, decode_fbs
 from server.tests.fixtures.fixtures import pbmc3k_colors
 from server.tests.unit import BaseTest as _BaseTest
 
@@ -50,6 +50,13 @@ class EndPoints(BaseTest):
         cls.TEST_S3_URI_ENCODED_SPARSE = cls.encode_s3_uri(cls.TEST_S3_URI_SPARSE)
         cls.TEST_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED}"
         cls.TEST_DATASET_URL_BASE_SPARSE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED_SPARSE}"
+
+        cls.TEST_UNS_S3_URI = f"{FIXTURES_ROOT_UNS}/super-cool-spatial.cxg"
+        cls.TEST_UNS_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_UNS_S3_URI)
+        cls.TEST_UNS_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_UNS_S3_URI_ENCODED}"
+        
+        cls.TEST_UNS_URL_BASE = f"{cls.TEST_UNS_DATASET_URL_BASE}/api/v0.3/"
+
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
@@ -726,11 +733,11 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
-    def test_uns_metadata_get(self):
+    def test_uns_no_metadata_get(self):
         endpoint = "uns/meta"
         query = "key=spatial"
-        expected_data = {"spatial": {"image": None, "imageHeight": None, "imageWidth": None, "libraryId": None}}
-        for url_base in [self.TEST_URL_BASE, self.TEST_URL_BASE_SPARSE]:
+        uns_meta_expected_response = {}
+        for url_base in [self.TEST_URL_BASE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
                 header = {"Accept": "application/ojson"}
@@ -738,7 +745,32 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.OK)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
                 result_data = json.loads(result.data)
-                self.assertEqual(result_data, expected_data)
+                self.assertEqual(result_data, uns_meta_expected_response)
+
+    def test_uns_metadata_get(self):
+        endpoint = "uns/meta"
+        query = "key=spatial"
+        uns_meta_expected_response = {
+                            "spatial": {
+                                "imageWidth": 1955,
+                                "imageHeight": 1955,
+                                "libraryId": "HCAHeartST13233999",
+                            }
+                        }
+        for url_base in [self.TEST_UNS_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/ojson"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+
+                # To avoid clutter of a large endcoded image string as part of the expected response,
+                # we verify that the image field is present in the response then remove it for assertion
+                assert "image" in result_data["spatial"]
+                del result_data["spatial"]["image"]
+                self.assertEqual(result_data, uns_meta_expected_response)
 
 
 class TestDatasetMetadata(BaseTest):

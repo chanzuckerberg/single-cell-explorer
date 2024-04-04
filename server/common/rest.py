@@ -1,7 +1,5 @@
-import base64
 import copy
 import hashlib
-import io
 import logging
 import os
 import struct
@@ -9,17 +7,14 @@ import sys
 import zlib
 from http import HTTPStatus
 
-import numpy as np
 import requests
 from flask import abort, current_app, jsonify, make_response, redirect
-from PIL import Image
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
 from server.common.constants import (
     CELLGUIDE_CXG_KEY_NAME,
-    SPATIAL_IMAGE_DEFAULT_RES,
     Axis,
     DiffExpMode,
     JSON_NaN_to_num_warning_msg,
@@ -36,7 +31,7 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
-from server.common.utils.utils import crop_box
+from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
 
@@ -465,53 +460,6 @@ def summarize_var_post(request, data_adaptor):
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
 
 
-def spatial_metadata_get(spatial):
-    """
-    Returns an object containing spatial metadata, including image width and image height
-    """
-    # if no spatial metadata present, return default values
-    # this is the case for datasets with no spatial data
-    if spatial is None:
-        return {
-            "spatial": {
-                "imageWidth": None,
-                "imageHeight": None,
-                "libraryId": None,
-                "image": None,
-            }
-        }
-
-    resolution = SPATIAL_IMAGE_DEFAULT_RES
-
-    try:
-        library_id = list(spatial.keys())[0]
-        image_array = spatial[library_id]["images"][resolution]
-    except KeyError as e:
-        raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
-
-    response_image = io.BytesIO()
-
-    image = Image.fromarray(np.uint8(image_array * 255))
-    image = image.crop(crop_box(image.size))
-    image.save(response_image, format="WEBP", quality=90)
-
-    image_str = base64.b64encode(response_image.getvalue()).decode()
-
-    (h, w, _) = image_array.shape
-    h = w = min(h, w)  # adjust for 1:1 aspect ratio
-
-    spatial_metadata = {
-        "spatial": {
-            "imageWidth": h,
-            "imageHeight": w,
-            "libraryId": library_id,
-            "image": image_str,
-        }
-    }
-
-    return spatial_metadata
-
-
 def uns_metadata_get(request, data_adaptor):
     """
     Returns uns metadata for the requested key
@@ -521,12 +469,14 @@ def uns_metadata_get(request, data_adaptor):
     if metadata_key is not None:
         uns_metadata = data_adaptor.get_uns(metadata_key)
 
-        if metadata_key == "spatial":
+        if metadata_key == "spatial" and uns_metadata is not None:
             return make_response(
                 spatial_metadata_get(uns_metadata),
                 HTTPStatus.OK,
                 {"Content-Type": "application/json"},
             )
+        elif uns_metadata is None:
+            return make_response({}, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
             return (
                 make_response(uns_metadata),
