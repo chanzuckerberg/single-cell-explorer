@@ -760,7 +760,7 @@ class EndPoints(BaseTest):
         for url_base in [self.TEST_UNS_URL_BASE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
-                header = {"Content-Type": "application/json"}
+                header = {"Accept": "application/json"}
                 result = self.client.get(url, headers=header)
 
                 self.assertEqual(result.status_code, HTTPStatus.OK)
