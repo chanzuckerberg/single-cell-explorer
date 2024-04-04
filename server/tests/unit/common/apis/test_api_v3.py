@@ -751,12 +751,12 @@ class EndPoints(BaseTest):
         endpoint = "uns/meta"
         query = "key=spatial"
         uns_meta_expected_response = {
-                            "spatial": {
-                                "imageWidth": 1955,
-                                "imageHeight": 1955,
-                                "libraryId": "HCAHeartST13233999",
-                            }
-                        }
+            "spatial": {
+                "imageWidth": 1955,
+                "imageHeight": 1955,
+                "libraryId": "HCAHeartST13233999",
+            }
+        }
         for url_base in [self.TEST_UNS_URL_BASE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
