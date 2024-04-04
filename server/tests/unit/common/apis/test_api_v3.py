@@ -754,6 +754,7 @@ class EndPoints(BaseTest):
                 "imageWidth": 1955,
                 "imageHeight": 1955,
                 "libraryId": "HCAHeartST13233999",
+                "image": "484f7e831642a66fadebc8231ad4eeaf1dff1b39",
             }
         }
         for url_base in [self.TEST_UNS_URL_BASE]:
@@ -761,14 +762,13 @@ class EndPoints(BaseTest):
                 url = f"{url_base}{endpoint}?{query}"
                 header = {"Accept": "application/ojson"}
                 result = self.client.get(url, headers=header)
+
                 self.assertEqual(result.status_code, HTTPStatus.OK)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
-                result_data = json.loads(result.data)
 
-                # To avoid clutter of a large endcoded image string as part of the expected response,
-                # we verify that the image field is present in the response then remove it for assertion
-                assert "image" in result_data["spatial"]
-                del result_data["spatial"]["image"]
+                result_data = json.loads(result.data)
+                # hash the image string and compare with expected response hash
+                result_data["spatial"]["image"] = hashlib.sha1(result_data["spatial"]["image"].encode()).hexdigest()
                 self.assertEqual(result_data, uns_meta_expected_response)
 
 
