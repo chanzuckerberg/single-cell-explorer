@@ -106,6 +106,7 @@ class MenuBar extends React.PureComponent<{}, State> {
     if (currentConditionMet) {
       dispatch({
         type: "toggle image underlay",
+        toggle: true,
       });
     }
   }
@@ -123,6 +124,7 @@ class MenuBar extends React.PureComponent<{}, State> {
     if (!prevConditionMet && currentConditionMet) {
       dispatch({
         type: "toggle image underlay",
+        toggle: true,
       });
     }
   }
@@ -438,6 +440,7 @@ class MenuBar extends React.PureComponent<{}, State> {
                     onClick={() => {
                       dispatch({
                         type: "toggle image underlay",
+                        toggle: !imageUnderlay,
                       });
                     }}
                   />
