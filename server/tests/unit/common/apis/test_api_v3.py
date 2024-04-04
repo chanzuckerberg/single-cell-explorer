@@ -54,7 +54,6 @@ class EndPoints(BaseTest):
         cls.TEST_UNS_S3_URI = f"{FIXTURES_ROOT_UNS}/super-cool-spatial.cxg"
         cls.TEST_UNS_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_UNS_S3_URI)
         cls.TEST_UNS_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_UNS_S3_URI_ENCODED}"
-        
         cls.TEST_UNS_URL_BASE = f"{cls.TEST_UNS_DATASET_URL_BASE}/api/v0.3/"
 
         cls.app.testing = True
