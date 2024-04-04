@@ -15,7 +15,8 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
-from server.common.utils.utils import crop_box, jsonify_numpy
+from server.common.utils.uns import crop_box
+from server.common.utils.utils import jsonify_numpy
 
 
 class Dataset(metaclass=ABCMeta):
