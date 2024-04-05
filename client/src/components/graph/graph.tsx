@@ -333,13 +333,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
-    const { selectionTool, currentSelection, graphInteractionMode } =
+    const { selectionTool, currentSelection, graphInteractionMode, screenCap } =
       this.props;
     const { toolSVG, viewport } = this.state;
     const hasResized =
       prevState.viewport.height !== viewport.height ||
       prevState.viewport.width !== viewport.width;
     let stateChanges: Partial<GraphState> = {};
+
+    if (prevProps.screenCap !== screenCap) {
+      stateChanges = {
+        ...stateChanges,
+        viewport: this.getViewportDimensions(),
+      };
+    }
     if (
       (viewport.height && viewport.width && !toolSVG) || // first time init
       hasResized || //  window size has changed we want to recreate all SVGs
@@ -542,7 +549,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   getViewportDimensions = (): { height: number; width: number } => {
-    const { viewportRef } = this.props;
+    const { viewportRef, screenCap } = this.props;
+
+    if (screenCap) {
+      const prevAspectRatio =
+        viewportRef.clientHeight / viewportRef.clientWidth;
+
+      return {
+        height: 1800 * prevAspectRatio,
+        width: 1800,
+      };
+    }
     return {
       height: viewportRef.clientHeight,
       width: viewportRef.clientWidth,
@@ -1008,7 +1025,51 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.isDownloadingImage = true;
 
       const graph = regl._gl.canvas;
-      const imageURI = await toPng(graph as HTMLCanvasElement, {
+
+      const offscreenCanvas = document.createElement("canvas");
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const legendNodes =
+        document.getElementById("continuous_legend")?.childNodes;
+      const ctx = offscreenCanvas.getContext("2d");
+      ctx?.drawImage(graph, 0, 0);
+
+      legendNodes?.forEach(async (node) => {
+        if (node.nodeName === "CANVAS") {
+          // get style from node
+          const style = window.getComputedStyle(node as HTMLCanvasElement);
+          const nodeWidth = parseInt(style.width, 10);
+          const nodeHeight = parseInt(style.height, 10);
+          const nodeLeft = parseInt(style.left, 10);
+          const nodeTop = parseInt(style.top, 10);
+          ctx?.drawImage(
+            node as HTMLCanvasElement,
+            100 + nodeLeft,
+            100 + nodeTop,
+            nodeWidth,
+            nodeHeight
+          );
+        } else if (node.nodeName === "svg" || node.nodeName === "SVG") {
+          const svgNode = node as SVGSVGElement;
+          const xml = new XMLSerializer().serializeToString(svgNode);
+          const svg64 = btoa(unescape(encodeURIComponent(xml)));
+          const b64Start = "data:image/svg+xml;base64,";
+          const image64 = b64Start + svg64;
+          const img = new Image();
+          img.onload = () => {
+            ctx?.drawImage(img, 100, 100);
+          };
+          img.src = image64;
+        }
+      });
+
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 25);
+      });
+
+      const imageURI = await toPng(offscreenCanvas, {
         backgroundColor: "white",
         height,
         width,
@@ -1031,8 +1092,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
           a.remove();
         }, 1000);
         dispatch({ type: "graph: screencap end" });
-        this.isDownloadingImage = false;
       }
+      this.isDownloadingImage = false;
     }
 
     regl?._gl.flush();
