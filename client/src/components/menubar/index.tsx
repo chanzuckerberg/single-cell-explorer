@@ -19,6 +19,7 @@ import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
+import { isSpatialMode } from "../../common/selectors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -296,8 +297,6 @@ class MenuBar extends React.PureComponent<{}, State> {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
-      seamlessEnabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       screenCap,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       imageUnderlay,
@@ -425,30 +424,29 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          {layoutChoice?.current?.includes(globals.spatialEmbeddingKeyword) &&
-            isSpatial && (
-              <ButtonGroup className={styles.menubarButton}>
-                <Tooltip
-                  content="Toggle image"
-                  position="bottom"
-                  hoverOpenDelay={globals.tooltipHoverOpenDelay}
-                >
-                  <AnchorButton
-                    type="button"
-                    data-testid="toggle-image-underlay"
-                    icon="media"
-                    intent={imageUnderlay ? "primary" : "none"}
-                    active={imageUnderlay}
-                    onClick={() => {
-                      dispatch({
-                        type: "toggle image underlay",
-                        toggle: !imageUnderlay,
-                      });
-                    }}
-                  />
-                </Tooltip>
-              </ButtonGroup>
-            )}
+          {isSpatialMode(this.props) && isSpatial && (
+            <ButtonGroup className={styles.menubarButton}>
+              <Tooltip
+                content="Toggle image"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="toggle-image-underlay"
+                  icon="media"
+                  intent={imageUnderlay ? "primary" : "none"}
+                  active={imageUnderlay}
+                  onClick={() => {
+                    dispatch({
+                      type: "toggle image underlay",
+                      toggle: !imageUnderlay,
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+          )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}

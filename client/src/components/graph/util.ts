@@ -1,5 +1,9 @@
 import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
+import { GraphProps, GraphState } from "./types";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
+import { isSpatialMode as isSpatialModeSelector } from "../../common/selectors";
 
 export async function captureLegend(
   colors: any,
@@ -92,29 +96,42 @@ Simple 2D transforms control all point painting.  There are three:
   * camera - apply a 2D camera transformation (pan, zoom)
   * projection - apply any transformation required for screen size and layout
 */
-export function createProjectionTF(
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  /*
-  the projection transform accounts for the screen size & other layout
-  */
-  const fractionToUse = 0.95; // fraction of min dimension to use
-  const topGutterSizePx = 32; // top gutter for tools
-  const bottomGutterSizePx = 32; // bottom gutter for tools
+export function createProjectionTF({
+  viewportWidth,
+  viewportHeight,
+  isSpatialMode,
+}: {
+  viewportWidth: number;
+  viewportHeight: number;
+  isSpatialMode: boolean;
+}) {
+  /**
+   * the projection transform accounts for the screen size & other layout
+   * (thuang): For spatial mode, we want to use the full screen width and height,
+   * so the openseadragon layer can align with the canvas layer properly.
+   */
+  const fractionToUse = isSpatialMode ? 1 : 0.95; // fraction of min dimension to use
+  const topGutterSizePx = isSpatialMode ? 0 : 32; // top gutter for tools
+  const bottomGutterSizePx = isSpatialMode ? 0 : 32; // bottom gutter for tools
   const heightMinusGutter =
     viewportHeight - topGutterSizePx - bottomGutterSizePx;
+
   const minDim = Math.min(viewportWidth, heightMinusGutter);
+
   const aspectScale = new Float32Array([
     (fractionToUse * minDim) / viewportWidth,
     (fractionToUse * minDim) / viewportHeight,
   ]);
+
   const m = mat3.create();
+
   mat3.fromTranslation(m, [
     0,
     (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
   ]);
+
   mat3.scale(m, m, aspectScale);
+
   return m;
 }
 
@@ -126,4 +143,59 @@ export function createModelTF() {
   const m = mat3.fromScaling(mat3.create(), [2, 2]);
   mat3.translate(m, m, [-0.5, -0.5]);
   return m;
+}
+
+export function getSpatialPrefixUrl(s3URI: string) {
+  const url = getSpatialUrl(s3URI);
+
+  return `${url}spatial_files/`;
+}
+
+export function getSpatialTileSources(s3URI: string) {
+  const url = getSpatialUrl(s3URI);
+
+  return `${url}spatial.dzi`;
+}
+
+function getSpatialUrl(s3URI: string) {
+  const datasetVersionId = getDatasetVersionId(s3URI);
+
+  const { hostname } = window.location;
+
+  // TODO(thuang): Take rdev into account
+
+  if (hostname.includes("dev")) {
+    return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
+  }
+
+  if (hostname.includes("staging")) {
+    return `https://cellxgene.staging.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
+  }
+
+  if (hostname.includes("prod")) {
+    return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
+  }
+
+  return `http://localhost:5005/d/${datasetVersionId}.cxg/static/deep_zoom/`;
+}
+
+function getDatasetVersionId(s3URI: string) {
+  return s3URI.split("/").at(-1)?.split(".cxg")[0];
+}
+
+const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+
+/**
+ * (thuang): Selector to determine if the OpenSeadragon viewer should be shown
+ */
+export function shouldShowOpenseadragon(props: GraphProps, state: GraphState) {
+  const { isDeepZoomSourceValid } = state;
+
+  const {
+    config: { s3URI },
+  } = props;
+
+  return (
+    isSpatial && isDeepZoomSourceValid && s3URI && isSpatialModeSelector(props)
+  );
 }

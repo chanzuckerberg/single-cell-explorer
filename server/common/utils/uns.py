@@ -6,6 +6,8 @@ from PIL import Image
 
 from server.common.constants import SPATIAL_IMAGE_DEFAULT_RES
 
+import pyvips
+
 
 def crop_box(image_size):  # type: ignore
     """
@@ -27,7 +29,7 @@ def crop_box(image_size):  # type: ignore
 
 def spatial_metadata_get(spatial):  # type: ignore
     """
-    Returns an object containing spatial metadata, including image width and image height
+    Returns an object containing spatial metadata, including image width and image height.
     """
     resolution = SPATIAL_IMAGE_DEFAULT_RES
 
@@ -37,21 +39,41 @@ def spatial_metadata_get(spatial):  # type: ignore
     except KeyError as e:
         raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
 
+    # Convert the image to a uint8 numpy array scaled to 0-255
+    image_array_uint8 = np.uint8(image_array * 255)
+
+    # Convert the numpy array to a PIL Image
+    image_pil = Image.fromarray(image_array_uint8)
+
+    # Crop the image using a predefined crop_box function
+    image_pil = image_pil.crop(crop_box(image_pil.size))
+
+    # Save the cropped PIL image to a BytesIO stream in WEBP format
     response_image = io.BytesIO()
-
-    image = Image.fromarray(np.uint8(image_array * 255))
-    image = image.crop(crop_box(image.size))  # type: ignore
-    image.save(response_image, format="WEBP", quality=90)
-
+    image_pil.save(response_image, format="WEBP", quality=90)
     image_str = base64.b64encode(response_image.getvalue()).decode()
 
-    (h, w, _) = image_array.shape
-    h = w = min(h, w)  # adjust for 1:1 aspect ratio
+    # Preparing data for pyvips from the cropped numpy array
+
+    # NOTE: Flip the image vertically, since somehow the client flips the image
+    image_pil = image_pil.transpose(Image.FLIP_TOP_BOTTOM)
+
+    # Convert the flipped PIL Image back to a numpy array
+    flipped_array_uint8 = np.array(image_pil)
+
+    h, w, bands = flipped_array_uint8.shape
+    linear = flipped_array_uint8.reshape(w * h * bands)
+    vipsImage = pyvips.Image.new_from_memory(linear.data, w, h, bands, "uchar")
+
+    # Save as Deep Zoom Image (this will create a directory with tiles and a .dzi file)
+    vipsImage.dzsave("./server/common/web/static/deep_zoom/spatial", suffix=".jpeg")
+
+    h = w = min(h, w)  # Adjust for 1:1 aspect ratio
 
     spatial_metadata = {
         "spatial": {
-            "imageWidth": h,
-            "imageHeight": w,
+            "imageWidth": w,
+            "imageHeight": h,
             "libraryId": library_id,
             "image": image_str,
         }

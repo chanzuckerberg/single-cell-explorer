@@ -15,7 +15,9 @@ import { EmbeddingSchema, Schema } from "../common/types/schema";
 function bestDefaultLayout(layouts: Array<string>): string {
   const preferredNames = ["umap", "tsne", "pca"];
   const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
+
   if (idx !== -1) return preferredNames[idx];
+
   return layouts[0];
 }
 
@@ -23,8 +25,11 @@ function setToDefaultLayout(schema: Schema): LayoutChoiceState {
   const available = schema.layout.obs
     .map((v: EmbeddingSchema) => v.name)
     .sort();
+
   const current = bestDefaultLayout(available);
+
   const currentDimNames = schema.layout.obsByName[current].dims;
+
   return { available, current, currentDimNames };
 }
 
@@ -57,6 +62,7 @@ const LayoutChoice = (
       const { schema } = nextSharedState.annoMatrix;
       const current = (action as LayoutChoiceAction).layoutChoice;
       const currentDimNames = schema.layout.obsByName[current].dims;
+
       return { ...state, current, currentDimNames };
     }
 

@@ -34,6 +34,14 @@ const ConfigReducer = (
         error: null,
         ...action.config,
       };
+    /**
+     * (thuang): Add `s3URI` to the state, so FE can use it to fetch deep zoom images
+     */
+    case "initial data load complete":
+      return {
+        ...state,
+        s3URI: action.s3URI,
+      };
     case "initial data load error":
       return {
         ...state,

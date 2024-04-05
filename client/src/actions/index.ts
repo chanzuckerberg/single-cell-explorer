@@ -34,7 +34,7 @@ import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
+
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
 
 function setGlobalConfig(config: Config) {
@@ -203,14 +203,13 @@ const doInitialDataLoad = (): ((
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
-    if (!globals.API) throw new Error("API not set");
 
-    // check URL for feature flags
-    checkFeatureFlags();
+    if (!globals.API) throw new Error("API not set");
 
     try {
       const s3URI = await s3URIFetch();
       const oldPrefix = globals.updateAPIWithS3(s3URI);
+
       const [config, schema] = await Promise.all([
         configFetchAndLoad(dispatch),
         schemaFetch(),
@@ -233,8 +232,8 @@ const doInitialDataLoad = (): ((
         isCellGuideCxg,
       });
 
-      // save isCellGuideCxg to the reducer store
-      dispatch({ type: "initial data load complete", isCellGuideCxg });
+      // save `isCellGuideCxg` and `s3URI` to the reducer store
+      dispatch({ type: "initial data load complete", isCellGuideCxg, s3URI });
 
       const defaultEmbedding = config?.parameters?.default_embedding;
       const layoutSchema = schema?.schema?.layout?.obs ?? [];
