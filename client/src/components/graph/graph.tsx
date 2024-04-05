@@ -9,6 +9,8 @@ import memoize from "memoize-one";
 import Async from "react-async";
 import { Button } from "@blueprintjs/core";
 
+import Openseadragon, { Viewer } from "openseadragon";
+
 import { setupBrush, setupLasso } from "./setupSVGandBrush";
 import _camera, { Camera } from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
@@ -173,6 +175,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   reglCanvas: HTMLCanvasElement | null;
 
+  private openseadragon: Viewer | null = null;
+
   computePointPositions = memoize((X, Y, modelTF) => {
     /*
         compute the model coordinate for each point
@@ -322,6 +326,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       prevState.viewport.width !== viewport.width;
     let stateChanges: Partial<GraphState> = {};
 
+    this.mountOpenSeadragon();
+
     if (prevProps.screenCap !== screenCap) {
       stateChanges = {
         ...stateChanges,
@@ -367,6 +373,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   handleResize = (): void => {
+    const { spatial } = this.props;
+
+    // DEBUG
+    // DEBUG
+    // DEBUG
+    console.log("-----spatial", spatial);
+
     const viewport = this.getViewportDimensions();
     const projectionTF = createProjectionTF(viewport.width, viewport.height);
     this.setState((state) => ({
@@ -376,16 +389,25 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }));
   };
 
+  handleGoHome = () => {
+    const { camera } = this.state;
+
+    camera?.goHome(this.openseadragon);
+    this.renderCanvas();
+  };
+
   handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
+
     if (
       camera?.handleEvent(
         e as unknown as MouseEvent<
           HTMLCanvasElement,
           MouseEvent<Element, MouseEvent>
         >,
-        projectionTF
+        projectionTF,
+        this.openseadragon
       )
     ) {
       this.renderCanvas();
@@ -929,6 +951,23 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
+  mountOpenSeadragon() {
+    const {
+      viewport: { width, height },
+    } = this.state;
+
+    if (this.openseadragon || !width || !height) return;
+
+    this.openseadragon = Openseadragon({
+      id: "openseadragon",
+      prefixUrl:
+        "http://localhost:5005/d/super-cool-spatial.cxg/static/deep_zoom/spatial_files/",
+      tileSources:
+        "http://localhost:5005/d/super-cool-spatial.cxg/static/deep_zoom/spatial.dzi",
+      showNavigationControl: false,
+    });
+  }
+
   async renderPoints(
     regl: GraphState["regl"],
     drawPoints: GraphState["drawPoints"],
@@ -961,10 +1000,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { width, height } = this.reglCanvas;
 
     regl?.poll();
-    regl?.clear({
-      depth: 1,
-      color: [1, 1, 1, 1],
-    });
+
+    // DEBUG
+    // DEBUG
+    // DEBUG
+    // Remove this since it adds white background
+    // regl?.clear({
+    //   depth: 1,
+    //   color: [1, 1, 1, 1],
+    // });
 
     if (drawPoints) {
       drawPoints({
@@ -986,19 +1030,23 @@ class Graph extends React.Component<GraphProps, GraphState> {
       spatial &&
       this.spatialImage
     ) {
-      const imW = spatial.imageWidth;
-      const imH = spatial.imageHeight;
-      drawSpatialImage({
-        projView,
-        imageWidth: imW,
-        imageHeight: imH,
-        rectCoords: [0, 0, imW, 0, 0, imH, 0, imH, imW, 0, imW, imH],
-        spatialImageAsTexture: regl?.texture({
-          data: this.spatialImage,
-          wrapS: "clamp",
-          wrapT: "clamp",
-        }),
-      });
+      // const imW = spatial.imageWidth;
+      // const imH = spatial.imageHeight;
+      // DEBUG
+      // DEBUG
+      // DEBUG
+      // No need to render image anymore
+      // drawSpatialImage({
+      //   projView,
+      //   imageWidth: imW,
+      //   imageHeight: imH,
+      //   rectCoords: [0, 0, imW, 0, 0, imH, 0, imH, imW, 0, imW, imH],
+      //   spatialImageAsTexture: regl?.texture({
+      //     data: this.spatialImage,
+      //     wrapS: "clamp",
+      //     wrapT: "clamp",
+      //   }),
+      // });
     }
 
     if (screenCap && regl && !this.isDownloadingImage) {
@@ -1065,6 +1113,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.state;
     const cameraTF = camera?.view()?.slice();
 
+    // DEBUG
+    // DEBUG
+    // DEBUG
+    console.log("-----------------viewport.height", viewport.height);
+
     return (
       <div
         id="graph-wrapper"
@@ -1077,6 +1130,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
         data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
+        <button
+          onClick={this.handleGoHome}
+          type="button"
+          style={{
+            position: "absolute",
+            top: "55px",
+            zIndex: 20,
+          }}
+        >
+          Go Home
+        </button>
         <GraphOverlayLayer
           /**  @ts-expect-error TODO: type GraphOverlayLayer**/
           width={viewport.width}
@@ -1103,6 +1167,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
           width={viewport.width}
           height={viewport.height}
           pointerEvents={graphInteractionMode === "select" ? "auto" : "none"}
+        />
+        <div
+          id="openseadragon"
+          style={{
+            width: viewport.width,
+            height: viewport.height,
+            /**
+             * (thuang): Copied from the style of the graph-canvas element
+             * to ensure both openseadragon and the canvas are resizable
+             */
+            position: "absolute",
+            top: 0,
+            left: 0,
+            padding: 0,
+            margin: 0,
+          }}
         />
         <canvas
           width={viewport.width}

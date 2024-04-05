@@ -99,22 +99,28 @@ export function createProjectionTF(
   /*
   the projection transform accounts for the screen size & other layout
   */
-  const fractionToUse = 0.95; // fraction of min dimension to use
-  const topGutterSizePx = 32; // top gutter for tools
-  const bottomGutterSizePx = 32; // bottom gutter for tools
+  const fractionToUse = 1; // fraction of min dimension to use
+  const topGutterSizePx = 0; // top gutter for tools
+  const bottomGutterSizePx = 0; // bottom gutter for tools
   const heightMinusGutter =
     viewportHeight - topGutterSizePx - bottomGutterSizePx;
+
   const minDim = Math.min(viewportWidth, heightMinusGutter);
+
   const aspectScale = new Float32Array([
     (fractionToUse * minDim) / viewportWidth,
     (fractionToUse * minDim) / viewportHeight,
   ]);
+
   const m = mat3.create();
+
   mat3.fromTranslation(m, [
     0,
     (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
   ]);
+
   mat3.scale(m, m, aspectScale);
+
   return m;
 }
 

@@ -1,5 +1,6 @@
 import { vec2, mat3 } from "gl-matrix";
 import { MouseEvent } from "react";
+import { Point, Viewer } from "openseadragon";
 import clamp from "./clamp";
 
 const EPSILON = 0.000001;
@@ -8,11 +9,11 @@ const scaleSpeed = 0.5;
 // exporting this for testing
 export const scaleMax = 12.0;
 const scaleMin = 0.5;
-const panBound = 0.8;
 
 // private
 const scratch0 = new Float32Array(16);
 const scratch1 = new Float32Array(16);
+const scratch3 = new Float32Array(16);
 
 export class Camera {
   canvas: HTMLCanvasElement;
@@ -50,36 +51,89 @@ export class Camera {
     return this.viewMatrix[0];
   }
 
-  pan(dx: number, dy: number): void {
+  /**
+   * Pans the camera by the specified amount in the x and y directions.
+   *
+   * @param dx - The amount to pan in the x direction.
+   * @param dy - The amount to pan in the y direction.
+   * @param openseadragon - The OpenSeadragon viewer instance (optional).
+   * @param offsetX - The x offset of the pan operation (default: 0).
+   * @param offsetY - The y offset of the pan operation (default: 0).
+   * @param prevOffsetX - The previous x offset of the pan operation (default: 0).
+   * @param prevOffsetY - The previous y offset of the pan operation (default: 0).
+   */
+  pan(
+    dx: number,
+    dy: number,
+    openseadragon: Viewer | null = null,
+    offsetX = 0,
+    offsetY = 0,
+    prevOffsetX = 0,
+    prevOffsetY = 0
+  ): void {
     const m = this.viewMatrix;
-    const dyRange: [number, number] = [
-      -panBound - (m[7] + 1) / m[4],
-      panBound - (m[7] - 1) / m[4],
-    ];
-    const dxRange: [number, number] = [
-      -panBound - (m[6] + 1) / m[0],
-      panBound - (m[6] - 1) / m[0],
-    ];
+
+    const dyRange: [number, number] = [-(m[7] + 1) / m[4], -(m[7] - 1) / m[4]];
+    const dxRange: [number, number] = [-(m[6] + 1) / m[0], -(m[6] - 1) / m[0]];
 
     const dxClamped = clamp(dx, dxRange);
     const dyClamped = clamp(dy, dyRange);
-    if (Math.abs(dxClamped) <= EPSILON && Math.abs(dyClamped) <= EPSILON)
-      return;
 
-    mat3.translate(m, m, [dxClamped, dyClamped]);
+    if (Math.abs(dxClamped) <= EPSILON && Math.abs(dyClamped) <= EPSILON) {
+      return;
+    }
+
+    mat3.translate(m, m, [dx, dy]);
     mat3.invert(this.viewMatrixInv, m);
+
+    if (openseadragon) {
+      const webPoint = new Point(offsetX, offsetY);
+      const viewportPoint = openseadragon.viewport.pointFromPixel(webPoint);
+
+      const prevWebPoint = new Point(prevOffsetX, prevOffsetY);
+      const prevViewportPoint =
+        openseadragon.viewport.pointFromPixel(prevWebPoint);
+
+      const delta = vec2.sub(
+        scratch3,
+        [viewportPoint.x, viewportPoint.y],
+        [prevViewportPoint.x, prevViewportPoint.y]
+      );
+
+      /**
+       * (thuang): We explicitly set `-` to the clamped values `delta` because
+       * OpenSeadragon's `panBy` function expects the delta to be in the
+       * opposite direction of the pan.
+       */
+      openseadragon.viewport.panBy(new Point(-delta[0], -delta[1]), true);
+    }
   }
 
-  zoomAt(d: number, x = 0, y = 0): void {
+  goHome(openseadragon: Viewer | null = null) {
+    // Reset the custom layer's transformation matrix to the identity matrix
+    mat3.identity(this.viewMatrix);
+    mat3.invert(this.viewMatrixInv, this.viewMatrix);
+
+    if (openseadragon) {
+      openseadragon.viewport.goHome(true);
+    }
+  }
+
+  zoomAt(
+    d: number,
+    x = 0,
+    y = 0,
+    openseadragon: Viewer | null,
+    offsetX = 0,
+    offsetY = 0
+  ): void {
     /*
     Camera zoom at [x,y]
     */
     const m = this.viewMatrix;
-    const bounds: [number, number] = [-panBound, panBound];
-    x = clamp(x, bounds);
-    y = clamp(y, bounds);
 
     const dClamped = clamp(d * m[0], [scaleMin, scaleMax]) / m[0];
+
     if (Math.abs(1 - dClamped) <= EPSILON) return; // noop request
 
     mat3.translate(m, m, [x, y]);
@@ -87,6 +141,17 @@ export class Camera {
     mat3.translate(m, m, [-x, -y]);
 
     mat3.invert(this.viewMatrixInv, m);
+
+    if (openseadragon) {
+      const webPoint = new Point(offsetX, offsetY);
+      const viewportPoint = openseadragon.viewport.pointFromPixel(webPoint);
+
+      openseadragon.viewport.zoomBy(
+        dClamped,
+        new Point(viewportPoint.x, viewportPoint.y),
+        true
+      );
+    }
   }
 
   /*
@@ -104,68 +169,101 @@ export class Camera {
     canvasX: number,
     canvasY: number,
     projectionInvTF: mat3
-  ): vec2 {
+  ): { local: vec2; offset: vec2 } {
     /*
     Convert mouse position to local
     */
     const { height, width } = target;
+
     const targetRect = target.getBoundingClientRect();
-    canvasX -= targetRect.left;
-    canvasY -= targetRect.top;
+
+    const offsetX = canvasX - targetRect.left;
+    const offsetY = canvasY - targetRect.top;
 
     const pos = vec2.fromValues(
-      2 * (canvasX / width) - 1,
-      -2 * (canvasY / height) + 1
+      2 * (offsetX / width) - 1,
+      -2 * (offsetY / height) + 1
     );
+
     if (projectionInvTF) {
       vec2.transformMat3(pos, pos, projectionInvTF);
     }
+
     vec2.transformMat3(pos, pos, this.invView());
-    return pos;
+
+    return { local: pos, offset: [offsetX, offsetY] };
   }
 
   mousePan(
     e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>,
-    projectionTF: mat3
+    projectionTF: mat3,
+    openseadragon: Viewer | null = null
   ): true {
     const projectionInvTF = mat3.invert(scratch0, projectionTF);
-    const pos = this.localPosition(
+
+    const { local, offset } = this.localPosition(
       this.canvas,
       e.clientX,
       e.clientY,
       projectionInvTF
     );
-    const prev = this.localPosition(
+
+    const { local: prevLocal, offset: prevOffset } = this.localPosition(
       this.canvas,
       this.prevEvent.clientX,
       this.prevEvent.clientY,
       projectionInvTF
     );
 
-    const delta = vec2.sub(scratch1, pos, prev);
-    this.pan(delta[0], delta[1]);
+    const delta = vec2.sub(scratch1, local, prevLocal);
+
+    this.pan(
+      delta[0],
+      delta[1],
+      openseadragon,
+      offset[0],
+      offset[1],
+      prevOffset[0],
+      prevOffset[1]
+    );
+
     return true;
   }
 
-  wheelZoom(e: WheelEvent, projectionTF: mat3): true {
+  wheelZoom(
+    e: WheelEvent,
+    projectionTF: mat3,
+    openseadragon: Viewer | null
+  ): true {
     const { height } = this.canvas;
     const { deltaY, deltaMode, clientX, clientY } = e;
     const scale = scaleSpeed * (deltaMode === 1 ? 12 : 1) * (deltaY || 0);
 
     const projectionInvTF = mat3.invert(scratch0, projectionTF);
-    const pos = this.localPosition(
+
+    const { local, offset } = this.localPosition(
       this.canvas,
       clientX,
       clientY,
       projectionInvTF
     );
-    this.zoomAt(1 / Math.exp(scale / height), pos[0], pos[1]);
+
+    this.zoomAt(
+      1 / Math.exp(scale / height),
+      local[0],
+      local[1],
+      openseadragon,
+      offset[0],
+      offset[1]
+    );
+
     return true;
   }
 
   handleEvent(
     e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>,
-    projectionTF: mat3
+    projectionTF: mat3,
+    openseadragon: Viewer | null = null
   ): boolean {
     /*
     process the event, and return true if camera view changed
@@ -175,14 +273,18 @@ export class Camera {
       case "mousemove": {
         /* eslint-disable-next-line no-bitwise --- MouseEvent.buttons exposes a bitmask, best acted on with bitops */
         if (e.buttons & 0x1) {
-          viewChanged = this.mousePan(e, projectionTF);
+          viewChanged = this.mousePan(e, projectionTF, openseadragon);
         }
         this.flush(e);
         break;
       }
 
       case "wheel": {
-        viewChanged = this.wheelZoom(e as unknown as WheelEvent, projectionTF);
+        viewChanged = this.wheelZoom(
+          e as unknown as WheelEvent,
+          projectionTF,
+          openseadragon
+        );
         this.flush(e);
         break;
       }
