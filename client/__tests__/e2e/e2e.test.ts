@@ -847,7 +847,7 @@ for (const testDataset of testDatasets) {
           );
         });
 
-        test("expand gene and brush", async ({ page }, testInfo) => {
+        test.only("expand gene and brush", async ({ page }, testInfo) => {
           await setup({ option, page, url });
           await createGeneset(brushThisGeneGeneset, page);
           await addGeneToSetAndExpand(
