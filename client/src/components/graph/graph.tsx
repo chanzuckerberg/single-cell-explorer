@@ -555,9 +555,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const prevAspectRatio =
         viewportRef.clientHeight / viewportRef.clientWidth;
 
+      // seve: Default to 1080p resolution (arbitrary, but a good starting point for screen captures)
       return {
-        height: 1800 * prevAspectRatio,
-        width: 1800,
+        height: 1080 * prevAspectRatio,
+        width: 1080,
       };
     }
     return {
@@ -1026,6 +1027,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
       const graph = regl._gl.canvas;
 
+      // without this, the legend is drawn offscreen
+      const PADDING = 100;
+
       const offscreenCanvas = document.createElement("canvas");
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
@@ -1044,8 +1048,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
           const nodeTop = parseInt(style.top, 10);
           ctx?.drawImage(
             node as HTMLCanvasElement,
-            100 + nodeLeft,
-            100 + nodeTop,
+            PADDING + nodeLeft,
+            PADDING + nodeTop,
             nodeWidth,
             nodeHeight
           );
@@ -1057,7 +1061,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           const image64 = b64Start + svg64;
           const img = new Image();
           img.onload = () => {
-            ctx?.drawImage(img, 100, 100);
+            ctx?.drawImage(img, PADDING, PADDING);
           };
           img.src = image64;
         }
