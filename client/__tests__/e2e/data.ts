@@ -321,8 +321,8 @@ export const datasets = {
       withSubset: "69",
     },
     expandGeneAndBrush: {
-      default: "52",
-      withSubset: "49",
+      default: "362",
+      withSubset: "344",
     },
   },
 };
