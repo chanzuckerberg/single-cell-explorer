@@ -455,9 +455,10 @@ const Controls = (
          Uns/Spatial
     **************************/
     case "toggle image underlay": {
+      if (state.imageUnderlay === action.toggle) return state;
       return {
         ...state,
-        imageUnderlay: !state.imageUnderlay,
+        imageUnderlay: action.toggle,
       };
     }
     case "request uns metadata started":

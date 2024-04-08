@@ -46,9 +46,13 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
 
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
-    if (imageUnderlay && e.target.value !== globals.spatialEmbeddingKeyword) {
+    if (
+      imageUnderlay &&
+      !e.target.value.includes(globals.spatialEmbeddingKeyword)
+    ) {
       dispatch({
         type: "toggle image underlay",
+        toggle: false,
       });
     }
   };
