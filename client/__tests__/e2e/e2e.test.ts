@@ -610,7 +610,7 @@ for (const testDataset of testDatasets) {
 
     for (const option of options) {
       describe(`geneSET crud operations and interactions ${option.tag}`, () => {
-        test.only("brush on geneset mean", async ({ page }, testInfo) => {
+        test("brush on geneset mean", async ({ page }, testInfo) => {
           await setup({ option, page, url });
           await createGeneset(meanExpressionBrushGenesetName, page);
           await addGeneToSetAndExpand(
@@ -660,7 +660,7 @@ for (const testDataset of testDatasets) {
           await snapshotTestGraph(page, testInfo);
         });
 
-        test.only("diffexp", async ({ page }, testInfo) => {
+        test("diffexp", async ({ page }, testInfo) => {
           if (option.withSubset) return;
 
           const runningAgainstDeployment = !testURL.includes("localhost");
@@ -847,7 +847,7 @@ for (const testDataset of testDatasets) {
           );
         });
 
-        test.only("expand gene and brush", async ({ page }, testInfo) => {
+        test("expand gene and brush", async ({ page }, testInfo) => {
           await setup({ option, page, url });
           await createGeneset(brushThisGeneGeneset, page);
           await addGeneToSetAndExpand(
@@ -901,9 +901,7 @@ for (const testDataset of testDatasets) {
           await assertColorLegendLabel("SIK1", page);
           await snapshotTestGraph(page, testInfo);
         });
-        test.only("delete gene from geneset and undo/redo", async ({
-          page,
-        }) => {
+        test("delete gene from geneset and undo/redo", async ({ page }) => {
           /**
            * (thuang): Test is flaky, so we need to retry until it passes
            */
@@ -929,7 +927,7 @@ for (const testDataset of testDatasets) {
           );
         });
 
-        test.only("open gene info card and hide/remove", async ({
+        test("open gene info card and hide/remove", async ({
           page,
         }, testInfo) => {
           await setup({ option, page, url });
