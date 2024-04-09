@@ -371,6 +371,7 @@ class MenuBar extends React.PureComponent<{}, State> {
                 style={{
                   cursor: "pointer",
                 }}
+                loading={screenCap}
                 onClick={() => dispatch({ type: "graph: screencap start" })}
               />
             </Tooltip>
