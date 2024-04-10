@@ -49,7 +49,7 @@ The CXG is a TileDB group containing all data and metadata for a single annotate
 - `emb`: a TileDB group, which in turn contains all (zero or more) embeddings.
 - `emb/<EMBEDDING_NAME>`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
 - `cxg_group_metadata`: an empty TileDB array, used to store CXG-wide metadata
-- `uns`: a TileDB array for `unstructured` dataset metadata. holidng Key->value pairs where key is a string and value is a serialized dictionary.
+- `uns`: a TileDB group for `unstructured` dataset metadata. holidng Key->value pairs where key is a string and value is a serialized dictionary.
 
 ### `obs` and `var` arrays
 
@@ -104,7 +104,7 @@ Required, but empty, TileDB array, used to store CXG-wide metadata within [array
 
 ### `uns` array
 
-The uns TileDB array in the CXG stores a variety of unstructured metadata related to the dataset, such as annotations, experimental conditions, and processing information. Designed for flexibility, it allows the incorporation of data that doesn't fit into more structured categories. Each entry is key-value based, where the key is a string identifying the data, and the value is a serialized representation of the data, which can be of any type.
+The uns TileDB group in the CXG stores a variety of unstructured metadata related to the dataset, such as annotations, experimental conditions, and processing information. Designed for flexibility, it allows the incorporation of data that doesn't fit into more structured categories. Each entry is key-value based, where the key is a string identifying the data, and the value is a serialized representation of the data, which can be of any type.
 
 Currently only stores spatial metadata within a dictionary. This structured approach is designed to consolidate metadata relevant to spatial datasets, ensuring uniformity and accessibility of spatial attributes for single-cell research datasets. For detailed specifications, please refer to the [documentation on schema 5.1.0](https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md).
 
