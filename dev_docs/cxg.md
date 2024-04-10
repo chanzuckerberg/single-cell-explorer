@@ -49,7 +49,7 @@ The CXG is a TileDB group containing all data and metadata for a single annotate
 - `emb`: a TileDB group, which in turn contains all (zero or more) embeddings.
 - `emb/<EMBEDDING_NAME>`: a TileDB array, with a single anonymous attribute, of numeric type, and shape (n_obs, N>=2).
 - `cxg_group_metadata`: an empty TileDB array, used to store CXG-wide metadata
-- `uns`: a TileDB array for `unstructured` dataset metadata. holidng Key->value pairs where value is a serialized (pickled) dictionary.
+- `uns`: a TileDB array for `unstructured` dataset metadata. holidng Key->value pairs where key is a string and value is a serialized dictionary.
 
 ### `obs` and `var` arrays
 
