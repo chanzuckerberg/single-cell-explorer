@@ -1120,7 +1120,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           categoricalLegendImageURI = await toPng(categoryAndValues, {
             backgroundColor: "white",
             // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
-            // skipFonts: true,
+            skipFonts: true,
             filter: (filterNode: HTMLElement) =>
               !filterNode.classList?.contains("ignore-capture"),
           });
