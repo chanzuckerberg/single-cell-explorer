@@ -37,6 +37,7 @@ import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
 import { DatasetUnsMetadata } from "../../common/types/entities";
+import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
 /*
 Simple 2D transforms control all point painting.  There are three:
@@ -119,6 +120,25 @@ interface GraphAsyncProps {
   spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
+}
+
+function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
 }
 
 type GraphProps = Partial<RootState>;
@@ -966,6 +986,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       layoutChoice,
       imageUnderlay,
       spatial,
+      colors,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
@@ -1033,47 +1054,86 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const offscreenCanvas = document.createElement("canvas");
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
-      const legendNodes =
-        document.getElementById("continuous_legend")?.childNodes;
+
       const ctx = offscreenCanvas.getContext("2d");
       ctx?.drawImage(graph, 0, 0);
 
-      legendNodes?.forEach(async (node) => {
-        if (node.nodeName === "CANVAS") {
-          // get style from node
-          const style = window.getComputedStyle(node as HTMLCanvasElement);
-          const nodeWidth = parseInt(style.width, 10);
-          const nodeHeight = parseInt(style.height, 10);
-          const nodeLeft = parseInt(style.left, 10);
-          const nodeTop = parseInt(style.top, 10);
-          ctx?.drawImage(
-            node as HTMLCanvasElement,
-            PADDING + nodeLeft,
-            PADDING + nodeTop,
-            nodeWidth,
-            nodeHeight
+      let categoricalLegendImageURI: string | null = null;
+
+      if (colors.colorMode !== null) {
+        if (colors.colorMode !== "color by categorical metadata") {
+          const legendNodes =
+            document.getElementById("continuous_legend")?.childNodes;
+          legendNodes?.forEach(async (node) => {
+            if (node.nodeName === "CANVAS") {
+              // get style from node
+              const style = window.getComputedStyle(node as HTMLCanvasElement);
+              const nodeWidth = parseInt(style.width, 10);
+              const nodeHeight = parseInt(style.height, 10);
+              const nodeLeft = parseInt(style.left, 10);
+              const nodeTop = parseInt(style.top, 10);
+              ctx?.drawImage(
+                node as HTMLCanvasElement,
+                PADDING + nodeLeft,
+                PADDING + nodeTop,
+                nodeWidth,
+                nodeHeight
+              );
+            } else if (node.nodeName === "svg" || node.nodeName === "SVG") {
+              const svgNode = node as SVGSVGElement;
+              const xml = new XMLSerializer().serializeToString(svgNode);
+              const svg64 = btoa(unescape(encodeURIComponent(xml)));
+              const b64Start = "data:image/svg+xml;base64,";
+              const image64 = b64Start + svg64;
+              const img = new Image();
+              img.onload = () => {
+                ctx?.drawImage(img, PADDING, PADDING);
+              };
+              img.src = image64;
+            }
+          });
+        } else {
+          const categoryName = colors.colorAccessor;
+          // get category by data-testid attribute
+          const categoryExpandNode = document.querySelector(
+            `[data-testid='${categoryName}:category-expand']`
+          ) as HTMLElement;
+
+          const categoryAndValues = document.querySelector(
+            `[data-testid='category-${categoryName}']`
+          ) as HTMLElement;
+          if (categoryAndValues === null)
+            throw new Error(
+              `Could not find category ${categoryName} in the legend`
+            );
+
+          // check if category is expanded by checking children for data-testid "category-expand-is-expanded"
+          const isCategoryExpanded = categoryExpandNode?.querySelector(
+            "[data-testid='category-expand-is-expanded']"
           );
-        } else if (node.nodeName === "svg" || node.nodeName === "SVG") {
-          const svgNode = node as SVGSVGElement;
-          const xml = new XMLSerializer().serializeToString(svgNode);
-          const svg64 = btoa(unescape(encodeURIComponent(xml)));
-          const b64Start = "data:image/svg+xml;base64,";
-          const image64 = b64Start + svg64;
-          const img = new Image();
-          img.onload = () => {
-            ctx?.drawImage(img, PADDING, PADDING);
-          };
-          img.src = image64;
+
+          if (!isCategoryExpanded) {
+            // click on node to expand category
+            categoryExpandNode?.click();
+          }
+
+          categoricalLegendImageURI = await toPng(categoryAndValues, {
+            backgroundColor: "white",
+            // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
+            // skipFonts: true,
+            filter: (filterNode: HTMLElement) =>
+              !filterNode.classList?.contains("ignore-capture"),
+          });
         }
-      });
 
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 25);
-      });
+        await new Promise<void>((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 25);
+        });
+      }
 
-      const imageURI = await toPng(offscreenCanvas, {
+      const graphImageURI = await toPng(offscreenCanvas, {
         backgroundColor: "white",
         height,
         width,
@@ -1081,20 +1141,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
         skipFonts: true,
       });
       if (mountCapture) {
-        this.setState({ testImageSrc: imageURI });
+        this.setState({ testImageSrc: graphImageURI });
         dispatch({ type: "test: screencap end" });
       } else {
-        const a = document.createElement("a");
-        a.href = imageURI;
-        a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
-        a.style.display = "none";
-        document.body.append(a);
-        a.click();
-        // Revoke the blob URL and remove the element.
-        setTimeout(() => {
-          URL.revokeObjectURL(imageURI);
-          a.remove();
-        }, 1000);
+        downloadImage(graphImageURI, layoutChoice);
+        if (categoricalLegendImageURI) downloadImage(categoricalLegendImageURI);
         dispatch({ type: "graph: screencap end" });
       }
       this.isDownloadingImage = false;
