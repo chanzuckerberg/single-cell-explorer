@@ -13,13 +13,13 @@ import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
-import Graph from "./graph/graph";
 import MenuBar from "./menubar";
 import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
+import Graph from "./graph/graph";
 
 interface Props {
   dispatch: AppDispatch;
