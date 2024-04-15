@@ -2,7 +2,7 @@
  * Color By UI state
  */
 
-import { Action, AnyAction } from "redux";
+import { AnyAction } from "redux";
 
 export interface UserColor {
   colors: { [label: string]: [number, number, number] };
@@ -15,7 +15,12 @@ export interface ConvertedUserColors {
 
 export interface ColorsState {
   // by continuous, by expression
-  colorMode: Action["type"] | null;
+  colorMode:
+    | "color by categorical metadata"
+    | "color by expression"
+    | "color by continuous metadata"
+    | "color by geneset mean expression"
+    | null;
   // tissue, Apod
   colorAccessor: string | null;
   userColors?: ConvertedUserColors;
