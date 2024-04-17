@@ -37,46 +37,8 @@ import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
 import { DatasetUnsMetadata } from "../../common/types/entities";
-
-/*
-Simple 2D transforms control all point painting.  There are three:
-  * model - convert from underlying per-point coordinate to a layout.
-    Currently used to move from data to webgl coordinate system.
-  * camera - apply a 2D camera transformation (pan, zoom)
-  * projection - apply any transformation required for screen size and layout
-*/
-function createProjectionTF(viewportWidth: number, viewportHeight: number) {
-  /*
-  the projection transform accounts for the screen size & other layout
-  */
-  const fractionToUse = 0.95; // fraction of min dimension to use
-  const topGutterSizePx = 32; // top gutter for tools
-  const bottomGutterSizePx = 32; // bottom gutter for tools
-  const heightMinusGutter =
-    viewportHeight - topGutterSizePx - bottomGutterSizePx;
-  const minDim = Math.min(viewportWidth, heightMinusGutter);
-  const aspectScale = new Float32Array([
-    (fractionToUse * minDim) / viewportWidth,
-    (fractionToUse * minDim) / viewportHeight,
-  ]);
-  const m = mat3.create();
-  mat3.fromTranslation(m, [
-    0,
-    (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
-  ]);
-  mat3.scale(m, m, aspectScale);
-  return m;
-}
-
-function createModelTF() {
-  /*
-  preallocate coordinate system transformation between data and gl.
-  Data arrives in a [0,1] range, and we operate elsewhere in [-1,1].
-  */
-  const m = mat3.fromScaling(mat3.create(), [2, 2]);
-  mat3.translate(m, m, [-0.5, -0.5]);
-  return m;
-}
+import { LayoutChoiceState } from "../../reducers/layoutChoice";
+import { captureLegend, createModelTF, createProjectionTF } from "./util";
 
 type GraphState = {
   regl: Regl | null;
@@ -119,6 +81,25 @@ interface GraphAsyncProps {
   spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
+}
+
+function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
 }
 
 type GraphProps = Partial<RootState>;
@@ -966,6 +947,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       layoutChoice,
       imageUnderlay,
       spatial,
+      colors,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
@@ -1033,47 +1015,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const offscreenCanvas = document.createElement("canvas");
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
-      const legendNodes =
-        document.getElementById("continuous_legend")?.childNodes;
+
       const ctx = offscreenCanvas.getContext("2d");
       ctx?.drawImage(graph, 0, 0);
 
-      legendNodes?.forEach(async (node) => {
-        if (node.nodeName === "CANVAS") {
-          // get style from node
-          const style = window.getComputedStyle(node as HTMLCanvasElement);
-          const nodeWidth = parseInt(style.width, 10);
-          const nodeHeight = parseInt(style.height, 10);
-          const nodeLeft = parseInt(style.left, 10);
-          const nodeTop = parseInt(style.top, 10);
-          ctx?.drawImage(
-            node as HTMLCanvasElement,
-            PADDING + nodeLeft,
-            PADDING + nodeTop,
-            nodeWidth,
-            nodeHeight
-          );
-        } else if (node.nodeName === "svg" || node.nodeName === "SVG") {
-          const svgNode = node as SVGSVGElement;
-          const xml = new XMLSerializer().serializeToString(svgNode);
-          const svg64 = btoa(unescape(encodeURIComponent(xml)));
-          const b64Start = "data:image/svg+xml;base64,";
-          const image64 = b64Start + svg64;
-          const img = new Image();
-          img.onload = () => {
-            ctx?.drawImage(img, PADDING, PADDING);
-          };
-          img.src = image64;
-        }
-      });
+      let categoricalLegendImageURI: string | null = null;
 
-      await new Promise<void>((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, 25);
-      });
+      categoricalLegendImageURI = await captureLegend(
+        colors,
+        ctx,
+        PADDING,
+        categoricalLegendImageURI
+      );
 
-      const imageURI = await toPng(offscreenCanvas, {
+      const graphImageURI = await toPng(offscreenCanvas, {
         backgroundColor: "white",
         height,
         width,
@@ -1081,20 +1036,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
         skipFonts: true,
       });
       if (mountCapture) {
-        this.setState({ testImageSrc: imageURI });
+        this.setState({ testImageSrc: graphImageURI });
         dispatch({ type: "test: screencap end" });
       } else {
-        const a = document.createElement("a");
-        a.href = imageURI;
-        a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
-        a.style.display = "none";
-        document.body.append(a);
-        a.click();
-        // Revoke the blob URL and remove the element.
-        setTimeout(() => {
-          URL.revokeObjectURL(imageURI);
-          a.remove();
-        }, 1000);
+        downloadImage(graphImageURI, layoutChoice);
+        if (categoricalLegendImageURI) downloadImage(categoricalLegendImageURI);
         dispatch({ type: "graph: screencap end" });
       }
       this.isDownloadingImage = false;
