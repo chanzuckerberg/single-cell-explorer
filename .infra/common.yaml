@@ -5,7 +5,7 @@ global:
   service:
     port: 6000
 services:
-  backend:
+  explorer:
     serviceAccount:
       create: true
       automount: true
