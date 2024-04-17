@@ -20,7 +20,7 @@ const WIDTH_MENUBAR = 482;
  */
 function LayoutSkeleton(): JSX.Element {
   return (
-    <Layout datasetMetadataError={null}>
+    <Layout addTopPadding>
       <LeftSidebarSkeleton />
       {() => (
         <Controls>
