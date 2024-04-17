@@ -8,6 +8,7 @@ on:
     workflow_dispatch: {}
     push:
         paths-ignore:
+            - '.infra/**'
             - '.github/**'
             - '.happy/**'
             - 'dev_docs/**'
