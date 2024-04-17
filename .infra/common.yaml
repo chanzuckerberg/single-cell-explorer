@@ -8,6 +8,7 @@ services:
   backend:
     serviceAccount:
       create: true
+      automount: true
       annotations:
         "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_dev_explorer
     image:
