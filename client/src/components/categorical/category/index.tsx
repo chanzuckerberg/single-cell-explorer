@@ -444,7 +444,7 @@ const CategoryHeader = React.memo(
           }}
         >
           <label
-            className={`${Classes.CONTROL} ${Classes.CHECKBOX}`}
+            className={`${Classes.CONTROL} ${Classes.CHECKBOX} ignore-capture`}
             htmlFor={checkboxID}
           >
             <input
@@ -494,7 +494,7 @@ const CategoryHeader = React.memo(
           </span>
         </div>
 
-        <div>
+        <div className="ignore-capture">
           <Tooltip
             content="Use as color scale"
             position={Position.LEFT}
