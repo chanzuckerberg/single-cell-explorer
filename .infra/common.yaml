@@ -1,0 +1,11 @@
+global:
+  replicaCount: 1
+  autoscaling:
+    enabled: true
+  service:
+    port: 6000
+
+services:
+  backend:
+    image:
+      repository: 471112759938.dkr.ecr.us-west-2.amazonaws.com/core-platform/single-cell-explorer/explorer

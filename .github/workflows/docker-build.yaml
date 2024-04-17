@@ -1,0 +1,27 @@
+name: Docker Image Build
+
+on:
+    workflow_dispatch: {}
+    push:
+        paths-ignore:
+            - '.github/**'
+            - '.happy/**'
+            - 'dev_docs/**'
+            - 'example-dataset/**'
+        branches-ignore:
+          - main
+
+jobs:
+  argus_builder:
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.2.0
+    secrets: inherit
+    with:
+      env: rdev
+      images: |
+        [
+          {
+            "name": "explorer",
+            "context": ".",
+            "dockerfile": "hosted/Dockerfile"
+          }
+        ]

@@ -1,0 +1,5 @@
+services:
+  explorer:
+    image:
+      tag: sha-0000000
+    replicaCount: 1
