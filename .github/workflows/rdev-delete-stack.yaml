@@ -1,0 +1,20 @@
+name: Delete an RDev Stack
+
+on:
+  pull_request:
+    types: [ unlabeled, closed ]
+
+jobs:
+  delete-stack:
+    runs-on: [ARM64, self-hosted, Linux]
+    if: contains(github.event.pull_request.labels.*.name, 'stack')
+    permissions:
+        id-token: write
+        contents: read
+
+    steps:
+      - name: Create Stack
+        uses: chanzuckerberg/core-platform/ci/packages/delete-stack@v0.6.2
+        with:
+          appName: single-cell-explorer
+          envName: rdev
