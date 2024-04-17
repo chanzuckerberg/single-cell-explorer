@@ -9,6 +9,7 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Download, Page } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
+import os from "os";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -1021,10 +1022,21 @@ for (const testDataset of testDatasets) {
     describe(`Image Download`, () => {
       test.beforeEach(async ({ page }, testInfo) => {
         page.on("download", async (download: Download) => {
-          console.log("DOWNLOAD", await download.path());
-
-          await page.goto(`file://${await download.path()}`);
-          await takeSnapshot(page, testInfo);
+          const tmp = os.tmpdir();
+          try {
+            await download.saveAs(
+              `${tmp}/${await download.suggestedFilename()}`
+            );
+            const path = await download.path();
+            await page.goto(
+              `file://${path}/${await download.suggestedFilename()}`
+            );
+            await takeSnapshot(page, testInfo);
+            await download.delete();
+          } catch (e) {
+            console.error(e);
+            if (await download.failure()) console.log(await download.failure());
+          }
         });
       });
 
