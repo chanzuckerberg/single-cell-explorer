@@ -7,8 +7,8 @@
  */
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
-import { Page } from "@playwright/test";
-import { test, expect } from "@chromatic-com/playwright";
+import { Download, Page } from "@playwright/test";
+import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -1017,6 +1017,34 @@ for (const testDataset of testDatasets) {
         });
       });
     }
+
+    describe(`Image Download`, () => {
+      test.beforeEach(async ({ page }, testInfo) => {
+        page.on("download", async (download: Download) => {
+          console.log("DOWNLOAD", await download.path());
+
+          await page.goto(`file://${await download.path()}`);
+          await takeSnapshot(page, testInfo);
+        });
+      });
+
+      test("w/ continuous legend", async ({ page }) => {
+        await goToPage(page, url);
+
+        await addGeneToSearch("SIK1", page);
+        await colorByGene("SIK1", page);
+
+        page.getByTestId("download-graph-button").click();
+      });
+      test("w/ categorical legend", async ({ page }) => {
+        await goToPage(page, url);
+
+        const allLabels = [...Object.keys(data.categorical)];
+        await page.getByTestId(`colorby-${allLabels[0]}`).click();
+
+        page.getByTestId("download-graph-button").click();
+      });
+    });
   });
 }
 
