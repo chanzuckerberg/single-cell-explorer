@@ -6,6 +6,12 @@ global:
     port: 6000
   nodeSelector:
     kubernetes.io/arch: amd64
+  livenessProbe:
+    httpGet:
+      path: /cellxgene/health
+  livenessProbe:
+    httpGet:
+      path: /cellxgene/health
 services:
   explorer:
     serviceAccount:
