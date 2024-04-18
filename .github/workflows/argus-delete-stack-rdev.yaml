@@ -13,7 +13,7 @@ jobs:
         contents: read
 
     steps:
-      - name: Create Stack
+      - name: Delete Stack
         uses: chanzuckerberg/core-platform/ci/packages/delete-stack@v0.6.2
         with:
           appName: single-cell-explorer
