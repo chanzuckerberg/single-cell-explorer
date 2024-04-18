@@ -4,6 +4,8 @@ global:
     enabled: true
   service:
     port: 6000
+  nodeSelector:
+    kubernetes.io/arch: amd64
 services:
   explorer:
     serviceAccount:
