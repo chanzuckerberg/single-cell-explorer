@@ -13,20 +13,8 @@ jobs:
         contents: read
 
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: chanzuckerberg/github-app-token@v1.1.4
-        with:
-          app_id: ${{ secrets.CZI_GITHUB_HELPER_APP_ID }}
-          private_key: ${{ secrets.CZI_GITHUB_HELPER_PK }}
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
-          repository: chanzuckerberg/core-platform
-          path: core-platform
-
       - name: Create Stack
-        uses: ./core-platform/ci/packages/create-stack
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.7.1
         with:
           appName: single-cell-explorer
           envName: rdev

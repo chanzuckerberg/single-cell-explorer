@@ -9,7 +9,7 @@ global:
   livenessProbe:
     httpGet:
       path: /cellxgene/health
-  livenessProbe:
+  readinessProbe:
     httpGet:
       path: /cellxgene/health
 services:
