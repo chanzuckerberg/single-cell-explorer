@@ -1,0 +1,20 @@
+name: Delete an RDev Stack
+
+on:
+  pull_request:
+    types: [ unlabeled, closed ]
+
+jobs:
+  delete-rdev-stack:
+    runs-on: [ARM64, self-hosted, Linux]
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'stack') || github.event.pull_request.state == 'closed' }}
+    permissions:
+        id-token: write
+        contents: read
+
+    steps:
+      - name: Delete Stack
+        uses: chanzuckerberg/argus-artifacts/ci/packages/delete-stack@v0.7.1
+        with:
+          appName: single-cell-explorer
+          envName: rdev
