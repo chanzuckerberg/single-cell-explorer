@@ -6,6 +6,7 @@
  *          https://playwright.dev/docs/input#forcing-the-click
  */
 
+/* eslint-disable compat/compat -- not ran in the broser */
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
@@ -1029,19 +1030,15 @@ for (const testDataset of testDatasets) {
         const tmp = os.tmpdir();
         try {
           await download.saveAs(`${tmp}/${await download.suggestedFilename()}`);
-          const path = await download.path();
-          console.log(
-            await download.path(),
-            await download.suggestedFilename()
-          );
           await page.goto(
-            `file://${path}/${await download.suggestedFilename()}`
+            `file://${tmp}/${await download.suggestedFilename()}`
           );
+
           await takeSnapshot(page, testInfo);
           await download.delete();
         } catch (e) {
-          console.error(e);
-          if (await download.failure()) console.log(await download.failure());
+          if (await download.failure()) throw await download.failure();
+          else throw e;
         }
       }
 
@@ -1086,6 +1083,7 @@ test("categories and values from dataset appear and properly truncate if applica
 });
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
+/* eslint-enable compat/compat -- not ran in the browser */
 
 async function setup({
   option: { withSubset },
