@@ -21,3 +21,11 @@ services:
         "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_dev_explorer
     image:
       repository: 533267185808.dkr.ecr.us-west-2.amazonaws.com/core-platform/single-cell-explorer/explorer
+    resources:
+      limits:
+        cpu: 4
+        memory: 4Gi
+      requests:
+        cpu: 2
+        memory: 2Gi
+
