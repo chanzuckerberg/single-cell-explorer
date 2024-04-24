@@ -18,7 +18,7 @@ on:
 
 jobs:
   argus_builder:
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.3.0
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.6.0
     secrets: inherit
     with:
       env: rdev
