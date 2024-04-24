@@ -3,7 +3,7 @@ global:
   autoscaling:
     enabled: true
   service:
-    port: 6000
+    port: 4555
   nodeSelector:
     kubernetes.io/arch: amd64
   livenessProbe:
