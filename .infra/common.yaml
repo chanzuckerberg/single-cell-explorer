@@ -1,7 +1,7 @@
 global:
   replicaCount: 1
   autoscaling:
-    enabled: true
+    enabled: false
   service:
     port: 5000
   nodeSelector:
