@@ -7,7 +7,7 @@
  */
 
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
-import { Download, Page } from "@playwright/test";
+import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
 
@@ -1020,35 +1020,40 @@ for (const testDataset of testDatasets) {
     }
 
     describe(`Image Download`, () => {
-      test.beforeEach(async ({ page }, testInfo) => {
-        page.on("download", async (download: Download) => {
-          const tmp = os.tmpdir();
-          try {
-            await download.saveAs(
-              `${tmp}/${await download.suggestedFilename()}`
-            );
-            const path = await download.path();
-            await page.goto(
-              `file://${path}/${await download.suggestedFilename()}`
-            );
-            await takeSnapshot(page, testInfo);
-            await download.delete();
-          } catch (e) {
-            console.error(e);
-            if (await download.failure()) console.log(await download.failure());
-          }
-        });
-      });
+      async function downloadAndSnapshotImage(page: Page, testInfo: TestInfo) {
+        const [download] = await Promise.all([
+          page.waitForEvent("download"),
+          page.getByTestId("download-graph-button").click(),
+        ]);
 
-      test("w/ continuous legend", async ({ page }) => {
+        const tmp = os.tmpdir();
+        try {
+          await download.saveAs(`${tmp}/${await download.suggestedFilename()}`);
+          const path = await download.path();
+          console.log(
+            await download.path(),
+            await download.suggestedFilename()
+          );
+          await page.goto(
+            `file://${path}/${await download.suggestedFilename()}`
+          );
+          await takeSnapshot(page, testInfo);
+          await download.delete();
+        } catch (e) {
+          console.error(e);
+          if (await download.failure()) console.log(await download.failure());
+        }
+      }
+
+      test.only("with continuous legend", async ({ page }, testInfo) => {
         await goToPage(page, url);
 
         await addGeneToSearch("SIK1", page);
         await colorByGene("SIK1", page);
 
-        page.getByTestId("download-graph-button").click();
+        await downloadAndSnapshotImage(page, testInfo);
       });
-      test("w/ categorical legend", async ({ page }) => {
+      test("with categorical legend", async ({ page }) => {
         await goToPage(page, url);
 
         const allLabels = [...Object.keys(data.categorical)];
