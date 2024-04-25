@@ -74,6 +74,7 @@ class WSGIServer(Server):
                     [
                         "https://canary-cellxgene.dev.single-cell.czi.technology/",
                         r"^http://localhost:\d+",
+                        r"^https://(.*).sc.dev.czi.team/",
                     ]
                 )
             if os.getenv("DEPLOYMENT_STAGE") in ["Dev", "dev"]:
