@@ -76,12 +76,6 @@ class WSGIServer(Server):
                         r"^http://localhost:\d+",
                     ]
                 )
-            if os.getenv("DEPLOYMENT_STAGE") in ["Dev", "dev"]:
-                allowed_origins.extend(
-                    [
-                        r"^https://(.*).sc.dev.czi.team/",
-                    ]
-                )
             CORS(app, supports_credentials=True, origins=allowed_origins)
 
         Talisman(
