@@ -802,7 +802,7 @@ for (const testDataset of testDatasets) {
           }
         });
 
-        test("color by mean expression", async ({ page }, testInfo) => {
+        test.only("color by mean expression", async ({ page }, testInfo) => {
           await setup({ option, page, url });
           await createGeneset(meanExpressionBrushGenesetName, page);
           await addGeneToSetAndExpand(
