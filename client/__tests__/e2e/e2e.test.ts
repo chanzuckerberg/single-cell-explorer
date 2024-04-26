@@ -57,6 +57,7 @@ import {
   pageURLTruncate,
   testURL,
   pageURLSpatial,
+  pageURLCellGuide,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
 
@@ -100,6 +101,144 @@ const testURLs = {
   [DATASET]: testURL,
   "super-cool-spatial.cxg": pageURLSpatial,
 };
+
+describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
+  test("page launched", async ({ page }, testInfo) => {
+    await goToPage(page, pageURLCellGuide);
+
+    const element = await page.getByTestId("header").innerHTML();
+
+    expect(element).toMatchSnapshot();
+
+    await snapshotTestGraph(page, testInfo);
+  });
+  test("assert absence of 'Standard Categories' and 'Author Categories'", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLCellGuide);
+
+    // Check for the absence of 'Standard Categories'
+    const standardCategories = await page
+      .locator("text='Standard Categories'")
+      .count();
+    expect(standardCategories).toBe(0);
+
+    // Check for the absence of 'Author Categories'
+    const authorCategories = await page
+      .locator("text='Author Categories'")
+      .count();
+    expect(authorCategories).toBe(0);
+  });
+  test("assert 'Marker Gene Sets' header is present and collapsed", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLCellGuide);
+
+    // Check for the presence of 'Marker Gene Sets' header
+    const markerGeneSetsHeader = await page.locator(
+      "h5:has-text('Marker Gene Sets')"
+    );
+    await expect(markerGeneSetsHeader).toBeVisible();
+
+    // Check if the header is collapsed by looking for a child with a chevron-right icon
+    const chevronRightIcon = markerGeneSetsHeader.locator(
+      "svg[data-icon='chevron-right']"
+    );
+    await expect(chevronRightIcon).toBeVisible();
+  });
+  test("expansion of 'Marker Gene Sets' reveals specific genesets", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLCellGuide);
+
+    // Locate and expand the 'Marker Gene Sets' header
+    const markerGeneSetsHeader = await page.locator(
+      "h5:has-text('Marker Gene Sets')"
+    );
+    await markerGeneSetsHeader.click(); // Assuming clicking will expand the section
+
+    tryUntil(
+      async () => {
+        // Assert the presence of specific genesets
+        const geneset1 = await page.locator(
+          `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
+        );
+        const geneset2 = await page.locator(
+          `div[data-testid="genesets"]:has-text("smooth muscle fiber of ileum")`
+        );
+
+        await expect(geneset1).toBeVisible();
+        await expect(geneset2).toBeVisible();
+      },
+      { page }
+    );
+  });
+  test("expansion of 'enteric smooth muscle cell' reveals genes", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLCellGuide);
+
+    // Locate and expand the 'Marker Gene Sets' header if not already expanded
+    const markerGeneSetsHeader = await page.locator(
+      "h5:has-text('Marker Gene Sets')"
+    );
+    const chevronDownIcon = markerGeneSetsHeader.locator(
+      "svg[data-icon='chevron-down']"
+    );
+    if ((await chevronDownIcon.count()) === 0) {
+      await markerGeneSetsHeader.click();
+    }
+
+    // Locate and expand 'enteric smooth muscle cell' geneset
+    const entericSmoothMuscleCell = await page.locator(
+      `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
+    );
+    await entericSmoothMuscleCell.click();
+
+    // Assert the presence of the genes div and that it contains 100 child divs
+    const genesDiv = await page.locator(`div[data-testid="gene-set-genes"]`);
+    await expect(genesDiv).toBeVisible();
+    const childDivs = await genesDiv.locator("div");
+    await expect(childDivs).toHaveCount(100);
+  });
+  test("deleting 'enteric smooth muscle cell' geneset and refreshing adds it back", async ({
+    page,
+  }) => {
+    await goToPage(page, pageURLCellGuide);
+
+    // Locate and expand the 'Marker Gene Sets' header if not already expanded
+    let markerGeneSetsHeader = await page.locator(
+      "h5:has-text('Marker Gene Sets')"
+    );
+    let chevronDownIcon = markerGeneSetsHeader.locator(
+      "svg[data-icon='chevron-down']"
+    );
+    if ((await chevronDownIcon.count()) === 0) {
+      await markerGeneSetsHeader.click();
+    }
+
+    await deleteGeneset("enteric smooth muscle cell", page);
+
+    // Refresh the page
+    await page.reload();
+
+    // Locate and expand the 'Marker Gene Sets' header if not already expanded
+    markerGeneSetsHeader = await page.locator(
+      "h5:has-text('Marker Gene Sets')"
+    );
+    chevronDownIcon = markerGeneSetsHeader.locator(
+      "svg[data-icon='chevron-down']"
+    );
+    if ((await chevronDownIcon.count()) === 0) {
+      await markerGeneSetsHeader.click();
+    }
+    // Check if the geneset is added back
+    const genesetPresence = await page.locator(
+      `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
+    );
+    await expect(genesetPresence).toBeVisible();
+  });
+});
 
 for (const testDataset of testDatasets) {
   const data = datasets[testDataset];
@@ -289,6 +428,20 @@ for (const testDataset of testDatasets) {
 
           await snapshotTestGraph(page, testInfo);
         }
+      });
+      test("subset - categories with zero cells are filtered out", async ({
+        page,
+      }) => {
+        await goToPage(page, url);
+        const select = data.subset.cellset1[0];
+        await selectCategory(select.metadata, select.values, page, true);
+        await page.getByTestId("subset-button").click();
+
+        const actualCategories = await getAllCategoriesAndCounts(
+          select.metadata,
+          page
+        );
+        expect(Object.keys(actualCategories)).toEqual(select.values);
       });
 
       test("lasso after subset", async ({ page }, testInfo) => {
@@ -658,6 +811,37 @@ for (const testDataset of testDatasets) {
           await colorByGeneset(meanExpressionBrushGenesetName, page);
           await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
           await snapshotTestGraph(page, testInfo);
+        });
+        test("color by mean expression changes sorting of categories in 'cell_type'", async ({
+          page,
+        }) => {
+          await setup({ option, page, url });
+          await createGeneset(meanExpressionBrushGenesetName, page);
+          await addGeneToSetAndExpand(
+            meanExpressionBrushGenesetName,
+            "SIK1",
+            page
+          );
+
+          // Check initial order of categories
+          const initialOrder = await getAllCategoriesAndCounts(
+            "cell_type",
+            page
+          );
+
+          // Color by the geneset mean expression
+          await colorByGeneset(meanExpressionBrushGenesetName, page);
+
+          // Check order of categories after sorting by mean expression
+          const sortedOrder = await getAllCategoriesAndCounts(
+            "cell_type",
+            page
+          );
+
+          // Expect the sorted order to be different from the initial order
+          expect(Object.keys(sortedOrder)).not.toEqual(
+            Object.keys(initialOrder)
+          );
         });
 
         test("diffexp", async ({ page }, testInfo) => {
