@@ -43,18 +43,7 @@ const setup = async ({ page }: { page: Page }) => {
     });
   });
   page.on("console", (message) => {
-    const messageString = JSON.stringify(message);
-    if (
-      message.type() === "error" &&
-      // (atarashansky): hack to ignore console errors from cellguide-cxgs tests
-      // for some reason, cellguide-cxgs tests cannot load certain static assets,
-      // in a test env (e.g. obsoleteBrowsers.js) which causes console errors.
-      !messageString.includes("cellguide-cxgs") &&
-      // (atarashansky): hack to ignore console errors from plausible
-      !messageString.includes("window.plausible is not a function") &&
-      // (atarashansky): hack to ignore console errors that are warnings
-      !messageString.includes("Warning: ")
-    ) {
+    if (message.type() === "error") {
       throw new Error(`CLIENT SIDE ERROR: ${JSON.stringify(message)}`);
     }
   });
