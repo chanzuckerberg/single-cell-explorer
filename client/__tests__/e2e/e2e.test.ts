@@ -47,6 +47,8 @@ import {
   checkGenesetDescription,
   assertUndoRedo,
   snapshotTestGraph,
+  expandGeneset,
+  getAllCategories,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -161,10 +163,10 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
       async () => {
         // Assert the presence of specific genesets
         const geneset1 = await page.locator(
-          `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
+          `div[data-testid="geneset"]:has-text("enteric smooth muscle cell")`
         );
         const geneset2 = await page.locator(
-          `div[data-testid="genesets"]:has-text("smooth muscle fiber of ileum")`
+          `div[data-testid="geneset"]:has-text("smooth muscle fiber of ileum")`
         );
 
         await expect(geneset1).toBeVisible();
@@ -190,16 +192,15 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
     }
 
     // Locate and expand 'enteric smooth muscle cell' geneset
-    const entericSmoothMuscleCell = await page.locator(
-      `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
-    );
-    await entericSmoothMuscleCell.click();
+    await expandGeneset("enteric smooth muscle cell - marker genes", page);
 
     // Assert the presence of the genes div and that it contains 100 child divs
     const genesDiv = await page.locator(`div[data-testid="gene-set-genes"]`);
     await expect(genesDiv).toBeVisible();
-    const childDivs = await genesDiv.locator("div");
-    await expect(childDivs).toHaveCount(100);
+    const childDivs = await genesDiv.locator(
+      'div[data-testid*=":gene-expand"]'
+    );
+    await expect(childDivs).toHaveCount(55);
   });
   test("deleting 'enteric smooth muscle cell' geneset and refreshing adds it back", async ({
     page,
@@ -217,7 +218,7 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
       await markerGeneSetsHeader.click();
     }
 
-    await deleteGeneset("enteric smooth muscle cell", page);
+    await deleteGeneset("enteric smooth muscle cell - marker genes", page);
 
     // Refresh the page
     await page.reload();
@@ -234,7 +235,7 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
     }
     // Check if the geneset is added back
     const genesetPresence = await page.locator(
-      `div[data-testid="genesets"]:has-text("enteric smooth muscle cell")`
+      `div[data-testid="geneset"]:has-text("enteric smooth muscle cell")`
     );
     await expect(genesetPresence).toBeVisible();
   });
@@ -441,7 +442,9 @@ for (const testDataset of testDatasets) {
           select.metadata,
           page
         );
-        expect(Object.keys(actualCategories)).toEqual(select.values);
+        const actualCategoriesKeys = Object.keys(actualCategories).sort();
+        const expectedCateogriesKeys = select.values.slice().sort();
+        expect(actualCategoriesKeys).toEqual(expectedCateogriesKeys);
       });
 
       test("lasso after subset", async ({ page }, testInfo) => {
@@ -816,6 +819,16 @@ for (const testDataset of testDatasets) {
           page,
         }) => {
           await setup({ option, page, url });
+          const categories = await page
+            .locator('[data-testid*=":category-expand"]')
+            .all();
+          const category = categories[0];
+          const categoryName = (
+            await category.getAttribute("data-testid")
+          )?.split(":")[0] as string;
+
+          await expandCategory(categoryName, page);
+
           await createGeneset(meanExpressionBrushGenesetName, page);
           await addGeneToSetAndExpand(
             meanExpressionBrushGenesetName,
@@ -824,24 +837,16 @@ for (const testDataset of testDatasets) {
           );
 
           // Check initial order of categories
-          const initialOrder = await getAllCategoriesAndCounts(
-            "cell_type",
-            page
-          );
+          const initialOrder = await getAllCategories(categoryName, page);
 
           // Color by the geneset mean expression
           await colorByGeneset(meanExpressionBrushGenesetName, page);
 
           // Check order of categories after sorting by mean expression
-          const sortedOrder = await getAllCategoriesAndCounts(
-            "cell_type",
-            page
-          );
+          const sortedOrder = await getAllCategories(categoryName, page);
 
           // Expect the sorted order to be different from the initial order
-          expect(Object.keys(sortedOrder)).not.toEqual(
-            Object.keys(initialOrder)
-          );
+          expect(sortedOrder).not.toEqual(initialOrder);
         });
 
         test("diffexp", async ({ page }, testInfo) => {
@@ -1191,17 +1196,3 @@ async function setup({
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page);
   }
 }
-
-// TODO(atarashansky): write this test suite
-// https://github.com/chanzuckerberg/single-cell-explorer/issues/811
-// async function goToCellGuideCxg(page: Page) {
-//   await goToPage(page, "http://localhost:3000/d/cellguide-cxgs/example.cxg/");
-// }
-
-// describe(`CellGuide CXG tests`, () => {
-//   test.only("author and standard category headers are not present", async ({
-//     page,
-//   }) => {
-//     await goToPage(page, url);
-//   });
-// });

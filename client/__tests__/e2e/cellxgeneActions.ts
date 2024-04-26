@@ -140,6 +140,30 @@ export async function getAllCategoriesAndCounts(
 
   return Object.fromEntries(arrayOfLabelsAndCounts);
 }
+export async function getAllCategories(
+  category: string,
+  page: Page
+): Promise<string[]> {
+  // these load asynchronously, so we have to wait for the specific category.
+  const categoryRows = await page
+    .getByTestId(`category-${category}`)
+    .getByTestId("categorical-row")
+    .all();
+
+  const arrayOfLabels = await Promise.all(
+    categoryRows.map(async (row): Promise<string> => {
+      const cat = await row
+        .getByTestId("categorical-value")
+        .getAttribute("aria-label");
+
+      if (!cat) throw new Error("category value not found");
+
+      return cat;
+    })
+  );
+
+  return arrayOfLabels;
+}
 
 export async function getCellSetCount(
   num: number,
@@ -405,11 +429,10 @@ export async function checkGenesetDescription(
 
       const editButton = `${genesetName}:edit-genesetName-mode`;
       await page.getByTestId(editButton).click({
-        force: true
+        force: true,
         /**
          * (thuang): Don't wait for the default timeout, since we want to fail fast
-         */,
-        timeout: 1 * 1000,
+         */ timeout: 1 * 1000,
       });
 
       const description = page.getByTestId("change-geneset-description");
