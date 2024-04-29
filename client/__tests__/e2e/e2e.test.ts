@@ -1050,13 +1050,15 @@ for (const testDataset of testDatasets) {
 
         await downloadAndSnapshotImage(page, testInfo);
       });
-      test("with categorical legend", async ({ page }) => {
+      test("with categorical legend", async ({ page }, testInfo) => {
         await goToPage(page, url);
 
         const allLabels = [...Object.keys(data.categorical)];
         await page.getByTestId(`colorby-${allLabels[0]}`).click();
 
         page.getByTestId("download-graph-button").click();
+
+        await downloadAndSnapshotImage(page, testInfo);
       });
     });
   });
