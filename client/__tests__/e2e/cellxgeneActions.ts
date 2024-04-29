@@ -149,7 +149,7 @@ export async function expandMarkerGeneSetsHeader(page: Page): Promise<void> {
   const chevronDownIcon = markerGeneSetsHeader.locator(
     "svg[data-icon='chevron-down']"
   );
-  tryUntil(
+  await tryUntil(
     async () => {
       if ((await chevronDownIcon.count()) === 0) {
         await markerGeneSetsHeader.click();
