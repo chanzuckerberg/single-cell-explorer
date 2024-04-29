@@ -47,6 +47,7 @@ import {
   checkGenesetDescription,
   assertUndoRedo,
   snapshotTestGraph,
+  getAllCategories,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -289,6 +290,22 @@ for (const testDataset of testDatasets) {
 
           await snapshotTestGraph(page, testInfo);
         }
+      });
+      test("subset - categories with zero cells are filtered out", async ({
+        page,
+      }) => {
+        await goToPage(page, url);
+        const select = data.subset.cellset1[0];
+        await selectCategory(select.metadata, select.values, page, true);
+        await page.getByTestId("subset-button").click();
+
+        const actualCategories = await getAllCategoriesAndCounts(
+          select.metadata,
+          page
+        );
+        const actualCategoriesKeys = Object.keys(actualCategories).sort();
+        const expectedCateogriesKeys = select.values.slice().sort();
+        expect(actualCategoriesKeys).toEqual(expectedCateogriesKeys);
       });
 
       test("lasso after subset", async ({ page }, testInfo) => {
@@ -659,6 +676,39 @@ for (const testDataset of testDatasets) {
           await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
           await snapshotTestGraph(page, testInfo);
         });
+        test("color by mean expression changes sorting of categories in 'cell_type'", async ({
+          page,
+        }) => {
+          await setup({ option, page, url });
+          const categories = await page
+            .locator('[data-testid*=":category-expand"]')
+            .all();
+          const category = categories[0];
+          const categoryName = (
+            await category.getAttribute("data-testid")
+          )?.split(":")[0] as string;
+
+          await expandCategory(categoryName, page);
+
+          await createGeneset(meanExpressionBrushGenesetName, page);
+          await addGeneToSetAndExpand(
+            meanExpressionBrushGenesetName,
+            "SIK1",
+            page
+          );
+
+          // Check initial order of categories
+          const initialOrder = await getAllCategories(categoryName, page);
+
+          // Color by the geneset mean expression
+          await colorByGeneset(meanExpressionBrushGenesetName, page);
+
+          // Check order of categories after sorting by mean expression
+          const sortedOrder = await getAllCategories(categoryName, page);
+
+          // Expect the sorted order to be different from the initial order
+          expect(sortedOrder).not.toEqual(initialOrder);
+        });
 
         test("diffexp", async ({ page }, testInfo) => {
           if (option.withSubset) return;
@@ -1007,17 +1057,3 @@ async function setup({
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page);
   }
 }
-
-// TODO(atarashansky): write this test suite
-// https://github.com/chanzuckerberg/single-cell-explorer/issues/811
-// async function goToCellGuideCxg(page: Page) {
-//   await goToPage(page, "http://localhost:3000/d/cellguide-cxgs/example.cxg/");
-// }
-
-// describe(`CellGuide CXG tests`, () => {
-//   test.only("author and standard category headers are not present", async ({
-//     page,
-//   }) => {
-//     await goToPage(page, url);
-//   });
-// });
