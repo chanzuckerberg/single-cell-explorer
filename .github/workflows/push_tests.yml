@@ -124,6 +124,8 @@ jobs:
           workingDir: ./client
           # This is `npm run build-archive-storybook`
           buildScriptName: "build-archive-storybook"
+          exitOnceUploaded: true
+
 
       - name: Upload FE test results as an artifact
         if: always()
