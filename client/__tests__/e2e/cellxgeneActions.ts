@@ -140,6 +140,26 @@ export async function getAllCategoriesAndCounts(
 
   return Object.fromEntries(arrayOfLabelsAndCounts);
 }
+
+export async function expandMarkerGeneSetsHeader(page: Page): Promise<void> {
+  // Locate and expand the 'Marker Gene Sets' header if not already expanded
+  const markerGeneSetsHeader = await page.locator(
+    "h5:has-text('Marker Gene Sets')"
+  );
+  const chevronDownIcon = markerGeneSetsHeader.locator(
+    "svg[data-icon='chevron-down']"
+  );
+  tryUntil(
+    async () => {
+      if ((await chevronDownIcon.count()) === 0) {
+        await markerGeneSetsHeader.click();
+      }
+      const count = await chevronDownIcon.count();
+      expect(count).toBeGreaterThan(0);
+    },
+    { page }
+  );
+}
 export async function getAllCategories(
   category: string,
   page: Page

@@ -49,6 +49,7 @@ import {
   snapshotTestGraph,
   expandGeneset,
   getAllCategories,
+  expandMarkerGeneSetsHeader,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -157,10 +158,11 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
     const markerGeneSetsHeader = await page.locator(
       "h5:has-text('Marker Gene Sets')"
     );
-    await markerGeneSetsHeader.click(); // Assuming clicking will expand the section
 
     tryUntil(
       async () => {
+        await markerGeneSetsHeader.click(); // Assuming clicking will expand the section
+
         // Assert the presence of specific genesets
         const geneset1 = await page.locator(
           `div[data-testid="geneset"]:has-text("enteric smooth muscle cell")`
@@ -180,21 +182,12 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
   }) => {
     await goToPage(page, pageURLCellGuide);
 
-    // Locate and expand the 'Marker Gene Sets' header if not already expanded
-    const markerGeneSetsHeader = await page.locator(
-      "h5:has-text('Marker Gene Sets')"
-    );
-    const chevronDownIcon = markerGeneSetsHeader.locator(
-      "svg[data-icon='chevron-down']"
-    );
-    if ((await chevronDownIcon.count()) === 0) {
-      await markerGeneSetsHeader.click();
-    }
+    await expandMarkerGeneSetsHeader(page);
 
     // Locate and expand 'enteric smooth muscle cell' geneset
     await expandGeneset("enteric smooth muscle cell - marker genes", page);
 
-    // Assert the presence of the genes div and that it contains 100 child divs
+    // Assert the presence of the genes div and that it contains 55 child divs
     const genesDiv = await page.locator(`div[data-testid="gene-set-genes"]`);
     await expect(genesDiv).toBeVisible();
     const childDivs = await genesDiv.locator(
@@ -207,32 +200,15 @@ describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
   }) => {
     await goToPage(page, pageURLCellGuide);
 
-    // Locate and expand the 'Marker Gene Sets' header if not already expanded
-    let markerGeneSetsHeader = await page.locator(
-      "h5:has-text('Marker Gene Sets')"
-    );
-    let chevronDownIcon = markerGeneSetsHeader.locator(
-      "svg[data-icon='chevron-down']"
-    );
-    if ((await chevronDownIcon.count()) === 0) {
-      await markerGeneSetsHeader.click();
-    }
+    await expandMarkerGeneSetsHeader(page);
 
     await deleteGeneset("enteric smooth muscle cell - marker genes", page);
 
     // Refresh the page
     await page.reload();
 
-    // Locate and expand the 'Marker Gene Sets' header if not already expanded
-    markerGeneSetsHeader = await page.locator(
-      "h5:has-text('Marker Gene Sets')"
-    );
-    chevronDownIcon = markerGeneSetsHeader.locator(
-      "svg[data-icon='chevron-down']"
-    );
-    if ((await chevronDownIcon.count()) === 0) {
-      await markerGeneSetsHeader.click();
-    }
+    await expandMarkerGeneSetsHeader(page);
+
     // Check if the geneset is added back
     const genesetPresence = await page.locator(
       `div[data-testid="geneset"]:has-text("enteric smooth muscle cell")`
