@@ -452,7 +452,8 @@ export async function checkGenesetDescription(
         force: true,
         /**
          * (thuang): Don't wait for the default timeout, since we want to fail fast
-         */ timeout: 1 * 1000,
+         */
+        timeout: 1 * 1000,
       });
 
       const description = page.getByTestId("change-geneset-description");
