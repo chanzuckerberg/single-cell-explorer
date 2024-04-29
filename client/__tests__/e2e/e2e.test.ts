@@ -1042,7 +1042,7 @@ for (const testDataset of testDatasets) {
         }
       }
 
-      test.only("with continuous legend", async ({ page }, testInfo) => {
+      test("with continuous legend", async ({ page }, testInfo) => {
         await goToPage(page, url);
 
         await addGeneToSearch("SIK1", page);
