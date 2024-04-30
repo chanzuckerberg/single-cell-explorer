@@ -1045,13 +1045,16 @@ for (const testDataset of testDatasets) {
         const imageFile = await fs.readFile(path, { encoding: "base64" });
 
         // attach the image at path to the dom so we can snapshot it
+        // ensure that the image is rendered on top of the graph
         await page.evaluate((imgData) => {
           const img = document.createElement("img");
           img.id = "downloaded-image";
           img.src = `data:image/png;base64,${imgData}`;
-          img.style.width = "100%";
-          img.style.height = "100%";
+          img.style.height = "100vh";
           img.style.zIndex = "1000";
+          img.style.background = "white";
+          img.style.position = "absolute";
+          img.style.top = "0";
           document.body.appendChild(img);
         }, imageFile);
         await takeSnapshot(page, info);
