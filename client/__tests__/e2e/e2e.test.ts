@@ -11,6 +11,8 @@
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
+import fs from "fs/promises";
+import crypto from "crypto";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -90,6 +92,19 @@ const geneToRequestInfo = "SIK1";
 
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
+
+const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
+  "CELLxGENE_umap_emb.png with continuous legend hash":
+    "48f54d922ee6924e09614212fa807c52",
+  "CELLxGENE_umap_emb.png with categorical legend hash":
+    "5f477a8010783ba03af660e3b9b45292",
+  "CELLxGENE_spatial_emb.png with continuous legend hash":
+    "59d6d8b5d5eadc79387fa74bd28683eb",
+  "CELLxGENE_legend.png with categorical legend hash":
+    "179fa82ba200d4307bd41ec16d62bcef",
+  "CELLxGENE_spatial_emb.png with categorical legend hash":
+    "9d7f861e5e953091af26046e6e82890b",
+};
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -180,9 +195,9 @@ for (const testDataset of testDatasets) {
       test("continuous data appears", async ({ page }, testInfo) => {
         await goToPage(page, url);
         for (const label of Object.keys(data.continuous)) {
-          expect(
-            await page.getByTestId(`histogram-${label}-plot`)
-          ).not.toHaveCount(0);
+          expect(page.getByTestId(`histogram-${label}-plot`)).not.toHaveCount(
+            0
+          );
 
           await snapshotTestGraph(page, testInfo);
         }
@@ -510,7 +525,7 @@ for (const testDataset of testDatasets) {
             page,
           });
 
-          const newGraph = await page.getByTestId("graph-wrapper");
+          const newGraph = page.getByTestId("graph-wrapper");
           const newDistance =
             (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
           expect(parseFloat(newDistance)).toBe(scaleMax);
@@ -547,8 +562,8 @@ for (const testDataset of testDatasets) {
 
           expect(initialCount).toBe(panzoomLasso.count);
 
-          await page.getByTestId("mode-pan-zoom");
-          await page.getByTestId("mode-lasso");
+          page.getByTestId("mode-pan-zoom");
+          page.getByTestId("mode-lasso");
 
           const modeSwitchCount = await getCellSetCount(1, page);
 
@@ -1020,26 +1035,53 @@ for (const testDataset of testDatasets) {
       });
     }
 
-    describe(`Image Download`, () => {
-      async function downloadAndSnapshotImage(page: Page, testInfo: TestInfo) {
-        const [download] = await Promise.all([
-          page.waitForEvent("download"),
-          page.getByTestId("download-graph-button").click(),
-        ]);
+    describe.only(`Image Download`, () => {
+      async function getImageHash(path: string) {
+        const imageFile = await fs.readFile(path);
+        return crypto.createHash("md5").update(imageFile).digest("hex");
+      }
+      async function navigateToAndSnapshotImage(
+        page: Page,
+        info: TestInfo,
+        path: string
+      ) {
+        await page.goto(`file://${path}`);
+        await takeSnapshot(page, info);
+      }
+      async function downloadAndSnapshotImage(page: Page, info: TestInfo) {
+        const graphPromise = page.waitForEvent("download");
+        await page.getByTestId("download-graph-button").click();
+        const graphDownload = await graphPromise;
 
         const tmp = os.tmpdir();
-        try {
-          await download.saveAs(`${tmp}/${await download.suggestedFilename()}`);
-          await page.goto(
-            `file://${tmp}/${await download.suggestedFilename()}`
-          );
+        // make the title safe for file system
+        const safeTitle = info.title.replace(/[^a-z0-9]/gi, "_");
+        const graphPath = `${tmp}/${safeTitle}/${graphDownload.suggestedFilename()}`;
 
-          await takeSnapshot(page, testInfo);
-          await download.delete();
-        } catch (e) {
-          if (await download.failure()) throw await download.failure();
-          else throw e;
+        let legendPromise;
+        if (info.title.includes("categorical")) {
+          // this will capture a separate legend download if the colorby is categorical
+          legendPromise = page.waitForEvent("download");
         }
+        graphDownload.saveAs(graphPath);
+        const graphHash = await getImageHash(graphPath);
+
+        expect(graphHash).toBe(
+          FILE_HASHES[`${graphDownload.suggestedFilename()} ${info.title} hash`]
+        );
+
+        if (legendPromise) {
+          const legendDownload = await legendPromise;
+          const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
+          const legendHash = await getImageHash(legendPath);
+          expect(legendHash).toBe(
+            FILE_HASHES[
+              `${legendDownload.suggestedFilename()} ${info.title} hash`
+            ]
+          );
+          await navigateToAndSnapshotImage(page, info, legendPath);
+        }
+        await navigateToAndSnapshotImage(page, info, graphPath);
       }
 
       test("with continuous legend", async ({ page }, testInfo) => {
@@ -1055,8 +1097,6 @@ for (const testDataset of testDatasets) {
 
         const allLabels = [...Object.keys(data.categorical)];
         await page.getByTestId(`colorby-${allLabels[0]}`).click();
-
-        page.getByTestId("download-graph-button").click();
 
         await downloadAndSnapshotImage(page, testInfo);
       });
