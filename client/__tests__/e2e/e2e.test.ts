@@ -94,15 +94,15 @@ const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
 const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
-  "CELLxGENE_umap_emb.png with continuous legend hash":
+  "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with continuous legend hash":
     "48f54d922ee6924e09614212fa807c52",
-  "CELLxGENE_umap_emb.png with categorical legend hash":
+  "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
     "5f477a8010783ba03af660e3b9b45292",
-  "CELLxGENE_spatial_emb.png with continuous legend hash":
-    "59d6d8b5d5eadc79387fa74bd28683eb",
-  "CELLxGENE_legend.png with categorical legend hash":
+  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
     "179fa82ba200d4307bd41ec16d62bcef",
-  "CELLxGENE_spatial_emb.png with categorical legend hash":
+  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
+    "179fa82ba200d4307bd41ec16d62bcef",
+  "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
     "9d7f861e5e953091af26046e6e82890b",
 };
 
@@ -1065,18 +1065,20 @@ for (const testDataset of testDatasets) {
         }
         graphDownload.saveAs(graphPath);
         const graphHash = await getImageHash(graphPath);
-
         expect(graphHash).toBe(
-          FILE_HASHES[`${graphDownload.suggestedFilename()} ${info.title} hash`]
+          FILE_HASHES[
+            `${graphDownload.suggestedFilename()} ${info.titlePath} hash`
+          ]
         );
 
         if (legendPromise) {
           const legendDownload = await legendPromise;
           const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
           const legendHash = await getImageHash(legendPath);
+
           expect(legendHash).toBe(
             FILE_HASHES[
-              `${legendDownload.suggestedFilename()} ${info.title} hash`
+              `${legendDownload.suggestedFilename()} ${info.titlePath} hash`
             ]
           );
           await navigateToAndSnapshotImage(page, info, legendPath);
