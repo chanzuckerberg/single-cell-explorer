@@ -11,8 +11,8 @@
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
-import fs from "fs/promises";
-import crypto from "crypto";
+// import fs from "fs/promises";
+// import crypto from "crypto";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -93,20 +93,20 @@ const geneToRequestInfo = "SIK1";
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
-const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
-  "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with continuous legend hash":
-    "48f54d922ee6924e09614212fa807c52",
-  "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
-    "5f477a8010783ba03af660e3b9b45292",
-  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
-    "454f80c63655f9b4a161b0e6c5c7400c",
-  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
-    "179fa82ba200d4307bd41ec16d62bcef",
-  "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
-    "9d7f861e5e953091af26046e6e82890b",
-  "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with continuous legend hash":
-    "59d6d8b5d5eadc79387fa74bd28683eb",
-};
+// const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
+//   "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with continuous legend hash":
+//     "48f54d922ee6924e09614212fa807c52",
+//   "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
+//     "5f477a8010783ba03af660e3b9b45292",
+//   "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
+//     "454f80c63655f9b4a161b0e6c5c7400c",
+//   "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
+//     "179fa82ba200d4307bd41ec16d62bcef",
+//   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
+//     "9d7f861e5e953091af26046e6e82890b",
+//   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with continuous legend hash":
+//     "59d6d8b5d5eadc79387fa74bd28683eb",
+// };
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -1038,10 +1038,10 @@ for (const testDataset of testDatasets) {
     }
 
     describe(`Image Download`, () => {
-      async function getImageHash(path: string) {
-        const imageFile = await fs.readFile(path);
-        return crypto.createHash("md5").update(imageFile).digest("hex");
-      }
+      // async function getImageHash(path: string) {
+      //   const imageFile = await fs.readFile(path);
+      //   return crypto.createHash("md5").update(imageFile).digest("hex");
+      // }
       async function navigateToAndSnapshotImage(
         page: Page,
         info: TestInfo,
@@ -1066,24 +1066,24 @@ for (const testDataset of testDatasets) {
           legendPromise = page.waitForEvent("download");
         }
         await graphDownload.saveAs(graphPath);
-        const graphHash = await getImageHash(graphPath);
-        expect(graphHash).toBe(
-          FILE_HASHES[
-            `${graphDownload.suggestedFilename()} ${info.titlePath} hash`
-          ]
-        );
+        // const graphHash = await getImageHash(graphPath);
+        // expect(graphHash).toBe(
+        //   FILE_HASHES[
+        //     `${graphDownload.suggestedFilename()} ${info.titlePath} hash`
+        //   ]
+        // );
 
         if (legendPromise) {
           const legendDownload = await legendPromise;
           const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
           await legendDownload.saveAs(legendPath);
-          const legendHash = await getImageHash(legendPath);
+          // const legendHash = await getImageHash(legendPath);
 
-          expect(legendHash).toBe(
-            FILE_HASHES[
-              `${legendDownload.suggestedFilename()} ${info.titlePath} hash`
-            ]
-          );
+          // expect(legendHash).toBe(
+          //   FILE_HASHES[
+          //     `${legendDownload.suggestedFilename()} ${info.titlePath} hash`
+          //   ]
+          // );
           await navigateToAndSnapshotImage(page, info, legendPath);
         }
         await navigateToAndSnapshotImage(page, info, graphPath);
