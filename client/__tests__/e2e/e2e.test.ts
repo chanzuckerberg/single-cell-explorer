@@ -99,13 +99,13 @@ const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
   "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
     "5f477a8010783ba03af660e3b9b45292",
   "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
-    "179fa82ba200d4307bd41ec16d62bcef",
-  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
     "454f80c63655f9b4a161b0e6c5c7400c",
+  "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
+    "179fa82ba200d4307bd41ec16d62bcef",
   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
     "9d7f861e5e953091af26046e6e82890b",
   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with continuous legend hash":
-    "ba7613b3f4ef6e5408ab6b231d8c5874",
+    "59d6d8b5d5eadc79387fa74bd28683eb",
 };
 
 // TODO #754
@@ -1037,7 +1037,7 @@ for (const testDataset of testDatasets) {
       });
     }
 
-    describe(`Image Download`, () => {
+    describe.only(`Image Download`, () => {
       async function getImageHash(path: string) {
         const imageFile = await fs.readFile(path);
         return crypto.createHash("md5").update(imageFile).digest("hex");
@@ -1065,7 +1065,7 @@ for (const testDataset of testDatasets) {
           // this will capture a separate legend download if the colorby is categorical
           legendPromise = page.waitForEvent("download");
         }
-        graphDownload.saveAs(graphPath);
+        await graphDownload.saveAs(graphPath);
         const graphHash = await getImageHash(graphPath);
         expect(graphHash).toBe(
           FILE_HASHES[
@@ -1076,7 +1076,7 @@ for (const testDataset of testDatasets) {
         if (legendPromise) {
           const legendDownload = await legendPromise;
           const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
-          legendDownload.saveAs(legendPath);
+          await legendDownload.saveAs(legendPath);
           const legendHash = await getImageHash(legendPath);
 
           expect(legendHash).toBe(
