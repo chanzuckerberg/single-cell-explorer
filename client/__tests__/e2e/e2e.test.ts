@@ -1037,7 +1037,7 @@ for (const testDataset of testDatasets) {
       });
     }
 
-    describe.only(`Image Download`, () => {
+    describe(`Image Download`, () => {
       async function getImageHash(path: string) {
         const imageFile = await fs.readFile(path);
         return crypto.createHash("md5").update(imageFile).digest("hex");
