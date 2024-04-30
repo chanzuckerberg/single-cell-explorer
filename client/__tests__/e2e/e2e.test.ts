@@ -11,8 +11,6 @@
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
-// import fs from "fs/promises";
-// import crypto from "crypto";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -1038,17 +1036,28 @@ for (const testDataset of testDatasets) {
     }
 
     describe(`Image Download`, () => {
-      // async function getImageHash(path: string) {
-      //   const imageFile = await fs.readFile(path);
-      //   return crypto.createHash("md5").update(imageFile).digest("hex");
-      // }
       async function navigateToAndSnapshotImage(
         page: Page,
         info: TestInfo,
         path: string
       ) {
-        await page.goto(`file://${path}`);
+        // attach the image at path to the dom so we can snapshot it
+        await page.evaluate((passedPath) => {
+          const img = document.createElement("img");
+          img.id = "downloaded-image";
+          img.src = passedPath;
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.zIndex = "1000";
+          document.body.appendChild(img);
+        }, path);
         await takeSnapshot(page, info);
+
+        // remove the image from the dom
+        await page.evaluate(() => {
+          const img = document.getElementById("downloaded-image");
+          img?.parentNode?.removeChild(img);
+        });
       }
       async function downloadAndSnapshotImage(page: Page, info: TestInfo) {
         const graphPromise = page.waitForEvent("download");
@@ -1066,24 +1075,12 @@ for (const testDataset of testDatasets) {
           legendPromise = page.waitForEvent("download");
         }
         await graphDownload.saveAs(graphPath);
-        // const graphHash = await getImageHash(graphPath);
-        // expect(graphHash).toBe(
-        //   FILE_HASHES[
-        //     `${graphDownload.suggestedFilename()} ${info.titlePath} hash`
-        //   ]
-        // );
 
         if (legendPromise) {
           const legendDownload = await legendPromise;
           const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
           await legendDownload.saveAs(legendPath);
-          // const legendHash = await getImageHash(legendPath);
 
-          // expect(legendHash).toBe(
-          //   FILE_HASHES[
-          //     `${legendDownload.suggestedFilename()} ${info.titlePath} hash`
-          //   ]
-          // );
           await navigateToAndSnapshotImage(page, info, legendPath);
         }
         await navigateToAndSnapshotImage(page, info, graphPath);
