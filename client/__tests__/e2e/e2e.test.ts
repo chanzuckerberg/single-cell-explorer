@@ -11,6 +11,7 @@
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
+import fs from "fs/promises";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -1041,16 +1042,18 @@ for (const testDataset of testDatasets) {
         info: TestInfo,
         path: string
       ) {
+        const imageFile = await fs.readFile(path, { encoding: "base64" });
+
         // attach the image at path to the dom so we can snapshot it
-        await page.evaluate((passedPath) => {
+        await page.evaluate((imgData) => {
           const img = document.createElement("img");
           img.id = "downloaded-image";
-          img.src = `file://${passedPath}`;
+          img.src = `data:image/png;base64,${imgData}`;
           img.style.width = "100%";
           img.style.height = "100%";
           img.style.zIndex = "1000";
           document.body.appendChild(img);
-        }, path);
+        }, imageFile);
         await takeSnapshot(page, info);
 
         // remove the image from the dom
