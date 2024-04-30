@@ -1045,7 +1045,7 @@ for (const testDataset of testDatasets) {
         await page.evaluate((passedPath) => {
           const img = document.createElement("img");
           img.id = "downloaded-image";
-          img.src = passedPath;
+          img.src = `file://${passedPath}`;
           img.style.width = "100%";
           img.style.height = "100%";
           img.style.zIndex = "1000";
