@@ -6,7 +6,7 @@
  *          https://playwright.dev/docs/input#forcing-the-click
  */
 
-/* eslint-disable compat/compat -- not ran in the broser */
+/* eslint-disable compat/compat -- not ran in the browser */
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { Page, TestInfo } from "@playwright/test";
 import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
