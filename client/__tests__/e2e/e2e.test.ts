@@ -92,21 +92,6 @@ const geneToRequestInfo = "SIK1";
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
 
-// const FILE_HASHES: { [key: `${string} ${string} hash`]: string } = {
-//   "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with continuous legend hash":
-//     "48f54d922ee6924e09614212fa807c52",
-//   "CELLxGENE_umap_emb.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
-//     "5f477a8010783ba03af660e3b9b45292",
-//   "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: pbmc3k.cxg,Image Download,with categorical legend hash":
-//     "454f80c63655f9b4a161b0e6c5c7400c",
-//   "CELLxGENE_legend.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
-//     "179fa82ba200d4307bd41ec16d62bcef",
-//   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with categorical legend hash":
-//     "9d7f861e5e953091af26046e6e82890b",
-//   "CELLxGENE_spatial_emb.png e2e/e2e.test.ts,dataset: super-cool-spatial.cxg,Image Download,with continuous legend hash":
-//     "59d6d8b5d5eadc79387fa74bd28683eb",
-// };
-
 // TODO #754
 test.beforeEach(mockSetup);
 
