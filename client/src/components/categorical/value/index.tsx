@@ -586,7 +586,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           <div style={{ display: "flex", alignItems: "baseline" }}>
             <label
               htmlFor={valueToggleLabel}
-              className={`${Classes.CONTROL} ${Classes.CHECKBOX}`}
+              className={`${Classes.CONTROL} ${Classes.CHECKBOX} ignore-capture`}
               style={{ margin: 0 }}
             >
               <input
@@ -633,7 +633,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             {this.renderMiniHistogram()}
           </span>
         </div>
-        <div>
+        <div
+          style={{
+            whiteSpace: "nowrap",
+          }}
+        >
           <span>
             <span
               data-testid="categorical-value-count"

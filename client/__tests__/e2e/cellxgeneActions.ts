@@ -141,6 +141,50 @@ export async function getAllCategoriesAndCounts(
   return Object.fromEntries(arrayOfLabelsAndCounts);
 }
 
+export async function expandMarkerGeneSetsHeader(page: Page): Promise<void> {
+  // Locate and expand the 'Marker Gene Sets' header if not already expanded
+  const markerGeneSetsHeader = await page.locator(
+    "h5:has-text('Marker Gene Sets')"
+  );
+  const chevronDownIcon = markerGeneSetsHeader.locator(
+    "svg[data-icon='chevron-down']"
+  );
+  await tryUntil(
+    async () => {
+      if ((await chevronDownIcon.count()) === 0) {
+        await markerGeneSetsHeader.click();
+      }
+      const count = await chevronDownIcon.count();
+      expect(count).toBeGreaterThan(0);
+    },
+    { page }
+  );
+}
+export async function getAllCategories(
+  category: string,
+  page: Page
+): Promise<string[]> {
+  // these load asynchronously, so we have to wait for the specific category.
+  const categoryRows = await page
+    .getByTestId(`category-${category}`)
+    .getByTestId("categorical-row")
+    .all();
+
+  const arrayOfLabels = await Promise.all(
+    categoryRows.map(async (row): Promise<string> => {
+      const cat = await row
+        .getByTestId("categorical-value")
+        .getAttribute("aria-label");
+
+      if (!cat) throw new Error("category value not found");
+
+      return cat;
+    })
+  );
+
+  return arrayOfLabels;
+}
+
 export async function getCellSetCount(
   num: number,
   page: Page
@@ -367,8 +411,21 @@ export async function editGenesetName(
 ): Promise<void> {
   const editButton = `${genesetName}:edit-genesetName-mode`;
   const submitButton = `${genesetName}:submit-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click();
-  await page.getByTestId(editButton).click({ force: true });
+
+  await tryUntil(
+    async () => {
+      await page.getByTestId(`${genesetName}:see-actions`).click();
+      await page.getByTestId(editButton).click({
+        force: true,
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */
+        timeout: 1 * 1000,
+      });
+    },
+    { page }
+  );
+
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
@@ -384,11 +441,27 @@ export async function checkGenesetDescription(
   descriptionText: string,
   page: Page
 ): Promise<void> {
-  const editButton = `${genesetName}:edit-genesetName-mode`;
-  await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(editButton).click({ force: true });
-  const description = page.getByTestId("change-geneset-description");
-  await expect(description).toHaveValue(descriptionText);
+  await tryUntil(
+    async () => {
+      await page
+        .getByTestId(`${genesetName}:see-actions`)
+        .click({ force: true });
+
+      const editButton = `${genesetName}:edit-genesetName-mode`;
+      await page.getByTestId(editButton).click({
+        force: true,
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */
+        timeout: 1 * 1000,
+      });
+
+      const description = page.getByTestId("change-geneset-description");
+
+      await expect(description).toHaveValue(descriptionText);
+    },
+    { page }
+  );
 }
 
 export async function deleteGeneset(
@@ -396,10 +469,23 @@ export async function deleteGeneset(
   page: Page
 ): Promise<void> {
   const targetId = `${genesetName}:delete-geneset`;
-  await page.getByTestId(`${genesetName}:see-actions`).click({ force: true });
-  await page.getByTestId(targetId).click({ force: true });
+  await tryUntil(
+    async () => {
+      await page
+        .getByTestId(`${genesetName}:see-actions`)
+        .click({ force: true });
 
-  await assertGenesetDoesNotExist(genesetName, page);
+      await page.getByTestId(targetId).click({
+        force: true,
+        /**
+         * (thuang): Don't wait for the default timeout, since we want to fail fast
+         */ timeout: 1 * 1000,
+      });
+
+      await assertGenesetDoesNotExist(genesetName, page);
+    },
+    { page }
+  );
 }
 
 export async function assertGenesetDoesNotExist(
@@ -532,15 +618,18 @@ export async function assertGeneInfoCardIsMinimized(
     "clear-gene-info",
   ];
 
-  await tryUntil(async () => {
-    for (const id of testIds) {
-      const result = await page.getByTestId(id).isVisible();
-      await expect(result).toBe(true);
-    }
+  await tryUntil(
+    async () => {
+      for (const id of testIds) {
+        const result = await page.getByTestId(id).isVisible();
+        await expect(result).toBe(true);
+      }
 
-    const result = await page.getByTestId("gene-info-symbol").isVisible();
-    await expect(result).toBe(false);
-  }, {page});
+      const result = await page.getByTestId("gene-info-symbol").isVisible();
+      await expect(result).toBe(false);
+    },
+    { page }
+  );
 }
 
 export async function removeGeneInfo(page: Page): Promise<void> {
@@ -557,12 +646,15 @@ export async function assertGeneInfoDoesNotExist(
     "min-gene-info",
     "clear-gene-info",
   ];
-  await tryUntil(async () => {
-    for (const id of testIds) {
-      const result = await page.getByTestId(id).isVisible();
-      await expect(result).toBe(false);
-    }
-  }, {page});
+  await tryUntil(
+    async () => {
+      for (const id of testIds) {
+        const result = await page.getByTestId(id).isVisible();
+        await expect(result).toBe(false);
+      }
+    },
+    { page }
+  );
 }
 
 /**
@@ -675,9 +767,17 @@ export async function assertUndoRedo(
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   const buttonID = "capture-and-display-graph";
   const imageID = "graph-image";
-  await page.getByTestId(buttonID).click();
-  page.getByTestId(imageID).waitFor();
-  await takeSnapshot(page, testInfo);
+
+  await tryUntil(
+    async () => {
+      await page.getByTestId(buttonID).click({ force: true });
+
+      await page.getByTestId(imageID).waitFor();
+
+      await takeSnapshot(page, testInfo);
+    },
+    { page }
+  );
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

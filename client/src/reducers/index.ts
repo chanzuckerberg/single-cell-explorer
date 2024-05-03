@@ -26,8 +26,6 @@ import genesetsUI from "./genesetsUI";
 import centroidLabels from "./centroidLabels";
 import pointDialation from "./pointDilation";
 import quickGenes from "./quickGenes";
-import spatial from "./spatial";
-import imageUnderlay from "./imageUnderlay";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -52,8 +50,6 @@ const AppReducer = undoable(
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDialation],
     ["datasetMetadata", datasetMetadata],
-    ["spatial", spatial],
-    ["imageUnderlay", imageUnderlay],
   ]),
   [
     "annoMatrix",
@@ -69,8 +65,6 @@ const AppReducer = undoable(
     "centroidLabels",
     "genesets",
     "annotations",
-    "spatial",
-    "imageUnderlay",
   ],
   undoableConfig
 );

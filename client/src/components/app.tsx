@@ -13,13 +13,13 @@ import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
-import Graph from "./graph/graph";
 import MenuBar from "./menubar";
 import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
+import Graph from "./graph/graph";
 
 interface Props {
   dispatch: AppDispatch;
@@ -30,6 +30,7 @@ interface Props {
   privacyURL: string | undefined;
   seamlessEnabled: boolean;
   datasetMetadataError: string | null;
+  isCellGuideCxg: boolean;
 }
 
 class App extends React.Component<Props> {
@@ -49,6 +50,7 @@ class App extends React.Component<Props> {
       privacyURL,
       seamlessEnabled,
       datasetMetadataError,
+      isCellGuideCxg,
     } = this.props;
     return (
       <Container>
@@ -69,12 +71,14 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
-              {(seamlessEnabled || datasetMetadataError === null) && (
+              {(seamlessEnabled ||
+                datasetMetadataError === null ||
+                isCellGuideCxg) && (
                 <Header tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
                 <Layout
-                  datasetMetadataError={datasetMetadataError}
+                  addTopPadding={!datasetMetadataError || isCellGuideCxg}
                   renderGraph={(viewportRef: HTMLDivElement) => (
                     <>
                       <GlobalHotkeys />
@@ -112,4 +116,5 @@ export default connect((state: RootState) => ({
   privacyURL: state.config?.parameters?.about_legal_privacy,
   seamlessEnabled: selectIsSeamlessEnabled(state),
   datasetMetadataError: state.datasetMetadata.error,
+  isCellGuideCxg: state.controls.isCellGuideCxg,
 }))(App);

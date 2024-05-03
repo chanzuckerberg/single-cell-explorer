@@ -108,7 +108,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testMatch: "**/e2e.test.ts",
+      testMatch: "**/e2e/*.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,

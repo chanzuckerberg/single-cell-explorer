@@ -54,6 +54,7 @@ jobs:
 
   unit-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
@@ -82,7 +83,8 @@ jobs:
 
   smoke-tests:
     runs-on: ubuntu-22.04
-    timeout-minutes: 25
+    # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -123,6 +125,7 @@ jobs:
           workingDir: ./client
           # This is `npm run build-archive-storybook`
           buildScriptName: "build-archive-storybook"
+          exitOnceUploaded: true
 
       - name: Upload FE test results as an artifact
         if: always()

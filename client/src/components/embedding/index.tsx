@@ -47,11 +47,12 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
 
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
     if (
-      imageUnderlay.isActive &&
-      e.target.value !== globals.spatialEmbeddingKeyword
+      imageUnderlay &&
+      !e.target.value.includes(globals.spatialEmbeddingKeyword)
     ) {
       dispatch({
         type: "toggle image underlay",
+        toggle: false,
       });
     }
   };

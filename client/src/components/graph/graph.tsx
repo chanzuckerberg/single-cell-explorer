@@ -36,55 +36,9 @@ import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
-
-/*
-Simple 2D transforms control all point painting.  There are three:
-  * model - convert from underlying per-point coordinate to a layout.
-    Currently used to move from data to webgl coordinate system.
-  * camera - apply a 2D camera transformation (pan, zoom)
-  * projection - apply any transformation required for screen size and layout
-*/
-function createProjectionTF(viewportWidth: number, viewportHeight: number) {
-  /*
-  the projection transform accounts for the screen size & other layout
-  */
-  const fractionToUse = 0.95; // fraction of min dimension to use
-  const topGutterSizePx = 32; // top gutter for tools
-  const bottomGutterSizePx = 32; // bottom gutter for tools
-  const heightMinusGutter =
-    viewportHeight - topGutterSizePx - bottomGutterSizePx;
-  const minDim = Math.min(viewportWidth, heightMinusGutter);
-  const aspectScale = new Float32Array([
-    (fractionToUse * minDim) / viewportWidth,
-    (fractionToUse * minDim) / viewportHeight,
-  ]);
-  const m = mat3.create();
-  mat3.fromTranslation(m, [
-    0,
-    (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
-  ]);
-  mat3.scale(m, m, aspectScale);
-  return m;
-}
-
-function createModelTF() {
-  /*
-  preallocate coordinate system transformation between data and gl.
-  Data arrives in a [0,1] range, and we operate elsewhere in [-1,1].
-  */
-  const m = mat3.fromScaling(mat3.create(), [2, 2]);
-  mat3.translate(m, m, [-0.5, -0.5]);
-  return m;
-}
-
-interface SpatialProps {
-  imaageWidth: number;
-  imageHeight: number;
-}
-
-interface ImageUnderlay {
-  isActive: boolean;
-}
+import { DatasetUnsMetadata } from "../../common/types/entities";
+import { LayoutChoiceState } from "../../reducers/layoutChoice";
+import { captureLegend, createModelTF, createProjectionTF } from "./util";
 
 type GraphState = {
   regl: Regl | null;
@@ -117,7 +71,6 @@ type GraphState = {
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
   drawSpatialImage: DrawCommand | null;
-  spatial: SpatialProps | null;
 };
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -125,9 +78,28 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: SpatialProps;
-  imageUnderlay: ImageUnderlay;
+  spatial: DatasetUnsMetadata;
+  imageUnderlay: boolean;
   screenCap: boolean;
+}
+
+function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
 }
 
 type GraphProps = Partial<RootState>;
@@ -144,8 +116,8 @@ type GraphProps = Partial<RootState>;
   genesets: state.genesets.genesets,
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
-  spatial: state.spatial.metadata,
-  imageUnderlay: state.imageUnderlay,
+  imageUnderlay: state.controls.imageUnderlay,
+  spatial: state.controls.unsMetadata.spatial,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
@@ -195,7 +167,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   private graphRef = React.createRef<HTMLDivElement>();
 
-  private downloadedImg: HTMLImageElement = new Image();
+  private underlayImage: HTMLImageElement = new Image();
 
   cachedAsyncProps: GraphAsyncProps | null;
 
@@ -311,7 +283,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       colorBuffer: null,
       flagBuffer: null,
       drawSpatialImage: null,
-      spatial: null,
       // component rendering derived state - these must stay synchronized
       // with the reducer state they were generated from.
       layoutState: {
@@ -343,13 +314,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
-    const { selectionTool, currentSelection, graphInteractionMode } =
+    const { selectionTool, currentSelection, graphInteractionMode, screenCap } =
       this.props;
     const { toolSVG, viewport } = this.state;
     const hasResized =
       prevState.viewport.height !== viewport.height ||
       prevState.viewport.width !== viewport.width;
     let stateChanges: Partial<GraphState> = {};
+
+    if (prevProps.screenCap !== screenCap) {
+      stateChanges = {
+        ...stateChanges,
+        viewport: this.getViewportDimensions(),
+      };
+    }
     if (
       (viewport.height && viewport.width && !toolSVG) || // first time init
       hasResized || //  window size has changed we want to recreate all SVGs
@@ -552,7 +530,18 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   getViewportDimensions = (): { height: number; width: number } => {
-    const { viewportRef } = this.props;
+    const { viewportRef, screenCap } = this.props;
+
+    if (screenCap) {
+      const prevAspectRatio =
+        viewportRef.clientHeight / viewportRef.clientWidth;
+
+      // seve: Default to 1080p resolution (arbitrary, but a good starting point for screen captures)
+      return {
+        height: 1080 * prevAspectRatio,
+        width: 1080,
+      };
+    }
     return {
       height: viewportRef.clientHeight,
       width: viewportRef.clientWidth,
@@ -614,17 +603,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return { toolSVG: newToolSVG, tool, container };
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  loadTextureFromUrl = async (src: string): Promise<any> => {
-    this.downloadedImg.crossOrigin = "anonymous";
-    this.downloadedImg.src = src;
-
-    await new Promise((resolve, reject) => {
-      this.downloadedImg.onload = () => resolve(this.downloadedImg);
-      this.downloadedImg.onerror = reject;
-    });
-
-    return this.downloadedImg;
+  loadTextureFromProp = (src: string): HTMLImageElement => {
+    this.underlayImage.src = src;
+    return this.underlayImage;
   };
 
   fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
@@ -635,9 +616,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       pointDilation,
       viewport,
-      spatial,
       imageUnderlay,
       screenCap,
+      spatial,
     } = props.watchProps;
     const { modelTF } = this.state;
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
@@ -670,11 +651,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
-    this.spatialImage = this.isSpatial
-      ? await this.loadTextureFromUrl(
-          `${globals.API?.prefix}${globals.API?.version}spatial/image`
-        )
-      : null;
+    this.spatialImage =
+      this.isSpatial && spatial.image
+        ? await this.loadTextureFromProp(
+            `data:image/webp;base64,${spatial.image}`
+          )
+        : null;
 
     const { width, height } = viewport;
     return {
@@ -683,9 +665,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       flags,
       width,
       height,
-      spatial,
       imageUnderlay,
       screenCap,
+      spatial,
     };
   };
 
@@ -963,8 +945,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       screenCap,
       mountCapture,
       layoutChoice,
-      spatial,
       imageUnderlay,
+      spatial,
+      colors,
     } = this.props;
     if (!this.reglCanvas || !annoMatrix) return;
     const { schema } = annoMatrix;
@@ -996,10 +979,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
       });
     }
     if (
-      imageUnderlay?.isActive &&
+      imageUnderlay &&
       drawSpatialImage &&
+      layoutChoice.current === "spatial" &&
       this.isSpatial &&
-      spatial
+      spatial &&
+      this.spatialImage
     ) {
       const imW = spatial.imageWidth;
       const imH = spatial.imageHeight;
@@ -1015,6 +1000,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         }),
       });
     }
+
     if (screenCap && regl && !this.isDownloadingImage) {
       /**
        * (thuang): This prevents re-rendering causes a second image download
@@ -1022,7 +1008,27 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.isDownloadingImage = true;
 
       const graph = regl._gl.canvas;
-      const imageURI = await toPng(graph as HTMLCanvasElement, {
+
+      // without this, the legend is drawn offscreen
+      const PADDING = 100;
+
+      const offscreenCanvas = document.createElement("canvas");
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+
+      const ctx = offscreenCanvas.getContext("2d");
+      ctx?.drawImage(graph, 0, 0);
+
+      let categoricalLegendImageURI: string | null = null;
+
+      categoricalLegendImageURI = await captureLegend(
+        colors,
+        ctx,
+        PADDING,
+        categoricalLegendImageURI
+      );
+
+      const graphImageURI = await toPng(offscreenCanvas, {
         backgroundColor: "white",
         height,
         width,
@@ -1030,23 +1036,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
         skipFonts: true,
       });
       if (mountCapture) {
-        this.setState({ testImageSrc: imageURI });
+        this.setState({ testImageSrc: graphImageURI });
         dispatch({ type: "test: screencap end" });
       } else {
-        const a = document.createElement("a");
-        a.href = imageURI;
-        a.download = `${layoutChoice.current.split(";;").at(-1)}_emb.png`;
-        a.style.display = "none";
-        document.body.append(a);
-        a.click();
-        // Revoke the blob URL and remove the element.
-        setTimeout(() => {
-          URL.revokeObjectURL(imageURI);
-          a.remove();
-        }, 1000);
+        downloadImage(graphImageURI, layoutChoice);
+        if (categoricalLegendImageURI) downloadImage(categoricalLegendImageURI);
         dispatch({ type: "graph: screencap end" });
-        this.isDownloadingImage = false;
       }
+      this.isDownloadingImage = false;
     }
 
     regl?._gl.flush();
@@ -1061,8 +1058,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilation,
       crossfilter,
       screenCap,
-      spatial,
       imageUnderlay,
+      spatial,
     } = this.props;
     const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
       this.state;
@@ -1154,8 +1151,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
             crossfilter,
             viewport,
             screenCap,
-            spatial,
             imageUnderlay,
+            spatial,
           }}
         >
           <Async.Pending initial>

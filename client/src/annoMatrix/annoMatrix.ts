@@ -20,12 +20,7 @@ import {
 import _shallowClone from "./clone";
 import { _queryValidate, _queryCacheKey, Query } from "./query";
 import { GCHints } from "../common/types/entities";
-import {
-  Field,
-  Schema,
-  ArraySchema,
-  RawSchema,
-} from "../common/types/schema";
+import { Field, Schema, ArraySchema, RawSchema } from "../common/types/schema";
 import { LabelArray } from "../util/dataframe/types";
 import { LabelIndexBase } from "../util/dataframe/labelIndex";
 
@@ -338,7 +333,6 @@ export default abstract class AnnoMatrix {
    ** The actual implementation is in the sub-classes, which MUST override these.
    **/
 
-
   getCacheKeys(
     field: Field,
     query: Query
@@ -359,7 +353,7 @@ export default abstract class AnnoMatrix {
         // @ts-expect-error ts-migrate --- suppressing TS defect (https://github.com/microsoft/TypeScript/issues/44373).
         // Compiler is complaining that expression is not callable on array union types. Remove suppression once fixed.
         _whereCacheGet(this._whereCache, this.schema, field, query).filter(
-          (cacheKey: LabelType | undefined) =>
+          (cacheKey: LabelType | undefined): cacheKey is LabelType =>
             cacheKey !== undefined && this._cache[field].hasCol(cacheKey)
         )
       )

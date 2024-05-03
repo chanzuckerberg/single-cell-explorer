@@ -1,6 +1,5 @@
 import copy
 import hashlib
-import io
 import logging
 import os
 import struct
@@ -8,15 +7,18 @@ import sys
 import zlib
 from http import HTTPStatus
 
-import numpy as np
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect, send_file
-from PIL import Image
+from flask import abort, current_app, jsonify, make_response, redirect
 from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
-from server.common.constants import CELLGUIDE_CXG_KEY_NAME, Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.constants import (
+    CELLGUIDE_CXG_KEY_NAME,
+    Axis,
+    DiffExpMode,
+    JSON_NaN_to_num_warning_msg,
+)
 from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
     ColorFormatException,
@@ -26,10 +28,10 @@ from server.common.errors import (
     FilterError,
     InvalidCxgDatasetError,
     JSONEncodingValueError,
-    PrepareError,
     TombstoneError,
     UnsupportedSummaryMethod,
 )
+from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
 
@@ -383,8 +385,10 @@ def layout_obs_get(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
-
-    spatial = data_adaptor.get_spatial()
+    try:
+        spatial = data_adaptor.get_uns("spatial")
+    except KeyError:
+        spatial = None
 
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
@@ -456,64 +460,29 @@ def summarize_var_post(request, data_adaptor):
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
 
 
-def spatial_image_get(request, data_adaptor):
+def uns_metadata_get(request, data_adaptor):
     """
-    Retrieve a spatial image from the data adaptor and return it as a PNG file
+    Returns uns metadata for the requested key
     """
+    metadata_key = request.args.get("key", None)
 
-    resolution = "hires"
+    if metadata_key is not None:
+        uns_metadata = data_adaptor.get_uns(metadata_key)
 
-    spatial = data_adaptor.get_spatial()
-    response_image = io.BytesIO()
-    img = spatial[resolution]
+        if metadata_key == "spatial" and uns_metadata is not None:
+            return make_response(
+                spatial_metadata_get(uns_metadata),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"},
+            )
+        elif uns_metadata is None:
+            return make_response({}, HTTPStatus.OK, {"Content-Type": "application/json"})
+        else:
+            return (
+                make_response(uns_metadata),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"},
+            )
 
-    pil_img = Image.fromarray(np.uint8(img * 255))
-    pil_img.save(response_image, format="WEBP", quality=100)
-
-    response_image.seek(0)
-
-    library_id = "test_library_id"
-
-    try:
-        return send_file(response_image, download_name=f"{library_id}-{resolution}.webp", mimetype="image/webp")
-    except (KeyError, DatasetAccessError) as e:
-        return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
-    except PrepareError:
-        return abort_and_log(
-            HTTPStatus.NOT_IMPLEMENTED,
-            f"No spatial image available {request.path}",
-            loglevel=logging.ERROR,
-            include_exc_info=True,
-        )
-
-
-def spatial_meta_get(request, data_adaptor):
-    """
-    Returns an object containing the spatial metadata, including image width, image height,
-    scale reference, inverse scale, inverse translate, and inverse min
-    """
-    spatial = data_adaptor.get_spatial()
-
-    resolution = "hires"
-
-    if resolution not in spatial:
-        raise Exception(f"spatial information does not contain requested resolution '{resolution}'")
-
-    scaleref = spatial[f"tissue_{resolution}_scalef"]
-    (h, w, _) = spatial[resolution].shape
-
-    A = data_adaptor.get_embedding_array("spatial")
-
-    min = np.nanmin(A, axis=0)
-    max = np.nanmax(A, axis=0)
-    scale = np.amax(max - min)
-    translate = 0.5 - ((max - min) / scale / 2)
-
-    return {
-        "imageWidth": w,
-        "imageHeight": h,
-        "scaleref": scaleref,
-        "inverseScale": int(scale),
-        "inverseTranslate": translate.tolist(),
-        "inverseMin": min.tolist(),
-    }
+    else:
+        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)

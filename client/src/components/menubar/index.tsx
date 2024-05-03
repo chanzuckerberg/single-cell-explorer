@@ -58,7 +58,7 @@ type State = any;
     categoricalSelection: state.categoricalSelection,
     seamlessEnabled: selectIsSeamlessEnabled(state),
     screenCap: state.controls.screenCap,
-    imageUnderlay: state.imageUnderlay,
+    imageUnderlay: state.controls.imageUnderlay,
     layoutChoice: state.layoutChoice,
   };
 })
@@ -92,9 +92,23 @@ class MenuBar extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+    const { layoutChoice, dispatch } = this.props;
     this.state = {
       pendingClipPercentiles: null,
     };
+    const currentConditionMet = layoutChoice?.current?.includes(
+      globals.spatialEmbeddingKeyword
+    );
+    // (seve): On some datasets, the app initially loads with a different layout selected, then switches to spatial.
+    //  This triggers the componentDidUpdate, which toggles the image underlay.
+    //  Other datasets correctly load with the spatial layout initially selected, but then don't trigger the componentDidUpdate.
+    if (currentConditionMet) {
+      dispatch({
+        type: "toggle image underlay",
+        toggle: true,
+      });
+    }
   }
 
   componentDidUpdate(prevProps: any): void {
@@ -110,6 +124,7 @@ class MenuBar extends React.PureComponent<{}, State> {
     if (!prevConditionMet && currentConditionMet) {
       dispatch({
         type: "toggle image underlay",
+        toggle: true,
       });
     }
   }
@@ -356,28 +371,24 @@ class MenuBar extends React.PureComponent<{}, State> {
                 style={{
                   cursor: "pointer",
                 }}
+                loading={screenCap}
                 onClick={() => dispatch({ type: "graph: screencap start" })}
               />
             </Tooltip>
           )}
           {isTest && (
-            <Tooltip
-              content="🌊"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                type="button"
-                icon={IconNames.TORCH}
-                style={{
-                  cursor: "pointer",
-                }}
-                data-testid="capture-and-display-graph"
-                loading={screenCap}
-                onClick={() => dispatch({ type: "test: screencap start" })}
-              />
-            </Tooltip>
+            <AnchorButton
+              className={styles.menubarButton}
+              type="button"
+              icon={IconNames.TORCH}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid="capture-and-display-graph"
+              data-chromatic="ignore"
+              loading={screenCap}
+              onClick={() => dispatch({ type: "test: screencap start" })}
+            />
           )}
           <Clip
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
@@ -425,11 +436,12 @@ class MenuBar extends React.PureComponent<{}, State> {
                     type="button"
                     data-testid="toggle-image-underlay"
                     icon="media"
-                    intent={imageUnderlay.isActive ? "primary" : "none"}
-                    active={imageUnderlay.isActive}
+                    intent={imageUnderlay ? "primary" : "none"}
+                    active={imageUnderlay}
                     onClick={() => {
                       dispatch({
                         type: "toggle image underlay",
+                        toggle: !imageUnderlay,
                       });
                     }}
                   />
