@@ -548,8 +548,8 @@ for (const testDataset of testDatasets) {
 
           expect(initialCount).toBe(panzoomLasso.count);
 
-          page.getByTestId("mode-pan-zoom");
-          page.getByTestId("mode-lasso");
+          await page.getByTestId("mode-pan-zoom").click();
+          await page.getByTestId("mode-lasso").click();
 
           const modeSwitchCount = await getCellSetCount(1, page);
 
