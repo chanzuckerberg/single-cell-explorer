@@ -276,11 +276,8 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     const summary = column.summarizeContinuous();
     const range = [summary.min, summary.max];
 
-    console.log("got continuous value", field, range);
-
-    if (summary.min === summary.max && !isClipped) {
-      console.log("got single value", field, summary.min);
-
+    // we only want to do this on the initial render because we don't want this to disappear on subset
+    if (summary.min === summary.max && !annoMatrix.userFlags.isUserSubsetView) {
       dispatch({
         type: "add single continuous value",
         field,
@@ -295,6 +292,8 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
         OK2Render: false,
       };
     }
+
+    const isSingleValue = summary.min === summary.max;
 
     // if we are clipped, fetch both our value and our unclipped value,
     // as we need the absolute min/max range, not just the clipped min/max.
@@ -331,7 +330,6 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       HEIGHT_MINI
     );
 
-    const isSingleValue = summary.min === summary.max;
     const nonFiniteExtent =
       summary.min === undefined ||
       summary.max === undefined ||
