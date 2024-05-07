@@ -366,6 +366,7 @@ class MenuBar extends React.PureComponent<{}, State> {
             >
               <AnchorButton
                 className={styles.menubarButton}
+                data-testid="download-graph-button"
                 type="button"
                 icon={IconNames.CAMERA}
                 style={{
