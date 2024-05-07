@@ -4,11 +4,12 @@ import { connect } from "react-redux";
 import { Drawer, Position } from "@blueprintjs/core";
 
 /* App dependencies */
-import InfoFormat, { SingleValueCategories } from "./infoFormat";
+import InfoFormat, { SingleValues } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
 import { DatasetMetadata } from "../../common/types/entities";
 import { Schema } from "../../common/types/schema";
+import { SingleContinuousValueState } from "../../reducers/singleContinuousValue";
 
 /**
  * Actions dispatched by info drawer.
@@ -31,6 +32,7 @@ interface StateProps {
   datasetMetadata: DatasetMetadata;
   isOpen: boolean;
   schema: Schema;
+  singleContinuousValues: SingleContinuousValueState["singleContinuousValues"];
 }
 
 type Props = DispatchProps & OwnProps & StateProps;
@@ -42,6 +44,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
   datasetMetadata: state.datasetMetadata?.datasetMetadata,
   isOpen: state.controls.datasetDrawer,
   schema: state.annoMatrix.schema,
+  singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
 });
 
 /**
@@ -58,24 +61,35 @@ class InfoDrawer extends PureComponent<Props> {
   };
 
   render(): JSX.Element {
-    const { datasetMetadata, position, schema, isOpen } = this.props;
+    const {
+      datasetMetadata,
+      position,
+      schema,
+      isOpen,
+      singleContinuousValues,
+    } = this.props;
+
+    console.log(singleContinuousValues);
 
     const allCategoryNames = selectableCategoryNames(schema).sort();
-    const singleValueCategories: SingleValueCategories = new Map();
+    const allSingleValues: SingleValues = new Map();
 
     allCategoryNames.forEach((catName) => {
       const isUserAnno = schema?.annotations?.obsByName[catName]?.writable;
       const colSchema = schema.annotations.obsByName[catName];
       if (!isUserAnno && colSchema.categories?.length === 1) {
-        singleValueCategories.set(catName, colSchema.categories[0]);
+        allSingleValues.set(catName, colSchema.categories[0]);
       }
+    });
+    singleContinuousValues.forEach((value, catName) => {
+      allSingleValues.set(catName, value);
     });
     return (
       <Drawer size={480} onClose={this.handleClose} {...{ isOpen, position }}>
         <InfoFormat
           {...{
             datasetMetadata,
-            singleValueCategories,
+            allSingleValues,
           }}
         />
       </Drawer>

@@ -57,6 +57,7 @@ type BrushableHistogramProps = Partial<RootState> & BrushableHistogramOwnProps;
     isColorAccessor:
       state.colors.colorAccessor === field &&
       state.colors.colorMode !== "color by categorical metadata",
+    singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
   };
 })
 class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
@@ -235,8 +236,25 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   };
 
   fetchAsyncProps = async () => {
-    const { annoMatrix, width, onGeneExpressionComplete } = this.props;
+    const {
+      annoMatrix,
+      width,
+      onGeneExpressionComplete,
+      field,
+      dispatch,
+      singleContinuousValues,
+    } = this.props;
     const { isClipped } = annoMatrix;
+    if (singleContinuousValues.has(field)) {
+      return {
+        histogram: undefined,
+        range: undefined,
+        unclippedRange: undefined,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
 
     const query = this.createQuery();
     if (!query) {
@@ -257,6 +275,29 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     // as we need the absolute min/max range, not just the clipped min/max.
     const summary = column.summarizeContinuous();
     const range = [summary.min, summary.max];
+
+    console.log("got continuous value", field, range);
+
+    if (summary.min === summary.max && !isClipped) {
+      console.log("got single value", field, summary.min);
+
+      dispatch({
+        type: "add single continuous value",
+        field,
+        value: summary.min,
+      });
+      return {
+        histogram: undefined,
+        range,
+        unclippedRange: range,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
+
+    // if we are clipped, fetch both our value and our unclipped value,
+    // as we need the absolute min/max range, not just the clipped min/max.
 
     let unclippedRange = [...range];
     if (isClipped) {
