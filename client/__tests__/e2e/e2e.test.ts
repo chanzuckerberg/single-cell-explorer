@@ -1068,6 +1068,8 @@ for (const testDataset of testDatasets) {
         await graphDownload.saveAs(graphPath);
 
         if (legendPromise) {
+          // awaiting the legend download needs to occur after the graph image has been downloaded
+          // otherwise the legend download will not be triggered and the await will hang
           const legendDownload = await legendPromise;
           const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
           await legendDownload.saveAs(legendPath);
