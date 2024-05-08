@@ -28,7 +28,7 @@ const { describe } = test;
 // TODO #754
 test.beforeEach(mockSetup);
 
-describe(`Testing CellGuideCXG at ${pageURLCellGuide}`, () => {
+describe("CellGuideCXG", () => {
   test("page launched", async ({ page }, testInfo) => {
     await goToPage(page, pageURLCellGuide);
 
