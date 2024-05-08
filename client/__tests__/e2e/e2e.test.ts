@@ -683,10 +683,13 @@ for (const testDataset of testDatasets) {
           page,
         }) => {
           await setup({ option, page, url });
+
           const categories = await page
             .locator('[data-testid*=":category-expand"]')
             .all();
+
           const category = categories[0];
+
           const categoryName = (
             await category.getAttribute("data-testid")
           )?.split(":")[0] as string;
@@ -694,23 +697,37 @@ for (const testDataset of testDatasets) {
           await expandCategory(categoryName, page);
 
           await createGeneset(meanExpressionBrushGenesetName, page);
+
           await addGeneToSetAndExpand(
             meanExpressionBrushGenesetName,
             "SIK1",
             page
           );
 
-          // Check initial order of categories
-          const initialOrder = await getAllCategories(categoryName, page);
+          await waitUntilNoSkeletonDetected(page);
 
-          // Color by the geneset mean expression
-          await colorByGeneset(meanExpressionBrushGenesetName, page);
+          await tryUntil(
+            async () => {
+              // Check initial order of categories
+              const initialOrder = await getAllCategories(categoryName, page);
 
-          // Check order of categories after sorting by mean expression
-          const sortedOrder = await getAllCategories(categoryName, page);
+              expect(initialOrder).not.toEqual([]);
 
-          // Expect the sorted order to be different from the initial order
-          expect(sortedOrder).not.toEqual(initialOrder);
+              // Color by the geneset mean expression
+              await colorByGeneset(meanExpressionBrushGenesetName, page);
+
+              await waitUntilNoSkeletonDetected(page);
+
+              // Check order of categories after sorting by mean expression
+              const sortedOrder = await getAllCategories(categoryName, page);
+
+              expect(sortedOrder).not.toEqual([]);
+
+              // Expect the sorted order to be different from the initial order
+              expect(sortedOrder).not.toEqual(initialOrder);
+            },
+            { page }
+          );
         });
 
         test("diffexp", async ({ page }, testInfo) => {
