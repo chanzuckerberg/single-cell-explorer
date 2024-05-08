@@ -14,7 +14,9 @@ jobs:
 
     steps:
       - name: Delete Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/delete-stack@v0.8.0
+        uses: chanzuckerberg/argus-artifacts/ci/packages/delete-stack@v0.11.0
         with:
           appName: single-cell-explorer
           envName: rdev
+        env:
+          PLATFORM_BASE_URL: https://core-platform-staging.core-platform.dev.czi.team
