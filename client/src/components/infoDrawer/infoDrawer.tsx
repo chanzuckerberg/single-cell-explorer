@@ -69,8 +69,6 @@ class InfoDrawer extends PureComponent<Props> {
       singleContinuousValues,
     } = this.props;
 
-    console.log(singleContinuousValues);
-
     const allCategoryNames = selectableCategoryNames(schema).sort();
     const allSingleValues: SingleValues = new Map();
 
