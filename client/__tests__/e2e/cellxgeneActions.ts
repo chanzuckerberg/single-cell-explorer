@@ -336,6 +336,7 @@ export async function colorByGeneset(
 
 export async function colorByGene(gene: string, page: Page): Promise<void> {
   await page.getByTestId(`colorby-${gene}`).click();
+  await assertColorLegendLabel(gene, page);
 }
 
 export async function assertColorLegendLabel(

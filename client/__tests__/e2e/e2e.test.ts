@@ -6,9 +6,12 @@
  *          https://playwright.dev/docs/input#forcing-the-click
  */
 
+/* eslint-disable compat/compat -- not ran in the browser */
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
-import { Page } from "@playwright/test";
-import { test, expect } from "@chromatic-com/playwright";
+import { Page, TestInfo } from "@playwright/test";
+import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
+import os from "os";
+import fs from "fs/promises";
 
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
@@ -178,9 +181,9 @@ for (const testDataset of testDatasets) {
       test("continuous data appears", async ({ page }, testInfo) => {
         await goToPage(page, url);
         for (const label of Object.keys(data.continuous)) {
-          expect(
-            await page.getByTestId(`histogram-${label}-plot`)
-          ).not.toHaveCount(0);
+          expect(page.getByTestId(`histogram-${label}-plot`)).not.toHaveCount(
+            0
+          );
 
           await snapshotTestGraph(page, testInfo);
         }
@@ -508,7 +511,7 @@ for (const testDataset of testDatasets) {
             page,
           });
 
-          const newGraph = await page.getByTestId("graph-wrapper");
+          const newGraph = page.getByTestId("graph-wrapper");
           const newDistance =
             (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
           expect(parseFloat(newDistance)).toBe(scaleMax);
@@ -545,8 +548,8 @@ for (const testDataset of testDatasets) {
 
           expect(initialCount).toBe(panzoomLasso.count);
 
-          await page.getByTestId("mode-pan-zoom");
-          await page.getByTestId("mode-lasso");
+          await page.getByTestId("mode-pan-zoom").click();
+          await page.getByTestId("mode-lasso").click();
 
           const modeSwitchCount = await getCellSetCount(1, page);
 
@@ -680,10 +683,13 @@ for (const testDataset of testDatasets) {
           page,
         }) => {
           await setup({ option, page, url });
+
           const categories = await page
             .locator('[data-testid*=":category-expand"]')
             .all();
+
           const category = categories[0];
+
           const categoryName = (
             await category.getAttribute("data-testid")
           )?.split(":")[0] as string;
@@ -691,23 +697,37 @@ for (const testDataset of testDatasets) {
           await expandCategory(categoryName, page);
 
           await createGeneset(meanExpressionBrushGenesetName, page);
+
           await addGeneToSetAndExpand(
             meanExpressionBrushGenesetName,
             "SIK1",
             page
           );
 
-          // Check initial order of categories
-          const initialOrder = await getAllCategories(categoryName, page);
+          await waitUntilNoSkeletonDetected(page);
 
-          // Color by the geneset mean expression
-          await colorByGeneset(meanExpressionBrushGenesetName, page);
+          await tryUntil(
+            async () => {
+              // Check initial order of categories
+              const initialOrder = await getAllCategories(categoryName, page);
 
-          // Check order of categories after sorting by mean expression
-          const sortedOrder = await getAllCategories(categoryName, page);
+              expect(initialOrder).not.toEqual([]);
 
-          // Expect the sorted order to be different from the initial order
-          expect(sortedOrder).not.toEqual(initialOrder);
+              // Color by the geneset mean expression
+              await colorByGeneset(meanExpressionBrushGenesetName, page);
+
+              await waitUntilNoSkeletonDetected(page);
+
+              // Check order of categories after sorting by mean expression
+              const sortedOrder = await getAllCategories(categoryName, page);
+
+              expect(sortedOrder).not.toEqual([]);
+
+              // Expect the sorted order to be different from the initial order
+              expect(sortedOrder).not.toEqual(initialOrder);
+            },
+            { page }
+          );
         });
 
         test("diffexp", async ({ page }, testInfo) => {
@@ -1017,6 +1037,82 @@ for (const testDataset of testDatasets) {
         });
       });
     }
+
+    describe(`Image Download`, () => {
+      async function navigateToAndSnapshotImage(
+        page: Page,
+        info: TestInfo,
+        path: string
+      ) {
+        const imageFile = await fs.readFile(path, { encoding: "base64" });
+
+        // attach the image at path to the dom so we can snapshot it
+        // ensure that the image is rendered on top of the graph
+        await page.evaluate((imgData) => {
+          const img = document.createElement("img");
+          img.id = "downloaded-image";
+          img.src = `data:image/png;base64,${imgData}`;
+          img.style.height = "100vh";
+          img.style.zIndex = "1000";
+          img.style.background = "white";
+          img.style.position = "absolute";
+          img.style.top = "0";
+          document.body.appendChild(img);
+        }, imageFile);
+        await takeSnapshot(page, info);
+
+        // remove the image from the dom
+        await page.evaluate(() => {
+          const img = document.getElementById("downloaded-image");
+          img?.parentNode?.removeChild(img);
+        });
+      }
+      async function downloadAndSnapshotImage(page: Page, info: TestInfo) {
+        const graphPromise = page.waitForEvent("download");
+        await page.getByTestId("download-graph-button").click();
+        const graphDownload = await graphPromise;
+
+        const tmp = os.tmpdir();
+        // make the title safe for file system
+        const safeTitle = info.title.replace(/[^a-z0-9]/gi, "_");
+        const graphPath = `${tmp}/${safeTitle}/${graphDownload.suggestedFilename()}`;
+
+        let legendPromise;
+        if (info.title.includes("categorical")) {
+          // this will capture a separate legend download if the colorby is categorical
+          legendPromise = page.waitForEvent("download");
+        }
+        await graphDownload.saveAs(graphPath);
+
+        if (legendPromise) {
+          // awaiting the legend download needs to occur after the graph image has been downloaded
+          // otherwise the legend download will not be triggered and the await will hang
+          const legendDownload = await legendPromise;
+          const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
+          await legendDownload.saveAs(legendPath);
+
+          await navigateToAndSnapshotImage(page, info, legendPath);
+        }
+        await navigateToAndSnapshotImage(page, info, graphPath);
+      }
+
+      test("with continuous legend", async ({ page }, testInfo) => {
+        await goToPage(page, url);
+
+        await addGeneToSearch("SIK1", page);
+        await colorByGene("SIK1", page);
+
+        await downloadAndSnapshotImage(page, testInfo);
+      });
+      test("with categorical legend", async ({ page }, testInfo) => {
+        await goToPage(page, url);
+
+        const allLabels = [...Object.keys(data.categorical)];
+        await page.getByTestId(`colorby-${allLabels[0]}`).click();
+
+        await downloadAndSnapshotImage(page, testInfo);
+      });
+    });
   });
 }
 
@@ -1041,6 +1137,7 @@ test("categories and values from dataset appear and properly truncate if applica
 });
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
+/* eslint-enable compat/compat -- not ran in the browser */
 
 async function setup({
   option: { withSubset },

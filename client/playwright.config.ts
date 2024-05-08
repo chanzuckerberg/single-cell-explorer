@@ -88,7 +88,11 @@ export default defineConfig({
       cookies: [],
       origins: [
         {
-          localStorage: [{ name: "cxg-ff-test", value: "yes" }],
+          localStorage: [
+            { name: "cxg-ff-test", value: "yes" },
+            { name: "cxg-ff-dl", value: "yes" },
+            { name: "cxg-ff-spatial", value: "yes" },
+          ],
           origin: testURL,
         },
       ],
