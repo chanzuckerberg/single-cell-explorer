@@ -373,20 +373,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   handleResize = (): void => {
-    const { spatial } = this.props;
-
-    // DEBUG
-    // DEBUG
-    // DEBUG
-    console.log("-----spatial", spatial);
-
     const viewport = this.getViewportDimensions();
     const projectionTF = createProjectionTF(viewport.width, viewport.height);
+
     this.setState((state) => ({
       ...state,
       viewport,
       projectionTF,
     }));
+
+    this.handleGoHome();
   };
 
   handleGoHome = () => {
