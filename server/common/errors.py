@@ -47,7 +47,6 @@ def define_tombstone_exception(name, doc, default_status_code=HTTPStatus.FOUND):
 # Define CellxgeneException Errors
 define_exception("ConfigurationError", "Raised when checking configuration errors")  # type: ignore
 define_exception("InvalidCxgDatasetError", "Raised when dataset does not comply with CXG schema")  # type: ignore
-define_exception("PrepareError", "Raised when data is misprepared")  # type: ignore
 define_exception("SecretKeyRetrievalError", "Raised when get_secret_key from AWS fails")  # type: ignore
 define_exception("ObsoleteRequest", "Raised when the request is no longer valid.")  # type: ignore
 define_exception("UnsupportedSummaryMethod", "Raised when a gene set summary method is unknown or unsupported.")  # type: ignore

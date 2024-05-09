@@ -43,11 +43,20 @@ const setup = async ({ page }: { page: Page }) => {
     });
   });
   page.on("console", (message) => {
+    // if this is running locally don't fail on error
+    if (process.env.CI !== "true") {
+      return;
+    }
+
     if (message.type() === "error") {
       throw new Error(`CLIENT SIDE ERROR: ${JSON.stringify(message)}`);
     }
   });
   page.on("pageerror", (error) => {
+    // if this is running locally don't fail on error
+    if (process.env.CI !== "true") {
+      return;
+    }
     throw new Error(`UNCAUGHT CLIENT ERROR: ${error}`);
   });
 };

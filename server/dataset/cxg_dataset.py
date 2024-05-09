@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import pickle
 import threading
 
 import numpy as np
@@ -375,12 +376,22 @@ class CxgDataset(Dataset):
         schema = var.schema
         return [attr.name for attr in schema]
 
-    def get_uns_values(self):
-        uns = self.open_array("uns")
-        metadata_dict = {}
+    def get_uns(self, metadata_key):
+        """
+        Extracts an object from the uns array in a TileDB container
+        """
+        try:
+            uns = self.open_array("uns")
+        except KeyError:
+            return None
+
         for key in uns.meta:
-            metadata_dict[key] = uns.meta[key]
-        return metadata_dict
+            if key == metadata_key:
+                try:
+                    return pickle.loads(uns.meta[key])
+                except Exception as e:
+                    print(f"Error deserializing uns data for key {key}: {e}")
+                    return None
 
     # function to get the embedding
     # this function to iterate through embeddings.

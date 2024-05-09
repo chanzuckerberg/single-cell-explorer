@@ -88,7 +88,11 @@ export default defineConfig({
       cookies: [],
       origins: [
         {
-          localStorage: [{ name: "cxg-ff-test", value: "yes" }],
+          localStorage: [
+            { name: "cxg-ff-test", value: "yes" },
+            { name: "cxg-ff-dl", value: "yes" },
+            { name: "cxg-ff-spatial", value: "yes" },
+          ],
           origin: testURL,
         },
       ],
@@ -108,7 +112,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testMatch: "**/e2e.test.ts",
+      testMatch: "**/e2e/*.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,

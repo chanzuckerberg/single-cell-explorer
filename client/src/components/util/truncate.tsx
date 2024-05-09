@@ -99,13 +99,17 @@ export default (props: any) => {
       {tooltipAddendum}
     </span>
   );
+
+  const originalContent = (
+    <span data-chromatic="ignore">
+      {originalString}
+      {tooltipAddendum}
+    </span>
+  );
+
   return (
     <Tooltip2
-      content={
-        isGenesetDescription
-          ? descriptionContent
-          : `${originalString}${tooltipAddendum}`
-      }
+      content={isGenesetDescription ? descriptionContent : originalContent}
       hoverOpenDelay={tooltipHoverOpenDelayQuick}
       // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
       targetProps={{ style: children.props.style }}
