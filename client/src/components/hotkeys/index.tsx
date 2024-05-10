@@ -15,7 +15,6 @@ interface DispatchProps {
 }
 type Props = DispatchProps;
 
-// Define a thunk action
 const performSubset = () => (dispatch: AppDispatch, getState: GetState) => {
   const state = getState();
   const crossfilter = state.obsCrossfilter;
