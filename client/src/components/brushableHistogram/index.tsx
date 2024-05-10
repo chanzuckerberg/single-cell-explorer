@@ -277,7 +277,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     const range = [summary.min, summary.max];
 
     // seve: if the anno matrix is not a view and it is a single value, remove it from histograms and send it to the dataset drawer
-    // NOTE: this also includes embedding views, so if the default embedding subsets to a view and there is a continuous value it will not be added to the dataset drawer
+    // NOTE: this also includes embedding views, so if the default embedding subsets to a view and there is a single continuous value for a field, it will not be added to the dataset drawer
     if (summary.min === summary.max && !annoMatrix.isView) {
       dispatch({
         type: "add single continuous value",
