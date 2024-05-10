@@ -19,7 +19,6 @@ const singleContinuousValue = (
 ): SingleContinuousValueState => {
   switch (action.type) {
     case "add single continuous value":
-      console.log(action);
 
       state.singleContinuousValues.set(action.field, action.value);
       return state;
