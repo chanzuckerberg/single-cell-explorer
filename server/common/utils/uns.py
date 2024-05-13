@@ -2,11 +2,10 @@ import base64
 import io
 
 import numpy as np
+import pyvips
 from PIL import Image
 
 from server.common.constants import SPATIAL_IMAGE_DEFAULT_RES
-
-import pyvips
 
 
 def crop_box(image_size):  # type: ignore
