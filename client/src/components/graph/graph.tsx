@@ -155,6 +155,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   private openseadragon: Viewer | null = null;
 
+  throttledHandleResize: () => void;
+
   computePointPositions = memoize((X, Y, modelTF) => {
     /*
         compute the model coordinate for each point
@@ -287,14 +289,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
       testImageSrc: null,
       isDeepZoomSourceValid: true,
     };
+
+    this.throttledHandleResize = throttle(
+      this.handleResize.bind(this),
+      THROTTLE_MS,
+      { trailing: true }
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   componentDidMount() {
-    window.addEventListener(
-      "resize",
-      throttle(this.handleResize, THROTTLE_MS, { trailing: true })
-    );
+    window.addEventListener("resize", this.throttledHandleResize);
 
     if (this.graphRef.current) {
       this.graphRef.current.addEventListener("wheel", this.disableScroll, {
@@ -381,7 +385,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   componentWillUnmount(): void {
-    window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("resize", this.throttledHandleResize);
+
     if (this.graphRef.current) {
       this.graphRef.current.removeEventListener("wheel", this.disableScroll);
     }
