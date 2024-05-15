@@ -1054,20 +1054,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
       bounds.y + bounds.height < viewportBounds.y;
 
     if (imageOutsideViewport) {
-      this.setState((state) => {
-        if (state.isImageLayerInViewport === false) return state;
-
-        return { ...state, isImageLayerInViewport: false };
-      });
+      this.setState((state) =>
+        state.isImageLayerInViewport
+          ? { ...state, isImageLayerInViewport: false }
+          : state
+      );
 
       return;
     }
 
-    this.setState((state) => {
-      if (state.isImageLayerInViewport === true) return state;
-
-      return { ...state, isImageLayerInViewport: true };
-    });
+    this.setState((state) =>
+      state.isImageLayerInViewport
+        ? state
+        : { ...state, isImageLayerInViewport: true }
+    );
   }
 
   async renderPoints(
