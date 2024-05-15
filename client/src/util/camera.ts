@@ -10,6 +10,7 @@ const scaleSpeed = 0.5;
 // exporting this for testing
 export const scaleMax = 12.0;
 const scaleMin = 0.5;
+const panBound = 0.8;
 
 // private
 const scratch0 = new Float32Array(16);
@@ -82,8 +83,18 @@ export class Camera {
   }): void {
     const m = this.viewMatrix;
 
-    const dyRange: [number, number] = [-(m[7] + 1) / m[4], -(m[7] - 1) / m[4]];
-    const dxRange: [number, number] = [-(m[6] + 1) / m[0], -(m[6] - 1) / m[0]];
+    /**
+     * (thuang): In spatial mode, we will not apply `panBound`, so the embedding
+     * dots can stay in sync with openseadragon's image layer. In other embedding
+     * modes, we will use the `panBound` to apply bounding.
+     */
+    const dxRange: [number, number] = openseadragon
+      ? [-(m[6] + 1) / m[0], -(m[6] - 1) / m[0]]
+      : [-panBound - (m[6] + 1) / m[0], panBound - (m[6] - 1) / m[0]];
+
+    const dyRange: [number, number] = openseadragon
+      ? [-(m[7] + 1) / m[4], -(m[7] - 1) / m[4]]
+      : [-panBound - (m[7] + 1) / m[4], panBound - (m[7] - 1) / m[4]];
 
     const dxClamped = clamp(dx, dxRange);
     const dyClamped = clamp(dy, dyRange);
@@ -92,7 +103,16 @@ export class Camera {
       return;
     }
 
-    mat3.translate(m, m, [dx, dy]);
+    /**
+     * (thuang): In spatial mode, we will use the unclamped values, so the
+     * embedding dots can stay in sync with openseadragon's image layer. In other
+     * embedding modes, we will use the clamped values to apply bounding.
+     */
+    mat3.translate(m, m, [
+      openseadragon ? dx : dxClamped,
+      openseadragon ? dy : dyClamped,
+    ]);
+
     mat3.invert(this.viewMatrixInv, m);
 
     if (openseadragon) {
@@ -140,13 +160,25 @@ export class Camera {
     */
     const m = this.viewMatrix;
 
+    const bounds: [number, number] = [-panBound, panBound];
+    const xClamped = clamp(x, bounds);
+    const yClamped = clamp(y, bounds);
+
     const dClamped = clamp(d * m[0], [scaleMin, scaleMax]) / m[0];
 
     if (Math.abs(1 - dClamped) <= EPSILON) return; // noop request
 
-    mat3.translate(m, m, [x, y]);
+    /**
+     * (thuang): In spatial mode, we will use the unclamped values, so the
+     * embedding dots can stay in sync with openseadragon's image layer. In other
+     * embedding modes, we will use the clamped values to apply bounding.
+     */
+    const finalX = openseadragon ? x : xClamped;
+    const finalY = openseadragon ? y : yClamped;
+
+    mat3.translate(m, m, [finalX, finalY]);
     mat3.scale(m, m, [dClamped, dClamped]);
-    mat3.translate(m, m, [-x, -y]);
+    mat3.translate(m, m, [-finalX, -finalY]);
 
     mat3.invert(this.viewMatrixInv, m);
 

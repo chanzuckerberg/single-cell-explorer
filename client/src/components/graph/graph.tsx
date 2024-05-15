@@ -7,11 +7,12 @@ import { mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
-import { Button } from "@blueprintjs/core";
+import { Button, Icon } from "@blueprintjs/core";
 
 import Openseadragon, { Viewer } from "openseadragon";
 
 import { throttle } from "lodash";
+import { IconNames } from "@blueprintjs/icons";
 import { setupBrush, setupLasso } from "./setupSVGandBrush";
 import _camera, { Camera } from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
@@ -288,6 +289,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       updateOverlay: false,
       testImageSrc: null,
       isDeepZoomSourceValid: true,
+      isImageLayerInViewport: true,
     };
 
     this.throttledHandleResize = throttle(
@@ -1006,6 +1008,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
       postUserErrorToast("The image is not available");
     });
+
+    this.openseadragon.addHandler(
+      "viewport-change",
+      /**
+       * (thuang): Binding `this` to the function to access the openseadragon instance
+       */
+      this.checkIsImageLayerInViewport.bind(this)
+    );
   }
 
   destroyOpenseadragon() {
@@ -1027,6 +1037,37 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
 
     tiledImage?.setOpacity(1);
+  }
+
+  checkIsImageLayerInViewport() {
+    if (!this.openseadragon) return;
+
+    const bounds = this.openseadragon.world.getItemAt(0)?.getBounds();
+    const viewportBounds = this.openseadragon.viewport?.getBounds();
+
+    if (!bounds || !viewportBounds) return;
+
+    const imageOutsideViewport =
+      bounds.x > viewportBounds.x + viewportBounds.width ||
+      bounds.x + bounds.width < viewportBounds.x ||
+      bounds.y > viewportBounds.y + viewportBounds.height ||
+      bounds.y + bounds.height < viewportBounds.y;
+
+    if (imageOutsideViewport) {
+      this.setState((state) =>
+        state.isImageLayerInViewport
+          ? { ...state, isImageLayerInViewport: false }
+          : state
+      );
+
+      return;
+    }
+
+    this.setState((state) =>
+      state.isImageLayerInViewport
+        ? state
+        : { ...state, isImageLayerInViewport: true }
+    );
   }
 
   async renderPoints(
@@ -1133,8 +1174,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
       spatial,
     } = this.props;
 
-    const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
-      this.state;
+    const {
+      modelTF,
+      projectionTF,
+      camera,
+      viewport,
+      regl,
+      testImageSrc,
+      isImageLayerInViewport,
+    } = this.state;
 
     const cameraTF = camera?.view()?.slice();
 
@@ -1142,25 +1190,35 @@ class Graph extends React.Component<GraphProps, GraphState> {
       <div
         id="graph-wrapper"
         style={{
-          position: "relative",
           top: 0,
+          position: "relative",
           left: 0,
+          flexDirection: "column",
+          display: "flex",
+          alignItems: "center",
         }}
         data-testid="graph-wrapper"
         data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
-        <button
-          onClick={this.handleGoHome}
-          type="button"
-          style={{
-            position: "absolute",
-            top: "55px",
-            zIndex: 20,
-          }}
-        >
-          Go Home
-        </button>
+        {isSpatialMode(this.props) && isImageLayerInViewport === false && (
+          <Button
+            onClick={this.handleGoHome}
+            type="button"
+            style={{
+              justifyContent: "center",
+              width: "fit-content",
+              zIndex: 3,
+              marginTop: "60px",
+            }}
+          >
+            <Icon
+              icon={IconNames.LOCATE}
+              style={{ marginLeft: "0", marginRight: "4px" }}
+            />
+            Re-center Embedding
+          </Button>
+        )}
 
         <GraphOverlayLayer
           /**  @ts-expect-error TODO: type GraphOverlayLayer**/
