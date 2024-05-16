@@ -20,6 +20,8 @@ import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
+import GeneInfo from "./geneExpression/geneInfo/geneInfo";
+import Scatterplot from "./scatterplot/scatterplot";
 
 interface Props {
   dispatch: AppDispatch;
@@ -31,6 +33,9 @@ interface Props {
   seamlessEnabled: boolean;
   datasetMetadataError: string | null;
   isCellGuideCxg: boolean;
+  scatterplotXXaccessor: string;
+  scatterplotYYaccessor: string;
+  geneIsOpen: boolean;
 }
 
 class App extends React.Component<Props> {
@@ -51,6 +56,9 @@ class App extends React.Component<Props> {
       seamlessEnabled,
       datasetMetadataError,
       isCellGuideCxg,
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
+      geneIsOpen,
     } = this.props;
     return (
       <Container>
@@ -90,6 +98,20 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      {scatterplotXXaccessor && scatterplotYYaccessor && (
+                        <Scatterplot />
+                      )}
+
+                      {geneIsOpen && (
+                        <GeneInfo
+                          geneSummary=""
+                          geneName=""
+                          gene=""
+                          geneUrl=""
+                          geneSynonyms={[]}
+                          showWarningBanner
+                        />
+                      )}
                       <Controls bottom={0}>
                         <DatasetSelector />
                       </Controls>

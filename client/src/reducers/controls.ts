@@ -1,11 +1,13 @@
 import { AnyAction } from "redux";
 import { DatasetUnsMetadata } from "../common/types/entities";
 
-type Level = "top" | "bottom" | "";
+export type Level = "top" | "bottom" | "";
 
 interface StackLevels {
   geneLevel: Level;
   scatterplotLevel: Level;
+  // TODO(seve): need to add control state for the embedding panel
+  // embeddingLevel: Level;
 }
 /* logic for minimizing and maximizing pop-ups */
 const minimizeMaximizePopUps = (
