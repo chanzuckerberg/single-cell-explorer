@@ -70,7 +70,7 @@ class DiffexpButtons extends React.PureComponent {
             intent={warnMaxSizeExceeded ? "danger" : "primary"}
             data-testid="diffexp-button"
             loading={differential.loading}
-            icon="target"
+            icon="left-join"
             fill
             onClick={this.computeDiffExp}
           />
