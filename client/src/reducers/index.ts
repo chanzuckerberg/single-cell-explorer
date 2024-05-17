@@ -26,6 +26,7 @@ import genesetsUI from "./genesetsUI";
 import centroidLabels from "./centroidLabels";
 import pointDialation from "./pointDilation";
 import quickGenes from "./quickGenes";
+import singleContinuousValue from "./singleContinuousValue";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -40,6 +41,7 @@ const AppReducer = undoable(
     ["genesets", genesets],
     ["genesetsUI", genesetsUI],
     ["layoutChoice", layoutChoice],
+    ["singleContinuousValue", singleContinuousValue],
     ["categoricalSelection", categoricalSelection],
     ["continuousSelection", continuousSelection],
     ["graphSelection", graphSelection],

@@ -57,6 +57,7 @@ type BrushableHistogramProps = Partial<RootState> & BrushableHistogramOwnProps;
     isColorAccessor:
       state.colors.colorAccessor === field &&
       state.colors.colorMode !== "color by categorical metadata",
+    singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
   };
 })
 class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
@@ -235,8 +236,25 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   };
 
   fetchAsyncProps = async () => {
-    const { annoMatrix, width, onGeneExpressionComplete } = this.props;
+    const {
+      annoMatrix,
+      width,
+      onGeneExpressionComplete,
+      field,
+      dispatch,
+      singleContinuousValues,
+    } = this.props;
     const { isClipped } = annoMatrix;
+    if (singleContinuousValues.has(field)) {
+      return {
+        histogram: undefined,
+        range: undefined,
+        unclippedRange: undefined,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
 
     const query = this.createQuery();
     if (!query) {
@@ -257,6 +275,29 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     // as we need the absolute min/max range, not just the clipped min/max.
     const summary = column.summarizeContinuous();
     const range = [summary.min, summary.max];
+
+    // seve: if the anno matrix is not a view and it is a single value, remove it from histograms and send it to the dataset drawer
+    // NOTE: this also includes embedding views, so if the default embedding subsets to a view and there is a single continuous value for a field, it will not be added to the dataset drawer
+    if (summary.min === summary.max && !annoMatrix.isView) {
+      dispatch({
+        type: "add single continuous value",
+        field,
+        value: summary.min,
+      });
+      return {
+        histogram: undefined,
+        range,
+        unclippedRange: range,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
+
+    const isSingleValue = summary.min === summary.max;
+
+    // if we are clipped, fetch both our value and our unclipped value,
+    // as we need the absolute min/max range, not just the clipped min/max.
 
     let unclippedRange = [...range];
     if (isClipped) {
@@ -290,7 +331,6 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       HEIGHT_MINI
     );
 
-    const isSingleValue = summary.min === summary.max;
     const nonFiniteExtent =
       summary.min === undefined ||
       summary.max === undefined ||
