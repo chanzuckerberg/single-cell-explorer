@@ -539,13 +539,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { dispatch, screenCap, mountCapture, layoutChoice, colors } =
       this.props;
 
-    if (
-      !this.reglCanvas ||
-      !screenCap ||
-      !regl ||
-      this.isDownloadingImage ||
-      !this.openseadragon
-    ) {
+    if (!this.reglCanvas || !screenCap || !regl || this.isDownloadingImage) {
       return;
     }
 
@@ -556,7 +550,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
      */
     this.isDownloadingImage = true;
 
-    const imageCanvas = this.openseadragon.drawer.canvas as HTMLCanvasElement;
     const graphCanvas = regl._gl.canvas as HTMLCanvasElement;
 
     // Create an offscreen canvas
@@ -564,49 +557,37 @@ class Graph extends React.Component<GraphProps, GraphState> {
     offscreenCanvas.width = width;
     offscreenCanvas.height = height;
 
-    const ctx = offscreenCanvas.getContext("2d");
+    const canvasContext = offscreenCanvas.getContext("2d");
 
-    if (!ctx) {
+    if (!canvasContext) {
       console.error("Failed to get 2D context for the offscreen canvas");
       this.isDownloadingImage = false;
       return;
     }
 
     try {
-      // Convert both canvases to data URLs
-      const imageDataURL = imageCanvas.toDataURL();
       const graphDataURL = graphCanvas.toDataURL();
 
       // Load both data URLs into image objects
-      const [image, graphImage] = await Promise.all([
-        loadImage(imageDataURL),
-        loadImage(graphDataURL),
-      ]);
+      const graphImage = await loadImage(graphDataURL);
 
-      // Calculate aspect ratio
-      const aspectRatio = image.width / image.height;
-      let targetWidth;
-      let targetHeight;
-      let offsetX = 0;
-      let offsetY = 0;
+      // Fill the offscreen canvas with a white background
+      canvasContext.fillStyle = "white";
+      canvasContext.fillRect(
+        0,
+        0,
+        offscreenCanvas.width,
+        offscreenCanvas.height
+      );
 
-      if (offscreenCanvas.width / offscreenCanvas.height > aspectRatio) {
-        // Fit by height
-        targetHeight = offscreenCanvas.height;
-        targetWidth = targetHeight * aspectRatio;
-        offsetX = (offscreenCanvas.width - targetWidth) / 2;
-      } else {
-        // Fit by width
-        targetWidth = offscreenCanvas.width;
-        targetHeight = targetWidth / aspectRatio;
-        offsetY = (offscreenCanvas.height - targetHeight) / 2;
-      }
-
-      // Draw the OpenSeadragon image as background with proper scaling
-      ctx.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
+      /**
+       * (thuang): This has to be done before the graph image is drawn,
+       * so that the graph image is drawn on top of the OpenSeadragon image.
+       */
+      await this.drawImageLayerForDownload({ offscreenCanvas, canvasContext });
 
       // Draw the graph image on top, ensuring it covers the entire canvas
-      ctx.drawImage(
+      canvasContext.drawImage(
         graphImage,
         0,
         0,
@@ -629,7 +610,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
         categoricalLegendImageURI = await captureLegend(
           colors,
-          ctx,
+          canvasContext,
           PADDING_PX,
           categoricalLegendImageURI
         );
@@ -806,6 +787,44 @@ class Graph extends React.Component<GraphProps, GraphState> {
       spatial,
     };
   };
+
+  async drawImageLayerForDownload({
+    offscreenCanvas,
+    canvasContext,
+  }: {
+    offscreenCanvas: HTMLCanvasElement;
+    canvasContext: CanvasRenderingContext2D;
+  }) {
+    if (!this.openseadragon) return;
+
+    const imageCanvas = this.openseadragon.drawer.canvas as HTMLCanvasElement;
+
+    const imageDataURL = imageCanvas.toDataURL();
+
+    const image = await loadImage(imageDataURL);
+
+    // Calculate aspect ratio
+    const aspectRatio = image.width / image.height;
+    let targetWidth;
+    let targetHeight;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (offscreenCanvas.width / offscreenCanvas.height > aspectRatio) {
+      // Fit by height
+      targetHeight = offscreenCanvas.height;
+      targetWidth = targetHeight * aspectRatio;
+      offsetX = (offscreenCanvas.width - targetWidth) / 2;
+    } else {
+      // Fit by width
+      targetWidth = offscreenCanvas.width;
+      targetHeight = targetWidth / aspectRatio;
+      offsetY = (offscreenCanvas.height - targetHeight) / 2;
+    }
+
+    // Draw the OpenSeadragon image as background with proper scaling
+    canvasContext.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
+  }
 
   async fetchData(
     annoMatrix: RootState["annoMatrix"],
