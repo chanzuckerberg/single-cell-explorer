@@ -1,6 +1,5 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import * as d3 from "d3";
-import { toPng } from "html-to-image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as @connect
 import { connect, shallowEqual } from "react-redux";
 import { mat3, vec2 } from "gl-matrix";
@@ -40,14 +39,15 @@ import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
 import { DatasetUnsMetadata } from "../../common/types/entities";
-import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
 import {
   captureLegend,
   createModelTF,
   createProjectionTF,
+  downloadImage,
   getSpatialPrefixUrl,
   getSpatialTileSources,
+  loadImage,
   shouldShowOpenseadragon,
 } from "./util";
 
@@ -67,25 +67,6 @@ interface GraphAsyncProps {
   spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
-}
-
-function downloadImage(
-  imageURI: string,
-  layoutChoice?: LayoutChoiceState
-): void {
-  const a = document.createElement("a");
-  a.href = imageURI;
-  a.download = layoutChoice
-    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
-    : "CELLxGENE_legend.png";
-  a.style.display = "none";
-  document.body.append(a);
-  a.click();
-  // Revoke the blob URL and remove the element.
-  setTimeout(() => {
-    URL.revokeObjectURL(imageURI);
-    a.remove();
-  }, 1000);
 }
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
@@ -557,6 +538,122 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (selectionTool === "lasso") this.handleLassoDeselectAction();
   }
 
+  async handleImageDownload(regl: GraphState["regl"]) {
+    const { dispatch, screenCap, mountCapture, layoutChoice, colors } =
+      this.props;
+
+    if (
+      !this.reglCanvas ||
+      !screenCap ||
+      !regl ||
+      this.isDownloadingImage ||
+      !this.openseadragon
+    ) {
+      return;
+    }
+
+    const { width, height } = this.reglCanvas;
+
+    /**
+     * (thuang): This prevents re-rendering causes a second image download
+     */
+    this.isDownloadingImage = true;
+
+    const imageCanvas = this.openseadragon.drawer.canvas as HTMLCanvasElement;
+    const graphCanvas = regl._gl.canvas as HTMLCanvasElement;
+
+    // Create an offscreen canvas
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+
+    const ctx = offscreenCanvas.getContext("2d");
+
+    if (!ctx) {
+      console.error("Failed to get 2D context for the offscreen canvas");
+      this.isDownloadingImage = false;
+      return;
+    }
+
+    try {
+      // Convert both canvases to data URLs
+      const imageDataURL = imageCanvas.toDataURL();
+      const graphDataURL = graphCanvas.toDataURL();
+
+      // Load both data URLs into image objects
+      const [image, graphImage] = await Promise.all([
+        loadImage(imageDataURL),
+        loadImage(graphDataURL),
+      ]);
+
+      // Calculate aspect ratio
+      const aspectRatio = image.width / image.height;
+      let targetWidth;
+      let targetHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (offscreenCanvas.width / offscreenCanvas.height > aspectRatio) {
+        // Fit by height
+        targetHeight = offscreenCanvas.height;
+        targetWidth = targetHeight * aspectRatio;
+        offsetX = (offscreenCanvas.width - targetWidth) / 2;
+      } else {
+        // Fit by width
+        targetWidth = offscreenCanvas.width;
+        targetHeight = targetWidth / aspectRatio;
+        offsetY = (offscreenCanvas.height - targetHeight) / 2;
+      }
+
+      // Draw the OpenSeadragon image as background with proper scaling
+      ctx.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
+
+      // Draw the graph image on top, ensuring it covers the entire canvas
+      ctx.drawImage(
+        graphImage,
+        0,
+        0,
+        offscreenCanvas.width,
+        offscreenCanvas.height
+      );
+
+      const graphImageURI = offscreenCanvas.toDataURL("image/png");
+
+      if (mountCapture) {
+        this.setState({ testImageSrc: graphImageURI });
+        dispatch({ type: "test: screencap end" });
+      } else {
+        downloadImage(graphImageURI, layoutChoice);
+
+        let categoricalLegendImageURI: string | null = null;
+
+        // without this, the legend is drawn offscreen
+        const PADDING_PX = 100;
+
+        categoricalLegendImageURI = await captureLegend(
+          colors,
+          ctx,
+          PADDING_PX,
+          categoricalLegendImageURI
+        );
+
+        if (categoricalLegendImageURI) {
+          downloadImage(categoricalLegendImageURI);
+        }
+
+        dispatch({ type: "graph: screencap end" });
+      }
+
+      this.isDownloadingImage = false;
+    } catch (error) {
+      console.error(
+        "Failed to load images or generate the final image:",
+        error
+      );
+      this.isDownloadingImage = false;
+    }
+  }
+
   disableScroll = (event: WheelEvent): void => {
     // disables browser scrolling behavior when hovering over the graph
     event.preventDefault();
@@ -994,6 +1091,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       prefixUrl: getSpatialPrefixUrl(s3URI),
       tileSources: getSpatialTileSources(s3URI),
       showNavigationControl: false,
+      /**
+       * (thuang): This is needed to prevent error `tainted canvas` when downloading the image
+       */
+      crossOriginPolicy: "Anonymous",
     });
 
     /**
@@ -1079,16 +1180,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
     camera: GraphState["camera"],
     projectionTF: GraphState["projectionTF"]
   ): Promise<void> {
-    const {
-      annoMatrix,
-      dispatch,
-      screenCap,
-      mountCapture,
-      layoutChoice,
-      colors,
-    } = this.props;
+    const { annoMatrix } = this.props;
+
     if (!this.reglCanvas || !annoMatrix) return;
+
     const { schema } = annoMatrix;
+
     const cameraTF = camera?.view();
 
     const projView = mat3.multiply(
@@ -1113,50 +1210,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       });
     }
 
-    if (screenCap && regl && !this.isDownloadingImage) {
-      /**
-       * (thuang): This prevents re-rendering causes a second image download
-       */
-      this.isDownloadingImage = true;
-
-      const graph = regl._gl.canvas;
-
-      // without this, the legend is drawn offscreen
-      const PADDING = 100;
-
-      const offscreenCanvas = document.createElement("canvas");
-      offscreenCanvas.width = width;
-      offscreenCanvas.height = height;
-
-      const ctx = offscreenCanvas.getContext("2d");
-      ctx?.drawImage(graph, 0, 0);
-
-      let categoricalLegendImageURI: string | null = null;
-
-      categoricalLegendImageURI = await captureLegend(
-        colors,
-        ctx,
-        PADDING,
-        categoricalLegendImageURI
-      );
-
-      const graphImageURI = await toPng(offscreenCanvas, {
-        backgroundColor: "white",
-        height,
-        width,
-        // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
-        skipFonts: true,
-      });
-      if (mountCapture) {
-        this.setState({ testImageSrc: graphImageURI });
-        dispatch({ type: "test: screencap end" });
-      } else {
-        downloadImage(graphImageURI, layoutChoice);
-        if (categoricalLegendImageURI) downloadImage(categoricalLegendImageURI);
-        dispatch({ type: "graph: screencap end" });
-      }
-      this.isDownloadingImage = false;
-    }
+    await this.handleImageDownload(regl);
 
     regl?._gl.flush();
   }

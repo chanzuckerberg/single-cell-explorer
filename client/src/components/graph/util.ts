@@ -4,6 +4,7 @@ import { GraphProps, GraphState } from "./types";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 import { isSpatialMode as isSpatialModeSelector } from "../../common/selectors";
+import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
 export async function captureLegend(
   colors: any,
@@ -198,4 +199,32 @@ export function shouldShowOpenseadragon(props: GraphProps, state: GraphState) {
   return (
     isSpatial && isDeepZoomSourceValid && s3URI && isSpatialModeSelector(props)
   );
+}
+
+export function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+  });
+}
+
+export function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
 }
