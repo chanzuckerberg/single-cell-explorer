@@ -1,7 +1,7 @@
 import { AnyAction } from "redux";
 import type { Config } from "../globals";
 
-interface ConfigState {
+export interface ConfigState {
   features: Config["features"] | null;
   parameters: Config["parameters"] | null;
   displayNames: Config["displayNames"] | null;
@@ -11,12 +11,15 @@ interface ConfigState {
   library_versions?: Config["library_versions"];
   portalUrl?: Config["portalUrl"];
   links?: Config["links"];
+  s3URI?: string;
+  isDeepZoomSourceValid: boolean;
 }
 const ConfigReducer = (
   state: ConfigState = {
     displayNames: null,
     features: null,
     parameters: null,
+    isDeepZoomSourceValid: true,
   },
   action: AnyAction
 ) => {
@@ -46,6 +49,11 @@ const ConfigReducer = (
       return {
         ...state,
         error: action.error,
+      };
+    case "fetchDeepZoomImageFailed":
+      return {
+        ...state,
+        isDeepZoomSourceValid: false,
       };
     default:
       return state;

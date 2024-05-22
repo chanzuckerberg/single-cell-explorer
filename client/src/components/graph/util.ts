@@ -1,9 +1,5 @@
 import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
-import { GraphProps, GraphState } from "./types";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
-import { isSpatialMode as isSpatialModeSelector } from "../../common/selectors";
 import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
 export async function captureLegend(
@@ -182,23 +178,6 @@ function getSpatialUrl(s3URI: string) {
 
 function getDatasetVersionId(s3URI: string) {
   return s3URI.split("/").at(-1)?.split(".cxg")[0];
-}
-
-const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
-
-/**
- * (thuang): Selector to determine if the OpenSeadragon viewer should be shown
- */
-export function shouldShowOpenseadragon(props: GraphProps, state: GraphState) {
-  const { isDeepZoomSourceValid } = state;
-
-  const {
-    config: { s3URI },
-  } = props;
-
-  return (
-    isSpatial && isDeepZoomSourceValid && s3URI && isSpatialModeSelector(props)
-  );
 }
 
 export function loadImage(src: string): Promise<HTMLImageElement> {
