@@ -48,15 +48,13 @@ import {
   getSpatialPrefixUrl,
   getSpatialTileSources,
   loadImage,
-  shouldShowOpenseadragon,
 } from "./util";
-
-import { postUserErrorToast } from "../framework/toasters";
 
 import { COMMON_CANVAS_STYLE } from "./constants";
 import { THROTTLE_MS } from "../../util/constants";
 import { GraphProps, GraphState } from "./types";
-import { isSpatialMode } from "../../common/selectors";
+import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
+import { fetchDeepZoomImageFailed } from "../../actions/config";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -269,7 +267,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       },
       updateOverlay: false,
       testImageSrc: null,
-      isDeepZoomSourceValid: true,
       isImageLayerInViewport: true,
     };
 
@@ -347,8 +344,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
 
     if (
-      shouldShowOpenseadragon(prevProps, prevState) &&
-      !shouldShowOpenseadragon(this.props, this.state)
+      shouldShowOpenseadragon(prevProps) &&
+      !shouldShowOpenseadragon(this.props)
     ) {
       this.destroyOpenseadragon();
     }
@@ -1078,7 +1075,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     if (
       this.openseadragon ||
-      !shouldShowOpenseadragon(this.props, this.state) ||
+      !shouldShowOpenseadragon(this.props) ||
       !width ||
       !height
     ) {
@@ -1102,12 +1099,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
      * likely because the image is not found in the S3 bucket.
      */
     this.openseadragon.addHandler("open-failed", () => {
-      this.setState((state) => ({
-        ...state,
-        isDeepZoomSourceValid: false,
-      }));
+      const { dispatch } = this.props;
 
-      postUserErrorToast("The image is not available");
+      dispatch(fetchDeepZoomImageFailed());
     });
 
     this.openseadragon.addHandler(
@@ -1301,7 +1295,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           height={viewport.height}
           pointerEvents={graphInteractionMode === "select" ? "auto" : "none"}
         />
-        {shouldShowOpenseadragon(this.props, this.state) && (
+        {shouldShowOpenseadragon(this.props) && (
           <div
             id="openseadragon"
             style={{

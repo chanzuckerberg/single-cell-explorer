@@ -19,7 +19,7 @@ import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
-import { isSpatialMode } from "../../common/selectors";
+import { shouldShowOpenseadragon } from "../../common/selectors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -61,6 +61,7 @@ type State = any;
     screenCap: state.controls.screenCap,
     imageUnderlay: state.controls.imageUnderlay,
     layoutChoice: state.layoutChoice,
+    config: state.config,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -274,10 +275,6 @@ class MenuBar extends React.PureComponent<{}, State> {
       dispatch,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'disableDiffexp' does not exist on type '... Remove this comment to see the full error message
       disableDiffexp,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'undoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      undoDisabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'redoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      redoDisabled,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
       selectionTool,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
@@ -307,7 +304,7 @@ class MenuBar extends React.PureComponent<{}, State> {
 
     const isTest = getFeatureFlag(FEATURES.TEST);
     const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
-    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] =
       selectionTool === "brush"
@@ -423,7 +420,7 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          {isSpatialMode(this.props) && isSpatial && (
+          {shouldShowOpenseadragon(this.props) && (
             <ButtonGroup className={styles.menubarButton}>
               <Tooltip
                 content="Toggle image"

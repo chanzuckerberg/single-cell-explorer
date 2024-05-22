@@ -44,6 +44,5 @@ export type GraphState = {
   modelTF: ReadonlyMat3;
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
-  isDeepZoomSourceValid: boolean;
   isImageLayerInViewport: boolean;
 };
