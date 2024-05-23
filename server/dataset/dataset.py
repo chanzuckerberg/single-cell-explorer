@@ -365,7 +365,7 @@ class Dataset(metaclass=ABCMeta):
             normalized_layout = A.astype(dtype=np.float32)
 
         else:
-            # scale isotopically
+            # scale isotropically
             try:
                 min_emb = np.nanmin(embedding, axis=0)
                 max_emb = np.nanmax(embedding, axis=0)
