@@ -10,23 +10,8 @@ about commonly used names.  Preferentially, pick in the following order:
 
 import type { Action, AnyAction } from "redux";
 import type { RootState } from ".";
-import { EmbeddingSchema, Schema } from "../common/types/schema";
-
-function bestDefaultLayout(layouts: Array<string>): string {
-  const preferredNames = ["umap", "tsne", "pca"];
-  const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
-  if (idx !== -1) return preferredNames[idx];
-  return layouts[0];
-}
-
-function setToDefaultLayout(schema: Schema): LayoutChoiceState {
-  const available = schema.layout.obs
-    .map((v: EmbeddingSchema) => v.name)
-    .sort();
-  const current = bestDefaultLayout(available);
-  const currentDimNames = schema.layout.obsByName[current].dims;
-  return { available, current, currentDimNames };
-}
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import { selectSchema } from "../selectors/annoMatrix";
 
 export interface LayoutChoiceState {
   available: Array<string>;
@@ -45,19 +30,19 @@ const LayoutChoice = (
 ): LayoutChoiceState => {
   switch (action.type) {
     case "initial data load complete": {
-      // set default to default
-      const { annoMatrix } = nextSharedState;
+      const { layoutChoice } = action;
+
       return {
         ...state,
-        ...setToDefaultLayout(annoMatrix.schema),
+        available: selectAvailableLayouts(nextSharedState),
+        ...getCurrentLayout(nextSharedState, layoutChoice),
       };
     }
 
     case "set layout choice": {
-      const { schema } = nextSharedState.annoMatrix;
-      const current = (action as LayoutChoiceAction).layoutChoice;
-      const currentDimNames = schema.layout.obsByName[current].dims;
-      return { ...state, current, currentDimNames };
+      const { layoutChoice } = action as LayoutChoiceAction;
+
+      return { ...state, ...getCurrentLayout(nextSharedState, layoutChoice) };
     }
 
     default: {
@@ -67,3 +52,23 @@ const LayoutChoice = (
 };
 
 export default LayoutChoice;
+
+function getCurrentLayout(
+  state: RootState,
+  layoutChoice: string
+): {
+  current: string;
+  currentDimNames: Array<string>;
+} {
+  const schema = selectSchema(state);
+  const currentDimNames = schema.layout.obsByName[layoutChoice].dims;
+
+  return { current: layoutChoice, currentDimNames };
+}
+
+export function getBestDefaultLayout(layouts: Array<string>): string {
+  const preferredNames = ["umap", "tsne", "pca"];
+  const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
+  if (idx !== -1) return preferredNames[idx];
+  return layouts[0];
+}
