@@ -346,23 +346,42 @@ class Dataset(metaclass=ABCMeta):
         Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
         """
 
-        # scale isotopically
-        try:
-            min_emb = np.nanmin(embedding, axis=0)
-            max_emb = np.nanmax(embedding, axis=0)
-        except RuntimeError:
-            # indicates entire array was NaN, which should propagate
-            min_emb = np.NaN
-            max_emb = np.NaN
+        if spatial is not None and ename in "spatial":
 
-        scale = np.amax(max_emb - min_emb)
-        normalized_layout = (embedding - min_emb) / scale
+            library_id = list(spatial.keys())[0]
+            image_properties = spatial[library_id]["image_properties"]
+            resolution = image_properties["resolution"]
 
-        # translate to center on both axis
-        translate = 0.5 - ((max_emb - min_emb) / scale / 2)
-        normalized_layout = normalized_layout + translate
+            scaleref = 1 if resolution == "fullres" else spatial[library_id]["scalefactors"]["tissue_hires_scalef"]
+            h, w = image_properties["height"], image_properties["width"]
+            left, upper, _, _ = image_properties["crop_coords"]
+            A = embedding * scaleref
 
-        normalized_layout = normalized_layout.astype(dtype=np.float32)
+            # offset crop coordinates
+            A[:, 0] -= left
+            A[:, 1] -= upper
+
+            A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
+            normalized_layout = A.astype(dtype=np.float32)
+
+        else:
+            # scale isotopically
+            try:
+                min_emb = np.nanmin(embedding, axis=0)
+                max_emb = np.nanmax(embedding, axis=0)
+            except RuntimeError:
+                # indicates entire array was NaN, which should propagate
+                min_emb = np.NaN
+                max_emb = np.NaN
+
+            scale = np.amax(max_emb - min_emb)
+            normalized_layout = (embedding - min_emb) / scale
+
+            # translate to center on both axis
+            translate = 0.5 - ((max_emb - min_emb) / scale / 2)
+            normalized_layout = normalized_layout + translate
+
+            normalized_layout = normalized_layout.astype(dtype=np.float32)
 
         return normalized_layout
 
