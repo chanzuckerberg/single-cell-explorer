@@ -36,6 +36,8 @@ import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import { getBestDefaultLayout } from "../reducers/layoutChoice";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -226,6 +228,10 @@ const doInitialDataLoad = (): ((
       prefetchEmbeddings(annoMatrix);
 
       const isCellGuideCxg = checkIfCellGuideCxg();
+
+      /**
+       * (thuang + seve) There is room to clean up by moving this to the annoMatrix initialization
+       */
       dispatch({
         type: "annoMatrix: init complete",
         annoMatrix,
@@ -233,17 +239,26 @@ const doInitialDataLoad = (): ((
         isCellGuideCxg,
       });
 
-      // save isCellGuideCxg to the reducer store
-      dispatch({ type: "initial data load complete", isCellGuideCxg });
+      const availableLayouts = selectAvailableLayouts({ annoMatrix });
+      const fallbackLayout = getBestDefaultLayout(availableLayouts);
+      const defaultLayout = config?.parameters?.default_embedding || "";
 
-      const defaultEmbedding = config?.parameters?.default_embedding;
-      const layoutSchema = schema?.schema?.layout?.obs ?? [];
-      if (
-        defaultEmbedding &&
-        layoutSchema.some((s: EmbeddingSchema) => s.name === defaultEmbedding)
-      ) {
-        await dispatch(embActions.layoutChoiceAction(defaultEmbedding));
-      }
+      const finalLayout = availableLayouts.includes(defaultLayout)
+        ? defaultLayout
+        : fallbackLayout;
+
+      dispatch({
+        type: "initial data load complete",
+        isCellGuideCxg,
+        layoutChoice: finalLayout,
+      });
+
+      /**
+       * (thuang): This dispatch is necessary to ensure that we get the right cell
+       * count when the page is first loaded.
+       * BUG: https://github.com/chanzuckerberg/single-cell-explorer/issues/936
+       */
+      await dispatch(embActions.layoutChoiceAction(finalLayout));
     } catch (error) {
       dispatch({ type: "initial data load error", error });
     }
