@@ -181,9 +181,9 @@ for (const testDataset of testDatasets) {
       test("continuous data appears", async ({ page }, testInfo) => {
         await goToPage(page, url);
         for (const label of Object.keys(data.continuous)) {
-          expect(page.getByTestId(`histogram-${label}-plot`)).not.toHaveCount(
-            0
-          );
+          await expect(
+            page.getByTestId(`histogram-${label}-plot`)
+          ).not.toHaveCount(0);
 
           await snapshotTestGraph(page, testInfo);
         }
@@ -562,7 +562,7 @@ for (const testDataset of testDatasets) {
     });
 
     test("lasso moves after pan", async ({ page }, testInfo) => {
-      goToPage(page, url);
+      await goToPage(page, url);
 
       await tryUntil(
         async () => {
@@ -787,7 +787,7 @@ for (const testDataset of testDatasets) {
 
               expect(page.getByTestId("geneset")).toBeTruthy();
 
-              expect(
+              await expect(
                 page.getByTestId(`${data.diffexp.pop2Gene}:gene-label`)
               ).toBeVisible();
             },
@@ -810,7 +810,7 @@ for (const testDataset of testDatasets) {
 
               await setup({ option, page, url });
 
-              waitUntilNoSkeletonDetected(page);
+              await waitUntilNoSkeletonDetected(page);
 
               const genesetName = `test-geneset-foo-123`;
 

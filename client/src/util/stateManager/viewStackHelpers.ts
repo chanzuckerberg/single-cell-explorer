@@ -125,7 +125,9 @@ export function _setEmbeddingSubset(
   const curEmbSubsetView = getEmbSubsetView(annoMatrix);
 
   /* if no current embedding subset, and no new embedding subset, just noop */
-  if (!embRowOffsets && !curEmbSubsetView) return annoMatrix;
+  if (!embRowOffsets && !curEmbSubsetView) {
+    return annoMatrix;
+  }
 
   // ... otherwise, do the work
 
@@ -201,7 +203,7 @@ export const getDiscreteCellEmbeddingRowIndex = memoize(
 export function getEmbSubsetView(
   annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView
 ): AnnoMatrix | undefined {
-  while (annoMatrix.isView) {
+  while (annoMatrix?.isView) {
     if (annoMatrix.userFlags.isEmbSubsetView) return annoMatrix;
     annoMatrix = annoMatrix.viewOf;
   }

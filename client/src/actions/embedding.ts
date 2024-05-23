@@ -11,7 +11,7 @@ import { Field } from "../common/types/schema";
 import * as globals from "../globals";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-export async function _switchEmbedding(
+async function _switchEmbedding(
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   prevAnnoMatrix: any,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -49,11 +49,13 @@ export const layoutChoiceAction: ActionCreator<
   */
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevCrossfilter } =
       getState();
+
     const [annoMatrix, obsCrossfilter] = await _switchEmbedding(
       prevAnnoMatrix,
       prevCrossfilter,
       newLayoutChoice
     );
+
     dispatch({
       type: "set layout choice",
       layoutChoice: newLayoutChoice,

@@ -218,8 +218,8 @@ const doInitialDataLoad = (): ((
         userColorsFetchAndLoad(dispatch),
       ]);
 
-      datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
+      await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      await datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
@@ -242,7 +242,7 @@ const doInitialDataLoad = (): ((
         defaultEmbedding &&
         layoutSchema.some((s: EmbeddingSchema) => s.name === defaultEmbedding)
       ) {
-        dispatch(embActions.layoutChoiceAction(defaultEmbedding));
+        await dispatch(embActions.layoutChoiceAction(defaultEmbedding));
       }
     } catch (error) {
       dispatch({ type: "initial data load error", error });
@@ -292,12 +292,12 @@ const dispatchDiffExpErrors = (
 const DEFAULT_GENESETS_RESPONSE = {
   genesets: [],
 };
-const genesetsFetch = (dispatch: AppDispatch) => {
-  fetchJson("genesets").then((response) => {
-    dispatch({
-      type: "geneset: initial load",
-      data: response ?? DEFAULT_GENESETS_RESPONSE,
-    });
+const genesetsFetch = async (dispatch: AppDispatch) => {
+  const response = await fetchJson("genesets");
+
+  dispatch({
+    type: "geneset: initial load",
+    data: response ?? DEFAULT_GENESETS_RESPONSE,
   });
 };
 
