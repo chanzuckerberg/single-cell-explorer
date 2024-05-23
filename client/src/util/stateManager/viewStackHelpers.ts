@@ -109,6 +109,14 @@ export function _userResetSubsetAnnoMatrix(
   return annoMatrix;
 }
 
+const isAnnoMatrixClipView = (
+  annoMatrix: AnnoMatrix | AnnoMatrixClipView | AnnoMatrixRowSubsetView,
+  embRowOffsets: Int32Array | null
+): annoMatrix is AnnoMatrixClipView => {
+  const curEmbSubsetView = getEmbSubsetView(annoMatrix);
+
+  return !(!embRowOffsets && !curEmbSubsetView);
+};
 /**
  * Set the embedding subset view. Only create a subset view for the embedding
  * when it is needed, ie, there are NaN values in the embeddings.
@@ -122,17 +130,13 @@ export function _setEmbeddingSubset(
     embeddingDf
   );
 
-  const curEmbSubsetView = getEmbSubsetView(annoMatrix);
-
   /* if no current embedding subset, and no new embedding subset, just noop */
-  if (!embRowOffsets && !curEmbSubsetView) return annoMatrix;
+  if (!isAnnoMatrixClipView(annoMatrix, embRowOffsets)) return annoMatrix;
 
   // ... otherwise, do the work
 
   /* stash clipping info, if any */
-  const clipRange = (annoMatrix as AnnoMatrixClipView).isClipped
-    ? (annoMatrix as AnnoMatrixClipView).clipRange
-    : null;
+  const clipRange = annoMatrix.isClipped ? annoMatrix.clipRange : null;
 
   /* pop all subsets, user or embedding */
   while (annoMatrix.isView) {

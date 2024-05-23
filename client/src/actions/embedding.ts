@@ -10,22 +10,19 @@ import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
 import * as globals from "../globals";
 import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import AnnoMatrix from "../annoMatrix/annoMatrix";
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 export async function _switchEmbedding(
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  prevAnnoMatrix: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  prevCrossfilter: any,
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  newEmbeddingName: any
+  prevAnnoMatrix: AnnoMatrix,
+  prevCrossfilter: AnnoMatrixObsCrossfilter,
+  newEmbeddingName: string
 ) {
   /*
   DRY helper used by embedding action creators
   */
   const base = prevAnnoMatrix.base();
   const embeddingDf = await base.fetch(
-    "emb",
+    Field.emb,
     newEmbeddingName,
     globals.numBinsEmb
   );
