@@ -90,7 +90,7 @@ function downloadImage(
   const a = document.createElement("a");
   a.href = imageURI;
   a.download = layoutChoice
-    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    ? `CELLxGENE_${layoutChoice?.current.split(";;").at(-1)}_emb.png`
     : "CELLxGENE_legend.png";
   a.style.display = "none";
   document.body.append(a);
@@ -419,7 +419,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const [minX, maxY] = northwest;
     const [maxX, minY] = southeast;
     dispatch(
-      actions.graphBrushChangeAction(layoutChoice.current, {
+      actions.graphBrushChangeAction(layoutChoice?.current, {
         minX,
         minY,
         maxX,
@@ -453,7 +453,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const [minX, maxY] = northwest;
       const [maxX, minY] = southeast;
       dispatch(
-        actions.graphBrushEndAction(layoutChoice.current, {
+        actions.graphBrushEndAction(layoutChoice?.current, {
           minX,
           minY,
           maxX,
@@ -463,13 +463,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
         })
       );
     } else {
-      dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
+      dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
     }
   }
 
   handleBrushDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
+    dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
   }
 
   handleLassoStart(): void {
@@ -486,11 +486,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
     ) {
       // if less than three points, or super small area, treat as a clear selection.
-      dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
+      dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
       dispatch(
         actions.graphLassoEndAction(
-          layoutChoice.current,
+          layoutChoice?.current,
           polygon.map((xy) => this.mapScreenToPoint(xy))
         )
       );
@@ -499,12 +499,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   handleLassoCancel(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoCancelAction(layoutChoice.current));
+    dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
   }
 
   handleLassoDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
+    dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
   }
 
   handleDeselectAction(): void {
@@ -690,7 +690,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
-      annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
+      annoMatrix.fetch("emb", layoutChoice?.current, globals.numBinsEmb),
       query
         ? annoMatrix.fetch(...query, globals.numBinsObsX)
         : Promise.resolve(null),
@@ -826,7 +826,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     ];
   }
 
-  renderCanvas = renderThrottle(() => {
+  renderCanvas = renderThrottle(async () => {
     const {
       regl,
       drawPoints,
@@ -837,7 +837,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       projectionTF,
       drawSpatialImage,
     } = this.state;
-    this.renderPoints(
+
+    await this.renderPoints(
       regl,
       drawPoints,
       colorBuffer,
@@ -981,7 +982,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (
       imageUnderlay &&
       drawSpatialImage &&
-      layoutChoice.current === "spatial" &&
+      layoutChoice?.current === "spatial" &&
       this.isSpatial &&
       spatial &&
       this.spatialImage
@@ -1157,7 +1158,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         >
           <Async.Pending initial>
             <StillLoading
-              displayName={layoutChoice.current}
+              displayName={layoutChoice?.current}
               width={viewport.width}
               height={viewport.height}
             />
@@ -1165,7 +1166,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           <Async.Rejected>
             {(error) => (
               <ErrorLoading
-                displayName={layoutChoice.current}
+                displayName={layoutChoice?.current}
                 error={error}
                 width={viewport.width}
                 height={viewport.height}

@@ -27,14 +27,14 @@ type State = any;
 @connect((state: State) => {
   const { annoMatrix } = state;
   const crossfilter = state.obsCrossfilter;
-  const selectedCount = crossfilter.countSelected();
+  const selectedCount = crossfilter?.countSelected?.() || 0;
 
   const subsetPossible =
     selectedCount !== 0 && selectedCount !== crossfilter.size(); // ie, not all and not none are selected
   const embSubsetView = getEmbSubsetView(annoMatrix);
   const subsetResetPossible = !embSubsetView
-    ? annoMatrix.nObs !== annoMatrix.schema.dataframe.nObs
-    : annoMatrix.nObs !== embSubsetView.nObs;
+    ? annoMatrix?.nObs !== annoMatrix?.schema.dataframe.nObs
+    : annoMatrix?.nObs !== embSubsetView?.nObs;
 
   return {
     subsetPossible,

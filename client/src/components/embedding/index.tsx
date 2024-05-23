@@ -61,7 +61,9 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
   render() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on type 'Re... Remove this comment to see the full error message
     const { layoutChoice, schema, crossfilter } = this.props;
-    const { annoMatrix } = crossfilter;
+    const { annoMatrix } = crossfilter || {};
+
+    if (!crossfilter) return null;
 
     return (
       <ButtonGroup

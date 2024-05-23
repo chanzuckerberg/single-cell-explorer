@@ -158,14 +158,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     });
   };
 
-  toggleOff = () => {
+  toggleOff = async () => {
     track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
 
     const { dispatch, metadataField, categoryIndex, categorySummary } =
       this.props;
 
     const label = categorySummary.categoryValues[categoryIndex];
-    dispatch(
+
+    await dispatch(
       actions.selectCategoricalMetadataAction(
         "categorical metadata filter deselect",
         metadataField,
@@ -234,13 +235,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     );
   };
 
-  toggleOn = () => {
+  toggleOn = async () => {
     track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
 
     const { dispatch, metadataField, categoryIndex, categorySummary } =
       this.props;
     const label = categorySummary.categoryValues[categoryIndex];
-    dispatch(
+
+    await dispatch(
       actions.selectCategoricalMetadataAction(
         "categorical metadata filter select",
         metadataField,

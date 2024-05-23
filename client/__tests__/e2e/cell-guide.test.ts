@@ -85,7 +85,7 @@ describe("CellGuideCXG", () => {
       "h5:has-text('Marker Gene Sets')"
     );
 
-    tryUntil(
+    await tryUntil(
       async () => {
         await markerGeneSetsHeader.click(); // Assuming clicking will expand the section
 

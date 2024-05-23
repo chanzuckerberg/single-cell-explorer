@@ -398,7 +398,7 @@ export async function createGeneset(
           .getByTestId("add-geneset-description")
           .fill(genesetDescription);
       }
-      expect(page.getByTestId("submit-geneset")).toBeEnabled();
+      await expect(page.getByTestId("submit-geneset")).toBeEnabled();
     },
     { page }
   );
@@ -430,7 +430,7 @@ export async function editGenesetName(
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
-      expect(page.getByTestId(submitButton)).toBeEnabled();
+      await expect(page.getByTestId(submitButton)).toBeEnabled();
     },
     { page }
   );
@@ -494,8 +494,10 @@ export async function assertGenesetDoesNotExist(
   page: Page
 ): Promise<void> {
   await tryUntil(
-    () => {
-      expect(page.getByTestId(`${genesetName}:geneset-name`)).toBeHidden();
+    async () => {
+      await expect(
+        page.getByTestId(`${genesetName}:geneset-name`)
+      ).toBeHidden();
     },
     { page }
   );
@@ -533,7 +535,8 @@ export async function addGeneToSet(
       await page
         .getByTestId("add-genes-to-geneset-dialog")
         .fill(geneToAddToSet);
-      expect(page.getByTestId(submitButton)).toBeEnabled();
+
+      await expect(page.getByTestId(submitButton)).toBeEnabled();
     },
     { page }
   );
@@ -672,7 +675,7 @@ export async function duplicateCategory(
 
   const dropdownOptionClass = "duplicate-category-dropdown-option";
 
-  tryUntil(
+  await tryUntil(
     async () => {
       await page.getByTestId("duplicate-category-dropdown").click();
       await expect(page.getByTestId(dropdownOptionClass)).toBeTruthy();
@@ -685,7 +688,7 @@ export async function duplicateCategory(
 
   await option.click();
 
-  tryUntil(
+  await tryUntil(
     async () => {
       await page.getByTestId("submit-category").click();
       await expect(
