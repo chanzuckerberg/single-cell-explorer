@@ -36,8 +36,6 @@ import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
-import { selectAvailableLayouts } from "../selectors/layoutChoice";
-import { getBestDefaultLayout } from "../reducers/layoutChoice";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -234,27 +232,12 @@ const doInitialDataLoad = (): ((
         obsCrossfilter,
         isCellGuideCxg,
       });
-
-      const availableLayouts = selectAvailableLayouts({ annoMatrix });
-      const fallbackLayout = getBestDefaultLayout(availableLayouts);
-      const defaultLayout = config?.parameters?.default_embedding || "";
-
-      const finalLayout = availableLayouts.includes(defaultLayout)
-        ? defaultLayout
-        : fallbackLayout;
-
+      // could possibly integrate this into the generation of the initial annoMatrix as part of the annoMatrix generation instead of after initialization is complete
+      embActions.initialLayoutChoiceAction(config);
       dispatch({
         type: "initial data load complete",
         isCellGuideCxg,
-        layoutChoice: finalLayout,
       });
-
-      /**
-       * (thuang): This dispatch is necessary to ensure that we get the right cell
-       * count when the page is first loaded.
-       * BUG: https://app.zenhub.com/workspaces/single-cell-5e2a191dad828d52cc78b028/issues/gh/chanzuckerberg/single-cell-explorer/936
-       */
-      dispatch(embActions.layoutChoiceAction(finalLayout));
     } catch (error) {
       dispatch({ type: "initial data load error", error });
     }

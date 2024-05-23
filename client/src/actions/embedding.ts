@@ -9,6 +9,7 @@ import type { AppDispatch, GetState, RootState } from "../reducers";
 import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
 import * as globals from "../globals";
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 export async function _switchEmbedding(
@@ -61,3 +62,39 @@ export const layoutChoiceAction: ActionCreator<
       annoMatrix,
     });
   };
+
+export const initialLayoutChoiceAction: ActionCreator<
+  ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
+> =
+  (config: globals.Config) =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevCrossfilter } =
+      getState();
+    const availableLayouts = selectAvailableLayouts({ prevAnnoMatrix });
+    const fallbackLayout = getBestDefaultLayout(availableLayouts);
+    const defaultLayout = config?.parameters?.default_embedding || "";
+
+    const finalLayout = availableLayouts.includes(defaultLayout)
+      ? defaultLayout
+      : fallbackLayout;
+
+    const [annoMatrix, obsCrossfilter] = await _switchEmbedding(
+      prevAnnoMatrix,
+      prevCrossfilter,
+      finalLayout
+    );
+
+    dispatch({
+      type: "set layout choice",
+      layoutChoice: finalLayout,
+      obsCrossfilter,
+      annoMatrix,
+    });
+  };
+
+function getBestDefaultLayout(layouts: Array<string>): string {
+  const preferredNames = ["umap", "tsne", "pca"];
+  const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
+  if (idx !== -1) return preferredNames[idx];
+  return layouts[0];
+}
