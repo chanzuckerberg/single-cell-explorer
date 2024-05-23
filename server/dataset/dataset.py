@@ -6,7 +6,7 @@ import pandas as pd
 from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig
-from server.common.constants import SPATIAL_IMAGE_DEFAULT_RES, Axis, XApproximateDistribution
+from server.common.constants import Axis, XApproximateDistribution
 from server.common.errors import (
     DatasetAccessError,
     ExceedsLimitError,
@@ -15,7 +15,6 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
-from server.common.utils.uns import crop_box
 from server.common.utils.utils import jsonify_numpy
 
 
@@ -347,51 +346,24 @@ class Dataset(metaclass=ABCMeta):
         Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
         """
 
-        if spatial is not None and ename in "spatial":
+        # scale isotopically
+        try:
+            min_emb = np.nanmin(embedding, axis=0)
+            max_emb = np.nanmax(embedding, axis=0)
+        except RuntimeError:
+            # indicates entire array was NaN, which should propagate
+            min_emb = np.NaN
+            max_emb = np.NaN
 
-            if not spatial:
-                raise Exception("uns does not have spatial information")
+        scale = np.amax(max_emb - min_emb)
+        normalized_layout = (embedding - min_emb) / scale
 
-            resolution = SPATIAL_IMAGE_DEFAULT_RES
+        # translate to center on both axis
+        translate = 0.5 - ((max_emb - min_emb) / scale / 2)
+        normalized_layout = normalized_layout + translate
 
-            library_id = list(spatial.keys())[0]
+        normalized_layout = normalized_layout.astype(dtype=np.float32)
 
-            try:
-                (h, w, _) = spatial[library_id]["images"][resolution].shape
-            except KeyError as e:
-                raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
-
-            scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
-
-            left, upper, _, _ = crop_box((w, h))
-
-            # adjust for 1:1 aspect ratio
-            h = w = min(h, w)
-
-            A = embedding * scaleref
-            A[:, 0] -= left
-            A[:, 1] -= upper
-            A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
-            normalized_layout = A.astype(dtype=np.float32)
-
-        else:
-            # scale isotropically
-            try:
-                min_emb = np.nanmin(embedding, axis=0)
-                max_emb = np.nanmax(embedding, axis=0)
-            except RuntimeError:
-                # indicates entire array was NaN, which should propagate
-                min_emb = np.NaN
-                max_emb = np.NaN
-
-            scale = np.amax(max_emb - min_emb)
-            normalized_layout = (embedding - min_emb) / scale
-
-            # translate to center on both axis
-            translate = 0.5 - ((max_emb - min_emb) / scale / 2)
-            normalized_layout = normalized_layout + translate
-
-            normalized_layout = normalized_layout.astype(dtype=np.float32)
         return normalized_layout
 
     def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None):

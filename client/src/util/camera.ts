@@ -2,13 +2,12 @@ import { vec2, mat3 } from "gl-matrix";
 import { MouseEvent } from "react";
 import { Point, Viewer } from "openseadragon";
 import clamp from "./clamp";
-import { THROTTLE_MS } from "./constants";
+import { THROTTLE_MS, SCALE_MAX } from "./constants";
 
 const EPSILON = 0.000001;
 
 const scaleSpeed = 0.5;
-// exporting this for testing
-export const scaleMax = 12.0;
+
 const scaleMin = 0.5;
 const panBound = 0.8;
 
@@ -164,7 +163,7 @@ export class Camera {
     const xClamped = clamp(x, bounds);
     const yClamped = clamp(y, bounds);
 
-    const dClamped = clamp(d * m[0], [scaleMin, scaleMax]) / m[0];
+    const dClamped = clamp(d * m[0], [scaleMin, SCALE_MAX]) / m[0];
 
     if (Math.abs(1 - dClamped) <= EPSILON) return; // noop request
 

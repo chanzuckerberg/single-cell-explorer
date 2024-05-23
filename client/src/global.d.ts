@@ -1,4 +1,4 @@
-import { Viewer, Options } from "openseadragon";
+import { Point, Viewer, Options } from "openseadragon";
 
 declare module "*.svg" {
   const content: string;
@@ -11,6 +11,7 @@ declare module "*.svg" {
  */
 declare module "openseadragon" {
   function openseadragon(options: Options): Viewer;
+  openseadragon.Point = Point;
 
   export default openseadragon;
 }

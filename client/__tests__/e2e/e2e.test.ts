@@ -55,7 +55,6 @@ import {
 
 import { datasets } from "./data";
 
-import { scaleMax } from "../../src/util/camera";
 import {
   DATASET,
   pageURLTruncate,
@@ -63,6 +62,7 @@ import {
   pageURLSpatial,
 } from "../common/constants";
 import { goToPage } from "../util/helpers";
+import { SCALE_MAX } from "../../src/util/constants";
 
 const { describe } = test;
 
@@ -514,7 +514,7 @@ for (const testDataset of testDatasets) {
           const newGraph = page.getByTestId("graph-wrapper");
           const newDistance =
             (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-          expect(parseFloat(newDistance)).toBe(scaleMax);
+          expect(parseFloat(newDistance)).toBe(SCALE_MAX);
         },
         { page }
       );

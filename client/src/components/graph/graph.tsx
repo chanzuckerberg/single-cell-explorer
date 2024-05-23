@@ -38,7 +38,6 @@ import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
-import { DatasetUnsMetadata } from "../../common/types/entities";
 
 import {
   captureLegend,
@@ -62,7 +61,6 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
 }
@@ -81,7 +79,6 @@ interface GraphAsyncProps {
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
-  spatial: state.controls.unsMetadata.spatial,
   config: state.config,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
@@ -737,7 +734,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
-      spatial,
     } = props.watchProps;
 
     const { modelTF } = this.state;
@@ -784,7 +780,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
-      spatial,
     };
   };
 

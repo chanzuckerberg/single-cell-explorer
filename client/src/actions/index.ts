@@ -16,12 +16,7 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type {
-  DatasetMetadata,
-  Dataset,
-  S3URI,
-  DatasetUnsMetadata,
-} from "../common/types/entities";
+import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -131,30 +126,6 @@ async function datasetMetadataFetchAndLoad(
   });
 }
 
-/**
- * Fetches and loads dataset spatial metadata.
- * @param dispatch - Function facilitating update of store.
- */
-async function datasetUnsMetadataFetchAndLoad(
-  dispatch: AppDispatch,
-  metadataKey: string
-): Promise<void> {
-  try {
-    const datasetUnsMetadataResponse = await fetchJson<{
-      metadata: DatasetUnsMetadata;
-    }>(`uns/meta?key=${metadataKey}`);
-    dispatch({
-      type: "request uns metadata success",
-      data: datasetUnsMetadataResponse,
-    });
-  } catch (error) {
-    dispatch({
-      type: "request uns metadata error",
-      error,
-    });
-  }
-}
-
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -218,7 +189,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
+
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
