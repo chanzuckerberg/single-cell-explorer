@@ -52,19 +52,21 @@ export function setupLasso({
   handleStartAction,
   handleEndAction,
   handleCancelAction,
+  isSidePanel,
 }: {
   selectionToolType: "lasso";
   handleStartAction: () => void;
   handleEndAction: (polygon: [number, number][]) => void;
   handleCancelAction: () => void;
+  isSidePanel: boolean;
 }): {
   svg?: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   container?: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
   tool?: LassoFunctionWithAttributes;
 } {
   const svg: d3.Selection<SVGGElement, unknown, HTMLElement, any> = d3
-    .select("#graph-wrapper")
-    .select("#lasso-layer");
+    .select(`#graph-wrapper${isSidePanel ? "-side" : ""}`)
+    .select(`#lasso-layer${isSidePanel ? "-side" : ""}`);
   if (svg.empty()) {
     return {};
   }
@@ -74,7 +76,7 @@ export function setupLasso({
     .on("start", handleStartAction)
     .on("cancel", handleCancelAction);
 
-  const lassoContainer = svg.call(lasso);
+  const lassoContainer = svg.call(lasso, isSidePanel);
 
   return { svg, container: lassoContainer, tool: lasso };
 }

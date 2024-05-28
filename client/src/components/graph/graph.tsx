@@ -5,7 +5,7 @@ import { connect, shallowEqual } from "react-redux";
 import { mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
-import Async from "react-async";
+import Async, { AsyncProps } from "react-async";
 import { Button, Icon } from "@blueprintjs/core";
 
 import Openseadragon, { Viewer } from "openseadragon";
@@ -34,7 +34,7 @@ import {
 } from "../../util/glHelpers";
 
 import { Dataframe } from "../../util/dataframe";
-import { RootState } from "../../reducers";
+import { AppDispatch, RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
@@ -61,17 +61,82 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
+  spatial: DatasetUnsMetadata["spatial"];
   imageUnderlay: boolean;
   screenCap: boolean;
 }
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState) => ({
+function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
+}
+
+interface StateProps {
+  annoMatrix: RootState["annoMatrix"];
+  crossfilter: RootState["obsCrossfilter"];
+  selectionTool: RootState["graphSelection"]["tool"];
+  currentSelection: RootState["graphSelection"]["selection"];
+  layoutChoice: RootState["layoutChoice"];
+  graphInteractionMode: RootState["controls"]["graphInteractionMode"];
+  colors: RootState["colors"];
+  pointDilation: RootState["pointDilation"];
+  genesets: RootState["genesets"]["genesets"];
+  screenCap: RootState["controls"]["screenCap"];
+  mountCapture: RootState["controls"]["mountCapture"];
+  imageUnderlay: RootState["controls"]["imageUnderlay"];
+  spatial: DatasetUnsMetadata["spatial"];
+}
+
+interface OwnProps {
+  viewportRef: HTMLDivElement;
+  isSidePanel?: boolean;
+}
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type GraphProps = OwnProps & StateProps & DispatchProps;
+
+// interface WatchProps {
+//   watchProps: {
+//     annoMatrix: RootState["annoMatrix"];
+//     colors: RootState["colors"];
+//     layoutChoice: RootState["layoutChoice"];
+//     crossfilter: RootState["obsCrossfilter"];
+//     pointDilation: RootState["pointDilation"];
+//     viewport: { width: number; height: number };
+//     imageUnderlay: boolean;
+//     screenCap: boolean;
+//     spatial: DatasetUnsMetadata["spatial"];
+//   };
+// }
+
+const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   annoMatrix: state.annoMatrix,
   crossfilter: state.obsCrossfilter,
   selectionTool: state.graphSelection.tool,
   currentSelection: state.graphSelection.selection,
-  layoutChoice: state.layoutChoice,
+  layoutChoice: ownProps.isSidePanel
+    ? {
+        available: ["draw_graph_fr", "pca", "tsne", "umap"],
+        current: "tsne",
+        currentDimNames: ["tsne_0", "tsne_1"],
+      }
+    : state.layoutChoice,
   graphInteractionMode: state.controls.graphInteractionMode,
   colors: state.colors,
   pointDilation: state.pointDilation,
@@ -113,8 +178,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
     };
   }
 
-  static watchAsync(props: GraphProps, prevProps: GraphProps): boolean {
-    return !shallowEqual(props.watchProps, prevProps.watchProps);
+  static watchAsync(
+    watchProps: AsyncProps<GraphAsyncProps>,
+    prevWatchProps: AsyncProps<GraphAsyncProps>
+  ): boolean {
+    return !shallowEqual(watchProps.watchProps, prevWatchProps.watchProps);
   }
 
   /**
@@ -499,7 +567,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
   // when a lasso is completed, filter to the points within the lasso polygon
   handleLassoEnd(polygon: [number, number][]): void {
     const minimumPolygonArea = 10;
-    const { dispatch, layoutChoice } = this.props;
+    const { dispatch, layoutChoice, isSidePanel } = this.props;
+    console.log(`Lasso completed in ${isSidePanel ? "side" : "main"}`);
     if (
       polygon.length < 3 ||
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
@@ -672,12 +741,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
         Called from componentDidUpdate. Create the tool SVG, and return any
         state changes that should be passed to setState().
         */
-    const { selectionTool, graphInteractionMode } = this.props;
+    const { selectionTool, graphInteractionMode, isSidePanel } = this.props;
     const { viewport } = this.state;
     /* clear out whatever was on the div, even if nothing, but usually the brushes etc */
-    const lasso = d3.select("#lasso-layer");
+    const lasso = d3.select(`#lasso-layer${isSidePanel ? "-side" : ""}`);
     if (lasso.empty()) return {}; // still initializing
-    lasso.selectAll(".lasso-group").remove();
+    lasso.selectAll(`.lasso-group${isSidePanel ? "-side" : ""}`).remove();
     // Don't render or recreate toolSVG if currently in zoom mode
     if (graphInteractionMode !== "select") {
       // don't return "change" of state unless we are really changing it!
@@ -712,6 +781,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         handleStartAction: handleStart,
         handleEndAction: handleEnd,
         handleCancelAction: handleCancel,
+        isSidePanel: !!isSidePanel,
       });
     }
     if (!ret) return {};
@@ -724,7 +794,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return this.underlayImage;
   };
 
-  fetchAsyncProps = async (props: GraphProps): Promise<GraphAsyncProps> => {
+  // (props: AsyncProps<GraphAsyncProps> | Readonly<AsyncProps<GraphAsyncProps>>): Async<GraphAsyncProps>'
+  fetchAsyncProps = async (
+    props: AsyncProps<GraphAsyncProps>
+  ): Promise<GraphAsyncProps> => {
     const {
       annoMatrix,
       colors: colorsProp,
@@ -1234,6 +1307,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       screenCap,
       imageUnderlay,
       spatial,
+      isSidePanel,
     } = this.props;
 
     const {
@@ -1250,7 +1324,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     return (
       <div
-        id="graph-wrapper"
+        id={`graph-wrapper${isSidePanel ? "-side" : ""}`}
         style={{
           top: 0,
           position: "relative",
@@ -1259,7 +1333,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           display: "flex",
           alignItems: "center",
         }}
-        data-testid="graph-wrapper"
+        data-testid={`graph-wrapper${isSidePanel ? "-side" : ""}`}
         data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
@@ -1296,9 +1370,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
           <CentroidLabels />
         </GraphOverlayLayer>
         <svg
-          id="lasso-layer"
-          data-testid="layout-overlay"
-          className="graph-svg"
+          id={`lasso-layer${isSidePanel ? "-side" : ""}`}
+          data-testid={`layout-overlay${isSidePanel ? "-side" : ""}`}
           style={{
             position: "absolute",
             top: 0,
@@ -1330,8 +1403,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
           }}
-          className="graph-canvas"
-          data-testid="layout-graph"
+          id={`graph-canvas${isSidePanel ? "-side" : ""}`}
+          data-testid={`layout-graph${isSidePanel ? "-side" : ""}`}
           ref={this.setReglCanvas}
           onMouseDown={this.handleCanvasEvent}
           onMouseUp={this.handleCanvasEvent}
@@ -1351,7 +1424,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
               COMMON_CANVAS_STYLE
             }
             alt=""
-            data-testid="graph-image"
+            data-testid={`graph-image${isSidePanel ? "-side" : ""}`}
             src={testImageSrc}
           />
         )}
@@ -1460,5 +1533,4 @@ const StillLoading = ({ displayName, width, height }: StillLoadingProps) => (
     </div>
   </div>
 );
-
-export default Graph;
+export default connect(mapStateToProps)(Graph);
