@@ -190,7 +190,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "2114",
+          count: "2025",
         },
       ],
       categorical: [
@@ -254,7 +254,7 @@ export const datasets = {
       panzoom: {
         lasso: {
           "coordinates-as-percent": { x1: 0.3, y1: 0.3, x2: 0.5, y2: 0.5 },
-          count: "237",
+          count: "221",
         },
       },
     },
@@ -288,11 +288,11 @@ export const datasets = {
     },
     brushOnGenesetMean: {
       default: "74",
-      withSubset: "69",
+      withSubset: "67",
     },
     expandGeneAndBrush: {
       default: "52",
-      withSubset: "49",
+      withSubset: "47",
     },
   },
 };
