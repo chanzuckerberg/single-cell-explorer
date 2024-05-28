@@ -732,45 +732,6 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
 
-    def test_uns_no_metadata_get(self):
-        endpoint = "uns/meta"
-        query = "key=spatial"
-        uns_meta_expected_response = {}
-        for url_base in [self.TEST_URL_BASE]:
-            with self.subTest(url_base=url_base):
-                url = f"{url_base}{endpoint}?{query}"
-                header = {"Accept": "application/json"}
-                result = self.client.get(url, headers=header)
-                self.assertEqual(result.status_code, HTTPStatus.OK)
-                self.assertEqual(result.headers["Content-Type"], "application/json")
-                result_data = json.loads(result.data)
-                self.assertEqual(result_data, uns_meta_expected_response)
-
-    def test_uns_metadata_get(self):
-        endpoint = "uns/meta"
-        query = "key=spatial"
-        uns_meta_expected_response = {
-            "spatial": {
-                "imageWidth": 1955,
-                "imageHeight": 1955,
-                "libraryId": "HCAHeartST13233999",
-                "image": "484f7e831642a66fadebc8231ad4eeaf1dff1b39",
-            }
-        }
-        for url_base in [self.TEST_UNS_URL_BASE]:
-            with self.subTest(url_base=url_base):
-                url = f"{url_base}{endpoint}?{query}"
-                header = {"Accept": "application/json"}
-                result = self.client.get(url, headers=header)
-
-                self.assertEqual(result.status_code, HTTPStatus.OK)
-                self.assertEqual(result.headers["Content-Type"], "application/json")
-
-                result_data = json.loads(result.data)
-                # hash the image string and compare with expected response hash
-                result_data["spatial"]["image"] = hashlib.sha1(result_data["spatial"]["image"].encode()).hexdigest()
-                self.assertEqual(result_data, uns_meta_expected_response)
-
 
 class TestDatasetMetadata(BaseTest):
     @classmethod

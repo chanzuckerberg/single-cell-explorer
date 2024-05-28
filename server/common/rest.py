@@ -31,7 +31,6 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
-from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
 
@@ -458,31 +457,3 @@ def summarize_var_post(request, data_adaptor):
 
     key = request.args.get("key", default=None)
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
-
-
-def uns_metadata_get(request, data_adaptor):
-    """
-    Returns uns metadata for the requested key
-    """
-    metadata_key = request.args.get("key", None)
-
-    if metadata_key is not None:
-        uns_metadata = data_adaptor.get_uns(metadata_key)
-
-        if metadata_key == "spatial" and uns_metadata is not None:
-            return make_response(
-                spatial_metadata_get(uns_metadata),
-                HTTPStatus.OK,
-                {"Content-Type": "application/json"},
-            )
-        elif uns_metadata is None:
-            return make_response({}, HTTPStatus.OK, {"Content-Type": "application/json"})
-        else:
-            return (
-                make_response(uns_metadata),
-                HTTPStatus.OK,
-                {"Content-Type": "application/json"},
-            )
-
-    else:
-        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
