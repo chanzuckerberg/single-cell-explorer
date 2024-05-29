@@ -62,18 +62,6 @@ export interface DatasetMetadata {
   s3_URI: S3URI;
 }
 
-/**
- * Represents the metadata for a dataset's uns (unstructured) data.
- */
-export type DatasetUnsMetadata = {
-  spatial: {
-    imageWidth: number;
-    imageHeight: number;
-    libraryId: string;
-    image: string;
-  };
-};
-
 export type S3URI = string;
 
 /**
