@@ -19,6 +19,7 @@ import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
+import { shouldShowOpenseadragon } from "../../common/selectors";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -60,6 +61,7 @@ type State = any;
     screenCap: state.controls.screenCap,
     imageUnderlay: state.controls.imageUnderlay,
     layoutChoice: state.layoutChoice,
+    config: state.config,
   };
 })
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -273,10 +275,6 @@ class MenuBar extends React.PureComponent<{}, State> {
       dispatch,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'disableDiffexp' does not exist on type '... Remove this comment to see the full error message
       disableDiffexp,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'undoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      undoDisabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'redoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      redoDisabled,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
       selectionTool,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
@@ -296,13 +294,9 @@ class MenuBar extends React.PureComponent<{}, State> {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
-      seamlessEnabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       screenCap,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       imageUnderlay,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
-      layoutChoice,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -310,7 +304,7 @@ class MenuBar extends React.PureComponent<{}, State> {
 
     const isTest = getFeatureFlag(FEATURES.TEST);
     const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
-    const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] =
       selectionTool === "brush"
@@ -326,6 +320,7 @@ class MenuBar extends React.PureComponent<{}, State> {
           justifyContent: "space-between",
           width: "100%",
         }}
+        data-test-id="menubar"
       >
         <div
           style={{
@@ -425,30 +420,29 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          {layoutChoice?.current?.includes(globals.spatialEmbeddingKeyword) &&
-            isSpatial && (
-              <ButtonGroup className={styles.menubarButton}>
-                <Tooltip
-                  content="Toggle image"
-                  position="bottom"
-                  hoverOpenDelay={globals.tooltipHoverOpenDelay}
-                >
-                  <AnchorButton
-                    type="button"
-                    data-testid="toggle-image-underlay"
-                    icon="media"
-                    intent={imageUnderlay ? "primary" : "none"}
-                    active={imageUnderlay}
-                    onClick={() => {
-                      dispatch({
-                        type: "toggle image underlay",
-                        toggle: !imageUnderlay,
-                      });
-                    }}
-                  />
-                </Tooltip>
-              </ButtonGroup>
-            )}
+          {shouldShowOpenseadragon(this.props) && (
+            <ButtonGroup className={styles.menubarButton}>
+              <Tooltip
+                content="Toggle image"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="toggle-image-underlay"
+                  icon="media"
+                  intent={imageUnderlay ? "primary" : "none"}
+                  active={imageUnderlay}
+                  onClick={() => {
+                    dispatch({
+                      type: "toggle image underlay",
+                      toggle: !imageUnderlay,
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+          )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}
