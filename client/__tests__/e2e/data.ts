@@ -44,6 +44,15 @@ export const datasets = {
           count: "930",
         },
       ],
+      invalidLasso: [
+        {
+          /**
+           * (thuang): This creates a straight line along x, which is an invalid lasso.
+           */
+          "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.25 },
+          count: "2638",
+        },
+      ],
       categorical: [
         {
           metadata: "louvain",
@@ -59,7 +68,6 @@ export const datasets = {
         },
       ],
     },
-
     diffexp: {
       category: "louvain",
       cellset1: {
@@ -70,7 +78,6 @@ export const datasets = {
       },
       pop2Gene: "NKG7",
     },
-
     genes: {
       bulkadd: ["S100A8", "FCGR3A", "LGALS2", "GSTP1"],
       search: "ACD",
@@ -145,6 +152,19 @@ export const datasets = {
       default: "109",
       withSubset: "94",
     },
+    embeddingChoice: {
+      original: "umap",
+      somethingElse: "pca",
+    },
+    /**
+     * (thuang): Unused, since homeButton is only available on spatial datasets.
+     * However, it's included here to satisfy the type checker.
+     */
+    homeButton: {
+      pan: {
+        "coordinates-as-percent": { x1: 0, y1: 0, x2: 0, y2: 0 },
+      },
+    },
   },
   "super-cool-spatial.cxg": {
     title: "super-cool-spatial.cxg",
@@ -191,6 +211,15 @@ export const datasets = {
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
           count: "2025",
+        },
+      ],
+      invalidLasso: [
+        {
+          /**
+           * (thuang): This creates a straight line along x, which is an invalid lasso.
+           */
+          "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.25 },
+          count: "2881",
         },
       ],
       categorical: [
@@ -293,6 +322,15 @@ export const datasets = {
     expandGeneAndBrush: {
       default: "52",
       withSubset: "47",
+    },
+    embeddingChoice: {
+      original: "spatial",
+      somethingElse: "prop",
+    },
+    homeButton: {
+      pan: {
+        "coordinates-as-percent": { x1: 0.75, y1: 0.75, x2: 0.2, y2: 0.2 },
+      },
     },
   },
 };
