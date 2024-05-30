@@ -132,13 +132,18 @@ class App extends React.Component<Props> {
   }
 }
 
-export default connect((state: RootState) => ({
-  loading: state.controls.loading,
-  error: state.controls.error,
-  graphRenderCounter: state.controls.graphRenderCounter,
-  tosURL: state.config?.parameters?.about_legal_tos,
-  privacyURL: state.config?.parameters?.about_legal_privacy,
-  seamlessEnabled: selectIsSeamlessEnabled(state),
-  datasetMetadataError: state.datasetMetadata.error,
-  isCellGuideCxg: state.controls.isCellGuideCxg,
-}))(App);
+export default connect(
+  (state: RootState): Props => ({
+    loading: state.controls.loading,
+    error: state.controls.error,
+    graphRenderCounter: state.controls.graphRenderCounter,
+    tosURL: state.config?.parameters?.about_legal_tos,
+    privacyURL: state.config?.parameters?.about_legal_privacy,
+    seamlessEnabled: selectIsSeamlessEnabled(state),
+    datasetMetadataError: state.datasetMetadata.error,
+    isCellGuideCxg: state.controls.isCellGuideCxg,
+    scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
+    scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+    geneIsOpen: state.controls.geneIsOpen,
+  })
+)(App);
