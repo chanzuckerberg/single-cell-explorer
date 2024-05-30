@@ -411,7 +411,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
     const { isSidePanel } = this.props;
-    console.log("zoom", isSidePanel);
 
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
