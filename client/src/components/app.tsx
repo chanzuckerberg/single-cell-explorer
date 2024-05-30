@@ -24,8 +24,7 @@ import GeneInfo from "./geneExpression/geneInfo/geneInfo";
 import Scatterplot from "./scatterplot/scatterplot";
 import EmbeddingPanel from "./EmbeddingPanel";
 
-interface Props {
-  dispatch: AppDispatch;
+interface StateProps {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
@@ -39,7 +38,7 @@ interface Props {
   geneIsOpen: boolean;
 }
 
-class App extends React.Component<Props> {
+class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
   componentDidMount(): void {
     const { dispatch } = this.props;
     dispatch(actions.doInitialDataLoad());
@@ -133,7 +132,7 @@ class App extends React.Component<Props> {
 }
 
 export default connect(
-  (state: RootState): Props => ({
+  (state: RootState): StateProps => ({
     loading: state.controls.loading,
     error: state.controls.error,
     graphRenderCounter: state.controls.graphRenderCounter,
