@@ -1,9 +1,7 @@
 name: Update staging
 
 on:
-  pull_request:
-    paths-ignore:
-      - '.infra/staging/values.yaml'
+  - pull_request
 
 jobs:
   run_if:
