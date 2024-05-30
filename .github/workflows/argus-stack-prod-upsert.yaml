@@ -15,5 +15,5 @@ jobs:
       - name: Upsert Staging Stack
         uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.16.0
         with:
-          appName: core-platform-example-app
+          appName: single-cell-explorer
           envName: prod
