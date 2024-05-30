@@ -3,6 +3,7 @@ name: Update staging
 on:
   pull_request:
     paths:
+      - '.infra/common.yaml'
       - '.infra/staging/values.yaml'
 
 jobs:
