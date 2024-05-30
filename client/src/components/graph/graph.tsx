@@ -34,7 +34,7 @@ import {
 } from "../../util/glHelpers";
 
 import { Dataframe } from "../../util/dataframe";
-import { AppDispatch, RootState } from "../../reducers";
+import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
@@ -51,7 +51,7 @@ import {
 
 import { COMMON_CANVAS_STYLE } from "./constants";
 import { THROTTLE_MS } from "../../util/constants";
-import { GraphProps, GraphState } from "./types";
+import { GraphProps, OwnProps, GraphState, StateProps } from "./types";
 import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
 import { fetchDeepZoomImageFailed } from "../../actions/config";
 
@@ -61,69 +61,9 @@ interface GraphAsyncProps {
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: DatasetUnsMetadata["spatial"];
   imageUnderlay: boolean;
   screenCap: boolean;
 }
-
-function downloadImage(
-  imageURI: string,
-  layoutChoice?: LayoutChoiceState
-): void {
-  const a = document.createElement("a");
-  a.href = imageURI;
-  a.download = layoutChoice
-    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
-    : "CELLxGENE_legend.png";
-  a.style.display = "none";
-  document.body.append(a);
-  a.click();
-  // Revoke the blob URL and remove the element.
-  setTimeout(() => {
-    URL.revokeObjectURL(imageURI);
-    a.remove();
-  }, 1000);
-}
-
-interface StateProps {
-  annoMatrix: RootState["annoMatrix"];
-  crossfilter: RootState["obsCrossfilter"];
-  selectionTool: RootState["graphSelection"]["tool"];
-  currentSelection: RootState["graphSelection"]["selection"];
-  layoutChoice: RootState["layoutChoice"];
-  graphInteractionMode: RootState["controls"]["graphInteractionMode"];
-  colors: RootState["colors"];
-  pointDilation: RootState["pointDilation"];
-  genesets: RootState["genesets"]["genesets"];
-  screenCap: RootState["controls"]["screenCap"];
-  mountCapture: RootState["controls"]["mountCapture"];
-  imageUnderlay: RootState["controls"]["imageUnderlay"];
-  spatial: DatasetUnsMetadata["spatial"];
-}
-
-interface OwnProps {
-  viewportRef: HTMLDivElement;
-  isSidePanel?: boolean;
-}
-interface DispatchProps {
-  dispatch: AppDispatch;
-}
-
-type GraphProps = OwnProps & StateProps & DispatchProps;
-
-// interface WatchProps {
-//   watchProps: {
-//     annoMatrix: RootState["annoMatrix"];
-//     colors: RootState["colors"];
-//     layoutChoice: RootState["layoutChoice"];
-//     crossfilter: RootState["obsCrossfilter"];
-//     pointDilation: RootState["pointDilation"];
-//     viewport: { width: number; height: number };
-//     imageUnderlay: boolean;
-//     screenCap: boolean;
-//     spatial: DatasetUnsMetadata["spatial"];
-//   };
-// }
 
 const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   annoMatrix: state.annoMatrix,
@@ -132,9 +72,16 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   currentSelection: state.graphSelection.selection,
   layoutChoice: ownProps.isSidePanel
     ? {
-        available: ["draw_graph_fr", "pca", "tsne", "umap"],
-        current: "tsne",
-        currentDimNames: ["tsne_0", "tsne_1"],
+        available: [
+          "means_cell_abundance_w_sf",
+          "prop",
+          "q05_cell_abundance_w_sf",
+          "q95_cell_abundance_w_sf",
+          "spatial",
+          "stds_cell_abundance_w_sf",
+        ],
+        current: "spatial",
+        currentDimNames: ["spatial_0", "spatial_1"],
       }
     : state.layoutChoice,
   graphInteractionMode: state.controls.graphInteractionMode,
@@ -145,7 +92,8 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
   config: state.config,
-}))
+});
+
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
     camera: Camera;
@@ -462,6 +410,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
+    const { isSidePanel } = this.props;
+    console.log("zoom", isSidePanel);
+
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
 
@@ -483,7 +434,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   };
 
-  handleBrushDragAction(): void {
+  async handleBrushDragAction(): Promise<void> {
     /*
           event describing brush position:
           @-------|
@@ -505,7 +456,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const southeast = this.mapScreenToPoint(s[1]);
     const [minX, maxY] = northwest;
     const [maxX, minY] = southeast;
-    dispatch(
+    await dispatch(
       actions.graphBrushChangeAction(layoutChoice?.current, {
         minX,
         minY,
@@ -524,7 +475,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     dispatch(actions.graphBrushStartAction());
   }
 
-  handleBrushEndAction(): void {
+  async handleBrushEndAction(): Promise<void> {
     const { camera } = this.state;
     // Ignore programmatically generated events. Also abort if camera not initialized.
     if (!d3.event.sourceEvent || !camera) return;
@@ -539,7 +490,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const southeast = this.mapScreenToPoint(s[1]);
       const [minX, maxY] = northwest;
       const [maxX, minY] = southeast;
-      dispatch(
+      await dispatch(
         actions.graphBrushEndAction(layoutChoice?.current, {
           minX,
           minY,
@@ -550,13 +501,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
         })
       );
     } else {
-      dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
+      await dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
     }
   }
 
-  handleBrushDeselectAction(): void {
+  async handleBrushDeselectAction(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
+    await dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
   }
 
   handleLassoStart(): void {
@@ -565,7 +516,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   // when a lasso is completed, filter to the points within the lasso polygon
-  handleLassoEnd(polygon: [number, number][]): void {
+  async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
     const { dispatch, layoutChoice, isSidePanel } = this.props;
     console.log(`Lasso completed in ${isSidePanel ? "side" : "main"}`);
@@ -574,9 +525,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
     ) {
       // if less than three points, or super small area, treat as a clear selection.
-      dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
+      await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
-      dispatch(
+      await dispatch(
         actions.graphLassoEndAction(
           layoutChoice?.current,
           polygon.map((xy) => this.mapScreenToPoint(xy))
@@ -585,20 +536,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  handleLassoCancel(): void {
+  async handleLassoCancel(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
+    await dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
   }
 
-  handleLassoDeselectAction(): void {
+  async handleLassoDeselectAction(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
+    await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
   }
 
-  handleDeselectAction(): void {
+  async handleDeselectAction(): Promise<void> {
     const { selectionTool } = this.props;
-    if (selectionTool === "brush") this.handleBrushDeselectAction();
-    if (selectionTool === "lasso") this.handleLassoDeselectAction();
+    if (selectionTool === "brush") await this.handleBrushDeselectAction();
+    if (selectionTool === "lasso") await this.handleLassoDeselectAction();
   }
 
   async handleImageDownload(regl: GraphState["regl"]) {
@@ -1158,6 +1109,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     const {
       config: { s3URI },
+      isSidePanel,
     } = this.props;
 
     if (
@@ -1171,7 +1123,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     this.openseadragon = Openseadragon({
       // (thuang): This id will need to be unique for multiple graphs
-      id: "openseadragon",
+      id: `openseadragon${isSidePanel ? "-side" : ""}`,
       prefixUrl: getSpatialPrefixUrl(s3URI),
       tileSources: getSpatialTileSources(s3URI),
       showNavigationControl: false,
@@ -1306,7 +1258,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       screenCap,
       imageUnderlay,
-      spatial,
       isSidePanel,
     } = this.props;
 
@@ -1356,19 +1307,23 @@ class Graph extends React.Component<GraphProps, GraphState> {
           </Button>
         )}
 
-        <GraphOverlayLayer
-          /**  @ts-expect-error TODO: type GraphOverlayLayer**/
-          width={viewport.width}
-          height={viewport.height}
-          cameraTF={cameraTF}
-          modelTF={modelTF}
-          projectionTF={projectionTF}
-          handleCanvasEvent={
-            graphInteractionMode === "zoom" ? this.handleCanvasEvent : undefined
-          }
-        >
-          <CentroidLabels />
-        </GraphOverlayLayer>
+        {!isSidePanel && (
+          <GraphOverlayLayer
+            /**  @ts-expect-error TODO: type GraphOverlayLayer**/
+            width={viewport.width}
+            height={viewport.height}
+            cameraTF={cameraTF}
+            modelTF={modelTF}
+            projectionTF={projectionTF}
+            handleCanvasEvent={
+              graphInteractionMode === "zoom"
+                ? this.handleCanvasEvent
+                : undefined
+            }
+          >
+            <CentroidLabels />
+          </GraphOverlayLayer>
+        )}
         <svg
           id={`lasso-layer${isSidePanel ? "-side" : ""}`}
           data-testid={`layout-overlay${isSidePanel ? "-side" : ""}`}
@@ -1384,7 +1339,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         />
         {shouldShowOpenseadragon(this.props) && (
           <div
-            id="openseadragon"
+            id={`openseadragon${isSidePanel ? "-side" : ""}`}
             style={{
               width: viewport.width,
               height: viewport.height,
@@ -1440,7 +1395,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
             viewport,
             screenCap,
             imageUnderlay,
-            spatial,
           }}
         >
           <Async.Pending initial>

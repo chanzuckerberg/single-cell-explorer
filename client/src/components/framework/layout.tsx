@@ -63,7 +63,7 @@ const Layout: React.FC<Props> = (props) => {
       </div>
       <div
         style={{
-          zIndex: 0,
+          zIndex: 1,
           gridArea: "top / graph-start / bottom / graph-end",
           position: "relative",
           height: "inherit",
