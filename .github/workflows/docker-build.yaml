@@ -9,7 +9,7 @@ jobs:
     secrets: inherit
     with:
       branches_ignore: main,release-please--branches--main
-      path_filters: '!.infra/**,!.github/**,!.happy/**,!dev_docs/**,!example-dataset/**'
+      path_filters: '!.infra/**'
       envs: rdev
       images: |
         [
