@@ -1,0 +1,19 @@
+name: Update prod
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  prod_stack_upsert:
+    runs-on: [ARM64, self-hosted, Linux]
+    permissions:
+        id-token: write
+        contents: read
+
+    steps:
+      - name: Upsert Staging Stack
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.16.0
+        with:
+          appName: core-platform-example-app
+          envName: prod
