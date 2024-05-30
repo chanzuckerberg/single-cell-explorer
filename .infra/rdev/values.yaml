@@ -1,5 +1,5 @@
 services:
   explorer:
     image:
-      tag: sha-3883f979
+      tag: sha-61416180
     replicaCount: 1
