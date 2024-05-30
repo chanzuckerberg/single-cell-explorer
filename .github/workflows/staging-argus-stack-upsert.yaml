@@ -1,0 +1,27 @@
+name: Update staging
+
+on:
+  pull_request:
+    paths-ignore:
+      - '.infra/staging/values.yaml'
+
+jobs:
+  run_if:
+    if: github.head_ref == 'release-please--branches--main'
+    runs-on: [ARM64, self-hosted, Linux]
+    steps:
+      - run: echo "The head branch of this PR is the release please branch"
+
+  staging_stack_upsert:
+    needs: run_if
+    runs-on: [ARM64, self-hosted, Linux]
+    permissions:
+        id-token: write
+        contents: read
+
+    steps:
+      - name: Upsert Staging Stack
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.16.0
+        with:
+          appName: core-platform-example-app
+          envName: staging
