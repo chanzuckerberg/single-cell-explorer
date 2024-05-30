@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 
-// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './scatterplot.css' or its corr... Remove this comment to see the full error message
-import styles from "../scatterplot/scatterplot.css";
 import * as globals from "../../globals";
-import _camera from "../../util/camera";
 import { Level } from "../../reducers/controls";
 import { height, margin, width } from "./util";
 import Graph from "../graph/graph";
