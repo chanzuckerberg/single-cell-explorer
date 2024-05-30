@@ -12,7 +12,7 @@ jobs:
         contents: read
 
     steps:
-      - name: Upsert Staging Stack
+      - name: Upsert Prod Stack
         uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.16.0
         with:
           appName: single-cell-explorer
