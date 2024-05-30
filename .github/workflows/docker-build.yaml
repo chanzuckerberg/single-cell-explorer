@@ -1,14 +1,14 @@
-name: Docker Image Build
+name: Docker Image Build - rdev
 
 on:
   - push
 
 jobs:
-  argus_builder:
+  rdev_argus_builder:
     uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.9.0
     secrets: inherit
     with:
-      branches_ignore: main
+      branches_ignore: main,release-please--branches--main
       path_filters: '!.infra/**,!.github/**,!.happy/**,!dev_docs/**,!example-dataset/**'
       envs: rdev
       images: |
