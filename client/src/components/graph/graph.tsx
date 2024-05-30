@@ -744,7 +744,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return this.underlayImage;
   };
 
-  // (props: AsyncProps<GraphAsyncProps> | Readonly<AsyncProps<GraphAsyncProps>>): Async<GraphAsyncProps>'
   fetchAsyncProps = async (
     props: AsyncProps<GraphAsyncProps>
   ): Promise<GraphAsyncProps> => {
