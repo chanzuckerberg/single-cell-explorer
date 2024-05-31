@@ -1,6 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Button, ButtonGroup } from "@blueprintjs/core";
 import { Icon } from "czifui";
 import {
   SynHeader,
@@ -8,7 +7,6 @@ import {
   Link,
   Content,
   GeneSymbol,
-  GeneHeader,
   GeneInfoWrapper,
   WarningBanner,
 } from "./style";
@@ -98,46 +96,6 @@ class GeneInfo extends React.PureComponent<Props, State> {
         id="geneinfo_wrapper"
         data-testid={`${gene}:gene-info`}
       >
-        <GeneHeader
-          style={{
-            position: "absolute",
-            marginLeft: styles.margin.left,
-            top: styles.margin.bottom / 2,
-          }}
-          data-testid="gene-info-header"
-        >
-          Gene Info
-        </GeneHeader>
-        <ButtonGroup
-          style={{
-            position: "absolute",
-            right: 5,
-            top: 5,
-          }}
-        >
-          <Button
-            type="button"
-            minimal
-            data-testid="min-gene-info"
-            onClick={() => {
-              dispatch({ type: "minimize/maximize gene info" });
-            }}
-          >
-            {minimized ? "show gene info" : "hide"}
-          </Button>
-          <Button
-            type="button"
-            minimal
-            data-testid="clear-gene-info"
-            onClick={() =>
-              dispatch({
-                type: "clear gene info",
-              })
-            }
-          >
-            remove
-          </Button>
-        </ButtonGroup>
         <div
           id="gene-info"
           style={{

@@ -74,6 +74,8 @@ interface ControlsState {
   mountCapture: boolean;
   showWarningBanner: boolean;
   imageUnderlay: boolean;
+  activeTab: string;
+  infoPanelHidden: boolean;
 }
 const Controls = (
   state: ControlsState = {
@@ -105,6 +107,8 @@ const Controls = (
     mountCapture: false,
     showWarningBanner: false,
     imageUnderlay: false,
+    activeTab: "CellType",
+    infoPanelHidden: true,
   },
   action: AnyAction
 ): ControlsState => {
@@ -239,6 +243,9 @@ const Controls = (
 
       return {
         ...state,
+        activeTab: "Gene",
+        infoPanelHidden: false,
+
         geneIsOpen: true,
         gene: action.gene,
         geneUrl: "",
@@ -288,6 +295,7 @@ const Controls = (
 
       return {
         ...state,
+        infoPanelHidden: true,
         geneIsOpen: false,
         geneIsMinimized: false,
         geneLevel: stackLevels.geneLevel,

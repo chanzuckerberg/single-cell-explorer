@@ -6,6 +6,7 @@ import { connect } from "react-redux";
 import { RootState } from "../../reducers";
 import GeneExpression from "../geneExpression";
 import * as globals from "../../globals";
+import InfoPanel from "../geneExpression/infoPanel";
 
 /* Styles */
 export const STYLE_RIGHT_SIDEBAR: CSSProperties = {
@@ -15,7 +16,6 @@ export const STYLE_RIGHT_SIDEBAR: CSSProperties = {
   flexDirection: "column",
   height: "inherit",
   overflowY: "inherit",
-  padding: globals.leftSidebarSectionPadding,
   position: "relative",
   width: "inherit",
 };
@@ -23,6 +23,7 @@ export const STYLE_RIGHT_SIDEBAR: CSSProperties = {
 const RightSidebar = () => (
   <div style={STYLE_RIGHT_SIDEBAR}>
     <GeneExpression />
+    <InfoPanel />
   </div>
 );
 

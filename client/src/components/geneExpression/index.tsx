@@ -8,6 +8,7 @@ import QuickGene from "./quickGene";
 import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import * as globals from "../../globals";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
 import { MARKER_GENE_SUFFIX_IDENTIFIER } from "./constants";
 
@@ -175,7 +176,14 @@ class GeneExpression extends React.Component<{}, State> {
     const { isCellGuideCxg } = this.props;
     const { geneSetsExpanded, markerGeneSetsExpanded } = this.state;
     return (
-      <div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: globals.leftSidebarSectionPadding,
+        }}
+      >
         <QuickGene />
         <div>
           <div

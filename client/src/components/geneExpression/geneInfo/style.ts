@@ -8,25 +8,7 @@ import {
 } from "czifui";
 
 export const GeneInfoWrapper = styled.div`
-  position: fixed;
-  border-radius: 3px 3px 0px 0px;
-  padding: 0px 20px 20px 0px;
-  background: white;
-  box-shadow: 0px 0px 3px 2px rgba(153, 153, 153, 0.2);
-  z-index: 2;
-`;
-
-export const GeneHeader = styled.p`
-  font-weight: 500;
-  ${fontBodyS}
-
-  ${(props) => {
-    const colors = getColors(props);
-
-    return `
-        color: ${colors?.gray[500]};
-        `;
-  }}
+  display: flex;
 `;
 
 export const GeneSymbol = styled.h1`
