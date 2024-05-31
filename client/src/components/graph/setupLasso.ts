@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { Colors } from "@blueprintjs/core";
+import { sidePanelAttributeNameChange } from "./util";
 
 type LassoFunction = (
   svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>
@@ -58,7 +59,10 @@ const Lasso = () => {
 
       lassoPath = g
         .append("path")
-        .attr("data-testid", `lasso-element${isSidePanel ? "-side" : ""}`)
+        .attr(
+          "data-testid",
+          sidePanelAttributeNameChange("lasso-element", isSidePanel)
+        )
         .attr("fill-opacity", 0.1)
         .attr("stroke-dasharray", "3, 3");
 
@@ -131,7 +135,7 @@ const Lasso = () => {
     // append a <g> with a rect
     const g = svg
       .append("g")
-      .attr("class", `lasso-group${isSidePanel ? " side" : ""}`);
+      .attr("class", sidePanelAttributeNameChange("lasso-group", isSidePanel));
     const bbox = svgNode.getBoundingClientRect();
     const area = g
       .append("rect")
@@ -164,7 +168,10 @@ const Lasso = () => {
         lassoPolygon = polygon;
         lassoPath = g
           .append("path")
-          .attr("data-testid", `lasso-element${isSidePanel ? "-side" : ""}`)
+          .attr(
+            "data-testid",
+            sidePanelAttributeNameChange("lasso-element", isSidePanel)
+          )
           .attr("fill", lassoPathColor)
           .attr("fill-opacity", 0.1)
           .attr("stroke", lassoPathColor)

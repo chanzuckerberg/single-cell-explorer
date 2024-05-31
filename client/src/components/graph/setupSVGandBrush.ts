@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import Lasso, { LassoFunctionWithAttributes } from "./setupLasso";
+import { sidePanelAttributeNameChange } from "./util";
 
 /******************************************
 *******************************************
@@ -65,8 +66,8 @@ export function setupLasso({
   tool?: LassoFunctionWithAttributes;
 } {
   const svg: d3.Selection<SVGGElement, unknown, HTMLElement, any> = d3
-    .select(`#graph-wrapper${isSidePanel ? "-side" : ""}`)
-    .select(`#lasso-layer${isSidePanel ? "-side" : ""}`);
+    .select(sidePanelAttributeNameChange("#graph-wrapper", isSidePanel))
+    .select(sidePanelAttributeNameChange("#lasso-layer", isSidePanel));
   if (svg.empty()) {
     return {};
   }

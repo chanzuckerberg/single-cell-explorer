@@ -2,6 +2,13 @@ import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
 import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
+export function sidePanelAttributeNameChange(
+  name: string,
+  isSidePanel: boolean
+): string {
+  return `${name}${isSidePanel ? "-side" : ""}}`;
+}
+
 export async function captureLegend(
   colors: any,
   ctx: CanvasRenderingContext2D | null,

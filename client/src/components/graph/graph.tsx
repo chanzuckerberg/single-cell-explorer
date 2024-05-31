@@ -47,6 +47,7 @@ import {
   getSpatialPrefixUrl,
   getSpatialTileSources,
   loadImage,
+  sidePanelAttributeNameChange,
 } from "./util";
 
 import { COMMON_CANVAS_STYLE } from "./constants";
@@ -70,6 +71,7 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   crossfilter: state.obsCrossfilter,
   selectionTool: state.graphSelection.tool,
   currentSelection: state.graphSelection.selection,
+  // TODO(seve): add redux state for side panel
   layoutChoice: ownProps.isSidePanel
     ? {
         available: [
@@ -515,7 +517,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   // when a lasso is completed, filter to the points within the lasso polygon
   async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
-    const { dispatch, layoutChoice, isSidePanel } = this.props;
+    const { dispatch, layoutChoice, isSidePanel = false } = this.props;
     console.log(`Lasso completed in ${isSidePanel ? "side" : "main"}`);
     if (
       polygon.length < 3 ||
@@ -689,12 +691,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
         Called from componentDidUpdate. Create the tool SVG, and return any
         state changes that should be passed to setState().
         */
-    const { selectionTool, graphInteractionMode, isSidePanel } = this.props;
+    const {
+      selectionTool,
+      graphInteractionMode,
+      isSidePanel = false,
+    } = this.props;
     const { viewport } = this.state;
     /* clear out whatever was on the div, even if nothing, but usually the brushes etc */
-    const lasso = d3.select(`#lasso-layer${isSidePanel ? "-side" : ""}`);
+    const lasso = d3.select(
+      sidePanelAttributeNameChange(`#lasso-layer`, isSidePanel)
+    );
     if (lasso.empty()) return {}; // still initializing
-    lasso.selectAll(`.lasso-group${isSidePanel ? "-side" : ""}`).remove();
+    lasso
+      .selectAll(sidePanelAttributeNameChange(`.lasso-group`, isSidePanel))
+      .remove();
     // Don't render or recreate toolSVG if currently in zoom mode
     if (graphInteractionMode !== "select") {
       // don't return "change" of state unless we are really changing it!
@@ -729,7 +739,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         handleStartAction: handleStart,
         handleEndAction: handleEnd,
         handleCancelAction: handleCancel,
-        isSidePanel: !!isSidePanel,
+        isSidePanel,
       });
     }
     if (!ret) return {};
@@ -1105,7 +1115,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     const {
       config: { s3URI },
-      isSidePanel,
+      isSidePanel = false,
     } = this.props;
 
     if (
@@ -1118,8 +1128,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
 
     this.openseadragon = Openseadragon({
-      // (thuang): This id will need to be unique for multiple graphs
-      id: `openseadragon${isSidePanel ? "-side" : ""}`,
+      id: sidePanelAttributeNameChange(`openseadragon`, isSidePanel),
       prefixUrl: getSpatialPrefixUrl(s3URI),
       tileSources: getSpatialTileSources(s3URI),
       showNavigationControl: false,
@@ -1254,7 +1263,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       crossfilter,
       screenCap,
       imageUnderlay,
-      isSidePanel,
+      isSidePanel = false,
     } = this.props;
 
     const {
@@ -1271,7 +1280,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     return (
       <div
-        id={`graph-wrapper${isSidePanel ? "-side" : ""}`}
+        id={sidePanelAttributeNameChange(`graph-wrapper`, isSidePanel)}
         style={{
           top: 0,
           position: "relative",
@@ -1280,7 +1289,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           display: "flex",
           alignItems: "center",
         }}
-        data-testid={`graph-wrapper${isSidePanel ? "-side" : ""}`}
+        data-testid={sidePanelAttributeNameChange(`graph-wrapper`, isSidePanel)}
         data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
@@ -1302,7 +1311,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             Re-center Embedding
           </Button>
         )}
-
+        {/* If sidepanel don't show centroids */}
         {!isSidePanel && (
           <GraphOverlayLayer
             /**  @ts-expect-error TODO: type GraphOverlayLayer**/
@@ -1321,8 +1330,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
           </GraphOverlayLayer>
         )}
         <svg
-          id={`lasso-layer${isSidePanel ? "-side" : ""}`}
-          data-testid={`layout-overlay${isSidePanel ? "-side" : ""}`}
+          id={sidePanelAttributeNameChange(`lasso-layer`, isSidePanel)}
+          data-testid={sidePanelAttributeNameChange(
+            `layout-overlay`,
+            isSidePanel
+          )}
           style={{
             position: "absolute",
             top: 0,
@@ -1335,7 +1347,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         />
         {shouldShowOpenseadragon(this.props) && (
           <div
-            id={`openseadragon${isSidePanel ? "-side" : ""}`}
+            id={sidePanelAttributeNameChange(`openseadragon`, isSidePanel)}
             style={{
               width: viewport.width,
               height: viewport.height,
@@ -1354,8 +1366,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
           }}
-          id={`graph-canvas${isSidePanel ? "-side" : ""}`}
-          data-testid={`layout-graph${isSidePanel ? "-side" : ""}`}
+          id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}
+          data-testid={sidePanelAttributeNameChange(
+            `layout-graph`,
+            isSidePanel
+          )}
           ref={this.setReglCanvas}
           onMouseDown={this.handleCanvasEvent}
           onMouseUp={this.handleCanvasEvent}
@@ -1375,7 +1390,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
               COMMON_CANVAS_STYLE
             }
             alt=""
-            data-testid={`graph-image${isSidePanel ? "-side" : ""}`}
+            data-testid={sidePanelAttributeNameChange(
+              `graph-image`,
+              isSidePanel
+            )}
             src={testImageSrc}
           />
         )}
