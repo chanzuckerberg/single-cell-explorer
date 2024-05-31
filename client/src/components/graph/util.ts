@@ -6,7 +6,7 @@ export function sidePanelAttributeNameChange(
   name: string,
   isSidePanel: boolean
 ): string {
-  return `${name}${isSidePanel ? "-side" : ""}}`;
+  return `${name}${isSidePanel ? "-side" : ""}`;
 }
 
 export async function captureLegend(
