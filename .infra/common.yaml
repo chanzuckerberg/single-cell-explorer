@@ -28,9 +28,17 @@ services:
       requests:
         cpu: 2
         memory: 2Gi
+    env:
+      REMOTE_DEV_PREFIX: /explorer-devstack
+      DEPLOYMENT_STAGE: dev
+      DATA_LOCATOR_DOMAIN: api.cellxgene.dev.single-cell.czi.technology
+      CXG_BUCKET_PATH: hosted-cellxgene-dev
+      AWS_REGION: us-west-2
+      AWS_DEFAULT_REGION: us-west-2
+      API_DOMAIN: special-worm.sc.dev.czi.team # TODO: be able to swap out stack name?
+      WEB_DOMAIN: special-worm.sc.dev.czi.team # TODO: be able to swap out stack name?
     ingress:
       hosts:
         - paths:
-          - path: /
-            pathType: Prefix
-
+            - path: /
+              pathType: Prefix
