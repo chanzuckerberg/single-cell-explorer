@@ -3,19 +3,33 @@ import { Page, TestInfo, expect } from "@playwright/test";
 import { Classes } from "@blueprintjs/core";
 import { takeSnapshot } from "@chromatic-com/playwright";
 import { clearInputAndTypeInto, tryUntil, typeInto } from "./puppeteerUtils";
+import {
+  GRAPH_AS_IMAGE_TEST_ID,
+  LAYOUT_CHOICE_TEST_ID,
+} from "../../src/util/constants";
 
 interface Coordinate {
   x: number;
   y: number;
 }
 
-export async function drag(
-  testId: string,
-  start: Coordinate,
-  end: Coordinate,
-  page: Page,
-  lasso = false
-): Promise<void> {
+const WAIT_FOR_SWITCH_LAYOUT_MS = 2_000;
+
+export async function drag({
+  testId,
+  testInfo,
+  start,
+  end,
+  page,
+  lasso = false,
+}: {
+  testId: string;
+  testInfo: TestInfo;
+  start: Coordinate;
+  end: Coordinate;
+  page: Page;
+  lasso?: boolean;
+}): Promise<void> {
   const layout = await page.getByTestId(testId);
   const box = await layout.boundingBox();
   if (!box) throw new Error("bounding box not found");
@@ -37,6 +51,8 @@ export async function drag(
   }
 
   await page.mouse.up();
+
+  await snapshotTestGraph(page, testInfo);
 }
 
 export async function scroll({
@@ -710,7 +726,8 @@ export async function addGeneToSearch(
 
 export async function subset(
   coordinatesAsPercent: CoordinateAsPercent,
-  page: Page
+  page: Page,
+  testInfo: TestInfo
 ): Promise<void> {
   // In order to deselect the selection after the subset, make sure we have some clear part
   // of the scatterplot we can click on
@@ -722,13 +739,14 @@ export async function subset(
     coordinatesAsPercent,
     page
   );
-  await drag(
-    "layout-graph",
-    lassoSelection.start,
-    lassoSelection.end,
+  await drag({
+    testId: "layout-graph",
+    testInfo,
+    start: lassoSelection.start,
+    end: lassoSelection.end,
     page,
-    true
-  );
+    lasso: true,
+  });
   await page.getByTestId("subset-button").click();
   const clearCoordinate = await calcCoordinate("layout-graph", 0.5, 0.99, page);
   await clickOnCoordinate("layout-graph", clearCoordinate, page);
@@ -769,19 +787,67 @@ export async function assertUndoRedo(
 }
 
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
-  const buttonID = "capture-and-display-graph";
   const imageID = "graph-image";
+
+  await waitUntilNoSkeletonDetected(page);
 
   await tryUntil(
     async () => {
-      await page.getByTestId(buttonID).click({ force: true });
+      await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
       await page.getByTestId(imageID).waitFor();
 
       await takeSnapshot(page, testInfo);
+
+      /**
+       * (thuang): Remove the image in the DOM after taking the snapshot
+       */
+      await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
     },
     { page }
   );
+}
+
+export async function selectLayout(layoutChoice: string, page: Page) {
+  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+
+  /**
+   * (thuang): For blueprint radio buttons, we need to tab first to go to the
+   * currently selected option before we can use the arrow keys to navigate
+   */
+  await page.keyboard.press("Tab");
+
+  const layoutChoices = await await page
+    .getByTestId(RegExp(`^${LAYOUT_CHOICE_TEST_ID}-label-`))
+    .allInnerTexts();
+
+  const currentlySelectedLayout = await page
+    .locator("label")
+    .filter({ has: page.getByRole("radio", { checked: true }) })
+    .innerText();
+
+  const currentIndex = layoutChoices.indexOf(currentlySelectedLayout);
+  const targetIndex = layoutChoices.findIndex((choice) =>
+    choice.includes(layoutChoice)
+  );
+
+  const relativePosition = targetIndex - currentIndex;
+
+  if (relativePosition > 0) {
+    // press down arrow N times
+    for (let i = 0; i < relativePosition; i += 1) {
+      await page.keyboard.press("ArrowDown");
+    }
+  } else {
+    // press up arrow N times
+    for (let i = 0; i < Math.abs(relativePosition); i += 1) {
+      await page.keyboard.press("ArrowUp");
+    }
+  }
+
+  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+
+  await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
