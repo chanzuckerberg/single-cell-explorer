@@ -54,6 +54,7 @@ jobs:
 
   unit-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
@@ -124,6 +125,7 @@ jobs:
           workingDir: ./client
           # This is `npm run build-archive-storybook`
           buildScriptName: "build-archive-storybook"
+          exitOnceUploaded: true
 
       - name: Upload FE test results as an artifact
         if: always()

@@ -16,9 +16,9 @@ import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { RootState } from "../../reducers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type EmbeddingState = any;
+type Props = RootState;
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state: RootState) => ({
@@ -27,20 +27,12 @@ type EmbeddingState = any;
   crossfilter: state.obsCrossfilter,
   imageUnderlay: state.imageUnderlay,
 }))
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class Embedding extends React.PureComponent<{}, EmbeddingState> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
-    super(props);
-    this.state = {};
-  }
-
+class Embedding extends React.PureComponent<Props> {
   handleLayoutChoiceClick = (): void => {
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
   };
 
   handleLayoutChoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, imageUnderlay } = this.props;
 
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
@@ -59,9 +51,10 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on type 'Re... Remove this comment to see the full error message
     const { layoutChoice, schema, crossfilter } = this.props;
-    const { annoMatrix } = crossfilter;
+    const { annoMatrix } = crossfilter || {};
+
+    if (!crossfilter) return null;
 
     return (
       <ButtonGroup

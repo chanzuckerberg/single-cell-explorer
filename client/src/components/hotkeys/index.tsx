@@ -1,7 +1,7 @@
 import { useHotkeys, InputGroup } from "@blueprintjs/core";
 import React, { FC, useMemo } from "react";
 import { connect } from "react-redux";
-import { AppDispatch } from "../../reducers";
+import { AppDispatch, GetState } from "../../reducers";
 import { track } from "../../analytics";
 import { subsetAction, resetSubsetAction } from "../../actions/viewStack";
 import { EVENTS } from "../../analytics/events";
@@ -15,6 +15,19 @@ interface DispatchProps {
 }
 type Props = DispatchProps;
 
+const performSubset = () => (dispatch: AppDispatch, getState: GetState) => {
+  const state = getState();
+  const crossfilter = state.obsCrossfilter;
+  const selectedCount = crossfilter.countSelected();
+  const subsetPossible =
+    selectedCount !== 0 && selectedCount !== crossfilter.size();
+
+  if (subsetPossible) {
+    track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
+    dispatch(subsetAction());
+  }
+};
+
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
   undo: () => {
     track(EVENTS.EXPLORER_UNDO_BUTTON_CLICKED);
@@ -24,10 +37,7 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
     track(EVENTS.EXPLORER_REDO_BUTTON_CLICKED);
     dispatch({ type: "@@undoable/redo" });
   },
-  subset: () => {
-    track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
-    dispatch(subsetAction());
-  },
+  subset: () => dispatch(performSubset()),
   unsubset: () => {
     track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
     dispatch(resetSubsetAction());
