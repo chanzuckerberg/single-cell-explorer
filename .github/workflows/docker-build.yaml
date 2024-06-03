@@ -1,27 +1,16 @@
-name: Docker Image Build
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+name: Docker Image Build - rdev
 
 on:
-    workflow_dispatch: {}
-    push:
-        paths-ignore:
-            - '.infra/**'
-            - '.github/**'
-            - '.happy/**'
-            - 'dev_docs/**'
-            - 'example-dataset/**'
-        branches-ignore:
-          - main
+  - push
 
 jobs:
-  argus_builder:
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.6.0
+  rdev_argus_builder:
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.9.0
     secrets: inherit
     with:
-      env: rdev
+      branches_ignore: main,release-please--branches--main
+      path_filters: '!.infra/**'
+      envs: rdev
       images: |
         [
           {

@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Delete Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/delete-stack@v0.8.0
+        uses: chanzuckerberg/argus-artifacts/ci/packages/delete-stack@v0.16.0
         with:
           appName: single-cell-explorer
           envName: rdev
