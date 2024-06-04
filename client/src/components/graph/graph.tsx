@@ -71,7 +71,6 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   crossfilter: state.obsCrossfilter,
   selectionTool: state.graphSelection.tool,
   currentSelection: state.graphSelection.selection,
-  // TODO(seve): add redux state for side panel
   layoutChoice: ownProps.isSidePanel
     ? state.panelEmbedding.layoutChoice
     : state.layoutChoice,
