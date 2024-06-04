@@ -12,7 +12,7 @@ export const selectCategoricalSelection = (state: RootState): any =>
  @returns boolean
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- update typings once categoricalSelection reducer state is typed.
-export const selectIsUserStateDirty = (state: any): boolean => {
+export const selectIsUserStateDirty = (state: RootState): boolean => {
   const categoricalSelection = selectCategoricalSelection(state);
 
   return Boolean(isCategoricalSelectionInProgress(categoricalSelection));

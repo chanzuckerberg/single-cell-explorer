@@ -19,7 +19,6 @@ import { EVENTS } from "../../../analytics/events";
 import { RootState, AppDispatch } from "../../../reducers";
 import { Schema, Category } from "../../../common/types/schema";
 import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
-import { AnnotationsState } from "../../../reducers/annotations";
 import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
 import { ColorTable } from "../../../util/stateManager/colorHelpers";
 
@@ -42,8 +41,8 @@ interface PureCategoryValueProps {
 }
 
 interface StateProps {
-  annotations: AnnotationsState;
-  schema: Schema;
+  // @ts-expect-error -- (seve):
+  schema: RootState["annoMatrix"]["schema"];
   isDilated: boolean;
   isSelected: boolean;
   label: string;
@@ -85,13 +84,12 @@ const mapStateToProps = (
   const labelName = isDataframeDictEncodedColumn(col)
     ? col.codeMapping[parseInt(label as string, 10)]
     : label;
-  const isSelected = category.get(label) ?? true;
+  const isSelected = category.get(label as string) ?? true;
 
   const isColorBy =
     metadataField === colorAccessor &&
     colorMode === "color by categorical metadata";
   return {
-    annotations: state.annotations,
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
@@ -206,7 +204,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     const valueSelectionChange = isSelected !== newIsSelected;
 
     const colorAccessorChange = props.colorAccessor !== nextProps.colorAccessor;
-    const annotationsChange = props.annotations !== nextProps.annotations;
     const colorModeChange = props.colorMode !== nextProps.colorMode;
     const editingLabel = state.editedLabelText !== nextState.editedLabelText;
     const dilationChange = props.isDilated !== nextProps.isDilated;
@@ -226,7 +223,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       labelChanged ||
       valueSelectionChange ||
       colorAccessorChange ||
-      annotationsChange ||
       editingLabel ||
       dilationChange ||
       countChanged ||
@@ -364,8 +360,8 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
 
   // If coloring by and this isn't the colorAccessor and it isn't being edited
   shouldRenderStackedBarOrHistogram() {
-    const { colorAccessor, isColorBy, annotations } = this.props;
-    return !!colorAccessor && !isColorBy && !annotations.isEditingLabelName;
+    const { colorAccessor, isColorBy } = this.props;
+    return !!colorAccessor && !isColorBy;
   }
 
   currentLabelAsString() {

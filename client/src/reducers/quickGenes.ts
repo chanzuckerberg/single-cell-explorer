@@ -72,8 +72,8 @@ const quickGenes = (
       const isQuickGene =
         userDefinedGenes.includes(selection) ||
         userDefinedGenes.includes(gene) ||
-        userDefinedGenes.includes(scatterplotXXaccessor) ||
-        userDefinedGenes.includes(scatterplotYYaccessor);
+        userDefinedGenes.includes(scatterplotXXaccessor || "") ||
+        userDefinedGenes.includes(scatterplotYYaccessor || "");
 
       switch (action.type) {
         case "continuous metadata histogram end": {

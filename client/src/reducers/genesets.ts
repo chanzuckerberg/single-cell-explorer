@@ -38,20 +38,20 @@ interface Geneset {
 
 export type Genesets = Map<Geneset["genesetName"], Geneset>;
 
-export interface State {
+export interface GeneSetsState {
   initialized: boolean;
   lastTid?: number;
   genesets: Genesets;
 }
 
 const GeneSets = (
-  state: State = {
+  state: GeneSetsState = {
     initialized: false,
     lastTid: undefined,
     genesets: new Map(),
   },
   action: AnyAction
-): State => {
+): GeneSetsState => {
   switch (action.type) {
     case "geneset: initial load": {
       const { data } = action;

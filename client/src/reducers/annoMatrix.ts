@@ -4,11 +4,14 @@ Reducer for the annoMatrix
 
 import { AnyAction } from "redux";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
+import { AnnoMatrixClipView } from "../annoMatrix/views";
+
+export type AnnoMatrixState = AnnoMatrix | AnnoMatrixClipView | undefined;
 
 const AnnoMatrixReducer = (
-  state: AnnoMatrix | null = null,
+  state: AnnoMatrixState = undefined,
   action: AnyAction
-) => {
+): AnnoMatrixState => {
   if (action.annoMatrix) {
     return action.annoMatrix;
   }

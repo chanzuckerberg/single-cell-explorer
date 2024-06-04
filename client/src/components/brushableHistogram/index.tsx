@@ -14,7 +14,7 @@ import ErrorLoading from "./error";
 import { Dataframe } from "../../util/dataframe";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-import { RootState } from "../../reducers";
+import { AppDispatch, RootState } from "../../reducers";
 
 const MARGIN = {
   LEFT: 10, // Space for 0 tick label on X axis
@@ -38,12 +38,33 @@ interface BrushableHistogramOwnProps {
   isUserDefined?: boolean;
   isGeneSetSummary?: boolean;
   field: string;
+  onGeneExpressionComplete: () => void;
+  zebra?: boolean;
+  mini?: boolean;
+  width?: number;
+  setGenes?: Map<string, boolean>;
 }
 
-type BrushableHistogramProps = Partial<RootState> & BrushableHistogramOwnProps;
+interface StateProps {
+  annoMatrix: RootState["annoMatrix"];
+  isScatterplotXXaccessor: boolean;
+  isScatterplotYYaccessor: boolean;
+  continuousSelectionRange: RootState["continuousSelection"][string];
+  isColorAccessor: boolean;
+  singleContinuousValues: RootState["singleContinuousValue"]["singleContinuousValues"];
+}
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState, ownProps: BrushableHistogramOwnProps) => {
+type BrushableHistogramProps = BrushableHistogramOwnProps &
+  StateProps &
+  DispatchProps;
+
+const mapStateToProps = (
+  state: RootState,
+  ownProps: BrushableHistogramOwnProps
+): StateProps => {
   const { isObs, isUserDefined, isGeneSetSummary, field } = ownProps;
   const myName = makeContinuousDimensionName(
     { isObs, isUserDefined, isGeneSetSummary },
@@ -59,7 +80,7 @@ type BrushableHistogramProps = Partial<RootState> & BrushableHistogramOwnProps;
       state.colors.colorMode !== "color by categorical metadata",
     singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
   };
-})
+};
 class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
@@ -83,7 +104,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   onBrush = (selection: any, x: any, eventType: any) => {
     const type = `continuous metadata histogram ${eventType}`;
-    return () => {
+    return async () => {
       const { dispatch, field, isObs, isUserDefined, isGeneSetSummary } =
         this.props;
 
@@ -108,7 +129,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
           isGeneSetSummary,
         },
       };
-      dispatch(
+      await dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
     };
@@ -121,7 +142,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       x: any // eslint-disable-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     ) =>
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-    () => {
+    async () => {
       const { dispatch, field, isObs, isUserDefined, isGeneSetSummary } =
         this.props;
       const minAllowedBrushSize = 10;
@@ -177,7 +198,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
           isGeneSetSummary,
         },
       };
-      dispatch(
+      await dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
       track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
@@ -244,6 +265,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       dispatch,
       singleContinuousValues,
     } = this.props;
+    // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
     const { isClipped } = annoMatrix;
     if (singleContinuousValues.has(field)) {
       return {
@@ -257,7 +279,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     }
 
     const query = this.createQuery();
-    if (!query) {
+    if (!query || !annoMatrix) {
       return {
         histogram: null,
         miniHistogram: null,
@@ -268,6 +290,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
         OK2Render: false,
       };
     }
+    // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
     const df: Dataframe = await annoMatrix.fetch(...query, globals.numBinsObsX);
     const column = df.icol(0);
 
@@ -302,6 +325,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     let unclippedRange = [...range];
     if (isClipped) {
       const parent: Dataframe = await annoMatrix.viewOf.fetch(
+        // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
         ...query,
         globals.numBinsObsX
       );
@@ -310,9 +334,11 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     }
 
     const unclippedRangeColor = [
+      // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
       !annoMatrix.isClipped || annoMatrix.clipRange[0] === 0
         ? "#bbb"
         : globals.blue,
+      // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
       !annoMatrix.isClipped || annoMatrix.clipRange[1] === 1
         ? "#bbb"
         : globals.blue,
@@ -402,9 +428,9 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     return histogramCache;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   createQuery() {
     const { isObs, isGeneSetSummary, field, setGenes, annoMatrix } = this.props;
+    // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
     const { schema } = annoMatrix;
     if (isObs) {
       return ["obs", field];
@@ -420,7 +446,8 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
             method: "mean",
             field: "var",
             column: varIndex,
-            values: [...setGenes.keys()],
+            // (seve): fix downstream lint errors as a result of detailed app store typing
+            values: [...setGenes!.keys()],
           },
         },
       ];
@@ -561,4 +588,4 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   }
 }
 
-export default HistogramBrush;
+export default connect(mapStateToProps)(HistogramBrush);

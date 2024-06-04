@@ -18,6 +18,7 @@ type Props = DispatchProps;
 const performSubset = () => (dispatch: AppDispatch, getState: GetState) => {
   const state = getState();
   const crossfilter = state.obsCrossfilter;
+  if (!crossfilter) return;
   const selectedCount = crossfilter.countSelected();
   const subsetPossible =
     selectedCount !== 0 && selectedCount !== crossfilter.size();

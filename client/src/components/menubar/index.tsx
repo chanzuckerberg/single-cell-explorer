@@ -13,59 +13,78 @@ import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
-import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 import { shouldShowOpenseadragon } from "../../common/selectors";
+import { AppDispatch, RootState } from "../../reducers";
+import { AnnoMatrixClipView } from "../../annoMatrix/views";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
+interface StateProps {
+  subsetPossible: boolean;
+  subsetResetPossible: boolean;
+  graphInteractionMode: RootState["controls"]["graphInteractionMode"];
+  clipPercentileMin: number;
+  clipPercentileMax: number;
+  colorAccessor: RootState["colors"]["colorAccessor"];
+  disableDiffexp: boolean;
+  showCentroidLabels: RootState["centroidLabels"]["showLabels"];
+  categoricalSelection: RootState["categoricalSelection"];
+  screenCap: RootState["controls"]["screenCap"];
+  imageUnderlay: RootState["controls"]["imageUnderlay"];
+  layoutChoice: RootState["layoutChoice"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  config: RootState["config"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  panelEmbedding: RootState["panelEmbedding"];
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: State) => {
+const mapStateToProps = (state: RootState): StateProps => {
   const { annoMatrix } = state;
   const crossfilter = state.obsCrossfilter;
   const selectedCount = crossfilter?.countSelected?.() || 0;
 
   const subsetPossible =
-    selectedCount !== 0 && selectedCount !== crossfilter.size(); // ie, not all and not none are selected
-  const embSubsetView = getEmbSubsetView(annoMatrix);
+    selectedCount !== 0 && selectedCount !== crossfilter?.size(); // ie, not all and not none are selected
+  const embSubsetView = annoMatrix ? getEmbSubsetView(annoMatrix) : false;
   const subsetResetPossible = !embSubsetView
     ? annoMatrix?.nObs !== annoMatrix?.schema.dataframe.nObs
     : annoMatrix?.nObs !== embSubsetView?.nObs;
 
+  const [clipRangeMin, clipRangeMax] = (annoMatrix as AnnoMatrixClipView)
+    ?.clipRange ?? [0, 1];
+
   return {
     subsetPossible,
     subsetResetPossible,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    config: state.config,
     graphInteractionMode: state.controls.graphInteractionMode,
-    clipPercentileMin: Math.round(100 * (annoMatrix?.clipRange?.[0] ?? 0)),
-    clipPercentileMax: Math.round(100 * (annoMatrix?.clipRange?.[1] ?? 1)),
-    userDefinedGenes: state.quickGenes.userDefinedGenes,
+    clipPercentileMin: Math.round(100 * clipRangeMin),
+    clipPercentileMax: Math.round(100 * clipRangeMax),
     colorAccessor: state.colors.colorAccessor,
-    scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
-    scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
-    libraryVersions: state.config?.library_versions,
-    aboutLink: state.config?.links?.["about-dataset"],
     disableDiffexp: state.config?.parameters?.["disable-diffexp"] ?? false,
-    diffexpMayBeSlow:
-      state.config?.parameters?.["diffexp-may-be-slow"] ?? false,
     showCentroidLabels: state.centroidLabels.showLabels,
-    tosURL: state.config?.parameters?.about_legal_tos,
-    privacyURL: state.config?.parameters?.about_legal_privacy,
     categoricalSelection: state.categoricalSelection,
-    seamlessEnabled: selectIsSeamlessEnabled(state),
     screenCap: state.controls.screenCap,
     imageUnderlay: state.controls.imageUnderlay,
     layoutChoice: state.layoutChoice,
-    config: state.config,
+    panelEmbedding: state.panelEmbedding,
   };
-})
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class MenuBar extends React.PureComponent<{}, State> {
+};
+
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+export type MenuBarProps = StateProps & DispatchProps;
+interface State {
+  pendingClipPercentiles: {
+    clipPercentileMin: number | undefined;
+    clipPercentileMax: number | undefined;
+  };
+}
+class MenuBar extends React.PureComponent<MenuBarProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static isValidDigitKeyEvent(e: any) {
     /*
@@ -91,13 +110,14 @@ class MenuBar extends React.PureComponent<{}, State> {
     return key >= 0 && key <= 9;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
+  constructor(props: MenuBarProps) {
     super(props);
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { layoutChoice, dispatch } = this.props;
     this.state = {
-      pendingClipPercentiles: null,
+      pendingClipPercentiles: {
+        clipPercentileMin: undefined,
+        clipPercentileMax: undefined,
+      },
     };
     const currentConditionMet = layoutChoice?.current?.includes(
       globals.spatialEmbeddingKeyword
@@ -113,8 +133,7 @@ class MenuBar extends React.PureComponent<{}, State> {
     }
   }
 
-  componentDidUpdate(prevProps: any): void {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
+  componentDidUpdate(prevProps: MenuBarProps): void {
     const { layoutChoice, dispatch } = this.props;
     const prevConditionMet = prevProps.layoutChoice?.current?.includes(
       globals.spatialEmbeddingKeyword
@@ -140,15 +159,15 @@ class MenuBar extends React.PureComponent<{}, State> {
     const clipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
     const clipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMin: currentClipMin,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMax' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMax: currentClipMax,
     } = this.props;
 
     // if you change this test, be careful with logic around
     // comparisons between undefined / NaN handling.
     const isDisabled =
+      !clipPercentileMin ||
+      !clipPercentileMax ||
       !(clipPercentileMin < clipPercentileMax) ||
       (clipPercentileMin === currentClipMin &&
         clipPercentileMax === currentClipMax);
@@ -210,34 +229,33 @@ class MenuBar extends React.PureComponent<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipCommit = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
     const { pendingClipPercentiles } = this.state;
     const { clipPercentileMin, clipPercentileMax } = pendingClipPercentiles;
-    const min = clipPercentileMin / 100;
-    const max = clipPercentileMax / 100;
+    const min = clipPercentileMin! / 100;
+    const max = clipPercentileMax! / 100;
     dispatch(actions.clipAction(min, max));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipOpening = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
     const { clipPercentileMin, clipPercentileMax } = this.props;
     this.setState({
       pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipClosing = () => {
-    this.setState({ pendingClipPercentiles: null });
+    this.setState({
+      pendingClipPercentiles: {
+        clipPercentileMax: undefined,
+        clipPercentileMin: undefined,
+      },
+    });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCentroidChange = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, showCentroidLabels } = this.props;
 
     track(EVENTS.EXPLORER_CENTROID_LABEL_TOGGLE_BUTTON_CLICKED);
@@ -250,7 +268,6 @@ class MenuBar extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubset = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
 
     track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
@@ -260,7 +277,6 @@ class MenuBar extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubsetReset = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
 
     track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
@@ -268,48 +284,34 @@ class MenuBar extends React.PureComponent<{}, State> {
     dispatch(actions.resetSubsetAction());
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'disableDiffexp' does not exist on type '... Remove this comment to see the full error message
       disableDiffexp,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
-      selectionTool,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMin,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMax' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMax,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on ... Remove this comment to see the full error message
       graphInteractionMode,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'showCentroidLabels' does not exist on ty... Remove this comment to see the full error message
       showCentroidLabels,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoricalSelection' does not exist on ... Remove this comment to see the full error message
       categoricalSelection,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
       colorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetPossible' does not exist on type '... Remove this comment to see the full error message
       subsetPossible,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       screenCap,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       imageUnderlay,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
-    const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
+    const isColoredByCategorical =
+      !!categoricalSelection?.[colorAccessor || ""];
 
     const isTest = getFeatureFlag(FEATURES.TEST);
     const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
     // constants used to create selection tool button
-    const [selectionTooltip, selectionButtonIcon] =
-      selectionTool === "brush"
-        ? ["Brush selection", "Lasso selection"]
-        : ["select", "polygon-filter"];
+    const [selectionTooltip, selectionButtonIcon] = [
+      "select",
+      "polygon-filter",
+    ];
 
     return (
       <div
@@ -330,7 +332,7 @@ class MenuBar extends React.PureComponent<{}, State> {
             justifyContent: "left",
           }}
         >
-          <Embedding />
+          <Embedding isSidePanel={false} />
         </div>
         <div
           style={{
@@ -501,4 +503,4 @@ class MenuBar extends React.PureComponent<{}, State> {
   }
 }
 
-export default MenuBar;
+export default connect(mapStateToProps)(MenuBar);

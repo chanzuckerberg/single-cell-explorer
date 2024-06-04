@@ -32,7 +32,7 @@ import AnnoMatrix from "../annoMatrix/annoMatrix";
 
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
 import { selectAvailableLayouts } from "../selectors/layoutChoice";
-import { getBestDefaultLayout } from "../reducers/layoutChoice";
+import { getBestDefaultLayout } from "../util/layout";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -209,6 +209,7 @@ const doInitialDataLoad = (): ((
         isCellGuideCxg,
       });
 
+      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
       const availableLayouts = selectAvailableLayouts({ annoMatrix });
       const fallbackLayout = getBestDefaultLayout(availableLayouts);
       const defaultLayout = config?.parameters?.default_embedding || "";
@@ -306,6 +307,7 @@ const requestDifferentialExpression =
       2. get expression data for each
       */
       const { annoMatrix } = getState();
+      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
       const varIndexName = annoMatrix.schema.annotations.var.index;
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
@@ -348,7 +350,8 @@ const requestDifferentialExpression =
       }
 
       const response = await res.json();
-      const varIndex = await annoMatrix.fetch("var", varIndexName);
+      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
+      const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
         diffexpLists
@@ -356,6 +359,7 @@ const requestDifferentialExpression =
         diffexpLists[polarity] = response[polarity].map(
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
+            // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
             varIndex.at(v[0], varIndexName),
             ...v.slice(1),
           ]

@@ -6,9 +6,9 @@ import { AnyAction } from "redux";
 import { AnnoMatrixObsCrossfilter } from "../annoMatrix";
 
 const ObsCrossfilter = (
-  state: AnnoMatrixObsCrossfilter | null = null,
+  state: AnnoMatrixObsCrossfilter | undefined,
   action: AnyAction
-) => {
+): AnnoMatrixObsCrossfilter | undefined => {
   if (action.obsCrossfilter) {
     return action.obsCrossfilter;
   }

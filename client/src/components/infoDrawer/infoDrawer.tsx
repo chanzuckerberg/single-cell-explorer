@@ -7,8 +7,6 @@ import { Drawer, Position } from "@blueprintjs/core";
 import InfoFormat, { SingleValues } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
-import { DatasetMetadata } from "../../common/types/entities";
-import { Schema } from "../../common/types/schema";
 import { SingleContinuousValueState } from "../../reducers/singleContinuousValue";
 
 /**
@@ -29,9 +27,10 @@ interface OwnProps {
  * Props selected from store.
  */
 interface StateProps {
-  datasetMetadata: DatasetMetadata;
+  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
   isOpen: boolean;
-  schema: Schema;
+  // @ts-expect-error -- (seve): fix downstream affects of detailed RootState typing
+  schema: RootState["annoMatrix"]["schema"];
   singleContinuousValues: SingleContinuousValueState["singleContinuousValues"];
 }
 

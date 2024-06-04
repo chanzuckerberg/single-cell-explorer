@@ -55,8 +55,15 @@ async function _switchEmbedding(
 export const layoutChoiceAction: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
 > =
-  (newLayoutChoice: string) =>
+  (newLayoutChoice: string, isSidePanel = false) =>
   async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    if (isSidePanel) {
+      dispatch({
+        type: "set panel embedding layout choice",
+        layoutChoice: newLayoutChoice,
+      });
+      return;
+    }
     /**
      * Bruce: On layout choice, make sure we have selected all on the previous layout, AND the new
      * layout.
