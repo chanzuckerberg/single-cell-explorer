@@ -5,10 +5,30 @@ import {
   fontBodyS,
   getColors,
   fontHeaderL,
+  fontHeaderM,
 } from "czifui";
+import { Icon } from "@blueprintjs/core";
+
+import * as globals from "../../../../globals";
+import * as styles from "../../util";
+import { gray100, gray500 } from "../../../theme";
 
 export const GeneInfoWrapper = styled.div`
   display: flex;
+  bottom: ${globals.bottomToolbarGutter}px;
+  left: ${globals.leftSidebarWidth + globals.scatterplotMarginLeft}px;
+`;
+
+export const GeneInfoContainer = styled.div`
+  width: ${styles.width + styles.margin.left + styles.margin.right}px;
+  height: "auto";
+`;
+
+export const GeneInfoEmpty = styled.div`
+  margin-top: ${styles.margin.top}px;
+  margin-left: ${styles.margin.left}px;
+  margin-right: ${styles.margin.right}px;
+  margin-bottom: ${styles.margin.bottom}px;
 `;
 
 export const GeneSymbol = styled.h1`
@@ -85,4 +105,34 @@ export const WarningBanner = styled.div`
         }
         `;
   }}
+`;
+
+export const NoGeneSelectedDiv = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: ${gray100};
+  padding: 20px;
+  border-radius: 3px;
+`;
+
+export const MessageDiv = styled.div`
+  ${fontBodyXs}
+  font-weight: 400;
+  color: ${gray500};
+  padding: 10px;
+  &.title {
+    color: black;
+    ${fontHeaderM}
+    font-weight: 700;
+  }
+`;
+
+export const CustomIcon = styled(Icon)`
+  && {
+    color: ${gray500};
+  }
 `;
