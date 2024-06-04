@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import { fontBodyXs } from "czifui";
 import { AnchorButton } from "@blueprintjs/core";
+import { gray300 } from "../../theme";
 
 interface InfoPanelWrapperProps {
   isHidden: boolean;
@@ -32,8 +33,8 @@ export const InfoPanelHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  border-top: 1px solid ${gray300};
+  border-bottom: 1px solid ${gray300};
   padding: 10px 0px 5px 10px;
   height: 38px;
   position: absolute;
