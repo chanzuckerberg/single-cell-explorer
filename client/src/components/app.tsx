@@ -20,9 +20,11 @@ import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
+import GeneInfo from "./geneExpression/geneInfo/geneInfo";
+import Scatterplot from "./scatterplot/scatterplot";
+import EmbeddingPanel from "./EmbeddingPanel";
 
-interface Props {
-  dispatch: AppDispatch;
+interface StateProps {
   loading: boolean;
   error: string;
   graphRenderCounter: number;
@@ -31,9 +33,12 @@ interface Props {
   seamlessEnabled: boolean;
   datasetMetadataError: string | null;
   isCellGuideCxg: boolean;
+  scatterplotXXaccessor: string;
+  scatterplotYYaccessor: string;
+  geneIsOpen: boolean;
 }
 
-class App extends React.Component<Props> {
+class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
   componentDidMount(): void {
     const { dispatch } = this.props;
     dispatch(actions.doInitialDataLoad());
@@ -51,6 +56,9 @@ class App extends React.Component<Props> {
       seamlessEnabled,
       datasetMetadataError,
       isCellGuideCxg,
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
+      geneIsOpen,
     } = this.props;
     return (
       <Container>
@@ -90,6 +98,21 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      {scatterplotXXaccessor && scatterplotYYaccessor && (
+                        <Scatterplot />
+                      )}
+
+                      {geneIsOpen && (
+                        <GeneInfo
+                          geneSummary=""
+                          geneName=""
+                          gene=""
+                          geneUrl=""
+                          geneSynonyms={[]}
+                          showWarningBanner
+                        />
+                      )}
+                      <EmbeddingPanel />
                       <Controls bottom={0}>
                         <DatasetSelector />
                       </Controls>
@@ -108,13 +131,18 @@ class App extends React.Component<Props> {
   }
 }
 
-export default connect((state: RootState) => ({
-  loading: state.controls.loading,
-  error: state.controls.error,
-  graphRenderCounter: state.controls.graphRenderCounter,
-  tosURL: state.config?.parameters?.about_legal_tos,
-  privacyURL: state.config?.parameters?.about_legal_privacy,
-  seamlessEnabled: selectIsSeamlessEnabled(state),
-  datasetMetadataError: state.datasetMetadata.error,
-  isCellGuideCxg: state.controls.isCellGuideCxg,
-}))(App);
+export default connect(
+  (state: RootState): StateProps => ({
+    loading: state.controls.loading,
+    error: state.controls.error,
+    graphRenderCounter: state.controls.graphRenderCounter,
+    tosURL: state.config?.parameters?.about_legal_tos,
+    privacyURL: state.config?.parameters?.about_legal_privacy,
+    seamlessEnabled: selectIsSeamlessEnabled(state),
+    datasetMetadataError: state.datasetMetadata.error,
+    isCellGuideCxg: state.controls.isCellGuideCxg,
+    scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
+    scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+    geneIsOpen: state.controls.geneIsOpen,
+  })
+)(App);

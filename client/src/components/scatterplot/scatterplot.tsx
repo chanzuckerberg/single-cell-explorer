@@ -23,6 +23,7 @@ import {
   flagHighlight,
 } from "../../util/glHelpers";
 import { Dataframe, DataframeColumn } from "../../util/dataframe";
+import { RootState } from "../../reducers";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function createProjectionTF(viewportWidth: any, viewportHeight: any) {
@@ -45,35 +46,29 @@ const getYScale = memoize(getScale);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'obsCrossfilter' does not exist on type '... Remove this comment to see the full error message
+const mapStateToProps = (state: RootState) => {
   const { obsCrossfilter: crossfilter } = state;
   const {
     scatterplotXXaccessor,
     scatterplotYYaccessor,
     scatterplotIsMinimized,
     scatterplotLevel,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  } = (state as any).controls;
+  } = state.controls;
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    annoMatrix: (state as any).annoMatrix,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    colors: (state as any).colors,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    pointDilation: (state as any).pointDilation,
+    annoMatrix: state.annoMatrix,
+    colors: state.colors,
+    pointDilation: state.pointDilation,
     // Accessors are var/gene names (strings)
     scatterplotXXaccessor,
     scatterplotYYaccessor,
     scatterplotIsMinimized,
     scatterplotLevel,
     crossfilter,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    genesets: (state as any).genesets.genesets,
+    genesets: state.genesets.genesets,
   };
-})
+};
+
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Scatterplot extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -610,7 +605,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
   }
 }
 
-export default Scatterplot;
+export default connect(mapStateToProps)(Scatterplot);
 
 const ScatterplotAxis = React.memo(
   ({

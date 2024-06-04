@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import { Colors } from "@blueprintjs/core";
+import { sidePanelAttributeNameChange } from "./util";
 
 type LassoFunction = (
   svg: d3.Selection<SVGGElement, unknown, HTMLElement, any>
@@ -19,7 +20,8 @@ const Lasso = () => {
 
   // (seve): I really can't seem to correctly type this function with dynamic attributes
   const lasso: LassoFunctionWithAttributes = <LassoFunctionWithAttributes>((
-    svg
+    svg,
+    isSidePanel = false
   ) => {
     const svgNode = svg.node()!;
     let lassoPolygon: [number, number][] | null;
@@ -57,7 +59,10 @@ const Lasso = () => {
 
       lassoPath = g
         .append("path")
-        .attr("data-testid", "lasso-element")
+        .attr(
+          "data-testid",
+          sidePanelAttributeNameChange("lasso-element", isSidePanel)
+        )
         .attr("fill-opacity", 0.1)
         .attr("stroke-dasharray", "3, 3");
 
@@ -128,7 +133,9 @@ const Lasso = () => {
     };
 
     // append a <g> with a rect
-    const g = svg.append("g").attr("class", "lasso-group");
+    const g = svg
+      .append("g")
+      .attr("class", sidePanelAttributeNameChange("lasso-group", isSidePanel));
     const bbox = svgNode.getBoundingClientRect();
     const area = g
       .append("rect")
@@ -161,7 +168,10 @@ const Lasso = () => {
         lassoPolygon = polygon;
         lassoPath = g
           .append("path")
-          .attr("data-testid", "lasso-element")
+          .attr(
+            "data-testid",
+            sidePanelAttributeNameChange("lasso-element", isSidePanel)
+          )
           .attr("fill", lassoPathColor)
           .attr("fill-opacity", 0.1)
           .attr("stroke", lassoPathColor)
