@@ -47,6 +47,10 @@ export const Content = styled.p`
   font-weight: 500;
   color: black;
   ${fontBodyXs}
+  display: "-webkit_box";
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 export const SynHeader = styled.span`

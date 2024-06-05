@@ -1,33 +1,16 @@
-/* Core dependencies */
-import React, { CSSProperties } from "react";
-import { connect } from "react-redux";
+import React from "react";
 
-/* App dependencies */
-import { RootState } from "../../reducers";
 import GeneExpression from "../geneExpression";
-import * as globals from "../../globals";
 import InfoPanel from "../geneExpression/infoPanel";
+import { RightSidebarWrapper } from "./style";
 
-/* Styles */
-export const STYLE_RIGHT_SIDEBAR: CSSProperties = {
-  /* x y blur spread color */
-  borderLeft: `1px solid ${globals.lightGrey}`,
-  display: "flex",
-  flexDirection: "column",
-  height: "inherit",
-  overflowY: "inherit",
-  position: "relative",
-  width: "inherit",
-};
+function RightSidebar() {
+  return (
+    <RightSidebarWrapper>
+      <GeneExpression />
+      <InfoPanel />
+    </RightSidebarWrapper>
+  );
+}
 
-const RightSidebar = () => (
-  <div style={STYLE_RIGHT_SIDEBAR}>
-    <GeneExpression />
-    <InfoPanel />
-  </div>
-);
-
-export default connect((state: RootState) => ({
-  scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
-  scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
-}))(RightSidebar);
+export default RightSidebar;

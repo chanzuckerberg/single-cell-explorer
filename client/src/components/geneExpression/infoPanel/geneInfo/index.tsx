@@ -15,29 +15,10 @@ import {
   MessageDiv,
   CustomIcon,
 } from "./style";
-import { RootState } from "../../../../reducers";
+import { Props, mapStateToProps } from "./types";
+import { useConnect } from "./connect";
 
-interface Props {
-  geneSummary: string;
-  geneName: string;
-  gene: string;
-  geneUrl: string;
-  geneSynonyms: string[];
-  showWarningBanner: boolean;
-  infoError: string;
-}
-
-const mapStateToProps = (state: RootState): Props => ({
-  geneSummary: state.controls.geneSummary,
-  geneName: state.controls.geneName,
-  gene: state.controls.gene,
-  geneUrl: state.controls.geneUrl,
-  geneSynonyms: state.controls.geneSynonyms,
-  showWarningBanner: state.controls.showWarningBanner,
-  infoError: state.controls.infoError,
-});
-
-const GeneInfo = (props: Props) => {
+function GeneInfo(props: Props) {
   const {
     geneSummary,
     geneName,
@@ -48,16 +29,7 @@ const GeneInfo = (props: Props) => {
     showWarningBanner,
   } = props;
 
-  let synonymList;
-  if (geneSynonyms.length > 1) {
-    synonymList = geneSynonyms.join(", ");
-  } else if (geneSynonyms.length === 1) {
-    synonymList = geneSynonyms[0];
-  } else {
-    synonymList = null;
-  }
-
-  console.log(gene);
+  const { synonymList } = useConnect({ geneSynonyms });
 
   return (
     <GeneInfoWrapper id="geneinfo_wrapper" data-testid={`${gene}:gene-info`}>
@@ -110,28 +82,11 @@ const GeneInfo = (props: Props) => {
             <GeneSymbol data-testid="gene-info-symbol">{gene}</GeneSymbol>
             <Content data-testid="gene-info-name">{geneName}</Content>
             {geneSummary === "" ? (
-              <Content
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: "7",
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
+              <Content>
                 This gene does not currently have a summary in NCBI.
               </Content>
             ) : (
-              <Content
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: "7",
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-                data-testid="gene-info-summary"
-              >
-                {geneSummary}
-              </Content>
+              <Content data-testid="gene-info-summary">{geneSummary}</Content>
             )}
             {synonymList ? (
               <p>
@@ -156,6 +111,6 @@ const GeneInfo = (props: Props) => {
       </GeneInfoContainer>
     </GeneInfoWrapper>
   );
-};
+}
 
 export default connect(mapStateToProps)(GeneInfo);

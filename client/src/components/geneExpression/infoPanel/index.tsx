@@ -1,7 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup } from "@blueprintjs/core";
-import { AppDispatch, RootState } from "../../../reducers";
 import {
   CollapseToggle,
   InfoPanelContent,
@@ -12,15 +11,9 @@ import {
 } from "./style";
 import GeneInfo from "./geneInfo";
 import DatasetInfo from "./datasetInfo";
+import { Props, mapStateToProps } from "./types";
 
-interface Props {
-  activeTab: string;
-  dispatch: AppDispatch;
-  infoPanelMinimized: boolean;
-  infoPanelHidden: boolean;
-}
-
-const InfoPanel = (props: Props) => {
+function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
 
   return (
@@ -94,11 +87,6 @@ const InfoPanel = (props: Props) => {
       </InfoPanelContent>
     </InfoPanelWrapper>
   );
-};
+}
 
-export default connect((state: RootState) => ({
-  activeTab: state.controls.activeTab,
-  geneIsOpen: state.controls.geneIsOpen,
-  infoPanelMinimized: state.controls.infoPanelMinimized,
-  infoPanelHidden: state.controls.infoPanelHidden,
-}))(InfoPanel);
+export default connect(mapStateToProps)(InfoPanel);
