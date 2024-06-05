@@ -20,6 +20,7 @@ import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 import { shouldShowOpenseadragon } from "../../common/selectors";
+import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -380,7 +381,7 @@ class MenuBar extends React.PureComponent<{}, State> {
               style={{
                 cursor: "pointer",
               }}
-              data-testid="capture-and-display-graph"
+              data-testid={GRAPH_AS_IMAGE_TEST_ID}
               data-chromatic="ignore"
               loading={screenCap}
               onClick={() => dispatch({ type: "test: screencap start" })}
