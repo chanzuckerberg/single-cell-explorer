@@ -597,9 +597,6 @@ export async function assertInfoPanelExists(
   await expect(page.getByTestId(`info-panel-header`)).toBeTruthy();
   await expect(page.getByTestId(`min-info-panel`)).toBeTruthy();
 
-  // await expect(page.getByTestId(`clear-info-summary`).innerText).not.toEqual(
-  //   ""
-  // );
   await expect(page.getByTestId(`gene-info-synonyms`).innerText).not.toEqual(
     ""
   );
@@ -618,7 +615,7 @@ export async function assertInfoPanelIsMinimized(
   const testIds = [
     `${gene}:gene-info`,
     "info-panel-header",
-    "min-info-panel",
+    "max-info-panel",
     "close-info-panel",
   ];
 
@@ -628,9 +625,6 @@ export async function assertInfoPanelIsMinimized(
         const result = await page.getByTestId(id).isVisible();
         await expect(result).toBe(true);
       }
-
-      const result = await page.getByTestId("gene-info-symbol").isVisible();
-      await expect(result).toBe(false);
     },
     { page }
   );

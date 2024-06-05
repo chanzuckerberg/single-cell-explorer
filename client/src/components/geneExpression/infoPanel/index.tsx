@@ -55,7 +55,9 @@ function InfoPanel(props: Props) {
           >
             <AnchorButton
               active={false}
-              data-testid="min-info-panel"
+              data-testid={
+                infoPanelMinimized ? "max-info-panel" : "min-info-panel"
+              }
               minimal
               text=""
               rightIcon={infoPanelMinimized ? "chevron-up" : "chevron-down"}
