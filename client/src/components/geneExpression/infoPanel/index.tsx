@@ -21,7 +21,7 @@ function InfoPanel(props: Props) {
       isHidden={infoPanelHidden}
       isMinimized={infoPanelMinimized}
     >
-      <InfoPanelHeader>
+      <InfoPanelHeader data-testid="info-panel-header">
         <InfoPanelTabs>
           <StyledAnchorButton
             className={activeTab === "Gene" ? "active" : ""}
@@ -55,7 +55,7 @@ function InfoPanel(props: Props) {
           >
             <AnchorButton
               active={false}
-              data-testid="menu"
+              data-testid="min-info-panel"
               minimal
               text=""
               rightIcon={infoPanelMinimized ? "chevron-up" : "chevron-down"}
@@ -65,7 +65,7 @@ function InfoPanel(props: Props) {
             />
             <AnchorButton
               active={false}
-              data-testid="menu"
+              data-testid="close-info-panel"
               minimal
               text=""
               rightIcon="cross"

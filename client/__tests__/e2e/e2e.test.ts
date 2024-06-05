@@ -40,12 +40,12 @@ import {
   selectCategory,
   addGeneToSetAndExpand,
   requestGeneInfo,
-  assertGeneInfoCardExists,
-  assertGeneInfoCardIsMinimized,
-  minimizeGeneInfo,
-  removeGeneInfo,
+  assertInfoPanelExists,
+  assertInfoPanelIsMinimized,
+  minimizeInfoPanel,
+  closeInfoPanel,
   addGeneToSearch,
-  assertGeneInfoDoesNotExist,
+  assertInfoPanelClosed,
   waitUntilNoSkeletonDetected,
   checkGenesetDescription,
   assertUndoRedo,
@@ -997,9 +997,7 @@ for (const testDataset of testDatasets) {
           );
         });
 
-        test("open gene info card and hide/remove", async ({
-          page,
-        }, testInfo) => {
+        test("open info panel and hide/remove", async ({ page }, testInfo) => {
           await setup({ option, page, url });
           await addGeneToSearch(geneToRequestInfo, page);
 
@@ -1008,7 +1006,7 @@ for (const testDataset of testDatasets) {
           await tryUntil(
             async () => {
               await requestGeneInfo(geneToRequestInfo, page);
-              await assertGeneInfoCardExists(geneToRequestInfo, page);
+              await assertInfoPanelExists(geneToRequestInfo, page);
             },
             { page }
           );
@@ -1017,8 +1015,8 @@ for (const testDataset of testDatasets) {
 
           await tryUntil(
             async () => {
-              await minimizeGeneInfo(page);
-              await assertGeneInfoCardIsMinimized(geneToRequestInfo, page);
+              await minimizeInfoPanel(page);
+              await assertInfoPanelIsMinimized(geneToRequestInfo, page);
             },
             { page }
           );
@@ -1027,8 +1025,8 @@ for (const testDataset of testDatasets) {
 
           await tryUntil(
             async () => {
-              await removeGeneInfo(page);
-              await assertGeneInfoDoesNotExist(geneToRequestInfo, page);
+              await closeInfoPanel(page);
+              await assertInfoPanelClosed(geneToRequestInfo, page);
             },
             { page }
           );
