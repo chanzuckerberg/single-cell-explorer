@@ -15,36 +15,10 @@ import {
   MessageDiv,
   CustomIcon,
 } from "./style";
-<<<<<<< HEAD
 import { Props, mapStateToProps } from "./types";
 import { useConnect } from "./connect";
 
 function GeneInfo(props: Props) {
-=======
-import { RootState } from "../../../../reducers";
-
-interface Props {
-  geneSummary: string;
-  geneName: string;
-  gene: string;
-  geneUrl: string;
-  geneSynonyms: string[];
-  showWarningBanner: boolean;
-  infoError: string;
-}
-
-const mapStateToProps = (state: RootState): Props => ({
-  geneSummary: state.controls.geneSummary,
-  geneName: state.controls.geneName,
-  gene: state.controls.gene,
-  geneUrl: state.controls.geneUrl,
-  geneSynonyms: state.controls.geneSynonyms,
-  showWarningBanner: state.controls.showWarningBanner,
-  infoError: state.controls.infoError,
-});
-
-const GeneInfo = (props: Props) => {
->>>>>>> 238db020 (done all but tests)
   const {
     geneSummary,
     geneName,
@@ -55,20 +29,7 @@ const GeneInfo = (props: Props) => {
     showWarningBanner,
   } = props;
 
-<<<<<<< HEAD
   const { synonymList } = useConnect({ geneSynonyms });
-=======
-  let synonymList;
-  if (geneSynonyms.length > 1) {
-    synonymList = geneSynonyms.join(", ");
-  } else if (geneSynonyms.length === 1) {
-    synonymList = geneSynonyms[0];
-  } else {
-    synonymList = null;
-  }
-
-  console.log(gene);
->>>>>>> 238db020 (done all but tests)
 
   return (
     <GeneInfoWrapper id="geneinfo_wrapper" data-testid={`${gene}:gene-info`}>
@@ -121,36 +82,11 @@ const GeneInfo = (props: Props) => {
             <GeneSymbol data-testid="gene-info-symbol">{gene}</GeneSymbol>
             <Content data-testid="gene-info-name">{geneName}</Content>
             {geneSummary === "" ? (
-<<<<<<< HEAD
               <Content>
                 This gene does not currently have a summary in NCBI.
               </Content>
             ) : (
               <Content data-testid="gene-info-summary">{geneSummary}</Content>
-=======
-              <Content
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: "7",
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-              >
-                This gene does not currently have a summary in NCBI.
-              </Content>
-            ) : (
-              <Content
-                style={{
-                  display: "-webkit-box",
-                  WebkitLineClamp: "7",
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
-                }}
-                data-testid="gene-info-summary"
-              >
-                {geneSummary}
-              </Content>
->>>>>>> 238db020 (done all but tests)
             )}
             {synonymList ? (
               <p>
@@ -175,10 +111,6 @@ const GeneInfo = (props: Props) => {
       </GeneInfoContainer>
     </GeneInfoWrapper>
   );
-<<<<<<< HEAD
 }
-=======
-};
->>>>>>> 238db020 (done all but tests)
 
 export default connect(mapStateToProps)(GeneInfo);
