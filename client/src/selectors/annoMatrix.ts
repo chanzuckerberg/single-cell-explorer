@@ -1,17 +1,17 @@
 /* App dependencies */
+import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { AnnotationColumnSchema } from "../common/types/schema";
-import { RootState } from "../reducers";
+import { type RootState } from "../reducers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- update typings once annoMatrix reducer state is typed.
-export const selectAnnoMatrix = (state: RootState): any => state.annoMatrix;
+export const selectAnnoMatrix = (state: RootState): AnnoMatrix =>
+  state.annoMatrix;
 
 /*
  Returns true if user defined category has been created indicating work is in progress.
  @param annoMatrix from state
  @returns boolean
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- update typings once annoMatrix reducer state is typed.
-export const selectIsUserStateDirty = (state: any): boolean => {
+export const selectIsUserStateDirty = (state: RootState): boolean => {
   const annoMatrix = selectAnnoMatrix(state);
 
   return Boolean(
@@ -20,3 +20,8 @@ export const selectIsUserStateDirty = (state: any): boolean => {
     )
   );
 };
+
+export function selectSchema(state: RootState) {
+  const annoMatrix = selectAnnoMatrix(state);
+  return annoMatrix?.schema;
+}

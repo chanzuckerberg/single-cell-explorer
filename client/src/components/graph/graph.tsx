@@ -1,18 +1,20 @@
 import React, { MouseEvent, MouseEventHandler } from "react";
 import * as d3 from "d3";
-import { toPng } from "html-to-image";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as @connect
 import { connect, shallowEqual } from "react-redux";
-import { ReadonlyMat3, mat3, vec2 } from "gl-matrix";
-import _regl, { DrawCommand, Regl, TextureImageData } from "regl";
+import { mat3, vec2 } from "gl-matrix";
+import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async from "react-async";
-import { Button } from "@blueprintjs/core";
+import { Button, Icon } from "@blueprintjs/core";
 
+import Openseadragon, { Viewer } from "openseadragon";
+
+import { throttle } from "lodash";
+import { IconNames } from "@blueprintjs/icons";
 import { setupBrush, setupLasso } from "./setupSVGandBrush";
 import _camera, { Camera } from "../../util/camera";
 import _drawPoints from "./drawPointsRegl";
-import _drawSpatialImage from "./drawSpatialImageRegl";
 import {
   createColorTable,
   createColorQuery,
@@ -24,85 +26,45 @@ import GraphOverlayLayer from "./overlays/graphOverlayLayer";
 import CentroidLabels from "./overlays/centroidLabels";
 import actions from "../../actions";
 import renderThrottle from "../../util/renderThrottle";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
+
 import {
   flagBackground,
   flagSelected,
   flagHighlight,
 } from "../../util/glHelpers";
+
 import { Dataframe } from "../../util/dataframe";
 import { RootState } from "../../reducers";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { Field } from "../../common/types/schema";
 import { Query } from "../../annoMatrix/query";
-import { DatasetUnsMetadata } from "../../common/types/entities";
-import { LayoutChoiceState } from "../../reducers/layoutChoice";
-import { captureLegend, createModelTF, createProjectionTF } from "./util";
 
-type GraphState = {
-  regl: Regl | null;
-  drawPoints: DrawCommand | null;
-  colorBuffer: _regl.Buffer | null;
-  pointBuffer: _regl.Buffer | null;
-  flagBuffer: _regl.Buffer | null;
-  camera: Camera | null;
-  projectionTF: mat3;
-  tool: LassoFunctionWithAttributes | d3.BrushBehavior<unknown> | null;
-  container: d3.Selection<SVGGElement, unknown, HTMLElement, any> | null;
-  // used?
-  updateOverlay: boolean;
-  toolSVG: d3.Selection<SVGGElement, number, HTMLElement, any> | null;
-  viewport: { width: number; height: number };
-  layoutState: {
-    layoutDf: Dataframe | null;
-    layoutChoice: string | null;
-  };
-  colorState: {
-    colors: string[] | null;
-    colorDf: Dataframe | null;
-    colorTable: Dataframe | null;
-  };
-  pointDilationState: {
-    pointDilation: string | null;
-    pointDilationDf: Dataframe | null;
-  };
-  modelTF: ReadonlyMat3;
-  modelInvTF: ReadonlyMat3;
-  testImageSrc: string | null;
-  drawSpatialImage: DrawCommand | null;
-};
+import {
+  captureLegend,
+  createModelTF,
+  createProjectionTF,
+  downloadImage,
+  getSpatialPrefixUrl,
+  getSpatialTileSources,
+  loadImage,
+} from "./util";
+
+import { COMMON_CANVAS_STYLE } from "./constants";
+import { THROTTLE_MS } from "../../util/constants";
+import { GraphProps, GraphState } from "./types";
+import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
+import { fetchDeepZoomImageFailed } from "../../actions/config";
+
 interface GraphAsyncProps {
   positions: Float32Array;
   colors: Float32Array;
   flags: Float32Array;
   width: number;
   height: number;
-  spatial: DatasetUnsMetadata;
   imageUnderlay: boolean;
   screenCap: boolean;
 }
 
-function downloadImage(
-  imageURI: string,
-  layoutChoice?: LayoutChoiceState
-): void {
-  const a = document.createElement("a");
-  a.href = imageURI;
-  a.download = layoutChoice
-    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
-    : "CELLxGENE_legend.png";
-  a.style.display = "none";
-  document.body.append(a);
-  a.click();
-  // Revoke the blob URL and remove the element.
-  setTimeout(() => {
-    URL.revokeObjectURL(imageURI);
-    a.remove();
-  }, 1000);
-}
-
-type GraphProps = Partial<RootState>;
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state: RootState) => ({
   annoMatrix: state.annoMatrix,
@@ -117,7 +79,7 @@ type GraphProps = Partial<RootState>;
   screenCap: state.controls.screenCap,
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
-  spatial: state.controls.unsMetadata.spatial,
+  config: state.config,
 }))
 class Graph extends React.Component<GraphProps, GraphState> {
   static createReglState(canvas: HTMLCanvasElement): {
@@ -127,7 +89,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     pointBuffer: _regl.Buffer;
     colorBuffer: _regl.Buffer;
     flagBuffer: _regl.Buffer;
-    drawSpatialImage: DrawCommand;
   } {
     /*
         Must be created for each canvas
@@ -136,11 +97,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const camera = _camera(canvas);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
-    const drawSpatialImage = _drawSpatialImage(regl);
+
     // preallocate webgl buffers
     const pointBuffer = regl.buffer(0);
     const colorBuffer = regl.buffer(0);
     const flagBuffer = regl.buffer(0);
+
     return {
       camera,
       regl,
@@ -148,17 +110,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointBuffer,
       colorBuffer,
       flagBuffer,
-      drawSpatialImage,
     };
   }
 
   static watchAsync(props: GraphProps, prevProps: GraphProps): boolean {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
-
-  isSpatial = false;
-
-  spatialImage: TextureImageData | null = null;
 
   /**
    * (thuang): This prevents re-rendering causes a second image download
@@ -172,6 +129,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
   cachedAsyncProps: GraphAsyncProps | null;
 
   reglCanvas: HTMLCanvasElement | null;
+
+  private openseadragon: Viewer | null = null;
+
+  throttledHandleResize: () => void;
 
   computePointPositions = memoize((X, Y, modelTF) => {
     /*
@@ -275,14 +236,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
       camera: null,
       modelTF,
       modelInvTF: mat3.invert(mat3.create(), modelTF),
-      projectionTF: createProjectionTF(viewport.width, viewport.height),
+      projectionTF: createProjectionTF({
+        viewportWidth: viewport.width,
+        viewportHeight: viewport.height,
+        isSpatialMode: isSpatialMode(props),
+      }),
       // regl state
       regl: null,
       drawPoints: null,
       pointBuffer: null,
       colorBuffer: null,
       flagBuffer: null,
-      drawSpatialImage: null,
       // component rendering derived state - these must stay synchronized
       // with the reducer state they were generated from.
       layoutState: {
@@ -300,12 +264,19 @@ class Graph extends React.Component<GraphProps, GraphState> {
       },
       updateOverlay: false,
       testImageSrc: null,
+      isImageLayerInViewport: true,
     };
+
+    this.throttledHandleResize = throttle(
+      this.handleResize.bind(this),
+      THROTTLE_MS,
+      { trailing: true }
+    );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   componentDidMount() {
-    window.addEventListener("resize", this.handleResize);
+    window.addEventListener("resize", this.throttledHandleResize);
+
     if (this.graphRef.current) {
       this.graphRef.current.addEventListener("wheel", this.disableScroll, {
         passive: false,
@@ -314,13 +285,24 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
-    const { selectionTool, currentSelection, graphInteractionMode, screenCap } =
-      this.props;
+    const {
+      selectionTool,
+      currentSelection,
+      graphInteractionMode,
+      screenCap,
+      imageUnderlay,
+      layoutChoice,
+    } = this.props;
+
     const { toolSVG, viewport } = this.state;
+
     const hasResized =
       prevState.viewport.height !== viewport.height ||
       prevState.viewport.width !== viewport.width;
+
     let stateChanges: Partial<GraphState> = {};
+
+    this.updateOpenSeadragon();
 
     if (prevProps.screenCap !== screenCap) {
       stateChanges = {
@@ -357,10 +339,31 @@ class Graph extends React.Component<GraphProps, GraphState> {
     if (Object.keys(stateChanges).length > 0) {
       this.setState((state) => ({ ...state, ...stateChanges }));
     }
+
+    if (
+      shouldShowOpenseadragon(prevProps) &&
+      !shouldShowOpenseadragon(this.props)
+    ) {
+      this.destroyOpenseadragon();
+    }
+
+    if (prevProps.imageUnderlay && !imageUnderlay) {
+      this.hideOpenseadragon();
+    }
+
+    if (!prevProps.imageUnderlay && imageUnderlay) {
+      this.showOpenseadragon();
+    }
+
+    // Re-center when switching embedding mode
+    if (prevProps.layoutChoice.current !== layoutChoice.current) {
+      this.handleResize();
+    }
   }
 
   componentWillUnmount(): void {
-    window.removeEventListener("resize", this.handleResize);
+    window.removeEventListener("resize", this.throttledHandleResize);
+
     if (this.graphRef.current) {
       this.graphRef.current.removeEventListener("wheel", this.disableScroll);
     }
@@ -368,24 +371,40 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   handleResize = (): void => {
     const viewport = this.getViewportDimensions();
-    const projectionTF = createProjectionTF(viewport.width, viewport.height);
+    const projectionTF = createProjectionTF({
+      viewportWidth: viewport.width,
+      viewportHeight: viewport.height,
+      isSpatialMode: isSpatialMode(this.props),
+    });
+
     this.setState((state) => ({
       ...state,
       viewport,
       projectionTF,
     }));
+
+    this.handleGoHome();
+  };
+
+  handleGoHome = () => {
+    const { camera } = this.state;
+
+    camera?.goHome(this.openseadragon);
+    this.renderCanvas();
   };
 
   handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
     const { camera, projectionTF } = this.state;
     if (e.type !== "wheel") e.preventDefault();
+
     if (
       camera?.handleEvent(
         e as unknown as MouseEvent<
           HTMLCanvasElement,
           MouseEvent<Element, MouseEvent>
         >,
-        projectionTF
+        projectionTF,
+        this.openseadragon
       )
     ) {
       this.renderCanvas();
@@ -419,7 +438,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const [minX, maxY] = northwest;
     const [maxX, minY] = southeast;
     dispatch(
-      actions.graphBrushChangeAction(layoutChoice.current, {
+      actions.graphBrushChangeAction(layoutChoice?.current, {
         minX,
         minY,
         maxX,
@@ -453,7 +472,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const [minX, maxY] = northwest;
       const [maxX, minY] = southeast;
       dispatch(
-        actions.graphBrushEndAction(layoutChoice.current, {
+        actions.graphBrushEndAction(layoutChoice?.current, {
           minX,
           minY,
           maxX,
@@ -463,13 +482,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
         })
       );
     } else {
-      dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
+      dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
     }
   }
 
   handleBrushDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphBrushDeselectAction(layoutChoice.current));
+    dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
   }
 
   handleLassoStart(): void {
@@ -486,11 +505,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
     ) {
       // if less than three points, or super small area, treat as a clear selection.
-      dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
+      dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
       dispatch(
         actions.graphLassoEndAction(
-          layoutChoice.current,
+          layoutChoice?.current,
           polygon.map((xy) => this.mapScreenToPoint(xy))
         )
       );
@@ -499,18 +518,121 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   handleLassoCancel(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoCancelAction(layoutChoice.current));
+    dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
   }
 
   handleLassoDeselectAction(): void {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoDeselectAction(layoutChoice.current));
+    dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
   }
 
   handleDeselectAction(): void {
     const { selectionTool } = this.props;
     if (selectionTool === "brush") this.handleBrushDeselectAction();
     if (selectionTool === "lasso") this.handleLassoDeselectAction();
+  }
+
+  async handleImageDownload(regl: GraphState["regl"]) {
+    const { dispatch, screenCap, mountCapture, layoutChoice, colors } =
+      this.props;
+
+    if (!this.reglCanvas || !screenCap || !regl || this.isDownloadingImage) {
+      return;
+    }
+
+    const { width, height } = this.reglCanvas;
+
+    /**
+     * (thuang): This prevents re-rendering causes a second image download
+     */
+    this.isDownloadingImage = true;
+
+    const graphCanvas = regl._gl.canvas as HTMLCanvasElement;
+
+    // Create an offscreen canvas
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = width;
+    offscreenCanvas.height = height;
+
+    const canvasContext = offscreenCanvas.getContext("2d");
+
+    if (!canvasContext) {
+      console.error("Failed to get 2D context for the offscreen canvas");
+      this.isDownloadingImage = false;
+      return;
+    }
+
+    try {
+      const graphDataURL = graphCanvas.toDataURL();
+
+      // Load both data URLs into image objects
+      const graphImage = await loadImage(graphDataURL);
+
+      // Fill the offscreen canvas with a white background
+      canvasContext.fillStyle = "white";
+      canvasContext.fillRect(
+        0,
+        0,
+        offscreenCanvas.width,
+        offscreenCanvas.height
+      );
+
+      /**
+       * (thuang): This has to be done before the graph image is drawn,
+       * so that the graph image is drawn on top of the OpenSeadragon image.
+       */
+      await this.drawImageLayerForDownload({ offscreenCanvas, canvasContext });
+
+      // Draw the graph image on top, ensuring it covers the entire canvas
+      canvasContext.drawImage(
+        graphImage,
+        0,
+        0,
+        offscreenCanvas.width,
+        offscreenCanvas.height
+      );
+
+      const graphImageURI = offscreenCanvas.toDataURL("image/png");
+
+      if (mountCapture) {
+        this.setState(({ testImageSrc }) => ({
+          /**
+           * (thuang): We want to remove the test image if there's already one
+           */
+          testImageSrc: testImageSrc ? null : graphImageURI,
+        }));
+
+        dispatch({ type: "test: screencap end" });
+      } else {
+        downloadImage(graphImageURI, layoutChoice);
+
+        let categoricalLegendImageURI: string | null = null;
+
+        // without this, the legend is drawn offscreen
+        const PADDING_PX = 100;
+
+        categoricalLegendImageURI = await captureLegend(
+          colors,
+          canvasContext,
+          PADDING_PX,
+          categoricalLegendImageURI
+        );
+
+        if (categoricalLegendImageURI) {
+          downloadImage(categoricalLegendImageURI);
+        }
+
+        dispatch({ type: "graph: screencap end" });
+      }
+
+      this.isDownloadingImage = false;
+    } catch (error) {
+      console.error(
+        "Failed to load images or generate the final image:",
+        error
+      );
+      this.isDownloadingImage = false;
+    }
   }
 
   disableScroll = (event: WheelEvent): void => {
@@ -618,15 +740,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
-      spatial,
     } = props.watchProps;
+
     const { modelTF } = this.state;
+
     const [layoutDf, colorDf, pointDilationDf] = await this.fetchData(
       annoMatrix,
       layoutChoice,
       colorsProp,
       pointDilation
     );
+
     const { currentDimNames } = layoutChoice;
 
     const X = layoutDf.col(currentDimNames[0]).asArray();
@@ -635,13 +759,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const positions = this.computePointPositions(X, Y, modelTF);
     const colorTable = this.updateColorTable(colorsProp, colorDf);
     const colorByData = colorDf?.icol(0)?.asArray();
+
     const {
       metadataField: pointDilationCategory,
       categoryField: pointDilationLabel,
     } = pointDilation;
+
     const pointDilationData = pointDilationDf
       ?.col(pointDilationCategory)
       ?.asArray();
+
     const flags = this.computePointFlags(
       crossfilter,
       colorByData,
@@ -649,16 +776,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       pointDilationLabel
     );
 
-    this.isSpatial = getFeatureFlag(FEATURES.SPATIAL);
-
-    this.spatialImage =
-      this.isSpatial && spatial.image
-        ? await this.loadTextureFromProp(
-            `data:image/webp;base64,${spatial.image}`
-          )
-        : null;
-
     const { width, height } = viewport;
+
     return {
       positions,
       colors: colorTable.rgb,
@@ -667,9 +786,46 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
-      spatial,
     };
   };
+
+  async drawImageLayerForDownload({
+    offscreenCanvas,
+    canvasContext,
+  }: {
+    offscreenCanvas: HTMLCanvasElement;
+    canvasContext: CanvasRenderingContext2D;
+  }) {
+    if (!this.openseadragon) return;
+
+    const imageCanvas = this.openseadragon.drawer.canvas as HTMLCanvasElement;
+
+    const imageDataURL = imageCanvas.toDataURL();
+
+    const image = await loadImage(imageDataURL);
+
+    // Calculate aspect ratio
+    const aspectRatio = image.width / image.height;
+    let targetWidth;
+    let targetHeight;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    if (offscreenCanvas.width / offscreenCanvas.height > aspectRatio) {
+      // Fit by height
+      targetHeight = offscreenCanvas.height;
+      targetWidth = targetHeight * aspectRatio;
+      offsetX = (offscreenCanvas.width - targetWidth) / 2;
+    } else {
+      // Fit by width
+      targetWidth = offscreenCanvas.width;
+      targetHeight = targetWidth / aspectRatio;
+      offsetY = (offscreenCanvas.height - targetHeight) / 2;
+    }
+
+    // Draw the OpenSeadragon image as background with proper scaling
+    canvasContext.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
+  }
 
   async fetchData(
     annoMatrix: RootState["annoMatrix"],
@@ -690,7 +846,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
-      annoMatrix.fetch("emb", layoutChoice.current, globals.numBinsEmb),
+      annoMatrix.fetch("emb", layoutChoice?.current, globals.numBinsEmb),
       query
         ? annoMatrix.fetch(...query, globals.numBinsObsX)
         : Promise.resolve(null),
@@ -826,7 +982,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     ];
   }
 
-  renderCanvas = renderThrottle(() => {
+  renderCanvas = renderThrottle(async () => {
     const {
       regl,
       drawPoints,
@@ -835,17 +991,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
       flagBuffer,
       camera,
       projectionTF,
-      drawSpatialImage,
     } = this.state;
-    this.renderPoints(
+
+    await this.renderPoints(
       regl,
       drawPoints,
       colorBuffer,
       pointBuffer,
       flagBuffer,
       camera,
-      projectionTF,
-      drawSpatialImage
+      projectionTF
     );
   });
 
@@ -929,6 +1084,107 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
+  updateOpenSeadragon() {
+    const {
+      viewport: { width, height },
+    } = this.state;
+
+    const {
+      config: { s3URI },
+    } = this.props;
+
+    if (
+      this.openseadragon ||
+      !shouldShowOpenseadragon(this.props) ||
+      !width ||
+      !height
+    ) {
+      return;
+    }
+
+    this.openseadragon = Openseadragon({
+      // (thuang): This id will need to be unique for multiple graphs
+      id: "openseadragon",
+      prefixUrl: getSpatialPrefixUrl(s3URI),
+      tileSources: getSpatialTileSources(s3URI),
+      showNavigationControl: false,
+      /**
+       * (thuang): This is needed to prevent error `tainted canvas` when downloading the image
+       */
+      crossOriginPolicy: "Anonymous",
+    });
+
+    /**
+     * (thuang): Remove the openseadragon element when the image fails to load,
+     * likely because the image is not found in the S3 bucket.
+     */
+    this.openseadragon.addHandler("open-failed", () => {
+      const { dispatch } = this.props;
+
+      dispatch(fetchDeepZoomImageFailed());
+    });
+
+    this.openseadragon.addHandler(
+      "viewport-change",
+      /**
+       * (thuang): Binding `this` to the function to access the openseadragon instance
+       */
+      this.checkIsImageLayerInViewport.bind(this)
+    );
+  }
+
+  destroyOpenseadragon() {
+    this.openseadragon?.destroy();
+    this.openseadragon = null;
+  }
+
+  hideOpenseadragon() {
+    if (!this.openseadragon) return;
+
+    const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
+
+    tiledImage?.setOpacity(0);
+  }
+
+  showOpenseadragon() {
+    if (!this.openseadragon) return;
+
+    const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
+
+    tiledImage?.setOpacity(1);
+  }
+
+  checkIsImageLayerInViewport() {
+    if (!this.openseadragon) return;
+
+    const bounds = this.openseadragon.world.getItemAt(0)?.getBounds();
+    const viewportBounds = this.openseadragon.viewport?.getBounds();
+
+    if (!bounds || !viewportBounds) return;
+
+    const imageOutsideViewport =
+      bounds.x > viewportBounds.x + viewportBounds.width ||
+      bounds.x + bounds.width < viewportBounds.x ||
+      bounds.y > viewportBounds.y + viewportBounds.height ||
+      bounds.y + bounds.height < viewportBounds.y;
+
+    if (imageOutsideViewport) {
+      this.setState((state) =>
+        state.isImageLayerInViewport
+          ? { ...state, isImageLayerInViewport: false }
+          : state
+      );
+
+      return;
+    }
+
+    this.setState((state) =>
+      state.isImageLayerInViewport
+        ? state
+        : { ...state, isImageLayerInViewport: true }
+    );
+  }
+
   async renderPoints(
     regl: GraphState["regl"],
     drawPoints: GraphState["drawPoints"],
@@ -936,21 +1192,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
     pointBuffer: GraphState["pointBuffer"],
     flagBuffer: GraphState["flagBuffer"],
     camera: GraphState["camera"],
-    projectionTF: GraphState["projectionTF"],
-    drawSpatialImage: GraphState["drawSpatialImage"]
+    projectionTF: GraphState["projectionTF"]
   ): Promise<void> {
-    const {
-      annoMatrix,
-      dispatch,
-      screenCap,
-      mountCapture,
-      layoutChoice,
-      imageUnderlay,
-      spatial,
-      colors,
-    } = this.props;
+    const { annoMatrix } = this.props;
+
     if (!this.reglCanvas || !annoMatrix) return;
+
     const { schema } = annoMatrix;
+
     const cameraTF = camera?.view();
 
     const projView = mat3.multiply(
@@ -961,10 +1210,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { width, height } = this.reglCanvas;
 
     regl?.poll();
-    regl?.clear({
-      depth: 1,
-      color: [1, 1, 1, 1],
-    });
 
     if (drawPoints) {
       drawPoints({
@@ -978,73 +1223,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
         minViewportDimension: Math.min(width, height),
       });
     }
-    if (
-      imageUnderlay &&
-      drawSpatialImage &&
-      layoutChoice.current === "spatial" &&
-      this.isSpatial &&
-      spatial &&
-      this.spatialImage
-    ) {
-      const imW = spatial.imageWidth;
-      const imH = spatial.imageHeight;
-      drawSpatialImage({
-        projView,
-        imageWidth: imW,
-        imageHeight: imH,
-        rectCoords: [0, 0, imW, 0, 0, imH, 0, imH, imW, 0, imW, imH],
-        spatialImageAsTexture: regl?.texture({
-          data: this.spatialImage,
-          wrapS: "clamp",
-          wrapT: "clamp",
-        }),
-      });
-    }
 
-    if (screenCap && regl && !this.isDownloadingImage) {
-      /**
-       * (thuang): This prevents re-rendering causes a second image download
-       */
-      this.isDownloadingImage = true;
-
-      const graph = regl._gl.canvas;
-
-      // without this, the legend is drawn offscreen
-      const PADDING = 100;
-
-      const offscreenCanvas = document.createElement("canvas");
-      offscreenCanvas.width = width;
-      offscreenCanvas.height = height;
-
-      const ctx = offscreenCanvas.getContext("2d");
-      ctx?.drawImage(graph, 0, 0);
-
-      let categoricalLegendImageURI: string | null = null;
-
-      categoricalLegendImageURI = await captureLegend(
-        colors,
-        ctx,
-        PADDING,
-        categoricalLegendImageURI
-      );
-
-      const graphImageURI = await toPng(offscreenCanvas, {
-        backgroundColor: "white",
-        height,
-        width,
-        // the library is having issues with loading bp3 icons, its checking `/static/static/images` for some reason
-        skipFonts: true,
-      });
-      if (mountCapture) {
-        this.setState({ testImageSrc: graphImageURI });
-        dispatch({ type: "test: screencap end" });
-      } else {
-        downloadImage(graphImageURI, layoutChoice);
-        if (categoricalLegendImageURI) downloadImage(categoricalLegendImageURI);
-        dispatch({ type: "graph: screencap end" });
-      }
-      this.isDownloadingImage = false;
-    }
+    await this.handleImageDownload(regl);
 
     regl?._gl.flush();
   }
@@ -1061,22 +1241,53 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay,
       spatial,
     } = this.props;
-    const { modelTF, projectionTF, camera, viewport, regl, testImageSrc } =
-      this.state;
+
+    const {
+      modelTF,
+      projectionTF,
+      camera,
+      viewport,
+      regl,
+      testImageSrc,
+      isImageLayerInViewport,
+    } = this.state;
+
     const cameraTF = camera?.view()?.slice();
 
     return (
       <div
         id="graph-wrapper"
         style={{
-          position: "relative",
           top: 0,
+          position: "relative",
           left: 0,
+          flexDirection: "column",
+          display: "flex",
+          alignItems: "center",
         }}
         data-testid="graph-wrapper"
         data-camera-distance={camera?.distance()}
         ref={this.graphRef}
       >
+        {isSpatialMode(this.props) && isImageLayerInViewport === false && (
+          <Button
+            onClick={this.handleGoHome}
+            type="button"
+            style={{
+              justifyContent: "center",
+              width: "fit-content",
+              zIndex: 3,
+              marginTop: "60px",
+            }}
+          >
+            <Icon
+              icon={IconNames.LOCATE}
+              style={{ marginLeft: "0", marginRight: "4px" }}
+            />
+            Re-center Embedding
+          </Button>
+        )}
+
         <GraphOverlayLayer
           /**  @ts-expect-error TODO: type GraphOverlayLayer**/
           width={viewport.width}
@@ -1104,15 +1315,25 @@ class Graph extends React.Component<GraphProps, GraphState> {
           height={viewport.height}
           pointerEvents={graphInteractionMode === "select" ? "auto" : "none"}
         />
+        {shouldShowOpenseadragon(this.props) && (
+          <div
+            id="openseadragon"
+            style={{
+              width: viewport.width,
+              height: viewport.height,
+              /**
+               * (thuang): Copied from the style of the graph-canvas element
+               * to ensure both openseadragon and the canvas are resizable
+               */
+              ...COMMON_CANVAS_STYLE,
+            }}
+          />
+        )}
         <canvas
           width={viewport.width}
           height={viewport.height}
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            padding: 0,
-            margin: 0,
+            ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
           }}
           className="graph-canvas"
@@ -1128,13 +1349,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
           <img
             width={viewport.width}
             height={viewport.height}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              padding: 0,
-              margin: 0,
-            }}
+            style={
+              /**
+               * (thuang): Copied from the style of the graph-canvas element
+               * to ensure both openseadragon and the canvas are resizable
+               */
+              COMMON_CANVAS_STYLE
+            }
             alt=""
             data-testid="graph-image"
             src={testImageSrc}
@@ -1157,7 +1378,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         >
           <Async.Pending initial>
             <StillLoading
-              displayName={layoutChoice.current}
+              displayName={layoutChoice?.current}
               width={viewport.width}
               height={viewport.height}
             />
@@ -1165,7 +1386,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           <Async.Rejected>
             {(error) => (
               <ErrorLoading
-                displayName={layoutChoice.current}
+                displayName={layoutChoice?.current}
                 error={error}
                 width={viewport.width}
                 height={viewport.height}
@@ -1245,4 +1466,5 @@ const StillLoading = ({ displayName, width, height }: StillLoadingProps) => (
     </div>
   </div>
 );
+
 export default Graph;

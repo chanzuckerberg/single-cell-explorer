@@ -312,7 +312,7 @@ export default abstract class AnnoMatrix {
     Primary use is to being a cache load as early as is possible, reducing
     overall component rendering latency.
 		*/
-    this._fetch(field, q, nBins);
+    this._fetch(field, q, nBins).catch((error) => console.error(error));
   }
 
   /**

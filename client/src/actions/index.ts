@@ -16,12 +16,7 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type {
-  DatasetMetadata,
-  Dataset,
-  S3URI,
-  DatasetUnsMetadata,
-} from "../common/types/entities";
+import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -34,8 +29,10 @@ import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
-import { checkFeatureFlags } from "../util/featureFlags/featureFlags";
+
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import { getBestDefaultLayout } from "../reducers/layoutChoice";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -131,30 +128,6 @@ async function datasetMetadataFetchAndLoad(
   });
 }
 
-/**
- * Fetches and loads dataset spatial metadata.
- * @param dispatch - Function facilitating update of store.
- */
-async function datasetUnsMetadataFetchAndLoad(
-  dispatch: AppDispatch,
-  metadataKey: string
-): Promise<void> {
-  try {
-    const datasetUnsMetadataResponse = await fetchJson<{
-      metadata: DatasetUnsMetadata;
-    }>(`uns/meta?key=${metadataKey}`);
-    dispatch({
-      type: "request uns metadata success",
-      data: datasetUnsMetadataResponse,
-    });
-  } catch (error) {
-    dispatch({
-      type: "request uns metadata error",
-      error,
-    });
-  }
-}
-
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -203,14 +176,13 @@ const doInitialDataLoad = (): ((
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
-    if (!globals.API) throw new Error("API not set");
 
-    // check URL for feature flags
-    checkFeatureFlags();
+    if (!globals.API) throw new Error("API not set");
 
     try {
       const s3URI = await s3URIFetch();
       const oldPrefix = globals.updateAPIWithS3(s3URI);
+
       const [config, schema] = await Promise.all([
         configFetchAndLoad(dispatch),
         schemaFetch(),
@@ -218,14 +190,18 @@ const doInitialDataLoad = (): ((
         userColorsFetchAndLoad(dispatch),
       ]);
 
-      datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
-      datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
+      await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
       prefetchEmbeddings(annoMatrix);
 
       const isCellGuideCxg = checkIfCellGuideCxg();
+
+      /**
+       * (thuang + seve) There is room to clean up by moving this to the annoMatrix initialization
+       */
       dispatch({
         type: "annoMatrix: init complete",
         annoMatrix,
@@ -233,17 +209,28 @@ const doInitialDataLoad = (): ((
         isCellGuideCxg,
       });
 
-      // save isCellGuideCxg to the reducer store
-      dispatch({ type: "initial data load complete", isCellGuideCxg });
+      const availableLayouts = selectAvailableLayouts({ annoMatrix });
+      const fallbackLayout = getBestDefaultLayout(availableLayouts);
+      const defaultLayout = config?.parameters?.default_embedding || "";
 
-      const defaultEmbedding = config?.parameters?.default_embedding;
-      const layoutSchema = schema?.schema?.layout?.obs ?? [];
-      if (
-        defaultEmbedding &&
-        layoutSchema.some((s: EmbeddingSchema) => s.name === defaultEmbedding)
-      ) {
-        dispatch(embActions.layoutChoiceAction(defaultEmbedding));
-      }
+      const finalLayout = availableLayouts.includes(defaultLayout)
+        ? defaultLayout
+        : fallbackLayout;
+
+      // save `isCellGuideCxg` and `s3URI` to the reducer store
+      dispatch({
+        type: "initial data load complete",
+        isCellGuideCxg,
+        s3URI,
+        layoutChoice: finalLayout,
+      });
+
+      /**
+       * (thuang): This dispatch is necessary to ensure that we get the right cell
+       * count when the page is first loaded.
+       * BUG: https://github.com/chanzuckerberg/single-cell-explorer/issues/936
+       */
+      await dispatch(embActions.layoutChoiceAction(finalLayout));
     } catch (error) {
       dispatch({ type: "initial data load error", error });
     }
@@ -292,12 +279,12 @@ const dispatchDiffExpErrors = (
 const DEFAULT_GENESETS_RESPONSE = {
   genesets: [],
 };
-const genesetsFetch = (dispatch: AppDispatch) => {
-  fetchJson("genesets").then((response) => {
-    dispatch({
-      type: "geneset: initial load",
-      data: response ?? DEFAULT_GENESETS_RESPONSE,
-    });
+const genesetsFetch = async (dispatch: AppDispatch) => {
+  const response = await fetchJson("genesets");
+
+  dispatch({
+    type: "geneset: initial load",
+    data: response ?? DEFAULT_GENESETS_RESPONSE,
   });
 };
 

@@ -48,9 +48,7 @@ function QuickGene() {
   useEffect(() => {
     if (!annoMatrix) return;
 
-    fetch();
-
-    async function fetch() {
+    (async function fetch() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
         const { schema } = annoMatrix;
@@ -92,7 +90,7 @@ function QuickGene() {
           throw error;
         }
       }
-    }
+    })();
   }, [annoMatrix, prevProps]);
 
   const handleExpand = () => setIsExpanded(!isExpanded);

@@ -6,7 +6,7 @@ import pandas as pd
 from server_timing import Timing as ServerTiming
 
 from server.common.config.app_config import AppConfig
-from server.common.constants import SPATIAL_IMAGE_DEFAULT_RES, Axis, XApproximateDistribution
+from server.common.constants import Axis, XApproximateDistribution
 from server.common.errors import (
     DatasetAccessError,
     ExceedsLimitError,
@@ -15,7 +15,6 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
-from server.common.utils.uns import crop_box
 from server.common.utils.utils import jsonify_numpy
 
 
@@ -349,28 +348,19 @@ class Dataset(metaclass=ABCMeta):
 
         if spatial is not None and ename in "spatial":
 
-            if not spatial:
-                raise Exception("uns does not have spatial information")
-
-            resolution = SPATIAL_IMAGE_DEFAULT_RES
-
             library_id = list(spatial.keys())[0]
+            image_properties = spatial[library_id]["image_properties"]
+            resolution = image_properties["resolution"]
 
-            try:
-                (h, w, _) = spatial[library_id]["images"][resolution].shape
-            except KeyError as e:
-                raise Exception(f"spatial information does not contain requested resolution '{resolution}'") from e
-
-            scaleref = spatial[library_id]["scalefactors"][f"tissue_{resolution}_scalef"]
-
-            left, upper, _, _ = crop_box((w, h))
-
-            # adjust for 1:1 aspect ratio
-            h = w = min(h, w)
-
+            scaleref = 1 if resolution == "fullres" else spatial[library_id]["scalefactors"]["tissue_hires_scalef"]
+            h, w = image_properties["height"], image_properties["width"]
+            left, upper, _, _ = image_properties["crop_coords"]
             A = embedding * scaleref
+
+            # offset crop coordinates
             A[:, 0] -= left
             A[:, 1] -= upper
+
             A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
             normalized_layout = A.astype(dtype=np.float32)
 
@@ -392,6 +382,7 @@ class Dataset(metaclass=ABCMeta):
             normalized_layout = normalized_layout + translate
 
             normalized_layout = normalized_layout.astype(dtype=np.float32)
+
         return normalized_layout
 
     def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None):

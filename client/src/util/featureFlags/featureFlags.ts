@@ -10,12 +10,15 @@ export enum BOOLEAN {
   FALSE = "no",
 }
 
+enum ParamBoolean {
+  TRUE = "true",
+  FALSE = "false",
+}
+
 export function checkFeatureFlags(): void {
-  const { search } = window.location;
+  const params = getParams();
 
-  if (!search) return;
-
-  const params = new URLSearchParams(search);
+  if (!params) return;
 
   params.forEach((value, key) => {
     if (!allowedKeys.includes(key)) return;
@@ -25,12 +28,29 @@ export function checkFeatureFlags(): void {
 }
 
 export function getFeatureFlag(key: string): boolean {
+  const params = getParams();
+
+  const paramValue = params?.get(key);
+
+  if (paramValue !== undefined) {
+    setFeatureFlag(key, paramValue || "");
+    return paramValue === ParamBoolean.TRUE;
+  }
+
   return storageGet(FEATURE_FLAG_PREFIX + key) === BOOLEAN.TRUE;
 }
 
 function setFeatureFlag(key: string, value: string) {
   const URLValueAsBooleanString =
-    value === "true" ? BOOLEAN.TRUE : BOOLEAN.FALSE;
+    value === ParamBoolean.TRUE ? BOOLEAN.TRUE : BOOLEAN.FALSE;
 
   storageSet(FEATURE_FLAG_PREFIX + key, URLValueAsBooleanString);
+}
+
+function getParams(): URLSearchParams | null {
+  const { search } = window.location;
+
+  if (!search) return null;
+
+  return new URLSearchParams(search);
 }

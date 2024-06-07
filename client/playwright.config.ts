@@ -1,4 +1,5 @@
 import { ReporterDescription, defineConfig, devices } from "@playwright/test";
+import { ChromaticConfig } from "@chromatic-com/playwright";
 import { testURL } from "./__tests__/common/constants";
 
 /**
@@ -48,7 +49,7 @@ const PLAYWRIGHT_REPORTER = process.env.CI
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
-export default defineConfig({
+export default defineConfig<ChromaticConfig>({
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -69,6 +70,11 @@ export default defineConfig({
   reporter: PLAYWRIGHT_REPORTER,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    /**
+     * (thuang): We need to explicitly capture canvas with `snapshotTestGraph`
+     * so the auto snapshot feature is not useful
+     */
+    disableAutoSnapshot: true,
     acceptDownloads: true,
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,

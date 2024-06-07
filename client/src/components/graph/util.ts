@@ -1,5 +1,6 @@
 import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
+import { LayoutChoiceState } from "../../reducers/layoutChoice";
 
 export async function captureLegend(
   colors: any,
@@ -92,29 +93,42 @@ Simple 2D transforms control all point painting.  There are three:
   * camera - apply a 2D camera transformation (pan, zoom)
   * projection - apply any transformation required for screen size and layout
 */
-export function createProjectionTF(
-  viewportWidth: number,
-  viewportHeight: number
-) {
-  /*
-  the projection transform accounts for the screen size & other layout
-  */
-  const fractionToUse = 0.95; // fraction of min dimension to use
-  const topGutterSizePx = 32; // top gutter for tools
-  const bottomGutterSizePx = 32; // bottom gutter for tools
+export function createProjectionTF({
+  viewportWidth,
+  viewportHeight,
+  isSpatialMode,
+}: {
+  viewportWidth: number;
+  viewportHeight: number;
+  isSpatialMode: boolean;
+}) {
+  /**
+   * the projection transform accounts for the screen size & other layout
+   * (thuang): For spatial mode, we want to use the full screen width and height,
+   * so the openseadragon layer can align with the canvas layer properly.
+   */
+  const fractionToUse = isSpatialMode ? 1 : 0.95; // fraction of min dimension to use
+  const topGutterSizePx = isSpatialMode ? 0 : 32; // top gutter for tools
+  const bottomGutterSizePx = isSpatialMode ? 0 : 32; // bottom gutter for tools
   const heightMinusGutter =
     viewportHeight - topGutterSizePx - bottomGutterSizePx;
+
   const minDim = Math.min(viewportWidth, heightMinusGutter);
+
   const aspectScale = new Float32Array([
     (fractionToUse * minDim) / viewportWidth,
     (fractionToUse * minDim) / viewportHeight,
   ]);
+
   const m = mat3.create();
+
   mat3.fromTranslation(m, [
     0,
     (bottomGutterSizePx - topGutterSizePx) / viewportHeight / aspectScale[1],
   ]);
+
   mat3.scale(m, m, aspectScale);
+
   return m;
 }
 
@@ -126,4 +140,66 @@ export function createModelTF() {
   const m = mat3.fromScaling(mat3.create(), [2, 2]);
   mat3.translate(m, m, [-0.5, -0.5]);
   return m;
+}
+
+export function getSpatialPrefixUrl(s3URI: string) {
+  const url = getSpatialUrl(s3URI);
+
+  return `${url}spatial_files/`;
+}
+
+export function getSpatialTileSources(s3URI: string) {
+  const url = getSpatialUrl(s3URI);
+
+  return `${url}spatial.dzi`;
+}
+
+function getSpatialUrl(s3URI: string) {
+  const datasetVersionId = getDatasetVersionId(s3URI);
+
+  const { hostname } = window.location;
+
+  // TODO(thuang): Take rdev into account
+
+  if (hostname.includes("staging")) {
+    return `https://cellxgene.staging.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
+  }
+
+  if (hostname.includes("prod")) {
+    return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
+  }
+
+  return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
+}
+
+function getDatasetVersionId(s3URI: string) {
+  return s3URI.split("/").at(-1)?.split(".cxg")[0];
+}
+
+export function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+  });
+}
+
+export function downloadImage(
+  imageURI: string,
+  layoutChoice?: LayoutChoiceState
+): void {
+  const a = document.createElement("a");
+  a.href = imageURI;
+  a.download = layoutChoice
+    ? `CELLxGENE_${layoutChoice.current.split(";;").at(-1)}_emb.png`
+    : "CELLxGENE_legend.png";
+  a.style.display = "none";
+  document.body.append(a);
+  a.click();
+  // Revoke the blob URL and remove the element.
+  setTimeout(() => {
+    URL.revokeObjectURL(imageURI);
+    a.remove();
+  }, 1000);
 }

@@ -36,11 +36,18 @@ class GeneExpression extends React.Component<{}, State> {
   async componentDidMount(): Promise<void> {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Readon... Remove this comment to see the full error message
     const { annoMatrix } = this.props;
-    const { schema } = annoMatrix;
+
+    const { schema } = annoMatrix || {};
+
+    if (!schema) return;
+
     const varIndex = schema.annotations.var.index;
 
     let dfIds;
-    const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+    const df: Dataframe = await annoMatrix?.fetch("var", varIndex);
+
+    if (!df) return;
+
     this.setState({
       geneNames: df.col(varIndex).asArray() as DataframeValue[],
     });
