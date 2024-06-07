@@ -141,6 +141,50 @@ export async function getAllCategoriesAndCounts(
   return Object.fromEntries(arrayOfLabelsAndCounts);
 }
 
+export async function expandMarkerGeneSetsHeader(page: Page): Promise<void> {
+  // Locate and expand the 'Marker Gene Sets' header if not already expanded
+  const markerGeneSetsHeader = await page.locator(
+    "h5:has-text('Marker Gene Sets')"
+  );
+  const chevronDownIcon = markerGeneSetsHeader.locator(
+    "svg[data-icon='chevron-down']"
+  );
+  await tryUntil(
+    async () => {
+      if ((await chevronDownIcon.count()) === 0) {
+        await markerGeneSetsHeader.click();
+      }
+      const count = await chevronDownIcon.count();
+      expect(count).toBeGreaterThan(0);
+    },
+    { page }
+  );
+}
+export async function getAllCategories(
+  category: string,
+  page: Page
+): Promise<string[]> {
+  // these load asynchronously, so we have to wait for the specific category.
+  const categoryRows = await page
+    .getByTestId(`category-${category}`)
+    .getByTestId("categorical-row")
+    .all();
+
+  const arrayOfLabels = await Promise.all(
+    categoryRows.map(async (row): Promise<string> => {
+      const cat = await row
+        .getByTestId("categorical-value")
+        .getAttribute("aria-label");
+
+      if (!cat) throw new Error("category value not found");
+
+      return cat;
+    })
+  );
+
+  return arrayOfLabels;
+}
+
 export async function getCellSetCount(
   num: number,
   page: Page
@@ -292,6 +336,7 @@ export async function colorByGeneset(
 
 export async function colorByGene(gene: string, page: Page): Promise<void> {
   await page.getByTestId(`colorby-${gene}`).click();
+  await assertColorLegendLabel(gene, page);
 }
 
 export async function assertColorLegendLabel(
@@ -353,7 +398,7 @@ export async function createGeneset(
           .getByTestId("add-geneset-description")
           .fill(genesetDescription);
       }
-      expect(page.getByTestId("submit-geneset")).toBeEnabled();
+      await expect(page.getByTestId("submit-geneset")).toBeEnabled();
     },
     { page }
   );
@@ -385,7 +430,7 @@ export async function editGenesetName(
   await tryUntil(
     async () => {
       await page.getByTestId("rename-geneset-modal").fill(editText);
-      expect(page.getByTestId(submitButton)).toBeEnabled();
+      await expect(page.getByTestId(submitButton)).toBeEnabled();
     },
     { page }
   );
@@ -405,10 +450,10 @@ export async function checkGenesetDescription(
 
       const editButton = `${genesetName}:edit-genesetName-mode`;
       await page.getByTestId(editButton).click({
-        force: true
+        force: true,
         /**
          * (thuang): Don't wait for the default timeout, since we want to fail fast
-         */,
+         */
         timeout: 1 * 1000,
       });
 
@@ -449,8 +494,10 @@ export async function assertGenesetDoesNotExist(
   page: Page
 ): Promise<void> {
   await tryUntil(
-    () => {
-      expect(page.getByTestId(`${genesetName}:geneset-name`)).toBeHidden();
+    async () => {
+      await expect(
+        page.getByTestId(`${genesetName}:geneset-name`)
+      ).toBeHidden();
     },
     { page }
   );
@@ -488,7 +535,8 @@ export async function addGeneToSet(
       await page
         .getByTestId("add-genes-to-geneset-dialog")
         .fill(geneToAddToSet);
-      expect(page.getByTestId(submitButton)).toBeEnabled();
+
+      await expect(page.getByTestId(submitButton)).toBeEnabled();
     },
     { page }
   );
@@ -627,7 +675,7 @@ export async function duplicateCategory(
 
   const dropdownOptionClass = "duplicate-category-dropdown-option";
 
-  tryUntil(
+  await tryUntil(
     async () => {
       await page.getByTestId("duplicate-category-dropdown").click();
       await expect(page.getByTestId(dropdownOptionClass)).toBeTruthy();
@@ -640,7 +688,7 @@ export async function duplicateCategory(
 
   await option.click();
 
-  tryUntil(
+  await tryUntil(
     async () => {
       await page.getByTestId("submit-category").click();
       await expect(

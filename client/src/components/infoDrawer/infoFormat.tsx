@@ -35,10 +35,10 @@ interface MetadataView {
 
 interface Props {
   datasetMetadata: DatasetMetadata;
-  singleValueCategories: SingleValueCategories;
+  allSingleValues: SingleValues;
 }
 
-export type SingleValueCategories = Map<string, Category>;
+export type SingleValues = Map<string, Category>;
 
 /**
  * Sort collection links by custom sort order, create view-friendly model of link types.
@@ -244,16 +244,16 @@ const renderCollectionLinks = (
 
 /**
  * Render dataset metadata. That is, attributes found in categorical fields.
- * @param singleValueCategories - Attributes from categorical fields
+ * @param renderSingleValues - Attributes from categorical fields
  * @returns Markup for displaying meta in table format.
  */
 const renderDatasetMetadata = (
-  singleValueCategories: SingleValueCategories
+  renderSingleValues: SingleValues
 ): JSX.Element | null => {
-  if (singleValueCategories.size === 0) {
+  if (renderSingleValues.size === 0) {
     return null;
   }
-  const metadataViews = buildDatasetMetadataViews(singleValueCategories);
+  const metadataViews = buildDatasetMetadataViews(renderSingleValues);
   metadataViews.sort(sortDatasetMetadata);
   return (
     <>
@@ -328,7 +328,7 @@ const transformLinkTypeToDisplay = (type: string): string => {
  * @returns  Array of metadata key/value pairs.
  */
 const buildDatasetMetadataViews = (
-  singleValueCategories: SingleValueCategories
+  singleValueCategories: SingleValues
 ): MetadataView[] =>
   Array.from(singleValueCategories.entries())
     .filter(([key, value]) => {
@@ -341,17 +341,15 @@ const buildDatasetMetadataViews = (
     })
     .map(([key, value]) => ({ key, value: String(value) }));
 
-const InfoFormat = React.memo<Props>(
-  ({ datasetMetadata, singleValueCategories }) => (
-    <div className={Classes.DRAWER_BODY}>
-      <div className={Classes.DIALOG_BODY}>
-        <H3>{datasetMetadata.collection_name}</H3>
-        <p>{datasetMetadata.collection_description}</p>
-        {renderCollectionLinks(datasetMetadata)}
-        {renderDatasetMetadata(singleValueCategories)}
-      </div>
+const InfoFormat = React.memo<Props>(({ datasetMetadata, allSingleValues }) => (
+  <div className={Classes.DRAWER_BODY}>
+    <div className={Classes.DIALOG_BODY}>
+      <H3>{datasetMetadata.collection_name}</H3>
+      <p>{datasetMetadata.collection_description}</p>
+      {renderCollectionLinks(datasetMetadata)}
+      {renderDatasetMetadata(allSingleValues)}
     </div>
-  )
-);
+  </div>
+));
 
 export default InfoFormat;
