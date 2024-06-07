@@ -9,6 +9,8 @@ export interface PanelEmbeddingState {
     current: string;
     currentDimNames: Array<string>;
   };
+  open: boolean;
+  minimized: boolean;
 }
 
 export interface LayoutChoiceAction extends Action<string> {
@@ -21,8 +23,6 @@ const panelEmbedding = (
   nextSharedState: RootState
 ): PanelEmbeddingState => {
   switch (action.type) {
-    // TODO(#923): connect this to new button in the embedding selector
-    case "open embedding side panel":
     case "initial data load complete": {
       const { layoutChoice } = action;
 
@@ -32,6 +32,32 @@ const panelEmbedding = (
           available: selectAvailableLayouts(nextSharedState),
           ...getCurrentLayout(nextSharedState, layoutChoice),
         },
+        open: false,
+        minimized: false,
+      };
+    }
+
+    case "toggle panel embedding": {
+      return {
+        ...state,
+        open: !state.open,
+        layoutChoice: {
+          ...state.layoutChoice,
+          ...getCurrentLayout(
+            nextSharedState,
+            nextSharedState.layoutChoice.current
+          ),
+        },
+        minimized: false,
+      };
+    }
+
+    case "toggle minimize panel embedding": {
+      console.log(action);
+
+      return {
+        ...state,
+        minimized: !state.minimized,
       };
     }
 
@@ -44,6 +70,7 @@ const panelEmbedding = (
           ...state.layoutChoice,
           ...getCurrentLayout(nextSharedState, layoutChoice),
         },
+        minimized: false,
       };
     }
 

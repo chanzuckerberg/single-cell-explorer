@@ -64,6 +64,7 @@ export interface StateProps {
 export interface OwnProps {
   viewportRef: HTMLDivElement;
   isSidePanel?: boolean;
+  isHidden?: boolean;
 }
 
 interface DispatchProps {

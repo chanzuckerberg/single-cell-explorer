@@ -329,6 +329,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "left",
+            marginTop: 8,
           }}
         >
           <Embedding isSidePanel={false} />

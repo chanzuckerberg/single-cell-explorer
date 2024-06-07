@@ -1,37 +1,45 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
+import { IconNames } from "@blueprintjs/icons";
+import { Button } from "@blueprintjs/core";
 
 import * as globals from "../../globals";
 import { height, margin, width } from "./util";
 import Graph from "../graph/graph";
 import Controls from "../controls";
 import Embedding from "../embedding";
+import { AppDispatch, RootState } from "../../reducers";
+import actions from "../../actions";
 
 interface StateProps {
-  level: string;
-  minimized: boolean;
+  isMinimized: boolean;
+  isOpen: RootState["panelEmbedding"]["open"];
 }
 
-const mapStateToProps = (): StateProps => ({
-  level: "top",
-  minimized: false,
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+const mapStateToProps = (state: RootState): StateProps => ({
+  isMinimized: state.panelEmbedding.minimized,
+  isOpen: state.panelEmbedding.open,
 });
 
-const PanelEmbedding = (props: StateProps) => {
+const PanelEmbedding = (props: StateProps & DispatchProps) => {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
 
-  const { level, minimized } = props;
+  const { isMinimized, isOpen, dispatch } = props;
 
-  // TODO(seve): Connect to redux state
+  const handleSwapLayoutChoices = async (): Promise<void> => {
+    await dispatch(actions.swapLayoutChoicesAction());
+  };
+
+  if (!isOpen) return null;
 
   return (
     <div
       style={{
         position: "fixed",
-        bottom:
-          level === "top"
-            ? globals.bottomToolbarGutter * 2
-            : globals.bottomToolbarGutter,
         borderRadius: "3px 3px 0px 0px",
         right: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
         padding: "0px 20px 20px 0px",
@@ -39,7 +47,7 @@ const PanelEmbedding = (props: StateProps) => {
         /* x y blur spread color */
         boxShadow: "0px 0px 3px 2px rgba(153,153,153,0.2)",
         width: `${width + margin.left + margin.right}px`,
-        height: `${(minimized ? 0 : height + margin.top) + margin.bottom}px`,
+        height: `${(isMinimized ? 24 : height + margin.top) + margin.bottom}px`,
         zIndex: 5,
       }}
       id="side-viewport"
@@ -55,6 +63,7 @@ const PanelEmbedding = (props: StateProps) => {
             flexWrap: "wrap",
             justifyContent: "space-between",
             width: "100%",
+            marginTop: "8px",
           }}
         >
           <div
@@ -63,13 +72,49 @@ const PanelEmbedding = (props: StateProps) => {
               flexDirection: "row",
               flexWrap: "wrap",
               justifyContent: "left",
+              gap: "8px",
             }}
           >
             <Embedding isSidePanel />
+            <Button
+              type="button"
+              icon={IconNames.SWAP_VERTICAL}
+              onClick={handleSwapLayoutChoices}
+            />
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "right",
+              gap: "8px",
+            }}
+          >
+            <Button
+              type="button"
+              icon={isMinimized ? IconNames.MAXIMIZE : IconNames.MINIMIZE}
+              onClick={() => {
+                dispatch({
+                  type: "toggle minimize panel embedding",
+                });
+              }}
+            />
+            <Button
+              type="button"
+              icon={IconNames.CROSS}
+              onClick={() => {
+                dispatch({
+                  type: "toggle panel embedding",
+                });
+              }}
+            />
           </div>
         </div>
       </Controls>
-      {viewportRef && <Graph viewportRef={viewportRef} isSidePanel />}
+      {viewportRef && (
+        <Graph isHidden={isMinimized} viewportRef={viewportRef} isSidePanel />
+      )}
     </div>
   );
 };
