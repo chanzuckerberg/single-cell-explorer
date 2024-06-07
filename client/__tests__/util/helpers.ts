@@ -121,7 +121,7 @@ export async function selectNthOption(
   // (thuang): Since the first option is now active, we need to offset by 1
   const step = number - 1;
 
-  Promise.all(
+  await Promise.all(
     Array.from({ length: step }, async () => {
       await page.keyboard.press("ArrowDown");
     })

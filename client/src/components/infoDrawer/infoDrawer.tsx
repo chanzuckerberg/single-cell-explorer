@@ -43,7 +43,7 @@ type Props = DispatchProps & OwnProps & StateProps;
 const mapStateToProps = (state: RootState): StateProps => ({
   datasetMetadata: state.datasetMetadata?.datasetMetadata,
   isOpen: state.controls.datasetDrawer,
-  schema: state.annoMatrix.schema,
+  schema: state.annoMatrix?.schema,
   singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
 });
 

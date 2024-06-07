@@ -146,9 +146,10 @@ const TruncatingBreadcrumbs = React.memo<Props>(
 
     // Load of breadcrumbs can begin once fonts are loaded.
     useEffect(() => {
-      document.fonts.ready.then(() => {
+      (async () => {
+        await document.fonts.ready;
         setFontLoaded(true);
-      });
+      })();
     }, []);
 
     // Once we have the available width, measure element and font, build up view model.
