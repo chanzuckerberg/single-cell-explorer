@@ -164,7 +164,7 @@ function getSpatialUrl(s3URI: string) {
   if (hostname.includes("staging")) {
     return `https://cellxgene.staging.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
   }
-  if (hostname.includes("dev")) {
+  if (hostname.includes("dev") || hostname.includes("localhost")) {
     return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
   }
   return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
