@@ -2,7 +2,7 @@
 
 /**
  * Complete list of standard cellxgene column names.
- * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/3.0.0/schema.md#obs-cell-metadata
+ * https://github.com/chanzuckerberg/single-cell-curation/blob/main/schema/5.1.0/schema.md#obs-cell-metadata
  */
 export const STANDARD_CATEGORY_NAMES = [
   "assay",
@@ -13,17 +13,18 @@ export const STANDARD_CATEGORY_NAMES = [
   "development_stage_ontology_term_id",
   "disease",
   "disease_ontology_term_id",
-  "self_reported_ethnicity",
-  "self_reported_ethnicity_ontology_term_id",
+  "donor_id",
+  "in_tissue",
   "is_primary_data",
   "organism",
   "organism_ontology_term_id",
-  "sex_ontology_term_id",
+  "self_reported_ethnicity",
+  "self_reported_ethnicity_ontology_term_id",
   "sex",
-  "tissue_ontology_term_id",
-  "tissue",
+  "sex_ontology_term_id",
   "suspension_type",
-  "donor_id",
+  "tissue",
+  "tissue_ontology_term_id",
 ];
 
 export const EXCLUDED_CATEGORY_NAMES = ["observation_joinid"];

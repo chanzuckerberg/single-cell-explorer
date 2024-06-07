@@ -15,8 +15,17 @@ export const unassignedCategoryLabel = "unassigned";
 /** Maximum number of cells a dataset can have in order to be included for display. */
 export const DATASET_MAX_CELL_COUNT = 2_000_000;
 
-/* Category name suffix used to determine if category name is ontology term id. */
-export const ONTOLOGY_KEY = "ontology_term_id";
+/* Explicit ontology term ids. */
+export const ONTOLOGY_TERM_ID_KEYS = [
+  "assay_ontology_term_id",
+  "cell_type_ontology_term_id",
+  "development_stage_ontology_term_id",
+  "disease_ontology_term_id",
+  "organism_ontology_term_id",
+  "self_reported_ethnicity_ontology_term_id",
+  "sex_ontology_term_id",
+  "tissue_ontology_term_id",
+];
 
 /* Unified navigation bar header height. */
 export const HEADER_HEIGHT_PX = 56;
