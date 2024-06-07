@@ -595,7 +595,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const graphImageURI = offscreenCanvas.toDataURL("image/png");
 
       if (mountCapture) {
-        this.setState({ testImageSrc: graphImageURI });
+        this.setState(({ testImageSrc }) => ({
+          /**
+           * (thuang): We want to remove the test image if there's already one
+           */
+          testImageSrc: testImageSrc ? null : graphImageURI,
+        }));
+
         dispatch({ type: "test: screencap end" });
       } else {
         downloadImage(graphImageURI, layoutChoice);
