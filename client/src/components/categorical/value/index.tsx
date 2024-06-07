@@ -37,11 +37,9 @@ interface PureCategoryValueProps {
   colorTable: ColorTable;
   colorData: Dataframe | null;
   categoryData: Dataframe;
-  isUserAnno: boolean;
 }
 
 interface StateProps {
-  // @ts-expect-error -- (seve):
   schema: RootState["annoMatrix"]["schema"];
   isDilated: boolean;
   isSelected: boolean;
@@ -511,7 +509,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       categoryIndex,
       colorAccessor,
       colorTable,
-      isUserAnno,
       isDilated,
       isSelected,
       categorySummary,
@@ -534,16 +531,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     const LEFT_MARGIN = 60;
     const CHECKBOX = 26;
     const CELL_NUMBER = 50;
-    const ANNO_MENU = 26;
     const LABEL_MARGIN = 16;
     const CHART_MARGIN = 24;
 
     const otherElementsWidth =
-      LEFT_MARGIN +
-      CHECKBOX +
-      CELL_NUMBER +
-      LABEL_MARGIN +
-      (isUserAnno ? ANNO_MENU : 0);
+      LEFT_MARGIN + CHECKBOX + CELL_NUMBER + LABEL_MARGIN;
 
     const labelWidth =
       colorAccessor && !isColorBy

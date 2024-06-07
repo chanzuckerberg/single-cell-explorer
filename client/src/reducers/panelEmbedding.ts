@@ -37,7 +37,6 @@ const panelEmbedding = (
 
     case "set panel embedding layout choice": {
       const { layoutChoice } = action as LayoutChoiceAction;
-      console.log(action);
 
       return {
         ...state,

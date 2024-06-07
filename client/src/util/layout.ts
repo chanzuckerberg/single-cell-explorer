@@ -7,7 +7,7 @@ export function getCurrentLayout(
   current: string;
   currentDimNames: Array<string>;
 } {
-  const { schema } = state.annoMatrix!;
+  const { schema } = state.annoMatrix;
   const currentDimNames = schema.layout.obsByName[layoutChoice].dims;
 
   return { current: layoutChoice, currentDimNames };

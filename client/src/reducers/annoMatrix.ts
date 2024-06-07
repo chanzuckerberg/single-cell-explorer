@@ -6,10 +6,10 @@ import { AnyAction } from "redux";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 import { AnnoMatrixClipView } from "../annoMatrix/views";
 
-export type AnnoMatrixState = AnnoMatrix | AnnoMatrixClipView | undefined;
+export type AnnoMatrixState = AnnoMatrix | AnnoMatrixClipView;
 
 const AnnoMatrixReducer = (
-  state: AnnoMatrixState = undefined,
+  state: AnnoMatrixState,
   action: AnyAction
 ): AnnoMatrixState => {
   if (action.annoMatrix) {

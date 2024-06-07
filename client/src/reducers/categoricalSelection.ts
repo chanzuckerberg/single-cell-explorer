@@ -28,7 +28,7 @@ const CategoricalSelection = (
     case "set clip quantiles": {
       const { annoMatrix } = nextSharedState;
       const newState = CH.createCategoricalSelection(
-        CH.selectableCategoryNames(annoMatrix!.schema)
+        CH.selectableCategoryNames(annoMatrix.schema)
       );
       return newState;
     }

@@ -830,7 +830,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     colors: RootState["colors"],
     pointDilation: RootState["pointDilation"]
   ): Promise<[Dataframe, Dataframe | null, Dataframe | null]> {
-    annoMatrix = annoMatrix!;
     /*
         fetch all data needed.  Includes:
           - the color by dataframe
@@ -986,7 +985,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
     colorDf: Dataframe | null
   ): ColorTable {
     const { annoMatrix } = this.props;
-    // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
     const { schema } = annoMatrix;
     /* update color table state */
     if (!colors || !colorDf) {
@@ -1010,7 +1008,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   createColorByQuery(colors: RootState["colors"]): [Field, Query] | null {
     const { annoMatrix, genesets } = this.props;
-    // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
     const { schema } = annoMatrix;
     const { colorMode, colorAccessor } = colors;
     // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing

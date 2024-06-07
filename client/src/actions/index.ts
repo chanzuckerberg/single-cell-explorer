@@ -209,7 +209,6 @@ const doInitialDataLoad = (): ((
         isCellGuideCxg,
       });
 
-      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
       const availableLayouts = selectAvailableLayouts({ annoMatrix });
       const fallbackLayout = getBestDefaultLayout(availableLayouts);
       const defaultLayout = config?.parameters?.default_embedding || "";
@@ -307,7 +306,7 @@ const requestDifferentialExpression =
       2. get expression data for each
       */
       const { annoMatrix } = getState();
-      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
+
       const varIndexName = annoMatrix.schema.annotations.var.index;
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
@@ -350,7 +349,7 @@ const requestDifferentialExpression =
       }
 
       const response = await res.json();
-      // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
+
       const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(

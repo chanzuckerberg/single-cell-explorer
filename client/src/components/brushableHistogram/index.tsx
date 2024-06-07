@@ -15,6 +15,9 @@ import { Dataframe } from "../../util/dataframe";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { AppDispatch, RootState } from "../../reducers";
+import { AnnoMatrixClipView } from "../../annoMatrix/views";
+import { Query } from "../../annoMatrix/query";
+import { Field } from "../../common/types/schema";
 
 const MARGIN = {
   LEFT: 10, // Space for 0 tick label on X axis
@@ -265,8 +268,8 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       dispatch,
       singleContinuousValues,
     } = this.props;
-    // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
-    const { isClipped } = annoMatrix;
+
+    const { isClipped } = annoMatrix as AnnoMatrixClipView;
     if (singleContinuousValues.has(field)) {
       return {
         histogram: undefined,
@@ -290,7 +293,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
         OK2Render: false,
       };
     }
-    // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
+
     const df: Dataframe = await annoMatrix.fetch(...query, globals.numBinsObsX);
     const column = df.icol(0);
 
@@ -325,7 +328,6 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     let unclippedRange = [...range];
     if (isClipped) {
       const parent: Dataframe = await annoMatrix.viewOf.fetch(
-        // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
         ...query,
         globals.numBinsObsX
       );
@@ -334,12 +336,11 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     }
 
     const unclippedRangeColor = [
-      // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
-      !annoMatrix.isClipped || annoMatrix.clipRange[0] === 0
+      !isClipped || (annoMatrix as AnnoMatrixClipView).clipRange[0] === 0
         ? "#bbb"
         : globals.blue,
-      // @ts-expect-error -- (seve): fix downstream lint errors as a result of detailed app store typing
-      !annoMatrix.isClipped || annoMatrix.clipRange[1] === 1
+
+      !isClipped || (annoMatrix as AnnoMatrixClipView).clipRange[1] === 1
         ? "#bbb"
         : globals.blue,
     ];
@@ -428,26 +429,24 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     return histogramCache;
   }
 
-  createQuery() {
+  createQuery(): [Field, Query] | null {
     const { isObs, isGeneSetSummary, field, setGenes, annoMatrix } = this.props;
-    // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
     const { schema } = annoMatrix;
     if (isObs) {
-      return ["obs", field];
+      return [Field.obs, field];
     }
     const varIndex = schema?.annotations?.var?.index;
     if (!varIndex) return null;
 
-    if (isGeneSetSummary) {
+    if (isGeneSetSummary && setGenes) {
       return [
-        "X",
+        Field.X,
         {
           summarize: {
             method: "mean",
             field: "var",
             column: varIndex,
-            // (seve): fix downstream lint errors as a result of detailed app store typing
-            values: [...setGenes!.keys()],
+            values: [...setGenes.keys()],
           },
         },
       ];
@@ -455,7 +454,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
 
     // else, we assume it is a gene expression
     return [
-      "X",
+      Field.X,
       {
         where: {
           field: "var",
@@ -466,7 +465,6 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     ];
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
       dispatch,

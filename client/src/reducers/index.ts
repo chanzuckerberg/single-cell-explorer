@@ -37,7 +37,6 @@ const AppReducer = undoable(
     ["config", config],
     ["annoMatrix", annoMatrix],
     ["obsCrossfilter", obsCrossfilter],
-    // ["annotations", annotations],
     ["genesets", genesets],
     ["genesetsUI", genesetsUI],
     ["layoutChoice", layoutChoice],

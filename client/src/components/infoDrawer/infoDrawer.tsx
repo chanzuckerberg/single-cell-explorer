@@ -29,7 +29,6 @@ interface OwnProps {
 interface StateProps {
   datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
   isOpen: boolean;
-  // @ts-expect-error -- (seve): fix downstream affects of detailed RootState typing
   schema: RootState["annoMatrix"]["schema"];
   singleContinuousValues: SingleContinuousValueState["singleContinuousValues"];
 }
@@ -72,9 +71,8 @@ class InfoDrawer extends PureComponent<Props> {
     const allSingleValues: SingleValues = new Map();
 
     allCategoryNames.forEach((catName) => {
-      const isUserAnno = schema?.annotations?.obsByName[catName]?.writable;
       const colSchema = schema.annotations.obsByName[catName];
-      if (!isUserAnno && colSchema.categories?.length === 1) {
+      if (colSchema.categories?.length === 1) {
         allSingleValues.set(catName, colSchema.categories[0]);
       }
     });
