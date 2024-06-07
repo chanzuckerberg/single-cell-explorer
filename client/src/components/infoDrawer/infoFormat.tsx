@@ -332,7 +332,11 @@ const buildDatasetMetadataViews = (
 ): MetadataView[] =>
   Array.from(singleValueCategories.entries())
     .filter(([key, value]) => {
-      if (key.indexOf(globals.ONTOLOGY_KEY) >= 0) {
+      if (
+        globals.ONTOLOGY_TERM_ID_KEYS.some((ontologyKey) =>
+          key.includes(ontologyKey)
+        )
+      ) {
         // skip ontology terms
         return false;
       }
