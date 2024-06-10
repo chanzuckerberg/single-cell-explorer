@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import { connect } from "react-redux";
 
 import * as globals from "../../globals";
-import { Level } from "../../reducers/controls";
 import { height, margin, width } from "./util";
 import Graph from "../graph/graph";
 import Controls from "../controls";
 import Embedding from "../embedding";
 
 interface StateProps {
-  level: Level;
+  level: string;
   minimized: boolean;
 }
 

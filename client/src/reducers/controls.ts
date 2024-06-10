@@ -1,12 +1,9 @@
 import { AnyAction } from "redux";
 
-<<<<<<< HEAD
 export enum ActiveTab {
   Gene = "Gene",
   Dataset = "Dataset",
 }
-=======
->>>>>>> 238db020 (done all but tests)
 interface ControlsState {
   loading: boolean;
   error: Error | string | null;
@@ -60,11 +57,7 @@ const Controls = (
     mountCapture: false,
     showWarningBanner: false,
     imageUnderlay: false,
-<<<<<<< HEAD
     activeTab: ActiveTab.Dataset,
-=======
-    activeTab: "Dataset",
->>>>>>> 238db020 (done all but tests)
     infoPanelHidden: true,
     infoPanelMinimized: false,
   },

@@ -104,13 +104,7 @@ class Gene extends React.Component<Props, State> {
       gene,
     });
 
-<<<<<<< HEAD
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
-=======
-    const activeTab = "Gene";
-
-    dispatch({ type: "toggle active info panel", activeTab });
->>>>>>> 238db020 (done all but tests)
 
     const info = await actions.fetchGeneInfo(geneId, gene);
     if (!info) {

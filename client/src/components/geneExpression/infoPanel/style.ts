@@ -1,10 +1,7 @@
 import styled from "@emotion/styled";
 import { fontBodyXs } from "czifui";
 import { AnchorButton } from "@blueprintjs/core";
-<<<<<<< HEAD
 import { gray300 } from "../../theme";
-=======
->>>>>>> 238db020 (done all but tests)
 
 interface InfoPanelWrapperProps {
   isHidden: boolean;

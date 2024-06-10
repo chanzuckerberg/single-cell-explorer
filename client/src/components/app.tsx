@@ -20,7 +20,6 @@ import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
-import GeneInfo from "./geneExpression/geneInfo/geneInfo";
 import Scatterplot from "./scatterplot/scatterplot";
 import PanelEmbedding from "./PanelEmbedding";
 
@@ -35,7 +34,6 @@ interface StateProps {
   isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
   scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
   scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
-  geneIsOpen: boolean;
 }
 
 const mapStateToProps = (state: RootState): StateProps => ({
@@ -49,7 +47,6 @@ const mapStateToProps = (state: RootState): StateProps => ({
   isCellGuideCxg: state.controls.isCellGuideCxg,
   scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
   scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
-  geneIsOpen: state.controls.geneIsOpen,
 });
 
 class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
@@ -72,7 +69,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
       isCellGuideCxg,
       scatterplotXXaccessor,
       scatterplotYYaccessor,
-      geneIsOpen,
     } = this.props;
     return (
       <Container>
@@ -114,17 +110,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                       />
                       {scatterplotXXaccessor && scatterplotYYaccessor && (
                         <Scatterplot />
-                      )}
-
-                      {geneIsOpen && (
-                        <GeneInfo
-                          geneSummary=""
-                          geneName=""
-                          gene=""
-                          geneUrl=""
-                          geneSynonyms={[]}
-                          showWarningBanner
-                        />
                       )}
                       <PanelEmbedding />
                       <Controls bottom={0}>

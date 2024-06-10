@@ -1,15 +1,15 @@
 import { AppDispatch, RootState } from "../../../reducers";
 
-export interface Props {
+interface StateProps {
   activeTab: string;
-  dispatch: AppDispatch;
   infoPanelMinimized: boolean;
   infoPanelHidden: boolean;
 }
 
-export const mapStateToProps = (state: RootState): Props => ({
+export type Props = StateProps & { dispatch: AppDispatch };
+
+export const mapStateToProps = (state: RootState): StateProps => ({
   activeTab: state.controls.activeTab,
   infoPanelMinimized: state.controls.infoPanelMinimized,
   infoPanelHidden: state.controls.infoPanelHidden,
-  dispatch: state.controls.dispatch,
 });
