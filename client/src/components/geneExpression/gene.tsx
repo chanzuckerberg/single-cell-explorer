@@ -15,7 +15,9 @@ import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
-type State = RootState;
+interface State {
+  geneIsExpanded: boolean;
+}
 
 interface Props {
   gene: string;

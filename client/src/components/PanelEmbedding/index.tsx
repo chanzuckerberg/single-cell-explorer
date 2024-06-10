@@ -1,20 +1,29 @@
 import React, { useState } from "react";
+import { connect } from "react-redux";
 
 import * as globals from "../../globals";
 import { Level } from "../../reducers/controls";
 import { height, margin, width } from "./util";
 import Graph from "../graph/graph";
+import Controls from "../controls";
+import Embedding from "../embedding";
 
 interface StateProps {
   level: Level;
   minimized: boolean;
 }
 
-const EmbeddingPanel = () => {
+const mapStateToProps = (): StateProps => ({
+  level: "top",
+  minimized: false,
+});
+
+const PanelEmbedding = (props: StateProps) => {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
 
+  const { level, minimized } = props;
+
   // TODO(seve): Connect to redux state
-  const { level, minimized } = { level: "top", minimized: false } as StateProps;
 
   return (
     <div
@@ -32,15 +41,38 @@ const EmbeddingPanel = () => {
         boxShadow: "0px 0px 3px 2px rgba(153,153,153,0.2)",
         width: `${width + margin.left + margin.right}px`,
         height: `${(minimized ? 0 : height + margin.top) + margin.bottom}px`,
+        zIndex: 5,
       }}
       id="side-viewport"
       ref={(ref) => {
         setViewportRef(ref);
       }}
     >
+      <Controls>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "left",
+            }}
+          >
+            <Embedding isSidePanel />
+          </div>
+        </div>
+      </Controls>
       {viewportRef && <Graph viewportRef={viewportRef} isSidePanel />}
     </div>
   );
 };
 
-export default EmbeddingPanel;
+export default connect(mapStateToProps)(PanelEmbedding);

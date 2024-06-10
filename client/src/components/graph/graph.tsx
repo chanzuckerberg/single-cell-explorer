@@ -73,20 +73,8 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   crossfilter: state.obsCrossfilter,
   selectionTool: state.graphSelection.tool,
   currentSelection: state.graphSelection.selection,
-  // TODO(seve): add redux state for side panel
   layoutChoice: ownProps.isSidePanel
-    ? {
-        available: [
-          "means_cell_abundance_w_sf",
-          "prop",
-          "q05_cell_abundance_w_sf",
-          "q95_cell_abundance_w_sf",
-          "spatial",
-          "stds_cell_abundance_w_sf",
-        ],
-        current: "spatial",
-        currentDimNames: ["spatial_0", "spatial_1"],
-      }
+    ? state.panelEmbedding.layoutChoice
     : state.layoutChoice,
   graphInteractionMode: state.controls.graphInteractionMode,
   colors: state.colors,
@@ -307,7 +295,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
   componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
     const {
       selectionTool,
-      currentSelection,
       graphInteractionMode,
       screenCap,
       imageUnderlay,
@@ -341,21 +328,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         ...this.createToolSVG(),
       };
     }
-    /*
-        if the selection tool or state has changed, ensure that the selection
-        tool correctly reflects the underlying selection.
-        */
-    if (
-      currentSelection !== prevProps.currentSelection ||
-      graphInteractionMode !== prevProps.graphInteractionMode ||
-      stateChanges.toolSVG
-    ) {
-      const { tool, container } = this.state;
-      this.selectionToolUpdate(
-        stateChanges.tool ? stateChanges.tool : tool!,
-        stateChanges.container ? stateChanges.container : container!
-      );
-    }
+
     if (Object.keys(stateChanges).length > 0) {
       this.setState((state) => ({ ...state, ...stateChanges }));
     }
@@ -881,61 +854,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Promise<Dataframe | null>,
       Promise<Dataframe | null>
     ] = [
-      annoMatrix.fetch("emb", layoutChoice?.current, globals.numBinsEmb),
+      annoMatrix.fetch(Field.emb, layoutChoice?.current, globals.numBinsEmb),
       query
         ? annoMatrix.fetch(...query, globals.numBinsObsX)
         : Promise.resolve(null),
       pointDilationAccessor
-        ? annoMatrix.fetch("obs", pointDilationAccessor)
+        ? annoMatrix.fetch(Field.obs, pointDilationAccessor)
         : Promise.resolve(null),
     ];
     return Promise.all(promises);
-  }
-
-  brushToolUpdate(
-    tool: d3.BrushBehavior<unknown>,
-    container: d3.Selection<SVGGElement, unknown, HTMLElement, d3.BaseType>
-  ): void {
-    /*
-        this is called from componentDidUpdate(), so be very careful using
-        anything from this.state, which may be updated asynchronously.
-        */
-    const { currentSelection } = this.props;
-    const node = container.node();
-    if (node) {
-      const toolCurrentSelection = d3.brushSelection(node);
-      if (currentSelection.mode === "within-rect") {
-        /*
-                if there is a selection, make sure the brush tool matches
-                */
-        const screenCoords = [
-          this.mapPointToScreen(currentSelection.brushCoords.northwest),
-          this.mapPointToScreen(currentSelection.brushCoords.southeast),
-        ];
-        if (!toolCurrentSelection) {
-          /* tool is not selected, so just move the brush */
-          container.call(tool.move, screenCoords);
-        } else {
-          /* there is an active selection and a brush - make sure they match */
-          /* this just sums the difference of each dimension, of each point */
-          let delta = 0;
-          for (let x = 0; x < 2; x += 1) {
-            for (let y = 0; y < 2; y += 1) {
-              delta += Math.abs(
-                screenCoords[x][y] -
-                  (toolCurrentSelection as [number, number][])[x][y]
-              );
-            }
-          }
-          if (delta > 0) {
-            container.call(tool.move, screenCoords);
-          }
-        }
-      } else if (toolCurrentSelection) {
-        /* no selection, so clear the brush tool if it is set */
-        container.call(tool.move, null);
-      }
-    }
   }
 
   lassoToolUpdate(tool: LassoFunctionWithAttributes): void {
@@ -954,28 +881,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       tool.move(polygon);
     } else {
       tool.reset();
-    }
-  }
-
-  selectionToolUpdate(
-    tool: GraphState["tool"],
-    container: d3.Selection<SVGGElement, unknown, HTMLElement, SVGGElement>
-  ): void {
-    /*
-        this is called from componentDidUpdate(), so be very careful using
-        anything from this.state, which may be updated asynchronously.
-        */
-    const { selectionTool } = this.props;
-    switch (selectionTool) {
-      case "brush":
-        this.brushToolUpdate(tool as d3.BrushBehavior<unknown>, container);
-        break;
-      case "lasso":
-        this.lassoToolUpdate(tool as LassoFunctionWithAttributes);
-        break;
-      default:
-        /* punt? */
-        break;
     }
   }
 
@@ -1116,6 +1021,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { annoMatrix, genesets } = this.props;
     const { schema } = annoMatrix;
     const { colorMode, colorAccessor } = colors;
+    // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
@@ -1133,7 +1039,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.openseadragon ||
       !shouldShowOpenseadragon(this.props) ||
       !width ||
-      !height
+      !height ||
+      !s3URI
     ) {
       return;
     }

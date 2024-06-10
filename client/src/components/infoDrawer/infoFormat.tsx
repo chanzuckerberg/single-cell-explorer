@@ -6,12 +6,12 @@ import React, { CSSProperties } from "react";
 import {
   Author,
   Consortium,
-  DatasetMetadata,
   Link,
   PublisherMetadata,
 } from "../../common/types/entities";
 import { Category } from "../../common/types/schema";
 import * as globals from "../../globals";
+import { RootState } from "../../reducers";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
@@ -34,7 +34,7 @@ interface MetadataView {
 }
 
 interface Props {
-  datasetMetadata: DatasetMetadata;
+  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
   allSingleValues: SingleValues;
 }
 
@@ -208,8 +208,9 @@ const isAuthorPerson = (author: Author | Consortium): author is Author =>
  * @returns Markup displaying contact and collection-related links.
  */
 const renderCollectionLinks = (
-  datasetMetadata: DatasetMetadata
-): JSX.Element => {
+  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"]
+) => {
+  if (!datasetMetadata) return null;
   const {
     collection_contact_name: contactName,
     collection_contact_email: contactEmail,
@@ -348,8 +349,8 @@ const buildDatasetMetadataViews = (
 const InfoFormat = React.memo<Props>(({ datasetMetadata, allSingleValues }) => (
   <div className={Classes.DRAWER_BODY}>
     <div className={Classes.DIALOG_BODY}>
-      <H3>{datasetMetadata.collection_name}</H3>
-      <p>{datasetMetadata.collection_description}</p>
+      <H3>{datasetMetadata?.collection_name || "Collection"}</H3>
+      {datasetMetadata && <p>{datasetMetadata.collection_description}</p>}
       {renderCollectionLinks(datasetMetadata)}
       {renderDatasetMetadata(allSingleValues)}
     </div>
