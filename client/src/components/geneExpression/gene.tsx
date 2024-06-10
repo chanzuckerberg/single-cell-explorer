@@ -11,6 +11,7 @@ import actions from "../../actions";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { ActiveTab } from "../../reducers/controls";
 import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
@@ -103,7 +104,7 @@ class Gene extends React.Component<Props, State> {
       gene,
     });
 
-    dispatch({ type: "toggle active info panel", activeTab: "Gene" });
+    dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
     const info = await actions.fetchGeneInfo(geneId, gene);
     if (!info) {
