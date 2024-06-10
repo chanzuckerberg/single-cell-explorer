@@ -4,7 +4,6 @@ import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import { interpolateCool } from "d3-scale-chromatic";
 import Async, { AsyncProps } from "react-async";
-import AnnoMatrix from "../../annoMatrix/annoMatrix";
 import { AppDispatch, RootState } from "../../reducers";
 
 import {
@@ -125,7 +124,7 @@ interface FetchedAsyncProps {
 }
 
 interface StateProps {
-  annoMatrix: AnnoMatrix;
+  annoMatrix: RootState["annoMatrix"];
   colors: ColorsState;
   genesets: Genesets;
 }

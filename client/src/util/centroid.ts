@@ -1,7 +1,6 @@
 import quantile from "./quantile";
 import { memoize } from "./dataframe/util";
 import { Dataframe, DataframeValue } from "./dataframe";
-import { unassignedCategoryLabel } from "../globals";
 import {
   createCategorySummaryFromDfCol,
   isSelectableCategoryName,
@@ -55,8 +54,7 @@ const getCoordinatesByLabel = (
     ] as CategoricalAnnotationColumnSchema
   );
 
-  const { isUserAnno, categoryValueIndices, categoryValueCounts } =
-    categorySummary;
+  const { categoryValueIndices, categoryValueCounts } = categorySummary;
 
   // Iterate over all cells
   for (let i = 0, len = categoryArray.length; i < len; i += 1) {
@@ -71,10 +69,7 @@ const getCoordinatesByLabel = (
     //  labeled on the graph
     // If the user created this category,
     //  do not create a coord for the `unassigned` label
-    if (
-      labelIndex !== undefined &&
-      !(isUserAnno && label === unassignedCategoryLabel)
-    ) {
+    if (labelIndex !== undefined) {
       // Create/fetch the scratchpad value
       let coords = coordsByCategoryLabel.get(label);
       if (coords === undefined) {

@@ -1,16 +1,14 @@
 /* App dependencies */
-import { RootState } from "../reducers";
-import { State } from "../reducers/genesets";
 
-export const selectGeneSets = (state: RootState): State => state.genesets;
+import { RootState } from "../reducers";
 
 /*
  Returns true if genesets have been created indicating work is in progress.
  @param genesets from state
  @returns boolean
  */
-export const selectIsUserStateDirty = (state: State): boolean => {
-  const geneSets = selectGeneSets(state);
+export const selectIsUserStateDirty = (state: RootState): boolean => {
+  const { genesets } = state;
 
-  return Boolean(geneSets?.genesets?.size);
+  return Boolean(genesets?.genesets?.size);
 };

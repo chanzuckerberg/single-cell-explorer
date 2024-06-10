@@ -7,8 +7,6 @@ import { Drawer, Position } from "@blueprintjs/core";
 import InfoFormat, { SingleValues } from "./infoFormat";
 import { AppDispatch, RootState } from "../../reducers";
 import { selectableCategoryNames } from "../../util/stateManager/controlsHelpers";
-import { DatasetMetadata } from "../../common/types/entities";
-import { Schema } from "../../common/types/schema";
 import { SingleContinuousValueState } from "../../reducers/singleContinuousValue";
 
 /**
@@ -29,9 +27,9 @@ interface OwnProps {
  * Props selected from store.
  */
 interface StateProps {
-  datasetMetadata: DatasetMetadata;
+  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
   isOpen: boolean;
-  schema: Schema;
+  schema: RootState["annoMatrix"]["schema"];
   singleContinuousValues: SingleContinuousValueState["singleContinuousValues"];
 }
 
@@ -73,9 +71,8 @@ class InfoDrawer extends PureComponent<Props> {
     const allSingleValues: SingleValues = new Map();
 
     allCategoryNames.forEach((catName) => {
-      const isUserAnno = schema?.annotations?.obsByName[catName]?.writable;
       const colSchema = schema.annotations.obsByName[catName];
-      if (!isUserAnno && colSchema.categories?.length === 1) {
+      if (colSchema.categories?.length === 1) {
         allSingleValues.set(catName, colSchema.categories[0]);
       }
     });

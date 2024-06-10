@@ -32,8 +32,8 @@ export type NavigateCheckUserState = (url: string) => void;
  * Props selected from store.
  */
 interface StateProps {
-  datasetMetadata: DatasetMetadata;
-  portalUrl: string;
+  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
+  portalUrl: RootState["datasetMetadata"]["portalUrl"];
   seamlessEnabled: boolean;
 }
 
@@ -104,7 +104,7 @@ const DatasetSelector: FC<Props> = ({
     truncatingBreadcrumbProps: TruncatingBreadcrumbProps
   ): JSX.Element => {
     const { collection_datasets: datasets, dataset_id: selectedDatasetId } =
-      datasetMetadata;
+      datasetMetadata as DatasetMetadata;
     return isDatasetSingleton(datasets)
       ? renderBreadcrumb(truncatingBreadcrumbProps)
       : renderBreadcrumbMenu(

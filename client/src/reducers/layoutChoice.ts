@@ -8,10 +8,10 @@ about commonly used names.  Preferentially, pick in the following order:
   4. give up, use the first available
 */
 
-import type { Action, AnyAction } from "redux";
-import type { RootState } from ".";
+import { type Action, type AnyAction } from "redux";
+import { type RootState } from ".";
 import { selectAvailableLayouts } from "../selectors/layoutChoice";
-import { selectSchema } from "../selectors/annoMatrix";
+import { getCurrentLayout } from "../util/layout";
 
 export interface LayoutChoiceState {
   available: Array<string>;
@@ -52,23 +52,3 @@ const LayoutChoice = (
 };
 
 export default LayoutChoice;
-
-function getCurrentLayout(
-  state: RootState,
-  layoutChoice: string
-): {
-  current: string;
-  currentDimNames: Array<string>;
-} {
-  const schema = selectSchema(state);
-  const currentDimNames = schema.layout.obsByName[layoutChoice].dims;
-
-  return { current: layoutChoice, currentDimNames };
-}
-
-export function getBestDefaultLayout(layouts: Array<string>): string {
-  const preferredNames = ["umap", "tsne", "pca"];
-  const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
-  if (idx !== -1) return preferredNames[idx];
-  return layouts[0];
-}

@@ -12,6 +12,8 @@ export type AnnotationColumnSchema =
   | {
       name: string;
       type: "string" | "float32" | "int32" | "boolean";
+
+      // TODO(seve): remove writable from schema (user annotations)
       writable: boolean;
       categories?: Category[];
     };
