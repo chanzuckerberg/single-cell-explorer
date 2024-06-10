@@ -41,7 +41,6 @@ interface Props {
       state.colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.gene === gene && state.controls.geneIsOpen,
   };
 })
 class Gene extends React.Component<Props, State> {

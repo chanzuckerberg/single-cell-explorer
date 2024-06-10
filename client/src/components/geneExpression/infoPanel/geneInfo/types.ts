@@ -1,13 +1,13 @@
 import { RootState } from "../../../../reducers";
 
 export interface Props {
-  geneSummary: string;
-  geneName: string;
-  gene: string;
-  geneUrl: string;
-  geneSynonyms: string[];
-  showWarningBanner: boolean;
-  infoError: string;
+  geneSummary: RootState["controls"]["geneSummary"];
+  geneName: RootState["controls"]["geneName"];
+  gene: RootState["controls"]["gene"];
+  geneUrl: RootState["controls"]["geneUrl"];
+  geneSynonyms: RootState["controls"]["geneSynonyms"];
+  showWarningBanner: RootState["controls"]["showWarningBanner"];
+  infoError: RootState["controls"]["infoError"];
 }
 
 export const mapStateToProps = (state: RootState): Props => ({
