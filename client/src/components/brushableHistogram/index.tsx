@@ -282,7 +282,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     }
 
     const query = this.createQuery();
-    if (!query || !annoMatrix) {
+    if (!query) {
       return {
         histogram: null,
         miniHistogram: null,

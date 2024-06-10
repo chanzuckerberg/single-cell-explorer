@@ -46,7 +46,7 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   imageUnderlay: state.controls.imageUnderlay,
 });
 
-const Embedding = (props: Props) => {
+function Embedding(props: Props) {
   const { layoutChoice, schema, crossfilter, dispatch, imageUnderlay } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
@@ -131,7 +131,7 @@ const Embedding = (props: Props) => {
       </Popover2>
     </ButtonGroup>
   );
-};
+}
 
 export default connect(mapStateToProps)(Embedding);
 

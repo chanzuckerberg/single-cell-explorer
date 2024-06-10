@@ -6,7 +6,7 @@ export function selectAvailableLayouts(state: {
 }): string[] {
   const { annoMatrix } = state;
 
-  return (annoMatrix?.schema?.layout?.obs || [])
+  return annoMatrix.schema.layout.obs
     .map((v: EmbeddingSchema) => v.name)
     .sort();
 }

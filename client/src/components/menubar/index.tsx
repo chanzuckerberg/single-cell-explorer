@@ -48,7 +48,7 @@ const mapStateToProps = (state: RootState): StateProps => {
 
   const subsetPossible =
     selectedCount !== 0 && selectedCount !== crossfilter?.size(); // ie, not all and not none are selected
-  const embSubsetView = annoMatrix ? getEmbSubsetView(annoMatrix) : false;
+  const embSubsetView = getEmbSubsetView(annoMatrix);
   const subsetResetPossible = !embSubsetView
     ? annoMatrix?.nObs !== annoMatrix?.schema.dataframe.nObs
     : annoMatrix?.nObs !== embSubsetView?.nObs;
