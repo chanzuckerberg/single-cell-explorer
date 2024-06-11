@@ -312,6 +312,8 @@ class MenuBar extends React.PureComponent<{}, State> {
         ? ["Brush selection", "Lasso selection"]
         : ["select", "polygon-filter"];
 
+    console.log(imageUnderlay, "imageUnderlay");
+
     return (
       <div
         style={{
@@ -435,6 +437,11 @@ class MenuBar extends React.PureComponent<{}, State> {
                   intent={imageUnderlay ? "primary" : "none"}
                   active={imageUnderlay}
                   onClick={() => {
+                    track(
+                      imageUnderlay
+                        ? EVENTS.EXPLORER_IMAGE_SELECT
+                        : EVENTS.EXPLORER_IMAGE_DESELECT
+                    );
                     dispatch({
                       type: "toggle image underlay",
                       toggle: !imageUnderlay,
