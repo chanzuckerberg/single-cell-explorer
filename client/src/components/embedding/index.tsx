@@ -20,6 +20,8 @@ import { EVENTS } from "../../analytics/events";
 import { AppDispatch, RootState } from "../../reducers";
 import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
@@ -61,6 +63,8 @@ const Embedding = (props: Props) => {
   } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
+
+  const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
   const handleLayoutChoiceClick = (): void => {
     track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
@@ -145,7 +149,7 @@ const Embedding = (props: Props) => {
             </Button>
           </Tooltip>
         </Popover2>
-        {!isSidePanel && (
+        {!isSidePanel && isSpatial && (
           <Button
             icon={IconNames.MULTI_SELECT}
             onClick={handleOpenPanelEmbedding}
