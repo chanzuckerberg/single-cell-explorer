@@ -8,10 +8,10 @@ import {
   Consortium,
   Link,
   PublisherMetadata,
-} from "../../common/types/entities";
-import { Category } from "../../common/types/schema";
-import * as globals from "../../globals";
-import { RootState } from "../../reducers";
+} from "../../../../common/types/entities";
+import { Category } from "../../../../common/types/schema";
+import * as globals from "../../../../globals";
+import { RootState } from "../../../../reducers";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
@@ -207,9 +207,7 @@ const isAuthorPerson = (author: Author | Consortium): author is Author =>
  * @param datasetMetadata - Dataset metadata containing collection link information to be displayed
  * @returns Markup displaying contact and collection-related links.
  */
-const renderCollectionLinks = (
-  datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"]
-) => {
+const renderCollectionLinks = (datasetMetadata: Props["datasetMetadata"]) => {
   if (!datasetMetadata) return null;
   const {
     collection_contact_name: contactName,

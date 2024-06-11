@@ -52,7 +52,6 @@ const mapStateToProps = (state: RootState) => {
     scatterplotXXaccessor,
     scatterplotYYaccessor,
     scatterplotIsMinimized,
-    scatterplotLevel,
   } = state.controls;
 
   return {
@@ -63,7 +62,6 @@ const mapStateToProps = (state: RootState) => {
     scatterplotXXaccessor,
     scatterplotYYaccessor,
     scatterplotIsMinimized,
-    scatterplotLevel,
     crossfilter,
     genesets: state.genesets.genesets,
   };
