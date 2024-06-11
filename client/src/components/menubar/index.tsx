@@ -298,6 +298,8 @@ class MenuBar extends React.PureComponent<{}, State> {
       screenCap,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       imageUnderlay,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
+      layoutChoice,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -371,7 +373,12 @@ class MenuBar extends React.PureComponent<{}, State> {
                   cursor: "pointer",
                 }}
                 loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
+                onClick={() => {
+                  track(EVENTS.EXPLORER_DOWNLOAD_COMPLETE, {
+                    embedding: layoutChoice,
+                  });
+                  dispatch({ type: "graph: screencap start" });
+                }}
               />
             </Tooltip>
           )}
