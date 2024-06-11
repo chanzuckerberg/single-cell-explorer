@@ -4,7 +4,7 @@ import { IconNames } from "@blueprintjs/icons";
 import { Button } from "@blueprintjs/core";
 
 import * as globals from "../../globals";
-import { height, margin, width } from "./util";
+import { height, width } from "./util";
 import Graph from "../graph/graph";
 import Controls from "../controls";
 import Embedding from "../embedding";
@@ -42,12 +42,13 @@ const PanelEmbedding = (props: StateProps & DispatchProps) => {
         position: "fixed",
         borderRadius: "3px 3px 0px 0px",
         right: globals.leftSidebarWidth + globals.scatterplotMarginLeft,
+        bottom: "12px",
         padding: "0px 20px 20px 0px",
         background: "white",
         /* x y blur spread color */
         boxShadow: "0px 0px 3px 2px rgba(153,153,153,0.2)",
-        width: `${width + margin.left + margin.right}px`,
-        height: `${(isMinimized ? 24 : height + margin.top) + margin.bottom}px`,
+        width: `${width}px`,
+        height: `${isMinimized ? 48 : height}px`,
         zIndex: 5,
       }}
       id="side-viewport"
