@@ -1,9 +1,7 @@
 /* Core dependencies */
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
-
-/* Styles */
-import { STYLE_RIGHT_SIDEBAR } from ".";
+import { RightSidebarWrapper } from "./style";
 
 /**
  * Skeleton of right side bar, to be displayed during data load.
@@ -11,7 +9,7 @@ import { STYLE_RIGHT_SIDEBAR } from ".";
  */
 function RightSidebarSkeleton(): JSX.Element {
   return (
-    <div style={{ ...STYLE_RIGHT_SIDEBAR, top: -2 }}>
+    <RightSidebarWrapper style={{ top: -2 }}>
       {/* Quick gene search */}
       {/* Gene menu */}
       <div
@@ -44,7 +42,7 @@ function RightSidebarSkeleton(): JSX.Element {
           className={SKELETON}
         />
       </div>
-    </div>
+    </RightSidebarWrapper>
   );
 }
 

@@ -9,7 +9,6 @@ import styles from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
-import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
@@ -347,7 +346,10 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               type="button"
               icon={IconNames.INFO_SIGN}
               onClick={() => {
-                dispatch({ type: "toggle dataset drawer" });
+                dispatch({
+                  type: "toggle active info panel",
+                  activeTab: "Dataset",
+                });
               }}
               style={{
                 cursor: "pointer",
@@ -496,7 +498,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
             handleSubsetReset={this.handleSubsetReset}
           />
           {disableDiffexp ? null : <DiffexpButtons />}
-          <InfoDrawer />
         </div>
       </div>
     );

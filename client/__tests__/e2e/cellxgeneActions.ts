@@ -589,17 +589,14 @@ export async function requestGeneInfo(gene: string, page: Page): Promise<void> {
   await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
 }
 
-export async function assertGeneInfoCardExists(
+export async function assertInfoPanelExists(
   gene: string,
   page: Page
 ): Promise<void> {
   await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
-  await expect(page.getByTestId(`gene-info-header`)).toBeTruthy();
-  await expect(page.getByTestId(`min-gene-info`)).toBeTruthy();
+  await expect(page.getByTestId(`info-panel-header`)).toBeTruthy();
+  await expect(page.getByTestId(`min-info-panel`)).toBeTruthy();
 
-  await expect(page.getByTestId(`clear-info-summary`).innerText).not.toEqual(
-    ""
-  );
   await expect(page.getByTestId(`gene-info-synonyms`).innerText).not.toEqual(
     ""
   );
@@ -607,19 +604,19 @@ export async function assertGeneInfoCardExists(
   await expect(page.getByTestId(`gene-info-link`)).toBeTruthy();
 }
 
-export async function minimizeGeneInfo(page: Page): Promise<void> {
-  await page.getByTestId("min-gene-info").click();
+export async function minimizeInfoPanel(page: Page): Promise<void> {
+  await page.getByTestId("min-info-panel").click();
 }
 
-export async function assertGeneInfoCardIsMinimized(
+export async function assertInfoPanelIsMinimized(
   gene: string,
   page: Page
 ): Promise<void> {
   const testIds = [
     `${gene}:gene-info`,
-    "gene-info-header",
-    "min-gene-info",
-    "clear-gene-info",
+    "info-panel-header",
+    "max-info-panel",
+    "close-info-panel",
   ];
 
   await tryUntil(
@@ -628,27 +625,24 @@ export async function assertGeneInfoCardIsMinimized(
         const result = await page.getByTestId(id).isVisible();
         await expect(result).toBe(true);
       }
-
-      const result = await page.getByTestId("gene-info-symbol").isVisible();
-      await expect(result).toBe(false);
     },
     { page }
   );
 }
 
-export async function removeGeneInfo(page: Page): Promise<void> {
-  await page.getByTestId("clear-gene-info").click();
+export async function closeInfoPanel(page: Page): Promise<void> {
+  await page.getByTestId("close-info-panel").click();
 }
 
-export async function assertGeneInfoDoesNotExist(
+export async function assertInfoPanelClosed(
   gene: string,
   page: Page
 ): Promise<void> {
   const testIds = [
     `${gene}:gene-info`,
-    "gene-info-header",
-    "min-gene-info",
-    "clear-gene-info",
+    "info-panel-header",
+    "min-info-panel",
+    "close-info-panel",
   ];
   await tryUntil(
     async () => {
