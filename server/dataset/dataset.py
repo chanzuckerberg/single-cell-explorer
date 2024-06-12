@@ -346,7 +346,7 @@ class Dataset(metaclass=ABCMeta):
         Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
         """
 
-        if spatial is not None and ename in "spatial":
+        if spatial and ename in "spatial":
 
             library_id = list(spatial.keys())[0]
             image_properties = spatial[library_id]["image_properties"]
