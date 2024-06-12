@@ -373,12 +373,7 @@ class MenuBar extends React.PureComponent<{}, State> {
                   cursor: "pointer",
                 }}
                 loading={screenCap}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_DOWNLOAD_COMPLETE, {
-                    embedding: layoutChoice,
-                  });
-                  dispatch({ type: "graph: screencap start" });
-                }}
+                onClick={() => dispatch({ type: "graph: screencap start" })}
               />
             </Tooltip>
           )}
