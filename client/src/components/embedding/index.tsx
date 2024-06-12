@@ -10,6 +10,7 @@ import {
   RadioGroup,
   Tooltip,
 } from "@blueprintjs/core";
+import { IconNames } from "@blueprintjs/icons";
 import { Popover2 } from "@blueprintjs/popover2";
 import * as globals from "../../globals";
 import actions from "../../actions";
@@ -20,12 +21,15 @@ import { AppDispatch, RootState } from "../../reducers";
 import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
 import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
   schema?: Schema;
   crossfilter: RootState["obsCrossfilter"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
+  sideIsOpen: RootState["panelEmbedding"]["open"];
 }
 
 interface OwnProps {
@@ -45,12 +49,23 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   schema: state.annoMatrix?.schema,
   crossfilter: state.obsCrossfilter,
   imageUnderlay: state.controls.imageUnderlay,
+  sideIsOpen: state.panelEmbedding.open,
 });
 
-function Embedding(props: Props) {
-  const { layoutChoice, schema, crossfilter, dispatch, imageUnderlay } = props;
+const Embedding = (props: Props) => {
+  const {
+    layoutChoice,
+    schema,
+    crossfilter,
+    dispatch,
+    imageUnderlay,
+    isSidePanel,
+    sideIsOpen,
+  } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
+
+  const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
   const handleLayoutChoiceClick = (): void => {
     track(EVENTS.EXPLORER_EMBEDDING_CLICKED);
@@ -78,61 +93,91 @@ function Embedding(props: Props) {
     }
   };
 
+  const handleOpenPanelEmbedding = async (): Promise<void> => {
+    dispatch({
+      type: "toggle panel embedding",
+    });
+  };
+
   return (
-    <ButtonGroup
+    <div
       style={{
-        paddingTop: 8,
         zIndex: 9999,
       }}
     >
-      <Popover2
-        // minimal /* removes arrow */
-        position={Position.TOP_LEFT}
-        content={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-start",
-              alignItems: "flex-start",
-              flexDirection: "column",
-              padding: 10,
-              width: 400,
-            }}
-          >
-            <H4>Embedding Choice</H4>
-            <p style={{ fontStyle: "italic" }}>
-              There are {schema?.dataframe?.nObs} cells in the entire dataset.
-            </p>
-            <EmbeddingChoices
-              onChange={handleLayoutChoiceChange}
-              annoMatrix={annoMatrix}
-              layoutChoice={layoutChoice}
-            />
-          </div>
-        }
-      >
-        <Tooltip
-          content="Select embedding for visualization"
-          position="top"
-          hoverOpenDelay={globals.tooltipHoverOpenDelay}
+      <ButtonGroup>
+        <Popover2
+          // minimal /* removes arrow */
+          position={Position.TOP_LEFT}
+          content={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-start",
+                alignItems: "flex-start",
+                flexDirection: "column",
+                padding: 10,
+                width: 400,
+              }}
+            >
+              <H4>Embedding Choice</H4>
+              <p style={{ fontStyle: "italic" }}>
+                There are {schema?.dataframe?.nObs} cells in the entire dataset.
+              </p>
+              <EmbeddingChoices
+                onChange={handleLayoutChoiceChange}
+                annoMatrix={annoMatrix}
+                layoutChoice={layoutChoice}
+              />
+            </div>
+          }
         >
-          <Button
-            type="button"
-            data-testid={LAYOUT_CHOICE_TEST_ID}
-            id="embedding"
-            style={{
-              cursor: "pointer",
-            }}
-            onClick={handleLayoutChoiceClick}
+          <Tooltip
+            content="Select embedding for visualization"
+            position="top"
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
           >
-            {layoutChoice?.current}: {crossfilter.countSelected()} of{" "}
-            {crossfilter.size()} cells
-          </Button>
-        </Tooltip>
-      </Popover2>
-    </ButtonGroup>
+            <Button
+              type="button"
+              data-testid={LAYOUT_CHOICE_TEST_ID}
+              id="embedding"
+              style={{
+                cursor: "pointer",
+              }}
+              icon={IconNames.GRAPH}
+              rightIcon={IconNames.CARET_DOWN}
+              onClick={handleLayoutChoiceClick}
+            >
+              {layoutChoice?.current}
+            </Button>
+          </Tooltip>
+        </Popover2>
+        {!isSidePanel && isSpatial && (
+          <Button
+            icon={IconNames.MULTI_SELECT}
+            onClick={handleOpenPanelEmbedding}
+            active={sideIsOpen}
+          />
+        )}
+      </ButtonGroup>
+
+      {!isSidePanel && (
+        <span
+          style={{
+            color: "#767676",
+            fontWeight: 400,
+            marginTop: "8px",
+            position: "absolute",
+            top: "38px",
+            left: "64px",
+          }}
+        >
+          {crossfilter.countSelected()} of {crossfilter.size()} cells
+        </span>
+      )}
+    </div>
   );
-}
+};
 
 export default connect(mapStateToProps)(Embedding);
 

@@ -1182,6 +1182,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       screenCap,
       imageUnderlay,
       isSidePanel = false,
+      isHidden = false,
     } = this.props;
 
     const {
@@ -1204,7 +1205,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           position: "relative",
           left: 0,
           flexDirection: "column",
-          display: "flex",
+          display: isHidden ? "none" : "flex",
           alignItems: "center",
         }}
         data-testid={sidePanelAttributeNameChange(`graph-wrapper`, isSidePanel)}

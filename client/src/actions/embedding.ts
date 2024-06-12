@@ -98,3 +98,17 @@ export const layoutChoiceAction: ActionCreator<
       annoMatrix,
     });
   };
+
+export const swapLayoutChoicesAction: ActionCreator<
+  ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
+> =
+  () =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    const { layoutChoice, panelEmbedding } = getState();
+    // get main and side layout choices
+    const mainLayoutChoice = layoutChoice.current;
+    const sideLayoutChoice = panelEmbedding.layoutChoice.current;
+
+    await dispatch(layoutChoiceAction(mainLayoutChoice, true));
+    await dispatch(layoutChoiceAction(sideLayoutChoice, false));
+  };

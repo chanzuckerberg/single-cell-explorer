@@ -527,6 +527,7 @@ export default {
   subsetAction: viewActions.subsetAction,
   resetSubsetAction: viewActions.resetSubsetAction,
   layoutChoiceAction: embActions.layoutChoiceAction,
+  swapLayoutChoicesAction: embActions.swapLayoutChoicesAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
