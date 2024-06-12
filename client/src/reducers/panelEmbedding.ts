@@ -53,7 +53,6 @@ const panelEmbedding = (
     }
 
     case "toggle minimize panel embedding": {
-      console.log(action);
 
       return {
         ...state,
