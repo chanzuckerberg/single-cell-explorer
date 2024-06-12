@@ -625,7 +625,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           downloadImage(categoricalLegendImageURI);
         }
         track(EVENTS.EXPLORER_DOWNLOAD_COMPLETE, {
-          embedding: layoutChoice,
+          embedding: layoutChoice.current,
         });
         dispatch({ type: "graph: screencap end" });
       }
