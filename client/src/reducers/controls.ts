@@ -56,7 +56,7 @@ const Controls = (
     screenCap: false,
     mountCapture: false,
     showWarningBanner: false,
-    imageUnderlay: false,
+    imageUnderlay: true,
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,

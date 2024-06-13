@@ -1033,10 +1033,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const {
       config: { s3URI },
       isSidePanel = false,
+      imageUnderlay,
     } = this.props;
 
     if (
       this.openseadragon ||
+      !imageUnderlay ||
       !shouldShowOpenseadragon(this.props) ||
       !width ||
       !height ||
