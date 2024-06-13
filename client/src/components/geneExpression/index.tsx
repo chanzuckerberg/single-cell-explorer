@@ -180,8 +180,10 @@ class GeneExpression extends React.Component<{}, State> {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
+          justifyContent: "start",
           padding: globals.rightSidebarSectionPadding,
+          height: "50%",
+          overflowY: "auto",
         }}
       >
         <QuickGene />
