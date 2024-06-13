@@ -56,7 +56,7 @@ const Controls = (
     screenCap: false,
     mountCapture: false,
     showWarningBanner: false,
-    imageUnderlay: false,
+    imageUnderlay: true,
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
@@ -262,6 +262,7 @@ const Controls = (
     **************************/
     case "toggle image underlay": {
       if (state.imageUnderlay === action.toggle) return state;
+
       return {
         ...state,
         imageUnderlay: action.toggle,

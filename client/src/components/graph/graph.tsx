@@ -493,8 +493,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
   // when a lasso is completed, filter to the points within the lasso polygon
   async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
-    const { dispatch, layoutChoice, isSidePanel = false } = this.props;
-    console.log(`Lasso completed in ${isSidePanel ? "side" : "main"}`);
+    const { dispatch, layoutChoice } = this.props;
+
     if (
       polygon.length < 3 ||
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
@@ -1033,6 +1033,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const {
       config: { s3URI },
       isSidePanel = false,
+      imageUnderlay,
     } = this.props;
 
     if (
@@ -1054,6 +1055,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
        * (thuang): This is needed to prevent error `tainted canvas` when downloading the image
        */
       crossOriginPolicy: "Anonymous",
+      opacity: imageUnderlay ? 1 : 0,
     });
 
     /**
