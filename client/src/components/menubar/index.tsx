@@ -123,6 +123,7 @@ function MenuBar(props: MenuBarProps) {
   useEffect(() => {
     const observer = new ResizeObserver((rightMenuBar) => {
       setWidthUnits(
+        // Diffexp will never be popped into the column so ignore that when calculating width units available
         (rightMenuBar[0].contentRect.width - DIFFEXP_WIDTH) / BUTTON_WIDTH
       );
     });
@@ -277,7 +278,6 @@ function MenuBar(props: MenuBarProps) {
   // constants used to create selection tool button
   const [selectionTooltip, selectionButtonIcon] = ["select", "polygon-filter"];
 
-  // if you add or remove buttons from the menubar, you must also update the size array constant
   const rightMenuBarComponents = [
     <Subset
       // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message

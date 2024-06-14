@@ -214,7 +214,7 @@ for (const testDataset of testDatasets) {
         await snapshotTestGraph(page, testInfo);
       });
 
-      test.only("selects all cells cellset 2", async ({ page }, testInfo) => {
+      test("selects all cells cellset 2", async ({ page }, testInfo) => {
         await goToPage(page, url);
         const cellCount = await getCellSetCount(2, page);
 
