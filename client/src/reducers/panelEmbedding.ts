@@ -1,6 +1,7 @@
 import { type Action, type AnyAction } from "redux";
 import { type RootState } from ".";
 import { getCurrentLayout } from "../util/layout";
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
 
 export interface PanelEmbeddingState {
   layoutChoice: {
@@ -35,7 +36,7 @@ const panelEmbedding = (
         ...state,
         open: !state.open,
         layoutChoice: {
-          ...state.layoutChoice,
+          available: selectAvailableLayouts(nextSharedState),
           ...getCurrentLayout(
             nextSharedState,
             nextSharedState.layoutChoice.current
