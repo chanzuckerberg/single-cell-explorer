@@ -1,3 +1,4 @@
+import { Classes } from "@blueprintjs/core";
 import styled from "@emotion/styled";
 
 export const StyledMenubar = styled.div`
@@ -6,6 +7,9 @@ export const StyledMenubar = styled.div`
   justify-content: space-between;
   margin-top: 8px;
   width: 100%;
+  & .${Classes.BUTTON_GROUP} {
+    flex: 0 0 auto;
+  }
 `;
 
 export const StyledMenubarRight = styled.div`

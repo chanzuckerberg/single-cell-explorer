@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { cloneElement, useEffect, useRef, useState } from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup, Tooltip } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
@@ -117,12 +117,12 @@ function MenuBar(props: MenuBarProps) {
     clipPercentileMax: undefined,
   });
 
-  const [widthUnits, setWidthUnits] = useState(8);
+  const [availableButtonSlots, setAvailableButtonSlots] = useState(8);
 
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new ResizeObserver((rightMenuBar) => {
-      setWidthUnits(
+      setAvailableButtonSlots(
         // Diffexp will never be popped into the column so ignore that when calculating width units available
         (rightMenuBar[0].contentRect.width - DIFFEXP_WIDTH) / BUTTON_WIDTH
       );
@@ -431,10 +431,8 @@ function MenuBar(props: MenuBarProps) {
     />,
   ];
 
-  let widthUnitIterator = 0;
+  let usedButtonSlots = 0;
   let columnStartingIndex: null | number = null;
-
-  console.log(widthUnits, widthUnitIterator);
 
   return (
     <StyledMenubar data-test-id="menubar">
@@ -446,14 +444,14 @@ function MenuBar(props: MenuBarProps) {
             if (!component || columnStartingIndex !== null) {
               return null;
             }
-            // if current component is a ButtonGroup component, increment the widthUnitIterator by 2 otherwise its a single button and increment by 1
+            // if current component is a ButtonGroup component, increment the usedButtonSlots by 2 otherwise its a single button and increment by 1
             if (component.type === ButtonGroup) {
-              widthUnitIterator += 2;
+              usedButtonSlots += 2;
             } else {
-              widthUnitIterator += 1;
+              usedButtonSlots += 1;
             }
 
-            if (widthUnitIterator > widthUnits) {
+            if (usedButtonSlots >= availableButtonSlots) {
               columnStartingIndex = i;
               return null;
             }
@@ -464,7 +462,12 @@ function MenuBar(props: MenuBarProps) {
           {columnStartingIndex !== null &&
             rightMenuBarComponents
               .slice(columnStartingIndex)
-              .map((component) => component)}
+              .map((component) => {
+                if (component && component.type === ButtonGroup) {
+                  return cloneElement(component, { vertical: true });
+                }
+                return component;
+              })}
         </MenubarRightOverflowColumn>
       </StyledMenubarRight>
     </StyledMenubar>
