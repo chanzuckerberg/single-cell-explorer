@@ -1,11 +1,10 @@
-import React from "react";
+import React, { cloneElement, useEffect, useRef, useState } from "react";
 import { connect } from "react-redux";
-import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
+import { AnchorButton, ButtonGroup, Tooltip } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
+import ResizeObserver from "resize-observer-polyfill";
 
 import * as globals from "../../globals";
-// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
-import styles from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
@@ -21,6 +20,12 @@ import { shouldShowOpenseadragon } from "../../common/selectors";
 import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
 import { AppDispatch, RootState } from "../../reducers";
 import { AnnoMatrixClipView } from "../../annoMatrix/views";
+import {
+  MenubarRightOverflowColumn,
+  StyledMenubar,
+  StyledMenubarRight,
+  StyledMenubarRightRow,
+} from "./style";
 
 interface StateProps {
   subsetPossible: boolean;
@@ -34,6 +39,7 @@ interface StateProps {
   categoricalSelection: RootState["categoricalSelection"];
   screenCap: RootState["controls"]["screenCap"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   layoutChoice: RootState["layoutChoice"];
   // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   config: RootState["config"];
@@ -84,9 +90,54 @@ interface State {
     clipPercentileMax: number | undefined;
   };
 }
-class MenuBar extends React.PureComponent<MenuBarProps, State> {
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  static isValidDigitKeyEvent(e: any) {
+
+const DIFFEXP_WIDTH = 150;
+const BUTTON_WIDTH = 38;
+
+function MenuBar(props: MenuBarProps) {
+  const {
+    dispatch,
+    disableDiffexp,
+    clipPercentileMin,
+    clipPercentileMax,
+    graphInteractionMode,
+    showCentroidLabels,
+    categoricalSelection,
+    colorAccessor,
+    subsetPossible,
+    subsetResetPossible,
+    screenCap,
+    imageUnderlay,
+  } = props;
+
+  const [pendingClipPercentiles, setPendingClipPercentiles] = useState<
+    State["pendingClipPercentiles"]
+  >({
+    clipPercentileMin: undefined,
+    clipPercentileMax: undefined,
+  });
+
+  const [availableButtonSlots, setAvailableButtonSlots] = useState(8);
+
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const observer = new ResizeObserver((rightMenuBar) => {
+      setAvailableButtonSlots(
+        // Diffexp will never be popped into the column so ignore that when calculating width units available
+        (rightMenuBar[0].contentRect.width - DIFFEXP_WIDTH) / BUTTON_WIDTH
+      );
+    });
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  function isValidDigitKeyEvent(e: any) {
     /*
     Return true if this event is necessary to enter a percent number input.
     Return false if not.
@@ -110,154 +161,95 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     return key >= 0 && key <= 9;
   }
 
-  constructor(props: MenuBarProps) {
-    super(props);
-    const { layoutChoice, dispatch } = this.props;
-    this.state = {
-      pendingClipPercentiles: {
-        clipPercentileMin: undefined,
-        clipPercentileMax: undefined,
-      },
-    };
-    const currentConditionMet = layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-    // (seve): On some datasets, the app initially loads with a different layout selected, then switches to spatial.
-    //  This triggers the componentDidUpdate, which toggles the image underlay.
-    //  Other datasets correctly load with the spatial layout initially selected, but then don't trigger the componentDidUpdate.
-    if (currentConditionMet) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: true,
-      });
-    }
-  }
-
-  componentDidUpdate(prevProps: MenuBarProps): void {
-    const { layoutChoice, dispatch } = this.props;
-    const prevConditionMet = prevProps.layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-    const currentConditionMet = layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-
-    if (!prevConditionMet && currentConditionMet) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: true,
-      });
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  isClipDisabled = () => {
+  const isClipDisabled = () => {
     /*
     return true if clip button should be disabled.
     */
-    const { pendingClipPercentiles } = this.state;
-    const clipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
-    const clipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
+    const pendingClipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
+    const pendingClipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
     const {
       clipPercentileMin: currentClipMin,
       clipPercentileMax: currentClipMax,
-    } = this.props;
+    } = props;
 
     // if you change this test, be careful with logic around
     // comparisons between undefined / NaN handling.
     const isDisabled =
-      !clipPercentileMin ||
-      !clipPercentileMax ||
-      !(clipPercentileMin < clipPercentileMax) ||
-      (clipPercentileMin === currentClipMin &&
-        clipPercentileMax === currentClipMax);
+      !pendingClipPercentileMin ||
+      !pendingClipPercentileMax ||
+      !(pendingClipPercentileMin < pendingClipPercentileMax) ||
+      (pendingClipPercentileMin === currentClipMin &&
+        pendingClipPercentileMax === currentClipMax);
 
     return isDisabled;
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleClipOnKeyPress = (e: any) => {
+  const handleClipOnKeyPress = (e: any) => {
     /*
     allow only numbers, plus other critical keys which
     may be required to make a number
     */
-    if (!MenuBar.isValidDigitKeyEvent(e)) {
+    if (!isValidDigitKeyEvent(e)) {
       e.preventDefault();
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleClipPercentileMinValueChange = (v: any) => {
+  const handleClipPercentileMinValueChange = (v: any) => {
     /*
     Ignore anything that isn't a legit number
     */
     if (!Number.isFinite(v)) return;
-
-    const { pendingClipPercentiles } = this.state;
-    const clipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
 
     /*
     clamp to [0, currentClipPercentileMax]
     */
     if (v <= 0) v = 0;
     if (v > 100) v = 100;
-    const clipPercentileMin = Math.round(v); // paranoia
-    this.setState({
-      pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
+    setPendingClipPercentiles({
+      clipPercentileMin: Math.round(v), // paranoia
+      clipPercentileMax: pendingClipPercentiles?.clipPercentileMax,
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleClipPercentileMaxValueChange = (v: any) => {
+  const handleClipPercentileMaxValueChange = (v: any) => {
     /*
     Ignore anything that isn't a legit number
     */
     if (!Number.isFinite(v)) return;
-
-    const { pendingClipPercentiles } = this.state;
-    const clipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
 
     /*
     clamp to [0, 100]
     */
     if (v < 0) v = 0;
     if (v > 100) v = 100;
-    const clipPercentileMax = Math.round(v); // paranoia
 
-    this.setState({
-      pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
+    setPendingClipPercentiles({
+      clipPercentileMin: pendingClipPercentiles?.clipPercentileMin,
+      clipPercentileMax: Math.round(v), // paranoia
     });
   };
 
-  handleClipCommit = () => {
-    const { dispatch } = this.props;
-    const { pendingClipPercentiles } = this.state;
-    const { clipPercentileMin, clipPercentileMax } = pendingClipPercentiles;
-    const min = clipPercentileMin! / 100;
-    const max = clipPercentileMax! / 100;
+  const handleClipCommit = () => {
+    const min = pendingClipPercentiles.clipPercentileMin! / 100;
+    const max = pendingClipPercentiles.clipPercentileMax! / 100;
     dispatch(actions.clipAction(min, max));
   };
 
-  handleClipOpening = () => {
-    const { clipPercentileMin, clipPercentileMax } = this.props;
-    this.setState({
-      pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
+  const handleClipOpening = () => {
+    setPendingClipPercentiles({
+      clipPercentileMin,
+      clipPercentileMax,
     });
   };
 
-  handleClipClosing = () => {
-    this.setState({
-      pendingClipPercentiles: {
-        clipPercentileMax: undefined,
-        clipPercentileMin: undefined,
-      },
+  const handleClipClosing = () => {
+    setPendingClipPercentiles({
+      clipPercentileMax: undefined,
+      clipPercentileMin: undefined,
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleCentroidChange = () => {
-    const { dispatch, showCentroidLabels } = this.props;
-
+  const handleCentroidChange = () => {
     track(EVENTS.EXPLORER_CENTROID_LABEL_TOGGLE_BUTTON_CLICKED);
 
     dispatch({
@@ -266,249 +258,220 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleSubset = () => {
-    const { dispatch } = this.props;
-
+  const handleSubset = () => {
     track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
 
     dispatch(actions.subsetAction());
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleSubsetReset = () => {
-    const { dispatch } = this.props;
-
+  const handleSubsetReset = () => {
     track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
 
     dispatch(actions.resetSubsetAction());
   };
 
-  render() {
-    const {
-      dispatch,
-      disableDiffexp,
-      clipPercentileMin,
-      clipPercentileMax,
-      graphInteractionMode,
-      showCentroidLabels,
-      categoricalSelection,
-      colorAccessor,
-      subsetPossible,
-      subsetResetPossible,
-      screenCap,
-      imageUnderlay,
-    } = this.props;
-    const { pendingClipPercentiles } = this.state;
+  const isColoredByCategorical = !!categoricalSelection?.[colorAccessor || ""];
 
-    const isColoredByCategorical =
-      !!categoricalSelection?.[colorAccessor || ""];
+  const isTest = getFeatureFlag(FEATURES.TEST);
+  const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
-    const isTest = getFeatureFlag(FEATURES.TEST);
-    const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
+  // constants used to create selection tool button
+  const [selectionTooltip, selectionButtonIcon] = ["select", "polygon-filter"];
 
-    // constants used to create selection tool button
-    const [selectionTooltip, selectionButtonIcon] = [
-      "select",
-      "polygon-filter",
-    ];
-
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          width: "100%",
-        }}
-        data-test-id="menubar"
+  const rightMenuBarComponents = [
+    <Subset
+      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
+      subsetPossible={subsetPossible}
+      subsetResetPossible={subsetResetPossible}
+      handleSubset={handleSubset}
+      handleSubsetReset={handleSubsetReset}
+    />,
+    <ButtonGroup>
+      <Tooltip
+        content={selectionTooltip}
+        position="bottom"
+        hoverOpenDelay={globals.tooltipHoverOpenDelay}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "left",
-            marginTop: 8,
-          }}
-        >
-          <Embedding isSidePanel={false} />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row-reverse",
-            flexWrap: "wrap",
-            justifyContent: "right",
-          }}
-        >
-          <ButtonGroup className={styles.menubarButton}>
-            <AnchorButton
-              type="button"
-              icon={IconNames.INFO_SIGN}
-              onClick={() => {
-                dispatch({
-                  type: "toggle active info panel",
-                  activeTab: "Dataset",
-                });
-              }}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid="drawer"
-            />
-          </ButtonGroup>
-          {isDownload && (
-            <Tooltip
-              content="Download the current graph view as a PNG"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                data-testid="download-graph-button"
-                type="button"
-                icon={IconNames.CAMERA}
-                style={{
-                  cursor: "pointer",
-                }}
-                loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
-              />
-            </Tooltip>
-          )}
-          {isTest && (
-            <AnchorButton
-              className={styles.menubarButton}
-              type="button"
-              icon={IconNames.TORCH}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid={GRAPH_AS_IMAGE_TEST_ID}
-              data-chromatic="ignore"
-              loading={screenCap}
-              onClick={() => dispatch({ type: "test: screencap start" })}
-            />
-          )}
-          <Clip
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
-            pendingClipPercentiles={pendingClipPercentiles}
-            clipPercentileMin={clipPercentileMin}
-            clipPercentileMax={clipPercentileMax}
-            handleClipOpening={this.handleClipOpening}
-            handleClipClosing={this.handleClipClosing}
-            handleClipCommit={this.handleClipCommit}
-            isClipDisabled={this.isClipDisabled}
-            handleClipOnKeyPress={this.handleClipOnKeyPress}
-            handleClipPercentileMaxValueChange={
-              this.handleClipPercentileMaxValueChange
-            }
-            handleClipPercentileMinValueChange={
-              this.handleClipPercentileMinValueChange
-            }
-          />
-          <Tooltip
-            content="When a category is colored by, show labels on the graph"
-            position="bottom"
-            disabled={graphInteractionMode === "zoom"}
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
-          >
-            <AnchorButton
-              className={styles.menubarButton}
-              type="button"
-              data-testid="centroid-label-toggle"
-              icon="property"
-              onClick={this.handleCentroidChange}
-              active={showCentroidLabels}
-              intent={showCentroidLabels ? "primary" : "none"}
-              disabled={!isColoredByCategorical}
-            />
-          </Tooltip>
-          {shouldShowOpenseadragon(this.props) && (
-            <ButtonGroup className={styles.menubarButton}>
-              <Tooltip
-                content="Toggle image"
-                position="bottom"
-                hoverOpenDelay={globals.tooltipHoverOpenDelay}
-              >
-                <AnchorButton
-                  type="button"
-                  data-testid="toggle-image-underlay"
-                  icon="media"
-                  intent={imageUnderlay ? "primary" : "none"}
-                  active={imageUnderlay}
-                  onClick={() => {
-                    track(
-                      imageUnderlay
-                        ? EVENTS.EXPLORER_IMAGE_SELECT
-                        : EVENTS.EXPLORER_IMAGE_DESELECT
-                    );
-                    dispatch({
-                      type: "toggle image underlay",
-                      toggle: !imageUnderlay,
-                    });
-                  }}
-                />
-              </Tooltip>
-            </ButtonGroup>
-          )}
-          <ButtonGroup className={styles.menubarButton}>
-            <Tooltip
-              content={selectionTooltip}
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="mode-lasso"
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
-                icon={selectionButtonIcon}
-                active={graphInteractionMode === "select"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
+        <AnchorButton
+          type="button"
+          data-testid="mode-lasso"
+          // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
+          icon={selectionButtonIcon}
+          active={graphInteractionMode === "select"}
+          onClick={() => {
+            track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "select",
-                  });
-                }}
-              />
-            </Tooltip>
-            <Tooltip
-              content="Drag to pan, scroll to zoom"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="mode-pan-zoom"
-                icon="zoom-in"
-                active={graphInteractionMode === "zoom"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+            dispatch({
+              type: "change graph interaction mode",
+              data: "select",
+            });
+          }}
+        />
+      </Tooltip>
+      <Tooltip
+        content="Drag to pan, scroll to zoom"
+        position="bottom"
+        hoverOpenDelay={globals.tooltipHoverOpenDelay}
+      >
+        <AnchorButton
+          type="button"
+          data-testid="mode-pan-zoom"
+          icon="zoom-in"
+          active={graphInteractionMode === "zoom"}
+          onClick={() => {
+            track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "zoom",
-                  });
-                }}
-              />
-            </Tooltip>
-          </ButtonGroup>
-          <Subset
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
-            subsetPossible={subsetPossible}
-            subsetResetPossible={subsetResetPossible}
-            handleSubset={this.handleSubset}
-            handleSubsetReset={this.handleSubsetReset}
-          />
+            dispatch({
+              type: "change graph interaction mode",
+              data: "zoom",
+            });
+          }}
+        />
+      </Tooltip>
+    </ButtonGroup>,
+    <Tooltip
+      content="When a category is colored by, show labels on the graph"
+      position="bottom"
+      disabled={graphInteractionMode === "zoom"}
+      hoverOpenDelay={globals.tooltipHoverOpenDelay}
+    >
+      <AnchorButton
+        type="button"
+        data-testid="centroid-label-toggle"
+        icon="property"
+        onClick={handleCentroidChange}
+        active={showCentroidLabels}
+        intent={showCentroidLabels ? "primary" : "none"}
+        disabled={!isColoredByCategorical}
+      />
+    </Tooltip>,
+    shouldShowOpenseadragon(props) && (
+      <Tooltip
+        content="Toggle image"
+        position="bottom"
+        hoverOpenDelay={globals.tooltipHoverOpenDelay}
+      >
+        <AnchorButton
+          type="button"
+          data-testid="toggle-image-underlay"
+          icon="media"
+          intent={imageUnderlay ? "primary" : "none"}
+          active={imageUnderlay}
+          onClick={() => {
+            track(
+              imageUnderlay
+                ? EVENTS.EXPLORER_IMAGE_SELECT
+                : EVENTS.EXPLORER_IMAGE_DESELECT
+            );
+            dispatch({
+              type: "toggle image underlay",
+              toggle: !imageUnderlay,
+            });
+          }}
+        />
+      </Tooltip>
+    ),
+    <Clip
+      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
+      pendingClipPercentiles={pendingClipPercentiles}
+      clipPercentileMin={clipPercentileMin}
+      clipPercentileMax={clipPercentileMax}
+      handleClipOpening={handleClipOpening}
+      handleClipClosing={handleClipClosing}
+      handleClipCommit={handleClipCommit}
+      isClipDisabled={isClipDisabled}
+      handleClipOnKeyPress={handleClipOnKeyPress}
+      handleClipPercentileMaxValueChange={handleClipPercentileMaxValueChange}
+      handleClipPercentileMinValueChange={handleClipPercentileMinValueChange}
+    />,
+    isTest && (
+      <AnchorButton
+        type="button"
+        icon={IconNames.TORCH}
+        style={{
+          cursor: "pointer",
+        }}
+        data-testid={GRAPH_AS_IMAGE_TEST_ID}
+        data-chromatic="ignore"
+        loading={screenCap}
+        onClick={() => dispatch({ type: "test: screencap start" })}
+      />
+    ),
+    isDownload && (
+      <Tooltip
+        content="Download the current graph view as a PNG"
+        position="bottom"
+        hoverOpenDelay={globals.tooltipHoverOpenDelay}
+      >
+        <AnchorButton
+          data-testid="download-graph-button"
+          type="button"
+          icon={IconNames.CAMERA}
+          style={{
+            cursor: "pointer",
+          }}
+          loading={screenCap}
+          onClick={() => dispatch({ type: "graph: screencap start" })}
+        />
+      </Tooltip>
+    ),
+    <AnchorButton
+      type="button"
+      icon={IconNames.INFO_SIGN}
+      onClick={() => {
+        dispatch({
+          type: "toggle active info panel",
+          activeTab: "Dataset",
+        });
+      }}
+      style={{
+        cursor: "pointer",
+      }}
+      data-testid="drawer"
+    />,
+  ];
+
+  let usedButtonSlots = 0;
+  let columnStartingIndex: null | number = null;
+
+  return (
+    <StyledMenubar data-test-id="menubar">
+      <Embedding isSidePanel={false} />
+      <StyledMenubarRight ref={ref}>
+        <StyledMenubarRightRow>
           {disableDiffexp ? null : <DiffexpButtons />}
-        </div>
-      </div>
-    );
-  }
+          {rightMenuBarComponents.map((component, i) => {
+            if (!component || columnStartingIndex !== null) {
+              return null;
+            }
+            // if current component is a ButtonGroup component, increment the usedButtonSlots by 2 otherwise its a single button and increment by 1
+            if (component.type === ButtonGroup) {
+              usedButtonSlots += 2;
+            } else {
+              usedButtonSlots += 1;
+            }
+
+            if (usedButtonSlots >= availableButtonSlots) {
+              columnStartingIndex = i;
+              return null;
+            }
+            return component;
+          })}
+        </StyledMenubarRightRow>
+        <MenubarRightOverflowColumn>
+          {columnStartingIndex !== null &&
+            rightMenuBarComponents
+              .slice(columnStartingIndex)
+              .map((component) => {
+                if (component && component.type === ButtonGroup) {
+                  return cloneElement(component, { vertical: true });
+                }
+                return component;
+              })}
+        </MenubarRightOverflowColumn>
+      </StyledMenubarRight>
+    </StyledMenubar>
+  );
 }
 
 export default connect(mapStateToProps)(MenuBar);
