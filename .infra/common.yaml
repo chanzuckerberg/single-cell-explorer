@@ -42,9 +42,9 @@ services:
       - name: AWS_DEFAULT_REGION
         value: us-west-2
       - name: API_DOMAIN
-        value: $(__ARGUS_STACK_BASE_URL)
+        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_BASE_URL)
+        value: $(__ARGUS_STACK_INGRESS_HOST)
     ingress:
       hosts:
         - paths:
