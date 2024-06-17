@@ -30,13 +30,15 @@ type Props = RootState;
 }))
 class Embedding extends React.PureComponent<Props> {
   handleLayoutChoiceClick = (): void => {
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_EMBEDDING_CLICKED);
   };
 
   handleLayoutChoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { dispatch, imageUnderlay } = this.props;
 
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
+    track(EVENTS.EXPLORER_EMBEDDING_SELECTED, {
+      embedding: e.currentTarget.value,
+    });
 
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
     if (
