@@ -70,10 +70,10 @@ class Categories extends React.Component<{}, State> {
   /**
    * Determine if category name is an ontology key.
    * @param catName - Name of category.
-   * @returns True if category name includes ontology key.
+   * @returns True if category exists in ontology term id list.
    */
   isCategoryNameOntologyKey = (catName: string): boolean =>
-    catName.includes(globals.ONTOLOGY_KEY);
+    globals.ONTOLOGY_TERM_ID_KEYS.some((key: string) => catName.includes(key));
 
   /**
    * Categories are included for display if category has more than one category value or categories are not defined

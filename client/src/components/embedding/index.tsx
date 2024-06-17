@@ -17,6 +17,7 @@ import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewSt
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { RootState } from "../../reducers";
+import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
 
 type Props = RootState;
 
@@ -29,13 +30,15 @@ type Props = RootState;
 }))
 class Embedding extends React.PureComponent<Props> {
   handleLayoutChoiceClick = (): void => {
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_EMBEDDING_CLICKED);
   };
 
   handleLayoutChoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { dispatch, imageUnderlay } = this.props;
 
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
+    track(EVENTS.EXPLORER_EMBEDDING_SELECTED, {
+      embedding: e.currentTarget.value,
+    });
 
     dispatch(actions.layoutChoiceAction(e.currentTarget.value));
     if (
@@ -72,7 +75,7 @@ class Embedding extends React.PureComponent<Props> {
             >
               <Button
                 type="button"
-                data-testid="layout-choice"
+                data-testid={LAYOUT_CHOICE_TEST_ID}
                 id="embedding"
                 style={{
                   cursor: "pointer",
@@ -165,7 +168,16 @@ const EmbeddingChoices = ({ onChange, annoMatrix, layoutChoice }: any) => {
           const sizeHint = `${discreteCellIndex.size()} cells`;
           return (
             <Radio
-              label={`${embeddingName}: ${sizeHint}`}
+              label={
+                (
+                  <span
+                    data-testid={`${LAYOUT_CHOICE_TEST_ID}-label-${embeddingName}`}
+                  >
+                    {embeddingName}: {sizeHint}
+                  </span>
+                ) as unknown as string // (thuang): `label` does accept React.Node, but the BlueprintJS type is incorrect
+              }
+              data-testid={`${LAYOUT_CHOICE_TEST_ID}-radio-${embeddingName}`}
               value={embeddingName}
               key={embeddingName}
             />

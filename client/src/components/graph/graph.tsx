@@ -54,6 +54,8 @@ import { THROTTLE_MS } from "../../util/constants";
 import { GraphProps, GraphState } from "./types";
 import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
 import { fetchDeepZoomImageFailed } from "../../actions/config";
+import { track } from "../../analytics";
+import { EVENTS } from "../../analytics/events";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -387,6 +389,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   handleGoHome = () => {
+    track(EVENTS.EXPLORER_RE_CENTER_EMBEDDING);
     const { camera } = this.state;
 
     camera?.goHome(this.openseadragon);
@@ -595,7 +598,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const graphImageURI = offscreenCanvas.toDataURL("image/png");
 
       if (mountCapture) {
-        this.setState({ testImageSrc: graphImageURI });
+        this.setState(({ testImageSrc }) => ({
+          /**
+           * (thuang): We want to remove the test image if there's already one
+           */
+          testImageSrc: testImageSrc ? null : graphImageURI,
+        }));
+
         dispatch({ type: "test: screencap end" });
       } else {
         downloadImage(graphImageURI, layoutChoice);
@@ -615,7 +624,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
         if (categoricalLegendImageURI) {
           downloadImage(categoricalLegendImageURI);
         }
-
+        track(EVENTS.EXPLORER_DOWNLOAD_COMPLETE, {
+          embedding: layoutChoice.current,
+        });
         dispatch({ type: "graph: screencap end" });
       }
 
