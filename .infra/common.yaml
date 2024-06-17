@@ -42,11 +42,9 @@ services:
       - name: AWS_DEFAULT_REGION
         value: us-west-2
       - name: API_DOMAIN
-        value: $ARGOCD_APP_NAME.dev-sc.dev.czi.team # TODO: be able to swap out stack name?
+        value: $(__ARGUS_STACK_BASE_URL)
       - name: WEB_DOMAIN
-        value: $ARGOCD_APP_NAME.dev-sc.dev.czi.team # TODO: be able to swap out stack name?
-      - name: ARGOCD_APP_NAME
-        value: $ARGOCD_APP_NAME
+        value: $(__ARGUS_STACK_BASE_URL)
     ingress:
       hosts:
         - paths:
