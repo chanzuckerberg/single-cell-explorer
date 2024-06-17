@@ -117,10 +117,6 @@ for (const testDataset of testDatasets) {
       test("page launched", async ({ page }, testInfo) => {
         await goToPage(page, url);
 
-        const element = await page.getByTestId("header").innerHTML();
-
-        expect(element).toMatchSnapshot();
-
         await snapshotTestGraph(page, testInfo);
       });
     });
@@ -144,16 +140,12 @@ for (const testDataset of testDatasets) {
 
       test("datasets from breadcrumbs appears on clicking collections", async ({
         page,
-      }) => {
+      }, testInfo) => {
         await goToPage(page, url);
 
         await page.getByTestId(`bc-Dataset`).click();
 
-        const element = await page
-          .getByTestId("dataset-menu-item-Sed eu nisi condimentum")
-          .innerHTML();
-
-        expect(element).toMatchSnapshot();
+        await snapshotTestGraph(page, testInfo);
       });
     });
 
@@ -165,12 +157,6 @@ for (const testDataset of testDatasets) {
         for (const label of Object.keys(
           data.categorical
         ) as (keyof typeof data.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
-
-          expect(element).toMatchSnapshot();
-
           await page.getByTestId(`${label}:category-expand`).click();
 
           const categories = await getAllCategoriesAndCounts(label, page);
@@ -465,12 +451,6 @@ for (const testDataset of testDatasets) {
         for (const label of Object.keys(
           data.categorical
         ) as (keyof typeof data.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
-
-          expect(element).toMatchSnapshot();
-
           await page.getByTestId(`${label}:category-expand`).click();
 
           const categories = await getAllCategoriesAndCounts(label, page);

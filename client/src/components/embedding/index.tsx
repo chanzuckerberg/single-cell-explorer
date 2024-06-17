@@ -28,7 +28,6 @@ interface StateProps {
   layoutChoice: RootState["layoutChoice"];
   schema?: Schema;
   crossfilter: RootState["obsCrossfilter"];
-  imageUnderlay: RootState["controls"]["imageUnderlay"];
   sideIsOpen: RootState["panelEmbedding"]["open"];
 }
 
@@ -48,7 +47,6 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
     : state.layoutChoice,
   schema: state.annoMatrix?.schema,
   crossfilter: state.obsCrossfilter,
-  imageUnderlay: state.controls.imageUnderlay,
   sideIsOpen: state.panelEmbedding.open,
 });
 
@@ -58,7 +56,6 @@ const Embedding = (props: Props) => {
     schema,
     crossfilter,
     dispatch,
-    imageUnderlay,
     isSidePanel,
     sideIsOpen,
   } = props;
@@ -81,16 +78,6 @@ const Embedding = (props: Props) => {
     await dispatch(
       actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
     );
-    if (
-      imageUnderlay &&
-      !isSidePanel &&
-      !e.currentTarget.value.includes(globals.spatialEmbeddingKeyword)
-    ) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: false,
-      });
-    }
   };
 
   const handleOpenPanelEmbedding = async (): Promise<void> => {

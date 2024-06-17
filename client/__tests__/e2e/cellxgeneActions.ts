@@ -780,6 +780,8 @@ export async function assertUndoRedo(
   );
 }
 
+const WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS = 10_000;
+
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   const imageID = "graph-image";
 
@@ -789,7 +791,13 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
-      await page.getByTestId(imageID).waitFor();
+      await page
+        .getByTestId(imageID)
+        /**
+         * (thuang): Without explicit `timeout` option, the default timeout is
+         * 3 minutes, which is too long for this test.
+         */
+        .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
       await takeSnapshot(page, testInfo);
 

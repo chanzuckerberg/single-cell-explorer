@@ -295,6 +295,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   componentDidUpdate(prevProps: GraphProps, prevState: GraphState): void {
     const {
       selectionTool,
+      currentSelection,
       graphInteractionMode,
       screenCap,
       imageUnderlay,
@@ -327,6 +328,19 @@ class Graph extends React.Component<GraphProps, GraphState> {
         ...stateChanges,
         ...this.createToolSVG(),
       };
+    }
+
+    /*
+        if the selection tool or state has changed, ensure that the selection
+        tool correctly reflects the underlying selection.
+        */
+    if (
+      currentSelection !== prevProps.currentSelection ||
+      graphInteractionMode !== prevProps.graphInteractionMode ||
+      stateChanges.toolSVG
+    ) {
+      const { tool } = this.state;
+      this.selectionToolUpdate(stateChanges.tool ? stateChanges.tool : tool!);
     }
 
     if (Object.keys(stateChanges).length > 0) {
@@ -889,6 +903,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
       tool.move(polygon);
     } else {
       tool.reset();
+    }
+  }
+
+  selectionToolUpdate(tool: GraphState["tool"]): void {
+    /**
+     * this is called from componentDidUpdate(), so be very careful using
+     * anything from this.state, which may be updated asynchronously.
+     */
+    const { selectionTool } = this.props;
+    switch (selectionTool) {
+      case "lasso":
+        this.lassoToolUpdate(tool as LassoFunctionWithAttributes);
+        break;
+      default:
+        /* punt? */
+        break;
     }
   }
 
