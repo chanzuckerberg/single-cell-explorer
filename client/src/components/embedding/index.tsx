@@ -102,7 +102,7 @@ const Embedding = (props: Props) => {
   return (
     <div
       style={{
-        zIndex: 9999,
+        zIndex: 1,
       }}
     >
       <ButtonGroup>
