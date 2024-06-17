@@ -1,7 +1,7 @@
 import { type Action, type AnyAction } from "redux";
 import { type RootState } from ".";
-import { getCurrentLayout } from "../util/layout";
 import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import { getCurrentLayout } from "../util/layout";
 
 export interface PanelEmbeddingState {
   layoutChoice: {
@@ -24,8 +24,14 @@ const panelEmbedding = (
 ): PanelEmbeddingState => {
   switch (action.type) {
     case "initial data load complete": {
+      const { layoutChoice } = action;
+
       return {
         ...state,
+        layoutChoice: {
+          available: selectAvailableLayouts(nextSharedState),
+          ...getCurrentLayout(nextSharedState, layoutChoice),
+        },
         open: false,
         minimized: false,
       };
@@ -36,7 +42,7 @@ const panelEmbedding = (
         ...state,
         open: !state.open,
         layoutChoice: {
-          available: selectAvailableLayouts(nextSharedState),
+          ...state.layoutChoice,
           ...getCurrentLayout(
             nextSharedState,
             nextSharedState.layoutChoice.current
@@ -47,6 +53,7 @@ const panelEmbedding = (
     }
 
     case "toggle minimize panel embedding": {
+
       return {
         ...state,
         minimized: !state.minimized,
