@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Upsert Prod Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.17.1
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.19.1
         with:
           appName: single-cell-explorer
           envName: prod
