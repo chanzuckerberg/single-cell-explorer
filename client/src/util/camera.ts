@@ -1,8 +1,13 @@
 import { vec2, mat3 } from "gl-matrix";
 import { MouseEvent } from "react";
 import { Point, Viewer } from "openseadragon";
+import { debounce } from "lodash";
 import clamp from "./clamp";
 import { THROTTLE_MS, SCALE_MAX } from "./constants";
+import { EVENTS } from "../analytics/events";
+import { track } from "../analytics";
+
+const ANALYTICS_PAN_ZOOM_DEBOUNCE_MS = 100;
 
 const EPSILON = 0.000001;
 
@@ -80,6 +85,8 @@ export class Camera {
     prevOffsetX?: number;
     prevOffsetY?: number;
   }): void {
+    this.debouncedPanTrack();
+
     const m = this.viewMatrix;
 
     /**
@@ -124,6 +131,16 @@ export class Camera {
       });
     }
   }
+
+  debouncedPanTrack = debounce(
+    () => {
+      track(EVENTS.EXPLORER_PANNED);
+    },
+    ANALYTICS_PAN_ZOOM_DEBOUNCE_MS,
+    {
+      trailing: true,
+    }
+  );
 
   goHome(openseadragon: Viewer | null = null) {
     // Reset the custom layer's transformation matrix to the identity matrix
@@ -296,8 +313,27 @@ export class Camera {
       offsetY: offset[1],
     });
 
+    this.debouncedZoomTrack();
+
     return true;
   }
+
+  debouncedZoomTrack = debounce(
+    () => {
+      const distance = this.distance();
+
+      /**
+       * (thuang): Product requirement - Don't track zoom events when we're zooming out
+       */
+      if (distance < 1) return;
+
+      track(EVENTS.EXPLORER_ZOOMED, { zoomLevel: Math.round(distance) });
+    },
+    ANALYTICS_PAN_ZOOM_DEBOUNCE_MS,
+    {
+      trailing: true,
+    }
+  );
 
   handleEvent(
     e: MouseEvent<HTMLCanvasElement, MouseEvent<Element, MouseEvent>>,
