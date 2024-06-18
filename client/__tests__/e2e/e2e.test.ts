@@ -847,7 +847,12 @@ for (const testDataset of testDatasets) {
 
               const initialCount = await getCellSetCount(1, page);
 
-              expect(initialCount).toBe(panzoomLasso.count);
+              const expectedCellCount =
+                graphTestId === SIDE_PANEL
+                  ? panzoomLasso.count_side
+                  : panzoomLasso.count;
+
+              expect(initialCount).toBe(expectedCellCount);
 
               await page.getByTestId("mode-pan-zoom").click();
 
