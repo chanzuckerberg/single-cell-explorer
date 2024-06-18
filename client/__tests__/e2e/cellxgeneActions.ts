@@ -793,6 +793,10 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
 
       await page
         .getByTestId(imageID)
+        /**
+         * (thuang): Without explicit `timeout` option, the default timeout is
+         * 3 minutes, which is too long for this test.
+         */
         .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
       await takeSnapshot(page, testInfo);
