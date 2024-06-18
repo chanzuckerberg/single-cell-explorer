@@ -62,7 +62,13 @@ import {
   testURL,
   pageURLSpatial,
 } from "../common/constants";
-import { goToPage } from "../util/helpers";
+import {
+  conditionallyToggleSidePanel,
+  goToPage,
+  shouldSkipTests,
+  skipIfSidePanel,
+  toggleSidePanel,
+} from "../util/helpers";
 import { SCALE_MAX } from "../../src/util/constants";
 
 const { describe, skip } = test;
@@ -101,7 +107,12 @@ test.beforeEach(mockSetup);
 
 const SPATIAL_DATASET = "super-cool-spatial.cxg";
 
+const MAIN_PANEL = "layout-graph";
+const SIDE_PANEL = "layout-graph-side";
+
 const testDatasets = [DATASET, SPATIAL_DATASET] as (keyof typeof datasets)[];
+
+const graphInstanceTestIds = ["layout-graph", "layout-graph-side"];
 
 const testURLs = {
   [DATASET]: testURL,
@@ -111,1240 +122,1355 @@ const testURLs = {
 for (const testDataset of testDatasets) {
   const data = datasets[testDataset];
   const url = testURLs[testDataset];
-
-  describe(`dataset: ${testDataset}`, () => {
-    describe("did launch", () => {
-      test("page launched", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-
-        const element = await page.getByTestId("header").innerHTML();
-
-        expect(element).toMatchSnapshot();
-
-        await snapshotTestGraph(page, testInfo);
-      });
-    });
-
-    describe("breadcrumbs loads", () => {
-      test("dataset and collection from breadcrumbs appears", async ({
-        page,
-      }, testInfo) => {
-        await goToPage(page, url);
-
-        const datasetElement = await page.getByTestId("bc-Dataset").innerHTML();
-        const collectionsElement = await page
-          .getByTestId("bc-Collection")
-          .innerHTML();
-
-        expect(datasetElement).toMatchSnapshot();
-        expect(collectionsElement).toMatchSnapshot();
-
-        await snapshotTestGraph(page, testInfo);
-      });
-
-      test("datasets from breadcrumbs appears on clicking collections", async ({
-        page,
-      }) => {
-        await goToPage(page, url);
-
-        await page.getByTestId(`bc-Dataset`).click();
-
-        const element = await page
-          .getByTestId("dataset-menu-item-Sed eu nisi condimentum")
-          .innerHTML();
-
-        expect(element).toMatchSnapshot();
-      });
-    });
-
-    describe("metadata loads", () => {
-      test("categories and values from dataset appear", async ({
-        page,
-      }, testInfo) => {
-        await goToPage(page, url);
-        for (const label of Object.keys(
-          data.categorical
-        ) as (keyof typeof data.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
-
-          expect(element).toMatchSnapshot();
-
-          await page.getByTestId(`${label}:category-expand`).click();
-
-          const categories = await getAllCategoriesAndCounts(label, page);
-
-          expect(categories).toMatchObject(data.categorical[label]);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-
-      test("continuous data appears", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        for (const label of Object.keys(data.continuous)) {
-          await expect(
-            page.getByTestId(`histogram-${label}-plot`)
-          ).not.toHaveCount(0);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-    });
-
-    test("resize graph", async ({ page }, testInfo) => {
-      await goToPage(page, url);
-
-      await snapshotTestGraph(page, testInfo);
-
-      await page.setViewportSize({ width: 600, height: 600 });
-
-      await page.waitForTimeout(WAIT_FOR_AFTER_RESIZE_MS);
-
-      await snapshotTestGraph(page, testInfo);
-    });
-
-    describe("cell selection", () => {
-      test("selects all cells cellset 1", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        const cellCount = await getCellSetCount(1, page);
-
-        expect(cellCount).toBe(data.dataframe.nObs);
-        await snapshotTestGraph(page, testInfo);
-      });
-
-      test("selects all cells cellset 2", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        const cellCount = await getCellSetCount(2, page);
-
-        expect(cellCount).toBe(data.dataframe.nObs);
-
-        await snapshotTestGraph(page, testInfo);
-      });
-
-      test("bug fix: invalid lasso cancels lasso overlay", async ({
-        page,
-      }, testInfo) => {
-        await goToPage(page, url);
-
-        for (const cellset of data.cellsets.invalidLasso) {
-          const cellset1 = await calcDragCoordinates(
-            "layout-graph",
-            cellset["coordinates-as-percent"],
-            page
-          );
-
-          await drag({
-            page,
-            testInfo,
-            testId: "layout-graph",
-            start: cellset1.start,
-            end: cellset1.end,
-            lasso: true,
-          });
-
-          const cellCount = await getCellSetCount(1, page);
-
-          expect(cellCount).toBe(cellset.count);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-
-      test("selects cells via lasso", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-
-        const originalCellCount = await getCellSetCount(1, page);
-
-        for (const cellset of data.cellsets.lasso) {
-          const cellset1 = await calcDragCoordinates(
-            "layout-graph",
-            cellset["coordinates-as-percent"],
-            page
-          );
-
-          await drag({
-            page,
-            testInfo,
-            testId: "layout-graph",
-            start: cellset1.start,
-            end: cellset1.end,
-            lasso: true,
-          });
-
-          expect(await getCellSetCount(1, page)).toBe(cellset.count);
-
-          await snapshotTestGraph(page, testInfo);
-
-          // switch layout should retain the selection
-          const { original, somethingElse } = data.embeddingChoice;
-
-          await selectLayout(somethingElse, page);
-
-          expect(await getCellSetCount(1, page)).toBe(cellset.count);
-
-          await snapshotTestGraph(page, testInfo);
-
-          // switch back to original layout should reset the selection
-          await selectLayout(original, page);
-
-          expect(await getCellSetCount(1, page)).toBe(originalCellCount);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-
-      test("selects cells via categorical", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-
-        for (const cellset of data.cellsets.categorical) {
-          await page.getByTestId(`${cellset.metadata}:category-expand`).click();
-          await page
-            .getByTestId(`${cellset.metadata}:category-select`)
-            .click({ force: true });
-
-          for (const value of cellset.values) {
-            await page
-              .getByTestId(
-                `categorical-value-select-${cellset.metadata}-${value}`
-              )
-              .click({ force: true });
-          }
-
-          const cellCount = await getCellSetCount(1, page);
-
-          expect(cellCount).toBe(cellset.count);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-
-      test("selects cells via continuous", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        for (const cellset of data.cellsets.continuous) {
-          const histBrushableAreaId = `histogram-${cellset.metadata}-plot-brushable-area`;
-
-          const coords = await calcDragCoordinates(
-            histBrushableAreaId,
-            cellset["coordinates-as-percent"],
-            page
-          );
-
-          await drag({
-            page,
-            testInfo,
-            testId: histBrushableAreaId,
-            start: coords.start,
-            end: coords.end,
-          });
-
-          const cellCount = await getCellSetCount(1, page);
-
-          expect(cellCount).toBe(cellset.count);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-    });
-
-    describe("subset", () => {
-      test("subset - cell count matches", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        for (const select of data.subset.cellset1) {
-          if (select.kind === "categorical") {
-            await selectCategory(select.metadata, select.values, page, true);
-          }
-        }
-
-        await page.getByTestId("subset-button").click();
-
-        await assertCategoricalCounts();
-
-        // switch layout should retain the subset
-        const { original, somethingElse } = data.embeddingChoice;
-
-        await selectLayout(somethingElse, page);
-
-        await assertCategoricalCounts();
-
-        await snapshotTestGraph(page, testInfo);
-
-        // switch back to original layout should retain the subset too
-        await selectLayout(original, page);
-
-        await assertCategoricalCounts();
-
-        await snapshotTestGraph(page, testInfo);
-
-        async function assertCategoricalCounts() {
-          for (const label of Object.keys(
-            data.subset.categorical
-          ) as (keyof typeof data.subset.categorical)[]) {
-            const categories = await getAllCategoriesAndCounts(label, page);
-
-            expect(categories).toMatchObject(data.subset.categorical[label]);
+  for (const graphTestId of graphInstanceTestIds) {
+    const shouldSkip = shouldSkipTests(graphTestId, SIDE_PANEL);
+    const describeFn = shouldSkip ? describe.skip : describe;
+
+    describe(`dataset: ${testDataset}`, () => {
+      describe(`graph instance: ${graphTestId}`, () => {
+        describeFn("did launch", () => {
+          test("page launched", async ({ page }, testInfo) => {
+            await goToPage(page, url);
 
             await snapshotTestGraph(page, testInfo);
-          }
-        }
-      });
+          });
+        });
 
-      test("subset - categories with zero cells are filtered out", async ({
-        page,
-      }) => {
-        await goToPage(page, url);
-        const select = data.subset.cellset1[0];
-        await selectCategory(select.metadata, select.values, page, true);
-        await page.getByTestId("subset-button").click();
+        describeFn("breadcrumbs loads", () => {
+          test("dataset and collection from breadcrumbs appears", async ({
+            page,
+          }, testInfo) => {
+            await goToPage(page, url);
 
-        const actualCategories = await getAllCategoriesAndCounts(
-          select.metadata,
-          page
-        );
-        const actualCategoriesKeys = Object.keys(actualCategories).sort();
-        const expectedCateogriesKeys = select.values.slice().sort();
-        expect(actualCategoriesKeys).toEqual(expectedCateogriesKeys);
-      });
+            const datasetElement = await page
+              .getByTestId("bc-Dataset")
+              .innerHTML();
+            const collectionsElement = await page
+              .getByTestId("bc-Collection")
+              .innerHTML();
 
-      test("lasso after subset", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        for (const select of data.subset.cellset1) {
-          if (select.kind === "categorical") {
+            expect(datasetElement).toMatchSnapshot();
+            expect(collectionsElement).toMatchSnapshot();
+
+            await snapshotTestGraph(page, testInfo);
+          });
+
+          test("datasets from breadcrumbs appears on clicking collections", async ({
+            page,
+          }, testInfo) => {
+            await goToPage(page, url);
+
+            await page.getByTestId(`bc-Dataset`).click();
+
+            await snapshotTestGraph(page, testInfo);
+          });
+        });
+
+        describe("metadata loads", () => {
+          test("categories and values from dataset appear", async ({
+            page,
+          }, testInfo) => {
+            await goToPage(page, url);
+            for (const label of Object.keys(
+              data.categorical
+            ) as (keyof typeof data.categorical)[]) {
+              await page.getByTestId(`${label}:category-expand`).click();
+
+              const categories = await getAllCategoriesAndCounts(label, page);
+
+              expect(categories).toMatchObject(data.categorical[label]);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+
+          test("continuous data appears", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+            for (const label of Object.keys(data.continuous)) {
+              await expect(
+                page.getByTestId(`histogram-${label}-plot`)
+              ).not.toHaveCount(0);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+        });
+
+        test("resize graph", async ({ page }, testInfo) => {
+          skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+          await goToPage(page, url);
+
+          await snapshotTestGraph(page, testInfo);
+
+          await page.setViewportSize({ width: 600, height: 600 });
+
+          await page.waitForTimeout(WAIT_FOR_AFTER_RESIZE_MS);
+
+          await snapshotTestGraph(page, testInfo);
+        });
+
+        describe("cell selection", () => {
+          test("selects all cells cellset 1", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            const cellCount = await getCellSetCount(1, page);
+
+            expect(cellCount).toBe(data.dataframe.nObs);
+            await snapshotTestGraph(page, testInfo);
+          });
+
+          test("selects all cells cellset 2", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            const cellCount = await getCellSetCount(2, page);
+
+            expect(cellCount).toBe(data.dataframe.nObs);
+
+            await snapshotTestGraph(page, testInfo);
+          });
+
+          test("bug fix: invalid lasso cancels lasso overlay", async ({
+            page,
+          }, testInfo) => {
+            await goToPage(page, url);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            for (const cellset of data.cellsets.invalidLasso) {
+              const cellset1 = await calcDragCoordinates(
+                graphTestId,
+                cellset["coordinates-as-percent"],
+                page
+              );
+
+              await drag({
+                page,
+                testInfo,
+                testId: graphTestId,
+                start: cellset1.start,
+                end: cellset1.end,
+                lasso: true,
+              });
+
+              const cellCount = await getCellSetCount(1, page);
+
+              expect(cellCount).toBe(cellset.count);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+
+          test("selects cells via lasso", async ({ page }, testInfo) => {
+            // TODO: fix bug for side panel where subset1 doesn't reset after layout switch
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            const originalCellCount = await getCellSetCount(1, page);
+
+            for (const cellset of data.cellsets.lasso) {
+              const cellset1 = await calcDragCoordinates(
+                graphTestId,
+                cellset["coordinates-as-percent"],
+                page
+              );
+
+              await drag({
+                page,
+                testInfo,
+                testId: graphTestId,
+                start: cellset1.start,
+                end: cellset1.end,
+                lasso: true,
+              });
+
+              const cellCount =
+                graphTestId === SIDE_PANEL ? cellset.count_side : cellset.count;
+
+              expect(await getCellSetCount(1, page)).toBe(cellCount);
+
+              await snapshotTestGraph(page, testInfo);
+
+              // switch layout should retain the selection
+              const { original, somethingElse } = data.embeddingChoice;
+
+              await selectLayout(somethingElse, graphTestId, SIDE_PANEL, page);
+
+              expect(await getCellSetCount(1, page)).toBe(cellCount);
+
+              await snapshotTestGraph(page, testInfo);
+
+              // switch back to original layout should reset the selection
+              await selectLayout(original, graphTestId, SIDE_PANEL, page);
+
+              expect(await getCellSetCount(1, page)).toBe(originalCellCount);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+
+          test("selects cells via categorical", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            for (const cellset of data.cellsets.categorical) {
+              await page
+                .getByTestId(`${cellset.metadata}:category-expand`)
+                .click();
+              await page
+                .getByTestId(`${cellset.metadata}:category-select`)
+                .click({ force: true });
+
+              for (const value of cellset.values) {
+                await page
+                  .getByTestId(
+                    `categorical-value-select-${cellset.metadata}-${value}`
+                  )
+                  .click({ force: true });
+              }
+
+              const cellCount = await getCellSetCount(1, page);
+
+              expect(cellCount).toBe(cellset.count);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+
+          test("selects cells via continuous", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            for (const cellset of data.cellsets.continuous) {
+              const histBrushableAreaId = `histogram-${cellset.metadata}-plot-brushable-area`;
+
+              const coords = await calcDragCoordinates(
+                histBrushableAreaId,
+                cellset["coordinates-as-percent"],
+                page
+              );
+
+              await drag({
+                page,
+                testInfo,
+                testId: histBrushableAreaId,
+                start: coords.start,
+                end: coords.end,
+              });
+
+              const cellCount = await getCellSetCount(1, page);
+
+              expect(cellCount).toBe(cellset.count);
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+        });
+
+        describe("subset", () => {
+          test("subset - cell count matches", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            for (const select of data.subset.cellset1) {
+              if (select.kind === "categorical") {
+                await selectCategory(
+                  select.metadata,
+                  select.values,
+                  page,
+                  true
+                );
+              }
+            }
+
+            await page.getByTestId("subset-button").click();
+
+            await assertCategoricalCounts();
+
+            // switch layout should retain the subset
+            const { original, somethingElse } = data.embeddingChoice;
+
+            await selectLayout(somethingElse, graphTestId, SIDE_PANEL, page);
+
+            await assertCategoricalCounts();
+
+            await snapshotTestGraph(page, testInfo);
+
+            // switch back to original layout should retain the subset too
+            await selectLayout(original, graphTestId, SIDE_PANEL, page);
+
+            await assertCategoricalCounts();
+
+            await snapshotTestGraph(page, testInfo);
+
+            async function assertCategoricalCounts() {
+              for (const label of Object.keys(
+                data.subset.categorical
+              ) as (keyof typeof data.subset.categorical)[]) {
+                const categories = await getAllCategoriesAndCounts(label, page);
+
+                expect(categories).toMatchObject(
+                  data.subset.categorical[label]
+                );
+
+                await snapshotTestGraph(page, testInfo);
+              }
+            }
+          });
+
+          test("subset - categories with zero cells are filtered out", async ({
+            page,
+          }) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            const select = data.subset.cellset1[0];
             await selectCategory(select.metadata, select.values, page, true);
-          }
-        }
+            await page.getByTestId("subset-button").click();
 
-        await page.getByTestId("subset-button").click();
+            const actualCategories = await getAllCategoriesAndCounts(
+              select.metadata,
+              page
+            );
+            const actualCategoriesKeys = Object.keys(actualCategories).sort();
+            const expectedCateogriesKeys = select.values.slice().sort();
+            expect(actualCategoriesKeys).toEqual(expectedCateogriesKeys);
+          });
 
-        const lassoSelection = await calcDragCoordinates(
-          "layout-graph",
-          data.subset.lasso["coordinates-as-percent"],
-          page
-        );
+          test("lasso after subset", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
 
-        await drag({
-          page,
-          testInfo,
-          testId: "layout-graph",
-          start: lassoSelection.start,
-          end: lassoSelection.end,
-          lasso: true,
-        });
+            await goToPage(page, url);
+            for (const select of data.subset.cellset1) {
+              if (select.kind === "categorical") {
+                await selectCategory(
+                  select.metadata,
+                  select.values,
+                  page,
+                  true
+                );
+              }
+            }
 
-        const cellCount = await getCellSetCount(1, page);
+            await page.getByTestId("subset-button").click();
 
-        expect(cellCount).toBe(data.subset.lasso.count);
-        await snapshotTestGraph(page, testInfo);
-      });
-    });
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
-    describe("clipping", () => {
-      test("clip continuous", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        await clip(data.clip.min, data.clip.max, page);
-        const histBrushableAreaId = `histogram-${data.clip.metadata}-plot-brushable-area`;
-        const coords = await calcDragCoordinates(
-          histBrushableAreaId,
-          data.clip["coordinates-as-percent"],
-          page
-        );
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              data.subset.lasso["coordinates-as-percent"],
+              page
+            );
 
-        await drag({
-          page,
-          testInfo,
-          testId: histBrushableAreaId,
-          start: coords.start,
-          end: coords.end,
-        });
-
-        const cellCount = await getCellSetCount(1, page);
-        expect(cellCount).toBe(data.clip.count);
-
-        // ensure categorical data appears properly
-        for (const label of Object.keys(
-          data.categorical
-        ) as (keyof typeof data.categorical)[]) {
-          const element = await page
-            .getByTestId(`category-${label}`)
-            .innerHTML();
-
-          expect(element).toMatchSnapshot();
-
-          await page.getByTestId(`${label}:category-expand`).click();
-
-          const categories = await getAllCategoriesAndCounts(label, page);
-
-          expect(categories).toMatchObject(data.categorical[label]);
-
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-    });
-
-    // interact with UI elements just that they do not break
-    describe("ui elements don't error", () => {
-      test("color by", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        const allLabels = [
-          ...Object.keys(data.categorical),
-          ...Object.keys(data.continuous),
-        ];
-
-        for (const label of allLabels) {
-          await page.getByTestId(`colorby-${label}`).click();
-        }
-        await snapshotTestGraph(page, testInfo);
-      });
-
-      test("pan and zoom", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        await page.getByTestId("mode-pan-zoom").click();
-        const panCoords = await calcDragCoordinates(
-          "layout-graph",
-          data.pan["coordinates-as-percent"],
-          page
-        );
-
-        await drag({
-          page,
-          testInfo,
-          testId: "layout-graph",
-          start: panCoords.start,
-          end: panCoords.end,
-        });
-
-        await page.evaluate("window.scrollBy(0, 1000);");
-
-        await snapshotTestGraph(page, testInfo);
-
-        // switch layout and back should reset pan and zoom
-        const { original, somethingElse } = data.embeddingChoice;
-
-        await selectLayout(somethingElse, page);
-
-        await snapshotTestGraph(page, testInfo);
-
-        await selectLayout(original, page);
-
-        await snapshotTestGraph(page, testInfo);
-      });
-
-      test("home button", async ({ page }, testInfo) => {
-        skip(testDataset !== SPATIAL_DATASET, "Only run on spatial dataset");
-
-        await goToPage(page, url);
-
-        const homeButton = page.getByText("Re-center Embedding");
-
-        await expect(homeButton).not.toBeVisible();
-
-        const {
-          homeButton: { pan },
-        } = data;
-
-        const { start, end } = await calcDragCoordinates(
-          "layout-graph",
-          pan["coordinates-as-percent"],
-          page
-        );
-
-        await page.getByTestId("mode-pan-zoom").click();
-
-        await tryUntil(
-          async () => {
             await drag({
               page,
               testInfo,
-              testId: "layout-graph",
-              start,
-              end,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
             });
 
-            /**
-             * (thuang): We need to do the same drag twice, since the first drag
-             * doesn't move the image completely out of the viewport
-             */
+            const cellCount = await getCellSetCount(1, page);
+
+            expect(cellCount).toBe(data.subset.lasso.count);
+            await snapshotTestGraph(page, testInfo);
+          });
+        });
+
+        describe("clipping", () => {
+          test("clip continuous", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await clip(data.clip.min, data.clip.max, page);
+            const histBrushableAreaId = `histogram-${data.clip.metadata}-plot-brushable-area`;
+            const coords = await calcDragCoordinates(
+              histBrushableAreaId,
+              data.clip["coordinates-as-percent"],
+              page
+            );
+
             await drag({
               page,
               testInfo,
-              testId: "layout-graph",
-              start,
-              end,
+              testId: histBrushableAreaId,
+              start: coords.start,
+              end: coords.end,
             });
 
-            await expect(homeButton).toBeVisible({
-              timeout: CHECK_HOME_BUTTON_MS,
-            });
-          },
-          { page }
-        );
+            const cellCount = await getCellSetCount(1, page);
+            expect(cellCount).toBe(data.clip.count);
 
-        await homeButton.click();
+            // ensure categorical data appears properly
+            for (const label of Object.keys(
+              data.categorical
+            ) as (keyof typeof data.categorical)[]) {
+              await page.getByTestId(`${label}:category-expand`).click();
 
-        await tryUntil(
-          async () => {
-            await expect(homeButton).not.toBeVisible();
-          },
-          { page }
-        );
-      });
-    });
+              const categories = await getAllCategoriesAndCounts(label, page);
 
-    describe("centroid labels", () => {
-      test("labels are created", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        const labels = Object.keys(
-          data.categorical
-        ) as (keyof typeof data.categorical)[];
+              expect(categories).toMatchObject(data.categorical[label]);
 
-        await page.getByTestId(`colorby-${labels[0]}`).click();
-        await page.getByTestId("centroid-label-toggle").click();
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+        });
 
-        // Toggle colorby for each category and check to see if labels are generated
-        for (let i = 0, { length } = labels; i < length; i += 1) {
-          const label = labels[i];
-          // first label is already enabled
-          if (i !== 0) await page.getByTestId(`colorby-${label}`).click();
-          const generatedLabels = await page
-            .getByTestId("centroid-label")
-            .all();
+        // interact with UI elements just that they do not break
+        describe("ui elements don't error", () => {
+          test("color by", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
 
-          // Number of labels generated should be equal to size of the object
-          expect(generatedLabels).toHaveLength(
-            Object.keys(data.categorical[label]).length
-          );
+            await goToPage(page, url);
+            const allLabels = [
+              ...Object.keys(data.categorical),
+              ...Object.keys(data.continuous),
+            ];
 
-          await snapshotTestGraph(page, testInfo);
-        }
-      });
-    });
+            for (const label of allLabels) {
+              await page.getByTestId(`colorby-${label}`).click();
+            }
+            await snapshotTestGraph(page, testInfo);
+          });
 
-    describe("graph overlay", () => {
-      test("transform centroids correctly", async ({ page }, testInfo) => {
-        await goToPage(page, url);
-        const category = Object.keys(
-          data.categorical
-        )[0] as keyof typeof data.categorical;
+          test("pan and zoom", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
-        await page.getByTestId(`colorby-${category}`).click();
-        await page.getByTestId("centroid-label-toggle").click();
-        await page.getByTestId("mode-pan-zoom").click();
+            await page.getByTestId("mode-pan-zoom").click();
+            const panCoords = await calcDragCoordinates(
+              graphTestId,
+              data.pan["coordinates-as-percent"],
+              page
+            );
 
-        const panCoords = await calcDragCoordinates(
-          "layout-graph",
-          data.pan["coordinates-as-percent"],
-          page
-        );
-
-        const categoryValue = Object.keys(data.categorical[category])[0];
-        const initialCoordinates = await getElementCoordinates(
-          `centroid-label`,
-          categoryValue,
-          page
-        );
-
-        await tryUntil(
-          async () => {
             await drag({
               page,
               testInfo,
-              testId: "layout-graph",
+              testId: graphTestId,
               start: panCoords.start,
               end: panCoords.end,
             });
 
-            const terminalCoordinates = await getElementCoordinates(
+            await page.evaluate("window.scrollBy(0, 1000);");
+
+            await snapshotTestGraph(page, testInfo);
+
+            // switch layout and back should reset pan and zoom
+            const { original, somethingElse } = data.embeddingChoice;
+
+            await selectLayout(somethingElse, graphTestId, SIDE_PANEL, page);
+
+            await snapshotTestGraph(page, testInfo);
+
+            await selectLayout(original, graphTestId, SIDE_PANEL, page);
+
+            await snapshotTestGraph(page, testInfo);
+          });
+
+          test("home button", async ({ page }, testInfo) => {
+            skip(
+              testDataset !== SPATIAL_DATASET,
+              "Only run on spatial dataset"
+            );
+
+            await goToPage(page, url);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            const homeButton = page.getByText("Re-center Embedding");
+
+            await expect(homeButton).not.toBeVisible();
+
+            const {
+              homeButton: { pan },
+            } = data;
+
+            const { start, end } = await calcDragCoordinates(
+              graphTestId,
+              pan["coordinates-as-percent"],
+              page
+            );
+
+            await page.getByTestId("mode-pan-zoom").click();
+
+            await tryUntil(
+              async () => {
+                await drag({
+                  page,
+                  testInfo,
+                  testId: graphTestId,
+                  start,
+                  end,
+                });
+
+                /**
+                 * (thuang): We need to do the same drag twice, since the first drag
+                 * doesn't move the image completely out of the viewport
+                 */
+                await drag({
+                  page,
+                  testInfo,
+                  testId: graphTestId,
+                  start,
+                  end,
+                });
+
+                await expect(homeButton).toBeVisible({
+                  timeout: CHECK_HOME_BUTTON_MS,
+                });
+              },
+              { page }
+            );
+
+            await homeButton.click();
+
+            await tryUntil(
+              async () => {
+                await expect(homeButton).not.toBeVisible();
+              },
+              { page }
+            );
+          });
+        });
+
+        describe("centroid labels", () => {
+          test("labels are created", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            const labels = Object.keys(
+              data.categorical
+            ) as (keyof typeof data.categorical)[];
+
+            await page.getByTestId(`colorby-${labels[0]}`).click();
+            await page.getByTestId("centroid-label-toggle").click();
+
+            // Toggle colorby for each category and check to see if labels are generated
+            for (let i = 0, { length } = labels; i < length; i += 1) {
+              const label = labels[i];
+              // first label is already enabled
+              if (i !== 0) await page.getByTestId(`colorby-${label}`).click();
+              const generatedLabels = await page
+                .getByTestId("centroid-label")
+                .all();
+
+              // Number of labels generated should be equal to size of the object
+              expect(generatedLabels).toHaveLength(
+                Object.keys(data.categorical[label]).length
+              );
+
+              await snapshotTestGraph(page, testInfo);
+            }
+          });
+        });
+
+        describe("graph overlay", () => {
+          test("transform centroids correctly", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            const category = Object.keys(
+              data.categorical
+            )[0] as keyof typeof data.categorical;
+
+            await page.getByTestId(`colorby-${category}`).click();
+            await page.getByTestId("centroid-label-toggle").click();
+            await page.getByTestId("mode-pan-zoom").click();
+
+            const panCoords = await calcDragCoordinates(
+              graphTestId,
+              data.pan["coordinates-as-percent"],
+              page
+            );
+
+            const categoryValue = Object.keys(data.categorical[category])[0];
+            const initialCoordinates = await getElementCoordinates(
               `centroid-label`,
               categoryValue,
               page
             );
 
-            expect(terminalCoordinates[0] - initialCoordinates[0]).toBeCloseTo(
-              panCoords.end.x - panCoords.start.x
+            await tryUntil(
+              async () => {
+                await drag({
+                  page,
+                  testInfo,
+                  testId: graphTestId,
+                  start: panCoords.start,
+                  end: panCoords.end,
+                });
+
+                const terminalCoordinates = await getElementCoordinates(
+                  `centroid-label`,
+                  categoryValue,
+                  page
+                );
+
+                expect(
+                  terminalCoordinates[0] - initialCoordinates[0]
+                ).toBeCloseTo(panCoords.end.x - panCoords.start.x);
+                expect(
+                  terminalCoordinates[1] - initialCoordinates[1]
+                ).toBeCloseTo(panCoords.end.y - panCoords.start.y);
+              },
+              { page }
             );
-            expect(terminalCoordinates[1] - initialCoordinates[1]).toBeCloseTo(
-              panCoords.end.y - panCoords.start.y
-            );
-          },
-          { page }
-        );
 
-        await snapshotTestGraph(page, testInfo);
-      });
-    });
-
-    test("zoom limit is 12x", async ({ page }, testInfo) => {
-      await goToPage(page, url);
-      const category = Object.keys(
-        data.categorical
-      )[0] as keyof typeof data.categorical;
-
-      await page.getByTestId(`colorby-${category}`).click();
-      await page.getByTestId("centroid-label-toggle").click();
-      await page.getByTestId("mode-pan-zoom").click();
-
-      const categoryValue = Object.keys(data.categorical[category])[0];
-      const initialCoordinates = await getElementCoordinates(
-        `centroid-label`,
-        categoryValue,
-        page
-      );
-
-      await tryUntil(
-        async () => {
-          await scroll({
-            testId: "layout-graph",
-            deltaY: -10000,
-            coords: initialCoordinates,
-            page,
+            await snapshotTestGraph(page, testInfo);
           });
+        });
 
-          const newGraph = page.getByTestId("graph-wrapper");
-          const newDistance =
-            (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-          expect(parseFloat(newDistance)).toBe(SCALE_MAX);
-        },
-        { page }
-      );
+        test("zoom limit is 12x", async ({ page }, testInfo) => {
+          await goToPage(page, url);
+          const category = Object.keys(
+            data.categorical
+          )[0] as keyof typeof data.categorical;
+          await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
-      await snapshotTestGraph(page, testInfo);
-    });
-
-    test("pan zoom mode resets lasso selection", async ({ page }, testInfo) => {
-      await goToPage(page, url);
-
-      await tryUntil(
-        async () => {
-          const panzoomLasso = data.features.panzoom.lasso;
-
-          const lassoSelection = await calcDragCoordinates(
-            "layout-graph",
-            panzoomLasso["coordinates-as-percent"],
-            page
-          );
-
-          await drag({
-            page,
-            testInfo,
-            testId: "layout-graph",
-            start: lassoSelection.start,
-            end: lassoSelection.end,
-            lasso: true,
-          });
-
-          await expect(page.getByTestId("lasso-element")).toBeVisible();
-
-          const initialCount = await getCellSetCount(1, page);
-
-          expect(initialCount).toBe(panzoomLasso.count);
-
-          await page.getByTestId("mode-pan-zoom").click();
-          await page.getByTestId("mode-lasso").click();
-
-          const modeSwitchCount = await getCellSetCount(1, page);
-
-          expect(modeSwitchCount).toBe(initialCount);
-        },
-        { page }
-      );
-
-      await snapshotTestGraph(page, testInfo);
-    });
-
-    test("lasso moves after pan", async ({ page }, testInfo) => {
-      await goToPage(page, url);
-
-      await tryUntil(
-        async () => {
-          const panzoomLasso = data.features.panzoom.lasso;
-          const coordinatesAsPercent = panzoomLasso["coordinates-as-percent"];
-
-          const lassoSelection = await calcDragCoordinates(
-            "layout-graph",
-            coordinatesAsPercent,
-            page
-          );
-
-          await snapshotTestGraph(page, testInfo);
-
-          await drag({
-            page,
-            testInfo,
-            testId: "layout-graph",
-            start: lassoSelection.start,
-            end: lassoSelection.end,
-            lasso: true,
-          });
-
-          await snapshotTestGraph(page, testInfo);
-
-          await expect(page.getByTestId("lasso-element")).toBeVisible();
-
-          const initialCount = await getCellSetCount(1, page);
-
-          expect(initialCount).toBe(panzoomLasso.count);
-
+          await page.getByTestId(`colorby-${category}`).click();
+          await page.getByTestId("centroid-label-toggle").click();
           await page.getByTestId("mode-pan-zoom").click();
 
-          await snapshotTestGraph(page, testInfo);
-
-          const panCoords = await calcDragCoordinates(
-            "layout-graph",
-            coordinatesAsPercent,
+          const categoryValue = Object.keys(data.categorical[category])[0];
+          const initialCoordinates = await getElementCoordinates(
+            `centroid-label`,
+            categoryValue,
             page
           );
 
-          await drag({
-            page,
-            testInfo,
-            testId: "layout-graph",
-            start: panCoords.start,
-            end: panCoords.end,
-            lasso: true,
-          });
+          await tryUntil(
+            async () => {
+              await scroll({
+                testId: graphTestId,
+                deltaY: -10000,
+                coords: initialCoordinates,
+                page,
+              });
+
+              const newGraph = page.getByTestId("graph-wrapper");
+              const newDistance =
+                (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
+              expect(parseFloat(newDistance)).toBe(SCALE_MAX);
+            },
+            { page }
+          );
 
           await snapshotTestGraph(page, testInfo);
+        });
 
-          await page.getByTestId("mode-lasso").click();
+        test("pan zoom mode resets lasso selection", async ({
+          page,
+        }, testInfo) => {
+          await goToPage(page, url);
+          await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
-          const panCount = await getCellSetCount(2, page);
+          await tryUntil(
+            async () => {
+              const panzoomLasso = data.features.panzoom.lasso;
+              let panzoomLassoCount = panzoomLasso.count;
+              if (graphTestId === SIDE_PANEL) {
+                panzoomLassoCount = data.features.panzoom.lasso.count_side;
+              }
 
-          expect(panCount).toBe(initialCount);
+              const lassoSelection = await calcDragCoordinates(
+                graphTestId,
+                panzoomLasso["coordinates-as-percent"],
+                page
+              );
+
+              await drag({
+                page,
+                testInfo,
+                testId: graphTestId,
+                start: lassoSelection.start,
+                end: lassoSelection.end,
+                lasso: true,
+              });
+
+              await expect(page.getByTestId("lasso-element")).toBeVisible();
+
+              const initialCount = await getCellSetCount(1, page);
+
+              expect(initialCount).toBe(panzoomLassoCount);
+
+              await page.getByTestId("mode-pan-zoom").click();
+              await page.getByTestId("mode-lasso").click();
+
+              const modeSwitchCount = await getCellSetCount(1, page);
+
+              expect(modeSwitchCount).toBe(initialCount);
+            },
+            { page }
+          );
 
           await snapshotTestGraph(page, testInfo);
-        },
-        { page }
-      );
-    });
+        });
 
-    /*
+        test("lasso moves after pan", async ({ page }, testInfo) => {
+          await goToPage(page, url);
+          await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+          await tryUntil(
+            async () => {
+              const panzoomLasso = data.features.panzoom.lasso;
+              const coordinatesAsPercent =
+                panzoomLasso["coordinates-as-percent"];
+
+              const lassoSelection = await calcDragCoordinates(
+                graphTestId,
+                coordinatesAsPercent,
+                page
+              );
+
+              await snapshotTestGraph(page, testInfo);
+
+              await drag({
+                page,
+                testInfo,
+                testId: graphTestId,
+                start: lassoSelection.start,
+                end: lassoSelection.end,
+                lasso: true,
+              });
+
+              await snapshotTestGraph(page, testInfo);
+
+              await expect(page.getByTestId("lasso-element")).toBeVisible();
+
+              const initialCount = await getCellSetCount(1, page);
+
+              const expectedCellCount =
+                graphTestId === SIDE_PANEL
+                  ? panzoomLasso.count_side
+                  : panzoomLasso.count;
+
+              expect(initialCount).toBe(expectedCellCount);
+
+              await page.getByTestId("mode-pan-zoom").click();
+
+              await snapshotTestGraph(page, testInfo);
+
+              const panCoords = await calcDragCoordinates(
+                graphTestId,
+                coordinatesAsPercent,
+                page
+              );
+
+              await drag({
+                page,
+                testInfo,
+                testId: graphTestId,
+                start: panCoords.start,
+                end: panCoords.end,
+                lasso: true,
+              });
+
+              await snapshotTestGraph(page, testInfo);
+
+              await page.getByTestId("mode-lasso").click();
+
+              const panCount = await getCellSetCount(2, page);
+
+              expect(panCount).toBe(initialCount);
+
+              await snapshotTestGraph(page, testInfo);
+            },
+            { page }
+          );
+        });
+
+        /*
     Tests included below are specific to annotation features
     */
 
-    const options = [
-      { withSubset: true, tag: "subset" },
-      { withSubset: false, tag: "whole" },
-    ];
+        const options = [
+          { withSubset: true, tag: "subset" },
+          { withSubset: false, tag: "whole" },
+        ];
 
-    for (const option of options) {
-      describe(`geneSET crud operations and interactions ${option.tag}`, () => {
-        test("brush on geneset mean", async ({ page }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-          await createGeneset(meanExpressionBrushGenesetName, page);
-          await addGeneToSetAndExpand(
-            meanExpressionBrushGenesetName,
-            "SIK1",
-            page
-          );
+        for (const option of options) {
+          describeFn(
+            `geneSET crud operations and interactions ${option.tag}`,
+            () => {
+              test("brush on geneset mean", async ({ page }, testInfo) => {
+                await setup({ option, page, url, testInfo });
+                await createGeneset(meanExpressionBrushGenesetName, page);
+                await addGeneToSetAndExpand(
+                  meanExpressionBrushGenesetName,
+                  "SIK1",
+                  page
+                );
 
-          const histBrushableAreaId = `histogram-${meanExpressionBrushGenesetName}-plot-brushable-area`;
+                const histBrushableAreaId = `histogram-${meanExpressionBrushGenesetName}-plot-brushable-area`;
 
-          const coords = await calcDragCoordinates(
-            histBrushableAreaId,
-            {
-              x1: 0.1,
-              y1: 0.5,
-              x2: 0.9,
-              y2: 0.5,
-            },
-            page
-          );
+                const coords = await calcDragCoordinates(
+                  histBrushableAreaId,
+                  {
+                    x1: 0.1,
+                    y1: 0.5,
+                    x2: 0.9,
+                    y2: 0.5,
+                  },
+                  page
+                );
 
-          await drag({
-            page,
-            testInfo,
-            testId: histBrushableAreaId,
-            start: coords.start,
-            end: coords.end,
-          });
+                await drag({
+                  page,
+                  testInfo,
+                  testId: histBrushableAreaId,
+                  start: coords.start,
+                  end: coords.end,
+                });
 
-          await page.getByTestId(`cellset-button-1`).click();
-          const cellCount = await getCellSetCount(1, page);
+                await page.getByTestId(`cellset-button-1`).click();
+                const cellCount = await getCellSetCount(1, page);
 
-          // (seve): the withSubset version of this test is resulting in the unsubsetted value
-          if (option.withSubset) {
-            expect(cellCount).toBe(data.brushOnGenesetMean.withSubset);
-            await snapshotTestGraph(page, testInfo);
-          } else {
-            expect(cellCount).toBe(data.brushOnGenesetMean.default);
-            await snapshotTestGraph(page, testInfo);
-          }
-        });
+                // (seve): the withSubset version of this test is resulting in the unsubsetted value
+                if (option.withSubset) {
+                  expect(cellCount).toBe(data.brushOnGenesetMean.withSubset);
+                  await snapshotTestGraph(page, testInfo);
+                } else {
+                  expect(cellCount).toBe(data.brushOnGenesetMean.default);
+                  await snapshotTestGraph(page, testInfo);
+                }
+              });
 
-        test("color by mean expression", async ({ page }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-          await createGeneset(meanExpressionBrushGenesetName, page);
-          await addGeneToSetAndExpand(
-            meanExpressionBrushGenesetName,
-            "SIK1",
-            page
-          );
+              test("color by mean expression", async ({ page }, testInfo) => {
+                await setup({ option, page, url, testInfo });
+                await createGeneset(meanExpressionBrushGenesetName, page);
+                await addGeneToSetAndExpand(
+                  meanExpressionBrushGenesetName,
+                  "SIK1",
+                  page
+                );
 
-          await colorByGeneset(meanExpressionBrushGenesetName, page);
-          await assertColorLegendLabel(meanExpressionBrushGenesetName, page);
-          await snapshotTestGraph(page, testInfo);
-        });
-        test("color by mean expression changes sorting of categories in 'cell_type'", async ({
-          page,
-        }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-
-          const categories = await page
-            .locator('[data-testid*=":category-expand"]')
-            .all();
-
-          const category = categories[0];
-
-          const categoryName = (
-            await category.getAttribute("data-testid")
-          )?.split(":")[0] as string;
-
-          await expandCategory(categoryName, page);
-
-          await createGeneset(meanExpressionBrushGenesetName, page);
-
-          await addGeneToSetAndExpand(
-            meanExpressionBrushGenesetName,
-            "SIK1",
-            page
-          );
-
-          await waitUntilNoSkeletonDetected(page);
-
-          await tryUntil(
-            async () => {
-              // Check initial order of categories
-              const initialOrder = await getAllCategories(categoryName, page);
-
-              expect(initialOrder).not.toEqual([]);
-
-              // Color by the geneset mean expression
-              await colorByGeneset(meanExpressionBrushGenesetName, page);
-
-              await waitUntilNoSkeletonDetected(page);
-
-              // Check order of categories after sorting by mean expression
-              const sortedOrder = await getAllCategories(categoryName, page);
-
-              expect(sortedOrder).not.toEqual([]);
-
-              // Expect the sorted order to be different from the initial order
-              expect(sortedOrder).not.toEqual(initialOrder);
-            },
-            { page }
-          );
-        });
-
-        test("diffexp", async ({ page }, testInfo) => {
-          if (option.withSubset) return;
-
-          const runningAgainstDeployment = !testURL.includes("localhost");
-
-          // this test will take longer if we're running against a deployment
-          if (runningAgainstDeployment) test.slow();
-
-          await setup({ option, page, url, testInfo });
-
-          const { category, cellset1, cellset2 } = data.diffexp;
-
-          await expandCategory(category, page);
-
-          await page
-            .getByTestId(`${category}:category-select`)
-            .click({ force: true });
-
-          const cellset1Selector = page.getByTestId(
-            `categorical-value-select-${category}-${cellset1.cellType}`
-          );
-          const cellset2Selector = page.getByTestId(
-            `categorical-value-select-${category}-${cellset2.cellType}`
-          );
-
-          await cellset1Selector.click({ force: true });
-
-          await page.getByTestId(`cellset-button-1`).click();
-
-          await cellset1Selector.click({ force: true });
-
-          await cellset2Selector.click({ force: true });
-
-          await page.getByTestId(`cellset-button-2`).click();
-
-          // run diffexp
-          await page.getByTestId(`diffexp-button`).click();
-          await page.getByTestId("pop-1-geneset-expand").click();
-
-          await waitUntilNoSkeletonDetected(page);
-
-          let genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
-
-          expect(genesHTML).toMatchSnapshot();
-          await snapshotTestGraph(page, testInfo);
-
-          // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
-          // the click is so fast that it's not registered
-          await tryUntil(
-            async () => {
-              await page.getByTestId("pop-1-geneset-expand").click();
-              await page.getByTestId("pop-2-geneset-expand").click();
-
-              await waitUntilNoSkeletonDetected(page);
-
-              expect(page.getByTestId("geneset")).toBeTruthy();
-
-              await expect(
-                page.getByTestId(`${data.diffexp.pop2Gene}:gene-label`)
-              ).toBeVisible();
-            },
-            { page, timeoutMs: runningAgainstDeployment ? 20000 : undefined }
-          );
-
-          genesHTML = await page.getByTestId("gene-set-genes").innerHTML();
-
-          expect(genesHTML).toMatchSnapshot();
-          await snapshotTestGraph(page, testInfo);
-        });
-
-        test("create a new geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
-          /**
-           * (thuang): Test is flaky, so we need to retry until it passes
-           */
-          await tryUntil(
-            async () => {
-              if (option.withSubset) return;
-
-              await setup({ option, page, url, testInfo });
-
-              await waitUntilNoSkeletonDetected(page);
-
-              const genesetName = `test-geneset-foo-123`;
-
-              await assertGenesetDoesNotExist(genesetName, page);
-
-              await createGeneset(genesetName, page);
-
-              await assertGenesetExists(genesetName, page);
-
-              await assertUndoRedo(
+                await colorByGeneset(meanExpressionBrushGenesetName, page);
+                await assertColorLegendLabel(
+                  meanExpressionBrushGenesetName,
+                  page
+                );
+                await snapshotTestGraph(page, testInfo);
+              });
+              test("color by mean expression changes sorting of categories in 'cell_type'", async ({
                 page,
-                () => assertGenesetDoesNotExist(genesetName, page),
-                () => assertGenesetExists(genesetName, page)
-              );
-            },
-            { page }
-          );
-        });
+              }, testInfo) => {
+                await setup({ option, page, url, testInfo });
 
-        test("edit geneset name and undo/redo", async ({ page }, testInfo) => {
-          /**
-           * (thuang): Test is flaky, so we need to retry until it passes
-           */
-          await tryUntil(
-            async () => {
-              await setup({ option, page, url, testInfo });
-              await createGeneset(editableGenesetName, page);
-              await editGenesetName(editableGenesetName, newGenesetName, page);
+                const categories = await page
+                  .locator('[data-testid*=":category-expand"]')
+                  .all();
 
-              await assertGenesetExists(newGenesetName, page);
+                const category = categories[0];
 
-              await assertUndoRedo(
+                const categoryName = (
+                  await category.getAttribute("data-testid")
+                )?.split(":")[0] as string;
+
+                await expandCategory(categoryName, page);
+
+                await createGeneset(meanExpressionBrushGenesetName, page);
+
+                await addGeneToSetAndExpand(
+                  meanExpressionBrushGenesetName,
+                  "SIK1",
+                  page
+                );
+
+                await waitUntilNoSkeletonDetected(page);
+
+                await tryUntil(
+                  async () => {
+                    // Check initial order of categories
+                    const initialOrder = await getAllCategories(
+                      categoryName,
+                      page
+                    );
+
+                    expect(initialOrder).not.toEqual([]);
+
+                    // Color by the geneset mean expression
+                    await colorByGeneset(meanExpressionBrushGenesetName, page);
+
+                    await waitUntilNoSkeletonDetected(page);
+
+                    // Check order of categories after sorting by mean expression
+                    const sortedOrder = await getAllCategories(
+                      categoryName,
+                      page
+                    );
+
+                    expect(sortedOrder).not.toEqual([]);
+
+                    // Expect the sorted order to be different from the initial order
+                    expect(sortedOrder).not.toEqual(initialOrder);
+                  },
+                  { page }
+                );
+              });
+
+              test("diffexp", async ({ page }, testInfo) => {
+                if (option.withSubset) return;
+
+                const runningAgainstDeployment = !testURL.includes("localhost");
+
+                // this test will take longer if we're running against a deployment
+                if (runningAgainstDeployment) test.slow();
+
+                await setup({ option, page, url, testInfo });
+
+                const { category, cellset1, cellset2 } = data.diffexp;
+
+                await expandCategory(category, page);
+
+                await page
+                  .getByTestId(`${category}:category-select`)
+                  .click({ force: true });
+
+                const cellset1Selector = page.getByTestId(
+                  `categorical-value-select-${category}-${cellset1.cellType}`
+                );
+                const cellset2Selector = page.getByTestId(
+                  `categorical-value-select-${category}-${cellset2.cellType}`
+                );
+
+                await cellset1Selector.click({ force: true });
+
+                await page.getByTestId(`cellset-button-1`).click();
+
+                await cellset1Selector.click({ force: true });
+
+                await cellset2Selector.click({ force: true });
+
+                await page.getByTestId(`cellset-button-2`).click();
+
+                // run diffexp
+                await page.getByTestId(`diffexp-button`).click();
+                await page.getByTestId("pop-1-geneset-expand").click();
+
+                await waitUntilNoSkeletonDetected(page);
+
+                let genesHTML = await page
+                  .getByTestId("gene-set-genes")
+                  .innerHTML();
+
+                expect(genesHTML).toMatchSnapshot();
+                await snapshotTestGraph(page, testInfo);
+
+                // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
+                // the click is so fast that it's not registered
+                await tryUntil(
+                  async () => {
+                    await page.getByTestId("pop-1-geneset-expand").click();
+                    await page.getByTestId("pop-2-geneset-expand").click();
+
+                    await waitUntilNoSkeletonDetected(page);
+
+                    expect(page.getByTestId("geneset")).toBeTruthy();
+
+                    await expect(
+                      page.getByTestId(`${data.diffexp.pop2Gene}:gene-label`)
+                    ).toBeVisible();
+                  },
+                  {
+                    page,
+                    timeoutMs: runningAgainstDeployment ? 20000 : undefined,
+                  }
+                );
+
+                genesHTML = await page
+                  .getByTestId("gene-set-genes")
+                  .innerHTML();
+
+                expect(genesHTML).toMatchSnapshot();
+                await snapshotTestGraph(page, testInfo);
+              });
+
+              test("create a new geneset and undo/redo", async ({
                 page,
-                () => assertGenesetExists(editableGenesetName, page),
-                () => assertGenesetExists(newGenesetName, page)
-              );
-            },
-            { page }
-          );
-        });
+              }, testInfo) => {
+                /**
+                 * (thuang): Test is flaky, so we need to retry until it passes
+                 */
+                await tryUntil(
+                  async () => {
+                    if (option.withSubset) return;
 
-        test("delete a geneset and undo/redo", async ({ page }, testInfo) => {
-          /**
-           * (thuang): Test is flaky, so we need to retry until it passes
-           */
-          await tryUntil(
-            async () => {
-              if (option.withSubset) return;
+                    await setup({ option, page, url, testInfo });
 
-              await setup({ option, page, url, testInfo });
+                    await waitUntilNoSkeletonDetected(page);
 
-              await createGeneset(genesetToDeleteName, page);
+                    const genesetName = `test-geneset-foo-123`;
 
-              await deleteGeneset(genesetToDeleteName, page);
+                    await assertGenesetDoesNotExist(genesetName, page);
 
-              await assertUndoRedo(
+                    await createGeneset(genesetName, page);
+
+                    await assertGenesetExists(genesetName, page);
+
+                    await assertUndoRedo(
+                      page,
+                      () => assertGenesetDoesNotExist(genesetName, page),
+                      () => assertGenesetExists(genesetName, page)
+                    );
+                  },
+                  { page }
+                );
+              });
+
+              test("edit geneset name and undo/redo", async ({
                 page,
-                () => assertGenesetExists(genesetToDeleteName, page),
-                () => assertGenesetDoesNotExist(genesetToDeleteName, page)
-              );
-            },
-            { page }
-          );
-        });
+              }, testInfo) => {
+                /**
+                 * (thuang): Test is flaky, so we need to retry until it passes
+                 */
+                await tryUntil(
+                  async () => {
+                    await setup({ option, page, url, testInfo });
+                    await createGeneset(editableGenesetName, page);
+                    await editGenesetName(
+                      editableGenesetName,
+                      newGenesetName,
+                      page
+                    );
 
-        test("geneset description", async ({ page }, testInfo) => {
-          if (option.withSubset) return;
+                    await assertGenesetExists(newGenesetName, page);
 
-          await setup({ option, page, url, testInfo });
+                    await assertUndoRedo(
+                      page,
+                      () => assertGenesetExists(editableGenesetName, page),
+                      () => assertGenesetExists(newGenesetName, page)
+                    );
+                  },
+                  { page }
+                );
+              });
 
-          await createGeneset(
-            genesetToCheckForDescription,
-            page,
-            genesetDescriptionString
-          );
-
-          await checkGenesetDescription(
-            genesetToCheckForDescription,
-            genesetDescriptionString,
-            page
-          );
-        });
-      });
-
-      describe(`GENE crud operations and interactions ${option.tag}`, () => {
-        test("add a gene to geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
-          /**
-           * (thuang): Test is flaky, so we need to retry until it passes
-           */
-          await tryUntil(
-            async () => {
-              await setup({ option, page, url, testInfo });
-              await createGeneset(setToAddGeneTo, page);
-              await addGeneToSetAndExpand(setToAddGeneTo, geneToAddToSet, page);
-              await assertGeneExistsInGeneset(geneToAddToSet, page);
-
-              await assertUndoRedo(
+              test("delete a geneset and undo/redo", async ({
                 page,
-                () => assertGeneDoesNotExist(geneToAddToSet, page),
-                () => assertGeneExistsInGeneset(geneToAddToSet, page)
-              );
-            },
-            { page }
-          );
-        });
+              }, testInfo) => {
+                /**
+                 * (thuang): Test is flaky, so we need to retry until it passes
+                 */
+                await tryUntil(
+                  async () => {
+                    if (option.withSubset) return;
 
-        test("expand gene and brush", async ({ page }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-          await createGeneset(brushThisGeneGeneset, page);
-          await addGeneToSetAndExpand(
-            brushThisGeneGeneset,
-            geneToBrushAndColorBy,
-            page
-          );
-          await expandGene(geneToBrushAndColorBy, page);
-          const histBrushableAreaId = `histogram-${geneToBrushAndColorBy}-plot-brushable-area`;
+                    await setup({ option, page, url, testInfo });
 
-          const coords = await calcDragCoordinates(
-            histBrushableAreaId,
-            {
-              x1: 0.25,
-              y1: 0.5,
-              x2: 0.55,
-              y2: 0.5,
-            },
-            page
-          );
+                    await createGeneset(genesetToDeleteName, page);
 
-          await snapshotTestGraph(page, testInfo);
+                    await deleteGeneset(genesetToDeleteName, page);
 
-          await drag({
-            page,
-            testInfo,
-            testId: histBrushableAreaId,
-            start: coords.start,
-            end: coords.end,
-          });
+                    await assertUndoRedo(
+                      page,
+                      () => assertGenesetExists(genesetToDeleteName, page),
+                      () => assertGenesetDoesNotExist(genesetToDeleteName, page)
+                    );
+                  },
+                  { page }
+                );
+              });
 
-          await snapshotTestGraph(page, testInfo);
+              test("geneset description", async ({ page }, testInfo) => {
+                if (option.withSubset) return;
 
-          const cellCount = await getCellSetCount(1, page);
+                await setup({ option, page, url, testInfo });
 
-          if (option.withSubset) {
-            expect(cellCount).toBe(data.expandGeneAndBrush.withSubset);
-            await snapshotTestGraph(page, testInfo);
-          } else {
-            expect(cellCount).toBe(data.expandGeneAndBrush.default);
-            await snapshotTestGraph(page, testInfo);
-          }
-        });
+                await createGeneset(
+                  genesetToCheckForDescription,
+                  page,
+                  genesetDescriptionString
+                );
 
-        test("color by gene in geneset", async ({ page }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-
-          await createGeneset(meanExpressionBrushGenesetName, page);
-
-          await addGeneToSetAndExpand(
-            meanExpressionBrushGenesetName,
-            "SIK1",
-            page
+                await checkGenesetDescription(
+                  genesetToCheckForDescription,
+                  genesetDescriptionString,
+                  page
+                );
+              });
+            }
           );
 
-          await colorByGene("SIK1", page);
-          await assertColorLegendLabel("SIK1", page);
-          await snapshotTestGraph(page, testInfo);
-        });
-        test("delete gene from geneset and undo/redo", async ({
-          page,
-        }, testInfo) => {
-          /**
-           * (thuang): Test is flaky, so we need to retry until it passes
-           */
-          await tryUntil(
-            async () => {
-              if (option.withSubset) return;
-
-              await setup({ option, page, url, testInfo });
-              await createGeneset(setToRemoveFrom, page);
-              await addGeneToSetAndExpand(setToRemoveFrom, geneToRemove, page);
-
-              await removeGene(geneToRemove, page);
-
-              await assertGeneDoesNotExist(geneToRemove, page);
-
-              await assertUndoRedo(
+          describeFn(
+            `GENE crud operations and interactions ${option.tag}`,
+            () => {
+              test("add a gene to geneset and undo/redo", async ({
                 page,
-                () => assertGeneExistsInGeneset(geneToRemove, page),
-                () => assertGeneDoesNotExist(geneToRemove, page)
-              );
-            },
-            { page }
+              }, testInfo) => {
+                /**
+                 * (thuang): Test is flaky, so we need to retry until it passes
+                 */
+                await tryUntil(
+                  async () => {
+                    await setup({ option, page, url, testInfo });
+                    await createGeneset(setToAddGeneTo, page);
+                    await addGeneToSetAndExpand(
+                      setToAddGeneTo,
+                      geneToAddToSet,
+                      page
+                    );
+                    await assertGeneExistsInGeneset(geneToAddToSet, page);
+
+                    await assertUndoRedo(
+                      page,
+                      () => assertGeneDoesNotExist(geneToAddToSet, page),
+                      () => assertGeneExistsInGeneset(geneToAddToSet, page)
+                    );
+                  },
+                  { page }
+                );
+              });
+
+              test("expand gene and brush", async ({ page }, testInfo) => {
+                await setup({ option, page, url, testInfo });
+                await createGeneset(brushThisGeneGeneset, page);
+                await addGeneToSetAndExpand(
+                  brushThisGeneGeneset,
+                  geneToBrushAndColorBy,
+                  page
+                );
+                await expandGene(geneToBrushAndColorBy, page);
+                const histBrushableAreaId = `histogram-${geneToBrushAndColorBy}-plot-brushable-area`;
+
+                const coords = await calcDragCoordinates(
+                  histBrushableAreaId,
+                  {
+                    x1: 0.25,
+                    y1: 0.5,
+                    x2: 0.55,
+                    y2: 0.5,
+                  },
+                  page
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await drag({
+                  page,
+                  testInfo,
+                  testId: histBrushableAreaId,
+                  start: coords.start,
+                  end: coords.end,
+                });
+
+                await snapshotTestGraph(page, testInfo);
+
+                const cellCount = await getCellSetCount(1, page);
+
+                if (option.withSubset) {
+                  expect(cellCount).toBe(data.expandGeneAndBrush.withSubset);
+                  await snapshotTestGraph(page, testInfo);
+                } else {
+                  expect(cellCount).toBe(data.expandGeneAndBrush.default);
+                  await snapshotTestGraph(page, testInfo);
+                }
+              });
+
+              test("color by gene in geneset", async ({ page }, testInfo) => {
+                await setup({ option, page, url, testInfo });
+
+                await createGeneset(meanExpressionBrushGenesetName, page);
+
+                await addGeneToSetAndExpand(
+                  meanExpressionBrushGenesetName,
+                  "SIK1",
+                  page
+                );
+
+                await colorByGene("SIK1", page);
+                await assertColorLegendLabel("SIK1", page);
+                await snapshotTestGraph(page, testInfo);
+              });
+              test("delete gene from geneset and undo/redo", async ({
+                page,
+              }, testInfo) => {
+                /**
+                 * (thuang): Test is flaky, so we need to retry until it passes
+                 */
+                await tryUntil(
+                  async () => {
+                    if (option.withSubset) return;
+
+                    await setup({ option, page, url, testInfo });
+                    await createGeneset(setToRemoveFrom, page);
+                    await addGeneToSetAndExpand(
+                      setToRemoveFrom,
+                      geneToRemove,
+                      page
+                    );
+
+                    await removeGene(geneToRemove, page);
+
+                    await assertGeneDoesNotExist(geneToRemove, page);
+
+                    await assertUndoRedo(
+                      page,
+                      () => assertGeneExistsInGeneset(geneToRemove, page),
+                      () => assertGeneDoesNotExist(geneToRemove, page)
+                    );
+                  },
+                  { page }
+                );
+              });
+
+              test("open info panel and hide/remove", async ({
+                page,
+              }, testInfo) => {
+                await setup({ option, page, url, testInfo });
+                await addGeneToSearch(geneToRequestInfo, page);
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await requestGeneInfo(geneToRequestInfo, page);
+                    await assertInfoPanelExists(geneToRequestInfo, page);
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await minimizeInfoPanel(page);
+                    await assertInfoPanelIsMinimized(geneToRequestInfo, page);
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await closeInfoPanel(page);
+                    await assertInfoPanelClosed(geneToRequestInfo, page);
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+              });
+            }
           );
-        });
-
-        test("open info panel and hide/remove", async ({ page }, testInfo) => {
-          await setup({ option, page, url, testInfo });
-          await addGeneToSearch(geneToRequestInfo, page);
-
-          await snapshotTestGraph(page, testInfo);
-
-          await tryUntil(
-            async () => {
-              await requestGeneInfo(geneToRequestInfo, page);
-              await assertInfoPanelExists(geneToRequestInfo, page);
-            },
-            { page }
-          );
-
-          await snapshotTestGraph(page, testInfo);
-
-          await tryUntil(
-            async () => {
-              await minimizeInfoPanel(page);
-              await assertInfoPanelIsMinimized(geneToRequestInfo, page);
-            },
-            { page }
-          );
-
-          await snapshotTestGraph(page, testInfo);
-
-          await tryUntil(
-            async () => {
-              await closeInfoPanel(page);
-              await assertInfoPanelClosed(geneToRequestInfo, page);
-            },
-            { page }
-          );
-
-          await snapshotTestGraph(page, testInfo);
-        });
-      });
-    }
-
-    describe(`Image Download`, () => {
-      async function snapshotDownloadedImage(
-        page: Page,
-        info: TestInfo,
-        path: string
-      ) {
-        const imageFile = await fs.readFile(path, { encoding: "base64" });
-
-        // attach the image at path to the dom so we can snapshot it
-        // ensure that the image is rendered on top of the graph
-        await page.evaluate((imgData) => {
-          const img = document.createElement("img");
-          img.id = "downloaded-image";
-          img.src = `data:image/png;base64,${imgData}`;
-          img.style.height = "100vh";
-          img.style.zIndex = "1000";
-          img.style.background = "white";
-          img.style.position = "absolute";
-          img.style.top = "0";
-          document.body.appendChild(img);
-        }, imageFile);
-
-        await takeSnapshot(page, info);
-
-        // remove the image from the dom
-        await page.evaluate(() => {
-          const img = document.getElementById("downloaded-image");
-          img?.parentNode?.removeChild(img);
-        });
-      }
-
-      async function downloadAndSnapshotImage(page: Page, info: TestInfo) {
-        const downloads: Download[] = [];
-
-        page.on("download", (downloadData) => {
-          downloads.push(downloadData);
-        });
-
-        await page.getByTestId("download-graph-button").click();
-
-        await tryUntil(
-          async () => {
-            expect(downloads.length).toBe(
-              /**
-               * (thuang): If it's a categorical test, we expect 2 downloads
-               */
-              info.title.includes("categorical") ? 2 : 1
-            );
-          },
-          { page }
-        );
-
-        const [graphDownload, legendDownload] = downloads;
-
-        const tmp = os.tmpdir();
-
-        // make the title safe for file system
-        const safeTitle = info.title.replace(/[^a-z0-9]/gi, "_");
-        const graphPath = `${tmp}/${safeTitle}/${graphDownload.suggestedFilename()}`;
-
-        await graphDownload.saveAs(graphPath);
-
-        if (legendDownload) {
-          const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
-          await legendDownload.saveAs(legendPath);
-
-          await snapshotDownloadedImage(page, info, legendPath);
         }
 
-        await snapshotDownloadedImage(page, info, graphPath);
-      }
+        describeFn(`Image Download`, () => {
+          async function snapshotDownloadedImage(
+            page: Page,
+            info: TestInfo,
+            path: string
+          ) {
+            const imageFile = await fs.readFile(path, { encoding: "base64" });
 
-      test("with continuous legend", async ({ page }, testInfo) => {
-        await goToPage(page, url);
+            // attach the image at path to the dom so we can snapshot it
+            // ensure that the image is rendered on top of the graph
+            await page.evaluate((imgData) => {
+              const img = document.createElement("img");
+              img.id = "downloaded-image";
+              img.src = `data:image/png;base64,${imgData}`;
+              img.style.height = "100vh";
+              img.style.zIndex = "1000";
+              img.style.background = "white";
+              img.style.position = "absolute";
+              img.style.top = "0";
+              document.body.appendChild(img);
+            }, imageFile);
 
-        await addGeneToSearch("SIK1", page);
-        await colorByGene("SIK1", page);
+            await takeSnapshot(page, info);
 
-        await downloadAndSnapshotImage(page, testInfo);
-      });
+            // remove the image from the dom
+            await page.evaluate(() => {
+              const img = document.getElementById("downloaded-image");
+              img?.parentNode?.removeChild(img);
+            });
+          }
 
-      test("with categorical legend", async ({ page }, testInfo) => {
-        await goToPage(page, url);
+          async function downloadAndSnapshotImage(page: Page, info: TestInfo) {
+            const downloads: Download[] = [];
 
-        const allLabels = [...Object.keys(data.categorical)];
-        await page.getByTestId(`colorby-${allLabels[0]}`).click();
+            page.on("download", (downloadData) => {
+              downloads.push(downloadData);
+            });
 
-        await downloadAndSnapshotImage(page, testInfo);
+            await page.getByTestId("download-graph-button").click();
+
+            await tryUntil(
+              async () => {
+                expect(downloads.length).toBe(
+                  /**
+                   * (thuang): If it's a categorical test, we expect 2 downloads
+                   */
+                  info.title.includes("categorical") ? 2 : 1
+                );
+              },
+              { page }
+            );
+
+            const [graphDownload, legendDownload] = downloads;
+
+            const tmp = os.tmpdir();
+
+            // make the title safe for file system
+            const safeTitle = info.title.replace(/[^a-z0-9]/gi, "_");
+            const graphPath = `${tmp}/${safeTitle}/${graphDownload.suggestedFilename()}`;
+
+            await graphDownload.saveAs(graphPath);
+
+            if (legendDownload) {
+              const legendPath = `${tmp}/${safeTitle}/${legendDownload.suggestedFilename()}`;
+              await legendDownload.saveAs(legendPath);
+
+              await snapshotDownloadedImage(page, info, legendPath);
+            }
+
+            await snapshotDownloadedImage(page, info, graphPath);
+          }
+
+          test("with continuous legend", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            await addGeneToSearch("SIK1", page);
+            await colorByGene("SIK1", page);
+
+            await downloadAndSnapshotImage(page, testInfo);
+          });
+
+          test("with categorical legend", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            const allLabels = [...Object.keys(data.categorical)];
+            await page.getByTestId(`colorby-${allLabels[0]}`).click();
+
+            await downloadAndSnapshotImage(page, testInfo);
+          });
+        });
+        describeFn("Side Panel", () => {
+          test("open and close side panel", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            await toggleSidePanel(page);
+
+            await expect(page.getByTestId(SIDE_PANEL)).toBeVisible();
+            await snapshotTestGraph(page, testInfo);
+
+            await toggleSidePanel(page);
+
+            await expect(page.getByTestId(SIDE_PANEL)).not.toBeVisible();
+            await snapshotTestGraph(page, testInfo);
+          });
+        });
       });
     });
-  });
+  }
 }
 
 test("categories and values from dataset appear and properly truncate if applicable", async ({

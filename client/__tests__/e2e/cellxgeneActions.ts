@@ -780,6 +780,8 @@ export async function assertUndoRedo(
   );
 }
 
+const WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS = 10_000;
+
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   const imageID = "graph-image";
 
@@ -789,7 +791,13 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
-      await page.getByTestId(imageID).waitFor();
+      await page
+        .getByTestId(imageID)
+        /**
+         * (thuang): Without explicit `timeout` option, the default timeout is
+         * 3 minutes, which is too long for this test.
+         */
+        .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
       await takeSnapshot(page, testInfo);
 
@@ -802,8 +810,18 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   );
 }
 
-export async function selectLayout(layoutChoice: string, page: Page) {
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+export async function selectLayout(
+  layoutChoice: string,
+  graphTsetId: string,
+  sidePanel: string,
+  page: Page
+) {
+  let layoutChoiceTestId = LAYOUT_CHOICE_TEST_ID;
+  if (graphTsetId === sidePanel) {
+    layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
+  }
+
+  await page.getByTestId(layoutChoiceTestId).click();
 
   /**
    * (thuang): For blueprint radio buttons, we need to tab first to go to the
@@ -839,7 +857,7 @@ export async function selectLayout(layoutChoice: string, page: Page) {
     }
   }
 
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+  await page.getByTestId(layoutChoiceTestId).click();
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }

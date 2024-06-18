@@ -23,12 +23,12 @@ import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
+import { sidePanelAttributeNameChange } from "../graph/util";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
   schema?: Schema;
   crossfilter: RootState["obsCrossfilter"];
-  imageUnderlay: RootState["controls"]["imageUnderlay"];
   sideIsOpen: RootState["panelEmbedding"]["open"];
 }
 
@@ -48,7 +48,6 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
     : state.layoutChoice,
   schema: state.annoMatrix?.schema,
   crossfilter: state.obsCrossfilter,
-  imageUnderlay: state.controls.imageUnderlay,
   sideIsOpen: state.panelEmbedding.open,
 });
 
@@ -58,7 +57,6 @@ const Embedding = (props: Props) => {
     schema,
     crossfilter,
     dispatch,
-    imageUnderlay,
     isSidePanel,
     sideIsOpen,
   } = props;
@@ -81,16 +79,6 @@ const Embedding = (props: Props) => {
     await dispatch(
       actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
     );
-    if (
-      imageUnderlay &&
-      !isSidePanel &&
-      !e.currentTarget.value.includes(globals.spatialEmbeddingKeyword)
-    ) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: false,
-      });
-    }
   };
 
   const handleOpenPanelEmbedding = async (): Promise<void> => {
@@ -102,7 +90,7 @@ const Embedding = (props: Props) => {
   return (
     <div
       style={{
-        zIndex: 9999,
+        zIndex: 1,
       }}
     >
       <ButtonGroup>
@@ -139,7 +127,10 @@ const Embedding = (props: Props) => {
           >
             <Button
               type="button"
-              data-testid={LAYOUT_CHOICE_TEST_ID}
+              data-testid={sidePanelAttributeNameChange(
+                LAYOUT_CHOICE_TEST_ID,
+                isSidePanel
+              )}
               id="embedding"
               style={{
                 cursor: "pointer",
@@ -157,6 +148,7 @@ const Embedding = (props: Props) => {
             icon={IconNames.MULTI_SELECT}
             onClick={handleOpenPanelEmbedding}
             active={sideIsOpen}
+            data-testid="side-panel-toggle"
           />
         )}
       </ButtonGroup>

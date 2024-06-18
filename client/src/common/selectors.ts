@@ -7,9 +7,19 @@ import { FEATURES } from "../util/featureFlags/features";
 export function isSpatialMode(props: ShouldShowOpenseadragonProps): boolean {
   const { layoutChoice, panelEmbedding } = props;
 
-  return !!(
+  const { open, layoutChoice: panelEmbeddingLayoutChoice } =
+    panelEmbedding || {};
+
+  const isPanelEmbeddingInSpatialMode =
+    /**
+     * (thuang): If the side panel is not open, don't take its layout choice into account
+     */
+    open &&
+    panelEmbeddingLayoutChoice?.current?.includes(spatialEmbeddingKeyword);
+
+  return Boolean(
     layoutChoice?.current?.includes(spatialEmbeddingKeyword) ||
-    panelEmbedding?.layoutChoice?.current?.includes(spatialEmbeddingKeyword)
+      isPanelEmbeddingInSpatialMode
   );
 }
 
