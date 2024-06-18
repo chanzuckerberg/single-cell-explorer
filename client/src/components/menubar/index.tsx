@@ -34,6 +34,7 @@ interface StateProps {
   categoricalSelection: RootState["categoricalSelection"];
   screenCap: RootState["controls"]["screenCap"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   layoutChoice: RootState["layoutChoice"];
   // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   config: RootState["config"];
@@ -112,42 +113,13 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
 
   constructor(props: MenuBarProps) {
     super(props);
-    const { layoutChoice, dispatch } = this.props;
+
     this.state = {
       pendingClipPercentiles: {
         clipPercentileMin: undefined,
         clipPercentileMax: undefined,
       },
     };
-    const currentConditionMet = layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-    // (seve): On some datasets, the app initially loads with a different layout selected, then switches to spatial.
-    //  This triggers the componentDidUpdate, which toggles the image underlay.
-    //  Other datasets correctly load with the spatial layout initially selected, but then don't trigger the componentDidUpdate.
-    if (currentConditionMet) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: true,
-      });
-    }
-  }
-
-  componentDidUpdate(prevProps: MenuBarProps): void {
-    const { layoutChoice, dispatch } = this.props;
-    const prevConditionMet = prevProps.layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-    const currentConditionMet = layoutChoice?.current?.includes(
-      globals.spatialEmbeddingKeyword
-    );
-
-    if (!prevConditionMet && currentConditionMet) {
-      dispatch({
-        type: "toggle image underlay",
-        toggle: true,
-      });
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
