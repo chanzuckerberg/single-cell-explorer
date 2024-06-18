@@ -389,11 +389,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
   };
 
   handleGoHome = () => {
-    track(EVENTS.EXPLORER_RE_CENTER_EMBEDDING);
     const { camera } = this.state;
 
     camera?.goHome(this.openseadragon);
     this.renderCanvas();
+  };
+
+  handleRecenterButtonClick = () => {
+    track(EVENTS.EXPLORER_RE_CENTER_EMBEDDING);
+
+    this.handleGoHome();
   };
 
   handleCanvasEvent: MouseEventHandler<HTMLCanvasElement> = (e) => {
@@ -418,7 +423,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   };
 
-  handleBrushDragAction(): void {
+  async handleBrushDragAction(): Promise<void> {
     /*
           event describing brush position:
           @-------|
@@ -440,7 +445,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const southeast = this.mapScreenToPoint(s[1]);
     const [minX, maxY] = northwest;
     const [maxX, minY] = southeast;
-    dispatch(
+
+    await dispatch(
       actions.graphBrushChangeAction(layoutChoice?.current, {
         minX,
         minY,
@@ -459,7 +465,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     dispatch(actions.graphBrushStartAction());
   }
 
-  handleBrushEndAction(): void {
+  async handleBrushEndAction(): Promise<void> {
     const { camera } = this.state;
     // Ignore programmatically generated events. Also abort if camera not initialized.
     if (!d3.event.sourceEvent || !camera) return;
@@ -474,7 +480,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const southeast = this.mapScreenToPoint(s[1]);
       const [minX, maxY] = northwest;
       const [maxX, minY] = southeast;
-      dispatch(
+
+      await dispatch(
         actions.graphBrushEndAction(layoutChoice?.current, {
           minX,
           minY,
@@ -485,13 +492,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
         })
       );
     } else {
-      dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
+      await dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
     }
   }
 
-  handleBrushDeselectAction(): void {
+  async handleBrushDeselectAction(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
+    await dispatch(actions.graphBrushDeselectAction(layoutChoice?.current));
   }
 
   handleLassoStart(): void {
@@ -500,7 +507,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   // when a lasso is completed, filter to the points within the lasso polygon
-  handleLassoEnd(polygon: [number, number][]): void {
+  async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
     const { dispatch, layoutChoice } = this.props;
     if (
@@ -508,9 +515,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       Math.abs(d3.polygonArea(polygon)) < minimumPolygonArea
     ) {
       // if less than three points, or super small area, treat as a clear selection.
-      dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
+      await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
-      dispatch(
+      await dispatch(
         actions.graphLassoEndAction(
           layoutChoice?.current,
           polygon.map((xy) => this.mapScreenToPoint(xy))
@@ -519,20 +526,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
   }
 
-  handleLassoCancel(): void {
+  async handleLassoCancel(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
+
+    await dispatch(actions.graphLassoCancelAction(layoutChoice?.current));
   }
 
-  handleLassoDeselectAction(): void {
+  async handleLassoDeselectAction(): Promise<void> {
     const { dispatch, layoutChoice } = this.props;
-    dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
+
+    await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
   }
 
-  handleDeselectAction(): void {
+  async handleDeselectAction(): Promise<void> {
     const { selectionTool } = this.props;
-    if (selectionTool === "brush") this.handleBrushDeselectAction();
-    if (selectionTool === "lasso") this.handleLassoDeselectAction();
+    if (selectionTool === "brush") await this.handleBrushDeselectAction();
+    if (selectionTool === "lasso") await this.handleLassoDeselectAction();
   }
 
   async handleImageDownload(regl: GraphState["regl"]) {
@@ -1276,7 +1285,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       >
         {isSpatialMode(this.props) && isImageLayerInViewport === false && (
           <Button
-            onClick={this.handleGoHome}
+            onClick={this.handleRecenterButtonClick}
             type="button"
             style={{
               justifyContent: "center",
