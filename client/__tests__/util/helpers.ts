@@ -1,4 +1,5 @@
 import { ElementHandle, expect, Locator, Page } from "@playwright/test";
+import { test } from "@chromatic-com/playwright";
 
 import { ERROR_NO_TEST_ID_OR_LOCATOR } from "../common/constants";
 import { waitUntilNoSkeletonDetected } from "../e2e/cellxgeneActions";
@@ -7,6 +8,8 @@ export const TIMEOUT_MS = 3 * 1000;
 export const WAIT_FOR_TIMEOUT_MS = 3 * 1000;
 
 const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
+
+const { skip } = test;
 
 export async function goToPage(page: Page, url = ""): Promise<void> {
   await tryUntil(
@@ -268,4 +271,32 @@ export async function checkTooltipContent(
   // check that tooltip contains text
   const tooltipText = await tooltipLocator.textContent();
   expect(tooltipText).toContain(text);
+}
+
+export async function toggleSidePanel(page: Page): Promise<void> {
+  await page.getByTestId("side-panel-toggle").click();
+}
+
+export async function conditionallyToggleSidePanel(
+  page: Page,
+  graphTestId: string,
+  SIDE_PANEL: string
+): Promise<void> {
+  if (graphTestId === SIDE_PANEL) {
+    await toggleSidePanel(page);
+  }
+}
+
+export function skipIfSidePanel(graphTestId: string, MAIN_PANEL: string) {
+  const message = "This test is only for the main panel";
+  if (graphTestId !== MAIN_PANEL) {
+    skip(true, message);
+  }
+}
+
+export function shouldSkipTests(
+  graphTestId: string,
+  SIDE_PANEL: string
+): boolean {
+  return graphTestId === SIDE_PANEL;
 }

@@ -42,6 +42,7 @@ export const datasets = {
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
           count: "930",
+          count_side: "1211",
         },
       ],
       invalidLasso: [
@@ -113,6 +114,7 @@ export const datasets = {
         lasso: {
           "coordinates-as-percent": { x1: 0.3, y1: 0.3, x2: 0.5, y2: 0.5 },
           count: "37",
+          count_side: "45",
         },
       },
     },
@@ -211,6 +213,7 @@ export const datasets = {
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
           count: "2025",
+          count_side: "1775",
         },
       ],
       invalidLasso: [
@@ -284,6 +287,7 @@ export const datasets = {
         lasso: {
           "coordinates-as-percent": { x1: 0.3, y1: 0.3, x2: 0.5, y2: 0.5 },
           count: "221",
+          count_side: "221",
         },
       },
     },

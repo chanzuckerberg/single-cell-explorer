@@ -810,8 +810,18 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   );
 }
 
-export async function selectLayout(layoutChoice: string, page: Page) {
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+export async function selectLayout(
+  layoutChoice: string,
+  graphTsetId: string,
+  sidePanel: string,
+  page: Page
+) {
+  let layoutChoiceTestId = LAYOUT_CHOICE_TEST_ID;
+  if (graphTsetId === sidePanel) {
+    layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
+  }
+
+  await page.getByTestId(layoutChoiceTestId).click();
 
   /**
    * (thuang): For blueprint radio buttons, we need to tab first to go to the
@@ -847,7 +857,7 @@ export async function selectLayout(layoutChoice: string, page: Page) {
     }
   }
 
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+  await page.getByTestId(layoutChoiceTestId).click();
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }
