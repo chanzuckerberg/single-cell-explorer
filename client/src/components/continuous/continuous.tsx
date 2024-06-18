@@ -8,16 +8,16 @@ import { RootState } from "../../reducers";
 import AnnoMatrix from "../../annoMatrix/annoMatrix";
 import { AnnotationColumnSchema } from "../../common/types/schema";
 
-interface ContinuousProps {
-  schema: AnnoMatrix["schema"];
+interface StateProps {
+  schema?: AnnoMatrix["schema"];
 }
 
-function mapStateToProps(state: RootState) {
+function mapStateToProps(state: RootState): StateProps {
   return {
     schema: state.annoMatrix?.schema,
   };
 }
-class Continuous extends React.PureComponent<ContinuousProps, never> {
+class Continuous extends React.PureComponent<StateProps> {
   render() {
     /* initial value for iterator to simulate index, ranges is an object */
     const { schema } = this.props;
@@ -42,6 +42,7 @@ class Continuous extends React.PureComponent<ContinuousProps, never> {
               isObs
               zebra={index % 2 === 0}
               onGeneExpressionComplete={() => {}}
+              mini={false}
             />
           ))}
         </Collapse>

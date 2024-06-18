@@ -22,7 +22,7 @@ const ConfigReducer = (
     isDeepZoomSourceValid: true,
   },
   action: AnyAction
-) => {
+): ConfigState => {
   switch (action.type) {
     case "initial data load start":
       return {

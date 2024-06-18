@@ -10,7 +10,7 @@ const initialState: PointDilationState = {
   categoryField: "",
 };
 
-const pointDialation = (state = initialState, action: AnyAction) => {
+const pointDilation = (state = initialState, action: AnyAction) => {
   const { metadataField, label: categoryField } = action;
 
   switch (action.type) {
@@ -35,4 +35,4 @@ const pointDialation = (state = initialState, action: AnyAction) => {
   }
 };
 
-export default pointDialation;
+export default pointDilation;
