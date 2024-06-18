@@ -436,9 +436,13 @@ class MenuBar extends React.PureComponent<{}, State> {
                   active={imageUnderlay}
                   onClick={() => {
                     track(
+                      /**
+                       * (thuang): If `imageUnderlay` is currently `true`, then
+                       * we're about to deselect it thus firing the deselection event.
+                       */
                       imageUnderlay
-                        ? EVENTS.EXPLORER_IMAGE_SELECT
-                        : EVENTS.EXPLORER_IMAGE_DESELECT
+                        ? EVENTS.EXPLORER_IMAGE_DESELECT
+                        : EVENTS.EXPLORER_IMAGE_SELECT
                     );
                     dispatch({
                       type: "toggle image underlay",
