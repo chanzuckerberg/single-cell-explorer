@@ -263,11 +263,14 @@ for (const testDataset of testDatasets) {
             }
           });
 
-          test.only("selects cells via lasso", async ({ page }, testInfo) => {
+          test("selects cells via lasso", async ({ page }, testInfo) => {
             // TODO: fix bug for side panel where subset1 doesn't reset after layout switch
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
             const originalCellCount = await getCellSetCount(1, page);
 
             for (const cellset of data.cellsets.lasso) {
@@ -286,10 +289,8 @@ for (const testDataset of testDatasets) {
                 lasso: true,
               });
 
-              let cellCount = cellset.count;
-              if (graphTestId === SIDE_PANEL) {
-                cellCount = cellset.count_side;
-              }
+              const cellCount =
+                graphTestId === SIDE_PANEL ? cellset.count_side : cellset.count;
 
               expect(await getCellSetCount(1, page)).toBe(cellCount);
 
