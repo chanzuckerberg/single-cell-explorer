@@ -55,8 +55,15 @@ async function _switchEmbedding(
 export const layoutChoiceAction: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
 > =
-  (newLayoutChoice: string) =>
+  (newLayoutChoice: string, isSidePanel = false) =>
   async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    if (isSidePanel) {
+      dispatch({
+        type: "set panel embedding layout choice",
+        layoutChoice: newLayoutChoice,
+      });
+      return;
+    }
     /**
      * Bruce: On layout choice, make sure we have selected all on the previous layout, AND the new
      * layout.
@@ -90,4 +97,18 @@ export const layoutChoiceAction: ActionCreator<
       obsCrossfilter,
       annoMatrix,
     });
+  };
+
+export const swapLayoutChoicesAction: ActionCreator<
+  ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
+> =
+  () =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    const { layoutChoice, panelEmbedding } = getState();
+    // get main and side layout choices
+    const mainLayoutChoice = layoutChoice.current;
+    const sideLayoutChoice = panelEmbedding.layoutChoice.current;
+
+    await dispatch(layoutChoiceAction(mainLayoutChoice, true));
+    await dispatch(layoutChoiceAction(sideLayoutChoice, false));
   };

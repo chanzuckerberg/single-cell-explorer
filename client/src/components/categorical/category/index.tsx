@@ -3,8 +3,7 @@ import React, { useRef, useEffect } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { AnchorButton, Classes, Position, Tooltip } from "@blueprintjs/core";
-import { Flipper, Flipped } from "react-flip-toolkit";
-import Async from "react-async";
+import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 
 import Value from "../value";
@@ -16,60 +15,63 @@ import { createCategorySummaryFromDfCol } from "../../../util/stateManager/contr
 import {
   createColorTable,
   createColorQuery,
+  ColorTable,
 } from "../../../util/stateManager/colorHelpers";
 import actions from "../../../actions";
 import { Dataframe } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
-import { Schema } from "../../../common/types/schema";
+import { RootState } from "../../../reducers";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
-const ANNO_BUTTON_WIDTH = 50;
-const LABEL_WIDTH_ANNO = LABEL_WIDTH - ANNO_BUTTON_WIDTH;
+
+type CategoryAsyncProps = {
+  categoryData: Dataframe;
+  categorySummary: ReturnType<typeof createCategorySummaryFromDfCol>;
+  colorData: Dataframe | null;
+  colorTable: ColorTable;
+  isColorAccessor: boolean;
+  handleCategoryToggleAllClick: () => void;
+} & StateProps["colors"];
 
 interface PureCategoryProps {
   metadataField: string;
-  colorMode: string;
-  categorySummary: any;
-  colorAccessor: string;
-  colorData: Dataframe | null;
-  categoryData: any;
-  isColorAccessor: boolean;
-  colorTable: any;
-  handleCategoryToggleAllClick: any;
+  isExpanded: boolean;
+  onExpansionChange: (metadataField: string) => void;
+  categoryType: string;
 }
 
-type CategoryProps = PureCategoryProps & {
-  colors: any;
-  categoricalSelection: any;
-  annotations: any;
-  annoMatrix: any;
-  schema: Schema;
-  crossfilter: any;
-  isUserAnno: boolean;
-  genesets: any;
+interface StateProps {
+  colors: RootState["colors"];
+  categoricalSelection: RootState["categoricalSelection"][string];
+  annoMatrix: RootState["annoMatrix"];
+  schema: RootState["annoMatrix"]["schema"];
+  crossfilter: RootState["obsCrossfilter"];
+  genesets: RootState["genesets"]["genesets"];
   isCellGuideCxg: boolean;
-};
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState, ownProps: PureCategoryProps) => {
+type CategoryProps = PureCategoryProps & StateProps;
+
+const mapStateToProps = (
+  state: RootState,
+  ownProps: PureCategoryProps
+): StateProps => {
   const schema = state.annoMatrix?.schema;
   const { metadataField } = ownProps;
-  const isUserAnno = schema?.annotations?.obsByName[metadataField]?.writable;
   const categoricalSelection = state.categoricalSelection?.[metadataField];
   return {
     colors: state.colors,
     categoricalSelection,
-    annotations: state.annotations,
     annoMatrix: state.annoMatrix,
     schema,
     crossfilter: state.obsCrossfilter,
-    isUserAnno,
     genesets: state.genesets.genesets,
     isCellGuideCxg: state.controls.isCellGuideCxg,
   };
-})
-class Category extends React.PureComponent {
+};
+
+class Category extends React.PureComponent<CategoryProps> {
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
@@ -104,7 +106,6 @@ class Category extends React.PureComponent {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   getSelectionState(categorySummary: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoricalSelection' does not exist on ... Remove this comment to see the full error message
     const { categoricalSelection, metadataField } = this.props;
     return Category.getSelectionState(
       categoricalSelection,
@@ -129,16 +130,9 @@ class Category extends React.PureComponent {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCategoryClick = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annotations' does not exist on type 'Rea... Remove this comment to see the full error message
-    const { annotations, metadataField, onExpansionChange } = this.props;
-    const editingCategory =
-      annotations.isEditingCategoryName &&
-      annotations.categoryBeingEdited === metadataField;
-    if (!editingCategory) {
-      onExpansionChange(metadataField);
-    }
+    const { metadataField, onExpansionChange } = this.props;
+    onExpansionChange(metadataField);
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -160,11 +154,10 @@ class Category extends React.PureComponent {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  fetchAsyncProps = async (props: any) => {
+  fetchAsyncProps = async (
+    props: AsyncProps<CategoryAsyncProps>
+  ): Promise<CategoryAsyncProps> => {
     const { annoMatrix, metadataField, colors } = props.watchProps;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on type 'Rea... Remove this comment to see the full error message
-    const { crossfilter, isCellGuideCxg } = this.props;
 
     const [categoryData, categorySummary, colorData] = await this.fetchData(
       annoMatrix,
@@ -176,8 +169,6 @@ class Category extends React.PureComponent {
       categoryData,
       categorySummary,
       colorData,
-      isCellGuideCxg,
-      crossfilter,
       ...this.updateColorTable(colorData),
       handleCategoryToggleAllClick: () =>
         this.handleToggleAllClick(categorySummary),
@@ -205,7 +196,6 @@ class Category extends React.PureComponent {
     */
     const { schema } = annoMatrix;
     const { colorAccessor, colorMode } = colors;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'genesets' does not exist on type 'Readon... Remove this comment to see the full error message
     const { genesets } = this.props;
     let colorDataPromise: Promise<Dataframe | null> = Promise.resolve(null);
     if (colorAccessor) {
@@ -234,10 +224,11 @@ class Category extends React.PureComponent {
     return [categoryData, categorySummary, colorData, colorMode];
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- - FIXME: disabled temporarily on migrate to TS.
-  updateColorTable(colorData: Dataframe | null) {
+  updateColorTable(colorData: Dataframe | null): {
+    isColorAccessor: boolean;
+    colorTable: ColorTable;
+  } & StateProps["colors"] {
     // color table, which may be null
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exist on type 'Readonly... Remove this comment to see the full error message
     const { schema, colors, metadataField } = this.props;
     const { colorAccessor, userColors, colorMode } = colors;
     return {
@@ -286,21 +277,16 @@ class Category extends React.PureComponent {
 
   render(): JSX.Element {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type 'R... Remove this comment to see the full error message
       metadataField,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isExpanded' does not exist on type 'Read... Remove this comment to see the full error message
       isExpanded,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoricalSelection' does not exist on ... Remove this comment to see the full error message
       categoricalSelection,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'crossfilter' does not exist on type 'Rea... Remove this comment to see the full error message
       crossfilter,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colors' does not exist on type 'Readonly... Remove this comment to see the full error message
       colors,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
       annoMatrix,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type 'Read... Remove this comment to see the full error message
-      isUserAnno,
+      isCellGuideCxg,
     } = this.props;
+
+    const { colorAccessor } = colors;
 
     const checkboxID = `category-select-${metadataField}`;
 
@@ -325,9 +311,8 @@ class Category extends React.PureComponent {
             )}
           </Async.Rejected>
           <Async.Fulfilled persist>
-            {(asyncProps: CategoryProps) => {
+            {(asyncProps: CategoryAsyncProps) => {
               const {
-                colorAccessor,
                 colorTable,
                 colorData,
                 categoryData,
@@ -335,7 +320,6 @@ class Category extends React.PureComponent {
                 isColorAccessor,
                 handleCategoryToggleAllClick,
                 colorMode,
-                isCellGuideCxg,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
               return (
@@ -343,7 +327,6 @@ class Category extends React.PureComponent {
                   // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; checkboxID: string; is... Remove this comment to see the full error message
                   metadataField={metadataField}
                   checkboxID={checkboxID}
-                  isUserAnno={isUserAnno}
                   isExpanded={isExpanded}
                   isColorAccessor={isColorAccessor}
                   selectionState={selectionState}
@@ -368,7 +351,7 @@ class Category extends React.PureComponent {
   }
 }
 
-export default Category;
+export default connect(mapStateToProps)(Category);
 
 /**
  * We are still loading this category, so render a "busy" signal.
@@ -401,7 +384,6 @@ const ErrorLoading = ({ metadataField, error }: any) => {
 interface CategoryHeaderProps {
   metadataField: any;
   checkboxID: any;
-  isUserAnno: boolean;
   isColorAccessor: boolean;
   isExpanded: boolean;
   selectionState: any;
@@ -415,7 +397,6 @@ const CategoryHeader = React.memo(
   ({
     metadataField,
     checkboxID,
-    isUserAnno,
     isColorAccessor,
     isExpanded,
     selectionState,
@@ -471,7 +452,7 @@ const CategoryHeader = React.memo(
             <Truncate>
               <span
                 style={{
-                  maxWidth: isUserAnno ? LABEL_WIDTH_ANNO : LABEL_WIDTH,
+                  maxWidth: LABEL_WIDTH,
                 }}
                 data-testid={`${metadataField}:category-label`}
                 // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
@@ -525,8 +506,6 @@ const CategoryRender = React.memo(
     metadataField,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'checkboxID' does not exist on type '{ ch... Remove this comment to see the full error message
     checkboxID,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserAnno' does not exist on type '{ ch... Remove this comment to see the full error message
-    isUserAnno,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
     isColorAccessor,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'isExpanded' does not exist on type '{ ch... Remove this comment to see the full error message
@@ -560,7 +539,7 @@ const CategoryRender = React.memo(
     Render the core of the category, including checkboxes, controls, etc.
     */
     const { numCategoryValues } = categorySummary;
-    const isSingularValue = !isUserAnno && numCategoryValues === 1;
+    const isSingularValue = numCategoryValues === 1;
 
     if (isSingularValue && !isCellGuideCxg) {
       /*
@@ -589,7 +568,6 @@ const CategoryRender = React.memo(
           <CategoryHeader
             metadataField={metadataField}
             checkboxID={checkboxID}
-            isUserAnno={isUserAnno}
             isExpanded={isExpanded}
             isColorAccessor={isColorAccessor}
             selectionState={selectionState}
@@ -604,7 +582,6 @@ const CategoryRender = React.memo(
             /* values*/
             isExpanded ? (
               <CategoryValueList
-                isUserAnno={isUserAnno}
                 metadataField={metadataField}
                 categoryData={categoryData}
                 categorySummary={categorySummary}
@@ -622,7 +599,6 @@ const CategoryRender = React.memo(
 );
 
 interface CategoryValueListProps {
-  isUserAnno: boolean;
   metadataField: any;
   categoryData: any;
   categorySummary: any;
@@ -633,7 +609,6 @@ interface CategoryValueListProps {
 }
 const CategoryValueList = React.memo(
   ({
-    isUserAnno,
     metadataField,
     categoryData,
     categorySummary,
@@ -681,47 +656,22 @@ const CategoryValueList = React.memo(
       animation, if read-only, we don't bother and save a few bits of perf.
       */
     }
-    if (!isUserAnno) {
-      return (
-        <>
-          {tuples.map(([value, index]) => (
-            <Value
-              key={value}
-              isUserAnno={isUserAnno}
-              metadataField={metadataField}
-              categoryIndex={index}
-              categoryData={categoryData}
-              categorySummary={categorySummary}
-              colorAccessor={colorAccessor}
-              colorData={colorData}
-              colorTable={colorTable}
-              colorMode={colorMode}
-            />
-          ))}
-        </>
-      );
-    }
-
-    /* User annotation */
-    const flipKey = tuples.map((t) => t[0]).join("");
     return (
-      <Flipper flipKey={flipKey}>
+      <>
         {tuples.map(([value, index]) => (
-          <Flipped key={value} flipId={value}>
-            <Value
-              isUserAnno={isUserAnno}
-              metadataField={metadataField}
-              categoryIndex={index}
-              categoryData={categoryData}
-              categorySummary={categorySummary}
-              colorAccessor={colorAccessor}
-              colorData={colorData}
-              colorTable={colorTable}
-              colorMode={colorMode}
-            />
-          </Flipped>
+          <Value
+            key={value}
+            metadataField={metadataField}
+            categoryIndex={index}
+            categoryData={categoryData}
+            categorySummary={categorySummary}
+            colorAccessor={colorAccessor}
+            colorData={colorData}
+            colorTable={colorTable}
+            colorMode={colorMode}
+          />
         ))}
-      </Flipper>
+      </>
     );
   }
 );

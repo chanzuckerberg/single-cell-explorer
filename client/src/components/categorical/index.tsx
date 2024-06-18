@@ -31,11 +31,6 @@ class Categories extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      createAnnoModeActive: false,
-      // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
-      newCategoryText: "",
-      // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
-      categoryToDuplicate: null,
       expandedCats: new Set(),
     };
   }
@@ -129,7 +124,7 @@ class Categories extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    const { createAnnoModeActive, expandedCats } = this.state;
+    const { expandedCats } = this.state;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
     const { schema, isCellGuideCxg } = this.props;
 
@@ -168,11 +163,9 @@ class Categories extends React.Component<{}, State> {
               standardCategoryNames.map((catName: string) => (
                 <Category
                   key={catName}
-                  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
                   metadataField={catName}
                   onExpansionChange={this.onExpansionChange}
                   isExpanded={expandedCats.has(catName)}
-                  createAnnoModeActive={createAnnoModeActive}
                   categoryType="standard"
                 />
               ))}
@@ -187,11 +180,9 @@ class Categories extends React.Component<{}, State> {
                 {standardCategoryNames.map((catName: string) => (
                   <Category
                     key={catName}
-                    // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
                     metadataField={catName}
                     onExpansionChange={this.onExpansionChange}
                     isExpanded={expandedCats.has(catName)}
-                    createAnnoModeActive={createAnnoModeActive}
                     categoryType="standard"
                   />
                 ))}
@@ -205,11 +196,9 @@ class Categories extends React.Component<{}, State> {
                 {authorCategoryNames.map((catName: string) => (
                   <Category
                     key={catName}
-                    // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
                     metadataField={catName}
                     onExpansionChange={this.onExpansionChange}
                     isExpanded={expandedCats.has(catName)}
-                    createAnnoModeActive={createAnnoModeActive}
                     categoryType="author"
                   />
                 ))}

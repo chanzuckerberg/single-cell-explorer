@@ -10,9 +10,7 @@ import { Dataframe } from "../../util/dataframe";
 
 import { LassoFunctionWithAttributes } from "./setupLasso";
 
-import { RootState } from "../../reducers";
-
-export type GraphProps = Partial<RootState>;
+import { AppDispatch, RootState } from "../../reducers";
 
 export type GraphState = {
   regl: Regl | null;
@@ -46,3 +44,31 @@ export type GraphState = {
   testImageSrc: string | null;
   isImageLayerInViewport: boolean;
 };
+
+export interface StateProps {
+  annoMatrix: RootState["annoMatrix"];
+  crossfilter: RootState["obsCrossfilter"];
+  selectionTool: RootState["graphSelection"]["tool"];
+  currentSelection: RootState["graphSelection"]["selection"];
+  layoutChoice: RootState["layoutChoice"];
+  graphInteractionMode: RootState["controls"]["graphInteractionMode"];
+  colors: RootState["colors"];
+  pointDilation: RootState["pointDilation"];
+  genesets: RootState["genesets"]["genesets"];
+  screenCap: RootState["controls"]["screenCap"];
+  mountCapture: RootState["controls"]["mountCapture"];
+  imageUnderlay: RootState["controls"]["imageUnderlay"];
+  config: RootState["config"];
+}
+
+export interface OwnProps {
+  viewportRef: HTMLDivElement;
+  isSidePanel?: boolean;
+  isHidden?: boolean;
+}
+
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+export type GraphProps = StateProps & DispatchProps & OwnProps;

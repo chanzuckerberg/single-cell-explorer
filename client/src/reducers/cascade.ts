@@ -1,16 +1,21 @@
 import { AnyAction, Reducer } from "redux";
-import type { RootState } from ".";
+import { type RootState } from ".";
 
-export type ReducerFunction = (
-  prevStateForKey: RootState[keyof RootState],
+export type ReducerFunction<T extends keyof RootState> = (
+  prevStateForKey: RootState[T] | undefined,
   action: AnyAction,
   nextState?: RootState,
   prevState?: RootState
-) => RootState;
+) => RootState[T];
+
+type CascadedReducersMap = Map<
+  keyof RootState,
+  ReducerFunction<keyof RootState>
+>;
 
 type CascadedReducers =
-  | [string, ReducerFunction][]
-  | Map<string, ReducerFunction>;
+  | [keyof RootState, ReducerFunction<keyof RootState>][]
+  | CascadedReducersMap;
 
 export default function cascadeReducers(arg: CascadedReducers): Reducer {
   /**
@@ -34,11 +39,12 @@ export default function cascadeReducers(arg: CascadedReducers): Reducer {
    * - reducers guaranteed to be called in order
    * - each reducer will receive shared objects
    */
-  const reducers = arg instanceof Map ? arg : new Map(arg);
-  const reducerKeys = [...reducers.keys()];
+  const reducers =
+    arg instanceof Map ? arg : (new Map(arg) as CascadedReducersMap);
+  const reducerKeys = [...reducers.keys()] as (keyof RootState)[];
 
-  return (prevState: RootState, action: AnyAction) => {
-    const nextState: RootState = {};
+  return (prevState: RootState, action: AnyAction): RootState => {
+    const nextState = {} as RootState;
     let stateChange = false;
     for (let i = 0, l = reducerKeys.length; i < l; i += 1) {
       const key = reducerKeys[i];
@@ -51,6 +57,7 @@ export default function cascadeReducers(arg: CascadedReducers): Reducer {
           nextState,
           prevState
         );
+        // @ts-expect-error -- can't seem to convince TS that nextStateForKey is the correct type
         nextState[key] = nextStateForKey;
         stateChange = stateChange || nextStateForKey !== prevStateForKey;
       }

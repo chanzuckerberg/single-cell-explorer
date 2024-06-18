@@ -76,7 +76,6 @@ export interface CategorySummary {
   numCategoryValues: number;
   // Array of cardinality of each category, (top N)
   categoryValueCounts: number[];
-  isUserAnno: boolean;
 }
 
 /**
@@ -88,7 +87,6 @@ export function createCategorySummaryFromDfCol(
   dfCol: DataframeColumn,
   colSchema: CategoricalAnnotationColumnSchema
 ): CategorySummary {
-  const { writable: isUserAnno } = colSchema;
   const summary = dfCol.summarizeCategorical();
   const { categories: allCategoryValues } = colSchema;
   const categoryValues = allCategoryValues;
@@ -105,7 +103,6 @@ export function createCategorySummaryFromDfCol(
     categoryValueIndices,
     numCategoryValues,
     categoryValueCounts,
-    isUserAnno,
   };
 }
 
