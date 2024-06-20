@@ -84,6 +84,8 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   mountCapture: state.controls.mountCapture,
   imageUnderlay: state.controls.imageUnderlay,
   config: state.config,
+  isSidePanelOpen: state.panelEmbedding.open,
+  sidePanelLayoutChoice: state.panelEmbedding.layoutChoice,
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
@@ -550,8 +552,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
   }
 
   async handleImageDownload(regl: GraphState["regl"]) {
-    const { dispatch, screenCap, mountCapture, layoutChoice, colors } =
-      this.props;
+    const {
+      dispatch,
+      screenCap,
+      mountCapture,
+      layoutChoice,
+      colors,
+      isSidePanelOpen,
+      sidePanelLayoutChoice,
+    } = this.props;
 
     if (!this.reglCanvas || !screenCap || !regl || this.isDownloadingImage) {
       return;
@@ -638,9 +647,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
         if (categoricalLegendImageURI) {
           downloadImage(categoricalLegendImageURI);
         }
-        track(EVENTS.EXPLORER_DOWNLOAD_COMPLETE, {
-          embedding: layoutChoice.current,
-        });
+
+        track(
+          EVENTS.EXPLORER_DOWNLOAD_COMPLETE,
+          isSidePanelOpen
+            ? {
+                embedding: layoutChoice.current,
+                side_by_side: sidePanelLayoutChoice?.current,
+              }
+            : { embedding: layoutChoice.current }
+        );
+
         dispatch({ type: "graph: screencap end" });
       }
 

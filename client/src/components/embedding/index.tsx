@@ -66,15 +66,24 @@ const Embedding = (props: Props) => {
   const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
   const handleLayoutChoiceClick = (): void => {
-    track(EVENTS.EXPLORER_EMBEDDING_CLICKED);
+    track(
+      isSidePanel
+        ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_CLICKED
+        : EVENTS.EXPLORER_EMBEDDING_CLICKED
+    );
   };
 
   const handleLayoutChoiceChange = async (
     e: FormEvent<HTMLInputElement>
   ): Promise<void> => {
-    track(EVENTS.EXPLORER_EMBEDDING_SELECTED, {
-      embedding: e.currentTarget.value,
-    });
+    track(
+      isSidePanel
+        ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_SELECTED
+        : EVENTS.EXPLORER_EMBEDDING_SELECTED,
+      {
+        embedding: e.currentTarget.value,
+      }
+    );
 
     await dispatch(
       actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
@@ -85,6 +94,16 @@ const Embedding = (props: Props) => {
     dispatch({
       type: "toggle panel embedding",
     });
+
+    /**
+     * (thuang): Product requirement to only track when the side panel goes from
+     * closed to open.
+     */
+    if (!sideIsOpen) {
+      track(EVENTS.EXPLORER_SBS_SELECTED, {
+        embedding: layoutChoice.current,
+      });
+    }
   };
 
   return (
