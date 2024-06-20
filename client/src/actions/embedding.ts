@@ -9,6 +9,8 @@ import type { AppDispatch, GetState, RootState } from "../reducers";
 import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
 import * as globals from "../globals";
+import { track } from "../analytics";
+import { EVENTS } from "../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 async function _switchEmbedding(
@@ -108,6 +110,11 @@ export const swapLayoutChoicesAction: ActionCreator<
     // get main and side layout choices
     const mainLayoutChoice = layoutChoice.current;
     const sideLayoutChoice = panelEmbedding.layoutChoice.current;
+
+    track(EVENTS.EXPLORER_SBS_SWAPPED, {
+      main_embedding: mainLayoutChoice,
+      window_embedding: sideLayoutChoice,
+    });
 
     await dispatch(layoutChoiceAction(mainLayoutChoice, true));
     await dispatch(layoutChoiceAction(sideLayoutChoice, false));
