@@ -560,6 +560,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       colors,
       isSidePanelOpen,
       sidePanelLayoutChoice,
+      isSidePanel,
     } = this.props;
 
     if (!this.reglCanvas || !screenCap || !regl || this.isDownloadingImage) {
@@ -648,15 +649,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
           downloadImage(categoricalLegendImageURI);
         }
 
-        track(
-          EVENTS.EXPLORER_DOWNLOAD_COMPLETE,
-          isSidePanelOpen
-            ? {
-                embedding: layoutChoice.current,
-                side_by_side: sidePanelLayoutChoice?.current,
-              }
-            : { embedding: layoutChoice.current }
-        );
+        /**
+         * (thuang): Only the main panel will send the event
+         */
+        if (!isSidePanel) {
+          track(
+            EVENTS.EXPLORER_DOWNLOAD_COMPLETE,
+            isSidePanelOpen
+              ? {
+                  embedding: layoutChoice.current,
+                  side_by_side: sidePanelLayoutChoice?.current,
+                }
+              : { embedding: layoutChoice.current }
+          );
+        }
 
         dispatch({ type: "graph: screencap end" });
       }
