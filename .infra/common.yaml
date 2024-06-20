@@ -1,0 +1,52 @@
+global:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  service:
+    port: 5000
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  livenessProbe:
+    httpGet:
+      path: /cellxgene/health
+  readinessProbe:
+    httpGet:
+      path: /cellxgene/health
+services:
+  explorer:
+    serviceAccount:
+      create: true
+      automount: true
+      annotations:
+        "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_dev_explorer
+    image:
+      repository: 533267185808.dkr.ecr.us-west-2.amazonaws.com/core-platform/single-cell-explorer/explorer
+    resources:
+      limits:
+        cpu: 4
+        memory: 4Gi
+      requests:
+        cpu: 2
+        memory: 2Gi
+    env:
+      - name: REMOTE_DEV_PREFIX
+        value: /explorer-devstack
+      - name: DEPLOYMENT_STAGE
+        value: dev
+      - name: DATA_LOCATOR_DOMAIN
+        value: api.cellxgene.dev.single-cell.czi.technology
+      - name: CXG_BUCKET_PATH
+        value: hosted-cellxgene-dev
+      - name: AWS_REGION
+        value: us-west-2
+      - name: AWS_DEFAULT_REGION
+        value: us-west-2
+      - name: API_DOMAIN
+        value: $(__ARGUS_STACK_INGRESS_HOST)
+      - name: WEB_DOMAIN
+        value: $(__ARGUS_STACK_INGRESS_HOST)
+    ingress:
+      hosts:
+        - paths:
+            - path: /
+              pathType: Prefix
