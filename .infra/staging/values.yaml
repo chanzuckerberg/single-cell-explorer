@@ -1,5 +1,8 @@
 services:
   explorer:
+    serviceAccount:
+      annotations:
+        "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_staging_explorer
     image:
       tag: sha-3883f979
     replicaCount: 1
