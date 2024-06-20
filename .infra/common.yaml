@@ -28,23 +28,6 @@ services:
       requests:
         cpu: 2
         memory: 2Gi
-    env:
-      - name: REMOTE_DEV_PREFIX
-        value: /explorer-devstack
-      - name: DEPLOYMENT_STAGE
-        value: dev
-      - name: DATA_LOCATOR_DOMAIN
-        value: api.cellxgene.dev.single-cell.czi.technology
-      - name: CXG_BUCKET_PATH
-        value: hosted-cellxgene-dev
-      - name: AWS_REGION
-        value: us-west-2
-      - name: AWS_DEFAULT_REGION
-        value: us-west-2
-      - name: API_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
     ingress:
       hosts:
         - paths:
