@@ -4,6 +4,7 @@ services:
       tag: sha-6a4bee02
     replicaCount: 1
     env:
+      # env vars common to all deployment stages
       - name: AWS_REGION
         value: us-west-2
       - name: AWS_DEFAULT_REGION
@@ -12,11 +13,13 @@ services:
         value: /$(__ARGUS_STACK_NAME)
       - name: DATA_LOCATOR_DOMAIN
         value: api.$(__ARGUS_STACK_INGRESS_HOST)
-      - name: API_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: WEB_DOMAIN
         value: $(__ARGUS_STACK_INGRESS_HOST)
+
+      # env vars specific to this deployment stage
       - name: DEPLOYMENT_STAGE
         value: rdev
+      - name: API_DOMAIN
+        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: CXG_BUCKET_PATH
         value: hosted-cellxgene-dev
