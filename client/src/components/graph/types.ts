@@ -59,6 +59,8 @@ export interface StateProps {
   mountCapture: RootState["controls"]["mountCapture"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
   config: RootState["config"];
+  isSidePanelOpen: RootState["panelEmbedding"]["open"];
+  sidePanelLayoutChoice: RootState["panelEmbedding"]["layoutChoice"];
 }
 
 export interface OwnProps {
