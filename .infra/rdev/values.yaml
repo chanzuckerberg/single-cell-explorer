@@ -3,3 +3,6 @@ services:
     image:
       tag: sha-6a4bee02
     replicaCount: 1
+    env:
+      - name: DEPLOYMENT_STAGE
+        value: dev

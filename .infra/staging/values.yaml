@@ -3,3 +3,6 @@ services:
     image:
       tag: sha-3883f979
     replicaCount: 1
+    env:
+      - name: DEPLOYMENT_STAGE
+        value: staging
