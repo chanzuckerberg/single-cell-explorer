@@ -65,6 +65,10 @@ const Embedding = (props: Props) => {
 
   const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
+  /**
+   * (thuang): Attach to `onOpening` event to only track the event when the user
+   * clicks on the dropdown to open the popover, not when the popover is closed.
+   */
   const handleLayoutChoiceClick = (): void => {
     track(
       isSidePanel
@@ -115,6 +119,7 @@ const Embedding = (props: Props) => {
       <ButtonGroup>
         <Popover2
           // minimal /* removes arrow */
+          onOpening={handleLayoutChoiceClick}
           position={Position.TOP_LEFT}
           content={
             <div
@@ -156,7 +161,6 @@ const Embedding = (props: Props) => {
               }}
               icon={IconNames.GRAPH}
               rightIcon={IconNames.CARET_DOWN}
-              onClick={handleLayoutChoiceClick}
             >
               {layoutChoice?.current}
             </Button>
