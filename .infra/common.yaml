@@ -35,8 +35,6 @@ services:
         value: us-west-2
       - name: REMOTE_DEV_PREFIX
         value: /$(__ARGUS_STACK_NAME)
-      - name: CXG_BUCKET_PATH
-        value: hosted-cellxgene-dev
       - name: DATA_LOCATOR_DOMAIN
         value: api.$(__ARGUS_STACK_INGRESS_HOST)
       - name: API_DOMAIN

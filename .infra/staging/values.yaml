@@ -13,3 +13,5 @@ services:
     env:
       - name: DEPLOYMENT_STAGE
         value: staging
+      - name: CXG_BUCKET_PATH
+        value: hosted-cellxgene-staging
