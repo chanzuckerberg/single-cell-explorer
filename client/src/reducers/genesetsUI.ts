@@ -15,7 +15,7 @@ const GeneSetsUI = (
     isAddingGenesToGeneset: false,
   },
   action: AnyAction
-) => {
+): GeneSetsUIState => {
   switch (action.type) {
     /**
      * Activate interface for adding a new geneset

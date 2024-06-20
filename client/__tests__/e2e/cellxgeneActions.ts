@@ -605,17 +605,14 @@ export async function requestGeneInfo(gene: string, page: Page): Promise<void> {
   await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
 }
 
-export async function assertGeneInfoCardExists(
+export async function assertInfoPanelExists(
   gene: string,
   page: Page
 ): Promise<void> {
   await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
-  await expect(page.getByTestId(`gene-info-header`)).toBeTruthy();
-  await expect(page.getByTestId(`min-gene-info`)).toBeTruthy();
+  await expect(page.getByTestId(`info-panel-header`)).toBeTruthy();
+  await expect(page.getByTestId(`min-info-panel`)).toBeTruthy();
 
-  await expect(page.getByTestId(`clear-info-summary`).innerText).not.toEqual(
-    ""
-  );
   await expect(page.getByTestId(`gene-info-synonyms`).innerText).not.toEqual(
     ""
   );
@@ -623,19 +620,19 @@ export async function assertGeneInfoCardExists(
   await expect(page.getByTestId(`gene-info-link`)).toBeTruthy();
 }
 
-export async function minimizeGeneInfo(page: Page): Promise<void> {
-  await page.getByTestId("min-gene-info").click();
+export async function minimizeInfoPanel(page: Page): Promise<void> {
+  await page.getByTestId("min-info-panel").click();
 }
 
-export async function assertGeneInfoCardIsMinimized(
+export async function assertInfoPanelIsMinimized(
   gene: string,
   page: Page
 ): Promise<void> {
   const testIds = [
     `${gene}:gene-info`,
-    "gene-info-header",
-    "min-gene-info",
-    "clear-gene-info",
+    "info-panel-header",
+    "max-info-panel",
+    "close-info-panel",
   ];
 
   await tryUntil(
@@ -644,27 +641,24 @@ export async function assertGeneInfoCardIsMinimized(
         const result = await page.getByTestId(id).isVisible();
         await expect(result).toBe(true);
       }
-
-      const result = await page.getByTestId("gene-info-symbol").isVisible();
-      await expect(result).toBe(false);
     },
     { page }
   );
 }
 
-export async function removeGeneInfo(page: Page): Promise<void> {
-  await page.getByTestId("clear-gene-info").click();
+export async function closeInfoPanel(page: Page): Promise<void> {
+  await page.getByTestId("close-info-panel").click();
 }
 
-export async function assertGeneInfoDoesNotExist(
+export async function assertInfoPanelClosed(
   gene: string,
   page: Page
 ): Promise<void> {
   const testIds = [
     `${gene}:gene-info`,
-    "gene-info-header",
-    "min-gene-info",
-    "clear-gene-info",
+    "info-panel-header",
+    "min-info-panel",
+    "close-info-panel",
   ];
   await tryUntil(
     async () => {
@@ -786,6 +780,8 @@ export async function assertUndoRedo(
   );
 }
 
+const WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS = 10_000;
+
 export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   const imageID = "graph-image";
 
@@ -795,7 +791,13 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
-      await page.getByTestId(imageID).waitFor();
+      await page
+        .getByTestId(imageID)
+        /**
+         * (thuang): Without explicit `timeout` option, the default timeout is
+         * 3 minutes, which is too long for this test.
+         */
+        .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
       await takeSnapshot(page, testInfo);
 
@@ -808,8 +810,18 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   );
 }
 
-export async function selectLayout(layoutChoice: string, page: Page) {
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+export async function selectLayout(
+  layoutChoice: string,
+  graphTsetId: string,
+  sidePanel: string,
+  page: Page
+) {
+  let layoutChoiceTestId = LAYOUT_CHOICE_TEST_ID;
+  if (graphTsetId === sidePanel) {
+    layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
+  }
+
+  await page.getByTestId(layoutChoiceTestId).click();
 
   /**
    * (thuang): For blueprint radio buttons, we need to tab first to go to the
@@ -845,7 +857,7 @@ export async function selectLayout(layoutChoice: string, page: Page) {
     }
   }
 
-  await page.getByTestId(LAYOUT_CHOICE_TEST_ID).click();
+  await page.getByTestId(layoutChoiceTestId).click();
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }

@@ -62,8 +62,9 @@ const Layout: React.FC<Props> = (props) => {
         {leftSidebar}
       </div>
       <div
+        // side panel needs to take priority in z-index
         style={{
-          zIndex: 0,
+          zIndex: 1,
           gridArea: "top / graph-start / bottom / graph-end",
           position: "relative",
           height: "inherit",

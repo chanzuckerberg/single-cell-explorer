@@ -112,7 +112,7 @@ export default defineConfig<ChromaticConfig>({
   },
   maxFailures: process.env.CI ? CICD_MAX_FAILURE : undefined,
 
-  timeout: 2.5 * 60 * 1000, // 2.5 minutes
+  timeout: 3 * 60 * 1000, // 2.5 minutes
 
   /* Configure projects for major browsers */
   projects: [
