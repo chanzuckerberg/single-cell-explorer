@@ -20,3 +20,5 @@ services:
         value: rdev
       - name: CXG_BUCKET_PATH
         value: hosted-cellxgene-dev
+      - name: HAYDEN_TEST
+        value: "rdev"
