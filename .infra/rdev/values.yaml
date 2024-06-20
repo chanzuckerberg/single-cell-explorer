@@ -8,3 +8,5 @@ services:
         value: rdev
       - name: CXG_BUCKET_PATH
         value: hosted-cellxgene-dev
+      - name: API_DOMAIN
+        value: $(__ARGUS_STACK_INGRESS_HOST)
