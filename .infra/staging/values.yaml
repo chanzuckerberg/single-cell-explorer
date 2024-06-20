@@ -3,6 +3,13 @@ services:
     image:
       tag: sha-3883f979
     replicaCount: 1
+    resources:
+      limits:
+        cpu: 4
+        memory: 14Gi
+      requests:
+        cpu: 2
+        memory: 4Gi
     env:
       - name: DEPLOYMENT_STAGE
         value: staging
