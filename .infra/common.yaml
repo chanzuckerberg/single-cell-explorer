@@ -12,9 +12,6 @@ global:
   readinessProbe:
     httpGet:
       path: /cellxgene/health
-  env:
-    - name: HAYDEN_TEST
-      value: "global"
 services:
   explorer:
     serviceAccount:
