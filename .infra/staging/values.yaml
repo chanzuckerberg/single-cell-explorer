@@ -28,8 +28,8 @@ services:
       - name: DEPLOYMENT_STAGE
         value: staging
       - name: API_DOMAIN
-        value: api.cellxgene.staging.single-cell.czi.technology
+        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: DATA_LOCATOR_DOMAIN
-        value: api.cellxgene.staging.single-cell.czi.technology
+        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: CXG_BUCKET_PATH
         value: hosted-cellxgene-staging
