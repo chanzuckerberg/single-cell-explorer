@@ -47,6 +47,7 @@ import {
   getSpatialPrefixUrl,
   getSpatialTileSources,
   loadImage,
+  shouldSkipSidePanelImage,
   sidePanelAttributeNameChange,
 } from "./util";
 
@@ -85,6 +86,7 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   imageUnderlay: state.controls.imageUnderlay,
   config: state.config,
   isSidePanelOpen: state.panelEmbedding.open,
+  isSidePanelMinimized: state.panelEmbedding.minimized,
   sidePanelLayoutChoice: state.panelEmbedding.layoutChoice,
 });
 
@@ -561,9 +563,16 @@ class Graph extends React.Component<GraphProps, GraphState> {
       isSidePanelOpen,
       sidePanelLayoutChoice,
       isSidePanel,
+      isSidePanelMinimized,
     } = this.props;
 
-    if (!this.reglCanvas || !screenCap || !regl || this.isDownloadingImage) {
+    if (
+      !this.reglCanvas ||
+      !screenCap ||
+      !regl ||
+      this.isDownloadingImage ||
+      shouldSkipSidePanelImage(this.props)
+    ) {
       return;
     }
 
@@ -655,7 +664,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         if (!isSidePanel) {
           track(
             EVENTS.EXPLORER_DOWNLOAD_COMPLETE,
-            isSidePanelOpen
+            isSidePanelOpen && !isSidePanelMinimized
               ? {
                   embedding: layoutChoice.current,
                   side_by_side: sidePanelLayoutChoice?.current,
