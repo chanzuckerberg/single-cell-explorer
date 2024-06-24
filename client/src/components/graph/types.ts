@@ -8,7 +8,7 @@ import { Camera } from "../../util/camera";
 
 import { Dataframe } from "../../util/dataframe";
 
-import { LassoFunctionWithAttributes } from "./setupLasso";
+import { type LassoFunctionWithAttributes } from "./setupLasso";
 
 import { AppDispatch, RootState } from "../../reducers";
 
@@ -60,6 +60,7 @@ export interface StateProps {
   imageUnderlay: RootState["controls"]["imageUnderlay"];
   config: RootState["config"];
   isSidePanelOpen: RootState["panelEmbedding"]["open"];
+  isSidePanelMinimized: RootState["panelEmbedding"]["minimized"];
   sidePanelLayoutChoice: RootState["panelEmbedding"]["layoutChoice"];
 }
 

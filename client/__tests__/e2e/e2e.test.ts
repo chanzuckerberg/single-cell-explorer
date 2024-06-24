@@ -70,6 +70,7 @@ import {
   toggleSidePanel,
 } from "../util/helpers";
 import { SCALE_MAX } from "../../src/util/constants";
+import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
 
 const { describe, skip } = test;
 
@@ -1467,7 +1468,38 @@ for (const testDataset of testDatasets) {
 
             await downloadAndSnapshotImage(page, testInfo);
           });
+
+          test("with side panel", async ({ page }) => {
+            await goToPage(page, url);
+
+            await toggleSidePanel(page);
+
+            const downloads: Download[] = [];
+
+            page.on("download", (downloadData) => {
+              downloads.push(downloadData);
+            });
+
+            await page.getByTestId("download-graph-button").click();
+
+            expect(downloads.length).toBe(2);
+
+            const afterMinimizeDownloads: Download[] = [];
+
+            await page
+              .getByTestId(PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID)
+              .click();
+
+            page.on("download", (downloadData) => {
+              afterMinimizeDownloads.push(downloadData);
+            });
+
+            await page.getByTestId("download-graph-button").click();
+
+            expect(afterMinimizeDownloads.length).toBe(1);
+          });
         });
+
         describeFn("Side Panel", () => {
           test("open and close side panel", async ({ page }, testInfo) => {
             await goToPage(page, url);
