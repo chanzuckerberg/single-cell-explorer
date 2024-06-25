@@ -304,6 +304,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       screenCap,
       imageUnderlay,
       layoutChoice,
+      isHidden,
+      isSidePanel,
     } = this.props;
 
     const { toolSVG, viewport } = this.state;
@@ -344,7 +346,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       stateChanges.toolSVG
     ) {
       const { tool } = this.state;
-      this.selectionToolUpdate(stateChanges.tool ? stateChanges.tool : tool!);
+      this.selectionToolUpdate(stateChanges.tool ? stateChanges.tool : tool);
     }
 
     if (Object.keys(stateChanges).length > 0) {
@@ -368,6 +370,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     // Re-center when switching embedding mode
     if (prevProps.layoutChoice.current !== layoutChoice.current) {
+      this.handleResize();
+    }
+
+    /**
+     * (thuang): We need to resize the graph when the side panel is expanded
+     * from minimized state to prevent squished graph.
+     */
+    if (isSidePanel && prevProps.isHidden && !isHidden) {
       this.handleResize();
     }
   }
@@ -919,7 +929,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return Promise.all(promises);
   }
 
-  lassoToolUpdate(tool: LassoFunctionWithAttributes): void {
+  lassoToolUpdate(tool: LassoFunctionWithAttributes | null): void {
     /*
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
@@ -932,9 +942,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const polygon = currentSelection.polygon.map((p: [number, number]) =>
         this.mapPointToScreen(p)
       );
-      tool.move(polygon);
+      tool?.move(polygon);
     } else {
-      tool.reset();
+      tool?.reset();
     }
   }
 
