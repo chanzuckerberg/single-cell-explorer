@@ -21,15 +21,15 @@ services:
         value: us-west-2
       - name: REMOTE_DEV_PREFIX
         value: /$(__ARGUS_STACK_NAME)
-      - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
+      - name: DEPLOYMENT_STAGE
+        value: $(__ARGUS_DEPLOYMENT_STAGE)
 
       # env vars specific to this deployment stage
-      - name: DEPLOYMENT_STAGE
-        value: staging
+      - name: WEB_DOMAIN
+        value: cellxgene.staging.single-cell.czi.technology
       - name: API_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
+        value: api.cellxgene.staging.single-cell.czi.technology
       - name: DATA_LOCATOR_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
+        value: api.cellxgene.staging.single-cell.czi.technology
       - name: CXG_BUCKET_PATH
-        value: hosted-cellxgene-staging
+        value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)

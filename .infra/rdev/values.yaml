@@ -11,12 +11,12 @@ services:
         value: us-west-2
       - name: REMOTE_DEV_PREFIX
         value: /$(__ARGUS_STACK_NAME)
-      - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
+      - name: DEPLOYMENT_STAGE
+        value: $(__ARGUS_DEPLOYMENT_STAGE)
 
       # env vars specific to this deployment stage
-      - name: DEPLOYMENT_STAGE
-        value: rdev
+      - name: WEB_DOMAIN
+        value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: API_DOMAIN
         value: $(__ARGUS_STACK_INGRESS_HOST)
       - name: DATA_LOCATOR_DOMAIN
