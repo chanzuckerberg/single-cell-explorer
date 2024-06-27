@@ -10,6 +10,7 @@ import Controls from "../controls";
 import Embedding from "../embedding";
 import { AppDispatch, RootState } from "../../reducers";
 import actions from "../../actions";
+import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "./constants";
 
 interface StateProps {
   isMinimized: boolean;
@@ -94,6 +95,7 @@ const PanelEmbedding = (props: StateProps & DispatchProps) => {
           >
             <Button
               type="button"
+              data-testid={PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID}
               icon={isMinimized ? IconNames.MAXIMIZE : IconNames.MINIMIZE}
               onClick={() => {
                 dispatch({
