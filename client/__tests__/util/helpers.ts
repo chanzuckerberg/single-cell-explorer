@@ -288,10 +288,7 @@ export async function conditionallyToggleSidePanel(
 }
 
 export function skipIfSidePanel(graphTestId: string, MAIN_PANEL: string) {
-  const message = "This test is only for the main panel";
-  if (graphTestId !== MAIN_PANEL) {
-    skip(true, message);
-  }
+  skip(graphTestId !== MAIN_PANEL, "This test is only for the main panel");
 }
 
 export function shouldSkipTests(
