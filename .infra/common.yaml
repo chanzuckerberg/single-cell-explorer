@@ -29,7 +29,6 @@ services:
         cpu: 2
         memory: 2Gi
     ingress:
-      hosts:
-        - paths:
-            - path: /
-              pathType: Prefix
+      paths:
+        - path: /
+          pathType: Prefix
