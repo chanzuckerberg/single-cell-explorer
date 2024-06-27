@@ -1,28 +1,29 @@
-services:
-  explorer:
-    image:
-      tag: sha-7764ea31
-    replicaCount: 1
-    env:
-      # env vars common to all deployment stages
-      - name: AWS_REGION
-        value: us-west-2
-      - name: AWS_DEFAULT_REGION
-        value: us-west-2
-      - name: REMOTE_DEV_PREFIX
-        value: /$(__ARGUS_STACK_NAME)
-      - name: DEPLOYMENT_STAGE
-        value: $(__ARGUS_DEPLOYMENT_STAGE)
+stack:
+  services:
+    explorer:
+      image:
+        tag: sha-7764ea31
+      replicaCount: 1
+      env:
+        # env vars common to all deployment stages
+        - name: AWS_REGION
+          value: us-west-2
+        - name: AWS_DEFAULT_REGION
+          value: us-west-2
+        - name: REMOTE_DEV_PREFIX
+          value: /$(__ARGUS_STACK_NAME)
+        - name: DEPLOYMENT_STAGE
+          value: $(__ARGUS_DEPLOYMENT_STAGE)
 
-      # env vars specific to this deployment stage
-      - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: API_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: DATA_LOCATOR_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: CXG_BUCKET_PATH
-        value: hosted-cellxgene-dev
-    ingress:
-      rules:
-        - host: test.example.com
+        # env vars specific to this deployment stage
+        - name: WEB_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: API_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: DATA_LOCATOR_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: CXG_BUCKET_PATH
+          value: hosted-cellxgene-dev
+      ingress:
+        rules:
+          - host: test.example.com
