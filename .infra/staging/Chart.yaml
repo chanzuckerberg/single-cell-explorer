@@ -5,5 +5,5 @@ version: 1.0.0
 
 dependencies:
 - name: stack
-  version: 1.2.0
+  version: 1.3.0
   repository: https://chanzuckerberg.github.io/argo-helm-charts

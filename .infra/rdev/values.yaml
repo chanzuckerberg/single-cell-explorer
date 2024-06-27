@@ -24,6 +24,3 @@ stack:
           value: $(__ARGUS_STACK_INGRESS_HOST)
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-dev
-      ingress:
-        rules:
-          - host: test.example.com
