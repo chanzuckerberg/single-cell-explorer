@@ -20,7 +20,7 @@ jobs:
           private_key: ${{ secrets.CZI_RELEASE_PLEASE_PK }}
 
       - name: release please
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         id: release
         with:
           token: ${{ steps.generate_token.outputs.token }}
