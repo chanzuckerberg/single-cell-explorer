@@ -33,3 +33,7 @@ services:
         value: api.cellxgene.staging.single-cell.czi.technology
       - name: CXG_BUCKET_PATH
         value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
+    ingress:
+      rules:
+        - host: cellxgene.staging.single-cell.czi.technology
+        - host: api.cellxgene.staging.single-cell.czi.technology
