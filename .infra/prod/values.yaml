@@ -1,35 +1,36 @@
-services:
-  explorer:
-    serviceAccount:
-      annotations:
-        "eks.amazonaws.com/role-arn": arn:aws:iam::231426846575:role/data_portal_prod_explorer
-    image:
-      tag: sha-3883f979
-    replicaCount: 3
-    resources:
-      limits:
-        cpu: 64
-        memory: 50Gi
-      requests:
-        cpu: 32
-        memory: 24Gi
-    env:
-      # env vars common to all deployment stages
-      - name: AWS_REGION
-        value: us-west-2
-      - name: AWS_DEFAULT_REGION
-        value: us-west-2
-      - name: REMOTE_DEV_PREFIX
-        value: /$(__ARGUS_STACK_NAME)
-      - name: DEPLOYMENT_STAGE
-        value: $(__ARGUS_DEPLOYMENT_STAGE)
+stack:
+  services:
+    explorer:
+      serviceAccount:
+        annotations:
+          "eks.amazonaws.com/role-arn": arn:aws:iam::231426846575:role/data_portal_prod_explorer
+      image:
+        tag: sha-8835a2e0
+      replicaCount: 3
+      resources:
+        limits:
+          cpu: 64
+          memory: 50Gi
+        requests:
+          cpu: 32
+          memory: 24Gi
+      env:
+        # env vars common to all deployment stages
+        - name: AWS_REGION
+          value: us-west-2
+        - name: AWS_DEFAULT_REGION
+          value: us-west-2
+        - name: REMOTE_DEV_PREFIX
+          value: /$(__ARGUS_STACK_NAME)
+        - name: DEPLOYMENT_STAGE
+          value: $(__ARGUS_DEPLOYMENT_STAGE)
 
-      # env vars specific to this deployment stage
-      - name: WEB_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: API_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: DATA_LOCATOR_DOMAIN
-        value: $(__ARGUS_STACK_INGRESS_HOST)
-      - name: CXG_BUCKET_PATH
-        value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
+        # env vars specific to this deployment stage
+        - name: WEB_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: API_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: DATA_LOCATOR_DOMAIN
+          value: $(__ARGUS_STACK_INGRESS_HOST)
+        - name: CXG_BUCKET_PATH
+          value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
