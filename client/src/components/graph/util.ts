@@ -1,6 +1,7 @@
 import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
 import { LayoutChoiceState } from "../../reducers/layoutChoice";
+import { GraphProps } from "./types";
 
 export function sidePanelAttributeNameChange(
   name: string,
@@ -207,4 +208,15 @@ export function downloadImage(
     URL.revokeObjectURL(imageURI);
     a.remove();
   }, 1000);
+}
+
+/**
+ * (thuang): Product requirement that the side panel should NOT be included
+ * in the download when it's minimized
+ */
+export function shouldSkipSidePanelImage({
+  isSidePanel,
+  isSidePanelMinimized,
+}: GraphProps) {
+  return isSidePanel && isSidePanelMinimized;
 }

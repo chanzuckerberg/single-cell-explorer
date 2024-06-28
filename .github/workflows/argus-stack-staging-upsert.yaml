@@ -26,3 +26,10 @@ jobs:
         with:
           appName: single-cell-explorer
           envName: staging
+
+      - name: Wait for Stating Stack to become Healthy
+        id: wait
+        uses: chanzuckerberg/argus-artifacts/ci/packages/wait-for-deployment@v0.19.1
+        with:
+          appName: single-cell-explorer
+          envName: staging

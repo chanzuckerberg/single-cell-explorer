@@ -43,13 +43,15 @@ class WSGIServer(Server):
 
         HUBSPOT_FORMS_URL = "https://forms.hsforms.com"
 
+        EXPLORER_DEV_URL = "https://cellxgene.dev.single-cell.czi.technology"
+
         csp = {
             "default-src": ["'self'", HUBSPOT_FORMS_URL, HUBSPOT_JS_URL],
             "form-action": ["'self'", HUBSPOT_FORMS_URL],
-            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL] + extra_connect_src,
+            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, EXPLORER_DEV_URL] + extra_connect_src,
             "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'"],
-            "img-src": ["'self'", "https://cellxgene.cziscience.com"]
+            "img-src": ["'self'", "https://cellxgene.cziscience.com", EXPLORER_DEV_URL]
             + extra_connect_src
             + ["data:", HUBSPOT_FORMS_URL],
             "object-src": ["'none'"],
