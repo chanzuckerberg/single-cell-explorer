@@ -32,3 +32,10 @@ jobs:
           appName: single-cell-explorer
           envName: staging
           waitForDeploymentSeconds: 300
+
+  staging_smoke_test:
+    uses: ./.github/workflows/workflow-smoke-test.yaml
+    needs: staging_stack_upsert
+    secrets: inherit
+    with:
+      env: stage
