@@ -23,3 +23,10 @@ jobs:
         with:
           appName: single-cell-explorer
           envName: rdev
+
+  rdev-smoke-test:
+    uses: ./.github/workflows/workflow-smoke-test.yaml
+    needs: create-rdev-stack
+    secrets: inherit
+    with:
+      env: dev
