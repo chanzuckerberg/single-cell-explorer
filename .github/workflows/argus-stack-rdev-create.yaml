@@ -19,7 +19,8 @@ jobs:
 
     steps:
       - name: Create Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.23.0
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.24.0
         with:
           appName: single-cell-explorer
           envName: rdev
+          postStackDetails: false

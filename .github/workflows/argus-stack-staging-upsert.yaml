@@ -34,15 +34,26 @@ jobs:
 
     steps:
       - name: Upsert Staging Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.23.0
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.24.0
         with:
           appName: single-cell-explorer
           envName: staging
           waitForDeploymentSeconds: 300
+          postStackDetails: false
 
   staging_smoke_test:
-    uses: ./.github/workflows/workflow-smoke-test.yaml
     needs: staging_stack_upsert
-    secrets: inherit
-    with:
-      env: stage
+    # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
+    timeout-minutes: 60
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ./client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Staging Smoke Tests
+        uses: ./.github/actions/smoke-test
+        with:
+          env: stage
