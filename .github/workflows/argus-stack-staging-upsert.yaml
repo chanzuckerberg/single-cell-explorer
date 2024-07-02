@@ -6,6 +6,10 @@ on:
       - '.infra/common.yaml'
       - '.infra/staging/values.yaml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run_if:
     if: github.head_ref == 'release-please--branches--main'
@@ -17,19 +21,21 @@ jobs:
     needs: run_if
     runs-on: [ARM64, self-hosted, Linux]
     permissions:
-        id-token: write
-        contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Upsert Staging Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.19.1
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.23.0
         with:
           appName: single-cell-explorer
           envName: staging
+          waitForDeploymentSeconds: 300
 
-      - name: Wait for Stating Stack to become Healthy
-        id: wait
-        uses: chanzuckerberg/argus-artifacts/ci/packages/wait-for-deployment@v0.19.1
-        with:
-          appName: single-cell-explorer
-          envName: staging
+  staging_smoke_test:
+    uses: ./.github/workflows/workflow-smoke-test.yaml
+    needs: staging_stack_upsert
+    secrets: inherit
+    with:
+      env: stage
