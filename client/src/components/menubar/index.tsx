@@ -277,7 +277,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
       !!categoricalSelection?.[colorAccessor || ""];
 
     const isTest = getFeatureFlag(FEATURES.TEST);
-    const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
     // constants used to create selection tool button
     const [selectionTooltip, selectionButtonIcon] = [
@@ -331,25 +330,23 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               data-testid="drawer"
             />
           </ButtonGroup>
-          {isDownload && (
-            <Tooltip
-              content="Download the current graph view as a PNG"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                data-testid="download-graph-button"
-                type="button"
-                icon={IconNames.CAMERA}
-                style={{
-                  cursor: "pointer",
-                }}
-                loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
-              />
-            </Tooltip>
-          )}
+          <Tooltip
+            content="Download the current graph view as a PNG"
+            position="bottom"
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
+          >
+            <AnchorButton
+              className={styles.menubarButton}
+              data-testid="download-graph-button"
+              type="button"
+              icon={IconNames.CAMERA}
+              style={{
+                cursor: "pointer",
+              }}
+              loading={screenCap}
+              onClick={() => dispatch({ type: "graph: screencap start" })}
+            />
+          </Tooltip>
           {isTest && (
             <AnchorButton
               className={styles.menubarButton}

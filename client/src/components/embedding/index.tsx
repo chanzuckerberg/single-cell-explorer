@@ -21,8 +21,6 @@ import { AppDispatch, RootState } from "../../reducers";
 import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
 import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
 import { sidePanelAttributeNameChange } from "../graph/util";
 
 interface StateProps {
@@ -62,8 +60,6 @@ const Embedding = (props: Props) => {
   } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
-
-  const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
   /**
    * (thuang): Attach to `onOpening` event to only track the event when the user
@@ -166,7 +162,7 @@ const Embedding = (props: Props) => {
             </Button>
           </Tooltip>
         </Popover2>
-        {!isSidePanel && isSpatial && (
+        {!isSidePanel && (
           <Button
             icon={IconNames.MULTI_SELECT}
             onClick={handleOpenPanelEmbedding}
