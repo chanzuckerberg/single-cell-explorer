@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.0.0...v1.0.1) (2024-07-02)
+
+
+### Bug Fixes
+
+* GE scroll and overflow ([#1011](https://github.com/chanzuckerberg/single-cell-explorer/issues/1011)) ([8879f03](https://github.com/chanzuckerberg/single-cell-explorer/commit/8879f034cc022a4a96efee9302e4fd3b6fd9f165))
+
+
+### Misc
+
+* bump staging memory ([#1014](https://github.com/chanzuckerberg/single-cell-explorer/issues/1014)) ([4ecebd1](https://github.com/chanzuckerberg/single-cell-explorer/commit/4ecebd11dcd144525c3ce688f25258738fa7ef1a))
+* configure e2e tests to run against staging before prod can deploy ([#1012](https://github.com/chanzuckerberg/single-cell-explorer/issues/1012)) ([3995a74](https://github.com/chanzuckerberg/single-cell-explorer/commit/3995a7432b7fbc0c6739d923a21860a28e3c87fb))
+
 ## 1.0.0 (2024-06-27)
 
 
