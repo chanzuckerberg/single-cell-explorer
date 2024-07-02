@@ -23,4 +23,3 @@ jobs:
         with:
           appName: single-cell-explorer
           envName: rdev
-          postStackDetails: false
