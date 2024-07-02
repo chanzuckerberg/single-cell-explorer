@@ -1,0 +1,56 @@
+name: Smoke Test
+description: End-to-end smoke tests
+
+inputs:
+  env:
+    description: 'Env name'
+    required: true
+  projectToken:
+    description: 'Chromatic project token'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: "client/.nvmrc"
+        cache: "npm"
+        cache-dependency-path: "client/package-lock.json"
+    - name: Install dependencies
+      shell: bash
+      working-directory: ./client
+      run: |
+        npm ci
+        npx playwright install --with-deps
+
+    # Run e2e tests
+    - name: Run e2e tests
+      shell: bash
+      working-directory: ./client
+      run: |
+        npm run e2e-${{ inputs.env }}
+
+    - name: Publish to Chromatic
+      uses: chromaui/action@latest
+      with:
+        projectToken: ${{ inputs.projectToken }}
+        workingDir: ./client
+        # This is `npm run build-archive-storybook`
+        buildScriptName: "build-archive-storybook"
+
+    - name: Upload FE test results as an artifact
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: playwright-report
+        path: ~/**/playwright-report/*
+        retention-days: 14
+
+    - name: Upload blob report to GitHub Actions Artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: all-blob-reports
+        path: ~/**/blob-report/*
+        retention-days: 1
