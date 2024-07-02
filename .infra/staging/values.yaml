@@ -5,15 +5,15 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_staging_explorer
       image:
-        tag: sha-8835a2e0
+        tag: sha-26dc8438
       replicaCount: 1
       resources:
         limits:
           cpu: 4
-          memory: 24Gi
+          memory: 12Gi
         requests:
           cpu: 2
-          memory: 8Gi
+          memory: 4Gi
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
