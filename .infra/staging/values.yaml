@@ -10,10 +10,10 @@ stack:
       resources:
         limits:
           cpu: 4
-          memory: 14Gi
+          memory: 24Gi
         requests:
           cpu: 2
-          memory: 4Gi
+          memory: 8Gi
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
