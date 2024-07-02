@@ -5,7 +5,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::231426846575:role/data_portal_prod_explorer
       image:
-        tag: sha-8835a2e0
+        tag: sha-96fc9361
       replicaCount: 3
       resources:
         limits:
