@@ -5,7 +5,9 @@ inputs:
   env:
     description: 'Env name'
     required: true
-    type: string
+  projectToken:
+    description: 'Chromatic project token'
+    required: true
 
 runs:
   using: composite
@@ -16,20 +18,21 @@ runs:
         cache: "npm"
         cache-dependency-path: "client/package-lock.json"
     - name: Install dependencies
+      shell: bash
       run: |
         npm ci
         npx playwright install --with-deps
 
     # Run e2e tests
     - name: Run e2e tests
+      shell: bash
       run: |
         npm run e2e-${{ inputs.env }}
 
     - name: Publish to Chromatic
       uses: chromaui/action@latest
       with:
-        # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
-        projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        projectToken: ${{ inputs.projectToken }}
         workingDir: ./client
         # This is `npm run build-archive-storybook`
         buildScriptName: "build-archive-storybook"
