@@ -10,9 +10,11 @@ stack:
     livenessProbe:
       httpGet:
         path: /cellxgene/health
+      timeoutSeconds: 30
     readinessProbe:
       httpGet:
         path: /cellxgene/health
+      timeoutSeconds: 30
   services:
     explorer:
       serviceAccount:
