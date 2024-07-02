@@ -2,7 +2,7 @@ stack:
   services:
     explorer:
       image:
-        tag: sha-312771fe
+        tag: sha-8b84e9b3
       replicaCount: 1
       env:
         # env vars common to all deployment stages
@@ -14,7 +14,6 @@ stack:
           value: /$(__ARGUS_STACK_NAME)
         - name: DEPLOYMENT_STAGE
           value: $(__ARGUS_DEPLOYMENT_STAGE)
-
         # env vars specific to this deployment stage
         - name: WEB_DOMAIN
           value: $(__ARGUS_STACK_INGRESS_HOST)
