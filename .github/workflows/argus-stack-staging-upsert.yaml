@@ -1,10 +1,7 @@
 name: Update staging
 
 on:
-  pull_request:
-    paths:
-      - '.infra/common.yaml'
-      - '.infra/staging/values.yaml'
+  - pull_request
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,12 +10,22 @@ concurrency:
 jobs:
   run_if:
     if: github.head_ref == 'release-please--branches--main'
+    outputs:
+      changes: ${{ steps.filter.outputs.staging_config }}
     runs-on: [ARM64, self-hosted, Linux]
     steps:
       - run: echo "The head branch of this PR is the release please branch"
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            staging_config:
+              - '.infra/common.yaml'
+              - '.infra/staging/values.yaml'
 
   staging_stack_upsert:
     needs: run_if
+    if: needs.run_if.outputs.changes == 'true'
     runs-on: [ARM64, self-hosted, Linux]
     permissions:
       id-token: write
