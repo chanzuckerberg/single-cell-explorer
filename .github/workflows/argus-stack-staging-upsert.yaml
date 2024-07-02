@@ -46,9 +46,6 @@ jobs:
     # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
     timeout-minutes: 60
     runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: ./client
     steps:
       - uses: actions/checkout@v4
         with:
