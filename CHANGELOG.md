@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.0.0...v1.0.1) (2024-07-02)
+
+
+### Bug Fixes
+
+* GE scroll and overflow ([#1011](https://github.com/chanzuckerberg/single-cell-explorer/issues/1011)) ([8879f03](https://github.com/chanzuckerberg/single-cell-explorer/commit/8879f034cc022a4a96efee9302e4fd3b6fd9f165))
+
+
+### Misc
+
+* allow smoke tests to be a required check ([#1016](https://github.com/chanzuckerberg/single-cell-explorer/issues/1016)) ([b6bf390](https://github.com/chanzuckerberg/single-cell-explorer/commit/b6bf3902bf86732705542396785614b0758bbdcb))
+* bump staging memory ([#1014](https://github.com/chanzuckerberg/single-cell-explorer/issues/1014)) ([4ecebd1](https://github.com/chanzuckerberg/single-cell-explorer/commit/4ecebd11dcd144525c3ce688f25258738fa7ef1a))
+* configure e2e tests to run against staging before prod can deploy ([#1012](https://github.com/chanzuckerberg/single-cell-explorer/issues/1012)) ([3995a74](https://github.com/chanzuckerberg/single-cell-explorer/commit/3995a7432b7fbc0c6739d923a21860a28e3c87fb))
+* tune smoke test invocation ([#1017](https://github.com/chanzuckerberg/single-cell-explorer/issues/1017)) ([231ad56](https://github.com/chanzuckerberg/single-cell-explorer/commit/231ad5667e2256975a6a7c0ab218985752cfaedc))
+
 ## 1.0.0 (2024-06-27)
 
 
