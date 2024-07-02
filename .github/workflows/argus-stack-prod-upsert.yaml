@@ -4,16 +4,21 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   prod_stack_upsert:
     runs-on: [ARM64, self-hosted, Linux]
     permissions:
-        id-token: write
-        contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Upsert Prod Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.19.1
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.23.0
         with:
           appName: single-cell-explorer
           envName: prod
