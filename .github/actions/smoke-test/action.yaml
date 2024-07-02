@@ -19,6 +19,7 @@ runs:
         cache-dependency-path: "client/package-lock.json"
     - name: Install dependencies
       shell: bash
+      working-directory: ./client
       run: |
         npm ci
         npx playwright install --with-deps
@@ -26,6 +27,7 @@ runs:
     # Run e2e tests
     - name: Run e2e tests
       shell: bash
+      working-directory: ./client
       run: |
         npm run e2e-${{ inputs.env }}
 
