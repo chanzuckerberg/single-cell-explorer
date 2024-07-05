@@ -1,5 +1,9 @@
 import { Regl } from "regl";
-import { glPointFlags, glPointSize } from "../../util/glHelpers";
+import {
+  glPointFlags,
+  glPointSize,
+  glPointSizeSpatial,
+} from "../../util/glHelpers";
 
 interface ReglProps {
   position: Float32Array;
@@ -10,6 +14,10 @@ interface ReglProps {
   nPoints: number;
   minViewportDimension: number;
   count: number;
+  imageHeight: number;
+  scaleref: number;
+  spotDiameterFullres: number;
+  isSpatial: boolean;
 }
 
 export default function drawPointsRegl(regl: Regl) {
@@ -25,6 +33,11 @@ export default function drawPointsRegl(regl: Regl) {
     uniform mat3 projView;
     uniform float nPoints;
     uniform float minViewportDimension;
+    
+    uniform float imageHeight;
+    uniform float scaleref;
+    uniform float spotDiameterFullres;
+    uniform bool isSpatial;
 
     varying lowp vec4 fragColor;
 
@@ -38,11 +51,21 @@ export default function drawPointsRegl(regl: Regl) {
     // get pointSize()
     ${glPointSize}
 
+    // get pointSizeSpatial()
+    ${glPointSizeSpatial}
+
     void main() {
       bool isBackground, isSelected, isHighlight;
+      float size;
+      
       getFlags(flag, isBackground, isSelected, isHighlight);
 
-      float size = pointSize(nPoints, minViewportDimension, isSelected, isHighlight);
+      if (isSpatial) {
+        size = pointSizeSpatial(nPoints, minViewportDimension, isSelected, isHighlight, distance, imageHeight, scaleref, spotDiameterFullres);
+      } else {
+        size = pointSize(nPoints, minViewportDimension, isSelected, isHighlight);
+      }
+
       gl_PointSize = size * pow(distance, 0.5);
 
       float z = isBackground ? zBottom : (isHighlight ? zTop : zMiddle);
@@ -76,6 +99,12 @@ export default function drawPointsRegl(regl: Regl) {
       minViewportDimension: regl.prop<ReglProps, "minViewportDimension">(
         "minViewportDimension"
       ),
+      imageHeight: regl.prop<ReglProps, "imageHeight">("imageHeight"),
+      scaleref: regl.prop<ReglProps, "scaleref">("scaleref"),
+      spotDiameterFullres: regl.prop<ReglProps, "spotDiameterFullres">(
+        "spotDiameterFullres"
+      ),
+      isSpatial: regl.prop<ReglProps, "isSpatial">("isSpatial"),
     },
 
     count: regl.prop<ReglProps, "count">("count"),

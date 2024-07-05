@@ -63,6 +63,14 @@ export interface DatasetMetadata {
   s3_URI: S3URI;
 }
 
+export interface DatasetUnsMetadata {
+  imageWidth: number;
+  imageHeight: number;
+  resolution: string;
+  scaleref: number;
+  spotDiameterFullres: number;
+}
+
 export type S3URI = string;
 
 /**

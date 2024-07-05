@@ -1,4 +1,5 @@
 import { AnyAction } from "redux";
+import { DatasetUnsMetadata } from "../common/types/entities";
 
 export enum ActiveTab {
   Gene = "Gene",
@@ -30,6 +31,7 @@ interface ControlsState {
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
+  unsMetadata: DatasetUnsMetadata;
 }
 const Controls = (
   state: ControlsState = {
@@ -60,6 +62,13 @@ const Controls = (
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
+    unsMetadata: {
+      imageWidth: 1955,
+      imageHeight: 1955,
+      resolution: "",
+      scaleref: 0.1868635,
+      spotDiameterFullres: 86.06629150338271,
+    },
   },
   action: AnyAction
 ): ControlsState => {
@@ -148,7 +157,6 @@ const Controls = (
         showWarningBanner: action.showWarningBanner,
       };
     }
-
     case "load gene info": {
       return {
         ...state,
@@ -160,7 +168,6 @@ const Controls = (
         infoError: null,
       };
     }
-
     /*******************************
               Scatterplot
     *******************************/
@@ -211,22 +218,25 @@ const Controls = (
     /**************************
           Info Panel
     **************************/
-    case "toggle active info panel":
+    case "toggle active info panel": {
       return {
         ...state,
         activeTab: action.activeTab,
         infoPanelHidden: false,
       };
-    case "close info panel":
+    }
+    case "close info panel": {
       return {
         ...state,
         infoPanelHidden: true,
       };
-    case "minimize/maximize info panel":
+    }
+    case "minimize/maximize info panel": {
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
       };
+    }
     /**************************
          Screen Capture
     **************************/
@@ -267,18 +277,28 @@ const Controls = (
         imageUnderlay: action.toggle,
       };
     }
-    case "request uns metadata started":
+    case "request uns metadata success": {
       return {
         ...state,
-        loading: true,
-        error: null,
+        unsMetadata: {
+          imageHeight:
+            action.data.image_height ?? state.unsMetadata.imageHeight,
+          imageWidth: action.data.image_width ?? state.unsMetadata.imageWidth,
+          resolution: action.data.resolution ?? state.unsMetadata.resolution,
+          scaleref: action.data.scaleref ?? state.unsMetadata.scaleref,
+          spotDiameterFullres:
+            action.data.spot_diameter_fullres ??
+            state.unsMetadata.spotDiameterFullres,
+        },
       };
-    case "request uns metadata error":
+    }
+    case "request uns metadata error": {
       return {
         ...state,
         loading: false,
         error: action.error,
       };
+    }
     default:
       return state;
   }
