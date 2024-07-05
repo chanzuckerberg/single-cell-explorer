@@ -1,35 +1,37 @@
-global:
-  replicaCount: 1
-  autoscaling:
-    enabled: false
-  service:
-    port: 5000
-  nodeSelector:
-    kubernetes.io/arch: amd64
-  livenessProbe:
-    httpGet:
-      path: /cellxgene/health
-  readinessProbe:
-    httpGet:
-      path: /cellxgene/health
-services:
-  explorer:
-    serviceAccount:
-      create: true
-      automount: true
-      annotations:
-        "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_dev_explorer
-    image:
-      repository: 533267185808.dkr.ecr.us-west-2.amazonaws.com/core-platform/single-cell-explorer/explorer
-    resources:
-      limits:
-        cpu: 4
-        memory: 4Gi
-      requests:
-        cpu: 2
-        memory: 2Gi
-    ingress:
-      hosts:
-        - paths:
-            - path: /
-              pathType: Prefix
+stack:
+  global:
+    replicaCount: 1
+    autoscaling:
+      enabled: false
+    service:
+      port: 5000
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    livenessProbe:
+      httpGet:
+        path: /cellxgene/health
+      timeoutSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /cellxgene/health
+      timeoutSeconds: 30
+  services:
+    explorer:
+      serviceAccount:
+        create: true
+        automount: true
+        annotations:
+          "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_dev_explorer
+      image:
+        repository: 533267185808.dkr.ecr.us-west-2.amazonaws.com/core-platform/single-cell-explorer/explorer
+      resources:
+        limits:
+          cpu: 4
+          memory: 4Gi
+        requests:
+          cpu: 2
+          memory: 2Gi
+      ingress:
+        paths:
+          - path: /
+            pathType: Prefix

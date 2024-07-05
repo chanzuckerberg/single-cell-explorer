@@ -1,35 +1,58 @@
 name: Update staging
 
 on:
-  pull_request:
-    paths:
-      - '.infra/common.yaml'
-      - '.infra/staging/values.yaml'
+  - pull_request
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   run_if:
     if: github.head_ref == 'release-please--branches--main'
+    outputs:
+      changes: ${{ steps.filter.outputs.staging_config }}
     runs-on: [ARM64, self-hosted, Linux]
     steps:
       - run: echo "The head branch of this PR is the release please branch"
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            staging_config:
+              - '.infra/common.yaml'
+              - '.infra/staging/values.yaml'
 
   staging_stack_upsert:
     needs: run_if
+    if: needs.run_if.outputs.changes == 'true'
     runs-on: [ARM64, self-hosted, Linux]
     permissions:
-        id-token: write
-        contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
 
     steps:
       - name: Upsert Staging Stack
-        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.19.1
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0.24.0
         with:
           appName: single-cell-explorer
           envName: staging
+          waitForDeploymentSeconds: 300
+          postStackDetails: false
 
-      - name: Wait for Stating Stack to become Healthy
-        id: wait
-        uses: chanzuckerberg/argus-artifacts/ci/packages/wait-for-deployment@v0.19.1
+  staging_smoke_test:
+    needs: staging_stack_upsert
+    # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
+    timeout-minutes: 60
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
         with:
-          appName: single-cell-explorer
-          envName: staging
+          fetch-depth: 0
+      - name: Staging Smoke Tests
+        uses: ./.github/actions/smoke-test
+        with:
+          env: stage
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
