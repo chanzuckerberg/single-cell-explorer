@@ -286,8 +286,6 @@ class Category extends React.PureComponent<CategoryProps> {
       isCellGuideCxg,
     } = this.props;
 
-    const { colorAccessor } = colors;
-
     const checkboxID = `category-select-${metadataField}`;
 
     return (
@@ -313,6 +311,7 @@ class Category extends React.PureComponent<CategoryProps> {
           <Async.Fulfilled persist>
             {(asyncProps: CategoryAsyncProps) => {
               const {
+                colorAccessor,
                 colorTable,
                 colorData,
                 categoryData,
