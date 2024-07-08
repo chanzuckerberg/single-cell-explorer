@@ -729,7 +729,7 @@ for (const testDataset of testDatasets) {
           });
         });
 
-        test("zoom limit is 12x", async ({ page }, testInfo) => {
+        test.only("zoom limit is 12x", async ({ page }, testInfo) => {
           await goToPage(page, url);
           const category = Object.keys(
             data.categorical

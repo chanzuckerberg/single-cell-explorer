@@ -183,7 +183,10 @@ export class Camera {
     const xClamped = clamp(x, bounds);
     const yClamped = clamp(y, bounds);
 
-    const scaleMax = this.resolution === "hires" ? SCALE_MAX_HIRES : SCALE_MAX;
+    const scaleMax =
+      this.resolution === "hires" || this.resolution === ""
+        ? SCALE_MAX_HIRES
+        : SCALE_MAX;
 
     const dClamped = clamp(d * m[0], [scaleMin, scaleMax]) / m[0];
 
