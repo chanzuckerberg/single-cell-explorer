@@ -3,7 +3,7 @@ import { MouseEvent } from "react";
 import { Point, Viewer } from "openseadragon";
 import { debounce } from "lodash";
 import clamp from "./clamp";
-import { THROTTLE_MS, SCALE_MAX } from "./constants";
+import { THROTTLE_MS, SCALE_MAX, SCALE_MAX_HIRES } from "./constants";
 import { EVENTS } from "../analytics/events";
 import { track } from "../analytics";
 
@@ -24,6 +24,8 @@ const scratch3 = new Float32Array(16);
 export class Camera {
   canvas: HTMLCanvasElement;
 
+  resolution: string;
+
   prevEvent: {
     clientX: number;
     clientY: number;
@@ -34,13 +36,14 @@ export class Camera {
 
   viewMatrixInv: mat3;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, resolution: string) {
     this.prevEvent = {
       clientX: 0,
       clientY: 0,
       type: "",
     };
     this.canvas = canvas;
+    this.resolution = resolution;
     this.viewMatrix = mat3.create();
     this.viewMatrixInv = mat3.create();
   }
@@ -180,7 +183,9 @@ export class Camera {
     const xClamped = clamp(x, bounds);
     const yClamped = clamp(y, bounds);
 
-    const dClamped = clamp(d * m[0], [scaleMin, SCALE_MAX]) / m[0];
+    const scaleMax = this.resolution === "hires" ? SCALE_MAX_HIRES : SCALE_MAX;
+
+    const dClamped = clamp(d * m[0], [scaleMin, scaleMax]) / m[0];
 
     if (Math.abs(1 - dClamped) <= EPSILON) return; // noop request
 
@@ -372,8 +377,8 @@ export class Camera {
   }
 }
 
-function attachCamera(canvas: HTMLCanvasElement): Camera {
-  return new Camera(canvas);
+function attachCamera(canvas: HTMLCanvasElement, resolution: string): Camera {
+  return new Camera(canvas, resolution);
 }
 
 function openseadragonPan({

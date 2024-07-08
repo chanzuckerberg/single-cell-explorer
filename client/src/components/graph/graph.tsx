@@ -94,7 +94,10 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
-  static createReglState(canvas: HTMLCanvasElement): {
+  static createReglState(
+    canvas: HTMLCanvasElement,
+    resolution: string
+  ): {
     camera: Camera;
     regl: Regl;
     drawPoints: DrawCommand;
@@ -106,7 +109,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         Must be created for each canvas
         */
     // setup canvas, webgl draw function and camera
-    const camera = _camera(canvas);
+    const camera = _camera(canvas, resolution);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
 
@@ -710,8 +713,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       return;
     }
     this.reglCanvas = canvas;
+    const { unsMetadata } = this.props;
+    const { resolution } = unsMetadata;
     this.setState({
-      ...Graph.createReglState(canvas),
+      ...Graph.createReglState(canvas, resolution),
     });
   };
 
