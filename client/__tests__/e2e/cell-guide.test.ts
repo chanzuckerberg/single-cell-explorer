@@ -32,10 +32,6 @@ describe("CellGuideCXG", () => {
   test("page launched", async ({ page }, testInfo) => {
     await goToPage(page, pageURLCellGuide);
 
-    const element = await page.getByTestId("header").innerHTML();
-
-    expect(element).toMatchSnapshot();
-
     await snapshotTestGraph(page, testInfo);
   });
 

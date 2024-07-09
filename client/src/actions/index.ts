@@ -16,7 +16,12 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
+import type {
+  DatasetMetadata,
+  Dataset,
+  S3URI,
+  DatasetUnsMetadata,
+} from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -32,7 +37,7 @@ import AnnoMatrix from "../annoMatrix/annoMatrix";
 
 import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
 import { selectAvailableLayouts } from "../selectors/layoutChoice";
-import { getBestDefaultLayout } from "../reducers/layoutChoice";
+import { getBestDefaultLayout } from "../util/layout";
 
 function setGlobalConfig(config: Config) {
   /**
@@ -128,6 +133,30 @@ async function datasetMetadataFetchAndLoad(
   });
 }
 
+/**
+ * Fetches and loads dataset spatial metadata.
+ * @param dispatch - Function facilitating update of store.
+ */
+async function datasetUnsMetadataFetchAndLoad(
+  dispatch: AppDispatch,
+  metadataKey: string
+): Promise<void> {
+  try {
+    const datasetUnsMetadataResponse = await fetchJson<{
+      metadata: DatasetUnsMetadata;
+    }>(`uns/meta?key=${metadataKey}`);
+    dispatch({
+      type: "request uns metadata success",
+      data: datasetUnsMetadataResponse,
+    });
+  } catch (error) {
+    dispatch({
+      type: "request uns metadata error",
+      error,
+    });
+  }
+}
+
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -191,6 +220,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      await datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
@@ -306,6 +336,7 @@ const requestDifferentialExpression =
       2. get expression data for each
       */
       const { annoMatrix } = getState();
+
       const varIndexName = annoMatrix.schema.annotations.var.index;
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
@@ -348,7 +379,8 @@ const requestDifferentialExpression =
       }
 
       const response = await res.json();
-      const varIndex = await annoMatrix.fetch("var", varIndexName);
+
+      const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
         diffexpLists
@@ -356,6 +388,7 @@ const requestDifferentialExpression =
         diffexpLists[polarity] = response[polarity].map(
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
+            // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
             varIndex.at(v[0], varIndexName),
             ...v.slice(1),
           ]
@@ -524,6 +557,7 @@ export default {
   subsetAction: viewActions.subsetAction,
   resetSubsetAction: viewActions.resetSubsetAction,
   layoutChoiceAction: embActions.layoutChoiceAction,
+  swapLayoutChoicesAction: embActions.swapLayoutChoicesAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,

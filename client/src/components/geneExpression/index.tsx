@@ -8,6 +8,7 @@ import QuickGene from "./quickGene";
 import CreateGenesetDialogue from "./menus/createGenesetDialogue";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import * as globals from "../../globals";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
 import { MARKER_GENE_SUFFIX_IDENTIFIER } from "./constants";
 
@@ -19,6 +20,8 @@ type State = any;
   genesets: state.genesets.genesets,
   annoMatrix: state.annoMatrix,
   isCellGuideCxg: state.controls.isCellGuideCxg,
+  infoPanelMinimized: state.controls.infoPanelMinimized,
+  infoPanelHidden: state.controls.infoPanelHidden,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class GeneExpression extends React.Component<{}, State> {
@@ -172,10 +175,19 @@ class GeneExpression extends React.Component<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { isCellGuideCxg } = this.props;
+    const { isCellGuideCxg, infoPanelMinimized, infoPanelHidden } = this.props;
     const { geneSetsExpanded, markerGeneSetsExpanded } = this.state;
     return (
-      <div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "start",
+          padding: globals.rightSidebarSectionPadding,
+          height: "50%",
+          overflowY: infoPanelMinimized || infoPanelHidden ? "visible" : "auto",
+        }}
+      >
         <QuickGene />
         <div>
           <div

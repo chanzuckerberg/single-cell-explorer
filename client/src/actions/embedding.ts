@@ -9,6 +9,8 @@ import type { AppDispatch, GetState, RootState } from "../reducers";
 import { _setEmbeddingSubset } from "../util/stateManager/viewStackHelpers";
 import { Field } from "../common/types/schema";
 import * as globals from "../globals";
+import { track } from "../analytics";
+import { EVENTS } from "../analytics/events";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 async function _switchEmbedding(
@@ -55,8 +57,15 @@ async function _switchEmbedding(
 export const layoutChoiceAction: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
 > =
-  (newLayoutChoice: string) =>
+  (newLayoutChoice: string, isSidePanel = false) =>
   async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    if (isSidePanel) {
+      dispatch({
+        type: "set panel embedding layout choice",
+        layoutChoice: newLayoutChoice,
+      });
+      return;
+    }
     /**
      * Bruce: On layout choice, make sure we have selected all on the previous layout, AND the new
      * layout.
@@ -90,4 +99,23 @@ export const layoutChoiceAction: ActionCreator<
       obsCrossfilter,
       annoMatrix,
     });
+  };
+
+export const swapLayoutChoicesAction: ActionCreator<
+  ThunkAction<Promise<void>, RootState, never, Action<"set layout choice">>
+> =
+  () =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<void> => {
+    const { layoutChoice, panelEmbedding } = getState();
+    // get main and side layout choices
+    const mainLayoutChoice = layoutChoice.current;
+    const sideLayoutChoice = panelEmbedding.layoutChoice.current;
+
+    track(EVENTS.EXPLORER_SBS_SWAPPED, {
+      main_embedding: mainLayoutChoice,
+      window_embedding: sideLayoutChoice,
+    });
+
+    await dispatch(layoutChoiceAction(mainLayoutChoice, true));
+    await dispatch(layoutChoiceAction(sideLayoutChoice, false));
   };

@@ -15,6 +15,7 @@ from server.common.errors import (
     UnsupportedSummaryMethod,
 )
 from server.common.fbs.matrix import encode_matrix_fbs
+from server.common.utils.uns import spatial_metadata_get
 from server.common.utils.utils import jsonify_numpy
 
 
@@ -343,18 +344,16 @@ class Dataset(metaclass=ABCMeta):
     @staticmethod
     def normalize_embedding(embedding, ename, spatial=None):
         """Normalize embedding layout to meet client assumptions.
-        Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
+        Embedding is an ndarray, shape (n_obs, n), where n is normally 2
         """
+        if spatial and ename == "spatial":
+            spatial_metadata = spatial_metadata_get(spatial)
 
-        if spatial is not None and ename in "spatial":
+            scaleref = spatial_metadata["scaleref"]
+            h, w = spatial_metadata["image_height"], spatial_metadata["image_width"]
+            crop_coords = spatial_metadata["crop_coords"]
+            left, upper, _, _ = crop_coords
 
-            library_id = list(spatial.keys())[0]
-            image_properties = spatial[library_id]["image_properties"]
-            resolution = image_properties["resolution"]
-
-            scaleref = 1 if resolution == "fullres" else spatial[library_id]["scalefactors"]["tissue_hires_scalef"]
-            h, w = image_properties["height"], image_properties["width"]
-            left, upper, _, _ = image_properties["crop_coords"]
             A = embedding * scaleref
 
             # offset crop coordinates

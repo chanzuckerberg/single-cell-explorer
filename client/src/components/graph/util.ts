@@ -1,6 +1,14 @@
 import { mat3 } from "gl-matrix";
 import { toPng } from "html-to-image";
 import { LayoutChoiceState } from "../../reducers/layoutChoice";
+import { GraphProps } from "./types";
+
+export function sidePanelAttributeNameChange(
+  name: string,
+  isSidePanel: boolean
+): string {
+  return `${name}${isSidePanel ? "-side" : ""}`;
+}
 
 export async function captureLegend(
   colors: any,
@@ -164,12 +172,10 @@ function getSpatialUrl(s3URI: string) {
   if (hostname.includes("staging")) {
     return `https://cellxgene.staging.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
   }
-
-  if (hostname.includes("prod")) {
-    return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
+  if (hostname.includes("dev") || hostname.includes("localhost")) {
+    return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
   }
-
-  return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
+  return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
 }
 
 function getDatasetVersionId(s3URI: string) {
@@ -202,4 +208,15 @@ export function downloadImage(
     URL.revokeObjectURL(imageURI);
     a.remove();
   }, 1000);
+}
+
+/**
+ * (thuang): Product requirement that the side panel should NOT be included
+ * in the download when it's minimized
+ */
+export function shouldSkipSidePanelImage({
+  isSidePanel,
+  isSidePanelMinimized,
+}: GraphProps) {
+  return isSidePanel && isSidePanelMinimized;
 }

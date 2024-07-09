@@ -108,7 +108,6 @@ export function normalizeWritableCategoricalSchema(
   // TODO #35: Use type guards instead of casting
 
   (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
-    true,
     Array.from(categorySet)
   );
   return colSchema as CategoricalAnnotationColumnSchema;
@@ -142,10 +141,9 @@ export function normalizeCategorical(
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {
-    (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
-      writable,
-      [...allCategories.keys()]
-    );
+    (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort([
+      ...allCategories.keys(),
+    ]);
     return df;
   }
 
@@ -185,10 +183,8 @@ export function normalizeCategorical(
     revisedCategories.splice(revisedCategories.indexOf(overflowCatName), 1)[0]
   );
   // TODO #35: Use type guards instead of casting
-  (colSchema as CategoricalAnnotationColumnSchema).categories = catLabelSort(
-    writable,
-    revisedCategories
-  );
+  (colSchema as CategoricalAnnotationColumnSchema).categories =
+    catLabelSort(revisedCategories);
 
   return df;
 }

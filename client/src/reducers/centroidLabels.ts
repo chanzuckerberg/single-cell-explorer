@@ -32,7 +32,7 @@ const centroidLabels = (
       // then clear the labels and make sure the toggle is off
       return {
         ...state,
-        showLabels: colorAccessor && showLabels,
+        showLabels: !!colorAccessor && showLabels,
       };
 
     case "reset centroid labels":

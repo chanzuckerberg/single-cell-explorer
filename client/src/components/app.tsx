@@ -21,21 +21,38 @@ import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
 import DiffexNotice from "./diffexNotice";
+import Scatterplot from "./scatterplot/scatterplot";
+import PanelEmbedding from "./PanelEmbedding";
 
-interface Props {
-  dispatch: AppDispatch;
-  loading: boolean;
-  error: string;
+interface StateProps {
+  loading: RootState["controls"]["loading"];
+  error: RootState["controls"]["error"];
   graphRenderCounter: number;
   tosURL: string | undefined;
-  privacyURL: string | undefined;
+  privacyURL: string;
   seamlessEnabled: boolean;
-  datasetMetadataError: string | null;
-  isCellGuideCxg: boolean;
+  datasetMetadataError: RootState["datasetMetadata"]["error"];
+  isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
+  scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
+  scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
   differentialExpressionLoading: boolean;
 }
 
-class App extends React.Component<Props> {
+const mapStateToProps = (state: RootState): StateProps => ({
+  loading: state.controls.loading,
+  error: state.controls.error,
+  graphRenderCounter: state.controls.graphRenderCounter,
+  tosURL: state.config?.parameters?.about_legal_tos,
+  privacyURL: state.config?.parameters?.about_legal_privacy || "",
+  seamlessEnabled: selectIsSeamlessEnabled(state),
+  datasetMetadataError: state.datasetMetadata.error,
+  isCellGuideCxg: state.controls.isCellGuideCxg,
+  scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
+  scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+  differentialExpressionLoading: state.differential.loading,  
+});
+
+class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
   componentDidMount(): void {
     const { dispatch } = this.props;
     dispatch(actions.doInitialDataLoad());
@@ -54,6 +71,8 @@ class App extends React.Component<Props> {
       datasetMetadataError,
       isCellGuideCxg,
       differentialExpressionLoading,
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
     } = this.props;
     return (
       <Container>
@@ -93,6 +112,10 @@ class App extends React.Component<Props> {
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      {scatterplotXXaccessor && scatterplotYYaccessor && (
+                        <Scatterplot />
+                      )}
+                      <PanelEmbedding />
                       <Controls bottom={0}>
                         <DatasetSelector />
                       </Controls>
@@ -112,14 +135,4 @@ class App extends React.Component<Props> {
   }
 }
 
-export default connect((state: RootState) => ({
-  loading: state.controls.loading,
-  error: state.controls.error,
-  graphRenderCounter: state.controls.graphRenderCounter,
-  tosURL: state.config?.parameters?.about_legal_tos,
-  privacyURL: state.config?.parameters?.about_legal_privacy,
-  seamlessEnabled: selectIsSeamlessEnabled(state),
-  datasetMetadataError: state.datasetMetadata.error,
-  isCellGuideCxg: state.controls.isCellGuideCxg,
-  differentialExpressionLoading: state.differential.loading,
-}))(App);
+export default connect(mapStateToProps)(App);

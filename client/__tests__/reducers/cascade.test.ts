@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment -- okay to disable for tests
+// @ts-nocheck -- Typing getting in way of unit test
+
 import { expect, test } from "@playwright/test";
 
 import cascadeReducers from "../../src/reducers/cascade";
