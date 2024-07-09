@@ -75,7 +75,6 @@ export default (props: any) => {
 
   const truncatedJSX = (
     <span style={splitStyle}>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ overflow: string; textOverflow: string; wh... Remove this comment to see the full error message */}
       <span style={FIRST_HALF_STYLE}>{firstString}</span>
       {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ position: string; overflow: string; whiteS... Remove this comment to see the full error message */}
       <span style={SECOND_HALF_STYLE}>

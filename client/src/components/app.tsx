@@ -20,6 +20,7 @@ import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
+import DiffexNotice from "./diffexNotice";
 
 interface Props {
   dispatch: AppDispatch;
@@ -31,6 +32,7 @@ interface Props {
   seamlessEnabled: boolean;
   datasetMetadataError: string | null;
   isCellGuideCxg: boolean;
+  differentialExpressionLoading: boolean;
 }
 
 class App extends React.Component<Props> {
@@ -51,6 +53,7 @@ class App extends React.Component<Props> {
       seamlessEnabled,
       datasetMetadataError,
       isCellGuideCxg,
+      differentialExpressionLoading,
     } = this.props;
     return (
       <Container>
@@ -102,6 +105,7 @@ class App extends React.Component<Props> {
               )}
             </ThemeProvider>
           </EmotionThemeProvider>
+          <DiffexNotice triggerOpen={differentialExpressionLoading} />
         </StylesProvider>
       </Container>
     );
@@ -117,4 +121,5 @@ export default connect((state: RootState) => ({
   seamlessEnabled: selectIsSeamlessEnabled(state),
   datasetMetadataError: state.datasetMetadata.error,
   isCellGuideCxg: state.controls.isCellGuideCxg,
+  differentialExpressionLoading: state.differential.loading,
 }))(App);
