@@ -65,6 +65,8 @@ const Embedding = (props: Props) => {
 
   const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
+  const isSingleEmbedding = layoutChoice.available.length === 1;
+
   /**
    * (thuang): Attach to `onOpening` event to only track the event when the user
    * clicks on the dropdown to open the popover, not when the popover is closed.
@@ -166,7 +168,7 @@ const Embedding = (props: Props) => {
             </Button>
           </Tooltip>
         </Popover2>
-        {!isSidePanel && isSpatial && (
+        {!isSidePanel && isSpatial && !isSingleEmbedding && (
           <Button
             icon={IconNames.MULTI_SELECT}
             onClick={handleOpenPanelEmbedding}
