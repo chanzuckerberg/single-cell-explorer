@@ -2,7 +2,6 @@
 Locust test config
 """
 
-
 """ Data routes that will be tested """
 
 # single dataset, for non-dataroot tests

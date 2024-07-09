@@ -69,7 +69,7 @@ import {
   skipIfSidePanel,
   toggleSidePanel,
 } from "../util/helpers";
-import { SCALE_MAX } from "../../src/util/constants";
+import { SCALE_MAX_HIRES } from "../../src/util/constants";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
 import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/continuous/constants";
 import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/categorical/constants";
@@ -793,7 +793,7 @@ for (const testDataset of testDatasets) {
               const newGraph = page.getByTestId("graph-wrapper");
               const newDistance =
                 (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-              expect(parseFloat(newDistance)).toBe(SCALE_MAX);
+              expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
             },
             { page }
           );

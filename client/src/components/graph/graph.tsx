@@ -58,6 +58,7 @@ import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
 import { fetchDeepZoomImageFailed } from "../../actions/config";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { DatasetUnsMetadata } from "../../common/types/entities";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -67,6 +68,7 @@ interface GraphAsyncProps {
   height: number;
   imageUnderlay: boolean;
   screenCap: boolean;
+  unsMetadata: DatasetUnsMetadata;
 }
 
 const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
@@ -88,10 +90,14 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   isSidePanelOpen: state.panelEmbedding.open,
   isSidePanelMinimized: state.panelEmbedding.minimized,
   sidePanelLayoutChoice: state.panelEmbedding.layoutChoice,
+  unsMetadata: state.controls.unsMetadata,
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
-  static createReglState(canvas: HTMLCanvasElement): {
+  static createReglState(
+    canvas: HTMLCanvasElement,
+    resolution: string
+  ): {
     camera: Camera;
     regl: Regl;
     drawPoints: DrawCommand;
@@ -103,7 +109,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         Must be created for each canvas
         */
     // setup canvas, webgl draw function and camera
-    const camera = _camera(canvas);
+    const camera = _camera(canvas, resolution);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
 
@@ -707,8 +713,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       return;
     }
     this.reglCanvas = canvas;
+    const { unsMetadata } = this.props;
+    const { resolution } = unsMetadata;
     this.setState({
-      ...Graph.createReglState(canvas),
+      ...Graph.createReglState(canvas, resolution),
     });
   };
 
@@ -812,6 +820,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     } = props.watchProps;
 
     const { modelTF } = this.state;
@@ -858,6 +867,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     };
   };
 
@@ -1218,7 +1228,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     camera: GraphState["camera"],
     projectionTF: GraphState["projectionTF"]
   ): Promise<void> {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, unsMetadata } = this.props;
 
     if (!this.reglCanvas || !annoMatrix) return;
 
@@ -1233,6 +1243,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     );
     const { width, height } = this.reglCanvas;
 
+    const { imageHeight, scaleref, spotDiameterFullres } = unsMetadata;
+
     regl?.poll();
 
     if (drawPoints) {
@@ -1245,6 +1257,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
         projView,
         nPoints: schema.dataframe.nObs,
         minViewportDimension: Math.min(width, height),
+        imageHeight,
+        scaleref,
+        spotDiameterFullres,
+        isSpatial: isSpatialMode(this.props),
       });
     }
 
