@@ -1103,10 +1103,6 @@ for (const testDataset of testDatasets) {
 
                 // run diffexp
                 await page.getByTestId(`diffexp-button`).click();
-
-                // close disclaimer
-                await page.getByTestId(`CloseIcon`).click();
-
                 await page.getByTestId("pop-1-geneset-expand").click();
 
                 await waitUntilNoSkeletonDetected(page);
