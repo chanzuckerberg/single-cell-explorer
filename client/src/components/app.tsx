@@ -20,6 +20,7 @@ import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
 import Graph from "./graph/graph";
+import DiffexNotice from "./diffexNotice";
 import Scatterplot from "./scatterplot/scatterplot";
 import PanelEmbedding from "./PanelEmbedding";
 
@@ -34,6 +35,7 @@ interface StateProps {
   isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
   scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
   scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
+  differentialExpressionLoading: RootState["differential"]["loading"];
 }
 
 const mapStateToProps = (state: RootState): StateProps => ({
@@ -47,6 +49,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
   isCellGuideCxg: state.controls.isCellGuideCxg,
   scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
   scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+  differentialExpressionLoading: state.differential.loading,
 });
 
 class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
@@ -67,6 +70,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
       seamlessEnabled,
       datasetMetadataError,
       isCellGuideCxg,
+      differentialExpressionLoading,
       scatterplotXXaccessor,
       scatterplotYYaccessor,
     } = this.props;
@@ -124,6 +128,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
               )}
             </ThemeProvider>
           </EmotionThemeProvider>
+          <DiffexNotice triggerOpen={differentialExpressionLoading} />
         </StylesProvider>
       </Container>
     );
