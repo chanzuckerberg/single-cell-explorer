@@ -54,8 +54,8 @@ function DiffexNotice(props: Props): JSX.Element {
         }}
       >
         <p style={{ marginBottom: "16px" }}>
-          To find differentially expressed genes using all data in the CellxGene
-          Census, use the Differential Expression Tool.
+          To find differentially expressed genes using all data in the CZ
+          CELLxGENE Discover Census, use the Differential Expression Tool.
         </p>
         <Link
           target="_blank"
