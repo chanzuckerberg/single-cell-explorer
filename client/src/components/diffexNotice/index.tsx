@@ -38,10 +38,11 @@ function DiffexNotice(props: Props): JSX.Element {
   return (
     <Snackbar
       open={open}
-      autoHideDuration={6000}
+      autoHideDuration={60000}
       onClose={handleClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       sx={{ width: "423px" }}
+      ClickAwayListenerProps={{ onClickAway: undefined }}
     >
       <MuiAlert
         onClose={handleClose}
