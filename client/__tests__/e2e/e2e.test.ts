@@ -71,6 +71,8 @@ import {
 } from "../util/helpers";
 import { SCALE_MAX_HIRES } from "../../src/util/constants";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
+import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/continuous/constants";
+import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/categorical/constants";
 
 const { describe, skip } = test;
 
@@ -262,6 +264,38 @@ for (const testDataset of testDatasets) {
 
               await snapshotTestGraph(page, testInfo);
             }
+          });
+
+          /**
+           * https://github.com/chanzuckerberg/single-cell-explorer/issues/1022
+           */
+          test("bug fix color by category #1022", async ({
+            page,
+          }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            // Expand category
+            for (const label of Object.keys(
+              data.categorical
+            ) as (keyof typeof data.categorical)[]) {
+              await page.getByTestId(`${label}:category-expand`).click();
+            }
+
+            await page
+              .getByTestId(CONTINUOUS_SECTION_TEST_ID)
+              .getByTestId(/colorby-/)
+              .first()
+              .click();
+
+            await page
+              .getByTestId(CATEGORICAL_SECTION_TEST_ID)
+              .getByTestId(/colorby-/)
+              .first()
+              .click();
+
+            await snapshotTestGraph(page, testInfo);
           });
 
           test("selects cells via lasso", async ({ page }, testInfo) => {

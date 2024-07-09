@@ -2,7 +2,7 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React, { useRef, useEffect } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
-import { AnchorButton, Classes, Position, Tooltip } from "@blueprintjs/core";
+import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 
@@ -311,6 +311,11 @@ class Category extends React.PureComponent<CategoryProps> {
           <Async.Fulfilled persist>
             {(asyncProps: CategoryAsyncProps) => {
               const {
+                /**
+                 * (thuang): `colorAccessor` needs to be accessed from `asyncProps` instead
+                 * of `this.props.colors` to prevent the bug below
+                 * https://github.com/chanzuckerberg/single-cell-explorer/issues/1022
+                 */
                 colorAccessor,
                 colorTable,
                 colorData,
@@ -485,7 +490,7 @@ const CategoryHeader = React.memo(
               hide: { enabled: false },
             }}
           >
-            <AnchorButton
+            <Button
               data-testid={`colorby-${metadataField}`}
               onClick={onColorChangeClick}
               active={isColorAccessor}

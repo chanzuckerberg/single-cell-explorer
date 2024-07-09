@@ -7,6 +7,7 @@ import Collapse from "../../util/collapse";
 import { RootState } from "../../reducers";
 import AnnoMatrix from "../../annoMatrix/annoMatrix";
 import { AnnotationColumnSchema } from "../../common/types/schema";
+import { CONTINUOUS_SECTION_TEST_ID } from "./constants";
 
 interface StateProps {
   schema?: AnnoMatrix["schema"];
@@ -32,7 +33,7 @@ class Continuous extends React.PureComponent<StateProps> {
       .filter((col: AnnotationColumnSchema) => !col.writable) // skip user annotations - they will be treated as categorical
       .map((col: AnnotationColumnSchema) => col.name);
     return allContinuousNames.length ? (
-      <div>
+      <div data-testid={CONTINUOUS_SECTION_TEST_ID}>
         <Collapse>
           <span style={{ paddingLeft: 10 }}>Continuous</span>
           {allContinuousNames.map((key, index) => (
