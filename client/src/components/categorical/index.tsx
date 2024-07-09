@@ -14,6 +14,7 @@ import Collapse from "../../util/collapse";
 import { ControlsHelpers } from "../../util/stateManager";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -152,6 +153,7 @@ class Categories extends React.Component<{}, State> {
     );
     return (
       <div
+        data-testid={CATEGORICAL_SECTION_TEST_ID}
         style={{
           padding: globals.leftSidebarSectionPadding,
           paddingBottom: 0,
