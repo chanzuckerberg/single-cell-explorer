@@ -35,7 +35,7 @@ interface StateProps {
   isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
   scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
   scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
-  differentialExpressionLoading: boolean;
+  differentialExpressionLoading: RootState["differential"]["loading"];
 }
 
 const mapStateToProps = (state: RootState): StateProps => ({
@@ -49,7 +49,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
   isCellGuideCxg: state.controls.isCellGuideCxg,
   scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
   scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
-  differentialExpressionLoading: state.differential.loading,  
+  differentialExpressionLoading: state.differential.loading,
 });
 
 class App extends React.Component<StateProps & { dispatch: AppDispatch }> {

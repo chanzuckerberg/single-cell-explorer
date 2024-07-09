@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
-import { Link } from "../geneExpression/geneInfo/style";
+import { Link } from "../geneExpression/infoPanel/geneInfo/style";
 
 interface Props {
-  triggerOpen: boolean;
+  triggerOpen: boolean | null;
 }
 
 function DiffexNotice(props: Props): JSX.Element {
