@@ -28,8 +28,6 @@ function DiffexNotice(props: Props): JSX.Element {
     setOpen(shouldShow);
   }, [triggerOpen]);
 
-  useEffect(() => {}, []);
-
   const handleClose = () => {
     localStorage.setItem("diffexNoticeClosed", new Date().toISOString());
     setOpen(false);
@@ -55,10 +53,10 @@ function DiffexNotice(props: Props): JSX.Element {
           lineHeight: "20px",
         }}
       >
-        To find differentially expressed genes using all data in the CellxGene
-        Census, use the Differential Expression Tool.
-        <br />
-        <br />
+        <p style={{ marginBottom: "16px" }}>
+          To find differentially expressed genes using all data in the CellxGene
+          Census, use the Differential Expression Tool.
+        </p>
         <Link
           target="_blank"
           rel="noopener noreferrer"
