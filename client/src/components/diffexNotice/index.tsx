@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import { noop } from "lodash";
 import { Link } from "../geneExpression/infoPanel/geneInfo/style";
 
 interface Props {
@@ -40,7 +41,7 @@ function DiffexNotice(props: Props): JSX.Element {
       onClose={handleClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       sx={{ width: "423px" }}
-      ClickAwayListenerProps={{ onClickAway: undefined }}
+      ClickAwayListenerProps={{ onClickAway: noop }}
     >
       <MuiAlert
         onClose={handleClose}
