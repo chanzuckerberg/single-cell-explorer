@@ -1,12 +1,17 @@
 /* Core dependencies */
 import React, { useState, useEffect } from "react";
-import Snackbar from "@mui/material/Snackbar";
-import MuiAlert from "@mui/material/Alert";
+
+import { noop } from "lodash";
 import { Link } from "../geneExpression/infoPanel/geneInfo/style";
+import { StyledSnackbar, StyledAlert } from "./style";
 
 interface Props {
   triggerOpen: boolean | null;
 }
+
+const ClickAwayListenerProps = {
+  onClickAway: noop,
+};
 
 function DiffexNotice(props: Props): JSX.Element {
   const { triggerOpen } = props;
@@ -34,25 +39,14 @@ function DiffexNotice(props: Props): JSX.Element {
   };
 
   return (
-    <Snackbar
+    <StyledSnackbar
       open={open}
       autoHideDuration={60000}
       onClose={handleClose}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      sx={{ width: "423px" }}
-      ClickAwayListenerProps={{ onClickAway: undefined }}
+      ClickAwayListenerProps={ClickAwayListenerProps}
     >
-      <MuiAlert
-        onClose={handleClose}
-        severity="info"
-        sx={{
-          width: "100%",
-          fontSize: "13px",
-          fontFamily: "Inter",
-          fontWeight: 400,
-          lineHeight: "20px",
-        }}
-      >
+      <StyledAlert onClose={handleClose} severity="info">
         <p style={{ marginBottom: "16px" }}>
           To find differentially expressed genes using all data in the CZ
           CELLxGENE Discover Census, use the Differential Expression Tool.
@@ -66,8 +60,8 @@ function DiffexNotice(props: Props): JSX.Element {
         >
           Open Differential Expression Tool
         </Link>
-      </MuiAlert>
-    </Snackbar>
+      </StyledAlert>
+    </StyledSnackbar>
   );
 }
 
