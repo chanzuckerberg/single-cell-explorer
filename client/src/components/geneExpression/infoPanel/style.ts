@@ -14,15 +14,15 @@ export const InfoPanelWrapper = styled.div<InfoPanelWrapperProps>`
   overflow: hidden;
   position: ${(props) => (props.isMinimized ? "absolute" : "relative")};
   bottom: ${(props) => (props.isMinimized ? "0" : "auto")};
-  height: ${(props) => (props.isMinimized ? "40px" : "auto")};
+  height: ${(props) => (props.isMinimized ? "40px" : "50%")};
 `;
 
 export const InfoPanelContent = styled.div<InfoPanelWrapperProps>`
   width: 100%;
-  padding: 30px 0px 0px 0px;
+  padding-top: 30px;
   position: relative;
   overflow-y: auto;
-  max-height: ${(props) => (props.isMinimized ? "0" : "400px")};
+  min-height: ${(props) => (props.isMinimized ? "0" : "50%")};
 `;
 
 export const InfoPanelHeader = styled.div`
@@ -33,7 +33,7 @@ export const InfoPanelHeader = styled.div`
   width: 100%;
   border-top: 1px solid ${gray300};
   border-bottom: 1px solid ${gray300};
-  padding: 16px 0px 8px 10px;
+  padding: 17px 0px 8px 10px;
   height: 35px;
   position: absolute;
   background: white;

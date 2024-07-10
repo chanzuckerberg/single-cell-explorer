@@ -346,7 +346,7 @@ const buildDatasetMetadataViews = (
 
 const InfoFormat = React.memo<Props>(({ datasetMetadata, allSingleValues }) => (
   <div className={Classes.DRAWER_BODY}>
-    <div className={Classes.DIALOG_BODY}>
+    <div className={Classes.DIALOG_BODY} style={{ margin: "12px" }}>
       <H3>{datasetMetadata?.collection_name || "Collection"}</H3>
       {datasetMetadata && <p>{datasetMetadata.collection_description}</p>}
       {renderCollectionLinks(datasetMetadata)}
