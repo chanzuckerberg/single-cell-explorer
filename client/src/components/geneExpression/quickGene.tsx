@@ -5,6 +5,7 @@ import fuzzysort from "fuzzysort";
 import { Suggest } from "@blueprintjs/select";
 import { useSelector, useDispatch } from "react-redux";
 
+import { noop } from "lodash";
 import Gene from "./gene";
 
 import { postUserErrorToast } from "../framework/toasters";
@@ -160,17 +161,15 @@ function QuickGene() {
       }
 
       return (
-        <>
-          <Gene
-            key={`quick=${gene}`}
-            gene={gene}
-            removeGene={removeGene}
-            quickGene
-            geneId={geneId}
-            isGeneExpressionComplete
-            onGeneExpressionComplete={() => {}}
-          />
-        </>
+        <Gene
+          key={`quick=${gene}`}
+          gene={gene}
+          removeGene={removeGene}
+          quickGene
+          geneId={geneId}
+          isGeneExpressionComplete
+          onGeneExpressionComplete={noop}
+        />
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
