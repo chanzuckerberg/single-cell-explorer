@@ -1,13 +1,13 @@
-import React from "react";
+import React, { useState, ChangeEvent, useEffect } from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup } from "@blueprintjs/core";
+import { Tabs, Tab } from "czifui";
+
 import {
   CollapseToggle,
   InfoPanelContent,
   InfoPanelHeader,
-  InfoPanelTabs,
   InfoPanelWrapper,
-  StyledAnchorButton,
 } from "./style";
 import GeneInfo from "./geneInfo";
 import DatasetInfo from "./datasetInfo";
@@ -15,37 +15,36 @@ import { Props, mapStateToProps } from "./types";
 
 function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
+  const [value, setValue] = useState(1);
+
+  const handleTabsChange = (
+    _: ChangeEvent<Record<string, unknown>>,
+    tabsValue: unknown
+  ) => {
+    setValue(tabsValue as number);
+    dispatch({
+      type: "toggle active info panel",
+      activeTab: tabsValue === 0 ? "Gene" : "Dataset",
+    });
+  };
+
+  useEffect(() => {
+    setValue(activeTab === "Gene" ? 0 : 1);
+  }, [activeTab]);
 
   return (
     <InfoPanelWrapper
       isHidden={infoPanelHidden}
       isMinimized={infoPanelMinimized}
     >
-      <InfoPanelHeader data-testid="info-panel-header">
-        <InfoPanelTabs>
-          <StyledAnchorButton
-            className={activeTab === "Gene" ? "active" : ""}
-            minimal
-            text="Gene"
-            onClick={() =>
-              dispatch({
-                type: "toggle active info panel",
-                activeTab: "Gene",
-              })
-            }
-          />
-          <StyledAnchorButton
-            className={activeTab === "Dataset" ? "active" : ""}
-            minimal
-            text="Dataset"
-            onClick={() =>
-              dispatch({
-                type: "toggle active info panel",
-                activeTab: "Dataset",
-              })
-            }
-          />
-        </InfoPanelTabs>
+      <InfoPanelHeader
+        data-testid="info-panel-header"
+        style={{ paddingBottom: "5px" }}
+      >
+        <Tabs value={value} sdsSize="small" onChange={handleTabsChange}>
+          <Tab label="Gene" />
+          <Tab label="Dataset" />
+        </Tabs>
         <CollapseToggle>
           <ButtonGroup
             style={{

@@ -1,6 +1,5 @@
 /* Core dependencies */
 import React, { useState, useEffect } from "react";
-
 import { noop } from "lodash";
 import { Link } from "../geneExpression/infoPanel/geneInfo/style";
 import { StyledSnackbar, StyledAlert } from "./style";
