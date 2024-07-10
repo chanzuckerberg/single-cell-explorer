@@ -11,7 +11,7 @@ import { Icon } from "@blueprintjs/core";
 
 import * as globals from "../../../../globals";
 import * as styles from "../../util";
-import { gray100, gray500 } from "../../../theme";
+import { gray100, gray500, spacesM } from "../../../theme";
 
 export const GeneInfoWrapper = styled.div`
   display: flex;
@@ -21,14 +21,11 @@ export const GeneInfoWrapper = styled.div`
 
 export const GeneInfoContainer = styled.div`
   width: ${styles.width + styles.margin.left + styles.margin.right}px;
-  height: "auto";
+  height: "50%";
 `;
 
 export const GeneInfoEmpty = styled.div`
-  margin-top: ${styles.margin.top}px;
-  margin-left: ${styles.margin.left}px;
-  margin-right: ${styles.margin.right}px;
-  margin-bottom: ${styles.margin.bottom}px;
+  margin: ${spacesM}px;
 `;
 
 export const GeneSymbol = styled.h1`
