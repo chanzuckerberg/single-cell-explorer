@@ -1520,9 +1520,21 @@ for (const testDataset of testDatasets) {
 
             const afterMinimizeDownloads: Download[] = [];
 
-            await page
-              .getByTestId(PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID)
-              .click();
+            await tryUntil(
+              async () => {
+                await page
+                  .getByTestId(PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID)
+                  .click();
+
+                /**
+                 * (thuang): Make sure the side panel is indeed minimized
+                 */
+                await expect(
+                  page.getByTestId("graph-wrapper-side")
+                ).not.toBeVisible();
+              },
+              { page }
+            );
 
             page.on("download", (downloadData) => {
               afterMinimizeDownloads.push(downloadData);

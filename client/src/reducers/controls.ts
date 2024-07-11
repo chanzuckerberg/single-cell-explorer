@@ -32,6 +32,8 @@ interface ControlsState {
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
   unsMetadata: DatasetUnsMetadata;
+  imageOpacity: number;
+  dotOpacity: number;
 }
 const Controls = (
   state: ControlsState = {
@@ -69,6 +71,8 @@ const Controls = (
       scaleref: 0.1868635,
       spotDiameterFullres: 86.06629150338271,
     },
+    imageOpacity: 100,
+    dotOpacity: 100,
   },
   action: AnyAction
 ): ControlsState => {
@@ -297,6 +301,21 @@ const Controls = (
         ...state,
         loading: false,
         error: action.error,
+      };
+    }
+    /**************************
+         Opacities
+    **************************/
+    case "set image opacity": {
+      return {
+        ...state,
+        imageOpacity: action.data,
+      };
+    }
+    case "set dot opacity": {
+      return {
+        ...state,
+        dotOpacity: action.data,
       };
     }
     default:

@@ -15,6 +15,12 @@ import {
 import { ColorsState } from "../../reducers/colors";
 import { Genesets } from "../../reducers/genesets";
 import * as globals from "../../globals";
+
+/**
+ * (thuang): The legend needs to be positioned below the cell count element
+ */
+const CELL_COUNT_ELEMENT_HEIGHT_PX = 20;
+
 // create continuous color legend
 const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
   const legendHeight = 200;
@@ -237,7 +243,7 @@ class ContinuousLegend extends React.Component<Props> {
         style={{
           position: "absolute",
           left: 8,
-          top: 35,
+          top: CELL_COUNT_ELEMENT_HEIGHT_PX + 35,
           zIndex: 1,
           pointerEvents: "none",
         }}

@@ -91,6 +91,8 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   isSidePanelMinimized: state.panelEmbedding.minimized,
   sidePanelLayoutChoice: state.panelEmbedding.layoutChoice,
   unsMetadata: state.controls.unsMetadata,
+  imageOpacity: state.controls.imageOpacity,
+  dotOpacity: state.controls.dotOpacity,
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
@@ -312,6 +314,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       layoutChoice,
       isHidden,
       isSidePanel,
+      imageOpacity,
     } = this.props;
 
     const { toolSVG, viewport } = this.state;
@@ -322,7 +325,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     let stateChanges: Partial<GraphState> = {};
 
-    this.updateOpenSeadragon();
+    this.initOpenSeadragon();
 
     if (prevProps.screenCap !== screenCap) {
       stateChanges = {
@@ -385,6 +388,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
      */
     if (isSidePanel && prevProps.isHidden && !isHidden) {
       this.handleResize();
+    }
+
+    /**
+     * (thuang): Image Opacity Change
+     */
+    if (prevProps.imageOpacity !== imageOpacity) {
+      this.updateOpenseadragonOpacity(imageOpacity);
     }
   }
 
@@ -1115,7 +1125,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
-  updateOpenSeadragon() {
+  initOpenSeadragon() {
     const {
       viewport: { width, height },
     } = this.state;
@@ -1172,20 +1182,33 @@ class Graph extends React.Component<GraphProps, GraphState> {
     this.openseadragon = null;
   }
 
-  hideOpenseadragon() {
+  /**
+   * (thuang): Opacity is a number between 0 and 100
+   */
+  updateOpenseadragonOpacity(opacity: number) {
     if (!this.openseadragon) return;
 
     const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
 
-    tiledImage?.setOpacity(0);
+    tiledImage?.setOpacity(opacity / 100);
+  }
+
+  hideOpenseadragon() {
+    const { dispatch } = this.props;
+
+    dispatch?.({
+      type: "set image opacity",
+      data: 0,
+    });
   }
 
   showOpenseadragon() {
-    if (!this.openseadragon) return;
+    const { dispatch } = this.props;
 
-    const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
-
-    tiledImage?.setOpacity(1);
+    dispatch?.({
+      type: "set image opacity",
+      data: 100,
+    });
   }
 
   checkIsImageLayerInViewport() {
@@ -1281,6 +1304,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay,
       isSidePanel = false,
       isHidden = false,
+      dotOpacity,
     } = this.props;
 
     const {
@@ -1382,6 +1406,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           style={{
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
+            opacity: `${dotOpacity}%`,
           }}
           id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}
           data-testid={sidePanelAttributeNameChange(

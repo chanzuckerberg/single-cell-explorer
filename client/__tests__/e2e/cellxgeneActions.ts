@@ -821,7 +821,7 @@ export async function selectLayout(
     layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
   }
 
-  await page.getByTestId(layoutChoiceTestId).click();
+  await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   /**
    * (thuang): For blueprint radio buttons, we need to tab first to go to the
@@ -857,7 +857,7 @@ export async function selectLayout(
     }
   }
 
-  await page.getByTestId(layoutChoiceTestId).click();
+  await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }
