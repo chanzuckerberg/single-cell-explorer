@@ -8,10 +8,11 @@ import {
   Position,
   Radio,
   RadioGroup,
-  Tooltip,
 } from "@blueprintjs/core";
+
+import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
+
 import { IconNames } from "@blueprintjs/icons";
-import { Popover2 } from "@blueprintjs/popover2";
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
@@ -24,12 +25,20 @@ import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 import { sidePanelAttributeNameChange } from "../graph/util";
+import { shouldShowOpenseadragon } from "../../common/selectors";
+import { ImageToggleWrapper, ImageDropdownButton } from "./style";
+import Opacities from "./components/Opacities";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
   schema?: Schema;
   crossfilter: RootState["obsCrossfilter"];
   sideIsOpen: RootState["panelEmbedding"]["open"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  config: RootState["config"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  panelEmbedding: RootState["panelEmbedding"];
+  imageUnderlay: RootState["controls"]["imageUnderlay"];
 }
 
 interface OwnProps {
@@ -49,6 +58,9 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   schema: state.annoMatrix?.schema,
   crossfilter: state.obsCrossfilter,
   sideIsOpen: state.panelEmbedding.open,
+  config: state.config,
+  panelEmbedding: state.panelEmbedding,
+  imageUnderlay: state.controls.imageUnderlay,
 });
 
 const Embedding = (props: Props) => {
@@ -59,6 +71,7 @@ const Embedding = (props: Props) => {
     dispatch,
     isSidePanel,
     sideIsOpen,
+    imageUnderlay,
   } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
@@ -120,7 +133,7 @@ const Embedding = (props: Props) => {
     >
       <ButtonGroup>
         <Popover2
-          // minimal /* removes arrow */
+          hasBackdrop
           onOpening={handleLayoutChoiceClick}
           position={Position.TOP_LEFT}
           content={
@@ -146,7 +159,7 @@ const Embedding = (props: Props) => {
             </div>
           }
         >
-          <Tooltip
+          <Tooltip2
             content="Select embedding for visualization"
             position="top"
             hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -166,7 +179,7 @@ const Embedding = (props: Props) => {
             >
               {layoutChoice?.current}
             </Button>
-          </Tooltip>
+          </Tooltip2>
         </Popover2>
         {!isSidePanel && isSpatial && !isSingleEmbedding && (
           <Button
@@ -176,6 +189,54 @@ const Embedding = (props: Props) => {
             data-testid="side-panel-toggle"
           />
         )}
+
+        {!isSidePanel && shouldShowOpenseadragon(props) && (
+          <ImageToggleWrapper>
+            <ButtonGroup>
+              <Tooltip2
+                usePortal
+                content="Toggle image"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <Button
+                  type="button"
+                  data-testid="toggle-image-underlay"
+                  icon="media"
+                  intent={imageUnderlay ? "primary" : "none"}
+                  active={imageUnderlay}
+                  onClick={() => {
+                    track(
+                      /**
+                       * (thuang): If `imageUnderlay` is currently `true`, then
+                       * we're about to deselect it thus firing the deselection event.
+                       */
+                      imageUnderlay
+                        ? EVENTS.EXPLORER_IMAGE_DESELECT
+                        : EVENTS.EXPLORER_IMAGE_SELECT
+                    );
+                    dispatch({
+                      type: "toggle image underlay",
+                      toggle: !imageUnderlay,
+                    });
+                  }}
+                />
+              </Tooltip2>
+              <Popover2
+                hasBackdrop
+                onOpening={handleLayoutChoiceClick}
+                position={Position.BOTTOM_LEFT}
+                content={<Opacities />}
+              >
+                <ImageDropdownButton
+                  type="button"
+                  data-testid="image-underlay-dropdown"
+                  icon="caret-down"
+                />
+              </Popover2>
+            </ButtonGroup>
+          </ImageToggleWrapper>
+        )}
       </ButtonGroup>
 
       {!isSidePanel && (
@@ -184,9 +245,13 @@ const Embedding = (props: Props) => {
             color: "#767676",
             fontWeight: 400,
             marginTop: "8px",
+            /**
+             * (thuang): This needs to be taken out of the normal flow to prevent
+             * expanding the parent container height and distorting the action button icon sizes
+             */
             position: "absolute",
-            top: "38px",
-            left: "64px",
+            top: "35px",
+            left: "0",
           }}
         >
           {crossfilter.countSelected()} of {crossfilter.size()} cells

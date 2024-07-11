@@ -17,7 +17,6 @@ import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
-import { shouldShowOpenseadragon } from "../../common/selectors";
 import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
 import { AppDispatch, RootState } from "../../reducers";
 import { AnnoMatrixClipView } from "../../annoMatrix/views";
@@ -33,13 +32,6 @@ interface StateProps {
   showCentroidLabels: RootState["centroidLabels"]["showLabels"];
   categoricalSelection: RootState["categoricalSelection"];
   screenCap: RootState["controls"]["screenCap"];
-  imageUnderlay: RootState["controls"]["imageUnderlay"];
-  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
-  layoutChoice: RootState["layoutChoice"];
-  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
-  config: RootState["config"];
-  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
-  panelEmbedding: RootState["panelEmbedding"];
 }
 
 const mapStateToProps = (state: RootState): StateProps => {
@@ -60,7 +52,6 @@ const mapStateToProps = (state: RootState): StateProps => {
   return {
     subsetPossible,
     subsetResetPossible,
-    config: state.config,
     graphInteractionMode: state.controls.graphInteractionMode,
     clipPercentileMin: Math.round(100 * clipRangeMin),
     clipPercentileMax: Math.round(100 * clipRangeMax),
@@ -69,9 +60,6 @@ const mapStateToProps = (state: RootState): StateProps => {
     showCentroidLabels: state.centroidLabels.showLabels,
     categoricalSelection: state.categoricalSelection,
     screenCap: state.controls.screenCap,
-    imageUnderlay: state.controls.imageUnderlay,
-    layoutChoice: state.layoutChoice,
-    panelEmbedding: state.panelEmbedding,
   };
 };
 
@@ -269,7 +257,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
       subsetPossible,
       subsetResetPossible,
       screenCap,
-      imageUnderlay,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
@@ -398,38 +385,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
-          {shouldShowOpenseadragon(this.props) && (
-            <ButtonGroup className={styles.menubarButton}>
-              <Tooltip
-                content="Toggle image"
-                position="bottom"
-                hoverOpenDelay={globals.tooltipHoverOpenDelay}
-              >
-                <AnchorButton
-                  type="button"
-                  data-testid="toggle-image-underlay"
-                  icon="media"
-                  intent={imageUnderlay ? "primary" : "none"}
-                  active={imageUnderlay}
-                  onClick={() => {
-                    track(
-                      /**
-                       * (thuang): If `imageUnderlay` is currently `true`, then
-                       * we're about to deselect it thus firing the deselection event.
-                       */
-                      imageUnderlay
-                        ? EVENTS.EXPLORER_IMAGE_DESELECT
-                        : EVENTS.EXPLORER_IMAGE_SELECT
-                    );
-                    dispatch({
-                      type: "toggle image underlay",
-                      toggle: !imageUnderlay,
-                    });
-                  }}
-                />
-              </Tooltip>
-            </ButtonGroup>
-          )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}
