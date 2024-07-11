@@ -857,7 +857,7 @@ export async function selectLayout(
     }
   }
 
-  await page.getByTestId(layoutChoiceTestId).click();
+  await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }
