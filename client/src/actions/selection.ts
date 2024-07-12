@@ -1,5 +1,7 @@
+import { vec2 } from "gl-matrix";
+
 /*
-Action creators for selection 
+Action creators for selection
 */
 export const selectContinuousMetadataAction =
   (
@@ -210,7 +212,15 @@ export const graphLassoDeselectAction = (embName: any) =>
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export const graphLassoEndAction =
-  (embName: any, polygon: any) =>
+  ({
+    embName,
+    polygon,
+    graphId,
+  }: {
+    embName: string;
+    polygon: vec2[];
+    graphId: string;
+  }) =>
   async (
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     dispatch: any,
@@ -233,6 +243,7 @@ export const graphLassoEndAction =
       type: "graph lasso end",
       obsCrossfilter,
       polygon,
+      graphId,
     });
   };
 
