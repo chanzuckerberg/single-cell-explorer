@@ -59,6 +59,7 @@ export interface SelectWithinRect {
 export interface SelectWithinPolygon {
   mode: SelectionMode.WithinPolygon | "within-polygon";
   polygon: [number, number][];
+  graphId: string;
 }
 
 export type CrossfilterSelector =

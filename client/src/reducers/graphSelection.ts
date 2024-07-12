@@ -38,12 +38,13 @@ const GraphSelection = (
     }
 
     case "graph lasso end": {
-      const { polygon } = action;
+      const { polygon, graphId } = action;
       return {
         ...state,
         selection: {
           mode: "within-polygon",
           polygon,
+          graphId,
         },
       };
     }
