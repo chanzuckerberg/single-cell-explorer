@@ -27,10 +27,14 @@ stack:
 
         # env vars specific to this deployment stage
         - name: WEB_DOMAIN
-          value: $(__ARGUS_STACK_INGRESS_HOST)
+          value: cellxgene.cziscience.com
         - name: API_DOMAIN
-          value: $(__ARGUS_STACK_INGRESS_HOST)
+          value: api.cellxgene.cziscience.com
         - name: DATA_LOCATOR_DOMAIN
-          value: $(__ARGUS_STACK_INGRESS_HOST)
+          value: api.cellxgene.cziscience.com
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
+      ingress:
+        rules:
+          - host: cellxgene.cziscience.com
+          - host: api.cellxgene.cziscience.com
