@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.0...v1.1.1) (2024-07-15)
+
+
+### Misc
+
+* invoke smoke tests against every prod deploy ([#1037](https://github.com/chanzuckerberg/single-cell-explorer/issues/1037)) ([b425a52](https://github.com/chanzuckerberg/single-cell-explorer/commit/b425a523d22bb9bcaa05ac3cb1edfc90cc97305a))
+
+
+### Bug Fixes
+
+* Prod analytics ([#1039](https://github.com/chanzuckerberg/single-cell-explorer/issues/1039)) ([86fc4a7](https://github.com/chanzuckerberg/single-cell-explorer/commit/86fc4a767699f20a2ac20efd3feb9755d68c0ad1))
+
 ## [1.1.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.0.1...v1.1.0) (2024-07-15)
 
 
