@@ -12,55 +12,61 @@ import {
 } from "../../common/types/schema";
 import Collapse from "../../util/collapse";
 import { ControlsHelpers } from "../../util/stateManager";
-import { track } from "../../analytics";
+import {
+  track,
+  trackColorByCategoryExpand,
+  trackColorByCategoryHighlightHistogram,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
+import { AppDispatch, RootState } from "../../reducers";
+import { toggleCategoryExpansion } from "../../actions/controls";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
+interface State {
+  expandedCats: Set<string>;
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: (state as any).annoMatrix?.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  isCellGuideCxg: (state as any).controls.isCellGuideCxg,
-}))
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class Categories extends React.Component<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      expandedCats: new Set(),
-    };
-  }
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleChange = (name: any) => {
-    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
-    this.setState({ newCategoryText: name });
-  };
+interface StateProps {
+  schema: Schema;
+  isCellGuideCxg: boolean;
+  continuousSelection: RootState["continuousSelection"];
+  expandedCategories: RootState["controls"]["expandedCategories"];
+}
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleSelect = (name: any) => {
-    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
-    this.setState({ newCategoryText: name });
-  };
+type Props = StateProps & DispatchProps;
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  onExpansionChange = (catName: any) => {
-    const { expandedCats } = this.state;
-    if (expandedCats.has(catName)) {
-      const _expandedCats = new Set(expandedCats);
-      _expandedCats.delete(catName);
-      this.setState({ expandedCats: _expandedCats });
-    } else {
+class Categories extends React.Component<Props, State> {
+  onExpansionChange = async (catName: string) => {
+    const { expandedCategories, dispatch } = this.props;
+
+    const isExpanding = !expandedCategories.includes(catName);
+
+    if (isExpanding) {
       track(EVENTS.EXPLORER_CATEGORY_EXPAND_BUTTON_CLICKED);
-      const _expandedCats = new Set(expandedCats);
-      _expandedCats.add(catName);
-      this.setState({ expandedCats: _expandedCats });
     }
+
+    await dispatch(toggleCategoryExpansion(catName, isExpanding));
+  };
+
+  onColorChange = (isColorAccessor: boolean) => {
+    const { continuousSelection, expandedCategories } = this.props;
+    const isAnyCategoryExpanded = expandedCategories.length > 0;
+    const isAnyHistogramHighlighted =
+      Object.keys(continuousSelection).length > 0;
+
+    /**
+     * (thuang): If `isColorAccessor` is currently `true`, we're turning off
+     * color by category, thus passing `!isColorAccessor` as arg `isColorByCategory`
+     */
+    trackColorByCategoryExpand(!isColorAccessor, isAnyCategoryExpanded);
+    trackColorByCategoryHighlightHistogram(
+      !isColorAccessor,
+      isAnyHistogramHighlighted
+    );
   };
 
   /**
@@ -79,7 +85,6 @@ class Categories extends React.Component<{}, State> {
    * @returns True if category has more than one category value or categories are not defined.
    */
   isCategoryDisplayable = (schema: Schema, catName: string): boolean => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
     const { isCellGuideCxg } = this.props;
 
     const columnSchema = schema.annotations.obsByName[catName];
@@ -100,7 +105,6 @@ class Categories extends React.Component<{}, State> {
    * @returns True if given category name is in the set of standard category names.
    */
   isCategoryNameStandard = (catName: string): boolean => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
     const { isCellGuideCxg } = this.props;
     // if isCellGuideCxg is true, then all categories are standard
     return STANDARD_CATEGORY_NAMES.includes(catName) || isCellGuideCxg;
@@ -123,11 +127,8 @@ class Categories extends React.Component<{}, State> {
   isCategoryWritable = (schema: Schema, catName: string): boolean =>
     schema.annotations.obsByName[catName].writable;
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    const { expandedCats } = this.state;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
-    const { schema, isCellGuideCxg } = this.props;
+    const { schema, isCellGuideCxg, expandedCategories } = this.props;
 
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
     const selectableCategoryNames = ControlsHelpers.selectableCategoryNames(
@@ -167,7 +168,8 @@ class Categories extends React.Component<{}, State> {
                   key={catName}
                   metadataField={catName}
                   onExpansionChange={this.onExpansionChange}
-                  isExpanded={expandedCats.has(catName)}
+                  onColorChange={this.onColorChange}
+                  isExpanded={expandedCategories.includes(catName)}
                   categoryType="standard"
                 />
               ))}
@@ -184,7 +186,8 @@ class Categories extends React.Component<{}, State> {
                     key={catName}
                     metadataField={catName}
                     onExpansionChange={this.onExpansionChange}
-                    isExpanded={expandedCats.has(catName)}
+                    onColorChange={this.onColorChange}
+                    isExpanded={expandedCategories.includes(catName)}
                     categoryType="standard"
                   />
                 ))}
@@ -200,7 +203,8 @@ class Categories extends React.Component<{}, State> {
                     key={catName}
                     metadataField={catName}
                     onExpansionChange={this.onExpansionChange}
-                    isExpanded={expandedCats.has(catName)}
+                    onColorChange={this.onColorChange}
+                    isExpanded={expandedCategories.includes(catName)}
                     categoryType="author"
                   />
                 ))}
@@ -213,4 +217,13 @@ class Categories extends React.Component<{}, State> {
   }
 }
 
-export default Categories;
+function mapStateToProps(state: RootState): StateProps {
+  return {
+    schema: state.annoMatrix?.schema,
+    isCellGuideCxg: state.controls.isCellGuideCxg,
+    continuousSelection: state.continuousSelection,
+    expandedCategories: state.controls.expandedCategories,
+  };
+}
+
+export default connect(mapStateToProps)(Categories);

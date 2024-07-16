@@ -38,6 +38,7 @@ interface PureCategoryProps {
   metadataField: string;
   isExpanded: boolean;
   onExpansionChange: (metadataField: string) => void;
+  onColorChange: (isColorAccessor: boolean) => void;
   categoryType: string;
 }
 
@@ -115,14 +116,16 @@ class Category extends React.PureComponent<CategoryProps> {
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleColorChange = () => {
+  handleColorChange = (isColorAccessor: boolean) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, metadataField, categoryType } = this.props;
+    const { dispatch, metadataField, categoryType, onColorChange } = this.props;
 
     track(EVENTS.EXPLORER_COLORBY_CATEGORIES_BUTTON_CLICKED, {
       type: categoryType,
       category: metadataField,
     });
+
+    onColorChange(isColorAccessor);
 
     dispatch({
       type: "color by categorical metadata",
@@ -391,7 +394,7 @@ interface CategoryHeaderProps {
   isColorAccessor: boolean;
   isExpanded: boolean;
   selectionState: any;
-  onColorChangeClick: any;
+  onColorChangeClick: (isColorAccessor: boolean) => void;
   onCategoryMenuClick: any;
   onCategoryMenuKeyPress: any;
   onCategoryToggleAllClick: any;
@@ -492,7 +495,7 @@ const CategoryHeader = React.memo(
           >
             <Button
               data-testid={`colorby-${metadataField}`}
-              onClick={onColorChangeClick}
+              onClick={() => onColorChangeClick(isColorAccessor)}
               active={isColorAccessor}
               intent={isColorAccessor ? "primary" : "none"}
               icon="tint"
@@ -526,7 +529,6 @@ const CategoryRender = React.memo(
     colorData,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onColorChangeClick' does not exist on ty... Remove this comment to see the full error message
     onColorChangeClick,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuClick' does not exist on t... Remove this comment to see the full error message
     onCategoryMenuClick,
@@ -538,6 +540,8 @@ const CategoryRender = React.memo(
     colorMode,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist... Remove this comment to see the full error message
     isCellGuideCxg,
+  }: {
+    onColorChangeClick: (isColorAccessor: boolean) => void;
   }) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.

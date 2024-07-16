@@ -16,7 +16,11 @@ import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
-import { track } from "../../analytics";
+import {
+  track,
+  trackColorByCategoryChangeEmbedding,
+  trackLassoChangeEmbedding,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { AppDispatch, RootState } from "../../reducers";
 import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
@@ -39,6 +43,7 @@ interface StateProps {
   // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   panelEmbedding: RootState["panelEmbedding"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
+  colorMode: RootState["colors"]["colorMode"];
 }
 
 interface OwnProps {
@@ -61,6 +66,7 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   config: state.config,
   panelEmbedding: state.panelEmbedding,
   imageUnderlay: state.controls.imageUnderlay,
+  colorMode: state.colors.colorMode,
 });
 
 const Embedding = (props: Props) => {
@@ -95,18 +101,42 @@ const Embedding = (props: Props) => {
   const handleLayoutChoiceChange = async (
     e: FormEvent<HTMLInputElement>
   ): Promise<void> => {
+    const { colorMode } = props;
+
+    const {
+      currentTarget: { value },
+    } = e;
+
     track(
       isSidePanel
         ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_SELECTED
         : EVENTS.EXPLORER_EMBEDDING_SELECTED,
       {
-        embedding: e.currentTarget.value,
+        embedding: value,
       }
     );
 
-    await dispatch(
-      actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
+    trackColorByCategoryChangeEmbedding(
+      colorMode === "color by categorical metadata"
     );
+
+    /**
+     * (thuang): Analytics requirement to only track embedding change while the
+     * blue lasso selection is active.
+     * Thus, this action needs to be dispatched BEFORE the layout choice action,
+     * since the layout choice action will reset the selection mode to "all".
+     *
+     * Example:
+     * Steps:
+     * 1. Use lasso to select some dots
+     * 2. The graph has the blue lasso selection
+     * 3. Switch to a different embedding <-- trigger event `EXPLORER_LASSO_CHANGE_EMBEDDING`
+     * 4. The blue lasso selection thing disappears (but the lasso’d dots are still in effect)
+     * 5. Switch to another different embedding <-- do NOT trigger event `EXPLORER_LASSO_CHANGE_EMBEDDING`
+     */
+    await dispatch(trackLassoChangeEmbedding());
+
+    await dispatch(actions.layoutChoiceAction(value, isSidePanel));
   };
 
   const handleOpenPanelEmbedding = async (): Promise<void> => {
