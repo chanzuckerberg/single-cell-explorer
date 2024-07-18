@@ -1422,6 +1422,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
             opacity: `${dotOpacity}%`,
+            mixBlendMode: "multiply",
           }}
           id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}
           data-testid={sidePanelAttributeNameChange(
