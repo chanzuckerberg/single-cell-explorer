@@ -143,3 +143,30 @@ export interface PublisherMetadata {
   published_month: number;
   published_year: number;
 }
+
+export interface CellInfo {
+  cellId: string;
+  cellName: string;
+  cellDescription: string;
+  synonyms: string[];
+  references: string[];
+  error: string | null;
+  loading: boolean;
+}
+
+export interface GeneInfo {
+  gene: string | null;
+  geneName: string;
+  geneSummary: string;
+  geneSynonyms: string[];
+  geneUrl: string;
+  showWarningBanner: boolean;
+  infoError: string | null;
+  loading: boolean;
+}
+
+export enum ActiveTab {
+  Gene = "Gene",
+  Dataset = "Dataset",
+  CellType = "CellType",
+}

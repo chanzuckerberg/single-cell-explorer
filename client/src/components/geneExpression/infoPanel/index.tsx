@@ -9,6 +9,7 @@ import {
   InfoPanelHeader,
   InfoPanelWrapper,
 } from "./style";
+import CellTypeInfo from "./cellTypeInfo";
 import GeneInfo from "./geneInfo";
 import DatasetInfo from "./datasetInfo";
 import { Props, mapStateToProps } from "./types";
@@ -24,12 +25,13 @@ function InfoPanel(props: Props) {
     setValue(tabsValue as number);
     dispatch({
       type: "toggle active info panel",
-      activeTab: tabsValue === 0 ? "Gene" : "Dataset",
+      activeTab:
+        tabsValue === 0 ? "Gene" : tabsValue === 1 ? "CellType" : "Dataset",
     });
   };
 
   useEffect(() => {
-    setValue(activeTab === "Gene" ? 0 : 1);
+    setValue(activeTab === "Gene" ? 0 : activeTab === "CellType" ? 1 : 2);
   }, [activeTab]);
 
   return (
@@ -43,6 +45,7 @@ function InfoPanel(props: Props) {
       >
         <Tabs value={value} sdsSize="small" onChange={handleTabsChange}>
           <Tab label="Gene" />
+          <Tab label="Cell Type" />
           <Tab label="Dataset" />
         </Tabs>
         <CollapseToggle>
@@ -84,6 +87,7 @@ function InfoPanel(props: Props) {
         isMinimized={infoPanelMinimized}
       >
         {activeTab === "Gene" && <GeneInfo />}
+        {activeTab === "CellType" && <CellTypeInfo />}
         {activeTab === "Dataset" && <DatasetInfo />}
       </InfoPanelContent>
     </InfoPanelWrapper>

@@ -31,6 +31,11 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
+from server.common.utils.cell_type_info import (
+    get_cell_description,
+    get_celltype_metadata,
+    get_latest_snapshot_identifier,
+)
 from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
@@ -299,6 +304,41 @@ def gene_info_get(request):
             return None
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
+
+
+def cell_type_info_get(request):
+    """
+    Request information about cell type from cell guide
+    """
+    try:
+        latest_snapshot_identifier = get_latest_snapshot_identifier()
+        celltype_metadata = get_celltype_metadata(latest_snapshot_identifier)
+
+        cell_name = request.args.get("cell")
+        if not cell_name:
+            return make_response(jsonify({"error": "Cell name is required"}), HTTPStatus.BAD_REQUEST)
+
+        cell_info = next((info for _, info in celltype_metadata.items() if info.get("name") == cell_name), None)
+        if not cell_info:
+            return make_response(jsonify({"error": "Cell type not found"}), HTTPStatus.OK)
+
+        cell_id = cell_info.get("id", "")
+        synonyms = cell_info.get("synonyms", [])
+
+        cell_description = {}
+
+        try:
+            cell_description = get_cell_description(cell_id.replace(":", "_"))
+        except Exception as e:
+            cell_description["description"] = cell_info.get("clDescription", "")
+
+        cell_description["cell_id"] = cell_id
+        cell_description["cell_name"] = cell_name
+        cell_description["synonyms"] = synonyms
+
+        return make_response(jsonify(cell_description), HTTPStatus.OK)
+    except Exception as e:
+        raise e
 
 
 def get_deployed_version(request):

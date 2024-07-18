@@ -13,22 +13,22 @@ import * as globals from "../../../../globals";
 import * as styles from "../../util";
 import { gray100, gray500, spacesM } from "../../../theme";
 
-export const GeneInfoWrapper = styled.div`
+export const InfoWrapper = styled.div`
   display: flex;
   bottom: ${globals.bottomToolbarGutter}px;
   left: ${globals.leftSidebarWidth + globals.scatterplotMarginLeft}px;
 `;
 
-export const GeneInfoContainer = styled.div`
+export const InfoContainer = styled.div`
   width: ${styles.width + styles.margin.left + styles.margin.right}px;
   height: "50%";
 `;
 
-export const GeneInfoEmpty = styled.div`
+export const InfoDiv = styled.div`
   margin: ${spacesM}px;
 `;
 
-export const GeneSymbol = styled.h1`
+export const InfoSymbol = styled.h1`
   color: black;
   ${fontHeaderL}
   ${(props) => {
@@ -40,7 +40,7 @@ export const GeneSymbol = styled.h1`
   }}
 `;
 
-export const Content = styled.p`
+export const Content = styled.div`
   font-weight: 500;
   color: black;
   ${fontBodyXs}

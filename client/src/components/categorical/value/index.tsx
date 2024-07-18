@@ -1,8 +1,9 @@
 import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
+import { Icon as InfoCircle, IconButton } from "czifui";
 
-import { Classes } from "@blueprintjs/core";
+import { AnchorButton, Classes } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
@@ -21,6 +22,7 @@ import { Schema, Category } from "../../../common/types/schema";
 import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
 import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
 import { ColorTable } from "../../../util/stateManager/colorHelpers";
+import { ActiveTab } from "../../../common/types/entities";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -356,6 +358,32 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     return null;
   };
 
+  handleDisplayCellTypeInfo = async (cellName: string): Promise<void> => {
+    const { dispatch } = this.props;
+
+    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
+      cellName,
+    });
+
+    dispatch({ type: "request cell info start", cellName });
+
+    dispatch({
+      type: "toggle active info panel",
+      activeTab: ActiveTab.CellType,
+    });
+
+    const info = await actions.fetchCellTypeInfo(cellName);
+
+    if (!info) {
+      return;
+    }
+
+    dispatch({
+      type: "open cell info",
+      cellInfo: info,
+    });
+  };
+
   // If coloring by and this isn't the colorAccessor and it isn't being edited
   shouldRenderStackedBarOrHistogram() {
     const { colorAccessor, isColorBy } = this.props;
@@ -545,6 +573,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           CHART_MARGIN
         : globals.leftSidebarWidth - otherElementsWidth;
 
+    const isCellInfo = metadataField === "CellType";
     return (
       <div
         className={
@@ -617,6 +646,28 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </span>
             </Truncate>
+            <AnchorButton
+              small
+              minimal
+              intent={isCellInfo ? "primary" : "none"}
+              data-testid={`get-info-${metadataField}-${displayString}`}
+              active={isCellInfo}
+              onClick={() => this.handleDisplayCellTypeInfo(displayString)}
+            >
+              <IconButton
+                disabled={false}
+                sdsSize="small"
+                style={{ top: "2px", paddingRight: "5px" }}
+              >
+                <div style={{ filter: "grayscale(100%)" }}>
+                  <InfoCircle
+                    sdsIcon="infoCircle"
+                    sdsSize="s"
+                    sdsType="iconButton"
+                  />
+                </div>
+              </IconButton>
+            </AnchorButton>
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}

@@ -1,10 +1,11 @@
 import { AnyAction } from "redux";
-import { DatasetUnsMetadata } from "../common/types/entities";
+import {
+  ActiveTab,
+  CellInfo,
+  DatasetUnsMetadata,
+  GeneInfo,
+} from "../common/types/entities";
 
-export enum ActiveTab {
-  Gene = "Gene",
-  Dataset = "Dataset",
-}
 interface ControlsState {
   loading: boolean;
   error: Error | string | null;
@@ -14,26 +15,21 @@ interface ControlsState {
   scatterplotYYaccessor: string | false;
   scatterplotIsMinimized: boolean;
   scatterplotIsOpen: boolean;
-  gene: string | null;
-  infoError: string | null;
   graphRenderCounter: number;
   colorLoading: boolean;
   datasetDrawer: boolean;
-  geneUrl: string;
-  geneSummary: string;
-  geneName: string;
-  geneSynonyms: string[];
   isCellGuideCxg: boolean;
   screenCap: boolean;
   mountCapture: boolean;
-  showWarningBanner: boolean;
   imageUnderlay: boolean;
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
-  unsMetadata: DatasetUnsMetadata;
   imageOpacity: number;
   dotOpacity: number;
+  geneInfo: GeneInfo;
+  unsMetadata: DatasetUnsMetadata;
+  cellInfo: CellInfo;
 }
 const Controls = (
   state: ControlsState = {
@@ -46,24 +42,19 @@ const Controls = (
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     scatterplotIsMinimized: false,
-    geneUrl: "",
-    geneSummary: "",
-    geneSynonyms: [""],
-    geneName: "",
     scatterplotIsOpen: false,
-    gene: null,
-    infoError: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
     colorLoading: false,
     datasetDrawer: false,
     isCellGuideCxg: false,
     screenCap: false,
     mountCapture: false,
-    showWarningBanner: false,
     imageUnderlay: true,
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
+    imageOpacity: 100,
+    dotOpacity: 100,
     unsMetadata: {
       imageWidth: 1955,
       imageHeight: 1955,
@@ -71,8 +62,25 @@ const Controls = (
       scaleref: 0.1868635,
       spotDiameterFullres: 86.06629150338271,
     },
-    imageOpacity: 100,
-    dotOpacity: 100,
+    cellInfo: {
+      cellId: "",
+      cellName: "",
+      cellDescription: "",
+      synonyms: [""],
+      references: [""],
+      error: null,
+      loading: false,
+    },
+    geneInfo: {
+      gene: null,
+      geneName: "",
+      geneSummary: "",
+      geneSynonyms: [""],
+      geneUrl: "",
+      showWarningBanner: false,
+      infoError: null,
+      loading: false,
+    },
   },
   action: AnyAction
 ): ControlsState => {
@@ -145,33 +153,6 @@ const Controls = (
         graphRenderCounter: c,
       };
     }
-
-    /*******************************
-              Gene Info
-    *******************************/
-    case "open gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: action.url,
-        geneSummary: action.summary,
-        geneSynonyms: action.synonyms,
-        geneName: action.name,
-        infoError: action.infoError,
-        showWarningBanner: action.showWarningBanner,
-      };
-    }
-    case "load gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: "",
-        geneSummary: "",
-        geneSynonyms: [""],
-        geneName: "",
-        infoError: null,
-      };
-    }
     /*******************************
               Scatterplot
     *******************************/
@@ -239,6 +220,62 @@ const Controls = (
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
+      };
+    }
+    /**************************
+          Cell Info
+    **************************/
+    case "request cell info start": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellName: action.cellName,
+          loading: true,
+        },
+      };
+    }
+    case "open cell info": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellId: action.cellInfo.cell_id,
+          cellDescription: action.cellInfo.description,
+          synonyms: action.cellInfo.synonyms,
+          references: action.cellInfo.references,
+          error: action.cellInfo.error,
+          loading: false,
+        },
+      };
+    }
+    /*******************************
+              Gene Info
+    *******************************/
+    case "request gene info start": {
+      return {
+        ...state,
+        geneInfo: {
+          ...state.geneInfo,
+          gene: action.gene,
+          loading: true,
+        },
+      };
+    }
+    case "open gene info": {
+      return {
+        ...state,
+        geneInfo: {
+          gene: action.gene,
+          geneName: action.name ?? state.geneInfo.geneName,
+          geneSummary: action.summary ?? state.geneInfo.geneSummary,
+          geneSynonyms: action.synonyms ?? state.geneInfo.geneSynonyms,
+          geneUrl: action.url ?? state.geneInfo.geneUrl,
+          showWarningBanner:
+            action.showWarningBanner ?? state.geneInfo.showWarningBanner,
+          infoError: action.infoError ?? state.geneInfo.infoError,
+          loading: false,
+        },
       };
     }
     /**************************
