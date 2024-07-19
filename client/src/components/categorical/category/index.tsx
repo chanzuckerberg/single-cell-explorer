@@ -1,5 +1,5 @@
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
@@ -22,6 +22,10 @@ import { Dataframe } from "../../../util/dataframe";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
 import { RootState } from "../../../reducers";
+import {
+  thunkTrackColorByCategoryExpand,
+  thunkTrackColorByCategoryHighlightHistogram,
+} from "./analytics";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 
@@ -114,15 +118,29 @@ class Category extends React.PureComponent<CategoryProps> {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  handleColorChange = () => {
+  handleColorChange = (currentIsColorAccessor: boolean) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, categoryType } = this.props;
 
-    track(EVENTS.EXPLORER_COLORBY_CATEGORIES_BUTTON_CLICKED, {
-      type: categoryType,
-      category: metadataField,
-    });
+    /**
+     * (thuang): If we're going from `currentIsColorAccessor` being `false` to `true`,
+     * we should track the event!
+     */
+    if (!currentIsColorAccessor) {
+      track(EVENTS.EXPLORER_COLORBY_CATEGORIES_BUTTON_CLICKED, {
+        type: categoryType,
+        category: metadataField,
+      });
+    }
+
+    /**
+     * (thuang): If `currentIsColorAccessor` is currently `true`, we're turning off
+     * color by category, thus passing `!currentIsColorAccessor` as arg `isColorByCategory`
+     */
+    dispatch(thunkTrackColorByCategoryExpand(!currentIsColorAccessor));
+    dispatch(
+      thunkTrackColorByCategoryHighlightHistogram(!currentIsColorAccessor)
+    );
 
     dispatch({
       type: "color by categorical metadata",
@@ -391,7 +409,7 @@ interface CategoryHeaderProps {
   isColorAccessor: boolean;
   isExpanded: boolean;
   selectionState: any;
-  onColorChangeClick: any;
+  onColorChangeClick: (isColorAccessor: boolean) => void;
   onCategoryMenuClick: any;
   onCategoryMenuKeyPress: any;
   onCategoryToggleAllClick: any;
@@ -418,6 +436,10 @@ const CategoryHeader = React.memo(
       // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
       checkboxRef.current.indeterminate = selectionState === "some";
     }, [selectionState]);
+
+    const handleColorChangeClick = useCallback(() => {
+      onColorChangeClick(isColorAccessor);
+    }, [onColorChangeClick, isColorAccessor]);
 
     return (
       <>
@@ -492,7 +514,7 @@ const CategoryHeader = React.memo(
           >
             <Button
               data-testid={`colorby-${metadataField}`}
-              onClick={onColorChangeClick}
+              onClick={handleColorChangeClick}
               active={isColorAccessor}
               intent={isColorAccessor ? "primary" : "none"}
               icon="tint"
@@ -526,7 +548,6 @@ const CategoryRender = React.memo(
     colorData,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onColorChangeClick' does not exist on ty... Remove this comment to see the full error message
     onColorChangeClick,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuClick' does not exist on t... Remove this comment to see the full error message
     onCategoryMenuClick,
@@ -538,6 +559,8 @@ const CategoryRender = React.memo(
     colorMode,
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist... Remove this comment to see the full error message
     isCellGuideCxg,
+  }: {
+    onColorChangeClick: (isColorAccessor: boolean) => void;
   }) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.

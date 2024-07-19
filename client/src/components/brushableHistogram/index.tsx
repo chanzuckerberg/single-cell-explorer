@@ -12,12 +12,20 @@ import HistogramFooter from "./footer";
 import StillLoading from "./loading";
 import ErrorLoading from "./error";
 import { Dataframe } from "../../util/dataframe";
-import { track } from "../../analytics";
+import {
+  isColorByHistogramColorMode,
+  track,
+  trackColorByCategoryHighlightHistogram,
+  thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
+  trackColorByHistogramHighlightHistogram,
+  thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { AppDispatch, RootState } from "../../reducers";
 import { AnnoMatrixClipView } from "../../annoMatrix/views";
 import { Query } from "../../annoMatrix/query";
 import { Field } from "../../common/types/schema";
+import { thunkTrackColorByContinuousHistogram } from "./analytics";
 
 const MARGIN = {
   LEFT: 10, // Space for 0 tick label on X axis
@@ -55,6 +63,7 @@ interface StateProps {
   continuousSelectionRange: RootState["continuousSelection"][string];
   isColorAccessor: boolean;
   singleContinuousValues: RootState["singleContinuousValue"]["singleContinuousValues"];
+  colorMode: RootState["colors"]["colorMode"];
 }
 interface DispatchProps {
   dispatch: AppDispatch;
@@ -82,6 +91,7 @@ const mapStateToProps = (
       state.colors.colorAccessor === field &&
       state.colors.colorMode !== "color by categorical metadata",
     singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
+    colorMode: state.colors.colorMode,
   };
 };
 class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
@@ -101,6 +111,16 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     } else {
       dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(field));
     }
+
+    /**
+     * (thuang): Must be dispatched AFTER the actions above, as the `colorMode`
+     * only changes after the above actions are completed.
+     */
+    dispatch(thunkTrackColorByContinuousHistogram());
+    dispatch(thunkTrackColorByHistogramExpandCategoryFromColorByHistogram());
+    dispatch(
+      thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram()
+    );
   });
 
   // @ts-expect-error ts-migrate(6133) FIXME: 'selection' is declared but its value is never rea... Remove this comment to see the full error message
@@ -146,8 +166,14 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     ) =>
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
     async () => {
-      const { dispatch, field, isObs, isUserDefined, isGeneSetSummary } =
-        this.props;
+      const {
+        dispatch,
+        field,
+        isObs,
+        isUserDefined,
+        isGeneSetSummary,
+        colorMode,
+      } = this.props;
       const minAllowedBrushSize = 10;
       const smallAmountToAvoidInfiniteLoop = 0.1;
 
@@ -204,7 +230,24 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       await dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
-      track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
+
+      /**
+       * (thuang): Analytics requirement to ONLY track the event when the user
+       * selects a histogram and NOT when it is deselected.
+       */
+      if (type === "continuous metadata histogram end") {
+        track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
+      }
+
+      trackColorByCategoryHighlightHistogram(
+        colorMode === "color by categorical metadata",
+        type === "continuous metadata histogram end"
+      );
+
+      trackColorByHistogramHighlightHistogram(
+        isColorByHistogramColorMode(colorMode),
+        type === "continuous metadata histogram end"
+      );
     };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

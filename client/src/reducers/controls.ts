@@ -30,6 +30,7 @@ interface ControlsState {
   geneInfo: GeneInfo;
   unsMetadata: DatasetUnsMetadata;
   cellInfo: CellInfo;
+  expandedCategories: string[];
 }
 const Controls = (
   state: ControlsState = {
@@ -81,6 +82,9 @@ const Controls = (
       infoError: null,
       loading: false,
     },
+    imageOpacity: 100,
+    dotOpacity: 100,
+    expandedCategories: [],
   },
   action: AnyAction
 ): ControlsState => {
@@ -353,6 +357,29 @@ const Controls = (
       return {
         ...state,
         dotOpacity: action.data,
+      };
+    }
+    /**************************
+         Categories
+    **************************/
+    case "controls category expansion change": {
+      const { category } = action;
+      const { expandedCategories } = state;
+
+      if (expandedCategories.includes(category)) {
+        const newExpandedCategories = expandedCategories.filter(
+          (expandedCategory) => expandedCategory !== category
+        );
+
+        return {
+          ...state,
+          expandedCategories: newExpandedCategories,
+        };
+      }
+
+      return {
+        ...state,
+        expandedCategories: [...expandedCategories, category],
       };
     }
     default:

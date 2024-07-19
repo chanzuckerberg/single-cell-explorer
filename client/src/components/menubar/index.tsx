@@ -218,7 +218,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
   handleCentroidChange = () => {
     const { dispatch, showCentroidLabels } = this.props;
 
-    track(EVENTS.EXPLORER_CENTROID_LABEL_TOGGLE_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_SHOW_LABELS);
 
     dispatch({
       type: "show centroid labels for category",

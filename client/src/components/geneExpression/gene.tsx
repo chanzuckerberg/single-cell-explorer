@@ -9,7 +9,11 @@ import { AppDispatch, RootState } from "../../reducers";
 
 import actions from "../../actions";
 
-import { track } from "../../analytics";
+import {
+  track,
+  thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
+  thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { ActiveTab } from "../../common/types/entities";
 import { DataframeValue } from "../../util/dataframe";
@@ -52,10 +56,21 @@ class Gene extends React.Component<Props, State> {
     };
   }
 
-  onColorChangeClick = (): void => {
+  onColorChangeClick = async () => {
     const { dispatch, gene } = this.props;
     track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+
+    /**
+     * (thuang): Must be dispatched AFTER the actions above, as the `colorMode`
+     * only changes after the above actions are completed.
+     */
+    await dispatch(
+      thunkTrackColorByHistogramExpandCategoryFromColorByHistogram()
+    );
+    await dispatch(
+      thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram()
+    );
   };
 
   handleGeneExpandClick = (): void => {
