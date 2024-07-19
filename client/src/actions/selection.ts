@@ -1,4 +1,6 @@
 import { vec2 } from "gl-matrix";
+import { track } from "../analytics";
+import { EVENTS } from "../analytics/events";
 
 /*
 Action creators for selection
@@ -245,6 +247,8 @@ export const graphLassoEndAction =
       polygon,
       graphId,
     });
+
+    track(EVENTS.EXPLORER_LASSO);
   };
 
 /*
