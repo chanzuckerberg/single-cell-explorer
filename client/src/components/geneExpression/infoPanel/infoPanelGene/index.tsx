@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Props, mapStateToProps } from "./types";
-import ContainerInfo from "../common/containerInfo";
+import ContainerInfo from "../common/infoPanelContainer";
 
 function GeneInfo(props: Props) {
   const { geneInfo } = props;

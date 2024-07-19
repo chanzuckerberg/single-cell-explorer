@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup } from "@blueprintjs/core";
 import { Tabs, Tab } from "czifui";
@@ -9,30 +9,15 @@ import {
   InfoPanelHeader,
   InfoPanelWrapper,
 } from "./style";
-import CellTypeInfo from "./cellTypeInfo";
-import GeneInfo from "./geneInfo";
-import DatasetInfo from "./datasetInfo";
+import CellTypeInfo from "./infoPanelCellType";
+import GeneInfo from "./infoPanelGene";
+import DatasetInfo from "./infoPanelDataset";
 import { Props, mapStateToProps } from "./types";
+import useConnect from "./connect";
 
 function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
-  const [value, setValue] = useState(1);
-
-  const handleTabsChange = (
-    _: ChangeEvent<Record<string, unknown>>,
-    tabsValue: unknown
-  ) => {
-    setValue(tabsValue as number);
-    dispatch({
-      type: "toggle active info panel",
-      activeTab:
-        tabsValue === 0 ? "Gene" : tabsValue === 1 ? "CellType" : "Dataset",
-    });
-  };
-
-  useEffect(() => {
-    setValue(activeTab === "Gene" ? 0 : activeTab === "CellType" ? 1 : 2);
-  }, [activeTab]);
+  const { value, handleTabsChange } = useConnect({ dispatch, activeTab });
 
   return (
     <InfoPanelWrapper

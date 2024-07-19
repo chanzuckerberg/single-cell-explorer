@@ -1,5 +1,6 @@
-import requests
 from typing import Dict, List, TypedDict, cast
+
+import requests
 
 from server.common.constants import CELLGUIDE_BASE_URL
 

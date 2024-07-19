@@ -54,8 +54,6 @@ const Controls = (
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
-    imageOpacity: 100,
-    dotOpacity: 100,
     unsMetadata: {
       imageWidth: 1955,
       imageHeight: 1955,
@@ -212,6 +210,7 @@ const Controls = (
         ...state,
         activeTab: action.activeTab,
         infoPanelHidden: false,
+        infoPanelMinimized: false,
       };
     }
     case "close info panel": {

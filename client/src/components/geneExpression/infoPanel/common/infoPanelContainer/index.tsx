@@ -1,7 +1,12 @@
 import React from "react";
 import { kebabCase } from "lodash";
 import { InfoContainer, InfoWrapper } from "../style";
-import { ErrorInfo, LoadingInfo, NoneSelected, ShowInfo } from "../loadingInfo";
+import {
+  ErrorInfo,
+  LoadingInfo,
+  NoneSelected,
+  ShowInfo,
+} from "../infoPanelParts";
 import { ExtendedInfoProps } from "../types";
 
 function ContainerInfo(props: ExtendedInfoProps) {
@@ -21,11 +26,10 @@ function ContainerInfo(props: ExtendedInfoProps) {
 
   const entityTag = kebabCase(entity);
 
+  const wrapperTestId = `${entity === "Gene" ? symbol : id}:${entityTag}-info`;
+
   return (
-    <InfoWrapper
-      id={`${entityTag}info_wrapper`}
-      data-testid={`${id}:${entityTag}-info`}
-    >
+    <InfoWrapper id={`${entityTag}info_wrapper`} data-testid={wrapperTestId}>
       <InfoContainer id={`${entityTag}-info`}>
         {/* Loading */}
         {(name || symbol) && !error && loading && (
@@ -33,7 +37,9 @@ function ContainerInfo(props: ExtendedInfoProps) {
         )}
 
         {/* None Selected */}
-        {!entity && error === null && <NoneSelected entity={entity} />}
+        {name === "" && error === null && !loading && (
+          <NoneSelected entity={entity} />
+        )}
 
         {/* Error */}
         {error && <ErrorInfo name={name} entity={entity} />}
