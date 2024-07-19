@@ -40,7 +40,7 @@ interface PureCategoryValueProps {
 }
 
 interface StateProps {
-  schema: RootState["annoMatrix"]["schema"];
+  schema?: RootState["annoMatrix"]["schema"];
   isDilated: boolean;
   isSelected: boolean;
   label: string;

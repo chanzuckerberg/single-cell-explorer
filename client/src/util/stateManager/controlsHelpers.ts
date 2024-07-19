@@ -55,7 +55,7 @@ export function isSelectableCategoryName(
  * If the initial name list not provided, use everything in the schema.
  */
 export function selectableCategoryNames(
-  schema: Schema,
+  schema?: Schema,
   names?: string[]
 ): string[] {
   if (!schema) return [];
