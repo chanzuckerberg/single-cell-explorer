@@ -73,6 +73,7 @@ import { SCALE_MAX_HIRES } from "../../src/util/constants";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
 import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/continuous/constants";
 import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/categorical/constants";
+import { sidePanelAttributeNameChange } from "../../src/components/graph/util";
 
 const { describe, skip } = test;
 
@@ -126,6 +127,8 @@ for (const testDataset of testDatasets) {
   const data = datasets[testDataset];
   const url = testURLs[testDataset];
   for (const graphTestId of graphInstanceTestIds) {
+    const isSidePanel = graphTestId === SIDE_PANEL;
+
     const shouldSkip = shouldSkipTests(graphTestId, SIDE_PANEL);
     const describeFn = shouldSkip ? describe.skip : describe;
 
@@ -324,8 +327,9 @@ for (const testDataset of testDatasets) {
                 lasso: true,
               });
 
-              const cellCount =
-                graphTestId === SIDE_PANEL ? cellset.count_side : cellset.count;
+              const cellCount = isSidePanel
+                ? cellset.count_side
+                : cellset.count;
 
               expect(await getCellSetCount(1, page)).toBe(cellCount);
 
@@ -812,9 +816,7 @@ for (const testDataset of testDatasets) {
               const panzoomLasso = data.features.panzoom.lasso;
 
               const expectedCellCount = Number(
-                graphTestId === SIDE_PANEL
-                  ? panzoomLasso.count_side
-                  : panzoomLasso.count
+                isSidePanel ? panzoomLasso.count_side : panzoomLasso.count
               );
 
               const lassoSelection = await calcDragCoordinates(
@@ -832,7 +834,11 @@ for (const testDataset of testDatasets) {
                 lasso: true,
               });
 
-              await expect(page.getByTestId("lasso-element")).toBeVisible();
+              await expect(
+                page.getByTestId(
+                  sidePanelAttributeNameChange("lasso-element", isSidePanel)
+                )
+              ).toBeVisible();
 
               const initialCount = Number(await getCellSetCount(1, page));
 
@@ -886,14 +892,16 @@ for (const testDataset of testDatasets) {
 
               await snapshotTestGraph(page, testInfo);
 
-              await expect(page.getByTestId("lasso-element")).toBeVisible();
+              await expect(
+                page.getByTestId(
+                  sidePanelAttributeNameChange("lasso-element", isSidePanel)
+                )
+              ).toBeVisible();
 
               const initialCount = Number(await getCellSetCount(1, page));
 
               const expectedCellCount = Number(
-                graphTestId === SIDE_PANEL
-                  ? panzoomLasso.count_side
-                  : panzoomLasso.count
+                isSidePanel ? panzoomLasso.count_side : panzoomLasso.count
               );
 
               /**

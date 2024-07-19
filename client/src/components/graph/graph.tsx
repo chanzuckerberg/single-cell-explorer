@@ -543,7 +543,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   // when a lasso is completed, filter to the points within the lasso polygon
   async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
-    const { dispatch, layoutChoice } = this.props;
+    const { dispatch, layoutChoice, isSidePanel } = this.props;
 
     if (
       polygon.length < 3 ||
@@ -553,10 +553,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
       await dispatch(
-        actions.graphLassoEndAction(
-          layoutChoice?.current,
-          polygon.map((xy) => this.mapScreenToPoint(xy))
-        )
+        actions.graphLassoEndAction({
+          embName: layoutChoice?.current,
+          polygon: polygon.map((xy) => this.mapScreenToPoint(xy)),
+          graphId: sidePanelAttributeNameChange("graph", Boolean(isSidePanel)),
+        })
       );
     }
   }
@@ -954,14 +955,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
         */
-    const { currentSelection } = this.props;
+    const { currentSelection, isSidePanel } = this.props;
+
     if (currentSelection.mode === "within-polygon") {
-      /*
-            if there is a current selection, make sure the lasso tool matches
-            */
-      const polygon = currentSelection.polygon.map((p: [number, number]) =>
+      const { polygon: polygonState, graphId } = currentSelection;
+
+      /**
+       * (thuang): Only display the lasso element in the panel that initiated
+       * the lasso
+       */
+      if (
+        graphId !== sidePanelAttributeNameChange("graph", Boolean(isSidePanel))
+      ) {
+        return;
+      }
+
+      /**
+       * if there is a current selection, make sure the lasso tool matches
+       */
+      const polygon = polygonState.map((p: [number, number]) =>
         this.mapPointToScreen(p)
       );
+
       tool?.move(polygon);
     } else {
       tool?.reset();
@@ -1407,6 +1422,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
             opacity: `${dotOpacity}%`,
+            mixBlendMode: "multiply",
           }}
           id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}
           data-testid={sidePanelAttributeNameChange(

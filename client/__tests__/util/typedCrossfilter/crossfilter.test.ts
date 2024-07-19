@@ -446,6 +446,7 @@ describe("ImmutableTypedCrossfilter", () => {
             .select("coords", {
               mode: "within-polygon",
               polygon: polygon as [number, number][],
+              graphId: "test-graph-id",
             })
             .allSelected()
         ).toEqual(

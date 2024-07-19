@@ -1,4 +1,4 @@
-import React, { cloneElement } from "react";
+import React, { CSSProperties, cloneElement } from "react";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { tooltipHoverOpenDelayQuick } from "../../globals";
@@ -19,12 +19,14 @@ const FIRST_HALF_STYLE = {
   whiteSpace: "nowrap",
   flexShrink: 1,
   minWidth: "5px",
-};
+} as CSSProperties;
+
 const SECOND_HALF_STYLE = {
   position: "relative",
   overflow: "hidden",
   whiteSpace: "nowrap",
 };
+
 const SECOND_HALF_SPACING_STYLE = {
   color: "transparent",
 };

@@ -35,11 +35,13 @@
         box-sizing: border-box;
       }
     </style>
-    <script
-      defer
-      data-domain="<%= PLAUSIBLE_DATA_DOMAIN %>"
-      src="https://plausible.io/js/plausible.js"
-    ></script>
+    <script>
+      var script = document.createElement('script')
+      script.defer=true
+      script.dataset.domain=window.location.host // Set script data-domain dynamically
+      script.src = "https://plausible.io/js/plausible.js"
+      document.head.append(script)
+    </script>
   </head>
   <body>
     <script type="text/javascript">
