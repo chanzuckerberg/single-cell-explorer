@@ -28,7 +28,7 @@ function ContainerInfo(props: ExtendedInfoProps) {
     >
       <InfoContainer id={`${entityTag}-info`}>
         {/* Loading */}
-        {name && !error && loading && (
+        {(name || symbol) && !error && loading && (
           <LoadingInfo name={name} entity={entity} />
         )}
 
@@ -38,7 +38,7 @@ function ContainerInfo(props: ExtendedInfoProps) {
         {/* Error */}
         {error && <ErrorInfo name={name} entity={entity} />}
 
-        {/* Show Info */}
+        {/* Show Info Card for Gen or Cell Type*/}
         {name && !error && !loading && (
           <ShowInfo
             id={id}

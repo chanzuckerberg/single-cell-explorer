@@ -4,24 +4,39 @@ import { Icon } from "czifui";
 
 import {
   Content,
+  ContentRow,
   CustomIcon,
   InfoDiv,
+  InfoLabel,
+  InfoOpenIn,
   InfoSymbol,
+  InfoTitle,
   Link,
   MessageDiv,
   NoGeneSelectedDiv,
-  SynHeader,
-  Synonyms,
+  Items,
   WarningBanner,
 } from "../style";
 import { BaseInfoProps, ExtendedInfoProps } from "../types";
+import {
+  ENTITY_NOT_FOUND,
+  LOADING_STRING,
+  NCBI_WARNING,
+  NO_ENTITY_SELECTED,
+  OPEN_IN,
+  SEARCH_ON_GOOGLE,
+  SELECT_GENE_OR_CELL_TYPE,
+  LABELS,
+} from "../constants";
 
 export function LoadingInfo(props: BaseInfoProps) {
   const { name, entity } = props;
   return (
     <InfoDiv>
-      <InfoSymbol>{name}</InfoSymbol>
-      <Content>Loading {entity}...</Content>
+      <InfoTitle>
+        <InfoSymbol>{name}</InfoSymbol>
+      </InfoTitle>
+      <Content>{LOADING_STRING(entity)}</Content>
     </InfoDiv>
   );
 }
@@ -31,10 +46,8 @@ export function NoneSelected({ entity }: { entity: BaseInfoProps["entity"] }) {
     <InfoDiv>
       <NoGeneSelectedDiv>
         <CustomIcon icon="search" size={33} />
-        <MessageDiv className="title">No {entity} Selected</MessageDiv>
-        <MessageDiv>
-          Choose a gene above or search the Cell Guide database.
-        </MessageDiv>
+        <MessageDiv className="title">{NO_ENTITY_SELECTED(entity)}</MessageDiv>
+        <MessageDiv>{SELECT_GENE_OR_CELL_TYPE}</MessageDiv>
       </NoGeneSelectedDiv>
     </InfoDiv>
   );
@@ -44,7 +57,7 @@ export function ShowWarningBanner() {
   return (
     <WarningBanner>
       <Icon sdsIcon="exclamationMarkCircle" sdsSize="l" sdsType="static" />
-      <span>NCBI didn&apos;t return an exact match for this gene.</span>
+      <span>{NCBI_WARNING}</span>
     </WarningBanner>
   );
 }
@@ -53,14 +66,18 @@ export function ErrorInfo(props: BaseInfoProps) {
   const { name, entity } = props;
   return (
     <InfoDiv>
-      <InfoSymbol>{name}</InfoSymbol>
-      <Content>Sorry, this {entity} could not be found.</Content>
+      <InfoTitle>
+        <InfoSymbol>{name}</InfoSymbol>
+      </InfoTitle>
+      <Content style={{ paddingBottom: "10px" }}>
+        {ENTITY_NOT_FOUND(entity)}
+      </Content>
       <Link
         href={`https://www.google.com/search?q=${name}`}
         target="_blank"
         rel="noreferrer noopener"
       >
-        Search on Google
+        {SEARCH_ON_GOOGLE}
       </Link>
     </InfoDiv>
   );
@@ -84,40 +101,43 @@ export function ShowInfo(props: ExtendedInfoProps) {
   return (
     <InfoDiv>
       {showWarningBanner ?? <ShowWarningBanner />}
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
+      <InfoTitle>
         <InfoSymbol>{symbol ?? name}</InfoSymbol>
-        <div style={{ paddingTop: "1px" }}>
-          <a href={externalUrl} target="_blank">
-            Open in Cell Guide
-          </a>
-        </div>
-      </div>
+        <InfoOpenIn>
+          <Link href={externalUrl} target="_blank">
+            {OPEN_IN(entity === "Cell Type" ? "Cell Guide" : "NCBI")}
+          </Link>
+        </InfoOpenIn>
+      </InfoTitle>
       {entity === "Gene" && (
-        <Content data-testid={`${entityTag}-info-name`}>{name}</Content>
+        <ContentRow data-testid={`${entityTag}-info-name`}>{name}</ContentRow>
       )}
       <Content>
-        <p>{description}</p>
+        <ContentRow>{description}</ContentRow>
         {entity === "Cell Type" ?? (
-          <p>
-            Ontology ID:
+          <ContentRow>
+            {LABELS.ontologyID}
             <Link href={externalUrl} target="_blank">
               {id}
             </Link>
-          </p>
+          </ContentRow>
         )}
         {synonyms.length > 0 && (
-          <p>
-            <SynHeader>Synonyms</SynHeader>
-            <Synonyms data-testid={`"gene-info-synonyms`}>
-              {synonyms.map((syn) => (
-                <span key={`syn-${syn}`}>{syn}, </span>
+          <ContentRow>
+            <InfoLabel>{LABELS.Synonyms}</InfoLabel>
+            <Items data-testid={`"gene-info-synonyms`}>
+              {synonyms.map((syn, index) => (
+                <span key={`syn-${syn}`}>
+                  {syn}
+                  {index < synonyms.length - 1 && ", "}
+                </span>
               ))}
-            </Synonyms>
-          </p>
+            </Items>
+          </ContentRow>
         )}
         {entity === "Cell Type" && references && references?.length > 0 && (
-          <p>
-            <SynHeader>References</SynHeader>
+          <ContentRow>
+            <InfoLabel>{LABELS.References} </InfoLabel>
             {references.map((ref, index) => (
               <Link
                 href={ref}
@@ -129,7 +149,7 @@ export function ShowInfo(props: ExtendedInfoProps) {
                 [{index + 1}]
               </Link>
             ))}
-          </p>
+          </ContentRow>
         )}
       </Content>
     </InfoDiv>

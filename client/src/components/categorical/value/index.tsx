@@ -646,28 +646,26 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </span>
             </Truncate>
-            <AnchorButton
-              small
-              minimal
-              intent={isCellInfo ? "primary" : "none"}
-              data-testid={`get-info-${metadataField}-${displayString}`}
-              active={isCellInfo}
-              onClick={() => this.handleDisplayCellTypeInfo(displayString)}
-            >
-              <IconButton
-                disabled={false}
-                sdsSize="small"
-                style={{ top: "2px", paddingRight: "5px" }}
+            <div style={{ display: "inline-block", marginLeft: "0" }}>
+              <AnchorButton
+                small
+                minimal
+                intent={isCellInfo ? "primary" : "none"}
+                data-testid={`get-info-${metadataField}-${displayString}`}
+                active={isCellInfo}
+                onClick={() => this.handleDisplayCellTypeInfo(displayString)}
               >
-                <div style={{ filter: "grayscale(100%)" }}>
-                  <InfoCircle
-                    sdsIcon="infoCircle"
-                    sdsSize="s"
-                    sdsType="iconButton"
-                  />
-                </div>
-              </IconButton>
-            </AnchorButton>
+                <IconButton disabled={false} sdsSize="small">
+                  <div style={{ filter: "grayscale(100%)" }}>
+                    <InfoCircle
+                      sdsIcon="infoCircle"
+                      sdsSize="s"
+                      sdsType="iconButton"
+                    />
+                  </div>
+                </IconButton>
+              </AnchorButton>
+            </div>
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}

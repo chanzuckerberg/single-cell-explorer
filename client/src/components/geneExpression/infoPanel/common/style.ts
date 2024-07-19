@@ -28,7 +28,13 @@ export const InfoDiv = styled.div`
   margin: ${spacesM}px;
 `;
 
+export const InfoOpenIn = styled.div`
+  padding-top: 15px;
+`;
+
 export const InfoSymbol = styled.h1`
+  width: 60%;
+  text-overflow: ellipsis;
   color: black;
   ${fontHeaderL}
   ${(props) => {
@@ -38,6 +44,11 @@ export const InfoSymbol = styled.h1`
         font-weight: ${fontWeights?.semibold};
         `;
   }}
+`;
+
+export const InfoTitle = styled.div`
+  display: flex;
+  justify-content: space-between;
 `;
 
 export const Content = styled.div`
@@ -50,7 +61,11 @@ export const Content = styled.div`
   overflow: hidden;
 `;
 
-export const SynHeader = styled.span`
+export const ContentRow = styled.p`
+  padding-bottom: 4px;
+`;
+
+export const InfoLabel = styled.span`
   ${fontBodyXs}
   ${(props) => {
     const colors = getColors(props);
@@ -63,7 +78,7 @@ export const SynHeader = styled.span`
   }}
 `;
 
-export const Synonyms = styled.span`
+export const Items = styled.span`
   padding: 4px;
   color: black;
 
