@@ -2,8 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { Props, mapStateToProps } from "./types";
 import ContainerInfo from "../common/containerInfo";
-
-const CELLGUIDE_URL = "https://cellxgene.cziscience.com/cellguide/";
+import { CELLGUIDE_URL } from "../common/constants";
 
 function CellTypeInfo(props: Props) {
   const { cellInfo } = props;

@@ -12,3 +12,5 @@ export const LABELS = {
   Synonyms: "Synonyms: ",
   References: "References: ",
 };
+
+export const CELLGUIDE_URL = "https://cellxgene.cziscience.com/cellguide/";

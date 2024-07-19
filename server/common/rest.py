@@ -329,7 +329,7 @@ def cell_type_info_get(request):
 
         try:
             cell_description = get_cell_description(cell_id.replace(":", "_"))
-        except Exception as e:
+        except Exception:
             cell_description["description"] = cell_info.get("clDescription", "")
 
         cell_description["cell_id"] = cell_id

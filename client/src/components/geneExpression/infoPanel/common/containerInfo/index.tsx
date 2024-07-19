@@ -33,7 +33,7 @@ function ContainerInfo(props: ExtendedInfoProps) {
         )}
 
         {/* None Selected */}
-        {name === "" && error === null && <NoneSelected entity={entity} />}
+        {!entity && error === null && <NoneSelected entity={entity} />}
 
         {/* Error */}
         {error && <ErrorInfo name={name} entity={entity} />}
