@@ -118,15 +118,15 @@ class Category extends React.PureComponent<CategoryProps> {
     );
   }
 
-  handleColorChange = (isColorAccessor: boolean) => {
+  handleColorChange = (currentIsColorAccessor: boolean) => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, categoryType } = this.props;
 
     /**
-     * (thuang): If we're going from `isColorAccessor` being `false` to `true`,
+     * (thuang): If we're going from `currentIsColorAccessor` being `false` to `true`,
      * we should track the event!
      */
-    if (!isColorAccessor) {
+    if (!currentIsColorAccessor) {
       track(EVENTS.EXPLORER_COLORBY_CATEGORIES_BUTTON_CLICKED, {
         type: categoryType,
         category: metadataField,
@@ -134,11 +134,13 @@ class Category extends React.PureComponent<CategoryProps> {
     }
 
     /**
-     * (thuang): If `isColorAccessor` is currently `true`, we're turning off
-     * color by category, thus passing `!isColorAccessor` as arg `isColorByCategory`
+     * (thuang): If `currentIsColorAccessor` is currently `true`, we're turning off
+     * color by category, thus passing `!currentIsColorAccessor` as arg `isColorByCategory`
      */
-    dispatch(thunkTrackColorByCategoryExpand(!isColorAccessor));
-    dispatch(thunkTrackColorByCategoryHighlightHistogram(!isColorAccessor));
+    dispatch(thunkTrackColorByCategoryExpand(!currentIsColorAccessor));
+    dispatch(
+      thunkTrackColorByCategoryHighlightHistogram(!currentIsColorAccessor)
+    );
 
     dispatch({
       type: "color by categorical metadata",

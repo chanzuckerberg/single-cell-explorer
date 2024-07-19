@@ -15,20 +15,9 @@ import { ControlsHelpers } from "../../util/stateManager";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
-import { AppDispatch, RootState } from "../../reducers";
+import { RootState } from "../../reducers";
 import { toggleCategoryExpansion } from "../../actions/controls";
-
-interface DispatchProps {
-  dispatch: AppDispatch;
-}
-
-interface StateProps {
-  schema?: Schema;
-  isCellGuideCxg: boolean;
-  expandedCategories: RootState["controls"]["expandedCategories"];
-}
-
-type Props = StateProps & DispatchProps;
+import { Props, StateProps } from "./types";
 
 class Categories extends React.Component<Props> {
   onExpansionChange = async (catName: string) => {
