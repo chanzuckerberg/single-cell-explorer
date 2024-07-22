@@ -330,15 +330,16 @@ def cell_type_info_get(request):
         try:
             cell_description = get_cell_description(cell_id.replace(":", "_"))
         except Exception:
-            cell_description["description"] = cell_info.get("clDescription", "")
+            current_app.logger.warning("Extended cell description not available, using default description instead.")
+            cell_description = {"description": cell_info.get("clDescription", "")}
 
-        cell_description["cell_id"] = cell_id
-        cell_description["cell_name"] = cell_name
-        cell_description["synonyms"] = synonyms
+        response_data = {"cell_id": cell_id, "cell_name": cell_name, "synonyms": synonyms, **cell_description}
 
-        return make_response(jsonify(cell_description), HTTPStatus.OK)
-    except Exception as e:
-        raise e
+        return make_response(jsonify(response_data), HTTPStatus.OK)
+
+    except Exception:
+        current_app.logger.error("Error fetching cell type info")
+        raise
 
 
 def get_deployed_version(request):

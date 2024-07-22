@@ -101,7 +101,7 @@ export function ShowInfo(props: ExtendedInfoProps) {
 
   return (
     <InfoDiv>
-      {showWarningBanner ?? <ShowWarningBanner />}
+      {showWarningBanner && <ShowWarningBanner />}
       <InfoTitle>
         <InfoSymbol>{symbol ?? name}</InfoSymbol>
         <InfoOpenIn>

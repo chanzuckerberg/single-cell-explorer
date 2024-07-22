@@ -270,13 +270,12 @@ const Controls = (
         ...state,
         geneInfo: {
           gene: action.gene,
-          geneName: action.name ?? state.geneInfo.geneName,
-          geneSummary: action.summary ?? state.geneInfo.geneSummary,
-          geneSynonyms: action.synonyms ?? state.geneInfo.geneSynonyms,
-          geneUrl: action.url ?? state.geneInfo.geneUrl,
-          showWarningBanner:
-            action.showWarningBanner ?? state.geneInfo.showWarningBanner,
-          infoError: action.infoError ?? state.geneInfo.infoError,
+          geneName: action.name,
+          geneSummary: action.summary,
+          geneSynonyms: action.synonyms,
+          geneUrl: action.url,
+          showWarningBanner: action.showWarningBanner,
+          infoError: action.infoError,
           loading: false,
         },
       };

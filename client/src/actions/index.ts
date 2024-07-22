@@ -185,7 +185,7 @@ interface CellTypeInfoAPI {
 }
 /**
  * Fetch cell type summary information
- * @param cell human-readable name of gene
+ * @param cell human-readable name of cell type
  */
 async function fetchCellTypeInfo(
   cell: string
