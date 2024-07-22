@@ -26,7 +26,9 @@ function ContainerInfo(props: ExtendedInfoProps) {
 
   const entityTag = kebabCase(entity);
 
-  const wrapperTestId = `${entity === "Gene" ? symbol : id}:${entityTag}-info`;
+  const wrapperTestId = `${
+    entity === "Gene" ? symbol : name
+  }:${entityTag}-info-wrapper`;
 
   return (
     <InfoWrapper id={`${entityTag}info_wrapper`} data-testid={wrapperTestId}>

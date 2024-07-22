@@ -1,6 +1,6 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { Icon } from "czifui";
+import { Icon, LoadingIndicator } from "czifui";
 
 import {
   Content,
@@ -20,7 +20,6 @@ import {
 import { BaseInfoProps, ExtendedInfoProps } from "../types";
 import {
   ENTITY_NOT_FOUND,
-  LOADING_STRING,
   NCBI_WARNING,
   NO_ENTITY_SELECTED,
   OPEN_IN,
@@ -30,13 +29,15 @@ import {
 } from "../constants";
 
 export function LoadingInfo(props: BaseInfoProps) {
-  const { name, entity } = props;
+  const { name } = props;
   return (
     <InfoDiv>
       <InfoTitle>
         <InfoSymbol>{name}</InfoSymbol>
       </InfoTitle>
-      <Content>{LOADING_STRING(entity)}</Content>
+      <Content>
+        <LoadingIndicator sdsStyle="minimal" />
+      </Content>
     </InfoDiv>
   );
 }
@@ -114,9 +115,9 @@ export function ShowInfo(props: ExtendedInfoProps) {
       )}
       <Content>
         <ContentRow>{description}</ContentRow>
-        {entity === "Cell Type" ?? (
+        {entity === "Cell Type" && (
           <ContentRow>
-            {LABELS.ontologyID}
+            <InfoLabel>{LABELS.ontologyID}</InfoLabel>
             <Link href={externalUrl} target="_blank">
               {id}
             </Link>

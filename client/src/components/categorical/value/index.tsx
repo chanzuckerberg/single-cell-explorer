@@ -361,9 +361,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
   handleDisplayCellTypeInfo = async (cellName: string): Promise<void> => {
     const { dispatch } = this.props;
 
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
-      cellName,
-    });
+    track(EVENTS.EXPLORER_CELLTYPE_INFO_BUTTON_CLICKED, { cellName });
 
     dispatch({ type: "request cell info start", cellName });
 
@@ -573,7 +571,8 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           CHART_MARGIN
         : globals.leftSidebarWidth - otherElementsWidth;
 
-    const isCellInfo = metadataField === "CellType";
+    const isCellInfo = metadataField === "cell_type";
+
     return (
       <div
         className={
@@ -646,26 +645,27 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </span>
             </Truncate>
-            <div style={{ display: "inline-block", marginLeft: "0" }}>
-              <AnchorButton
-                small
-                minimal
-                intent={isCellInfo ? "primary" : "none"}
-                data-testid={`get-info-${metadataField}-${displayString}`}
-                active={isCellInfo}
-                onClick={() => this.handleDisplayCellTypeInfo(displayString)}
-              >
-                <IconButton disabled={false} sdsSize="small">
-                  <div style={{ filter: "grayscale(100%)" }}>
-                    <InfoCircle
-                      sdsIcon="infoCircle"
-                      sdsSize="s"
-                      sdsType="iconButton"
-                    />
-                  </div>
-                </IconButton>
-              </AnchorButton>
-            </div>
+            {isCellInfo && (
+              <div style={{ display: "inline-block", marginLeft: "0" }}>
+                <AnchorButton
+                  small
+                  minimal
+                  intent="none"
+                  data-testid={`get-info-${metadataField}-${displayString}`}
+                  onClick={() => this.handleDisplayCellTypeInfo(displayString)}
+                >
+                  <IconButton disabled={false} sdsSize="small">
+                    <div style={{ filter: "grayscale(100%)" }}>
+                      <InfoCircle
+                        sdsIcon="infoCircle"
+                        sdsSize="s"
+                        sdsType="iconButton"
+                      />
+                    </div>
+                  </IconButton>
+                </AnchorButton>
+              </div>
+            )}
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}

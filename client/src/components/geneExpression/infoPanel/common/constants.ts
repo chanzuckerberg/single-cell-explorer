@@ -1,4 +1,3 @@
-export const LOADING_STRING = (entity: string) => `Loading ${entity}...`;
 export const NO_ENTITY_SELECTED = (entity: string) => `No ${entity} Selected`;
 export const ENTITY_NOT_FOUND = (entity: string) =>
   `Sorry, this ${entity} could not be found.`;
