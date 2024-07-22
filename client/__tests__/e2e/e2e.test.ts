@@ -1570,7 +1570,16 @@ for (const testDataset of testDatasets) {
 
             await page.getByTestId("download-graph-button").click();
 
-            expect(downloads.length).toBe(2);
+            /**
+             * (thuang): Sometimes in GHA there's only 1 download, so we need to retry
+             * until we get 2 downloads
+             */
+            await tryUntil(
+              () => {
+                expect(downloads.length).toBe(2);
+              },
+              { page }
+            );
 
             const afterMinimizeDownloads: Download[] = [];
 
