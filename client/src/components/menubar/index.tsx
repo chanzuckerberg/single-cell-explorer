@@ -196,13 +196,14 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     const min = clipPercentileMin / 100;
     const max = clipPercentileMax / 100;
 
-    track(EVENTS.EXPLORER_CLIP);
+    track(EVENTS.EXPLORER_CLIP_SELECTED);
 
     dispatch(actions.clipAction(min, max));
   };
 
   handleClipOpening = () => {
     const { clipPercentileMin, clipPercentileMax } = this.props;
+    track(EVENTS.EXPLORER_CLIP_CLICKED);
     this.setState({
       pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
     });
@@ -218,7 +219,10 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
   handleCentroidChange = () => {
     const { dispatch, showCentroidLabels } = this.props;
 
-    track(EVENTS.EXPLORER_SHOW_LABELS);
+    if (!showCentroidLabels) {
+      // only track when turning on
+      track(EVENTS.EXPLORER_SHOW_LABELS);
+    }
 
     dispatch({
       type: "show centroid labels for category",
