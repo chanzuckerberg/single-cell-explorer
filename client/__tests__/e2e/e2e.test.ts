@@ -1386,6 +1386,9 @@ for (const testDataset of testDatasets) {
                 page,
               }, testInfo) => {
                 skipIfSidePanel(graphTestId, MAIN_PANEL);
+                /*
+                 * Skip since there's no cell_type data in pbmc3k.cxg
+                 */
                 skipIfPbmcDataset(testDataset, DATASET);
 
                 await setup({ option, page, url, testInfo });

@@ -1,5 +1,7 @@
 import { ChangeEvent, useEffect, useState } from "react";
 import { AppDispatch } from "../../../reducers";
+import { TabsValue } from "./types";
+import { ActiveTab } from "../../../common/types/entities";
 
 function useConnect({
   dispatch,
@@ -8,25 +10,35 @@ function useConnect({
   dispatch: AppDispatch;
   activeTab: string;
 }) {
-  const [value, setValue] = useState(1);
+  const [tabValue, setTabValue] = useState(TabsValue.CellType);
 
   const handleTabsChange = (
     _: ChangeEvent<Record<string, unknown>>,
     tabsValue: unknown
   ) => {
-    setValue(tabsValue as number);
+    setTabValue(tabsValue as number);
     dispatch({
       type: "toggle active info panel",
       activeTab:
-        tabsValue === 0 ? "Gene" : tabsValue === 1 ? "CellType" : "Dataset",
+        tabsValue === TabsValue.Gene
+          ? ActiveTab.Gene
+          : tabsValue === TabsValue.CellType
+          ? ActiveTab.CellType
+          : ActiveTab.Dataset,
     });
   };
 
   useEffect(() => {
-    setValue(activeTab === "Gene" ? 0 : activeTab === "CellType" ? 1 : 2);
+    setTabValue(
+      activeTab === ActiveTab.Gene
+        ? TabsValue.Gene
+        : activeTab === ActiveTab.CellType
+        ? TabsValue.CellType
+        : TabsValue.Dataset
+    );
   }, [activeTab]);
 
-  return { value, handleTabsChange };
+  return { tabValue, handleTabsChange };
 }
 
 export default useConnect;

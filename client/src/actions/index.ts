@@ -188,10 +188,19 @@ interface CellTypeInfoAPI {
  * @param cell human-readable name of cell type
  */
 async function fetchCellTypeInfo(
-  cell: string
+  cell: string,
+  dispatch: AppDispatch
 ): Promise<CellTypeInfoAPI | undefined> {
-  const response = await fetchJson<CellTypeInfoAPI>(`cellinfo?cell=${cell}`);
-  return response;
+  try {
+    return await fetchJson<CellTypeInfoAPI>(`cellinfo?cell=${cell}`);
+  } catch (error) {
+    dispatchNetworkErrorMessageToUser("Failed to fetch cell type information.");
+    dispatch({
+      type: "request cell info error",
+      error,
+    });
+    return undefined;
+  }
 }
 
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {

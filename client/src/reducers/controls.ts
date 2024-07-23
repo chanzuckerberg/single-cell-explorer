@@ -229,6 +229,8 @@ const Controls = (
           Cell Info
     **************************/
     case "request cell info start": {
+      console.log(action);
+
       return {
         ...state,
         cellInfo: {
@@ -248,6 +250,16 @@ const Controls = (
           synonyms: action.cellInfo.synonyms,
           references: action.cellInfo.references,
           error: action.cellInfo.error,
+          loading: false,
+        },
+      };
+    }
+    case "request cell info error": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          error: action.error,
           loading: false,
         },
       };

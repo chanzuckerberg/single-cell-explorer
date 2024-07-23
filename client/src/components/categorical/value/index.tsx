@@ -370,7 +370,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       activeTab: ActiveTab.CellType,
     });
 
-    const info = await actions.fetchCellTypeInfo(cellName);
+    const info = await actions.fetchCellTypeInfo(cellName, dispatch);
 
     if (!info) {
       return;
@@ -653,6 +653,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                   intent="none"
                   data-testid={`get-info-${metadataField}-${displayString}`}
                   onClick={() => this.handleDisplayCellTypeInfo(displayString)}
+                  style={{ minHeight: "18px", minWidth: "18px", padding: 0 }}
                 >
                   <IconButton disabled={false} sdsSize="small">
                     <div style={{ filter: "grayscale(100%)" }}>

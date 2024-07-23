@@ -6,6 +6,12 @@ interface StateProps {
   infoPanelHidden: boolean;
 }
 
+export enum TabsValue {
+  Gene = 0,
+  CellType = 1,
+  Dataset = 2,
+}
+
 export type Props = StateProps & { dispatch: AppDispatch };
 
 export const mapStateToProps = (state: RootState): StateProps => ({
