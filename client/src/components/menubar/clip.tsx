@@ -14,8 +14,6 @@ import { IconNames } from "@blueprintjs/icons";
 import { tooltipHoverOpenDelay } from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
 
 const Clip = React.memo((props) => {
   const {
@@ -51,10 +49,6 @@ const Clip = React.memo((props) => {
         (Intent as any).INTENT_WARNING
       : Intent.NONE;
 
-  const handleVizSettingsClick = () => {
-    track(EVENTS.EXPLORER_VISUALIZATION_SETTINGS_BUTTON_CLICKED);
-  };
-
   return (
     <ButtonGroup className={`${styles.menubarButton}`}>
       <Popover
@@ -72,7 +66,6 @@ const Clip = React.memo((props) => {
               style={{
                 cursor: "pointer",
               }}
-              onClick={handleVizSettingsClick}
             />
           </Tooltip>
         }
