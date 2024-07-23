@@ -1,6 +1,6 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { Icon } from "czifui";
+import { Icon, LoadingIndicator } from "czifui";
 
 import {
   Content,
@@ -15,7 +15,6 @@ import {
   MessageDiv,
   NoGeneSelectedDiv,
   Items,
-  StyledLoadingIndicator,
   WarningBanner,
 } from "../style";
 import { BaseInfoProps, ExtendedInfoProps } from "../types";
@@ -53,9 +52,9 @@ export function LoadingInfo(props: BaseInfoProps) {
             transform: "translate(-50%, -50%)",
           }}
         >
-          <span style={{ textAlign: "center", fontFamily: "Open Sans" }}>
-            <StyledLoadingIndicator sdsStyle="minimal" />
-          </span>
+          <p style={{ textAlign: "center" }}>
+            <LoadingIndicator sdsStyle="minimal" />
+          </p>
         </div>
       </div>
     </InfoDiv>

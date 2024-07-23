@@ -6,7 +6,6 @@ import {
   getColors,
   fontHeaderL,
   fontHeaderM,
-  LoadingIndicator,
 } from "czifui";
 import { Icon } from "@blueprintjs/core";
 
@@ -152,8 +151,4 @@ export const CustomIcon = styled(Icon)`
   && {
     color: ${gray500};
   }
-`;
-
-export const StyledLoadingIndicator = styled(LoadingIndicator)`
-  font-family: "Open Sans";
 `;
