@@ -19,39 +19,39 @@ function ContainerInfo(props: ExtendedInfoProps) {
     references,
     error,
     loading,
-    entity,
+    infoType,
     url,
     showWarningBanner = false,
   } = props;
 
-  const entityTag = kebabCase(entity);
+  const infoTypeTag = kebabCase(infoType);
 
   const wrapperTestId = `${
-    entity === "Gene" ? symbol : name
-  }:${entityTag}-info-wrapper`;
+    infoType === "Gene" ? symbol : name
+  }:${infoTypeTag}-info-wrapper`;
 
   return (
-    <InfoWrapper id={`${entityTag}info_wrapper`} data-testid={wrapperTestId}>
-      <InfoContainer id={`${entityTag}-info`}>
+    <InfoWrapper id={`${infoTypeTag}info_wrapper`} data-testid={wrapperTestId}>
+      <InfoContainer id={`${infoTypeTag}-info`}>
         {/* Loading */}
         {(name || symbol) && !error && loading && (
-          <LoadingInfo name={name} entity={entity} />
+          <LoadingInfo name={name} infoType={infoType} />
         )}
 
         {/* None Selected */}
         {name === "" && error === null && !loading && (
-          <NoneSelected entity={entity} />
+          <NoneSelected infoType={infoType} />
         )}
 
         {/* Error */}
-        {error && <ErrorInfo name={name} entity={entity} />}
+        {error && <ErrorInfo name={name} infoType={infoType} />}
 
         {/* Show Info Card for Gen or Cell Type*/}
         {name && !error && !loading && (
           <ShowInfo
             id={id}
             name={name}
-            entity={entity}
+            infoType={infoType}
             description={description}
             synonyms={synonyms}
             references={references}

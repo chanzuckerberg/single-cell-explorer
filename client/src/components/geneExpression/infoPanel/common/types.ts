@@ -1,6 +1,6 @@
 export interface BaseInfoProps {
   name: string;
-  entity: "Gene" | "Cell Type";
+  infoType: "Gene" | "Cell Type";
 }
 
 export interface ExtendedInfoProps extends BaseInfoProps {

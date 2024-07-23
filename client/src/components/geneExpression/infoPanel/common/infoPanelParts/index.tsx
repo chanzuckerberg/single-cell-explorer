@@ -1,6 +1,6 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { Icon, LoadingIndicator } from "czifui";
+import { Icon } from "czifui";
 
 import {
   Content,
@@ -15,6 +15,7 @@ import {
   MessageDiv,
   NoGeneSelectedDiv,
   Items,
+  StyledLoadingIndicator,
   WarningBanner,
 } from "../style";
 import { BaseInfoProps, ExtendedInfoProps } from "../types";
@@ -35,19 +36,44 @@ export function LoadingInfo(props: BaseInfoProps) {
       <InfoTitle>
         <InfoSymbol>{name}</InfoSymbol>
       </InfoTitle>
-      <Content>
-        <LoadingIndicator sdsStyle="minimal" />
-      </Content>
+      <div
+        style={{
+          margin: 0,
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+        >
+          <span style={{ textAlign: "center", fontFamily: "Open Sans" }}>
+            <StyledLoadingIndicator sdsStyle="minimal" />
+          </span>
+        </div>
+      </div>
     </InfoDiv>
   );
 }
 
-export function NoneSelected({ entity }: { entity: BaseInfoProps["entity"] }) {
+export function NoneSelected({
+  infoType,
+}: {
+  infoType: BaseInfoProps["infoType"];
+}) {
   return (
     <InfoDiv>
       <NoGeneSelectedDiv>
         <CustomIcon icon="search" size={33} />
-        <MessageDiv className="title">{NO_ENTITY_SELECTED(entity)}</MessageDiv>
+        <MessageDiv className="title">
+          {NO_ENTITY_SELECTED(infoType)}
+        </MessageDiv>
         <MessageDiv>{SELECT_GENE_OR_CELL_TYPE}</MessageDiv>
       </NoGeneSelectedDiv>
     </InfoDiv>
@@ -64,14 +90,14 @@ export function ShowWarningBanner() {
 }
 
 export function ErrorInfo(props: BaseInfoProps) {
-  const { name, entity } = props;
+  const { name, infoType } = props;
   return (
     <InfoDiv>
       <InfoTitle>
         <InfoSymbol>{name}</InfoSymbol>
       </InfoTitle>
       <Content style={{ paddingBottom: "10px" }}>
-        {ENTITY_NOT_FOUND(entity)}
+        {ENTITY_NOT_FOUND(infoType)}
       </Content>
       <Link
         href={`https://www.google.com/search?q=${name}`}
@@ -87,7 +113,7 @@ export function ErrorInfo(props: BaseInfoProps) {
 export function ShowInfo(props: ExtendedInfoProps) {
   const {
     name,
-    entity,
+    infoType,
     description,
     id,
     synonyms,
@@ -97,7 +123,7 @@ export function ShowInfo(props: ExtendedInfoProps) {
     showWarningBanner,
   } = props;
   const externalUrl = id ? url + id : url;
-  const entityTag = kebabCase(entity);
+  const infoTypeTag = kebabCase(infoType);
 
   return (
     <InfoDiv>
@@ -106,16 +132,16 @@ export function ShowInfo(props: ExtendedInfoProps) {
         <InfoSymbol>{symbol ?? name}</InfoSymbol>
         <InfoOpenIn>
           <Link href={externalUrl} target="_blank">
-            {OPEN_IN(entity === "Cell Type" ? "Cell Guide" : "NCBI")}
+            {OPEN_IN(infoType === "Cell Type" ? "Cell Guide" : "NCBI")}
           </Link>
         </InfoOpenIn>
       </InfoTitle>
-      {entity === "Gene" && (
-        <ContentRow data-testid={`${entityTag}-info-name`}>{name}</ContentRow>
+      {infoType === "Gene" && (
+        <ContentRow data-testid={`${infoTypeTag}-info-name`}>{name}</ContentRow>
       )}
       <Content>
         <ContentRow>{description}</ContentRow>
-        {entity === "Cell Type" && (
+        {infoType === "Cell Type" && (
           <ContentRow>
             <InfoLabel>{LABELS.ontologyID}</InfoLabel>
             <Link href={externalUrl} target="_blank">
@@ -136,7 +162,7 @@ export function ShowInfo(props: ExtendedInfoProps) {
             </Items>
           </ContentRow>
         )}
-        {entity === "Cell Type" && references && references?.length > 0 && (
+        {infoType === "Cell Type" && references && references?.length > 0 && (
           <ContentRow>
             <InfoLabel>{LABELS.References} </InfoLabel>
             {references.map((ref, index) => (

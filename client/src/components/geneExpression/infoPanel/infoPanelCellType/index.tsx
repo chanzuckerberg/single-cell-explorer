@@ -26,7 +26,7 @@ function CellTypeInfo(props: Props) {
       references={references}
       error={error}
       loading={loading}
-      entity="Cell Type"
+      infoType="Cell Type"
       url={CELLGUIDE_URL}
     />
   );

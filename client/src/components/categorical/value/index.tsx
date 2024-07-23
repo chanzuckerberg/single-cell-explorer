@@ -581,7 +581,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
         }
         data-testid="categorical-row"
         style={{
-          padding: "4px 0px 4px 7px",
+          padding: "4px 10px 4px 7px",
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
@@ -596,7 +596,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             margin: 0,
             padding: 0,
             userSelect: "none",
-            width: globals.leftSidebarWidth - 145,
+            width: globals.leftSidebarWidth - 120,
             display: "flex",
             justifyContent: "space-between",
           }}
@@ -625,7 +625,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 data-testid="categorical-value"
                 tabIndex={-1}
                 style={{
-                  width: labelWidth,
+                  width: labelWidth - 25,
                   color:
                     displayString === globals.unassignedCategoryLabel
                       ? "#ababab"
@@ -677,7 +677,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             whiteSpace: "nowrap",
           }}
         >
-          <span>
+          <span style={{ display: "inline-block", verticalAlign: "baseline" }}>
             <span
               data-testid="categorical-value-count"
               data-testfield={`${metadataField}-${displayString}`}
@@ -690,25 +690,29 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                   displayString === globals.unassignedCategoryLabel
                     ? "italic"
                     : "auto",
+                top: "10px",
               }}
             >
               {count}
             </span>
-
-            <svg
-              display={isColorBy && categoryValueIndices ? "auto" : "none"}
-              style={{
-                marginLeft: 5,
-                width: 15,
-                height: 15,
-                backgroundColor:
-                  isColorBy && categoryValueIndices && colorScale
-                    ? (colorScale(
-                        categoryValueIndices.get(label) ?? 0
-                      ) as string)
-                    : "inherit",
-              }}
-            />
+            <span style={{ verticalAlign: "baseline" }}>
+              <svg
+                display={isColorBy && categoryValueIndices ? "auto" : "none"}
+                style={{
+                  top: 3,
+                  width: 15,
+                  height: 15,
+                  marginLeft: 5,
+                  position: "relative",
+                  backgroundColor:
+                    isColorBy && categoryValueIndices && colorScale
+                      ? (colorScale(
+                          categoryValueIndices.get(label) ?? 0
+                        ) as string)
+                      : "inherit",
+                }}
+              />
+            </span>
           </span>
         </div>
       </div>

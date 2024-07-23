@@ -611,18 +611,20 @@ export async function requestCellTypeInfo(cell: string, page: Page) {
 
 export async function assertInfoPanelExists(
   id: string,
-  entity: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
-  await expect(page.getByTestId(`${id}:${entity}-info-wrapper`)).toBeVisible();
+  await expect(
+    page.getByTestId(`${id}:${infoType}-info-wrapper`)
+  ).toBeVisible();
   await expect(page.getByTestId(`info-panel-header`)).toBeVisible();
   await expect(page.getByTestId(`min-info-panel`)).toBeVisible();
 
   await expect(
-    page.getByTestId(`${entity}-info-synonyms`).innerText
+    page.getByTestId(`${infoType}-info-synonyms`).innerText
   ).not.toEqual("");
 
-  await expect(page.getByTestId(`${entity}-info-link`)).toBeTruthy();
+  await expect(page.getByTestId(`${infoType}-info-link`)).toBeTruthy();
 }
 
 export async function minimizeInfoPanel(page: Page): Promise<void> {
@@ -631,11 +633,11 @@ export async function minimizeInfoPanel(page: Page): Promise<void> {
 
 export async function assertInfoPanelIsMinimized(
   id: string,
-  entity: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
   const testIds = [
-    `${id}:${entity}-info-wrapper`,
+    `${id}:${infoType}-info-wrapper`,
     "info-panel-header",
     "max-info-panel",
     "close-info-panel",
@@ -658,11 +660,11 @@ export async function closeInfoPanel(page: Page): Promise<void> {
 
 export async function assertInfoPanelClosed(
   id: string,
-  entity: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
   const testIds = [
-    `${id}:${entity}-info-wrapper`,
+    `${id}:${infoType}-info-wrapper`,
     "info-panel-header",
     "min-info-panel",
     "close-info-panel",

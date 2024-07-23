@@ -27,7 +27,7 @@ function GeneInfo(props: Props) {
       references={[]}
       error={infoError}
       loading={loading}
-      entity="Gene"
+      infoType="Gene"
       url={geneUrl}
       showWarningBanner={showWarningBanner}
     />

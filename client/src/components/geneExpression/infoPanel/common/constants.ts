@@ -1,7 +1,8 @@
-export const NO_ENTITY_SELECTED = (entity: string) => `No ${entity} Selected`;
-export const ENTITY_NOT_FOUND = (entity: string) =>
-  `Sorry, this ${entity} could not be found.`;
-export const OPEN_IN = (entity: string) => `Open in ${entity}`;
+export const NO_ENTITY_SELECTED = (infoType: string) =>
+  `No ${infoType} Selected`;
+export const ENTITY_NOT_FOUND = (infoType: string) =>
+  `Sorry, this ${infoType} could not be found.`;
+export const OPEN_IN = (infoType: string) => `Open in ${infoType}`;
 export const SELECT_GENE_OR_CELL_TYPE =
   "Select a gene or cell type or search the Cell Guide database";
 export const NCBI_WARNING = "NCBI didn't return an exact match for this gene.";
