@@ -1,8 +1,9 @@
 import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
+import { Icon as InfoCircle, IconButton } from "czifui";
 
-import { Classes } from "@blueprintjs/core";
+import { AnchorButton, Classes } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
@@ -21,6 +22,7 @@ import { Schema, Category } from "../../../common/types/schema";
 import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
 import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
 import { ColorTable } from "../../../util/stateManager/colorHelpers";
+import { ActiveTab } from "../../../common/types/entities";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -356,6 +358,30 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     return null;
   };
 
+  handleDisplayCellTypeInfo = async (cellName: string): Promise<void> => {
+    const { dispatch } = this.props;
+
+    track(EVENTS.EXPLORER_CELLTYPE_INFO_BUTTON_CLICKED, { cellName });
+
+    dispatch({ type: "request cell info start", cellName });
+
+    dispatch({
+      type: "toggle active info panel",
+      activeTab: ActiveTab.CellType,
+    });
+
+    const info = await actions.fetchCellTypeInfo(cellName, dispatch);
+
+    if (!info) {
+      return;
+    }
+
+    dispatch({
+      type: "open cell info",
+      cellInfo: info,
+    });
+  };
+
   // If coloring by and this isn't the colorAccessor and it isn't being edited
   shouldRenderStackedBarOrHistogram() {
     const { colorAccessor, isColorBy } = this.props;
@@ -545,6 +571,8 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           CHART_MARGIN
         : globals.leftSidebarWidth - otherElementsWidth;
 
+    const isCellInfo = metadataField === "cell_type";
+
     return (
       <div
         className={
@@ -553,7 +581,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
         }
         data-testid="categorical-row"
         style={{
-          padding: "4px 0px 4px 7px",
+          padding: "4px 10px 4px 7px",
           display: "flex",
           alignItems: "baseline",
           justifyContent: "space-between",
@@ -568,7 +596,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             margin: 0,
             padding: 0,
             userSelect: "none",
-            width: globals.leftSidebarWidth - 145,
+            width: globals.leftSidebarWidth - 120,
             display: "flex",
             justifyContent: "space-between",
           }}
@@ -597,7 +625,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 data-testid="categorical-value"
                 tabIndex={-1}
                 style={{
-                  width: labelWidth,
+                  width: labelWidth - 25,
                   color:
                     displayString === globals.unassignedCategoryLabel
                       ? "#ababab"
@@ -617,6 +645,28 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </span>
             </Truncate>
+            {isCellInfo && (
+              <div style={{ display: "inline-block", marginLeft: "0" }}>
+                <AnchorButton
+                  small
+                  minimal
+                  intent="none"
+                  data-testid={`get-info-${metadataField}-${displayString}`}
+                  onClick={() => this.handleDisplayCellTypeInfo(displayString)}
+                  style={{ minHeight: "18px", minWidth: "18px", padding: 0 }}
+                >
+                  <IconButton disabled={false} sdsSize="small">
+                    <div style={{ filter: "grayscale(100%)" }}>
+                      <InfoCircle
+                        sdsIcon="infoCircle"
+                        sdsSize="s"
+                        sdsType="iconButton"
+                      />
+                    </div>
+                  </IconButton>
+                </AnchorButton>
+              </div>
+            )}
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}
@@ -628,7 +678,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
             whiteSpace: "nowrap",
           }}
         >
-          <span>
+          <span style={{ display: "inline-block", verticalAlign: "baseline" }}>
             <span
               data-testid="categorical-value-count"
               data-testfield={`${metadataField}-${displayString}`}
@@ -641,25 +691,29 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                   displayString === globals.unassignedCategoryLabel
                     ? "italic"
                     : "auto",
+                top: "10px",
               }}
             >
               {count}
             </span>
-
-            <svg
-              display={isColorBy && categoryValueIndices ? "auto" : "none"}
-              style={{
-                marginLeft: 5,
-                width: 15,
-                height: 15,
-                backgroundColor:
-                  isColorBy && categoryValueIndices && colorScale
-                    ? (colorScale(
-                        categoryValueIndices.get(label) ?? 0
-                      ) as string)
-                    : "inherit",
-              }}
-            />
+            <span style={{ verticalAlign: "baseline" }}>
+              <svg
+                display={isColorBy && categoryValueIndices ? "auto" : "none"}
+                style={{
+                  top: 3,
+                  width: 15,
+                  height: 15,
+                  marginLeft: 5,
+                  position: "relative",
+                  backgroundColor:
+                    isColorBy && categoryValueIndices && colorScale
+                      ? (colorScale(
+                          categoryValueIndices.get(label) ?? 0
+                        ) as string)
+                      : "inherit",
+                }}
+              />
+            </span>
           </span>
         </div>
       </div>

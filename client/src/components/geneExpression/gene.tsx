@@ -15,7 +15,7 @@ import {
   thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
 } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-import { ActiveTab } from "../../reducers/controls";
+import { ActiveTab } from "../../common/types/entities";
 import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
@@ -115,17 +115,15 @@ class Gene extends React.Component<Props, State> {
       gene,
     });
 
-    dispatch({
-      type: "load gene info",
-      gene,
-    });
-
+    dispatch({ type: "request gene info start", gene });
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
     const info = await actions.fetchGeneInfo(geneId, gene);
+
     if (!info) {
       return;
     }
+
     dispatch({
       type: "open gene info",
       gene,
@@ -314,6 +312,6 @@ function mapStateToProps(state: RootState, ownProps: OwnProps): StateProps {
       state.colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.gene === gene,
+    isGeneInfo: state.controls.geneInfo.gene === gene,
   };
 }

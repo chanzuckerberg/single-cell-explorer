@@ -52,6 +52,7 @@ import {
   snapshotTestGraph,
   getAllCategories,
   selectLayout,
+  requestCellTypeInfo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -66,6 +67,7 @@ import {
   conditionallyToggleSidePanel,
   goToPage,
   shouldSkipTests,
+  skipIfPbmcDataset,
   skipIfSidePanel,
   toggleSidePanel,
 } from "../util/helpers";
@@ -99,6 +101,7 @@ const brushThisGeneGeneset = "brush_this_gene";
 
 // open gene info card
 const geneToRequestInfo = "SIK1";
+const cellToRequestInfo = "monocyte";
 
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
@@ -1382,6 +1385,12 @@ for (const testDataset of testDatasets) {
               test("open info panel and hide/remove", async ({
                 page,
               }, testInfo) => {
+                skipIfSidePanel(graphTestId, MAIN_PANEL);
+                /*
+                 * Skip since there's no cell_type data in pbmc3k.cxg
+                 */
+                skipIfPbmcDataset(testDataset, DATASET);
+
                 await setup({ option, page, url, testInfo });
                 await addGeneToSearch(geneToRequestInfo, page);
 
@@ -1390,7 +1399,11 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await requestGeneInfo(geneToRequestInfo, page);
-                    await assertInfoPanelExists(geneToRequestInfo, page);
+                    await assertInfoPanelExists(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
                   },
                   { page }
                 );
@@ -1400,7 +1413,11 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await minimizeInfoPanel(page);
-                    await assertInfoPanelIsMinimized(geneToRequestInfo, page);
+                    await assertInfoPanelIsMinimized(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
                   },
                   { page }
                 );
@@ -1410,7 +1427,39 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await closeInfoPanel(page);
-                    await assertInfoPanelClosed(geneToRequestInfo, page);
+                    await assertInfoPanelClosed(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await requestCellTypeInfo(cellToRequestInfo, page);
+                    await assertInfoPanelExists(
+                      cellToRequestInfo,
+                      "cell-type",
+                      page
+                    );
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await minimizeInfoPanel(page);
+                    await assertInfoPanelIsMinimized(
+                      cellToRequestInfo,
+                      "cell-type",
+                      page
+                    );
                   },
                   { page }
                 );

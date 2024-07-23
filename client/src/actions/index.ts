@@ -179,6 +179,30 @@ async function fetchGeneInfo(
   return response;
 }
 
+interface CellTypeInfoAPI {
+  name: string;
+  summary: string;
+}
+/**
+ * Fetch cell type summary information
+ * @param cell human-readable name of cell type
+ */
+async function fetchCellTypeInfo(
+  cell: string,
+  dispatch: AppDispatch
+): Promise<CellTypeInfoAPI | undefined> {
+  try {
+    return await fetchJson<CellTypeInfoAPI>(`cellinfo?cell=${cell}`);
+  } catch (error) {
+    dispatchNetworkErrorMessageToUser("Failed to fetch cell type information.");
+    dispatch({
+      type: "request cell info error",
+      error,
+    });
+    return undefined;
+  }
+}
+
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   /*
   prefetch requests for all embeddings
@@ -539,6 +563,7 @@ export default {
   checkExplainNewTab,
   navigateCheckUserState,
   selectDataset,
+  fetchCellTypeInfo,
   fetchGeneInfo,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,
