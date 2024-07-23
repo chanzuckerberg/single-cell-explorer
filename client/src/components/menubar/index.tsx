@@ -302,7 +302,14 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
             justifyContent: "right",
           }}
         >
-          <div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row-reverse",
+              flexWrap: "wrap",
+              justifyContent: "right",
+            }}
+          >
             <ButtonGroup className={styles.menubarButton}>
               <AnchorButton
                 type="button"
@@ -387,7 +394,14 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               />
             </Tooltip>
           </div>
-          <div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row-reverse",
+              flexWrap: "wrap",
+              justifyContent: "right",
+            }}
+          >
             <ButtonGroup className={styles.menubarButton}>
               <Tooltip
                 content={selectionTooltip}
