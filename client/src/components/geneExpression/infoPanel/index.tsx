@@ -14,6 +14,7 @@ import GeneInfo from "./infoPanelGene";
 import DatasetInfo from "./infoPanelDataset";
 import { Props, mapStateToProps } from "./types";
 import useConnect from "./connect";
+import { ActiveTab } from "../../../common/types/entities";
 
 function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
@@ -29,9 +30,9 @@ function InfoPanel(props: Props) {
         style={{ paddingBottom: "5px" }}
       >
         <Tabs value={tabValue} sdsSize="small" onChange={handleTabsChange}>
-          <Tab label="Gene" />
-          <Tab label="Cell Type" />
-          <Tab label="Dataset" />
+          <Tab label="Gene" value="Gene" />
+          <Tab label="Cell Type" value="CellType" />
+          <Tab label="Dataset" value="Dataset" />
         </Tabs>
         <CollapseToggle>
           <ButtonGroup
@@ -71,9 +72,9 @@ function InfoPanel(props: Props) {
         isHidden={infoPanelHidden}
         isMinimized={infoPanelMinimized}
       >
-        {activeTab === "Gene" && <GeneInfo />}
-        {activeTab === "CellType" && <CellTypeInfo />}
-        {activeTab === "Dataset" && <DatasetInfo />}
+        {activeTab === ActiveTab.Gene && <GeneInfo />}
+        {activeTab === ActiveTab.CellType && <CellTypeInfo />}
+        {activeTab === ActiveTab.Dataset && <DatasetInfo />}
       </InfoPanelContent>
     </InfoPanelWrapper>
   );

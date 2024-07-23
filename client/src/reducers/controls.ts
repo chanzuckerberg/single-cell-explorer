@@ -229,8 +229,6 @@ const Controls = (
           Cell Info
     **************************/
     case "request cell info start": {
-      console.log(action);
-
       return {
         ...state,
         cellInfo: {

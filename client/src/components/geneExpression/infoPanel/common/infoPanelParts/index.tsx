@@ -52,9 +52,9 @@ export function LoadingInfo(props: BaseInfoProps) {
             transform: "translate(-50%, -50%)",
           }}
         >
-          <p style={{ textAlign: "center" }}>
+          <span style={{ textAlign: "center" }}>
             <LoadingIndicator sdsStyle="minimal" />
-          </p>
+          </span>
         </div>
       </div>
     </InfoDiv>

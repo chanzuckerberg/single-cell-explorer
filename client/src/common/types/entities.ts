@@ -167,6 +167,6 @@ export interface GeneInfo {
 
 export enum ActiveTab {
   Gene = "Gene",
-  Dataset = "Dataset",
   CellType = "CellType",
+  Dataset = "Dataset",
 }
