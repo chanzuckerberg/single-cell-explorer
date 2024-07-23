@@ -7,23 +7,26 @@ function useConnect({
   activeTab,
 }: {
   dispatch: AppDispatch;
-  activeTab: string;
+  activeTab: ActiveTab;
 }) {
   const [tabValue, setTabValue] = useState(ActiveTab.CellType);
 
+  /**
+   * TODO: update to <string, ActiveTab> once we upgrade MUI
+   */
   const handleTabsChange = (
     _: ChangeEvent<Record<string, unknown>>,
-    tabsValue: unknown
+    activeTabValue: ActiveTab
   ) => {
-    setTabValue(tabsValue as ActiveTab);
+    setTabValue(activeTabValue);
     dispatch({
       type: "toggle active info panel",
-      activeTab: tabsValue as ActiveTab,
+      activeTab: activeTabValue,
     });
   };
 
   useEffect(() => {
-    setTabValue(activeTab as ActiveTab);
+    setTabValue(activeTab);
   }, [activeTab]);
 
   return { tabValue, handleTabsChange };

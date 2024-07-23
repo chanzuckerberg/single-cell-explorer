@@ -1,7 +1,8 @@
+import { ActiveTab } from "../../../common/types/entities";
 import { AppDispatch, RootState } from "../../../reducers";
 
 interface StateProps {
-  activeTab: string;
+  activeTab: ActiveTab;
   infoPanelMinimized: boolean;
   infoPanelHidden: boolean;
 }
