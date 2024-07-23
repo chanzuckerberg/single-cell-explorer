@@ -17,7 +17,7 @@ import useConnect from "./connect";
 
 function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
-  const { value, handleTabsChange } = useConnect({ dispatch, activeTab });
+  const { tabValue, handleTabsChange } = useConnect({ dispatch, activeTab });
 
   return (
     <InfoPanelWrapper
@@ -28,7 +28,7 @@ function InfoPanel(props: Props) {
         data-testid="info-panel-header"
         style={{ paddingBottom: "5px" }}
       >
-        <Tabs value={value} sdsSize="small" onChange={handleTabsChange}>
+        <Tabs value={tabValue} sdsSize="small" onChange={handleTabsChange}>
           <Tab label="Gene" />
           <Tab label="Cell Type" />
           <Tab label="Dataset" />
