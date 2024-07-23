@@ -21,6 +21,11 @@ import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
 import { AppDispatch, RootState } from "../../reducers";
 import { AnnoMatrixClipView } from "../../annoMatrix/views";
 
+const INITIAL_PERCENTILES = {
+  clipPercentileMin: 0,
+  clipPercentileMax: 100,
+};
+
 interface StateProps {
   subsetPossible: boolean;
   subsetResetPossible: boolean;
@@ -69,8 +74,8 @@ interface DispatchProps {
 export type MenuBarProps = StateProps & DispatchProps;
 interface State {
   pendingClipPercentiles: {
-    clipPercentileMin: number | undefined;
-    clipPercentileMax: number | undefined;
+    clipPercentileMin: number;
+    clipPercentileMax: number;
   };
 }
 class MenuBar extends React.PureComponent<MenuBarProps, State> {
@@ -103,21 +108,18 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     super(props);
 
     this.state = {
-      pendingClipPercentiles: {
-        clipPercentileMin: undefined,
-        clipPercentileMax: undefined,
-      },
+      pendingClipPercentiles: INITIAL_PERCENTILES,
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   isClipDisabled = () => {
     /*
     return true if clip button should be disabled.
     */
-    const { pendingClipPercentiles } = this.state;
-    const clipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
-    const clipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
+    const {
+      pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
+    } = this.state;
+
     const {
       clipPercentileMin: currentClipMin,
       clipPercentileMax: currentClipMax,
@@ -126,8 +128,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     // if you change this test, be careful with logic around
     // comparisons between undefined / NaN handling.
     const isDisabled =
-      !clipPercentileMin ||
-      !clipPercentileMax ||
       !(clipPercentileMin < clipPercentileMax) ||
       (clipPercentileMin === currentClipMin &&
         clipPercentileMax === currentClipMax);
@@ -193,8 +193,11 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     const { dispatch } = this.props;
     const { pendingClipPercentiles } = this.state;
     const { clipPercentileMin, clipPercentileMax } = pendingClipPercentiles;
-    const min = clipPercentileMin! / 100;
-    const max = clipPercentileMax! / 100;
+    const min = clipPercentileMin / 100;
+    const max = clipPercentileMax / 100;
+
+    track(EVENTS.EXPLORER_CLIP);
+
     dispatch(actions.clipAction(min, max));
   };
 
@@ -207,10 +210,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
 
   handleClipClosing = () => {
     this.setState({
-      pendingClipPercentiles: {
-        clipPercentileMax: undefined,
-        clipPercentileMin: undefined,
-      },
+      pendingClipPercentiles: INITIAL_PERCENTILES,
     });
   };
 

@@ -59,7 +59,7 @@ class CreateGenesetDialogue extends React.PureComponent<{}, State> {
     const { dispatch } = this.props;
     const { genesetName, genesToPopulateGeneset, genesetDescription } =
       this.state;
-    track(EVENTS.EXPLORER_SUBMIT_GENESET_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_ADD_GENE_SET);
 
     dispatch({
       type: "geneset: create",
