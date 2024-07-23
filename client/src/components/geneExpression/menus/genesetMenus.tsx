@@ -71,7 +71,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     if (geneset.includes(MARKER_GENE_SUFFIX_IDENTIFIER)) {
       track(EVENTS.EXPLORER_COLORBY_CG_MARKER_GENE_SET_CLICKED);
     } else {
-      track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
+      track(EVENTS.EXPLORER_COLORBY_GENE_SET);
     }
 
     dispatch({

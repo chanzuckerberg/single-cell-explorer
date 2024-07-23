@@ -58,7 +58,7 @@ class Gene extends React.Component<Props, State> {
 
   onColorChangeClick = async () => {
     const { dispatch, gene } = this.props;
-    track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_COLORBY_GENE);
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
 
     /**
@@ -74,7 +74,7 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleGeneExpandClick = (): void => {
-    track(EVENTS.EXPLORER_MAXIMIZE_GENE_BUTTON_CLICKED);
+    track(EVENTS.EXPLORER_GENE_VIEW_DISTRIBUTION);
 
     const { geneIsExpanded } = this.state;
     this.setState({ geneIsExpanded: !geneIsExpanded });
@@ -105,7 +105,7 @@ class Gene extends React.Component<Props, State> {
 
   handleDisplayGeneInfo = async (): Promise<void> => {
     const { dispatch, gene, geneId } = this.props;
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
+    track(EVENTS.EXPLORER_VIEW_GENE_INFO, {
       gene,
     });
 

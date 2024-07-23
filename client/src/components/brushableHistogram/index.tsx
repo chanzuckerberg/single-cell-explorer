@@ -234,9 +234,15 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       /**
        * (thuang): Analytics requirement to ONLY track the event when the user
        * selects a histogram and NOT when it is deselected.
+       * Also only trigger this when it's in the left panel and not any of the gene
+       * histograms, thus the `isObs` part.
        */
-      if (type === "continuous metadata histogram end") {
+      if (type === "continuous metadata histogram end" && isObs) {
         track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
+      }
+
+      if (type === "continuous metadata histogram end" && isGeneSetSummary) {
+        track(EVENTS.EXPLORER_GENE_SET_HISTOGRAM_HIGHLIGHT);
       }
 
       trackColorByCategoryHighlightHistogram(
