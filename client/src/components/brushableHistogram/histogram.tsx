@@ -5,6 +5,9 @@ import * as d3 from "d3";
 import { AxisDomain } from "d3";
 import maybeScientific from "../../util/maybeScientific";
 import clamp from "../../util/clamp";
+import { truncateText } from "./utils";
+
+const TRUNCATION_MAX_WIDTH_PX = 45;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 const Histogram = ({
@@ -130,7 +133,22 @@ const Histogram = ({
                 i: number
               ) => string
             )
-        );
+        )
+        .selectAll("text")
+        .each((_, i, nodes) => {
+          const d3Node = d3.select(nodes[i]);
+          const text = d3Node.text();
+          const node = d3Node.node() as SVGTextElement;
+
+          const truncatedText = truncateText(
+            text,
+            node,
+            TRUNCATION_MAX_WIDTH_PX
+          );
+
+          d3Node.text(truncatedText);
+          d3Node.append("title").text(text);
+        });
 
       /* Y AXIS */
       container
