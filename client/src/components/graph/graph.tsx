@@ -1421,7 +1421,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
           style={{
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
-            opacity: `${dotOpacity}%`,
+            opacity: isSpatialMode(this.props) ? `${dotOpacity}%` : "100%",
             mixBlendMode: "multiply",
           }}
           id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}

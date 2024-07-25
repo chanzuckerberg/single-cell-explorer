@@ -82,7 +82,7 @@ export const glPointSize = `
 
     if (isHighlight) return 2. * pointSize;
     if (isSelected) return pointSize;
-    return pointSize / 3.;
+    return pointSize / 5.;
   }
 `;
 

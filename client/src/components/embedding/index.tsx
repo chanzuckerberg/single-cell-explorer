@@ -28,6 +28,11 @@ import { sidePanelAttributeNameChange } from "../graph/util";
 import { shouldShowOpenseadragon } from "../../common/selectors";
 import { ImageToggleWrapper, ImageDropdownButton } from "./style";
 import Opacities from "./components/Opacities";
+import {
+  thunkTrackColorByCategoryChangeEmbedding,
+  thunkTrackColorByHistogramChangeEmbedding,
+  thunkTrackLassoChangeEmbedding,
+} from "./analytics";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
@@ -95,18 +100,39 @@ const Embedding = (props: Props) => {
   const handleLayoutChoiceChange = async (
     e: FormEvent<HTMLInputElement>
   ): Promise<void> => {
+    const {
+      currentTarget: { value },
+    } = e;
+
     track(
       isSidePanel
         ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_SELECTED
         : EVENTS.EXPLORER_EMBEDDING_SELECTED,
       {
-        embedding: e.currentTarget.value,
+        embedding: value,
       }
     );
 
-    await dispatch(
-      actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
-    );
+    dispatch(thunkTrackColorByCategoryChangeEmbedding());
+    dispatch(thunkTrackColorByHistogramChangeEmbedding());
+
+    /**
+     * (thuang): Analytics requirement to only track embedding change while the
+     * blue lasso selection is active.
+     * Thus, this action needs to be dispatched BEFORE the layout choice action,
+     * since the layout choice action will reset the selection mode to "all".
+     *
+     * Example:
+     * Steps:
+     * 1. Use lasso to select some dots
+     * 2. The graph has the blue lasso selection
+     * 3. Switch to a different embedding <-- trigger event `EXPLORER_LASSO_CHANGE_EMBEDDING`
+     * 4. The blue lasso selection thing disappears (but the lasso’d dots are still in effect)
+     * 5. Switch to another different embedding <-- do NOT trigger event `EXPLORER_LASSO_CHANGE_EMBEDDING`
+     */
+    dispatch(thunkTrackLassoChangeEmbedding());
+
+    await dispatch(actions.layoutChoiceAction(value, isSidePanel));
   };
 
   const handleOpenPanelEmbedding = async (): Promise<void> => {

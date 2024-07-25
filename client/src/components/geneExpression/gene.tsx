@@ -9,9 +9,13 @@ import { AppDispatch, RootState } from "../../reducers";
 
 import actions from "../../actions";
 
-import { track } from "../../analytics";
+import {
+  track,
+  thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
+  thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-import { ActiveTab } from "../../reducers/controls";
+import { ActiveTab } from "../../common/types/entities";
 import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
@@ -52,16 +56,33 @@ class Gene extends React.Component<Props, State> {
     };
   }
 
-  onColorChangeClick = (): void => {
-    const { dispatch, gene } = this.props;
-    track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
+  onColorChangeClick = async () => {
+    const { dispatch, gene, isColorAccessor } = this.props;
+    if (!isColorAccessor) {
+      // only track color change when turned on
+      track(EVENTS.EXPLORER_COLORBY_GENE);
+    }
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+
+    /**
+     * (thuang): Must be dispatched AFTER the actions above, as the `colorMode`
+     * only changes after the above actions are completed.
+     */
+    await dispatch(
+      thunkTrackColorByHistogramExpandCategoryFromColorByHistogram()
+    );
+    await dispatch(
+      thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram()
+    );
   };
 
   handleGeneExpandClick = (): void => {
-    track(EVENTS.EXPLORER_MAXIMIZE_GENE_BUTTON_CLICKED);
-
     const { geneIsExpanded } = this.state;
+    if (!geneIsExpanded) {
+      // only track gene view distribution on expand
+      track(EVENTS.EXPLORER_GENE_VIEW_DISTRIBUTION);
+    }
+
     this.setState({ geneIsExpanded: !geneIsExpanded });
   };
 
@@ -90,21 +111,19 @@ class Gene extends React.Component<Props, State> {
 
   handleDisplayGeneInfo = async (): Promise<void> => {
     const { dispatch, gene, geneId } = this.props;
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
+    track(EVENTS.EXPLORER_VIEW_GENE_INFO, {
       gene,
     });
 
-    dispatch({
-      type: "load gene info",
-      gene,
-    });
-
+    dispatch({ type: "request gene info start", gene });
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
     const info = await actions.fetchGeneInfo(geneId, gene);
+
     if (!info) {
       return;
     }
+
     dispatch({
       type: "open gene info",
       gene,
@@ -293,6 +312,6 @@ function mapStateToProps(state: RootState, ownProps: OwnProps): StateProps {
       state.colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.gene === gene,
+    isGeneInfo: state.controls.geneInfo.gene === gene,
   };
 }

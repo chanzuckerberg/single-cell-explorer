@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, useEffect } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup } from "@blueprintjs/core";
 import { Tabs, Tab } from "czifui";
@@ -9,28 +9,16 @@ import {
   InfoPanelHeader,
   InfoPanelWrapper,
 } from "./style";
-import GeneInfo from "./geneInfo";
-import DatasetInfo from "./datasetInfo";
+import CellTypeInfo from "./infoPanelCellType";
+import GeneInfo from "./infoPanelGene";
+import DatasetInfo from "./infoPanelDataset";
 import { Props, mapStateToProps } from "./types";
+import useConnect from "./connect";
+import { ActiveTab } from "../../../common/types/entities";
 
 function InfoPanel(props: Props) {
   const { activeTab, dispatch, infoPanelMinimized, infoPanelHidden } = props;
-  const [value, setValue] = useState(1);
-
-  const handleTabsChange = (
-    _: ChangeEvent<Record<string, unknown>>,
-    tabsValue: unknown
-  ) => {
-    setValue(tabsValue as number);
-    dispatch({
-      type: "toggle active info panel",
-      activeTab: tabsValue === 0 ? "Gene" : "Dataset",
-    });
-  };
-
-  useEffect(() => {
-    setValue(activeTab === "Gene" ? 0 : 1);
-  }, [activeTab]);
+  const { tabValue, handleTabsChange } = useConnect({ dispatch, activeTab });
 
   return (
     <InfoPanelWrapper
@@ -41,9 +29,10 @@ function InfoPanel(props: Props) {
         data-testid="info-panel-header"
         style={{ paddingBottom: "5px" }}
       >
-        <Tabs value={value} sdsSize="small" onChange={handleTabsChange}>
-          <Tab label="Gene" />
-          <Tab label="Dataset" />
+        <Tabs value={tabValue} sdsSize="small" onChange={handleTabsChange}>
+          <Tab label="Gene" value="Gene" />
+          <Tab label="Cell Type" value="CellType" />
+          <Tab label="Dataset" value="Dataset" />
         </Tabs>
         <CollapseToggle>
           <ButtonGroup
@@ -83,8 +72,9 @@ function InfoPanel(props: Props) {
         isHidden={infoPanelHidden}
         isMinimized={infoPanelMinimized}
       >
-        {activeTab === "Gene" && <GeneInfo />}
-        {activeTab === "Dataset" && <DatasetInfo />}
+        {activeTab === ActiveTab.Gene && <GeneInfo />}
+        {activeTab === ActiveTab.CellType && <CellTypeInfo />}
+        {activeTab === ActiveTab.Dataset && <DatasetInfo />}
       </InfoPanelContent>
     </InfoPanelWrapper>
   );

@@ -1,10 +1,11 @@
 import { AnyAction } from "redux";
-import { DatasetUnsMetadata } from "../common/types/entities";
+import {
+  ActiveTab,
+  CellInfo,
+  DatasetUnsMetadata,
+  GeneInfo,
+} from "../common/types/entities";
 
-export enum ActiveTab {
-  Gene = "Gene",
-  Dataset = "Dataset",
-}
 interface ControlsState {
   loading: boolean;
   error: Error | string | null;
@@ -14,26 +15,22 @@ interface ControlsState {
   scatterplotYYaccessor: string | false;
   scatterplotIsMinimized: boolean;
   scatterplotIsOpen: boolean;
-  gene: string | null;
-  infoError: string | null;
   graphRenderCounter: number;
   colorLoading: boolean;
   datasetDrawer: boolean;
-  geneUrl: string;
-  geneSummary: string;
-  geneName: string;
-  geneSynonyms: string[];
   isCellGuideCxg: boolean;
   screenCap: boolean;
   mountCapture: boolean;
-  showWarningBanner: boolean;
   imageUnderlay: boolean;
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
-  unsMetadata: DatasetUnsMetadata;
   imageOpacity: number;
   dotOpacity: number;
+  geneInfo: GeneInfo;
+  unsMetadata: DatasetUnsMetadata;
+  cellInfo: CellInfo;
+  expandedCategories: string[];
 }
 const Controls = (
   state: ControlsState = {
@@ -46,20 +43,13 @@ const Controls = (
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     scatterplotIsMinimized: false,
-    geneUrl: "",
-    geneSummary: "",
-    geneSynonyms: [""],
-    geneName: "",
     scatterplotIsOpen: false,
-    gene: null,
-    infoError: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
     colorLoading: false,
     datasetDrawer: false,
     isCellGuideCxg: false,
     screenCap: false,
     mountCapture: false,
-    showWarningBanner: false,
     imageUnderlay: true,
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
@@ -71,8 +61,28 @@ const Controls = (
       scaleref: 0.1868635,
       spotDiameterFullres: 86.06629150338271,
     },
+    cellInfo: {
+      cellId: "",
+      cellName: "",
+      cellDescription: "",
+      synonyms: [""],
+      references: [""],
+      error: null,
+      loading: false,
+    },
+    geneInfo: {
+      gene: null,
+      geneName: "",
+      geneSummary: "",
+      geneSynonyms: [""],
+      geneUrl: "",
+      showWarningBanner: false,
+      infoError: null,
+      loading: false,
+    },
     imageOpacity: 100,
     dotOpacity: 100,
+    expandedCategories: [],
   },
   action: AnyAction
 ): ControlsState => {
@@ -145,33 +155,6 @@ const Controls = (
         graphRenderCounter: c,
       };
     }
-
-    /*******************************
-              Gene Info
-    *******************************/
-    case "open gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: action.url,
-        geneSummary: action.summary,
-        geneSynonyms: action.synonyms,
-        geneName: action.name,
-        infoError: action.infoError,
-        showWarningBanner: action.showWarningBanner,
-      };
-    }
-    case "load gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: "",
-        geneSummary: "",
-        geneSynonyms: [""],
-        geneName: "",
-        infoError: null,
-      };
-    }
     /*******************************
               Scatterplot
     *******************************/
@@ -227,6 +210,7 @@ const Controls = (
         ...state,
         activeTab: action.activeTab,
         infoPanelHidden: false,
+        infoPanelMinimized: false,
       };
     }
     case "close info panel": {
@@ -239,6 +223,71 @@ const Controls = (
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
+      };
+    }
+    /**************************
+          Cell Info
+    **************************/
+    case "request cell info start": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellName: action.cellName,
+          loading: true,
+        },
+      };
+    }
+    case "open cell info": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellId: action.cellInfo.cell_id,
+          cellDescription: action.cellInfo.description,
+          synonyms: action.cellInfo.synonyms,
+          references: action.cellInfo.references,
+          error: action.cellInfo.error,
+          loading: false,
+        },
+      };
+    }
+    case "request cell info error": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          error: action.error,
+          loading: false,
+        },
+      };
+    }
+    /*******************************
+              Gene Info
+    *******************************/
+    case "request gene info start": {
+      return {
+        ...state,
+        geneInfo: {
+          ...state.geneInfo,
+          gene: action.gene,
+          loading: true,
+        },
+      };
+    }
+    case "open gene info": {
+      return {
+        ...state,
+        geneInfo: {
+          gene: action.gene,
+          geneName: action.name,
+          geneSummary: action.summary,
+          geneSynonyms: action.synonyms,
+          geneUrl: action.url,
+          showWarningBanner: action.showWarningBanner,
+          infoError: action.infoError,
+          loading: false,
+        },
       };
     }
     /**************************
@@ -316,6 +365,29 @@ const Controls = (
       return {
         ...state,
         dotOpacity: action.data,
+      };
+    }
+    /**************************
+         Categories
+    **************************/
+    case "controls category expansion change": {
+      const { category } = action;
+      const { expandedCategories } = state;
+
+      if (expandedCategories.includes(category)) {
+        const newExpandedCategories = expandedCategories.filter(
+          (expandedCategory) => expandedCategory !== category
+        );
+
+        return {
+          ...state,
+          expandedCategories: newExpandedCategories,
+        };
+      }
+
+      return {
+        ...state,
+        expandedCategories: [...expandedCategories, category],
       };
     }
     default:

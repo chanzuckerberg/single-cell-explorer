@@ -116,7 +116,6 @@ function QuickGene() {
         key={geneName}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
         onClick={(g: any /* this fires when user clicks a menu item */) => {
-          track(EVENTS.EXPLORER_SUGGEST_MENU_ITEM_CLICKED);
           handleClick(g);
         }}
         text={geneName}
@@ -133,6 +132,7 @@ function QuickGene() {
     } else if (geneNames.indexOf(gene) === undefined) {
       postUserErrorToast("That doesn't appear to be a valid gene name.");
     } else {
+      track(EVENTS.EXPLORER_ADD_GENE);
       dispatch({ type: "single user defined gene start" });
       dispatch(actions.requestUserDefinedGene(gene));
       dispatch({ type: "single user defined gene complete" });

@@ -62,7 +62,10 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     });
   };
 
-  handleColorByEntireGeneset = (event: React.MouseEvent): void => {
+  handleColorByEntireGeneset = (
+    event: React.MouseEvent,
+    isColorByActive: boolean
+  ): void => {
     event.preventDefault();
 
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
@@ -70,8 +73,9 @@ class GenesetMenus extends React.PureComponent<{}, State> {
 
     if (geneset.includes(MARKER_GENE_SUFFIX_IDENTIFIER)) {
       track(EVENTS.EXPLORER_COLORBY_CG_MARKER_GENE_SET_CLICKED);
-    } else {
-      track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
+    } else if (!isColorByActive) {
+      // only track when color by is being turned on
+      track(EVENTS.EXPLORER_COLORBY_GENE_SET);
     }
 
     dispatch({
@@ -167,7 +171,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 intent={isColorBy ? "primary" : "none"}
                 style={{ marginLeft: 0 }}
                 loading={isColorBy && colorLoading}
-                onClick={this.handleColorByEntireGeneset}
+                onClick={(e) => this.handleColorByEntireGeneset(e, isColorBy)}
                 data-testid={`${geneset}:colorby-entire-geneset`}
                 icon={<Icon icon="tint" iconSize={16} />}
               />

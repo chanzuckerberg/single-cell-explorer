@@ -77,19 +77,13 @@ const quickGenes = (
 
       switch (action.type) {
         case "continuous metadata histogram end": {
-          if (isQuickGene) track(EVENTS.EXPLORER_ADD_GENE_AND_SELECT_HISTOGRAM);
-          break;
-        }
-        case "color by expression": {
-          if (isQuickGene) track(EVENTS.EXPLORER_ADD_GENE_AND_COLORBY);
+          if (isQuickGene) track(EVENTS.EXPLORER_GENE_HISTOGRAM_HIGHLIGHT);
           break;
         }
         case "set scatterplot x":
         case "set scatterplot y": {
           if (scatterplotXXaccessor && scatterplotYYaccessor) {
-            track(EVENTS.EXPLORER_DISPLAY_SCATTERPLOT);
-            if (isQuickGene)
-              track(EVENTS.EXPLORER_ADD_GENE_AND_DISPLAY_SCATTERPLOT);
+            track(EVENTS.EXPLORER_GENE_DISPLAY_PLOT);
           }
           break;
         }
