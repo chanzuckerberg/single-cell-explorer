@@ -4,20 +4,25 @@ import { AnchorButton, ButtonGroup, Tooltip } from "@blueprintjs/core";
 import styles from "./menubar.css";
 import * as globals from "../../globals";
 
-const Subset = React.memo((props) => {
+interface SubsetProps {
+  subsetPossible: boolean;
+  subsetResetPossible: boolean;
+  handleSubset: () => void;
+  handleSubsetReset: () => void;
+  vertical: boolean;
+}
+
+const Subset = React.memo((props: SubsetProps) => {
   const {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetPossible' does not exist on type '... Remove this comment to see the full error message
     subsetPossible,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
     subsetResetPossible,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleSubset' does not exist on type '{ ... Remove this comment to see the full error message
     handleSubset,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleSubsetReset' does not exist on typ... Remove this comment to see the full error message
     handleSubsetReset,
+    vertical,
   } = props;
 
   return (
-    <ButtonGroup className={styles.menubarButton}>
+    <ButtonGroup className={styles.menubarButton} vertical={vertical}>
       <Tooltip
         content="Subset to currently selected cells and associated metadata"
         position="bottom"

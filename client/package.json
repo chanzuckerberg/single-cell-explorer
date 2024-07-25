@@ -65,6 +65,7 @@
     "@material-ui/icons": "^4.11.3",
     "@material-ui/lab": "^4.0.0-alpha.61",
     "abort-controller": "^3.0.0",
+    "classnames": "^2.5.1",
     "core-js": "^3.6.5",
     "czifui": "^6.6.0",
     "d3": "^4.10.0",

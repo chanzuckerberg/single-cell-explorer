@@ -2,10 +2,11 @@ import React from "react";
 import { connect } from "react-redux";
 import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
+import cx from "classnames";
 
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
-import styles from "./menubar.css";
+import cs from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
@@ -68,6 +69,7 @@ interface DispatchProps {
 }
 export type MenuBarProps = StateProps & DispatchProps;
 interface State {
+  matches: boolean;
   pendingClipPercentiles: {
     clipPercentileMin: number | undefined;
     clipPercentileMax: number | undefined;
@@ -107,7 +109,16 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
         clipPercentileMin: undefined,
         clipPercentileMax: undefined,
       },
+      matches: window.matchMedia("(max-width: 1275px)").matches,
     };
+  }
+
+  componentDidMount() {
+    const handler = (e: MediaQueryListEvent) =>
+      this.setState({ matches: e.matches });
+    window
+      .matchMedia("(max-width: 1275px)")
+      .addEventListener("change", handler);
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
@@ -193,7 +204,9 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     const { dispatch } = this.props;
     const { pendingClipPercentiles } = this.state;
     const { clipPercentileMin, clipPercentileMax } = pendingClipPercentiles;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- clipPercentileMin and clipPercentileMax are defined if button is enabled
     const min = clipPercentileMin! / 100;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- clipPercentileMin and clipPercentileMax are defined if button is enabled
     const max = clipPercentileMax! / 100;
     dispatch(actions.clipAction(min, max));
   };
@@ -214,7 +227,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCentroidChange = () => {
     const { dispatch, showCentroidLabels } = this.props;
 
@@ -226,7 +238,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubset = () => {
     const { dispatch } = this.props;
 
@@ -235,7 +246,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     dispatch(actions.subsetAction());
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubsetReset = () => {
     const { dispatch } = this.props;
 
@@ -258,7 +268,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
       subsetResetPossible,
       screenCap,
     } = this.props;
-    const { pendingClipPercentiles } = this.state;
+    const { pendingClipPercentiles, matches } = this.state;
 
     const isColoredByCategorical =
       !!categoricalSelection?.[colorAccessor || ""];
@@ -271,46 +281,14 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
       "select",
       "polygon-filter",
     ];
-
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          width: "100%",
-        }}
-        data-test-id="menubar"
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "left",
-            marginTop: 8,
-          }}
-        >
+      <div className={cs.menuBar} data-test-id="menubar">
+        <div className={cs.embeddingWrapper}>
           <Embedding isSidePanel={false} />
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row-reverse",
-            flexWrap: "wrap",
-            justifyContent: "right",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row-reverse",
-              flexWrap: "wrap",
-              justifyContent: "right",
-            }}
-          >
-            <ButtonGroup className={styles.menubarButton}>
+        <div className={cs.controlsWrapper}>
+          <div className={cx(cs.responsiveMenuGroup, cs.singleButtons)}>
+            <ButtonGroup className={cs.menubarButton}>
               <AnchorButton
                 type="button"
                 icon={IconNames.INFO_SIGN}
@@ -333,7 +311,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
                 hoverOpenDelay={globals.tooltipHoverOpenDelay}
               >
                 <AnchorButton
-                  className={styles.menubarButton}
+                  className={cs.menubarButton}
                   data-testid="download-graph-button"
                   type="button"
                   icon={IconNames.CAMERA}
@@ -347,7 +325,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
             )}
             {isTest && (
               <AnchorButton
-                className={styles.menubarButton}
+                className={cs.menubarButton}
                 type="button"
                 icon={IconNames.TORCH}
                 style={{
@@ -383,7 +361,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
             >
               <AnchorButton
-                className={styles.menubarButton}
+                className={cs.menubarButton}
                 type="button"
                 data-testid="centroid-label-toggle"
                 icon="property"
@@ -394,15 +372,8 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               />
             </Tooltip>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row-reverse",
-              flexWrap: "wrap",
-              justifyContent: "right",
-            }}
-          >
-            <ButtonGroup className={styles.menubarButton}>
+          <div className={cx(cs.responsiveMenuGroup, cs.buttonGroups)}>
+            <ButtonGroup className={cs.menubarButton} vertical={matches}>
               <Tooltip
                 content={selectionTooltip}
                 position="bottom"
@@ -446,11 +417,11 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
               </Tooltip>
             </ButtonGroup>
             <Subset
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
               subsetPossible={subsetPossible}
               subsetResetPossible={subsetResetPossible}
               handleSubset={this.handleSubset}
               handleSubsetReset={this.handleSubsetReset}
+              vertical={matches}
             />
           </div>
           {disableDiffexp ? null : <DiffexpButtons />}
