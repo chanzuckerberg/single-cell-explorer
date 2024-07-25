@@ -6,6 +6,13 @@ import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
+import {
+  ControlsWrapper,
+  EmbeddingWrapper,
+  MenuBarWrapper,
+  ResponsiveMenuGroupOne,
+  ResponsiveMenuGroupTwo,
+} from "./style";
 import actions from "../../actions";
 import Clip from "./clip";
 
@@ -73,6 +80,7 @@ interface DispatchProps {
 }
 export type MenuBarProps = StateProps & DispatchProps;
 interface State {
+  mediaWidthMatches: boolean;
   pendingClipPercentiles: {
     clipPercentileMin: number;
     clipPercentileMax: number;
@@ -109,7 +117,16 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
 
     this.state = {
       pendingClipPercentiles: INITIAL_PERCENTILES,
+      mediaWidthMatches: window.matchMedia("(max-width: 1275px)").matches,
     };
+  }
+
+  componentDidMount() {
+    const handler = (e: MediaQueryListEvent) =>
+      this.setState({ mediaWidthMatches: e.matches });
+    window
+      .matchMedia("(max-width: 1275px)")
+      .addEventListener("change", handler);
   }
 
   isClipDisabled = () => {
@@ -215,7 +232,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCentroidChange = () => {
     const { dispatch, showCentroidLabels } = this.props;
 
@@ -230,7 +246,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubset = () => {
     const { dispatch } = this.props;
 
@@ -239,7 +254,6 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     dispatch(actions.subsetAction());
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubsetReset = () => {
     const { dispatch } = this.props;
 
@@ -262,7 +276,7 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
       subsetResetPossible,
       screenCap,
     } = this.props;
-    const { pendingClipPercentiles } = this.state;
+    const { pendingClipPercentiles, mediaWidthMatches } = this.state;
 
     const isColoredByCategorical =
       !!categoricalSelection?.[colorAccessor || ""];
@@ -277,171 +291,154 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
     ];
 
     return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
-          width: "100%",
-        }}
-        data-test-id="menubar"
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "left",
-            marginTop: 8,
-          }}
-        >
+      <MenuBarWrapper data-test-id="menubar">
+        <EmbeddingWrapper>
           <Embedding isSidePanel={false} />
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row-reverse",
-            flexWrap: "wrap",
-            justifyContent: "right",
-          }}
-        >
-          <ButtonGroup className={styles.menubarButton}>
-            <AnchorButton
-              type="button"
-              icon={IconNames.INFO_SIGN}
-              onClick={() => {
-                dispatch({
-                  type: "toggle active info panel",
-                  activeTab: "Dataset",
-                });
-              }}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid="drawer"
+        </EmbeddingWrapper>
+        <ControlsWrapper>
+          <ResponsiveMenuGroupTwo>
+            <ButtonGroup className={styles.menubarButton}>
+              <AnchorButton
+                type="button"
+                icon={IconNames.INFO_SIGN}
+                onClick={() => {
+                  dispatch({
+                    type: "toggle active info panel",
+                    activeTab: "Dataset",
+                  });
+                }}
+                style={{
+                  cursor: "pointer",
+                }}
+                data-testid="drawer"
+              />
+            </ButtonGroup>
+            {isDownload && (
+              <Tooltip
+                content="Download the current graph view as a PNG"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  className={styles.menubarButton}
+                  data-testid="download-graph-button"
+                  type="button"
+                  icon={IconNames.CAMERA}
+                  style={{
+                    cursor: "pointer",
+                  }}
+                  loading={screenCap}
+                  onClick={() => dispatch({ type: "graph: screencap start" })}
+                />
+              </Tooltip>
+            )}
+            {isTest && (
+              <AnchorButton
+                className={styles.menubarButton}
+                type="button"
+                icon={IconNames.TORCH}
+                style={{
+                  cursor: "pointer",
+                }}
+                data-testid={GRAPH_AS_IMAGE_TEST_ID}
+                data-chromatic="ignore"
+                loading={screenCap}
+                onClick={() => dispatch({ type: "test: screencap start" })}
+              />
+            )}
+            <Clip
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
+              pendingClipPercentiles={pendingClipPercentiles}
+              clipPercentileMin={clipPercentileMin}
+              clipPercentileMax={clipPercentileMax}
+              handleClipOpening={this.handleClipOpening}
+              handleClipClosing={this.handleClipClosing}
+              handleClipCommit={this.handleClipCommit}
+              isClipDisabled={this.isClipDisabled}
+              handleClipOnKeyPress={this.handleClipOnKeyPress}
+              handleClipPercentileMaxValueChange={
+                this.handleClipPercentileMaxValueChange
+              }
+              handleClipPercentileMinValueChange={
+                this.handleClipPercentileMinValueChange
+              }
             />
-          </ButtonGroup>
-          {isDownload && (
             <Tooltip
-              content="Download the current graph view as a PNG"
+              content="When a category is colored by, show labels on the graph"
               position="bottom"
+              disabled={graphInteractionMode === "zoom"}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
             >
               <AnchorButton
                 className={styles.menubarButton}
-                data-testid="download-graph-button"
                 type="button"
-                icon={IconNames.CAMERA}
-                style={{
-                  cursor: "pointer",
-                }}
-                loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
+                data-testid="centroid-label-toggle"
+                icon="property"
+                onClick={this.handleCentroidChange}
+                active={showCentroidLabels}
+                intent={showCentroidLabels ? "primary" : "none"}
+                disabled={!isColoredByCategorical}
               />
             </Tooltip>
-          )}
-          {isTest && (
-            <AnchorButton
+          </ResponsiveMenuGroupTwo>
+          <ResponsiveMenuGroupOne>
+            <ButtonGroup
               className={styles.menubarButton}
-              type="button"
-              icon={IconNames.TORCH}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid={GRAPH_AS_IMAGE_TEST_ID}
-              data-chromatic="ignore"
-              loading={screenCap}
-              onClick={() => dispatch({ type: "test: screencap start" })}
-            />
-          )}
-          <Clip
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
-            pendingClipPercentiles={pendingClipPercentiles}
-            clipPercentileMin={clipPercentileMin}
-            clipPercentileMax={clipPercentileMax}
-            handleClipOpening={this.handleClipOpening}
-            handleClipClosing={this.handleClipClosing}
-            handleClipCommit={this.handleClipCommit}
-            isClipDisabled={this.isClipDisabled}
-            handleClipOnKeyPress={this.handleClipOnKeyPress}
-            handleClipPercentileMaxValueChange={
-              this.handleClipPercentileMaxValueChange
-            }
-            handleClipPercentileMinValueChange={
-              this.handleClipPercentileMinValueChange
-            }
-          />
-          <Tooltip
-            content="When a category is colored by, show labels on the graph"
-            position="bottom"
-            disabled={graphInteractionMode === "zoom"}
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
-          >
-            <AnchorButton
-              className={styles.menubarButton}
-              type="button"
-              data-testid="centroid-label-toggle"
-              icon="property"
-              onClick={this.handleCentroidChange}
-              active={showCentroidLabels}
-              intent={showCentroidLabels ? "primary" : "none"}
-              disabled={!isColoredByCategorical}
-            />
-          </Tooltip>
-          <ButtonGroup className={styles.menubarButton}>
-            <Tooltip
-              content={selectionTooltip}
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              vertical={mediaWidthMatches}
             >
-              <AnchorButton
-                type="button"
-                data-testid="mode-lasso"
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
-                icon={selectionButtonIcon}
-                active={graphInteractionMode === "select"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
+              <Tooltip
+                content={selectionTooltip}
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="mode-lasso"
+                  // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
+                  icon={selectionButtonIcon}
+                  active={graphInteractionMode === "select"}
+                  onClick={() => {
+                    track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "select",
-                  });
-                }}
-              />
-            </Tooltip>
-            <Tooltip
-              content="Drag to pan, scroll to zoom"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="mode-pan-zoom"
-                icon="zoom-in"
-                active={graphInteractionMode === "zoom"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+                    dispatch({
+                      type: "change graph interaction mode",
+                      data: "select",
+                    });
+                  }}
+                />
+              </Tooltip>
+              <Tooltip
+                content="Drag to pan, scroll to zoom"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="mode-pan-zoom"
+                  icon="zoom-in"
+                  active={graphInteractionMode === "zoom"}
+                  onClick={() => {
+                    track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "zoom",
-                  });
-                }}
-              />
-            </Tooltip>
-          </ButtonGroup>
-          <Subset
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ subsetPossible: any; subsetResetPossible: ... Remove this comment to see the full error message
-            subsetPossible={subsetPossible}
-            subsetResetPossible={subsetResetPossible}
-            handleSubset={this.handleSubset}
-            handleSubsetReset={this.handleSubsetReset}
-          />
+                    dispatch({
+                      type: "change graph interaction mode",
+                      data: "zoom",
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+            <Subset
+              subsetPossible={subsetPossible}
+              subsetResetPossible={subsetResetPossible}
+              handleSubset={this.handleSubset}
+              handleSubsetReset={this.handleSubsetReset}
+              vertical={mediaWidthMatches}
+            />
+          </ResponsiveMenuGroupOne>
           {disableDiffexp ? null : <DiffexpButtons />}
-        </div>
-      </div>
+        </ControlsWrapper>
+      </MenuBarWrapper>
     );
   }
 }
