@@ -12,12 +12,13 @@ declare global {
 
 export function track(event: EVENTS, props?: Record<string, unknown>): void {
   const options = props ? { props } : undefined;
+
   /**
    * (thuang): Log analytics events for debugging purposes
    * Please comment out before committing
    */
   console.log("track", event, options);
-  
+
   try {
     window.plausible(event, options);
   } catch (error) {
