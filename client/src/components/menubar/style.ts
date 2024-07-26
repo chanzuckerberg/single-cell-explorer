@@ -30,6 +30,8 @@ export const ResponsiveMenuGroupOne = styled.div`
   justify-content: right;
   @media screen and (max-width: ${fullVerticalScreenWidth}) {
     flex-direction: column-reverse;
+    position: absolute;
+    top: 37px;
   }
 `;
 
