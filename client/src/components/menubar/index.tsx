@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { connect } from "react-redux";
-import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
+import {
+  ButtonGroup,
+  AnchorButton,
+  Tooltip,
+  ResizeSensor,
+} from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 import * as globals from "../../globals";
@@ -33,8 +38,6 @@ const INITIAL_PERCENTILES = {
   clipPercentileMin: 0,
   clipPercentileMax: 100,
 };
-
-const MEDIA_QUERY = `(max-width: ${fullVerticalScreenWidth})`;
 interface StateProps {
   subsetPossible: boolean;
   subsetResetPossible: boolean;
@@ -121,17 +124,7 @@ const MenuBar = ({
 }: MenuBarProps) => {
   const [pendingClipPercentiles, setPendingClipPercentiles] =
     useState(INITIAL_PERCENTILES);
-  const [mediaWidthMatches, setMediaWidthMatches] = useState(
-    window.matchMedia(MEDIA_QUERY).matches
-  );
-
-  useEffect(() => {
-    const handler = (e: MediaQueryListEvent) => setMediaWidthMatches(e.matches);
-    window.matchMedia(MEDIA_QUERY).addEventListener("change", handler);
-    return () => {
-      window.matchMedia(MEDIA_QUERY).removeEventListener("change", handler);
-    };
-  }, []);
+  const [menuBarWidthMatches, setMenuBarWidthMatches] = useState(false);
 
   const isClipDisabled = () => {
     /*
@@ -245,6 +238,14 @@ const MenuBar = ({
     dispatch(actions.resetSubsetAction());
   };
 
+  const onResize = (e: ResizeObserverEntry[]) => {
+    if (e[0].contentRect.width <= fullVerticalScreenWidth) {
+      setMenuBarWidthMatches(true);
+    } else {
+      setMenuBarWidthMatches(false);
+    }
+  };
+
   const isColoredByCategorical = !!categoricalSelection?.[colorAccessor || ""];
 
   const isTest = getFeatureFlag(FEATURES.TEST);
@@ -254,154 +255,156 @@ const MenuBar = ({
   const [selectionTooltip, selectionButtonIcon] = ["select", "polygon-filter"];
 
   return (
-    <MenuBarWrapper data-test-id="menubar">
-      <EmbeddingWrapper>
-        <Embedding isSidePanel={false} />
-      </EmbeddingWrapper>
-      <ControlsWrapper>
-        <ResponsiveMenuGroupTwo>
-          <ButtonGroup className={styles.menubarButton}>
-            <AnchorButton
-              type="button"
-              icon={IconNames.INFO_SIGN}
-              onClick={() => {
-                dispatch({
-                  type: "toggle active info panel",
-                  activeTab: "Dataset",
-                });
-              }}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid="drawer"
+    <ResizeSensor onResize={onResize}>
+      <MenuBarWrapper data-test-id="menubar">
+        <EmbeddingWrapper>
+          <Embedding isSidePanel={false} />
+        </EmbeddingWrapper>
+        <ControlsWrapper>
+          <ResponsiveMenuGroupTwo>
+            <ButtonGroup className={styles.menubarButton}>
+              <AnchorButton
+                type="button"
+                icon={IconNames.INFO_SIGN}
+                onClick={() => {
+                  dispatch({
+                    type: "toggle active info panel",
+                    activeTab: "Dataset",
+                  });
+                }}
+                style={{
+                  cursor: "pointer",
+                }}
+                data-testid="drawer"
+              />
+            </ButtonGroup>
+            {isDownload && (
+              <Tooltip
+                content="Download the current graph view as a PNG"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  className={styles.menubarButton}
+                  data-testid="download-graph-button"
+                  type="button"
+                  icon={IconNames.CAMERA}
+                  style={{
+                    cursor: "pointer",
+                  }}
+                  loading={screenCap}
+                  onClick={() => dispatch({ type: "graph: screencap start" })}
+                />
+              </Tooltip>
+            )}
+            {isTest && (
+              <AnchorButton
+                className={styles.menubarButton}
+                type="button"
+                icon={IconNames.TORCH}
+                style={{
+                  cursor: "pointer",
+                }}
+                data-testid={GRAPH_AS_IMAGE_TEST_ID}
+                data-chromatic="ignore"
+                loading={screenCap}
+                onClick={() => dispatch({ type: "test: screencap start" })}
+              />
+            )}
+            <Clip
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
+              pendingClipPercentiles={pendingClipPercentiles}
+              clipPercentileMin={currentClipMin}
+              clipPercentileMax={currentClipMax}
+              handleClipOpening={handleClipOpening}
+              handleClipClosing={handleClipClosing}
+              handleClipCommit={handleClipCommit}
+              isClipDisabled={isClipDisabled}
+              handleClipOnKeyPress={handleClipOnKeyPress}
+              handleClipPercentileMaxValueChange={
+                handleClipPercentileMaxValueChange
+              }
+              handleClipPercentileMinValueChange={
+                handleClipPercentileMinValueChange
+              }
             />
-          </ButtonGroup>
-          {isDownload && (
             <Tooltip
-              content="Download the current graph view as a PNG"
+              content="When a category is colored by, show labels on the graph"
               position="bottom"
+              disabled={graphInteractionMode === "zoom"}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
             >
               <AnchorButton
                 className={styles.menubarButton}
-                data-testid="download-graph-button"
                 type="button"
-                icon={IconNames.CAMERA}
-                style={{
-                  cursor: "pointer",
-                }}
-                loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
+                data-testid="centroid-label-toggle"
+                icon="property"
+                onClick={handleCentroidChange}
+                active={showCentroidLabels}
+                intent={showCentroidLabels ? "primary" : "none"}
+                disabled={!isColoredByCategorical}
               />
             </Tooltip>
-          )}
-          {isTest && (
-            <AnchorButton
+          </ResponsiveMenuGroupTwo>
+          <ResponsiveMenuGroupOne>
+            <ButtonGroup
               className={styles.menubarButton}
-              type="button"
-              icon={IconNames.TORCH}
-              style={{
-                cursor: "pointer",
-              }}
-              data-testid={GRAPH_AS_IMAGE_TEST_ID}
-              data-chromatic="ignore"
-              loading={screenCap}
-              onClick={() => dispatch({ type: "test: screencap start" })}
-            />
-          )}
-          <Clip
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
-            pendingClipPercentiles={pendingClipPercentiles}
-            clipPercentileMin={currentClipMin}
-            clipPercentileMax={currentClipMax}
-            handleClipOpening={handleClipOpening}
-            handleClipClosing={handleClipClosing}
-            handleClipCommit={handleClipCommit}
-            isClipDisabled={isClipDisabled}
-            handleClipOnKeyPress={handleClipOnKeyPress}
-            handleClipPercentileMaxValueChange={
-              handleClipPercentileMaxValueChange
-            }
-            handleClipPercentileMinValueChange={
-              handleClipPercentileMinValueChange
-            }
-          />
-          <Tooltip
-            content="When a category is colored by, show labels on the graph"
-            position="bottom"
-            disabled={graphInteractionMode === "zoom"}
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
-          >
-            <AnchorButton
-              className={styles.menubarButton}
-              type="button"
-              data-testid="centroid-label-toggle"
-              icon="property"
-              onClick={handleCentroidChange}
-              active={showCentroidLabels}
-              intent={showCentroidLabels ? "primary" : "none"}
-              disabled={!isColoredByCategorical}
-            />
-          </Tooltip>
-        </ResponsiveMenuGroupTwo>
-        <ResponsiveMenuGroupOne>
-          <ButtonGroup
-            className={styles.menubarButton}
-            vertical={mediaWidthMatches}
-          >
-            <Tooltip
-              content={selectionTooltip}
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              vertical={menuBarWidthMatches}
             >
-              <AnchorButton
-                type="button"
-                data-testid="mode-lasso"
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
-                icon={selectionButtonIcon}
-                active={graphInteractionMode === "select"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
+              <Tooltip
+                content={selectionTooltip}
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="mode-lasso"
+                  // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
+                  icon={selectionButtonIcon}
+                  active={graphInteractionMode === "select"}
+                  onClick={() => {
+                    track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "select",
-                  });
-                }}
-              />
-            </Tooltip>
-            <Tooltip
-              content="Drag to pan, scroll to zoom"
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                type="button"
-                data-testid="mode-pan-zoom"
-                icon="zoom-in"
-                active={graphInteractionMode === "zoom"}
-                onClick={() => {
-                  track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
+                    dispatch({
+                      type: "change graph interaction mode",
+                      data: "select",
+                    });
+                  }}
+                />
+              </Tooltip>
+              <Tooltip
+                content="Drag to pan, scroll to zoom"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="mode-pan-zoom"
+                  icon="zoom-in"
+                  active={graphInteractionMode === "zoom"}
+                  onClick={() => {
+                    track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);
 
-                  dispatch({
-                    type: "change graph interaction mode",
-                    data: "zoom",
-                  });
-                }}
-              />
-            </Tooltip>
-          </ButtonGroup>
-          <Subset
-            subsetPossible={subsetPossible}
-            subsetResetPossible={subsetResetPossible}
-            handleSubset={handleSubset}
-            handleSubsetReset={handleSubsetReset}
-            vertical={mediaWidthMatches}
-          />
-        </ResponsiveMenuGroupOne>
-        {disableDiffexp ? null : <DiffexpButtons />}
-      </ControlsWrapper>
-    </MenuBarWrapper>
+                    dispatch({
+                      type: "change graph interaction mode",
+                      data: "zoom",
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+            <Subset
+              subsetPossible={subsetPossible}
+              subsetResetPossible={subsetResetPossible}
+              handleSubset={handleSubset}
+              handleSubsetReset={handleSubsetReset}
+              vertical={menuBarWidthMatches}
+            />
+          </ResponsiveMenuGroupOne>
+          {disableDiffexp ? null : <DiffexpButtons />}
+        </ControlsWrapper>
+      </MenuBarWrapper>
+    </ResizeSensor>
   );
 };
 

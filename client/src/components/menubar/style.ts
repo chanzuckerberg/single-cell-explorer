@@ -3,15 +3,15 @@ import { spacesS } from "../theme";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 
-export const fullVerticalScreenWidth = "1275px";
+export const fullVerticalScreenWidth = 500;
 const isTest = getFeatureFlag(FEATURES.TEST);
 const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
-let firstBreakpoint = "1400px";
+let firstBreakpoint = "655px";
 if (isTest && isDownload) {
-  firstBreakpoint = "1455px";
+  firstBreakpoint = "705px";
 } else if (isTest || isDownload) {
-  firstBreakpoint = "1430px";
+  firstBreakpoint = "685px";
 }
 
 export const MenuBarWrapper = styled.div`
@@ -21,6 +21,7 @@ export const MenuBarWrapper = styled.div`
   justify-content: space-between;
   width: 100%;
   position: relative;
+  container: menu-bar / inline-size;
 `;
 
 export const ResponsiveMenuGroupOne = styled.div`
@@ -28,7 +29,7 @@ export const ResponsiveMenuGroupOne = styled.div`
   flex-direction: row-reverse;
   flex-wrap: wrap;
   justify-content: right;
-  @media screen and (max-width: ${fullVerticalScreenWidth}) {
+  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
     flex-direction: column-reverse;
     position: absolute;
     top: 37px;
@@ -40,12 +41,12 @@ export const ResponsiveMenuGroupTwo = styled.div`
   flex-direction: row-reverse;
   flex-wrap: wrap;
   justify-content: right;
-  @media screen and (max-width: ${firstBreakpoint}) {
+  @container menu-bar (max-width: ${firstBreakpoint}) {
     flex-direction: column-reverse;
     position: absolute;
     top: 40px;
   }
-  @media screen and (max-width: ${fullVerticalScreenWidth}) {
+  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
     top: 172px;
   }
 `;
@@ -65,7 +66,7 @@ export const ControlsWrapper = styled.div`
   justify-content: right;
   align-items: flex-start;
   position: relative;
-  @media screen and (max-width: ${fullVerticalScreenWidth}) {
+  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
     flex-direction: column-reverse;
     align-items: flex-end;
     position: absolute;
