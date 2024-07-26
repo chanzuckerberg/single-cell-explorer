@@ -12,6 +12,7 @@ import {
   MenuBarWrapper,
   ResponsiveMenuGroupOne,
   ResponsiveMenuGroupTwo,
+  fullVerticalScreenWidth,
 } from "./style";
 import actions from "../../actions";
 import Clip from "./clip";
@@ -33,6 +34,7 @@ const INITIAL_PERCENTILES = {
   clipPercentileMax: 100,
 };
 
+const MEDIA_QUERY = `(max-width: ${fullVerticalScreenWidth})`;
 interface StateProps {
   subsetPossible: boolean;
   subsetResetPossible: boolean;
@@ -117,16 +119,14 @@ class MenuBar extends React.PureComponent<MenuBarProps, State> {
 
     this.state = {
       pendingClipPercentiles: INITIAL_PERCENTILES,
-      mediaWidthMatches: window.matchMedia("(max-width: 1275px)").matches,
+      mediaWidthMatches: window.matchMedia(MEDIA_QUERY).matches,
     };
   }
 
   componentDidMount() {
     const handler = (e: MediaQueryListEvent) =>
       this.setState({ mediaWidthMatches: e.matches });
-    window
-      .matchMedia("(max-width: 1275px)")
-      .addEventListener("change", handler);
+    window.matchMedia(MEDIA_QUERY).addEventListener("change", handler);
   }
 
   isClipDisabled = () => {
