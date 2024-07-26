@@ -252,7 +252,7 @@ const MenuBar = ({
 
   // constants used to create selection tool button
   const [selectionTooltip, selectionButtonIcon] = ["select", "polygon-filter"];
-  console.log("MenuBar Test!");
+
   return (
     <MenuBarWrapper data-test-id="menubar">
       <EmbeddingWrapper>
