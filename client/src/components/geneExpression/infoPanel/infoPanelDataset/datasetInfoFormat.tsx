@@ -12,6 +12,7 @@ import {
 import { Category } from "../../../../common/types/schema";
 import * as globals from "../../../../globals";
 import { RootState } from "../../../../reducers";
+import Truncate from "../../../util/truncate";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",
@@ -242,6 +243,12 @@ const renderCollectionLinks = (datasetMetadata: Props["datasetMetadata"]) => {
 };
 
 /**
+ * (thuang): This ensures the <Truncate /> component truncates the text in the
+ * table cells properly.
+ */
+const DATASET_METADATA_TABLE_ROW_MAX_WIDTH_PX = 160;
+
+/**
  * Render dataset metadata. That is, attributes found in categorical fields.
  * @param renderSingleValues - Attributes from categorical fields
  * @returns Markup for displaying meta in table format.
@@ -254,6 +261,7 @@ const renderDatasetMetadata = (
   }
   const metadataViews = buildDatasetMetadataViews(renderSingleValues);
   metadataViews.sort(sortDatasetMetadata);
+
   return (
     <>
       {renderSectionTitle("Dataset")}
@@ -261,8 +269,28 @@ const renderDatasetMetadata = (
         <tbody>
           {metadataViews.map(({ key, value }) => (
             <tr {...{ key }}>
-              <td>{key}</td>
-              <td>{value}</td>
+              <td>
+                <Truncate>
+                  <span
+                    style={{
+                      maxWidth: DATASET_METADATA_TABLE_ROW_MAX_WIDTH_PX,
+                    }}
+                  >
+                    {key}
+                  </span>
+                </Truncate>
+              </td>
+              <td>
+                <Truncate>
+                  <span
+                    style={{
+                      maxWidth: DATASET_METADATA_TABLE_ROW_MAX_WIDTH_PX,
+                    }}
+                  >
+                    {value}
+                  </span>
+                </Truncate>
+              </td>
             </tr>
           ))}
         </tbody>
