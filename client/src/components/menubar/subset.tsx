@@ -9,7 +9,7 @@ interface SubsetProps {
   subsetResetPossible: boolean;
   handleSubset: () => void;
   handleSubsetReset: () => void;
-  vertical: boolean;
+  isVertical: boolean;
 }
 
 const Subset = React.memo((props: SubsetProps) => {
@@ -18,11 +18,11 @@ const Subset = React.memo((props: SubsetProps) => {
     subsetResetPossible,
     handleSubset,
     handleSubsetReset,
-    vertical,
+    isVertical,
   } = props;
 
   return (
-    <ButtonGroup className={styles.menubarButton} vertical={vertical}>
+    <ButtonGroup className={styles.menubarButton} vertical={isVertical}>
       <Tooltip
         content="Subset to currently selected cells and associated metadata"
         position="bottom"

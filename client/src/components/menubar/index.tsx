@@ -124,7 +124,7 @@ const MenuBar = ({
 }: MenuBarProps) => {
   const [pendingClipPercentiles, setPendingClipPercentiles] =
     useState(INITIAL_PERCENTILES);
-  const [menuBarWidthMatches, setMenuBarWidthMatches] = useState(false);
+  const [isVertical, setIsVertical] = useState(false);
 
   const isClipDisabled = () => {
     /*
@@ -240,9 +240,9 @@ const MenuBar = ({
 
   const onResize = (e: ResizeObserverEntry[]) => {
     if (e[0].contentRect.width <= MAX_VERTICAL_THRESHOLD_WIDTH_PX) {
-      setMenuBarWidthMatches(true);
+      setIsVertical(true);
     } else {
-      setMenuBarWidthMatches(false);
+      setIsVertical(false);
     }
   };
 
@@ -347,10 +347,7 @@ const MenuBar = ({
             </Tooltip>
           </ResponsiveMenuGroupTwo>
           <ResponsiveMenuGroupOne>
-            <ButtonGroup
-              className={styles.menubarButton}
-              vertical={menuBarWidthMatches}
-            >
+            <ButtonGroup className={styles.menubarButton} vertical={isVertical}>
               <Tooltip
                 content={selectionTooltip}
                 position="bottom"
@@ -398,7 +395,7 @@ const MenuBar = ({
               subsetResetPossible={subsetResetPossible}
               handleSubset={handleSubset}
               handleSubsetReset={handleSubsetReset}
-              vertical={menuBarWidthMatches}
+              isVertical={isVertical}
             />
           </ResponsiveMenuGroupOne>
           {disableDiffexp ? null : <DiffexpButtons />}
