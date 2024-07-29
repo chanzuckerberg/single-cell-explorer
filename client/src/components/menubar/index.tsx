@@ -17,7 +17,7 @@ import {
   MenuBarWrapper,
   ResponsiveMenuGroupOne,
   ResponsiveMenuGroupTwo,
-  fullVerticalScreenWidth,
+  MAX_VERTICAL_THRESHOLD_WIDTH_PX,
 } from "./style";
 import actions from "../../actions";
 import Clip from "./clip";
@@ -239,7 +239,7 @@ const MenuBar = ({
   };
 
   const onResize = (e: ResizeObserverEntry[]) => {
-    if (e[0].contentRect.width <= fullVerticalScreenWidth) {
+    if (e[0].contentRect.width <= MAX_VERTICAL_THRESHOLD_WIDTH_PX) {
       setMenuBarWidthMatches(true);
     } else {
       setMenuBarWidthMatches(false);

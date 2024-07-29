@@ -3,15 +3,15 @@ import { spacesS } from "../theme";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 
-export const fullVerticalScreenWidth = 500;
+export const MAX_VERTICAL_THRESHOLD_WIDTH_PX = 500;
 const isTest = getFeatureFlag(FEATURES.TEST);
 const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
-let firstBreakpoint = "655px";
+let FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 655;
 if (isTest && isDownload) {
-  firstBreakpoint = "705px";
+  FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 705;
 } else if (isTest || isDownload) {
-  firstBreakpoint = "685px";
+  FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 685;
 }
 
 export const MenuBarWrapper = styled.div`
@@ -29,7 +29,7 @@ export const ResponsiveMenuGroupOne = styled.div`
   flex-direction: row-reverse;
   flex-wrap: wrap;
   justify-content: right;
-  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
+  @container menu-bar (max-width: ${MAX_VERTICAL_THRESHOLD_WIDTH_PX}px) {
     flex-direction: column-reverse;
     position: absolute;
     top: 37px;
@@ -41,12 +41,12 @@ export const ResponsiveMenuGroupTwo = styled.div`
   flex-direction: row-reverse;
   flex-wrap: wrap;
   justify-content: right;
-  @container menu-bar (max-width: ${firstBreakpoint}) {
+  @container menu-bar (max-width: ${FIRST_VERTICAL_THRESHOLD_WIDTH_PX}px) {
     flex-direction: column-reverse;
     position: absolute;
     top: 40px;
   }
-  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
+  @container menu-bar (max-width: ${MAX_VERTICAL_THRESHOLD_WIDTH_PX}px) {
     top: 172px;
   }
 `;
@@ -66,7 +66,7 @@ export const ControlsWrapper = styled.div`
   justify-content: right;
   align-items: flex-start;
   position: relative;
-  @container menu-bar (max-width: ${fullVerticalScreenWidth}px) {
+  @container menu-bar (max-width: ${MAX_VERTICAL_THRESHOLD_WIDTH_PX}px) {
     flex-direction: column-reverse;
     align-items: flex-end;
     position: absolute;
