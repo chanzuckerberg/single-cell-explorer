@@ -21,6 +21,7 @@ import type {
   Dataset,
   S3URI,
   DatasetUnsMetadata,
+  CellType,
 } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
@@ -170,13 +171,22 @@ interface GeneInfoAPI {
  * @param gene human-readable name of gene
  */
 async function fetchGeneInfo(
-  geneID: DataframeValue,
-  gene: string
+  gene: string,
+  geneID: DataframeValue = "",
+  dispatch: AppDispatch
 ): Promise<GeneInfoAPI | undefined> {
-  const response = await fetchJson<GeneInfoAPI>(
-    `geneinfo?geneID=${geneID}&gene=${gene}`
-  );
-  return response;
+  try {
+    return await fetchJson<GeneInfoAPI>(
+      `geneinfo?geneID=${geneID}&gene=${gene}`
+    );
+  } catch (error) {
+    dispatchNetworkErrorMessageToUser("Failed to fetch gene information.");
+    dispatch({
+      type: "request gene info error",
+      error,
+    });
+    return undefined;
+  }
 }
 
 interface CellTypeInfoAPI {
@@ -200,6 +210,25 @@ async function fetchCellTypeInfo(
       error,
     });
     return undefined;
+  }
+}
+
+/**
+ * Fetch all Cell Types list
+ */
+async function fetchCellTypesList(dispatch: AppDispatch): Promise<void> {
+  try {
+    const cellTypeListResponse = await fetchJson<CellType[]>(`celltypes`);
+    dispatch({
+      type: "request cell types list success",
+      data: cellTypeListResponse,
+    });
+  } catch (error) {
+    dispatchNetworkErrorMessageToUser("Failed to fetch cell types list.");
+    dispatch({
+      type: "request cell types list error",
+      error,
+    });
   }
 }
 
@@ -245,6 +274,7 @@ const doInitialDataLoad = (): ((
 
       await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
       await datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
+      await fetchCellTypesList(dispatch);
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);

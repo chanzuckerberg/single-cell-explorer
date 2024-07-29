@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { connect } from "react-redux";
 import { Props, mapStateToProps } from "./types";
-import ContainerInfo from "../common/infoPanelContainer";
+import InfoPanelContainer from "../common/infoPanelContainer";
 import { CELLGUIDE_URL } from "../common/constants";
 
 function CellTypeInfo(props: Props) {
-  const { cellInfo } = props;
+  const { cellInfo, cellTypes } = props;
 
   const {
     cellId,
@@ -17,8 +17,13 @@ function CellTypeInfo(props: Props) {
     loading,
   } = cellInfo;
 
+  const quickList = useMemo(
+    () => cellTypes.map((cellType) => cellType.cellTypeName),
+    [cellTypes]
+  );
+
   return (
-    <ContainerInfo
+    <InfoPanelContainer
       id={cellId}
       name={cellName}
       description={cellDescription}
@@ -28,6 +33,7 @@ function CellTypeInfo(props: Props) {
       loading={loading}
       infoType="Cell Type"
       url={CELLGUIDE_URL}
+      quickList={quickList}
     />
   );
 }

@@ -94,6 +94,10 @@ function QuickGene() {
     })();
   }, [annoMatrix, prevProps]);
 
+  useEffect(() => {
+    dispatch({ type: "request gene list success", geneNames });
+  }, [dispatch, geneNames]);
+
   const handleExpand = () => setIsExpanded(!isExpanded);
 
   const renderGene = (
@@ -173,6 +177,7 @@ function QuickGene() {
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
+
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
       <H4

@@ -2,6 +2,7 @@ import { AnyAction } from "redux";
 import {
   ActiveTab,
   CellInfo,
+  CellType,
   DatasetUnsMetadata,
   GeneInfo,
 } from "../common/types/entities";
@@ -30,6 +31,8 @@ interface ControlsState {
   geneInfo: GeneInfo;
   unsMetadata: DatasetUnsMetadata;
   cellInfo: CellInfo;
+  cellTypes: CellType[];
+  geneList: string[];
   expandedCategories: string[];
 }
 const Controls = (
@@ -70,6 +73,8 @@ const Controls = (
       error: null,
       loading: false,
     },
+    cellTypes: [],
+    geneList: [],
     geneInfo: {
       gene: null,
       geneName: "",
@@ -262,6 +267,17 @@ const Controls = (
         },
       };
     }
+    case "request cell types list success": {
+      return {
+        ...state,
+        cellTypes: (
+          action.data as { cell_id: string; cell_name: string }[]
+        ).map((item) => ({
+          cellTypeId: item.cell_id,
+          cellTypeName: item.cell_name,
+        })),
+      };
+    }
     /*******************************
               Gene Info
     *******************************/
@@ -271,6 +287,7 @@ const Controls = (
         geneInfo: {
           ...state.geneInfo,
           gene: action.gene,
+          geneName: action.gene,
           loading: true,
         },
       };
@@ -288,6 +305,22 @@ const Controls = (
           infoError: action.infoError,
           loading: false,
         },
+      };
+    }
+    case "request gene info error": {
+      return {
+        ...state,
+        geneInfo: {
+          ...state.geneInfo,
+          infoError: action.error,
+          loading: false,
+        },
+      };
+    }
+    case "request gene list success": {
+      return {
+        ...state,
+        geneList: action.geneNames,
       };
     }
     /**************************
