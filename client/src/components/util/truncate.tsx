@@ -38,6 +38,14 @@ const SECOND_HALF_INNER_STYLE = {
 
 const isTest = getFeatureFlag(FEATURES.TEST);
 
+/**
+ * (thuang): Make sure to add `max-width` to the first child element of this component
+ * for truncation to work properly.
+ * E.g.,
+ * <Truncate>
+ *  <span style={{ maxWidth: "100px" }}>This is a long string</span>
+ * </Truncate>
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export default (props: any) => {
   const { children, isGenesetDescription, tooltipAddendum = "" } = props;

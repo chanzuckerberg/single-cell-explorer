@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { Props, mapStateToProps } from "./types";
 import ContainerInfo from "../common/infoPanelContainer";
+import { EMPTY_ARRAY } from "../../../../common/constants";
 
 function GeneInfo(props: Props) {
   const { geneInfo } = props;
@@ -24,7 +25,7 @@ function GeneInfo(props: Props) {
       symbol={gene ?? undefined}
       description={geneSummary}
       synonyms={geneSynonyms}
-      references={[]}
+      references={EMPTY_ARRAY}
       error={infoError}
       loading={loading}
       infoType="Gene"
