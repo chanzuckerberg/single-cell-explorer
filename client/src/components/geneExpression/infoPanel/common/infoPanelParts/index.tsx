@@ -33,7 +33,7 @@ export function LoadingInfo(props: BaseInfoProps) {
   return (
     <InfoDiv>
       <InfoTitle>
-        <InfoSymbol>{name}</InfoSymbol>
+        <InfoSymbol data-testid="info-type-loading">{name}</InfoSymbol>
       </InfoTitle>
       <div
         style={{
@@ -128,7 +128,7 @@ export function ShowInfo(props: ExtendedInfoProps) {
     <InfoDiv>
       {showWarningBanner && <ShowWarningBanner />}
       <InfoTitle>
-        <InfoSymbol>{symbol ?? name}</InfoSymbol>
+        <InfoSymbol data-testid="info-type-title">{symbol ?? name}</InfoSymbol>
         <InfoOpenIn>
           <Link href={externalUrl} target="_blank">
             {OPEN_IN(infoType === "Cell Type" ? "Cell Guide" : "NCBI")}

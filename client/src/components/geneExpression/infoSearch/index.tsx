@@ -34,9 +34,10 @@ function InfoSearch(props: Props) {
     );
   };
   const { handleClick, filterItems } = useConnect({ infoType });
+  const infoTag = infoType === "Gene" ? "gene" : "cell-type";
 
   return (
-    <InfoSearchWrapper>
+    <InfoSearchWrapper data-testid={`suggest-menu-item-${infoTag}`}>
       <Suggest
         resetOnSelect
         closeOnSelect
