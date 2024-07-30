@@ -801,7 +801,7 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
   await tryUntil(
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
-      
+
       await page
         .getByTestId(imageID)
         /**
