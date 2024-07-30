@@ -2,9 +2,6 @@ FROM 533267185808.dkr.ecr.us-west-2.amazonaws.com/docker.io/sci/library/ubuntu:2
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
-ARG HAPPY_ENV
-ENV HAPPY_ENV=$HAPPY_ENV
-ENV DEPLOYMENT_STAGE=$HAPPY_ENV
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -38,8 +35,8 @@ ADD hosted/start.sh start.sh
 RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml
 
-ARG HAPPY_COMMIT=""
-LABEL commit=${HAPPY_COMMIT}
-ENV COMMIT_SHA=${HAPPY_COMMIT}
+ARG COMMIT_SHA=""
+LABEL commit=${COMMIT_SHA}
+ENV COMMIT_SHA=${COMMIT_SHA}
 
 CMD ["/start.sh"]
