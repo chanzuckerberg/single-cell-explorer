@@ -337,6 +337,8 @@ export async function clip(min = "0", max = "100", page: Page): Promise<void> {
   await clearInputAndTypeInto("clip-min-input", min, page);
   await clearInputAndTypeInto("clip-max-input", max, page);
   await page.getByTestId("clip-commit").click();
+  // close clip dialog
+  await page.getByTestId("visualization-settings").click();
 }
 
 /**
