@@ -25,6 +25,7 @@ export const STANDARD_CATEGORY_NAMES = [
   "suspension_type",
   "tissue",
   "tissue_ontology_term_id",
+  "tissue_type",
 ];
 
 export const EXCLUDED_CATEGORY_NAMES = ["observation_joinid"];
