@@ -1,39 +1,45 @@
 import React from "react";
+import { connect } from "react-redux";
+
 import { MenuItem } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import { Suggest, ItemRenderer } from "@blueprintjs/select";
 
-import { FuzzySortResult, Props, RenderItemProps } from "./types";
+import {
+  FuzzySortResult,
+  Props,
+  RenderItemProps,
+  mapDispatchToProps,
+} from "./types";
 import useConnect from "./connect";
 import { InfoSearchWrapper } from "./styles";
 
 function InfoSearch(props: Props) {
-  const { infoType, isLoading, quickList } = props;
+  const { infoType, isLoading, quickList, dispatch } = props;
 
   const renderItem: ItemRenderer<string | FuzzySortResult> = (
     item: string | FuzzySortResult,
-    { handleClick, modifiers }: RenderItemProps
+    { modifiers }: RenderItemProps
   ) => {
     if (!modifiers.matchesPredicate) {
       return null;
     }
 
     const itemName = typeof item === "string" ? item : item.target;
-
     return (
       <MenuItem
         active={modifiers.active}
         disabled={modifiers.disabled}
         data-testid={`suggest-menu-item-${itemName}`}
         key={itemName}
-        onClick={(g) => {
-          handleClick(g);
+        onClick={() => {
+          handleClick(item);
         }}
         text={itemName}
       />
     );
   };
-  const { handleClick, filterItems } = useConnect({ infoType });
+  const { handleClick, filterItems } = useConnect({ infoType, dispatch });
   const infoTag = infoType === "Gene" ? "gene" : "cell-type";
 
   return (
@@ -64,4 +70,4 @@ function InfoSearch(props: Props) {
     </InfoSearchWrapper>
   );
 }
-export default InfoSearch;
+export default connect(mapDispatchToProps)(InfoSearch);

@@ -15,7 +15,7 @@ import {
 } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
 import { ActiveTab } from "../../../common/types/entities";
-import { State, Props, mapStateToProps } from "./types";
+import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
 
 class Gene extends React.Component<Props, State> {
@@ -97,12 +97,7 @@ class Gene extends React.Component<Props, State> {
     dispatch({
       type: "open gene info",
       gene,
-      url: info?.ncbi_url,
-      name: info?.name,
-      synonyms: info.synonyms,
-      summary: info.summary,
-      infoError: null,
-      showWarningBanner: info.show_warning_banner,
+      info,
     });
   };
 
@@ -269,4 +264,4 @@ class Gene extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(Gene);
+export default connect(mapStateToProps, mapDispatchToProps)(Gene);

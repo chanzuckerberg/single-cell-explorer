@@ -44,3 +44,6 @@ export const mapStateToProps = (
     isGeneInfo: state.controls.geneInfo.gene === gene,
   };
 };
+export const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  dispatch,
+});

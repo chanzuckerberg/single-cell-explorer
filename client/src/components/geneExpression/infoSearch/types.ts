@@ -1,3 +1,5 @@
+import { AppDispatch } from "../../../reducers";
+
 export interface FuzzySortResult {
   target: string;
 }
@@ -15,8 +17,18 @@ export interface RenderItemProps {
 
 export type Item = string | FuzzySortResult;
 
-export interface Props {
+export interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+export interface OwnProps {
   infoType: string;
   isLoading: boolean | undefined;
   quickList: string[] | undefined;
 }
+
+export type Props = OwnProps & DispatchProps;
+
+export const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  dispatch,
+});

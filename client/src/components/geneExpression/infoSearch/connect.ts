@@ -1,14 +1,17 @@
 import fuzzysort from "fuzzysort";
-import { useDispatch } from "react-redux";
 
 import actions from "../../../actions";
 import { Item } from "./types";
+import { AppDispatch } from "../../../reducers";
 
-export default function useConnect({ infoType }: { infoType: string }) {
-  const dispatch = useDispatch();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const filterItems = (query: any, items: any) =>
+export default function useConnect({
+  infoType,
+  dispatch,
+}: {
+  infoType: string;
+  dispatch: AppDispatch;
+}) {
+  const filterItems = (query: string, items: string[]) =>
     fuzzysort.go(query, items, {
       limit: 5,
       threshold: -10000,
@@ -16,7 +19,9 @@ export default function useConnect({ infoType }: { infoType: string }) {
 
   const handleClick = (g: Item) => {
     if (!g) return;
+
     const item = typeof g === "string" ? g : g.target;
+
     if (infoType === "Gene") {
       handleGeneClick(item).catch((e) =>
         dispatch({ type: "gene info error", error: e })
@@ -39,12 +44,7 @@ export default function useConnect({ infoType }: { infoType: string }) {
     dispatch({
       type: "open gene info",
       gene,
-      url: info?.ncbi_url,
-      name: info?.name,
-      synonyms: info.synonyms,
-      summary: info.summary,
-      infoError: null,
-      showWarningBanner: info.show_warning_banner,
+      info,
     });
   };
 
