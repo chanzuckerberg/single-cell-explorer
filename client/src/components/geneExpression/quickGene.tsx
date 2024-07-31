@@ -24,7 +24,6 @@ const usePrevious = (value: any) => {
   return ref.current;
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 function QuickGene() {
   const dispatch = useDispatch();
 
@@ -191,7 +190,7 @@ function QuickGene() {
       </H4>
       {isExpanded && (
         <>
-          <div style={{ marginBottom: "8px" }}>
+          <div style={{ marginBottom: "8px" }} data-testid="gene-search">
             <Suggest
               resetOnSelect
               closeOnSelect

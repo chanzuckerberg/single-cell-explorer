@@ -17,7 +17,7 @@ function CellTypeInfo(props: Props) {
     loading,
   } = cellInfo;
 
-  const quickList = useMemo(
+  const cellTypeList = useMemo(
     () => cellTypes.map((cellType) => cellType.cellTypeName),
     [cellTypes]
   );
@@ -33,7 +33,7 @@ function CellTypeInfo(props: Props) {
       loading={loading}
       infoType="Cell Type"
       url={CELLGUIDE_URL}
-      quickList={quickList}
+      quickList={cellTypeList}
     />
   );
 }

@@ -752,7 +752,10 @@ export async function addGeneToSearch(
   geneName: string,
   page: Page
 ): Promise<void> {
-  await page.getByTestId("gene-search").fill(geneName);
+  await page
+    .getByTestId(`gene-search`)
+    .getByPlaceholder("Quick Gene Search")
+    .fill(geneName);
   await page.keyboard.press("Enter");
   expect(page.getByTestId(`histogram-${geneName}`)).toBeTruthy();
 }
