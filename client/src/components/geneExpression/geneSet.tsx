@@ -32,7 +32,7 @@ class GeneSet extends React.Component<{}, State> {
     const { isOpen } = this.state;
 
     if (!isOpen) {
-      track(EVENTS.EXPLORER_GENESET_EXPAND_BUTTON_CLICKED);
+      track(EVENTS.EXPLORER_GENE_SET_VIEW_DISTRIBUTION);
     }
 
     this.setState({ isOpen: !isOpen });
@@ -67,7 +67,6 @@ class GeneSet extends React.Component<{}, State> {
             <Gene
               key={gene}
               gene={gene}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; gene: any; geneDescription: any;... Remove this comment to see the full error message
               geneDescription={geneDescription}
               geneset={setName}
               geneId={geneId}

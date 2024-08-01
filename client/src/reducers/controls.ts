@@ -1,9 +1,11 @@
 import { AnyAction } from "redux";
+import {
+  ActiveTab,
+  CellInfo,
+  DatasetUnsMetadata,
+  GeneInfo,
+} from "../common/types/entities";
 
-export enum ActiveTab {
-  Gene = "Gene",
-  Dataset = "Dataset",
-}
 interface ControlsState {
   loading: boolean;
   error: Error | string | null;
@@ -13,23 +15,22 @@ interface ControlsState {
   scatterplotYYaccessor: string | false;
   scatterplotIsMinimized: boolean;
   scatterplotIsOpen: boolean;
-  gene: string | null;
-  infoError: string | null;
   graphRenderCounter: number;
   colorLoading: boolean;
   datasetDrawer: boolean;
-  geneUrl: string;
-  geneSummary: string;
-  geneName: string;
-  geneSynonyms: string[];
   isCellGuideCxg: boolean;
   screenCap: boolean;
   mountCapture: boolean;
-  showWarningBanner: boolean;
   imageUnderlay: boolean;
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
+  imageOpacity: number;
+  dotOpacity: number;
+  geneInfo: GeneInfo;
+  unsMetadata: DatasetUnsMetadata;
+  cellInfo: CellInfo;
+  expandedCategories: string[];
 }
 const Controls = (
   state: ControlsState = {
@@ -42,24 +43,46 @@ const Controls = (
     scatterplotXXaccessor: false, // just easier to read
     scatterplotYYaccessor: false,
     scatterplotIsMinimized: false,
-    geneUrl: "",
-    geneSummary: "",
-    geneSynonyms: [""],
-    geneName: "",
     scatterplotIsOpen: false,
-    gene: null,
-    infoError: null,
     graphRenderCounter: 0 /* integer as <Component key={graphRenderCounter} - a change in key forces a remount */,
     colorLoading: false,
     datasetDrawer: false,
     isCellGuideCxg: false,
     screenCap: false,
     mountCapture: false,
-    showWarningBanner: false,
     imageUnderlay: true,
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
+    unsMetadata: {
+      imageWidth: 1955,
+      imageHeight: 1955,
+      resolution: "",
+      scaleref: 0.1868635,
+      spotDiameterFullres: 86.06629150338271,
+    },
+    cellInfo: {
+      cellId: "",
+      cellName: "",
+      cellDescription: "",
+      synonyms: [""],
+      references: [""],
+      error: null,
+      loading: false,
+    },
+    geneInfo: {
+      gene: null,
+      geneName: "",
+      geneSummary: "",
+      geneSynonyms: [""],
+      geneUrl: "",
+      showWarningBanner: false,
+      infoError: null,
+      loading: false,
+    },
+    imageOpacity: 100,
+    dotOpacity: 100,
+    expandedCategories: [],
   },
   action: AnyAction
 ): ControlsState => {
@@ -132,35 +155,6 @@ const Controls = (
         graphRenderCounter: c,
       };
     }
-
-    /*******************************
-              Gene Info
-    *******************************/
-    case "open gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: action.url,
-        geneSummary: action.summary,
-        geneSynonyms: action.synonyms,
-        geneName: action.name,
-        infoError: action.infoError,
-        showWarningBanner: action.showWarningBanner,
-      };
-    }
-
-    case "load gene info": {
-      return {
-        ...state,
-        gene: action.gene,
-        geneUrl: "",
-        geneSummary: "",
-        geneSynonyms: [""],
-        geneName: "",
-        infoError: null,
-      };
-    }
-
     /*******************************
               Scatterplot
     *******************************/
@@ -211,22 +205,91 @@ const Controls = (
     /**************************
           Info Panel
     **************************/
-    case "toggle active info panel":
+    case "toggle active info panel": {
       return {
         ...state,
         activeTab: action.activeTab,
         infoPanelHidden: false,
+        infoPanelMinimized: false,
       };
-    case "close info panel":
+    }
+    case "close info panel": {
       return {
         ...state,
         infoPanelHidden: true,
       };
-    case "minimize/maximize info panel":
+    }
+    case "minimize/maximize info panel": {
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
       };
+    }
+    /**************************
+          Cell Info
+    **************************/
+    case "request cell info start": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellName: action.cellName,
+          loading: true,
+        },
+      };
+    }
+    case "open cell info": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          cellId: action.cellInfo.cell_id,
+          cellDescription: action.cellInfo.description,
+          synonyms: action.cellInfo.synonyms,
+          references: action.cellInfo.references,
+          error: action.cellInfo.error,
+          loading: false,
+        },
+      };
+    }
+    case "request cell info error": {
+      return {
+        ...state,
+        cellInfo: {
+          ...state.cellInfo,
+          error: action.error,
+          loading: false,
+        },
+      };
+    }
+    /*******************************
+              Gene Info
+    *******************************/
+    case "request gene info start": {
+      return {
+        ...state,
+        geneInfo: {
+          ...state.geneInfo,
+          gene: action.gene,
+          loading: true,
+        },
+      };
+    }
+    case "open gene info": {
+      return {
+        ...state,
+        geneInfo: {
+          gene: action.gene,
+          geneName: action.name,
+          geneSummary: action.summary,
+          geneSynonyms: action.synonyms,
+          geneUrl: action.url,
+          showWarningBanner: action.showWarningBanner,
+          infoError: action.infoError,
+          loading: false,
+        },
+      };
+    }
     /**************************
          Screen Capture
     **************************/
@@ -267,18 +330,66 @@ const Controls = (
         imageUnderlay: action.toggle,
       };
     }
-    case "request uns metadata started":
+    case "request uns metadata success": {
       return {
         ...state,
-        loading: true,
-        error: null,
+        unsMetadata: {
+          imageHeight:
+            action.data.image_height ?? state.unsMetadata.imageHeight,
+          imageWidth: action.data.image_width ?? state.unsMetadata.imageWidth,
+          resolution: action.data.resolution ?? state.unsMetadata.resolution,
+          scaleref: action.data.scaleref ?? state.unsMetadata.scaleref,
+          spotDiameterFullres:
+            action.data.spot_diameter_fullres ??
+            state.unsMetadata.spotDiameterFullres,
+        },
       };
-    case "request uns metadata error":
+    }
+    case "request uns metadata error": {
       return {
         ...state,
         loading: false,
         error: action.error,
       };
+    }
+    /**************************
+         Opacities
+    **************************/
+    case "set image opacity": {
+      return {
+        ...state,
+        imageOpacity: action.data,
+      };
+    }
+    case "set dot opacity": {
+      return {
+        ...state,
+        dotOpacity: action.data,
+      };
+    }
+    /**************************
+         Categories
+    **************************/
+    case "controls category expansion change": {
+      const { category } = action;
+      const { expandedCategories } = state;
+
+      if (expandedCategories.includes(category)) {
+        const newExpandedCategories = expandedCategories.filter(
+          (expandedCategory) => expandedCategory !== category
+        );
+
+        return {
+          ...state,
+          expandedCategories: newExpandedCategories,
+        };
+      }
+
+      return {
+        ...state,
+        expandedCategories: [...expandedCategories, category],
+      };
+    }
     default:
       return state;
   }

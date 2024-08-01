@@ -62,6 +62,9 @@ export interface StateProps {
   isSidePanelOpen: RootState["panelEmbedding"]["open"];
   isSidePanelMinimized: RootState["panelEmbedding"]["minimized"];
   sidePanelLayoutChoice: RootState["panelEmbedding"]["layoutChoice"];
+  unsMetadata: RootState["controls"]["unsMetadata"];
+  imageOpacity: RootState["controls"]["imageOpacity"];
+  dotOpacity: RootState["controls"]["dotOpacity"];
 }
 
 export interface OwnProps {

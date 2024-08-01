@@ -132,6 +132,7 @@ const Header = (props: HeaderProps) => {
         <Right>
           <LinkWrapper>
             <Popover2
+              hasBackdrop
               content={
                 <Menu>
                   <MenuItem

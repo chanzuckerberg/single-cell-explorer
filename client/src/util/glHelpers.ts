@@ -74,14 +74,40 @@ const offset = scale * -domain[0] + range[0];
 
 export const glPointSize = `
   float pointSize(float nPoints, float minViewportDimension, bool isSelected, bool isHighlight) {
-    float density = nPoints / (minViewportDimension * minViewportDimension);
-    float pointSize = (${scale.toFixed(4)}*density) + ${offset.toFixed(4)};
-    pointSize = clamp(pointSize, 
+      float density = nPoints / (minViewportDimension * minViewportDimension);
+      float pointSize = (${scale.toFixed(4)}*density) + ${offset.toFixed(4)};
+      pointSize = clamp(pointSize, 
       ${range[0].toFixed(4)}, 
       ${range[1].toFixed(4)});
 
     if (isHighlight) return 2. * pointSize;
     if (isSelected) return pointSize;
-    return pointSize / 3.;
+    return pointSize / 5.;
+  }
+`;
+
+export const densityFactor = 0.9;
+
+export const glPointSizeSpatial = `
+
+  float pointSizeSpatial(float nPoints, float minViewportDimension, bool isSelected, bool isHighlight, float distance, float imageHeight, float scaleref, float spotDiameterFullres) {
+    
+    float scaleFactor = (minViewportDimension / imageHeight) ;
+
+
+    // Adjust base size based on distance (zoom level)
+    float adjustedDistance = clamp(distance, 1., 3.5); // Clamp the distance to avoid extreme values
+    float zoomFactor = 1.0 / adjustedDistance * distance * ${densityFactor}; // Inverse of adjustedDistance and multiply by distnace and density factor to get smoother dot size change
+    float adjustedZoomFactor = clamp(zoomFactor, 0.5, 3.5); // Clamp the zoom factor to avoid extreme values and overlapping dots
+
+    float baseSize = spotDiameterFullres * scaleref * scaleFactor * adjustedZoomFactor; // Base size proportional to viewport
+    
+    if (isSelected) {
+      return baseSize * 1.5; // Increase size if selected
+    } else if (isHighlight) {
+      return baseSize * 2.0; // Increase size if highlighted
+    } else {
+      return baseSize;
+    }
   }
 `;

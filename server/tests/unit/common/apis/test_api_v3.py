@@ -20,6 +20,27 @@ from server.tests.unit import BaseTest as _BaseTest
 
 BAD_FILTER = {"filter": {"obs": {"annotation_value": [{"name": "xyz"}]}}}
 
+# Test data for cell type info endpoint
+TEST_SNAPSHOT_IDENTIFIER = "snapshot123"
+TEST_CELL_TYPE_METADATA = {
+    "1": {
+        "name": "monocyte",
+        "id": "CL:0000576",
+        "clDescription": "Monocytes are a type of white blood cell...",
+        "synonyms": [],
+    }
+}
+TEST_CELL_DESCRIPTION = {
+    "description": "Monocytes are a type of white blood cell...",
+    "references": ["ref1", "ref2"],
+}
+TEST_CELL_DESCRIPTION_RESPONSE = (
+    '{"description": "Monocytes are a type of white blood cell", "references": ["ref1", "ref2"]}'
+)
+TEST_CELL_METADATA_RESPONSE = (
+    '{"1": {"name": "monocyte", "id": "CL:0000540", "clDescription": "A neuron", "synonyms": []}}'
+)
+
 
 class BaseTest(_BaseTest):
     @classmethod
@@ -554,6 +575,67 @@ class EndPoints(BaseTest):
                 self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
                 self.assertEqual(result.headers["Content-Type"], "application/json")
 
+    @patch("server.common.rest.requests.get")
+    @patch("server.common.utils.cell_type_info.get_latest_snapshot_identifier")
+    @patch("server.common.utils.cell_type_info.get_celltype_metadata")
+    @patch("server.common.utils.cell_type_info.get_cell_description")
+    def test_cell_type_info_success(
+        self, mock_get_cell_description, mock_get_celltype_metadata, mock_get_latest_snapshot_identifier, mock_request
+    ):
+        endpoint = "cellinfo?cell=monocyte"
+        mock_get_latest_snapshot_identifier.return_value = TEST_SNAPSHOT_IDENTIFIER
+        mock_get_celltype_metadata.return_value = TEST_CELL_TYPE_METADATA
+        mock_get_cell_description.return_value = TEST_CELL_DESCRIPTION
+
+        def mock_requests_get(url, *args, **kwargs):
+            if "latest_snapshot_identifier" in url:
+                return MockResponse(TEST_SNAPSHOT_IDENTIFIER, 200)
+            elif "celltype_metadata.json" in url:
+                return MockResponse(TEST_CELL_METADATA_RESPONSE, 200)
+            else:
+                return MockResponse(TEST_CELL_DESCRIPTION_RESPONSE, 200)
+
+        mock_request.side_effect = mock_requests_get
+
+        for url_base in [self.TEST_UNS_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertIn("description", result.json)
+                self.assertIn("cell_id", result.json)
+                self.assertIn("cell_name", result.json)
+                self.assertIn("synonyms", result.json)
+
+    @patch("server.common.rest.requests.get")
+    @patch("server.common.utils.cell_type_info.get_latest_snapshot_identifier")
+    @patch("server.common.utils.cell_type_info.get_celltype_metadata")
+    @patch("server.common.utils.cell_type_info.get_cell_description")
+    def test_cell_type_info_not_found(
+        self, _, mock_get_celltype_metadata, mock_get_latest_snapshot_identifier, mock_request
+    ):
+        endpoint = "cellinfo?cell=unknowncell"
+        mock_get_latest_snapshot_identifier.return_value = TEST_SNAPSHOT_IDENTIFIER
+        mock_get_celltype_metadata.return_value = TEST_CELL_TYPE_METADATA
+
+        def mock_requests_get(url):
+            if "latest_snapshot_identifier" in url:
+                return MockResponse(TEST_SNAPSHOT_IDENTIFIER, 200)
+            elif "celltype_metadata.json" in url:
+                return MockResponse(TEST_CELL_METADATA_RESPONSE, 200)
+            else:
+                return MockResponse(TEST_CELL_DESCRIPTION_RESPONSE, 200)
+
+        mock_request.side_effect = mock_requests_get
+
+        for url_base in [self.TEST_UNS_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertIn("error", result.json)
+                self.assertEqual(result.json["error"], "Cell type not found")
+
     @unittest.skipIf(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):
         endpoint = "static"
@@ -731,6 +813,43 @@ class EndPoints(BaseTest):
                 self.assertEqual(df["n_cols"], 1)
                 self.assertEqual(df["col_idx"], [query_hash])
                 self.assertAlmostEqual(df["columns"][0][0], -0.17065382)
+
+    def test_uns_no_metadata_get(self):
+        endpoint = "uns/meta"
+        query = "key=spatial"
+        uns_meta_expected_response = {}
+        for url_base in [self.TEST_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/json"}
+                result = self.client.get(url, headers=header)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data, uns_meta_expected_response)
+
+    def test_uns_metadata_get(self):
+        endpoint = "uns/meta"
+        query = "key=spatial"
+        uns_meta_expected_response = {
+            "image_width": 1955,
+            "image_height": 1955,
+            "resolution": "hires",
+            "scaleref": 0.1868635,
+            "spot_diameter_fullres": 86.06629150338271,
+            "crop_coords": [0, 22, 1955, 1977],
+        }
+        for url_base in [self.TEST_UNS_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/json"}
+                result = self.client.get(url, headers=header)
+
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data, uns_meta_expected_response)
 
 
 class TestDatasetMetadata(BaseTest):
@@ -1037,10 +1156,15 @@ class TestDeployedVersion(BaseTest):
 
 
 class MockResponse:
-    def __init__(self, body, status_code, ok=True):
+    def __init__(self, body, status_code, text="monocyte", ok=True):
+        self.text = text
         self.content = body
         self.status_code = status_code
         self.ok = ok
 
     def json(self):
         return json.loads(self.content)
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise

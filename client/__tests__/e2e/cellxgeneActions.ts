@@ -337,6 +337,8 @@ export async function clip(min = "0", max = "100", page: Page): Promise<void> {
   await clearInputAndTypeInto("clip-min-input", min, page);
   await clearInputAndTypeInto("clip-max-input", max, page);
   await page.getByTestId("clip-commit").click();
+  // close clip dialog
+  await page.getByTestId("visualization-settings").click();
 }
 
 /**
@@ -602,22 +604,29 @@ export async function expandGene(
 
 export async function requestGeneInfo(gene: string, page: Page): Promise<void> {
   await page.getByTestId(`get-info-${gene}`).click();
-  await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
+}
+
+export async function requestCellTypeInfo(cell: string, page: Page) {
+  await page.getByTestId(`cell_type:category-expand`).click();
+  await page.getByTestId(`get-info-cell_type-${cell}`).click();
 }
 
 export async function assertInfoPanelExists(
-  gene: string,
+  id: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
-  await expect(page.getByTestId(`${gene}:gene-info`)).toBeTruthy();
-  await expect(page.getByTestId(`info-panel-header`)).toBeTruthy();
-  await expect(page.getByTestId(`min-info-panel`)).toBeTruthy();
+  await expect(
+    page.getByTestId(`${id}:${infoType}-info-wrapper`)
+  ).toBeVisible();
+  await expect(page.getByTestId(`info-panel-header`)).toBeVisible();
+  await expect(page.getByTestId(`min-info-panel`)).toBeVisible();
 
-  await expect(page.getByTestId(`gene-info-synonyms`).innerText).not.toEqual(
-    ""
-  );
+  await expect(
+    page.getByTestId(`${infoType}-info-synonyms`).innerText
+  ).not.toEqual("");
 
-  await expect(page.getByTestId(`gene-info-link`)).toBeTruthy();
+  await expect(page.getByTestId(`${infoType}-info-link`)).toBeTruthy();
 }
 
 export async function minimizeInfoPanel(page: Page): Promise<void> {
@@ -625,11 +634,12 @@ export async function minimizeInfoPanel(page: Page): Promise<void> {
 }
 
 export async function assertInfoPanelIsMinimized(
-  gene: string,
+  id: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
   const testIds = [
-    `${gene}:gene-info`,
+    `${id}:${infoType}-info-wrapper`,
     "info-panel-header",
     "max-info-panel",
     "close-info-panel",
@@ -637,8 +647,8 @@ export async function assertInfoPanelIsMinimized(
 
   await tryUntil(
     async () => {
-      for (const id of testIds) {
-        const result = await page.getByTestId(id).isVisible();
+      for (const testId of testIds) {
+        const result = await page.getByTestId(testId).isVisible();
         await expect(result).toBe(true);
       }
     },
@@ -651,19 +661,20 @@ export async function closeInfoPanel(page: Page): Promise<void> {
 }
 
 export async function assertInfoPanelClosed(
-  gene: string,
+  id: string,
+  infoType: string,
   page: Page
 ): Promise<void> {
   const testIds = [
-    `${gene}:gene-info`,
+    `${id}:${infoType}-info-wrapper`,
     "info-panel-header",
     "min-info-panel",
     "close-info-panel",
   ];
   await tryUntil(
     async () => {
-      for (const id of testIds) {
-        const result = await page.getByTestId(id).isVisible();
+      for (const testId of testIds) {
+        const result = await page.getByTestId(testId).isVisible();
         await expect(result).toBe(false);
       }
     },
@@ -821,7 +832,7 @@ export async function selectLayout(
     layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
   }
 
-  await page.getByTestId(layoutChoiceTestId).click();
+  await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   /**
    * (thuang): For blueprint radio buttons, we need to tab first to go to the
@@ -857,7 +868,7 @@ export async function selectLayout(
     }
   }
 
-  await page.getByTestId(layoutChoiceTestId).click();
+  await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
 }

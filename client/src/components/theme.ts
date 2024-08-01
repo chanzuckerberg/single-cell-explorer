@@ -58,7 +58,7 @@ export const cornersS = (props: CommonThemeProps) => getCorners(props)?.s;
 export const cornersNone = (props: CommonThemeProps) => getCorners(props)?.none;
 
 const typography = {
-  fontFamily: "Inter",
+  fontFamily: "Roboto Condensed",
   styles: {
     body: {
       button: {

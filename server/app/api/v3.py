@@ -155,6 +155,12 @@ class GeneInfoAPI(S3URIResource):
         return common_rest.gene_info_get(request)
 
 
+class CellTypeInfoAPI(S3URIResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.cell_type_info_get(request)
+
+
 class VersionAPI(Resource):
     def get(self):
         return common_rest.get_deployed_version(request)
@@ -226,6 +232,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(AnnotationsObsAPI, "/annotations/obs")
     add_resource(AnnotationsVarAPI, "/annotations/var")
     add_resource(DataVarAPI, "/data/var")
+    add_resource(CellTypeInfoAPI, "/cellinfo")
     add_resource(GeneInfoAPI, "/geneinfo")
     add_resource(SummarizeVarAPI, "/summarize/var")
     # Display routes

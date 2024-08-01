@@ -58,6 +58,7 @@ import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
 import { fetchDeepZoomImageFailed } from "../../actions/config";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { DatasetUnsMetadata } from "../../common/types/entities";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -67,6 +68,7 @@ interface GraphAsyncProps {
   height: number;
   imageUnderlay: boolean;
   screenCap: boolean;
+  unsMetadata: DatasetUnsMetadata;
 }
 
 const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
@@ -88,10 +90,16 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   isSidePanelOpen: state.panelEmbedding.open,
   isSidePanelMinimized: state.panelEmbedding.minimized,
   sidePanelLayoutChoice: state.panelEmbedding.layoutChoice,
+  unsMetadata: state.controls.unsMetadata,
+  imageOpacity: state.controls.imageOpacity,
+  dotOpacity: state.controls.dotOpacity,
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
-  static createReglState(canvas: HTMLCanvasElement): {
+  static createReglState(
+    canvas: HTMLCanvasElement,
+    resolution: string
+  ): {
     camera: Camera;
     regl: Regl;
     drawPoints: DrawCommand;
@@ -103,7 +111,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         Must be created for each canvas
         */
     // setup canvas, webgl draw function and camera
-    const camera = _camera(canvas);
+    const camera = _camera(canvas, resolution);
     const regl = _regl(canvas);
     const drawPoints = _drawPoints(regl);
 
@@ -306,6 +314,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       layoutChoice,
       isHidden,
       isSidePanel,
+      imageOpacity,
     } = this.props;
 
     const { toolSVG, viewport } = this.state;
@@ -316,7 +325,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     let stateChanges: Partial<GraphState> = {};
 
-    this.updateOpenSeadragon();
+    this.initOpenSeadragon();
 
     if (prevProps.screenCap !== screenCap) {
       stateChanges = {
@@ -379,6 +388,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
      */
     if (isSidePanel && prevProps.isHidden && !isHidden) {
       this.handleResize();
+    }
+
+    /**
+     * (thuang): Image Opacity Change
+     */
+    if (prevProps.imageOpacity !== imageOpacity) {
+      this.updateOpenseadragonOpacity(imageOpacity);
     }
   }
 
@@ -527,7 +543,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
   // when a lasso is completed, filter to the points within the lasso polygon
   async handleLassoEnd(polygon: [number, number][]): Promise<void> {
     const minimumPolygonArea = 10;
-    const { dispatch, layoutChoice } = this.props;
+    const { dispatch, layoutChoice, isSidePanel } = this.props;
 
     if (
       polygon.length < 3 ||
@@ -537,10 +553,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       await dispatch(actions.graphLassoDeselectAction(layoutChoice?.current));
     } else {
       await dispatch(
-        actions.graphLassoEndAction(
-          layoutChoice?.current,
-          polygon.map((xy) => this.mapScreenToPoint(xy))
-        )
+        actions.graphLassoEndAction({
+          embName: layoutChoice?.current,
+          polygon: polygon.map((xy) => this.mapScreenToPoint(xy)),
+          graphId: sidePanelAttributeNameChange("graph", Boolean(isSidePanel)),
+        })
       );
     }
   }
@@ -707,8 +724,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       return;
     }
     this.reglCanvas = canvas;
+    const { unsMetadata } = this.props;
+    const { resolution } = unsMetadata;
     this.setState({
-      ...Graph.createReglState(canvas),
+      ...Graph.createReglState(canvas, resolution),
     });
   };
 
@@ -812,6 +831,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       viewport,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     } = props.watchProps;
 
     const { modelTF } = this.state;
@@ -858,6 +878,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       height,
       imageUnderlay,
       screenCap,
+      unsMetadata,
     };
   };
 
@@ -934,14 +955,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
         this is called from componentDidUpdate(), so be very careful using
         anything from this.state, which may be updated asynchronously.
         */
-    const { currentSelection } = this.props;
+    const { currentSelection, isSidePanel } = this.props;
+
     if (currentSelection.mode === "within-polygon") {
-      /*
-            if there is a current selection, make sure the lasso tool matches
-            */
-      const polygon = currentSelection.polygon.map((p: [number, number]) =>
+      const { polygon: polygonState, graphId } = currentSelection;
+
+      /**
+       * (thuang): Only display the lasso element in the panel that initiated
+       * the lasso
+       */
+      if (
+        graphId !== sidePanelAttributeNameChange("graph", Boolean(isSidePanel))
+      ) {
+        return;
+      }
+
+      /**
+       * if there is a current selection, make sure the lasso tool matches
+       */
+      const polygon = polygonState.map((p: [number, number]) =>
         this.mapPointToScreen(p)
       );
+
       tool?.move(polygon);
     } else {
       tool?.reset();
@@ -1105,7 +1140,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     return createColorQuery(colorMode, colorAccessor, schema, genesets);
   }
 
-  updateOpenSeadragon() {
+  initOpenSeadragon() {
     const {
       viewport: { width, height },
     } = this.state;
@@ -1162,20 +1197,33 @@ class Graph extends React.Component<GraphProps, GraphState> {
     this.openseadragon = null;
   }
 
-  hideOpenseadragon() {
+  /**
+   * (thuang): Opacity is a number between 0 and 100
+   */
+  updateOpenseadragonOpacity(opacity: number) {
     if (!this.openseadragon) return;
 
     const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
 
-    tiledImage?.setOpacity(0);
+    tiledImage?.setOpacity(opacity / 100);
+  }
+
+  hideOpenseadragon() {
+    const { dispatch } = this.props;
+
+    dispatch?.({
+      type: "set image opacity",
+      data: 0,
+    });
   }
 
   showOpenseadragon() {
-    if (!this.openseadragon) return;
+    const { dispatch } = this.props;
 
-    const tiledImage = this.openseadragon.world.getItemAt(0); // Get the first image
-
-    tiledImage?.setOpacity(1);
+    dispatch?.({
+      type: "set image opacity",
+      data: 100,
+    });
   }
 
   checkIsImageLayerInViewport() {
@@ -1218,7 +1266,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
     camera: GraphState["camera"],
     projectionTF: GraphState["projectionTF"]
   ): Promise<void> {
-    const { annoMatrix } = this.props;
+    const { annoMatrix, unsMetadata } = this.props;
 
     if (!this.reglCanvas || !annoMatrix) return;
 
@@ -1233,6 +1281,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
     );
     const { width, height } = this.reglCanvas;
 
+    const { imageHeight, scaleref, spotDiameterFullres } = unsMetadata;
+
     regl?.poll();
 
     if (drawPoints) {
@@ -1245,6 +1295,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
         projView,
         nPoints: schema.dataframe.nObs,
         minViewportDimension: Math.min(width, height),
+        imageHeight,
+        scaleref,
+        spotDiameterFullres,
+        isSpatial: isSpatialMode(this.props),
       });
     }
 
@@ -1265,6 +1319,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay,
       isSidePanel = false,
       isHidden = false,
+      dotOpacity,
     } = this.props;
 
     const {
@@ -1366,6 +1421,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
           style={{
             ...COMMON_CANVAS_STYLE,
             shapeRendering: "crispEdges",
+            opacity: isSpatialMode(this.props) ? `${dotOpacity}%` : "100%",
+            mixBlendMode: "multiply",
           }}
           id={sidePanelAttributeNameChange(`graph-canvas`, isSidePanel)}
           data-testid={sidePanelAttributeNameChange(

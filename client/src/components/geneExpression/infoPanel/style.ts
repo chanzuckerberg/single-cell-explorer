@@ -1,6 +1,4 @@
 import styled from "@emotion/styled";
-import { fontBodyXs } from "czifui";
-import { AnchorButton } from "@blueprintjs/core";
 import { gray300 } from "../../theme";
 
 interface InfoPanelWrapperProps {
@@ -16,15 +14,15 @@ export const InfoPanelWrapper = styled.div<InfoPanelWrapperProps>`
   overflow: hidden;
   position: ${(props) => (props.isMinimized ? "absolute" : "relative")};
   bottom: ${(props) => (props.isMinimized ? "0" : "auto")};
-  height: ${(props) => (props.isMinimized ? "40px" : "auto")};
+  height: ${(props) => (props.isMinimized ? "40px" : "50%")};
 `;
 
 export const InfoPanelContent = styled.div<InfoPanelWrapperProps>`
   width: 100%;
-  padding: 30px 0px 0px 0px;
+  padding-top: 30px;
   position: relative;
   overflow-y: auto;
-  max-height: ${(props) => (props.isMinimized ? "0" : "400px")};
+  min-height: ${(props) => (props.isMinimized ? "0" : "50%")};
 `;
 
 export const InfoPanelHeader = styled.div`
@@ -35,30 +33,11 @@ export const InfoPanelHeader = styled.div`
   width: 100%;
   border-top: 1px solid ${gray300};
   border-bottom: 1px solid ${gray300};
-  padding: 10px 0px 5px 10px;
-  height: 38px;
+  padding: 17px 0px 8px 10px;
+  height: 35px;
   position: absolute;
   background: white;
   z-index: 1;
-`;
-
-export const StyledAnchorButton = styled(AnchorButton)`
-  ${fontBodyXs}
-  color: #ccc;
-
-  &.active {
-    font-weight: 600;
-    color: black;
-    border-bottom: 3px solid #0073ff;
-    border-radius: 0px;
-  }
-`;
-
-export const InfoPanelTabs = styled.div`
-  display: flex;
-  flex-direction: row;
-  width: 200px;
-  justify-content: space-between;
 `;
 
 export const CollapseToggle = styled.div`
@@ -66,6 +45,6 @@ export const CollapseToggle = styled.div`
   flex-direction: row;
   justify-content: flex-end;
   width: 50px;
-  padding: 0px 0px 0px 20px;
+  padding: 0px 0px 7px 20px;
   cursor: pointer;
 `;

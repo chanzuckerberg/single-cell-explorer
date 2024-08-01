@@ -23,8 +23,19 @@ on:
         default: ''
 
 jobs:
+  get_commit_sha:
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.get_sha.outputs.COMMIT_SHA }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get commit sha
+        id: get_sha
+        run: |
+          echo "COMMIT_SHA=$(git rev-parse --verify HEAD)" >> $GITHUB_OUTPUT
   argus_builder:
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.9.0
+    needs: get_commit_sha
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.11.1
     secrets: inherit
     with:
       branches: ${{ inputs.branches }}
@@ -37,6 +48,9 @@ jobs:
             "name": "explorer",
             "context": ".",
             "dockerfile": "hosted/Dockerfile",
-            "platform": "linux/amd64"
+            "platform": "linux/amd64",
+            "build_args": [
+              "COMMIT_SHA=${{ needs.get_commit_sha.outputs.commit_sha }}"
+            ]
           }
         ]

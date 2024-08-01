@@ -25,6 +25,7 @@ export const STANDARD_CATEGORY_NAMES = [
   "suspension_type",
   "tissue",
   "tissue_ontology_term_id",
+  "tissue_type",
 ];
 
 export const EXCLUDED_CATEGORY_NAMES = ["observation_joinid"];
@@ -61,6 +62,14 @@ export interface DatasetMetadata {
   dataset_id: string;
   dataset_name: string;
   s3_URI: S3URI;
+}
+
+export interface DatasetUnsMetadata {
+  imageWidth: number;
+  imageHeight: number;
+  resolution: string;
+  scaleref: number;
+  spotDiameterFullres: number;
 }
 
 export type S3URI = string;
@@ -134,4 +143,31 @@ export interface PublisherMetadata {
   published_day: number;
   published_month: number;
   published_year: number;
+}
+
+export interface CellInfo {
+  cellId: string;
+  cellName: string;
+  cellDescription: string;
+  synonyms: string[];
+  references: string[];
+  error: string | null;
+  loading: boolean;
+}
+
+export interface GeneInfo {
+  gene: string | null;
+  geneName: string;
+  geneSummary: string;
+  geneSynonyms: string[];
+  geneUrl: string;
+  showWarningBanner: boolean;
+  infoError: string | null;
+  loading: boolean;
+}
+
+export enum ActiveTab {
+  Gene = "Gene",
+  CellType = "CellType",
+  Dataset = "Dataset",
 }

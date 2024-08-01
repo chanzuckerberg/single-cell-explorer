@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.1.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.0...v1.1.1) (2024-07-15)
+
+
+### Misc
+
+* invoke smoke tests against every prod deploy ([#1037](https://github.com/chanzuckerberg/single-cell-explorer/issues/1037)) ([b425a52](https://github.com/chanzuckerberg/single-cell-explorer/commit/b425a523d22bb9bcaa05ac3cb1edfc90cc97305a))
+
+
+### Bug Fixes
+
+* Prod analytics ([#1039](https://github.com/chanzuckerberg/single-cell-explorer/issues/1039)) ([86fc4a7](https://github.com/chanzuckerberg/single-cell-explorer/commit/86fc4a767699f20a2ac20efd3feb9755d68c0ad1))
+
+## [1.1.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.0.1...v1.1.0) (2024-07-15)
+
+
+### Misc
+
+* Add test for bug [#1022](https://github.com/chanzuckerberg/single-cell-explorer/issues/1022) color by category ([#1024](https://github.com/chanzuckerberg/single-cell-explorer/issues/1024)) ([791e93d](https://github.com/chanzuckerberg/single-cell-explorer/commit/791e93dfc7c3a51967624b5cf7974e5b0c13b258))
+* Update conventional commit GHA ([#1025](https://github.com/chanzuckerberg/single-cell-explorer/issues/1025)) ([405b087](https://github.com/chanzuckerberg/single-cell-explorer/commit/405b08703cb43f762acdfc266adb1175b9e83fc3))
+* use cloudfront domains in Argus config ([#1036](https://github.com/chanzuckerberg/single-cell-explorer/issues/1036)) ([20dabf9](https://github.com/chanzuckerberg/single-cell-explorer/commit/20dabf92232dd1a232f790decb4fb446d79ceb80))
+
+
+### Features
+
+* 6867 6868 image and dot opacity ([#1029](https://github.com/chanzuckerberg/single-cell-explorer/issues/1029)) ([97f57e6](https://github.com/chanzuckerberg/single-cell-explorer/commit/97f57e6b282b83e9d1a044766380f92a51671034))
+* accurate and dynamic dot size for spatial ([#1021](https://github.com/chanzuckerberg/single-cell-explorer/issues/1021)) ([c6c195e](https://github.com/chanzuckerberg/single-cell-explorer/commit/c6c195e98a4184abdd397daccca1906e2cf68a06))
+* add docker login line for core platform ([#1018](https://github.com/chanzuckerberg/single-cell-explorer/issues/1018)) ([a6b5196](https://github.com/chanzuckerberg/single-cell-explorer/commit/a6b5196889a91813a675cb194e5207b9778801aa))
+* **de:** add diffex notice ([#1028](https://github.com/chanzuckerberg/single-cell-explorer/issues/1028)) ([2c4d9b0](https://github.com/chanzuckerberg/single-cell-explorer/commit/2c4d9b030848f0058514a782ec4bfb116beebe78))
+* limit zoom level for hires ([#1026](https://github.com/chanzuckerberg/single-cell-explorer/issues/1026)) ([e92be7c](https://github.com/chanzuckerberg/single-cell-explorer/commit/e92be7cd785e5bf6a491713266177b5272f0e623))
+
+
+### Bug Fixes
+
+* 1022 Fix color by category bug ([#1023](https://github.com/chanzuckerberg/single-cell-explorer/issues/1023)) ([ba46be0](https://github.com/chanzuckerberg/single-cell-explorer/commit/ba46be068d455371b8fbb8eaec9dfe49632ba84a))
+* diffexp notif ([#1031](https://github.com/chanzuckerberg/single-cell-explorer/issues/1031)) ([c4dbb37](https://github.com/chanzuckerberg/single-cell-explorer/commit/c4dbb37ac9cb64b4ec6b560900a0d6cd2ec088bf))
+* hide side panel toggle for single embedding ([#1027](https://github.com/chanzuckerberg/single-cell-explorer/issues/1027)) ([867311d](https://github.com/chanzuckerberg/single-cell-explorer/commit/867311dddc116da91a90270bd112babcef8c0083))
+* info panel tabs ([#1030](https://github.com/chanzuckerberg/single-cell-explorer/issues/1030)) ([68c42d5](https://github.com/chanzuckerberg/single-cell-explorer/commit/68c42d5e2b57e78793370a725e7daa2c6e7a5185))
+* local console errors ([#1033](https://github.com/chanzuckerberg/single-cell-explorer/issues/1033)) ([f062d10](https://github.com/chanzuckerberg/single-cell-explorer/commit/f062d10598dce09b70630332d5c88c32e4a4c36e))
+* padding of info panel content ([#1032](https://github.com/chanzuckerberg/single-cell-explorer/issues/1032)) ([5319564](https://github.com/chanzuckerberg/single-cell-explorer/commit/531956402115008000995536fac79a35cff9fb2d))
+* Remove the wrong lasso in the other panel ([#1035](https://github.com/chanzuckerberg/single-cell-explorer/issues/1035)) ([9dffc9e](https://github.com/chanzuckerberg/single-cell-explorer/commit/9dffc9e441e8f027c9906b0edee803d725270f93))
+
 ## [1.0.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.0.0...v1.0.1) (2024-07-02)
 
 

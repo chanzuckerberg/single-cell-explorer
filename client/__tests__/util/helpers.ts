@@ -291,6 +291,13 @@ export function skipIfSidePanel(graphTestId: string, MAIN_PANEL: string) {
   skip(graphTestId !== MAIN_PANEL, "This test is only for the main panel");
 }
 
+export function skipIfPbmcDataset(graphTestId: string, PBMC_DATASET: string) {
+  skip(
+    graphTestId === PBMC_DATASET,
+    "This test is only for the spatial dataset, since there's not cell_type data in pbmc3k.cxg dataset"
+  );
+}
+
 export function shouldSkipTests(
   graphTestId: string,
   SIDE_PANEL: string

@@ -16,7 +16,12 @@ import * as genesetActions from "./geneset";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
-import type { DatasetMetadata, Dataset, S3URI } from "../common/types/entities";
+import type {
+  DatasetMetadata,
+  Dataset,
+  S3URI,
+  DatasetUnsMetadata,
+} from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
 import { KEYS } from "../components/util/localStorage";
 import {
@@ -128,6 +133,30 @@ async function datasetMetadataFetchAndLoad(
   });
 }
 
+/**
+ * Fetches and loads dataset spatial metadata.
+ * @param dispatch - Function facilitating update of store.
+ */
+async function datasetUnsMetadataFetchAndLoad(
+  dispatch: AppDispatch,
+  metadataKey: string
+): Promise<void> {
+  try {
+    const datasetUnsMetadataResponse = await fetchJson<{
+      metadata: DatasetUnsMetadata;
+    }>(`uns/meta?key=${metadataKey}`);
+    dispatch({
+      type: "request uns metadata success",
+      data: datasetUnsMetadataResponse,
+    });
+  } catch (error) {
+    dispatch({
+      type: "request uns metadata error",
+      error,
+    });
+  }
+}
+
 interface GeneInfoAPI {
   ncbi_url: string;
   name: string;
@@ -148,6 +177,30 @@ async function fetchGeneInfo(
     `geneinfo?geneID=${geneID}&gene=${gene}`
   );
   return response;
+}
+
+interface CellTypeInfoAPI {
+  name: string;
+  summary: string;
+}
+/**
+ * Fetch cell type summary information
+ * @param cell human-readable name of cell type
+ */
+async function fetchCellTypeInfo(
+  cell: string,
+  dispatch: AppDispatch
+): Promise<CellTypeInfoAPI | undefined> {
+  try {
+    return await fetchJson<CellTypeInfoAPI>(`cellinfo?cell=${cell}`);
+  } catch (error) {
+    dispatchNetworkErrorMessageToUser("Failed to fetch cell type information.");
+    dispatch({
+      type: "request cell info error",
+      error,
+    });
+    return undefined;
+  }
 }
 
 function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
@@ -191,6 +244,7 @@ const doInitialDataLoad = (): ((
       ]);
 
       await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      await datasetUnsMetadataFetchAndLoad(dispatch, "spatial");
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
@@ -509,6 +563,7 @@ export default {
   checkExplainNewTab,
   navigateCheckUserState,
   selectDataset,
+  fetchCellTypeInfo,
   fetchGeneInfo,
   selectContinuousMetadataAction: selnActions.selectContinuousMetadataAction,
   selectCategoricalMetadataAction: selnActions.selectCategoricalMetadataAction,

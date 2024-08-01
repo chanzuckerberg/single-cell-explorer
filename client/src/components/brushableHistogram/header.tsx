@@ -2,8 +2,6 @@ import React, { useCallback } from "react";
 import { Button, ButtonGroup, Tooltip, Icon } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
-import { EVENTS } from "../../analytics/events";
-import { track } from "../../analytics";
 
 const HistogramHeader = React.memo(
   ({
@@ -41,7 +39,6 @@ const HistogramHeader = React.memo(
       */
 
     const memoizedColorByCallback = useCallback(() => {
-      track(EVENTS.EXPLORER_COLORBY_HISTOGRAM_CONTINUOUS_BUTTON_CLICKED);
       onColorByClick(fieldId, isObs);
     }, [fieldId, isObs, onColorByClick]);
 

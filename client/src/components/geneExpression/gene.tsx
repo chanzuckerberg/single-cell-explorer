@@ -1,17 +1,21 @@
 import React from "react";
 
-import { Button, Icon } from "@blueprintjs/core";
+import { AnchorButton, Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import { Icon as InfoCircle, IconButton } from "czifui";
 import Truncate from "../util/truncate";
 import HistogramBrush from "../brushableHistogram";
-import { RootState } from "../../reducers";
+import { AppDispatch, RootState } from "../../reducers";
 
 import actions from "../../actions";
 
-import { track } from "../../analytics";
+import {
+  track,
+  thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
+  thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
+} from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-import { ActiveTab } from "../../reducers/controls";
+import { ActiveTab } from "../../common/types/entities";
 import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
@@ -20,29 +24,30 @@ interface State {
   geneIsExpanded: boolean;
 }
 
-interface Props {
+interface StateProps {
+  isColorAccessor: boolean;
+  isScatterplotXXaccessor: boolean;
+  isScatterplotYYaccessor: boolean;
+  isGeneInfo: boolean;
+}
+
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+interface OwnProps {
   gene: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
-  quickGene: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- FIXME
-  removeGene: any;
+  quickGene?: boolean;
+  removeGene?: (gene: string) => () => void;
   geneId: DataframeValue;
   isGeneExpressionComplete: boolean;
   onGeneExpressionComplete: () => void;
+  geneDescription?: string;
+  geneset?: string;
 }
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state: RootState, ownProps: Props) => {
-  const { gene } = ownProps;
+type Props = StateProps & OwnProps & DispatchProps;
 
-  return {
-    isColorAccessor:
-      state.colors.colorAccessor === gene &&
-      state.colors.colorMode !== "color by categorical metadata",
-    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
-    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-  };
-})
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -51,23 +56,38 @@ class Gene extends React.Component<Props, State> {
     };
   }
 
-  onColorChangeClick = (): void => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene } = this.props;
-    track(EVENTS.EXPLORER_COLORBY_GENE_BUTTON_CLICKED);
+  onColorChangeClick = async () => {
+    const { dispatch, gene, isColorAccessor } = this.props;
+    if (!isColorAccessor) {
+      // only track color change when turned on
+      track(EVENTS.EXPLORER_COLORBY_GENE);
+    }
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+
+    /**
+     * (thuang): Must be dispatched AFTER the actions above, as the `colorMode`
+     * only changes after the above actions are completed.
+     */
+    await dispatch(
+      thunkTrackColorByHistogramExpandCategoryFromColorByHistogram()
+    );
+    await dispatch(
+      thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram()
+    );
   };
 
   handleGeneExpandClick = (): void => {
-    track(EVENTS.EXPLORER_MAXIMIZE_GENE_BUTTON_CLICKED);
-
     const { geneIsExpanded } = this.state;
+    if (!geneIsExpanded) {
+      // only track gene view distribution on expand
+      track(EVENTS.EXPLORER_GENE_VIEW_DISTRIBUTION);
+    }
+
     this.setState({ geneIsExpanded: !geneIsExpanded });
   };
 
   handleSetGeneAsScatterplotX = (): void => {
     track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
       type: "set scatterplot x",
@@ -77,7 +97,6 @@ class Gene extends React.Component<Props, State> {
 
   handleSetGeneAsScatterplotY = (): void => {
     track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene } = this.props;
     dispatch({
       type: "set scatterplot y",
@@ -86,29 +105,25 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleDeleteGeneFromSet = (): void => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene, geneset } = this.props;
     dispatch(actions.genesetDeleteGenes(geneset, [gene]));
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, gene, geneId } = this.props;
-    track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
+    track(EVENTS.EXPLORER_VIEW_GENE_INFO, {
       gene,
     });
 
-    dispatch({
-      type: "load gene info",
-      gene,
-    });
-
+    dispatch({ type: "request gene info start", gene });
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
     const info = await actions.fetchGeneInfo(geneId, gene);
+
     if (!info) {
       return;
     }
+
     dispatch({
       type: "open gene info",
       gene,
@@ -124,20 +139,15 @@ class Gene extends React.Component<Props, State> {
   render(): JSX.Element {
     const {
       gene,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'geneDescription' does not exist on type ... Remove this comment to see the full error message
       geneDescription,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
       isColorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotXXaccessor' does not exist on type ... Remove this comment to see the full error message
       isScatterplotXXaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist on type ... Remove this comment to see the full error message
       isScatterplotYYaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneInfo' does not exist on type ... Remove this comment to see the full error message
-      isGeneInfo,
       quickGene,
       removeGene,
       onGeneExpressionComplete,
       isGeneExpressionComplete,
+      isGeneInfo,
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
@@ -183,7 +193,7 @@ class Gene extends React.Component<Props, State> {
               </Truncate>
             </div>
             <div style={{ display: "inline-block", marginLeft: "0" }}>
-              <Button
+              <AnchorButton
                 small
                 minimal
                 intent={isGeneInfo ? "primary" : "none"}
@@ -204,7 +214,7 @@ class Gene extends React.Component<Props, State> {
                     />
                   </div>
                 </IconButton>
-              </Button>
+              </AnchorButton>
             </div>
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
@@ -227,7 +237,7 @@ class Gene extends React.Component<Props, State> {
                 track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
 
                 if (quickGene) {
-                  removeGene(gene)();
+                  removeGene?.(gene)();
                 } else {
                   this.handleDeleteGeneFromSet();
                 }
@@ -291,4 +301,17 @@ class Gene extends React.Component<Props, State> {
   }
 }
 
-export default Gene;
+export default connect(mapStateToProps)(Gene);
+
+function mapStateToProps(state: RootState, ownProps: OwnProps): StateProps {
+  const { gene } = ownProps;
+
+  return {
+    isColorAccessor:
+      state.colors.colorAccessor === gene &&
+      state.colors.colorMode !== "color by categorical metadata",
+    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
+    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
+    isGeneInfo: state.controls.geneInfo.gene === gene,
+  };
+}

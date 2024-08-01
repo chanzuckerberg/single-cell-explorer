@@ -31,6 +31,12 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
+from server.common.utils.cell_type_info import (
+    get_cell_description,
+    get_celltype_metadata,
+    get_latest_snapshot_identifier,
+)
+from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
 
@@ -300,6 +306,42 @@ def gene_info_get(request):
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
 
 
+def cell_type_info_get(request):
+    """
+    Request information about cell type from cell guide
+    """
+    try:
+        latest_snapshot_identifier = get_latest_snapshot_identifier()
+        celltype_metadata = get_celltype_metadata(latest_snapshot_identifier)
+
+        cell_name = request.args.get("cell")
+        if not cell_name:
+            return make_response(jsonify({"error": "Cell name is required"}), HTTPStatus.BAD_REQUEST)
+
+        cell_info = next((info for _, info in celltype_metadata.items() if info.get("name") == cell_name), None)
+        if not cell_info:
+            return make_response(jsonify({"error": "Cell type not found"}), HTTPStatus.OK)
+
+        cell_id = cell_info.get("id", "")
+        synonyms = cell_info.get("synonyms", [])
+
+        cell_description = {}
+
+        try:
+            cell_description = get_cell_description(cell_id.replace(":", "_"))
+        except Exception:
+            current_app.logger.warning("Extended cell description not available, using default description instead.")
+            cell_description = {"description": cell_info.get("clDescription", "")}
+
+        response_data = {"cell_id": cell_id, "cell_name": cell_name, "synonyms": synonyms, **cell_description}
+
+        return make_response(jsonify(response_data), HTTPStatus.OK)
+
+    except Exception:
+        current_app.logger.error("Error fetching cell type info")
+        raise
+
+
 def get_deployed_version(request):
     """
     Returns the deployed version
@@ -457,3 +499,17 @@ def summarize_var_post(request, data_adaptor):
 
     key = request.args.get("key", default=None)
     return summarize_var_helper(request, data_adaptor, key, request.get_data())
+
+
+def uns_metadata_get(request, data_adaptor):
+    """
+    Returns uns metadata for the requested key.
+    """
+    metadata_key = request.args.get("key")
+    if not metadata_key:
+        return make_response("No metadata key provided", HTTPStatus.BAD_REQUEST)
+
+    uns_metadata = data_adaptor.get_uns(metadata_key)
+    response = spatial_metadata_get(uns_metadata) if metadata_key == "spatial" and uns_metadata else uns_metadata or {}
+
+    return make_response(response, HTTPStatus.OK, {"Content-Type": "application/json"})

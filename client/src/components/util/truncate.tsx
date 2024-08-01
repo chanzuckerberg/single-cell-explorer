@@ -1,4 +1,4 @@
-import React, { cloneElement } from "react";
+import React, { CSSProperties, cloneElement } from "react";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { tooltipHoverOpenDelayQuick } from "../../globals";
@@ -19,12 +19,14 @@ const FIRST_HALF_STYLE = {
   whiteSpace: "nowrap",
   flexShrink: 1,
   minWidth: "5px",
-};
+} as CSSProperties;
+
 const SECOND_HALF_STYLE = {
   position: "relative",
   overflow: "hidden",
   whiteSpace: "nowrap",
 };
+
 const SECOND_HALF_SPACING_STYLE = {
   color: "transparent",
 };
@@ -36,6 +38,14 @@ const SECOND_HALF_INNER_STYLE = {
 
 const isTest = getFeatureFlag(FEATURES.TEST);
 
+/**
+ * (thuang): Make sure to add `max-width` to the first child element of this component
+ * for truncation to work properly.
+ * E.g.,
+ * <Truncate>
+ *  <span style={{ maxWidth: "100px" }}>This is a long string</span>
+ * </Truncate>
+ */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export default (props: any) => {
   const { children, isGenesetDescription, tooltipAddendum = "" } = props;
@@ -75,7 +85,6 @@ export default (props: any) => {
 
   const truncatedJSX = (
     <span style={splitStyle}>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ overflow: string; textOverflow: string; wh... Remove this comment to see the full error message */}
       <span style={FIRST_HALF_STYLE}>{firstString}</span>
       {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ position: string; overflow: string; whiteS... Remove this comment to see the full error message */}
       <span style={SECOND_HALF_STYLE}>

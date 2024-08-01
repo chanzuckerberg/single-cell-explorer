@@ -30,10 +30,7 @@ services:
         - "${DOCKER_REPO}corpora-explorer:latest"
       args:
         - BUILDKIT_INLINE_CACHE=1
-        - HAPPY_COMMIT
-        - HAPPY_BRANCH
-        - HAPPY_TAG
-        - HAPPY_ENV
+        - COMMIT_SHA
     restart: always
     depends_on:
       - localstack

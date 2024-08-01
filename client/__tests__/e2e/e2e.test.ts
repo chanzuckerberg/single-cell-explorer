@@ -52,6 +52,7 @@ import {
   snapshotTestGraph,
   getAllCategories,
   selectLayout,
+  requestCellTypeInfo,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -66,11 +67,15 @@ import {
   conditionallyToggleSidePanel,
   goToPage,
   shouldSkipTests,
+  skipIfPbmcDataset,
   skipIfSidePanel,
   toggleSidePanel,
 } from "../util/helpers";
-import { SCALE_MAX } from "../../src/util/constants";
+import { SCALE_MAX_HIRES } from "../../src/util/constants";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
+import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/continuous/constants";
+import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/categorical/constants";
+import { sidePanelAttributeNameChange } from "../../src/components/graph/util";
 
 const { describe, skip } = test;
 
@@ -96,6 +101,7 @@ const brushThisGeneGeneset = "brush_this_gene";
 
 // open gene info card
 const geneToRequestInfo = "SIK1";
+const cellToRequestInfo = "monocyte";
 
 const genesetDescriptionString = "fourth_gene_set: fourth description";
 const genesetToCheckForDescription = "fourth_gene_set";
@@ -124,6 +130,8 @@ for (const testDataset of testDatasets) {
   const data = datasets[testDataset];
   const url = testURLs[testDataset];
   for (const graphTestId of graphInstanceTestIds) {
+    const isSidePanel = graphTestId === SIDE_PANEL;
+
     const shouldSkip = shouldSkipTests(graphTestId, SIDE_PANEL);
     const describeFn = shouldSkip ? describe.skip : describe;
 
@@ -264,6 +272,38 @@ for (const testDataset of testDatasets) {
             }
           });
 
+          /**
+           * https://github.com/chanzuckerberg/single-cell-explorer/issues/1022
+           */
+          test("bug fix color by category #1022", async ({
+            page,
+          }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            // Expand category
+            for (const label of Object.keys(
+              data.categorical
+            ) as (keyof typeof data.categorical)[]) {
+              await page.getByTestId(`${label}:category-expand`).click();
+            }
+
+            await page
+              .getByTestId(CONTINUOUS_SECTION_TEST_ID)
+              .getByTestId(/colorby-/)
+              .first()
+              .click();
+
+            await page
+              .getByTestId(CATEGORICAL_SECTION_TEST_ID)
+              .getByTestId(/colorby-/)
+              .first()
+              .click();
+
+            await snapshotTestGraph(page, testInfo);
+          });
+
           test("selects cells via lasso", async ({ page }, testInfo) => {
             // TODO: fix bug for side panel where subset1 doesn't reset after layout switch
             skipIfSidePanel(graphTestId, MAIN_PANEL);
@@ -290,8 +330,9 @@ for (const testDataset of testDatasets) {
                 lasso: true,
               });
 
-              const cellCount =
-                graphTestId === SIDE_PANEL ? cellset.count_side : cellset.count;
+              const cellCount = isSidePanel
+                ? cellset.count_side
+                : cellset.count;
 
               expect(await getCellSetCount(1, page)).toBe(cellCount);
 
@@ -759,7 +800,7 @@ for (const testDataset of testDatasets) {
               const newGraph = page.getByTestId("graph-wrapper");
               const newDistance =
                 (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-              expect(parseFloat(newDistance)).toBe(SCALE_MAX);
+              expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
             },
             { page }
           );
@@ -778,9 +819,7 @@ for (const testDataset of testDatasets) {
               const panzoomLasso = data.features.panzoom.lasso;
 
               const expectedCellCount = Number(
-                graphTestId === SIDE_PANEL
-                  ? panzoomLasso.count_side
-                  : panzoomLasso.count
+                isSidePanel ? panzoomLasso.count_side : panzoomLasso.count
               );
 
               const lassoSelection = await calcDragCoordinates(
@@ -798,7 +837,11 @@ for (const testDataset of testDatasets) {
                 lasso: true,
               });
 
-              await expect(page.getByTestId("lasso-element")).toBeVisible();
+              await expect(
+                page.getByTestId(
+                  sidePanelAttributeNameChange("lasso-element", isSidePanel)
+                )
+              ).toBeVisible();
 
               const initialCount = Number(await getCellSetCount(1, page));
 
@@ -852,14 +895,16 @@ for (const testDataset of testDatasets) {
 
               await snapshotTestGraph(page, testInfo);
 
-              await expect(page.getByTestId("lasso-element")).toBeVisible();
+              await expect(
+                page.getByTestId(
+                  sidePanelAttributeNameChange("lasso-element", isSidePanel)
+                )
+              ).toBeVisible();
 
               const initialCount = Number(await getCellSetCount(1, page));
 
               const expectedCellCount = Number(
-                graphTestId === SIDE_PANEL
-                  ? panzoomLasso.count_side
-                  : panzoomLasso.count
+                isSidePanel ? panzoomLasso.count_side : panzoomLasso.count
               );
 
               /**
@@ -1340,6 +1385,12 @@ for (const testDataset of testDatasets) {
               test("open info panel and hide/remove", async ({
                 page,
               }, testInfo) => {
+                skipIfSidePanel(graphTestId, MAIN_PANEL);
+                /*
+                 * Skip since there's no cell_type data in pbmc3k.cxg
+                 */
+                skipIfPbmcDataset(testDataset, DATASET);
+
                 await setup({ option, page, url, testInfo });
                 await addGeneToSearch(geneToRequestInfo, page);
 
@@ -1348,7 +1399,11 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await requestGeneInfo(geneToRequestInfo, page);
-                    await assertInfoPanelExists(geneToRequestInfo, page);
+                    await assertInfoPanelExists(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
                   },
                   { page }
                 );
@@ -1358,7 +1413,11 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await minimizeInfoPanel(page);
-                    await assertInfoPanelIsMinimized(geneToRequestInfo, page);
+                    await assertInfoPanelIsMinimized(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
                   },
                   { page }
                 );
@@ -1368,7 +1427,39 @@ for (const testDataset of testDatasets) {
                 await tryUntil(
                   async () => {
                     await closeInfoPanel(page);
-                    await assertInfoPanelClosed(geneToRequestInfo, page);
+                    await assertInfoPanelClosed(
+                      geneToRequestInfo,
+                      "gene",
+                      page
+                    );
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await requestCellTypeInfo(cellToRequestInfo, page);
+                    await assertInfoPanelExists(
+                      cellToRequestInfo,
+                      "cell-type",
+                      page
+                    );
+                  },
+                  { page }
+                );
+
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await minimizeInfoPanel(page);
+                    await assertInfoPanelIsMinimized(
+                      cellToRequestInfo,
+                      "cell-type",
+                      page
+                    );
                   },
                   { page }
                 );
@@ -1482,13 +1573,34 @@ for (const testDataset of testDatasets) {
 
             await page.getByTestId("download-graph-button").click();
 
-            expect(downloads.length).toBe(2);
+            /**
+             * (thuang): Sometimes in GHA there's only 1 download, so we need to retry
+             * until we get 2 downloads
+             */
+            await tryUntil(
+              () => {
+                expect(downloads.length).toBe(2);
+              },
+              { page }
+            );
 
             const afterMinimizeDownloads: Download[] = [];
 
-            await page
-              .getByTestId(PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID)
-              .click();
+            await tryUntil(
+              async () => {
+                await page
+                  .getByTestId(PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID)
+                  .click();
+
+                /**
+                 * (thuang): Make sure the side panel is indeed minimized
+                 */
+                await expect(
+                  page.getByTestId("graph-wrapper-side")
+                ).not.toBeVisible();
+              },
+              { page }
+            );
 
             page.on("download", (downloadData) => {
               afterMinimizeDownloads.push(downloadData);
