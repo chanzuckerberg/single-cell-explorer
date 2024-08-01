@@ -41,9 +41,45 @@ To launch with hot reloading, you need to launch the server and the client separ
 
 Note: in case you need to just build the client alone, you can run `make build-client`.
 
+### If you have an M1 or M2 chip...
+
+Attempting to run Explorer locally (server and/or client) will fail with something that looks like:
+
+```
+npm ERR! The chromium binary is not available for arm64.
+npm ERR! If you are on Ubuntu, you can install with:
+npm ERR!
+npm ERR!  sudo apt install chromium
+npm ERR!
+npm ERR!
+npm ERR!  sudo apt install chromium-browser
+```
+
+Puppeteer is a dependency for e2e tests, but it's not used for running Explorer locally. If you want to run Explorer locally, you can get around this by setting `export PUPPETEER_SKIP_DOWNLOAD=true` in your virtual environment. That will skip the Puppeteer installation.
+
+If you want to actually run e2e tests, then you'll need to set up Chromium to enable Puppeteer. [This blog post](https://broddin.be/2022/09/19/fixing-the-chromium-binary-is-not-available-for-arm64/) should show you how to do that on an M1/M2 machine.
+
+### Mocking the dataset-metadata endpoint
+
+The dataset-metadata endpoint requires using data-portal. A true local build would require running an instance of data-portal locally. An easier solution that works for most use cases is to just mock the response of dataset-metadata. To do this, you can update the `DatasetMetadataAPI` class in `server/app/api/v3.py` to:
+
+```
+class DatasetMetadataAPI(DatasetResource):
+    @cache_control(public=True, no_store=True, max_age=0)
+    @rest_get_dataset_explorer_location_data_adaptor
+    def get(self, data_adaptor):
+        with open("server/tests/fixtures/liver_dataset_metadata_response.json", "r") as file:
+            mock_response = json.load(file)
+
+        json_response = json.dumps(mock_response)
+        return Response(json_response, content_type='application/json')
+```
+
+Note that you'll need to `import json` and also add `Response` to the `flask` import. This will mock the expected response to the `liver.cxg` dataset that is in the `example-dataset/` directory. After updating the mock response, you can build the backend + frontend the same way you normally would.
+
 ### Before you request a PR review...
 
-Please lint and format your code before requesting a PR review. 
+Please lint and format your code before requesting a PR review.
 
 We use [`flake8`](https://github.com/PyCQA/flake8) to lint Python and [`black`](https://pypi.org/project/black/) for auto-formatting Python. The frontend Javascript/Typescript code is linted by `eslint` and formatted by `prettier`.
 
@@ -61,12 +97,12 @@ Client and server tests run on [Github Actions](https://github.com/chanzuckerber
 
 ### Testing Command Cheat Sheet
 
-| What are you testing | Command |
-|---|---|
-| I want to run unit tests for the backend only. | `make unit-test-server` |
-| I want to run unit tests for the frontend only. | `make unit-test-client` |
-| I want to run unit and smoke tests for the backend. | `make test-server` |
-| I want to only run smoke tests. | `make smoke-test` |
+| What are you testing                                                  | Command                    |
+| --------------------------------------------------------------------- | -------------------------- |
+| I want to run unit tests for the backend only.                        | `make unit-test-server`    |
+| I want to run unit tests for the frontend only.                       | `make unit-test-client`    |
+| I want to run unit and smoke tests for the backend.                   | `make test-server`         |
+| I want to only run smoke tests.                                       | `make smoke-test`          |
 | I want to run smoke tests against my hot-loaded verion of the client. | `cd client && npm run e2e` |
 
 ### Flags

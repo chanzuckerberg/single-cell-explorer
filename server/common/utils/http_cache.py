@@ -7,18 +7,18 @@ ONE_WEEK = 7 * 24 * 60 * 60
 ONE_YEAR = 365 * 24 * 60 * 60
 
 
-def _cache_control(always, **cache_kwargs):
+def _cache_control(always, **cache_kwargs):  # type: ignore
     """
     Used to easily manage cache control headers on responses.
     See Werkzeug for attributes that can be set, eg, no_cache, private, max_age, etc.
     https://werkzeug.palletsprojects.com/en/1.0.x/datastructures/#werkzeug.datastructures.ResponseCacheControl
     """
 
-    def inner_cache_control(f):
+    def inner_cache_control(f):  # type: ignore
         @wraps(f)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs):  # type: ignore
             response = make_response(f(*args, **kwargs))
-            if not always and not current_app.app_config.server__app__generate_cache_control_headers:
+            if not always and not current_app.app_config.server__app__generate_cache_control_headers:  # type: ignore
                 return response
             if response.status_code >= 400:
                 return response
@@ -31,11 +31,11 @@ def _cache_control(always, **cache_kwargs):
     return inner_cache_control
 
 
-def cache_control(**cache_kwargs):
+def cache_control(**cache_kwargs):  # type: ignore
     """config driven"""
-    return _cache_control(False, **cache_kwargs)
+    return _cache_control(False, **cache_kwargs)  # type: ignore
 
 
-def cache_control_always(**cache_kwargs):
+def cache_control_always(**cache_kwargs):  # type: ignore
     """always generate headers, regardless of the config"""
-    return _cache_control(True, **cache_kwargs)
+    return _cache_control(True, **cache_kwargs)  # type: ignore

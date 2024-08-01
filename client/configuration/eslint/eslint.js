@@ -21,16 +21,6 @@ module.exports = {
     polyfills: ["Headers", "AbortController"],
   },
   env: { browser: true, commonjs: true, es6: true },
-  globals: {
-    expect: true,
-    jest: true,
-    jestPuppeteer: true,
-    it: true,
-    page: true,
-    browser: true,
-    context: true,
-    beforeEach: true,
-  },
   parserOptions: {
     ecmaVersion: 2017,
     sourceType: "module",
@@ -87,7 +77,9 @@ module.exports = {
     "spaced-comment": ["error", "always", { exceptions: ["*"] }],
     "no-param-reassign": "off",
     "object-curly-newline": ["error", { consistent: true }],
-    "react/prop-types": [0],
+    "react/prop-types": "off",
+    "react/require-default-props": "off",
+    "react/jsx-props-no-spreading": "off",
     "space-before-function-paren": "off",
     "@typescript-eslint/space-before-function-paren": "off",
     "function-paren-newline": "off",
@@ -105,6 +97,10 @@ module.exports = {
         devDependencies: true,
       },
     ],
+    "@typescript-eslint/no-floating-promises": [
+      "error",
+      { ignoreVoid: true, ignoreIIFE: true },
+    ],
   },
   overrides: [
     // Override some TypeScript rules just for .js files
@@ -112,22 +108,6 @@ module.exports = {
       files: ["*.js"],
       rules: {
         "@typescript-eslint/no-var-requires": "off",
-      },
-    },
-    {
-      files: ["**/*.test.ts"],
-      env: {
-        jest: true, // now **/*.test.ts files' env has both es6 *and* jest
-      },
-      // Can't extend in overrides: https://github.com/eslint/eslint/issues/8813
-      // "extends": ["plugin:jest/recommended"]
-      plugins: ["jest"],
-      rules: {
-        "jest/no-disabled-tests": "warn",
-        "jest/no-focused-tests": "error",
-        "jest/no-identical-title": "error",
-        "jest/prefer-to-have-length": "warn",
-        "jest/valid-expect": "error",
       },
     },
   ],

@@ -66,7 +66,7 @@ type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array;
-type Constructor<T extends unknown = unknown> = new (...args: unknown[]) => T;
+type Constructor<T> = new (...args: unknown[]) => T;
 export function concat<SrcType extends TypedArray, DstType extends TypedArray>(
   Ctor: Constructor<DstType>,
   tArrays: SrcType[]

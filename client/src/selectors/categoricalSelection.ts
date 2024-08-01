@@ -2,18 +2,14 @@
 import { RootState } from "../reducers";
 import { CategoricalSelection } from "../util/stateManager/controlsHelpers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- update typings once categoricalSelection reducer state is typed.
-export const selectCategoricalSelection = (state: RootState): any =>
-  state.categoricalSelection;
-
 /*
  Returns true if categorical selection controls have been touched indicating work is in progress.
  @param categoricalSelection from state
  @returns boolean
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any --- update typings once categoricalSelection reducer state is typed.
-export const selectIsUserStateDirty = (state: any): boolean => {
-  const categoricalSelection = selectCategoricalSelection(state);
+
+export const selectIsUserStateDirty = (state: RootState): boolean => {
+  const { categoricalSelection } = state;
 
   return Boolean(isCategoricalSelectionInProgress(categoricalSelection));
 };

@@ -20,12 +20,13 @@ import colors from "./colors";
 import differential from "./differential";
 import layoutChoice from "./layoutChoice";
 import controls from "./controls";
-import annotations from "./annotations";
 import genesets from "./genesets";
 import genesetsUI from "./genesetsUI";
 import centroidLabels from "./centroidLabels";
-import pointDialation from "./pointDilation";
+import pointDilation from "./pointDilation";
 import quickGenes from "./quickGenes";
+import singleContinuousValue from "./singleContinuousValue";
+import panelEmbedding from "./panelEmbedding";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -36,10 +37,11 @@ const AppReducer = undoable(
     ["config", config],
     ["annoMatrix", annoMatrix],
     ["obsCrossfilter", obsCrossfilter],
-    ["annotations", annotations],
     ["genesets", genesets],
     ["genesetsUI", genesetsUI],
     ["layoutChoice", layoutChoice],
+    ["panelEmbedding", panelEmbedding],
+    ["singleContinuousValue", singleContinuousValue],
     ["categoricalSelection", categoricalSelection],
     ["continuousSelection", continuousSelection],
     ["graphSelection", graphSelection],
@@ -48,9 +50,9 @@ const AppReducer = undoable(
     ["quickGenes", quickGenes],
     ["differential", differential],
     ["centroidLabels", centroidLabels],
-    ["pointDilation", pointDialation],
+    ["pointDilation", pointDilation],
     ["datasetMetadata", datasetMetadata],
-  ]),
+  ] as Parameters<typeof cascadeReducers>[0]),
   [
     "annoMatrix",
     "obsCrossfilter",
@@ -72,7 +74,7 @@ const AppReducer = undoable(
 const RootReducer: Reducer = (state: RootState, action: Action) => {
   // when a logout action is dispatched it will reset redux state
   if (action.type === "reset") {
-    state = undefined;
+    state = {} as RootState;
   }
 
   return AppReducer(state, action);
@@ -80,7 +82,26 @@ const RootReducer: Reducer = (state: RootState, action: Action) => {
 
 const store = createStore(RootReducer, applyMiddleware(thunk, annoMatrixGC));
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = {
+  config: ReturnType<typeof config>;
+  annoMatrix: ReturnType<typeof annoMatrix>;
+  obsCrossfilter: ReturnType<typeof obsCrossfilter>;
+  genesets: ReturnType<typeof genesets>;
+  genesetsUI: ReturnType<typeof genesetsUI>;
+  layoutChoice: ReturnType<typeof layoutChoice>;
+  panelEmbedding: ReturnType<typeof panelEmbedding>;
+  singleContinuousValue: ReturnType<typeof singleContinuousValue>;
+  categoricalSelection: ReturnType<typeof categoricalSelection>;
+  continuousSelection: ReturnType<typeof continuousSelection>;
+  graphSelection: ReturnType<typeof graphSelection>;
+  colors: ReturnType<typeof colors>;
+  controls: ReturnType<typeof controls>;
+  quickGenes: ReturnType<typeof quickGenes>;
+  differential: ReturnType<typeof differential>;
+  centroidLabels: ReturnType<typeof centroidLabels>;
+  pointDilation: ReturnType<typeof pointDilation>;
+  datasetMetadata: ReturnType<typeof datasetMetadata>;
+};
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;
 

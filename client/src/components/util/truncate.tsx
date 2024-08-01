@@ -2,6 +2,8 @@ import React, { cloneElement } from "react";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
 import { tooltipHoverOpenDelayQuick } from "../../globals";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 const SPLIT_STYLE = {
   display: "flex",
@@ -31,6 +33,8 @@ const SECOND_HALF_INNER_STYLE = {
   position: "absolute",
   right: 0,
 };
+
+const isTest = getFeatureFlag(FEATURES.TEST);
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export default (props: any) => {
@@ -92,19 +96,27 @@ export default (props: any) => {
   // we need an ID to check for this content, since this is the only place the geneset description appears
   const descriptionContent = (
     <span
-      test-id={`geneset-description-tooltip-${originalString}${tooltipAddendum}`}
+      data-testid={`geneset-description-tooltip-${originalString}${tooltipAddendum}`}
     >
       {originalString}
       {tooltipAddendum}
     </span>
   );
+
+  const originalContent = (
+    <span>
+      {originalString}
+      {tooltipAddendum}
+    </span>
+  );
+
   return (
     <Tooltip2
-      content={
-        isGenesetDescription
-          ? descriptionContent
-          : `${originalString}${tooltipAddendum}`
-      }
+      /**
+       * We disable the tooltip in test mode, so we don't have flaky chromatic screenshots
+       */
+      disabled={isTest}
+      content={isGenesetDescription ? descriptionContent : originalContent}
       hoverOpenDelay={tooltipHoverOpenDelayQuick}
       // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
       targetProps={{ style: children.props.style }}

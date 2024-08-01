@@ -14,7 +14,7 @@ import requests
 
 from server.common.config.app_config import AppConfig
 from server.common.diffexpdu import DiffExArguments
-from server.tests import FIXTURES_ROOT, decode_fbs
+from server.tests import FIXTURES_ROOT, FIXTURES_ROOT_UNS, decode_fbs
 from server.tests.fixtures.fixtures import pbmc3k_colors
 from server.tests.unit import BaseTest as _BaseTest
 
@@ -50,6 +50,12 @@ class EndPoints(BaseTest):
         cls.TEST_S3_URI_ENCODED_SPARSE = cls.encode_s3_uri(cls.TEST_S3_URI_SPARSE)
         cls.TEST_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED}"
         cls.TEST_DATASET_URL_BASE_SPARSE = f"/s3_uri/{cls.TEST_S3_URI_ENCODED_SPARSE}"
+
+        cls.TEST_UNS_S3_URI = f"{FIXTURES_ROOT_UNS}/super-cool-spatial.cxg"
+        cls.TEST_UNS_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_UNS_S3_URI)
+        cls.TEST_UNS_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_UNS_S3_URI_ENCODED}"
+        cls.TEST_UNS_URL_BASE = f"{cls.TEST_UNS_DATASET_URL_BASE}/api/v0.3/"
+
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
@@ -847,7 +853,7 @@ class TestDatasetMetadata(BaseTest):
 
         self.assertEqual(response_obj["dataset_name"], "Test Dataset")
 
-        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}/private"
+        expected_url = f"https://cellxgene.staging.single-cell.czi.technology/collections/{response_body['id']}"
         self.assertEqual(response_obj["dataset_id"], response_body["datasets"][0]["id"])
         self.assertEqual(response_obj["collection_url"], expected_url)
         self.assertEqual(response_obj["collection_name"], response_body["name"])

@@ -15,13 +15,8 @@ import {
   Query,
 } from "./query";
 import { normalizeResponse } from "./normalize";
-import {
-  Field,
-  RawSchema,
-} from "../common/types/schema";
-import {
-  Dataframe,
-} from "../util/dataframe";
+import { Field, RawSchema } from "../common/types/schema";
+import { Dataframe } from "../util/dataframe";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 
@@ -93,7 +88,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
       query,
       result.colIndex.labels()
     );
-
     result = normalizeResponse(field, this.schema, result);
 
     return [whereCacheUpdate, result];

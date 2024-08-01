@@ -48,9 +48,7 @@ function QuickGene() {
   useEffect(() => {
     if (!annoMatrix) return;
 
-    fetch();
-
-    async function fetch() {
+    (async function fetch() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
         const { schema } = annoMatrix;
@@ -61,6 +59,10 @@ function QuickGene() {
           const df: Dataframe = await annoMatrix.fetch("var", varIndex);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
+          const isFilteredCol = "feature_is_filtered";
+          const isFiltered =
+            annoMatrix.getMatrixColumns("var").includes(isFilteredCol) &&
+            (await annoMatrix.fetch("var", isFilteredCol));
 
           // if feature id column is available in var
           if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
@@ -69,13 +71,26 @@ function QuickGene() {
           }
 
           setStatus("success");
-          setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+
+          if (isFiltered) {
+            const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
+            setGeneNames(
+              df
+                .col(varIndex)
+                .asArray()
+                .filter(
+                  (_, index) => !isFilteredArray[index] && _
+                ) as DataframeValue[]
+            );
+          } else {
+            setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+          }
         } catch (error) {
           setStatus("error");
           throw error;
         }
       }
-    }
+    })();
   }, [annoMatrix, prevProps]);
 
   const handleExpand = () => setIsExpanded(!isExpanded);
@@ -159,14 +174,13 @@ function QuickGene() {
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
-
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
       <H4
         role="menuitem"
         // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
         tabIndex="0"
-        data-testclass="quickgene-heading-expand"
+        data-testid="quickgene-heading-expand"
         onKeyPress={handleExpand}
         style={{
           cursor: "pointer",
@@ -190,6 +204,9 @@ function QuickGene() {
               itemDisabled={userDefinedGenesLoading ? () => true : () => false}
               noResults={<MenuItem disabled text="No matching genes." />}
               onItemSelect={(g) => {
+                // (seve): I made an attempt at typing this, but it looks like the type of g is not consistent with the type of the argument in onItemSelect
+                //          onItemSelect's arguments are typed as (DataframeValue, Event), but this expects and receives just the Event
+
                 /* this happens on 'enter' */
                 handleClick(g);
               }}

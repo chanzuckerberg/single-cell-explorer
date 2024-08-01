@@ -17,9 +17,11 @@ LOG_FORMAT = format_log_string(LOGGED_FIELDS)
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%03dZ"
 
 
-def configure_logging():
+def configure_logging(log_level: int = logging.INFO):
     logHandler = logging.StreamHandler()
     formatter = jsonlogger.JsonFormatter(fmt=LOG_FORMAT, datefmt=DATETIME_FORMAT)
     logHandler.setFormatter(formatter)
     logHandler.addFilter(RequestIdFilter())
-    logging.basicConfig(level=logging.INFO, handlers=[logHandler], force=True)
+    logging.basicConfig(level=log_level, handlers=[logHandler], force=True)
+    logging.getLogger("werkzeug").setLevel(log_level)
+    logging.info(f"Configure logging: {log_level=}")

@@ -2,7 +2,10 @@ import React from "react";
 import { connect } from "react-redux";
 import * as globals from "../../globals";
 import Category from "./category";
-import { STANDARD_CATEGORY_NAMES } from "../../common/types/entities";
+import {
+  EXCLUDED_CATEGORY_NAMES,
+  STANDARD_CATEGORY_NAMES,
+} from "../../common/types/entities";
 import {
   CategoricalAnnotationColumnSchema,
   Schema,
@@ -19,6 +22,8 @@ type State = any;
 @connect((state) => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   schema: (state as any).annoMatrix?.schema,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  isCellGuideCxg: (state as any).controls.isCellGuideCxg,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
 class Categories extends React.Component<{}, State> {
@@ -26,20 +31,19 @@ class Categories extends React.Component<{}, State> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      createAnnoModeActive: false,
-      newCategoryText: "",
-      categoryToDuplicate: null,
       expandedCats: new Set(),
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleChange = (name: any) => {
+    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
     this.setState({ newCategoryText: name });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   handleSelect = (name: any) => {
+    // eslint-disable-next-line react/no-unused-state --- FIXME: disabled temporarily
     this.setState({ newCategoryText: name });
   };
 
@@ -61,10 +65,10 @@ class Categories extends React.Component<{}, State> {
   /**
    * Determine if category name is an ontology key.
    * @param catName - Name of category.
-   * @returns True if category name includes ontology key.
+   * @returns True if category exists in ontology term id list.
    */
   isCategoryNameOntologyKey = (catName: string): boolean =>
-    catName.includes(globals.ONTOLOGY_KEY);
+    globals.ONTOLOGY_TERM_ID_KEYS.some((key: string) => catName.includes(key));
 
   /**
    * Categories are included for display if category has more than one category value or categories are not defined
@@ -74,6 +78,9 @@ class Categories extends React.Component<{}, State> {
    * @returns True if category has more than one category value or categories are not defined.
    */
   isCategoryDisplayable = (schema: Schema, catName: string): boolean => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
+    const { isCellGuideCxg } = this.props;
+
     const columnSchema = schema.annotations.obsByName[catName];
     // Always display string and boolean types.
     if (!("categories" in columnSchema)) {
@@ -81,7 +88,8 @@ class Categories extends React.Component<{}, State> {
     }
     // Only display categoricals if they have more than one value.
     return (
-      (columnSchema as CategoricalAnnotationColumnSchema).categories.length > 1
+      (columnSchema as CategoricalAnnotationColumnSchema).categories.length >
+        1 || isCellGuideCxg
     );
   };
 
@@ -90,8 +98,20 @@ class Categories extends React.Component<{}, State> {
    * @param catName - Name of category.
    * @returns True if given category name is in the set of standard category names.
    */
-  isCategoryNameStandard = (catName: string): boolean =>
-    STANDARD_CATEGORY_NAMES.includes(catName);
+  isCategoryNameStandard = (catName: string): boolean => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
+    const { isCellGuideCxg } = this.props;
+    // if isCellGuideCxg is true, then all categories are standard
+    return STANDARD_CATEGORY_NAMES.includes(catName) || isCellGuideCxg;
+  };
+
+  /**
+   * Determine if category is excluded.
+   * @param catName - Name of category.
+   * @returns True if given category name is in the set of standard category names.
+   */
+  isCategoryNameExcluded = (catName: string): boolean =>
+    EXCLUDED_CATEGORY_NAMES.includes(catName);
 
   /**
    * Returns true if category is writable.
@@ -104,12 +124,10 @@ class Categories extends React.Component<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
-    const {
-      createAnnoModeActive,
-      expandedCats,
-    } = this.state;
+    const { expandedCats } = this.state;
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'schema' does not exis... Remove this comment to see the full error message
-    const { schema } = this.props;
+    const { schema, isCellGuideCxg } = this.props;
+
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
     const selectableCategoryNames = ControlsHelpers.selectableCategoryNames(
       schema
@@ -121,6 +139,7 @@ class Categories extends React.Component<{}, State> {
     const authorCategoryNames = selectableCategoryNames.filter(
       (catName) =>
         !this.isCategoryNameStandard(catName) &&
+        !this.isCategoryNameExcluded(catName) &&
         (this.isCategoryDisplayable(schema, catName) ||
           this.isCategoryWritable(schema, catName))
     );
@@ -138,42 +157,55 @@ class Categories extends React.Component<{}, State> {
           paddingBottom: 0,
         }}
       >
-        {/* STANDARD FIELDS */}
-        {/* this is duplicative but flat, could be abstracted */}
-        {standardCategoryNames.length ? (
-          <Collapse>
-            <span>Standard Categories</span>
-            {standardCategoryNames.map((catName: string) => (
-              <Category
-                key={catName}
-                // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-                metadataField={catName}
-                onExpansionChange={this.onExpansionChange}
-                isExpanded={expandedCats.has(catName)}
-                createAnnoModeActive={createAnnoModeActive}
-                categoryType="standard"
-              />
-            ))}
-          </Collapse>
-        ) : null}
+        {isCellGuideCxg ? (
+          <>
+            {standardCategoryNames.length &&
+              standardCategoryNames.map((catName: string) => (
+                <Category
+                  key={catName}
+                  metadataField={catName}
+                  onExpansionChange={this.onExpansionChange}
+                  isExpanded={expandedCats.has(catName)}
+                  categoryType="standard"
+                />
+              ))}
+          </>
+        ) : (
+          <>
+            {/* STANDARD FIELDS */}
+            {/* this is duplicative but flat, could be abstracted */}
+            {standardCategoryNames.length ? (
+              <Collapse>
+                <span>Standard Categories</span>
+                {standardCategoryNames.map((catName: string) => (
+                  <Category
+                    key={catName}
+                    metadataField={catName}
+                    onExpansionChange={this.onExpansionChange}
+                    isExpanded={expandedCats.has(catName)}
+                    categoryType="standard"
+                  />
+                ))}
+              </Collapse>
+            ) : null}
 
-        {/* AUTHOR FIELDS */}
-        {authorCategoryNames.length ? (
-          <Collapse>
-            <span>Author Categories</span>
-            {authorCategoryNames.map((catName: string) => (
-              <Category
-                key={catName}
-                // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-                metadataField={catName}
-                onExpansionChange={this.onExpansionChange}
-                isExpanded={expandedCats.has(catName)}
-                createAnnoModeActive={createAnnoModeActive}
-                categoryType="author"
-              />
-            ))}
-          </Collapse>
-        ) : null}
+            {/* AUTHOR FIELDS */}
+            {authorCategoryNames.length ? (
+              <Collapse>
+                <span>Author Categories</span>
+                {authorCategoryNames.map((catName: string) => (
+                  <Category
+                    key={catName}
+                    metadataField={catName}
+                    onExpansionChange={this.onExpansionChange}
+                    isExpanded={expandedCats.has(catName)}
+                    categoryType="author"
+                  />
+                ))}
+              </Collapse>
+            ) : null}
+          </>
+        )}
       </div>
     );
   }

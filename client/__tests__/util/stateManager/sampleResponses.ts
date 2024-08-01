@@ -170,10 +170,7 @@ function encodeMatrix(columns: any, colIndex = undefined) {
   Matrix.addNCols(builder, columns.length);
   Matrix.addColumns(builder, encColumns);
   if (colIndex) {
-    Matrix.addColIndexType(
-      builder,
-      TypedFBArray.JSONEncodedFBArray
-    );
+    Matrix.addColIndexType(builder, TypedFBArray.JSONEncodedFBArray);
     Matrix.addColIndex(builder, encColIndex);
   }
   const root = Matrix.endMatrix(builder);

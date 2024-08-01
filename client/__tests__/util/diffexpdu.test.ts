@@ -1,3 +1,4 @@
+import { expect, test } from "@playwright/test";
 import {
   packDiffExPdu,
   unpackDiffExPdu,
@@ -7,6 +8,7 @@ import {
 
 import { range } from "../../src/util/range";
 
+const { describe } = test;
 describe("diffexpdu", () => {
   test("roundtrip diffex pdu", () => {
     // single PDU round-trip
@@ -18,7 +20,7 @@ describe("diffexpdu", () => {
     };
     const buf = packDiffExPdu(deArgs);
     const decoded = unpackDiffExPdu(buf);
-    expect(decoded).toMatchObject(deArgs);
+    expect(decoded).toEqual(deArgs);
   });
 
   test("vary density", () => {
@@ -48,7 +50,7 @@ describe("diffexpdu", () => {
 
         const buf = packDiffExPdu(deArgs);
         const decoded = unpackDiffExPdu(buf);
-        expect(decoded).toMatchObject(deArgs);
+        expect(decoded).toEqual(deArgs);
       }
     }
   });

@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import pickle
 import threading
 
 import numpy as np
@@ -43,6 +44,7 @@ class CxgDataset(Dataset):
         self.lsuri_results = ImmutableKVCache(lambda key: self._lsuri(uri=key, tiledb_ctx=self.tiledb_ctx))
         self.arrays = ImmutableKVCache(lambda key: self._open_array(uri=key, tiledb_ctx=self.tiledb_ctx))
         self.schema = None
+        self.genesets = None
         self.X_approximate_distribution = None
 
         self._validate_and_initialize()
@@ -337,6 +339,9 @@ class CxgDataset(Dataset):
                 and "categories" in type_hint[term_name]
             ):
                 data = pd.Categorical.from_codes(data, categories=type_hint[term_name]["categories"])
+            elif type_hint is not None and type_hint[term_name]["type"] == "boolean":
+                # convert boolean to categorical
+                data = pd.Categorical(data)
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("query_obs") from None
         return data
@@ -371,6 +376,23 @@ class CxgDataset(Dataset):
         schema = var.schema
         return [attr.name for attr in schema]
 
+    def get_uns(self, metadata_key):
+        """
+        Extracts an object from the uns array in a TileDB container
+        """
+        try:
+            uns = self.open_array("uns")
+        except KeyError:
+            return None
+
+        for key in uns.meta:
+            if key == metadata_key:
+                try:
+                    return pickle.loads(uns.meta[key])
+                except Exception as e:
+                    print(f"Error deserializing uns data for key {key}: {e}")
+                    return None
+
     # function to get the embedding
     # this function to iterate through embeddings.
     def get_embedding_names(self):
@@ -388,7 +410,12 @@ class CxgDataset(Dataset):
         shape = self.get_shape()
         dtype = self.get_X_array_dtype()
 
-        dataframe = {"nObs": shape[0], "nVar": shape[1], **get_schema_type_hint_from_dtype(dtype)}
+        dataframe = {
+            "nObs": shape[0],
+            "nVar": shape[1],
+            # Allow int64 fields to be generated in the schema hint so that we can filter later
+            **get_schema_type_hint_from_dtype(dtype=dtype, allow_int64=True),
+        }
 
         annotations = {}
         for ax in ("obs", "var"):
@@ -403,11 +430,21 @@ class CxgDataset(Dataset):
                 type_hint = schema_hints.get(attr.name, {})
                 # type hints take precedence
                 if "type" in type_hint:
+                    if type_hint["type"] in ["int64", "uint64"] and ax == "obs":
+                        # Skip over int64 fields in the obs array when generating schema
+                        continue
+
                     schema["type"] = type_hint["type"]
-                    if schema["type"] == "categorical" and "categories" in type_hint:
+                    if schema["type"] == "boolean" and ax == "obs":
+                        # convert boolean to categorical
+                        schema["type"] = "categorical"
+                        schema["categories"] = pd.Categorical(
+                            self.open_array("obs").query(attrs=[attr.name])[:][attr.name].astype("bool")
+                        ).categories.tolist()
+                    elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
-                    schema.update(get_schema_type_hint_from_dtype(attr.dtype))
+                    schema.update(get_schema_type_hint_from_dtype(dtype=attr.dtype))
                 cols.append(schema)
 
             annotations[ax] = dict(columns=cols)
@@ -429,6 +466,18 @@ class CxgDataset(Dataset):
             with self.lock:
                 self.schema = self._get_schema()
         return self.schema
+
+    def _get_genesets(self):
+        if self.genesets:
+            return self.genesets
+        A = self.open_array("obs")
+        return json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+
+    def get_genesets(self):
+        if self.genesets is None:
+            with self.lock:
+                self.genesets = self._get_genesets()
+        return self.genesets
 
     def annotation_to_fbs_matrix(self, axis, fields=None, num_bins=None):
         with ServerTiming.time(f"annotations.{axis}.query"):

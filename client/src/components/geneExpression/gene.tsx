@@ -11,11 +11,14 @@ import actions from "../../actions";
 
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { ActiveTab } from "../../reducers/controls";
 import { DataframeValue } from "../../util/dataframe";
 
 const MINI_HISTOGRAM_WIDTH = 110;
 
-type State = RootState;
+interface State {
+  geneIsExpanded: boolean;
+}
 
 interface Props {
   gene: string;
@@ -38,7 +41,6 @@ interface Props {
       state.colors.colorMode !== "color by categorical metadata",
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.gene === gene && state.controls.geneIsOpen,
   };
 })
 class Gene extends React.Component<Props, State> {
@@ -91,41 +93,27 @@ class Gene extends React.Component<Props, State> {
 
   handleDisplayGeneInfo = async (): Promise<void> => {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch, gene, geneId, isGeneInfo } = this.props;
+    const { dispatch, gene, geneId } = this.props;
     track(EVENTS.EXPLORER_GENE_INFO_BUTTON_CLICKED, {
       gene,
     });
-
-    if (isGeneInfo) {
-      dispatch({
-        type: "clear gene info",
-      });
-      return;
-    }
 
     dispatch({
       type: "load gene info",
       gene,
     });
 
+    dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
+
     const info = await actions.fetchGeneInfo(geneId, gene);
     if (!info) {
-      dispatch({
-        type: "open gene info",
-        gene,
-        url: "",
-        name: "",
-        synonyms: [],
-        summary: "",
-        infoError: "fetch gene info failed",
-      });
       return;
     }
     dispatch({
       type: "open gene info",
       gene,
-      url: info.ncbi_url,
-      name: info.name,
+      url: info?.ncbi_url,
+      name: info?.name,
       synonyms: info.synonyms,
       summary: info.summary,
       infoError: null,
@@ -170,7 +158,6 @@ class Gene extends React.Component<Props, State> {
             role="menuitem"
             // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
             tabIndex="0"
-            data-testclass="gene-expand"
             data-testid={`${gene}:gene-expand`}
             onKeyPress={() => {}}
             style={{
@@ -222,7 +209,6 @@ class Gene extends React.Component<Props, State> {
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
                 <HistogramBrush
-                  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
                   isUserDefined
                   field={gene}
                   mini
@@ -275,7 +261,6 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testclass="maximize"
               data-testid={`maximize-${gene}`}
               onClick={this.handleGeneExpandClick}
               active={geneIsExpanded}
@@ -286,7 +271,6 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testclass="colorby"
               data-testid={`colorby-${gene}`}
               onClick={this.onColorChangeClick}
               active={isColorAccessor}
@@ -297,7 +281,6 @@ class Gene extends React.Component<Props, State> {
         </div>
         {geneIsExpanded && (
           <HistogramBrush
-            // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
             isUserDefined
             field={gene}
             onGeneExpressionComplete={() => {}}

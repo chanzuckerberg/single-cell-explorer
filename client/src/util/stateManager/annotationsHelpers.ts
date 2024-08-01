@@ -3,7 +3,6 @@ Helper functions for user-editable annotations state management.
 See also reducers/annotations.js
 */
 
-import AnnoMatrix from "../../annoMatrix/annoMatrix";
 import { Schema } from "../../common/types/schema";
 import { Dataframe, LabelType } from "../dataframe";
 
@@ -34,17 +33,6 @@ export function isCategoricalAnnotation(
   const { type } = colSchema;
 
   return type === "string" || type === "boolean" || type === "categorical";
-}
-
-function _isUserAnnotation(schema: Schema, name: string): boolean {
-  return schema.annotations.obsByName[name]?.writable || false;
-}
-
-export function isUserAnnotation(
-  annoMatrix: AnnoMatrix,
-  name: string
-): boolean {
-  return _isUserAnnotation(annoMatrix.schema, name);
 }
 
 /**

@@ -9,71 +9,83 @@ import styles from "./menubar.css";
 import actions from "../../actions";
 import Clip from "./clip";
 
-import InfoDrawer from "../infoDrawer/infoDrawer";
 import Subset from "./subset";
 import DiffexpButtons from "./diffexpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
-import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import Embedding from "../embedding";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
+import { shouldShowOpenseadragon } from "../../common/selectors";
+import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
+import { AppDispatch, RootState } from "../../reducers";
+import { AnnoMatrixClipView } from "../../annoMatrix/views";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
+interface StateProps {
+  subsetPossible: boolean;
+  subsetResetPossible: boolean;
+  graphInteractionMode: RootState["controls"]["graphInteractionMode"];
+  clipPercentileMin: number;
+  clipPercentileMax: number;
+  colorAccessor: RootState["colors"]["colorAccessor"];
+  disableDiffexp: boolean;
+  showCentroidLabels: RootState["centroidLabels"]["showLabels"];
+  categoricalSelection: RootState["categoricalSelection"];
+  screenCap: RootState["controls"]["screenCap"];
+  imageUnderlay: RootState["controls"]["imageUnderlay"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  layoutChoice: RootState["layoutChoice"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  config: RootState["config"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  panelEmbedding: RootState["panelEmbedding"];
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Defa... Remove this comment to see the full error message
+const mapStateToProps = (state: RootState): StateProps => {
   const { annoMatrix } = state;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const crossfilter = (state as any).obsCrossfilter;
-  const selectedCount = crossfilter.countSelected();
+  const crossfilter = state.obsCrossfilter;
+  const selectedCount = crossfilter?.countSelected?.() || 0;
 
   const subsetPossible =
-    selectedCount !== 0 && selectedCount !== crossfilter.size(); // ie, not all and not none are selected
+    selectedCount !== 0 && selectedCount !== crossfilter?.size(); // ie, not all and not none are selected
   const embSubsetView = getEmbSubsetView(annoMatrix);
   const subsetResetPossible = !embSubsetView
-    ? annoMatrix.nObs !== annoMatrix.schema.dataframe.nObs
-    : annoMatrix.nObs !== embSubsetView.nObs;
+    ? annoMatrix?.nObs !== annoMatrix?.schema.dataframe.nObs
+    : annoMatrix?.nObs !== embSubsetView?.nObs;
+
+  const [clipRangeMin, clipRangeMax] = (annoMatrix as AnnoMatrixClipView)
+    ?.clipRange ?? [0, 1];
 
   return {
     subsetPossible,
     subsetResetPossible,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    graphInteractionMode: (state as any).controls.graphInteractionMode,
-    clipPercentileMin: Math.round(100 * (annoMatrix?.clipRange?.[0] ?? 0)),
-    clipPercentileMax: Math.round(100 * (annoMatrix?.clipRange?.[1] ?? 1)),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    userDefinedGenes: (state as any).quickGenes.userDefinedGenes,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    colorAccessor: (state as any).colors.colorAccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    scatterplotXXaccessor: (state as any).controls.scatterplotXXaccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    scatterplotYYaccessor: (state as any).controls.scatterplotYYaccessor,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    libraryVersions: (state as any).config?.library_versions,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    aboutLink: (state as any).config?.links?.["about-dataset"],
-    disableDiffexp:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).config?.parameters?.["disable-diffexp"] ?? false,
-    diffexpMayBeSlow:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).config?.parameters?.["diffexp-may-be-slow"] ?? false,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    showCentroidLabels: (state as any).centroidLabels.showLabels,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    tosURL: (state as any).config?.parameters?.about_legal_tos,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    privacyURL: (state as any).config?.parameters?.about_legal_privacy,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    categoricalSelection: (state as any).categoricalSelection,
-    seamlessEnabled: selectIsSeamlessEnabled(state),
+    config: state.config,
+    graphInteractionMode: state.controls.graphInteractionMode,
+    clipPercentileMin: Math.round(100 * clipRangeMin),
+    clipPercentileMax: Math.round(100 * clipRangeMax),
+    colorAccessor: state.colors.colorAccessor,
+    disableDiffexp: state.config?.parameters?.["disable-diffexp"] ?? false,
+    showCentroidLabels: state.centroidLabels.showLabels,
+    categoricalSelection: state.categoricalSelection,
+    screenCap: state.controls.screenCap,
+    imageUnderlay: state.controls.imageUnderlay,
+    layoutChoice: state.layoutChoice,
+    panelEmbedding: state.panelEmbedding,
   };
-})
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class MenuBar extends React.PureComponent<{}, State> {
+};
+
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+export type MenuBarProps = StateProps & DispatchProps;
+interface State {
+  pendingClipPercentiles: {
+    clipPercentileMin: number | undefined;
+    clipPercentileMax: number | undefined;
+  };
+}
+class MenuBar extends React.PureComponent<MenuBarProps, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static isValidDigitKeyEvent(e: any) {
     /*
@@ -99,11 +111,14 @@ class MenuBar extends React.PureComponent<{}, State> {
     return key >= 0 && key <= 9;
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
+  constructor(props: MenuBarProps) {
     super(props);
+
     this.state = {
-      pendingClipPercentiles: null,
+      pendingClipPercentiles: {
+        clipPercentileMin: undefined,
+        clipPercentileMax: undefined,
+      },
     };
   }
 
@@ -116,15 +131,15 @@ class MenuBar extends React.PureComponent<{}, State> {
     const clipPercentileMin = pendingClipPercentiles?.clipPercentileMin;
     const clipPercentileMax = pendingClipPercentiles?.clipPercentileMax;
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMin: currentClipMin,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMax' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMax: currentClipMax,
     } = this.props;
 
     // if you change this test, be careful with logic around
     // comparisons between undefined / NaN handling.
     const isDisabled =
+      !clipPercentileMin ||
+      !clipPercentileMax ||
       !(clipPercentileMin < clipPercentileMax) ||
       (clipPercentileMin === currentClipMin &&
         clipPercentileMax === currentClipMax);
@@ -186,34 +201,33 @@ class MenuBar extends React.PureComponent<{}, State> {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipCommit = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
     const { pendingClipPercentiles } = this.state;
     const { clipPercentileMin, clipPercentileMax } = pendingClipPercentiles;
-    const min = clipPercentileMin / 100;
-    const max = clipPercentileMax / 100;
+    const min = clipPercentileMin! / 100;
+    const max = clipPercentileMax! / 100;
     dispatch(actions.clipAction(min, max));
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipOpening = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
     const { clipPercentileMin, clipPercentileMax } = this.props;
     this.setState({
       pendingClipPercentiles: { clipPercentileMin, clipPercentileMax },
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleClipClosing = () => {
-    this.setState({ pendingClipPercentiles: null });
+    this.setState({
+      pendingClipPercentiles: {
+        clipPercentileMax: undefined,
+        clipPercentileMin: undefined,
+      },
+    });
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleCentroidChange = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, showCentroidLabels } = this.props;
 
     track(EVENTS.EXPLORER_CENTROID_LABEL_TOGGLE_BUTTON_CLICKED);
@@ -226,7 +240,6 @@ class MenuBar extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubset = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
 
     track(EVENTS.EXPLORER_SUBSET_BUTTON_CLICKED);
@@ -236,7 +249,6 @@ class MenuBar extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSubsetReset = () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch } = this.props;
 
     track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
@@ -244,47 +256,34 @@ class MenuBar extends React.PureComponent<{}, State> {
     dispatch(actions.resetSubsetAction());
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'disableDiffexp' does not exist on type '... Remove this comment to see the full error message
       disableDiffexp,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'undoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      undoDisabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'redoDisabled' does not exist on type 'Re... Remove this comment to see the full error message
-      redoDisabled,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionTool' does not exist on type 'R... Remove this comment to see the full error message
-      selectionTool,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMin,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMax' does not exist on typ... Remove this comment to see the full error message
       clipPercentileMax,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'graphInteractionMode' does not exist on ... Remove this comment to see the full error message
       graphInteractionMode,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'showCentroidLabels' does not exist on ty... Remove this comment to see the full error message
       showCentroidLabels,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoricalSelection' does not exist on ... Remove this comment to see the full error message
       categoricalSelection,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type 'R... Remove this comment to see the full error message
       colorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetPossible' does not exist on type '... Remove this comment to see the full error message
       subsetPossible,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
       subsetResetPossible,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'subsetResetPossible' does not exist on t... Remove this comment to see the full error message
-      seamlessEnabled,
+      screenCap,
+      imageUnderlay,
     } = this.props;
     const { pendingClipPercentiles } = this.state;
 
-    const isColoredByCategorical = !!categoricalSelection?.[colorAccessor];
+    const isColoredByCategorical =
+      !!categoricalSelection?.[colorAccessor || ""];
+
+    const isTest = getFeatureFlag(FEATURES.TEST);
+    const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
     // constants used to create selection tool button
-    const [selectionTooltip, selectionButtonIcon] =
-      selectionTool === "brush"
-        ? ["Brush selection", "Lasso selection"]
-        : ["select", "polygon-filter"];
+    const [selectionTooltip, selectionButtonIcon] = [
+      "select",
+      "polygon-filter",
+    ];
 
     return (
       <div
@@ -295,6 +294,7 @@ class MenuBar extends React.PureComponent<{}, State> {
           justifyContent: "space-between",
           width: "100%",
         }}
+        data-test-id="menubar"
       >
         <div
           style={{
@@ -302,9 +302,10 @@ class MenuBar extends React.PureComponent<{}, State> {
             flexDirection: "row",
             flexWrap: "wrap",
             justifyContent: "left",
+            marginTop: 8,
           }}
         >
-          <Embedding />
+          <Embedding isSidePanel={false} />
         </div>
         <div
           style={{
@@ -314,21 +315,55 @@ class MenuBar extends React.PureComponent<{}, State> {
             justifyContent: "right",
           }}
         >
-          {seamlessEnabled ? (
-            <ButtonGroup className={styles.menubarButton}>
+          <ButtonGroup className={styles.menubarButton}>
+            <AnchorButton
+              type="button"
+              icon={IconNames.INFO_SIGN}
+              onClick={() => {
+                dispatch({
+                  type: "toggle active info panel",
+                  activeTab: "Dataset",
+                });
+              }}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid="drawer"
+            />
+          </ButtonGroup>
+          {isDownload && (
+            <Tooltip
+              content="Download the current graph view as a PNG"
+              position="bottom"
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
               <AnchorButton
+                className={styles.menubarButton}
+                data-testid="download-graph-button"
                 type="button"
-                icon={IconNames.INFO_SIGN}
-                onClick={() => {
-                  dispatch({ type: "toggle dataset drawer" });
-                }}
+                icon={IconNames.CAMERA}
                 style={{
                   cursor: "pointer",
                 }}
-                data-testid="drawer"
+                loading={screenCap}
+                onClick={() => dispatch({ type: "graph: screencap start" })}
               />
-            </ButtonGroup>
-          ) : null}
+            </Tooltip>
+          )}
+          {isTest && (
+            <AnchorButton
+              className={styles.menubarButton}
+              type="button"
+              icon={IconNames.TORCH}
+              style={{
+                cursor: "pointer",
+              }}
+              data-testid={GRAPH_AS_IMAGE_TEST_ID}
+              data-chromatic="ignore"
+              loading={screenCap}
+              onClick={() => dispatch({ type: "test: screencap start" })}
+            />
+          )}
           <Clip
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
             pendingClipPercentiles={pendingClipPercentiles}
@@ -350,6 +385,7 @@ class MenuBar extends React.PureComponent<{}, State> {
             content="When a category is colored by, show labels on the graph"
             position="bottom"
             disabled={graphInteractionMode === "zoom"}
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
           >
             <AnchorButton
               className={styles.menubarButton}
@@ -362,6 +398,38 @@ class MenuBar extends React.PureComponent<{}, State> {
               disabled={!isColoredByCategorical}
             />
           </Tooltip>
+          {shouldShowOpenseadragon(this.props) && (
+            <ButtonGroup className={styles.menubarButton}>
+              <Tooltip
+                content="Toggle image"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="toggle-image-underlay"
+                  icon="media"
+                  intent={imageUnderlay ? "primary" : "none"}
+                  active={imageUnderlay}
+                  onClick={() => {
+                    track(
+                      /**
+                       * (thuang): If `imageUnderlay` is currently `true`, then
+                       * we're about to deselect it thus firing the deselection event.
+                       */
+                      imageUnderlay
+                        ? EVENTS.EXPLORER_IMAGE_DESELECT
+                        : EVENTS.EXPLORER_IMAGE_SELECT
+                    );
+                    dispatch({
+                      type: "toggle image underlay",
+                      toggle: !imageUnderlay,
+                    });
+                  }}
+                />
+              </Tooltip>
+            </ButtonGroup>
+          )}
           <ButtonGroup className={styles.menubarButton}>
             <Tooltip
               content={selectionTooltip}
@@ -413,11 +481,10 @@ class MenuBar extends React.PureComponent<{}, State> {
             handleSubsetReset={this.handleSubsetReset}
           />
           {disableDiffexp ? null : <DiffexpButtons />}
-          <InfoDrawer />
         </div>
       </div>
     );
   }
 }
 
-export default MenuBar;
+export default connect(mapStateToProps)(MenuBar);

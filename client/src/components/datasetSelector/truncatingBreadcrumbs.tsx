@@ -81,41 +81,25 @@ enum BreadcrumbState {
 /**
  * Breadcrumbs State
  * -----------------
- * FFF - full, full, full
- * FTF - full, truncated, full
- * HSF - hidden, short text, full
- * HST - hidden, short text, truncated
- * HHS - hidden, hidden, short text
- * HHH - hidden, hidden, hidden
+ * FF - full, full
+ * FT - full, truncated
+ * SS - short text, short text
+ * HH - hidden, hidden
  */
-type BreadcrumbsState = [BreadcrumbState, BreadcrumbState, BreadcrumbState];
-const STATES_FFF: BreadcrumbsState = [
-  BreadcrumbState.FULL,
+type BreadcrumbsState = [BreadcrumbState, BreadcrumbState];
+const STATES_FF: BreadcrumbsState = [
   BreadcrumbState.FULL,
   BreadcrumbState.FULL,
 ];
-const STATES_FTF: BreadcrumbsState = [
+const STATES_FT: BreadcrumbsState = [
   BreadcrumbState.FULL,
   BreadcrumbState.TRUNCATED,
-  BreadcrumbState.FULL,
 ];
-const STATES_HSF: BreadcrumbsState = [
-  BreadcrumbState.HIDDEN,
+const STATES_SS: BreadcrumbsState = [
   BreadcrumbState.SHORT_TEXT,
-  BreadcrumbState.FULL,
-];
-const STATES_HST: BreadcrumbsState = [
-  BreadcrumbState.HIDDEN,
-  BreadcrumbState.SHORT_TEXT,
-  BreadcrumbState.TRUNCATED,
-];
-const STATES_HHS: BreadcrumbsState = [
-  BreadcrumbState.HIDDEN,
-  BreadcrumbState.HIDDEN,
   BreadcrumbState.SHORT_TEXT,
 ];
-const STATES_HHH: BreadcrumbsState = [
-  BreadcrumbState.HIDDEN,
+const STATES_HH: BreadcrumbsState = [
   BreadcrumbState.HIDDEN,
   BreadcrumbState.HIDDEN,
 ];
@@ -126,12 +110,10 @@ const STATES_HHH: BreadcrumbsState = [
  * Breadcrumbs can transition bidirectionally through states in the following order, and can also repeat individual states.
  */
 const BreadcrumbsStateTransitions: BreadcrumbsState[] = [
-  STATES_FFF,
-  STATES_FTF,
-  STATES_HSF,
-  STATES_HST,
-  STATES_HHS,
-  STATES_HHH,
+  STATES_FF,
+  STATES_FT,
+  STATES_SS,
+  STATES_HH,
 ];
 
 /**
@@ -164,9 +146,10 @@ const TruncatingBreadcrumbs = React.memo<Props>(
 
     // Load of breadcrumbs can begin once fonts are loaded.
     useEffect(() => {
-      document.fonts.ready.then(() => {
+      (async () => {
+        await document.fonts.ready;
         setFontLoaded(true);
-      });
+      })();
     }, []);
 
     // Once we have the available width, measure element and font, build up view model.

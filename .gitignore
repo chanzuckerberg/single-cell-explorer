@@ -50,3 +50,8 @@ client/.eslintcache
 # E2E Testing
 ignoreE2E*
 .test_*
+test-results/
+html-reports/
+playwright-report/
+blob-report/
+playwright/.cache/

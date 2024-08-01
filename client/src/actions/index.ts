@@ -30,6 +30,10 @@ import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
 import AnnoMatrix from "../annoMatrix/annoMatrix";
 
+import { DATASET_METADATA_RESPONSE } from "../../__tests__/__mocks__/apiMock";
+import { selectAvailableLayouts } from "../selectors/layoutChoice";
+import { getBestDefaultLayout } from "../util/layout";
+
 function setGlobalConfig(config: Config) {
   /**
    * Set any global run-time config not _exclusively_ managed by the config reducer.
@@ -88,33 +92,40 @@ async function datasetMetadataFetchAndLoad(
   oldPrefix: string,
   config: Config
 ): Promise<void> {
+  let datasetMetadataResponse;
   try {
-    const datasetMetadataResponse = await fetchJson<{
+    datasetMetadataResponse = await fetchJson<{
       metadata: DatasetMetadata;
     }>("dataset-metadata", oldPrefix);
-
-    // Create new dataset array with large datasets removed
-    const { metadata: datasetMetadata } = datasetMetadataResponse;
-    const datasets = removeLargeDatasets(
-      datasetMetadata.collection_datasets,
-      globals.DATASET_MAX_CELL_COUNT
-    );
-
-    const { links } = config;
-    dispatch({
-      type: "dataset metadata load complete",
-      datasetMetadata: {
-        ...datasetMetadata,
-        collection_datasets: datasets,
-      },
-      portalUrl: links["collections-home-page"],
-    });
   } catch (error) {
-    dispatch({
-      type: "dataset metadata load error",
-      error,
-    });
+    // mock the endpoint for local development
+    if (globals.API?.prefix.includes("http://localhost:5005")) {
+      datasetMetadataResponse = DATASET_METADATA_RESPONSE;
+    } else {
+      dispatch({
+        type: "dataset metadata load error",
+        error,
+      });
+      return;
+    }
   }
+
+  // Create new dataset array with large datasets removed
+  const { metadata: datasetMetadata } = datasetMetadataResponse;
+  const datasets = removeLargeDatasets(
+    datasetMetadata.collection_datasets,
+    globals.DATASET_MAX_CELL_COUNT
+  );
+
+  const { links } = config;
+  dispatch({
+    type: "dataset metadata load complete",
+    datasetMetadata: {
+      ...datasetMetadata,
+      collection_datasets: datasets,
+    },
+    portalUrl: links["collections-home-page"],
+  });
 }
 
 interface GeneInfoAPI {
@@ -150,48 +161,76 @@ function prefetchEmbeddings(annoMatrix: AnnoMatrix) {
   );
 }
 
+function checkIfCellGuideCxg() {
+  const urlPath = window.location.pathname;
+  return urlPath.includes("/cellguide-cxgs");
+}
+
 /*
 Application bootstrap
 */
+
 const doInitialDataLoad = (): ((
   dispatch: AppDispatch,
   getState: GetState
 ) => void) =>
   catchErrorsWrap(async (dispatch: AppDispatch) => {
     dispatch({ type: "initial data load start" });
+
     if (!globals.API) throw new Error("API not set");
 
     try {
       const s3URI = await s3URIFetch();
       const oldPrefix = globals.updateAPIWithS3(s3URI);
+
       const [config, schema] = await Promise.all([
         configFetchAndLoad(dispatch),
         schemaFetch(),
+        genesetsFetch(dispatch),
         userColorsFetchAndLoad(dispatch),
       ]);
 
-      datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
+      await datasetMetadataFetchAndLoad(dispatch, oldPrefix, config);
 
       const baseDataUrl = `${globals.API.prefix}${globals.API.version}`;
       const annoMatrix = new AnnoMatrixLoader(baseDataUrl, schema.schema);
       const obsCrossfilter = new AnnoMatrixObsCrossfilter(annoMatrix);
       prefetchEmbeddings(annoMatrix);
 
+      const isCellGuideCxg = checkIfCellGuideCxg();
+
+      /**
+       * (thuang + seve) There is room to clean up by moving this to the annoMatrix initialization
+       */
       dispatch({
         type: "annoMatrix: init complete",
         annoMatrix,
         obsCrossfilter,
+        isCellGuideCxg,
       });
-      dispatch({ type: "initial data load complete" });
 
-      const defaultEmbedding = config?.parameters?.default_embedding;
-      const layoutSchema = schema?.schema?.layout?.obs ?? [];
-      if (
-        defaultEmbedding &&
-        layoutSchema.some((s: EmbeddingSchema) => s.name === defaultEmbedding)
-      ) {
-        dispatch(embActions.layoutChoiceAction(defaultEmbedding));
-      }
+      const availableLayouts = selectAvailableLayouts({ annoMatrix });
+      const fallbackLayout = getBestDefaultLayout(availableLayouts);
+      const defaultLayout = config?.parameters?.default_embedding || "";
+
+      const finalLayout = availableLayouts.includes(defaultLayout)
+        ? defaultLayout
+        : fallbackLayout;
+
+      // save `isCellGuideCxg` and `s3URI` to the reducer store
+      dispatch({
+        type: "initial data load complete",
+        isCellGuideCxg,
+        s3URI,
+        layoutChoice: finalLayout,
+      });
+
+      /**
+       * (thuang): This dispatch is necessary to ensure that we get the right cell
+       * count when the page is first loaded.
+       * BUG: https://github.com/chanzuckerberg/single-cell-explorer/issues/936
+       */
+      await dispatch(embActions.layoutChoiceAction(finalLayout));
     } catch (error) {
       dispatch({ type: "initial data load error", error });
     }
@@ -237,6 +276,18 @@ const dispatchDiffExpErrors = (
   }
 };
 
+const DEFAULT_GENESETS_RESPONSE = {
+  genesets: [],
+};
+const genesetsFetch = async (dispatch: AppDispatch) => {
+  const response = await fetchJson("genesets");
+
+  dispatch({
+    type: "geneset: initial load",
+    data: response ?? DEFAULT_GENESETS_RESPONSE,
+  });
+};
+
 const requestDifferentialExpression =
   (set1: LabelArray, set2: LabelArray, num_genes = 15) =>
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- TODO: type diff exp data in genesets reducer (client/src/reducers/genesets.ts)
@@ -255,6 +306,7 @@ const requestDifferentialExpression =
       2. get expression data for each
       */
       const { annoMatrix } = getState();
+
       const varIndexName = annoMatrix.schema.annotations.var.index;
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
@@ -297,7 +349,8 @@ const requestDifferentialExpression =
       }
 
       const response = await res.json();
-      const varIndex = await annoMatrix.fetch("var", varIndexName);
+
+      const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
         diffexpLists
@@ -305,6 +358,7 @@ const requestDifferentialExpression =
         diffexpLists[polarity] = response[polarity].map(
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
+            // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
             varIndex.at(v[0], varIndexName),
             ...v.slice(1),
           ]
@@ -473,6 +527,7 @@ export default {
   subsetAction: viewActions.subsetAction,
   resetSubsetAction: viewActions.resetSubsetAction,
   layoutChoiceAction: embActions.layoutChoiceAction,
+  swapLayoutChoicesAction: embActions.swapLayoutChoicesAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,

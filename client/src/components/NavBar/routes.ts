@@ -9,4 +9,6 @@ export enum ROUTES {
   PREVIEW_POLICIES = "/previewpolicies/",
   WHERE_IS_MY_GENE = "/gene-expression",
   DOCS = "/docs",
+  CELL_GUIDE = "/cellguide",
+  CENSUS_MODELS = "/census-models",
 }

@@ -1,6 +1,9 @@
+import { expect, test } from "@playwright/test";
 import BitArray from "../../../src/util/typedCrossfilter/bitArray";
 
 const defaultTestLength = 8;
+
+const { describe } = test;
 
 describe("default select state", () => {
   test("newly created Bitarray should be deselected", () => {
@@ -183,9 +186,9 @@ describe("fillBySelection", () => {
 });
 
 describe("wide bitarray", () => {
-  test.each([9, 30, 31, 32, 33, 54, 63, 64, 65, 127, 128, 129])(
-    "more than %d dimensions",
-    (ndim) => {
+  const config = [9, 30, 31, 32, 33, 54, 63, 64, 65, 127, 128, 129];
+  for (const ndim of config) {
+    test(`more than ${ndim} dimensions`, () => {
       /* ensure we move across the uint boundary correctly */
 
       const ba = new BitArray(defaultTestLength);
@@ -199,6 +202,6 @@ describe("wide bitarray", () => {
 
       ba.freeDimension(ndim - 1);
       expect(ba.allocDimension()).toEqual(ndim - 1);
-    }
-  );
+    });
+  }
 });

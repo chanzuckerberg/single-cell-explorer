@@ -38,7 +38,7 @@ Notes:
 """
 
 
-def get_dtypes_and_schemas_of_dataframe(dataframe: pd.DataFrame):
+def get_dtypes_and_schemas_of_dataframe(dataframe: pd.DataFrame):  # type: ignore
     dtypes_by_column_name = {}
     schema_type_hints_by_column_name = {}
 
@@ -51,28 +51,28 @@ def get_dtypes_and_schemas_of_dataframe(dataframe: pd.DataFrame):
     return dtypes_by_column_name, schema_type_hints_by_column_name
 
 
-def get_encoding_dtype_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> np.dtype:
+def get_encoding_dtype_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> np.dtype:  # type: ignore
     return _get_type_info(array)[0]
 
 
-def get_schema_type_hint_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> dict:
+def get_schema_type_hint_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> dict:  # type: ignore
     return _get_type_info(array)[1]
 
 
-def get_dtype_and_schema_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:
+def get_dtype_and_schema_of_array(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:  # type: ignore
     """Return tuple (encoding_dtype, schema_type_hint)"""
     return _get_type_info(array)
 
 
-def get_schema_type_hint_from_dtype(dtype) -> dict:
-    res = _get_type_info_from_dtype(dtype)
+def get_schema_type_hint_from_dtype(dtype: np.dtype, allow_int64=False) -> dict:  # type: ignore
+    res = _get_type_info_from_dtype(dtype=dtype, allow_int64=allow_int64)
     if res is None:
         raise TypeError(f"Annotations of type {dtype} are unsupported.")
     else:
         return res[1]
 
 
-def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
+def _get_type_info_from_dtype(dtype: np.dtype, allow_int64=False) -> Union[Tuple[np.dtype, dict], None]:  # type: ignore
     """
     Best-effort to determine encoding type and schema hint from a dtype.
     If this is not possible, or the type is unsupported, return None.
@@ -81,18 +81,21 @@ def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
     _get_type_info().  The latter should be preferred if the array (values)
     are available for typing.
     """
+    if allow_int64 and dtype.kind in ["i", "u"] and np.can_cast(dtype, np.int64):
+        return (np.int64, {"type": "int64"})  # type: ignore
+
     if dtype.kind == "b":
-        return (np.uint8, {"type": "boolean"})
+        return (np.uint8, {"type": "boolean"})  # type: ignore
 
     if dtype.kind == "U":
         return (np.dtype(str), {"type": "string"})
 
     if dtype.kind in ["i", "u"] and np.can_cast(dtype, np.int32):
-        return (np.int32, {"type": "int32"})
+        return (np.int32, {"type": "int32"})  # type: ignore
 
     if dtype.kind == "f":
-        _float64_warning(dtype)
-        return (np.float32, {"type": "float32"})
+        _float64_warning(dtype)  # type: ignore
+        return (np.float32, {"type": "float32"})  # type: ignore
 
     if dtype.kind == "O" and dtype.name != "category":
         return (np.dtype(str), {"type": "string"})
@@ -100,7 +103,7 @@ def _get_type_info_from_dtype(dtype) -> Union[Tuple[np.dtype, dict], None]:
     return None
 
 
-def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:
+def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dtype, dict]:  # type: ignore
     """
     Determine encoding type and schema hint from an array.  This allows more
     flexible casting than may be possible by using just the dtype, as it can
@@ -128,7 +131,7 @@ def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dt
             # NA/NaN (missing or undefined) categories.
             if dtype.categories.dtype.kind in ["f", "i", "u"]:
                 return (
-                    _get_type_info(array.to_numpy())[0],
+                    _get_type_info(array.to_numpy())[0],  # type: ignore
                     {"type": "categorical"},
                 )
             else:
@@ -138,16 +141,16 @@ def _get_type_info(array: Union[np.ndarray, pd.Series, pd.Index]) -> Tuple[np.dt
         return (np.dtype(str), {"type": "string"})
 
     if dtype.kind in ["i", "u"] and _can_cast_array_values_to_int32(array):
-        return (np.int32, {"type": "int32"})
+        return (np.int32, {"type": "int32"})  # type: ignore
 
     if dtype.kind == "f":
-        _float64_warning(array.dtype)
-        return (np.float32, {"type": "float32"})
+        _float64_warning(array.dtype)  # type: ignore
+        return (np.float32, {"type": "float32"})  # type: ignore
 
     raise TypeError(f"Annotations of type {dtype} are unsupported.")
 
 
-def _float64_warning(dtype):
+def _float64_warning(dtype):  # type: ignore
     """
     Warn the user if we are down-casting a float64 to float32, and may potentially lose information.
     """
@@ -155,7 +158,7 @@ def _float64_warning(dtype):
         logging.warning(f"Type {dtype.name} will be converted to 32 bit float and may lose precision.")
 
 
-def _can_cast_array_values_to_int32(array: Union[np.ndarray, pd.Series, pd.Index]) -> bool:
+def _can_cast_array_values_to_int32(array: Union[np.ndarray, pd.Series, pd.Index]) -> bool:  # type: ignore
     """
     Return true if the (U)INT array values can be safely cast to int32.  We allow size reducing
     casts (ie, int64 to int32) if no actual values require the larger size (ie, actual values
@@ -176,7 +179,7 @@ def _can_cast_array_values_to_int32(array: Union[np.ndarray, pd.Series, pd.Index
     return False
 
 
-def convert_string_to_value(value: str):
+def convert_string_to_value(value: str):  # type: ignore
     """convert a string to value with the most appropriate type"""
     if value.lower() == "true":
         return True

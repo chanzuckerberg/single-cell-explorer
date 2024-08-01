@@ -13,39 +13,48 @@ import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
-import Graph from "./graph/graph";
 import MenuBar from "./menubar";
 import Header from "./NavBar";
 import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
+import Graph from "./graph/graph";
+import Scatterplot from "./scatterplot/scatterplot";
+import PanelEmbedding from "./PanelEmbedding";
 
-interface Props {
-  dispatch: AppDispatch;
-  loading: boolean;
-  error: string;
+interface StateProps {
+  loading: RootState["controls"]["loading"];
+  error: RootState["controls"]["error"];
   graphRenderCounter: number;
   tosURL: string | undefined;
-  privacyURL: string | undefined;
+  privacyURL: string;
   seamlessEnabled: boolean;
-  datasetMetadataError: string | null;
+  datasetMetadataError: RootState["datasetMetadata"]["error"];
+  isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
+  scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
+  scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
 }
 
-class App extends React.Component<Props> {
+const mapStateToProps = (state: RootState): StateProps => ({
+  loading: state.controls.loading,
+  error: state.controls.error,
+  graphRenderCounter: state.controls.graphRenderCounter,
+  tosURL: state.config?.parameters?.about_legal_tos,
+  privacyURL: state.config?.parameters?.about_legal_privacy || "",
+  seamlessEnabled: selectIsSeamlessEnabled(state),
+  datasetMetadataError: state.datasetMetadata.error,
+  isCellGuideCxg: state.controls.isCellGuideCxg,
+  scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
+  scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
+});
+
+class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
   componentDidMount(): void {
     const { dispatch } = this.props;
-    /* listen for url changes, fire one when we start the app up */
-    window.addEventListener("popstate", this._onURLChanged);
-    this._onURLChanged();
     dispatch(actions.doInitialDataLoad());
     dispatch(actions.checkExplainNewTab());
     this.forceUpdate();
-  }
-
-  _onURLChanged(): void {
-    const { dispatch } = this.props;
-    dispatch({ type: "url changed", url: document.location.href });
   }
 
   render(): JSX.Element {
@@ -57,6 +66,9 @@ class App extends React.Component<Props> {
       privacyURL,
       seamlessEnabled,
       datasetMetadataError,
+      isCellGuideCxg,
+      scatterplotXXaccessor,
+      scatterplotYYaccessor,
     } = this.props;
     return (
       <Container>
@@ -77,12 +89,14 @@ class App extends React.Component<Props> {
                   error loading cellxgene
                 </div>
               ) : null}
-              {(seamlessEnabled || datasetMetadataError === null) && (
+              {(seamlessEnabled ||
+                datasetMetadataError === null ||
+                isCellGuideCxg) && (
                 <Header tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
                 <Layout
-                  datasetMetadataError={datasetMetadataError}
+                  addTopPadding={!datasetMetadataError || isCellGuideCxg}
                   renderGraph={(viewportRef: HTMLDivElement) => (
                     <>
                       <GlobalHotkeys />
@@ -91,11 +105,13 @@ class App extends React.Component<Props> {
                       </Controls>
                       <Legend />
                       <Graph
-                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- FIXME: added to solve linting error with ts-ignore
-                        // @ts-ignore FIXME: Type '{ key: any; viewportRef: any; }' is not assi... Remove this comment to see the full error message
                         viewportRef={viewportRef}
                         key={graphRenderCounter}
                       />
+                      {scatterplotXXaccessor && scatterplotYYaccessor && (
+                        <Scatterplot />
+                      )}
+                      <PanelEmbedding />
                       <Controls bottom={0}>
                         <DatasetSelector />
                       </Controls>
@@ -114,12 +130,4 @@ class App extends React.Component<Props> {
   }
 }
 
-export default connect((state: RootState) => ({
-  loading: state.controls.loading,
-  error: state.controls.error,
-  graphRenderCounter: state.controls.graphRenderCounter,
-  tosURL: state.config?.parameters?.about_legal_tos,
-  privacyURL: state.config?.parameters?.about_legal_privacy,
-  seamlessEnabled: selectIsSeamlessEnabled(state),
-  datasetMetadataError: state.datasetMetadata.error,
-}))(App);
+export default connect(mapStateToProps)(App);

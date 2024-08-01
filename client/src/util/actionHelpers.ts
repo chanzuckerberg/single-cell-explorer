@@ -3,7 +3,7 @@ import sortBy from "lodash.sortby";
 import { postNetworkErrorToast } from "../components/framework/toasters";
 import type { AppDispatch, GetState } from "../reducers";
 
-let networkErrorToastKey: string | null = null;
+let networkErrorToastKey: string | undefined;
 
 /**
  * Dispatch an action error to the user. Currently we use async toasts.

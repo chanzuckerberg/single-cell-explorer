@@ -14,6 +14,10 @@ import ErrorLoading from "./error";
 import { Dataframe } from "../../util/dataframe";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { AppDispatch, RootState } from "../../reducers";
+import { AnnoMatrixClipView } from "../../annoMatrix/views";
+import { Query } from "../../annoMatrix/query";
+import { Field } from "../../common/types/schema";
 
 const MARGIN = {
   LEFT: 10, // Space for 0 tick label on X axis
@@ -32,32 +36,55 @@ const MARGIN_MINI = {
 const WIDTH_MINI = 120 - MARGIN_MINI.LEFT - MARGIN_MINI.RIGHT;
 const HEIGHT_MINI = 15 - MARGIN_MINI.TOP - MARGIN_MINI.BOTTOM;
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state, ownProps) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type '{}'.
+interface BrushableHistogramOwnProps {
+  isObs?: boolean;
+  isUserDefined?: boolean;
+  isGeneSetSummary?: boolean;
+  field: string;
+  onGeneExpressionComplete: () => void;
+  zebra?: boolean;
+  mini?: boolean;
+  width?: number;
+  setGenes?: Map<string, boolean>;
+}
+
+interface StateProps {
+  annoMatrix: RootState["annoMatrix"];
+  isScatterplotXXaccessor: boolean;
+  isScatterplotYYaccessor: boolean;
+  continuousSelectionRange: RootState["continuousSelection"][string];
+  isColorAccessor: boolean;
+  singleContinuousValues: RootState["singleContinuousValue"]["singleContinuousValues"];
+}
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type BrushableHistogramProps = BrushableHistogramOwnProps &
+  StateProps &
+  DispatchProps;
+
+const mapStateToProps = (
+  state: RootState,
+  ownProps: BrushableHistogramOwnProps
+): StateProps => {
   const { isObs, isUserDefined, isGeneSetSummary, field } = ownProps;
   const myName = makeContinuousDimensionName(
     { isObs, isUserDefined, isGeneSetSummary },
     field
   );
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    annoMatrix: (state as any).annoMatrix,
-    isScatterplotXXaccessor:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).controls.scatterplotXXaccessor === field,
-    isScatterplotYYaccessor:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-      (state as any).controls.scatterplotYYaccessor === field,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    continuousSelectionRange: (state as any).continuousSelection[myName],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+    annoMatrix: state.annoMatrix,
+    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === field,
+    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === field,
+    continuousSelectionRange: state.continuousSelection[myName],
     isColorAccessor:
-      (state as any).colors.colorAccessor === field &&
-      (state as any).colors.colorMode !== "color by categorical metadata",
+      state.colors.colorAccessor === field &&
+      state.colors.colorMode !== "color by categorical metadata",
+    singleContinuousValues: state.singleContinuousValue.singleContinuousValues,
   };
-})
-class HistogramBrush extends React.PureComponent {
+};
+class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
@@ -80,19 +107,9 @@ class HistogramBrush extends React.PureComponent {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   onBrush = (selection: any, x: any, eventType: any) => {
     const type = `continuous metadata histogram ${eventType}`;
-    return () => {
-      const {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-        dispatch,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'Readonly<... Remove this comment to see the full error message
-        field,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type 'Readonly<... Remove this comment to see the full error message
-        isObs,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserDefined' does not exist on type 'R... Remove this comment to see the full error message
-        isUserDefined,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
-        isGeneSetSummary,
-      } = this.props;
+    return async () => {
+      const { dispatch, field, isObs, isUserDefined, isGeneSetSummary } =
+        this.props;
 
       // ignore programmatically generated events
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -115,7 +132,7 @@ class HistogramBrush extends React.PureComponent {
           isGeneSetSummary,
         },
       };
-      dispatch(
+      await dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
     };
@@ -128,19 +145,9 @@ class HistogramBrush extends React.PureComponent {
       x: any // eslint-disable-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     ) =>
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-    () => {
-      const {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-        dispatch,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'Readonly<... Remove this comment to see the full error message
-        field,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type 'Readonly<... Remove this comment to see the full error message
-        isObs,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserDefined' does not exist on type 'R... Remove this comment to see the full error message
-        isUserDefined,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
-        isGeneSetSummary,
-      } = this.props;
+    async () => {
+      const { dispatch, field, isObs, isUserDefined, isGeneSetSummary } =
+        this.props;
       const minAllowedBrushSize = 10;
       const smallAmountToAvoidInfiniteLoop = 0.1;
 
@@ -194,7 +201,7 @@ class HistogramBrush extends React.PureComponent {
           isGeneSetSummary,
         },
       };
-      dispatch(
+      await dispatch(
         actions.selectContinuousMetadataAction(type, query, range, otherProps)
       );
       track(EVENTS.EXPLORER_SELECT_HISTOGRAM);
@@ -204,7 +211,6 @@ class HistogramBrush extends React.PureComponent {
   handleSetGeneAsScatterplotX = () => {
     track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, field } = this.props;
     dispatch({
       type: "set scatterplot x",
@@ -212,11 +218,9 @@ class HistogramBrush extends React.PureComponent {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   handleSetGeneAsScatterplotY = () => {
     track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, field } = this.props;
     dispatch({
       type: "set scatterplot y",
@@ -224,18 +228,12 @@ class HistogramBrush extends React.PureComponent {
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   removeHistogram = () => {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'Readonly<... Remove this comment to see the full error message
       field,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
       isColorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotXXaccessor' does not exist ... Remove this comment to see the full error message
       isScatterplotXXaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist ... Remove this comment to see the full error message
       isScatterplotYYaccessor,
     } = this.props;
     dispatch({
@@ -261,14 +259,41 @@ class HistogramBrush extends React.PureComponent {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   fetchAsyncProps = async () => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix, width, onGeneExpressionComplete } = this.props;
-    const { isClipped } = annoMatrix;
+    const {
+      annoMatrix,
+      width,
+      onGeneExpressionComplete,
+      field,
+      dispatch,
+      singleContinuousValues,
+    } = this.props;
+
+    const { isClipped } = annoMatrix as AnnoMatrixClipView;
+    if (singleContinuousValues.has(field)) {
+      return {
+        histogram: undefined,
+        range: undefined,
+        unclippedRange: undefined,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
 
     const query = this.createQuery();
-    // @ts-expect-error ts-migrate(2488) FIXME: Type 'any[] | null' must have a '[Symbol.iterator]... Remove this comment to see the full error message
+    if (!query) {
+      return {
+        histogram: null,
+        miniHistogram: null,
+        range: null,
+        unclippedRange: null,
+        unclippedRangeColor: null,
+        isSingleValue: null,
+        OK2Render: false,
+      };
+    }
+
     const df: Dataframe = await annoMatrix.fetch(...query, globals.numBinsObsX);
     const column = df.icol(0);
 
@@ -276,6 +301,29 @@ class HistogramBrush extends React.PureComponent {
     // as we need the absolute min/max range, not just the clipped min/max.
     const summary = column.summarizeContinuous();
     const range = [summary.min, summary.max];
+
+    // seve: if the anno matrix is not a view and it is a single value, remove it from histograms and send it to the dataset drawer
+    // NOTE: this also includes embedding views, so if the default embedding subsets to a view and there is a single continuous value for a field, it will not be added to the dataset drawer
+    if (summary.min === summary.max && !annoMatrix.isView) {
+      dispatch({
+        type: "add single continuous value",
+        field,
+        value: summary.min,
+      });
+      return {
+        histogram: undefined,
+        range,
+        unclippedRange: range,
+        unclippedRangeColor: globals.blue,
+        isSingleValue: true,
+        OK2Render: false,
+      };
+    }
+
+    const isSingleValue = summary.min === summary.max;
+
+    // if we are clipped, fetch both our value and our unclipped value,
+    // as we need the absolute min/max range, not just the clipped min/max.
 
     let unclippedRange = [...range];
     if (isClipped) {
@@ -288,10 +336,11 @@ class HistogramBrush extends React.PureComponent {
     }
 
     const unclippedRangeColor = [
-      !annoMatrix.isClipped || annoMatrix.clipRange[0] === 0
+      !isClipped || (annoMatrix as AnnoMatrixClipView).clipRange[0] === 0
         ? "#bbb"
         : globals.blue,
-      !annoMatrix.isClipped || annoMatrix.clipRange[1] === 1
+
+      !isClipped || (annoMatrix as AnnoMatrixClipView).clipRange[1] === 1
         ? "#bbb"
         : globals.blue,
     ];
@@ -309,7 +358,6 @@ class HistogramBrush extends React.PureComponent {
       HEIGHT_MINI
     );
 
-    const isSingleValue = summary.min === summary.max;
     const nonFiniteExtent =
       summary.min === undefined ||
       summary.max === undefined ||
@@ -381,20 +429,18 @@ class HistogramBrush extends React.PureComponent {
     return histogramCache;
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  createQuery() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type 'Readonly<... Remove this comment to see the full error message
+  createQuery(): [Field, Query] | null {
     const { isObs, isGeneSetSummary, field, setGenes, annoMatrix } = this.props;
     const { schema } = annoMatrix;
     if (isObs) {
-      return ["obs", field];
+      return [Field.obs, field];
     }
     const varIndex = schema?.annotations?.var?.index;
     if (!varIndex) return null;
 
-    if (isGeneSetSummary) {
+    if (isGeneSetSummary && setGenes) {
       return [
-        "X",
+        Field.X,
         {
           summarize: {
             method: "mean",
@@ -408,7 +454,7 @@ class HistogramBrush extends React.PureComponent {
 
     // else, we assume it is a gene expression
     return [
-      "X",
+      Field.X,
       {
         where: {
           field: "var",
@@ -419,38 +465,23 @@ class HistogramBrush extends React.PureComponent {
     ];
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
   render() {
     const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
       dispatch,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
       annoMatrix,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'Readonly<... Remove this comment to see the full error message
       field,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
       isColorAccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isUserDefined' does not exist on type 'R... Remove this comment to see the full error message
       isUserDefined,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isGeneSetSummary' does not exist on type... Remove this comment to see the full error message
       isGeneSetSummary,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotXXaccessor' does not exist ... Remove this comment to see the full error message
       isScatterplotXXaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isScatterplotYYaccessor' does not exist ... Remove this comment to see the full error message
       isScatterplotYYaccessor,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'zebra' does not exist on type 'Readonly<... Remove this comment to see the full error message
       zebra,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'continuousSelectionRange' does not exist... Remove this comment to see the full error message
       continuousSelectionRange,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isObs' does not exist on type 'Readonly<... Remove this comment to see the full error message
       isObs,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'mini' does not exist on type 'Readonly<{... Remove this comment to see the full error message
       mini,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'setGenes' does not exist on type 'Readon... Remove this comment to see the full error message
       setGenes,
     } = this.props;
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'width' does not exist on type 'Readonly<... Remove this comment to see the full error message
     let { width } = this.props;
     if (!width) {
       width = mini ? WIDTH_MINI : WIDTH;
@@ -458,10 +489,6 @@ class HistogramBrush extends React.PureComponent {
 
     const fieldForId = field.replace(/\s/g, "_");
     const showScatterPlot = isUserDefined;
-
-    let testClass = "histogram-continuous-metadata";
-    if (isUserDefined) testClass = "histogram-user-gene";
-    else if (isGeneSetSummary) testClass = "histogram-gene-set-summary";
 
     return (
       <Async
@@ -488,7 +515,6 @@ class HistogramBrush extends React.PureComponent {
               <div
                 id={`histogram_${fieldForId}`}
                 data-testid={`histogram-${field}`}
-                data-testclass={testClass}
                 style={{
                   padding: mini ? 0 : globals.leftSidebarSectionPadding,
                   backgroundColor: zebra ? globals.lightestGrey : "white",
@@ -560,4 +586,4 @@ class HistogramBrush extends React.PureComponent {
   }
 }
 
-export default HistogramBrush;
+export default connect(mapStateToProps)(HistogramBrush);

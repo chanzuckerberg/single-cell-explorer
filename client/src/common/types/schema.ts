@@ -12,6 +12,8 @@ export type AnnotationColumnSchema =
   | {
       name: string;
       type: "string" | "float32" | "int32" | "boolean";
+
+      // TODO(seve): remove writable from schema (user annotations)
       writable: boolean;
       categories?: Category[];
     };
@@ -29,6 +31,7 @@ export interface EmbeddingSchema {
   // TODO(thuang): Not sure what other types are available
   type: "float32";
 }
+
 interface RawLayoutSchema {
   obs: EmbeddingSchema[];
   var?: EmbeddingSchema[];

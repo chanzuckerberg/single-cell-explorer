@@ -3,6 +3,9 @@ import { dispatchNetworkErrorMessageToUser } from "./util/actionHelpers";
 import ENV_DEFAULT from "../../environment.default.json";
 import { DataPortalProps, S3URI } from "./common/types/entities";
 
+/* visium embedding word, spatial image underlay */
+export const spatialEmbeddingKeyword = "spatial";
+
 /* overflow category values are created  using this string */
 export const overflowCategoryLabel = ": all other labels";
 
@@ -12,20 +15,39 @@ export const unassignedCategoryLabel = "unassigned";
 /** Maximum number of cells a dataset can have in order to be included for display. */
 export const DATASET_MAX_CELL_COUNT = 2_000_000;
 
-/* Category name suffix used to determine if category name is ontology term id. */
-export const ONTOLOGY_KEY = "ontology_term_id";
+/* Explicit ontology term ids. */
+export const ONTOLOGY_TERM_ID_KEYS = [
+  "assay_ontology_term_id",
+  "cell_type_ontology_term_id",
+  "development_stage_ontology_term_id",
+  "disease_ontology_term_id",
+  "organism_ontology_term_id",
+  "self_reported_ethnicity_ontology_term_id",
+  "sex_ontology_term_id",
+  "tissue_ontology_term_id",
+];
 
 /* Unified navigation bar header height. */
-export const HEADER_HEIGHT_PX = 48;
+export const HEADER_HEIGHT_PX = 56;
 
 /* Added to Portal links from breadcrumbs if there is work in progress */
 export const QUERY_PARAM_EXPLAIN_NEW_TAB = "explainNewTab";
 
 /**
- * Matches "/" followed by "ONE_OR_MORE_ANY_CHAR/ONE_OR_MORE_ANY_CHAR_EXCEPT_FORWARD_SLASH/" and ending with "api". Must
- * exclude forward slash to prevent matches on multiple path segments (e.g. /cellxgene/d/uuid.cxg).
+ * Matches a path starting with "/" followed by any single character (as the dataroot), followed by a slash, then captures
+ * any sequence of characters (representing optional subdirectories) followed by another sequence of characters (the target directory)
+ * and ending with "api". This setup ensures it starts capturing at the single-character dataroot and includes any optional subpaths.
  */
-const REGEX_PATHNAME = /(?<=\/)\w+\/[^/]+\/(?=api)/;
+const REGEX_PATHNAME = /(?<=\/)[^/]{1}\/(?:[^/]+\/)*[^/]+\/(?=api)/;
+
+/**
+ * This regex is used to update the API prefix when the dataset selector is used.
+ * It matches the previous two segments (demarcated by `/`) leading up to `/api`.
+ * In deployed environments, these segments will be `s3_uri` and the S3 URI of the dataset.
+ * We require a separate REGEX because the dataset selector is applied to an API prefix that
+ * has already been updated with the S3 URI of the dataset.
+ */
+const REGEX_PATHNAME_FOR_DATASET_SELECTOR = /(?<=\/)\w+\/[^/]+\/(?=api)/;
 
 /* Config links types */
 export type ConfigLink = "about-dataset" | "collections-home-page";
@@ -83,7 +105,9 @@ export const globalConfig = {
 };
 
 /* is mac os? */
-export const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+export const isMac =
+  typeof navigator !== "undefined" &&
+  navigator.platform.toUpperCase().indexOf("MAC") >= 0;
 
 /* colors */
 export const blue = Colors.BLUE3;
@@ -136,6 +160,7 @@ export const leftSidebarSectionHeading = {
   letterSpacing: ".05em",
 };
 export const leftSidebarSectionPadding = 10;
+export const rightSidebarSectionPadding = 10;
 export const categoryLabelDisplayStringLongLength = 27;
 export const categoryLabelDisplayStringShortLength = 11;
 export const categoryDisplayStringMaxLength = 33;
@@ -175,7 +200,7 @@ declare global {
   }
 }
 
-if (window?.CELLXGENE?.API) {
+if (typeof window !== "undefined" && window?.CELLXGENE?.API) {
   _API = window.CELLXGENE.API;
 } else if (CXG_SERVER_PORT === undefined) {
   const errorMessage = "Please set the CXG_SERVER_PORT environment variable.";
@@ -198,7 +223,10 @@ export function updateApiPrefix(): void {
   const pathname = location.pathname.substring(1);
   // For the API prefix in the format protocol/host/pathSegement/e/uuid.cxg, replace /e/uuid.cxg with the corresponding
   // path segments taken from the pathname.
-  API.prefix = API.prefix.replace(REGEX_PATHNAME, pathname);
+  API.prefix = API.prefix.replace(
+    REGEX_PATHNAME_FOR_DATASET_SELECTOR,
+    pathname
+  );
 }
 
 /**

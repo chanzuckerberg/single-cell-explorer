@@ -1,4 +1,7 @@
+import { expect, test } from "@playwright/test";
 import { range, rangeFill, linspace } from "../../src/util/range";
+
+const { describe } = test;
 
 describe("range", () => {
   test("no defaults", () => {
@@ -25,17 +28,13 @@ describe("range", () => {
 
 describe("rangefill", () => {
   test("rangeFill(arr)", () => {
-    expect(rangeFill(new Int32Array(3))).toMatchObject(
-      new Int32Array([0, 1, 2])
-    );
+    expect(rangeFill(new Int32Array(3))).toEqual(new Int32Array([0, 1, 2]));
   });
   test("rangeFill(arr, start)", () => {
-    expect(rangeFill(new Int32Array(2), 1)).toMatchObject(
-      new Int32Array([1, 2])
-    );
+    expect(rangeFill(new Int32Array(2), 1)).toEqual(new Int32Array([1, 2]));
   });
   test("rangeFill(arr, start, step)", () => {
-    expect(rangeFill(new Int32Array(3), 2, -1)).toMatchObject(
+    expect(rangeFill(new Int32Array(3), 2, -1)).toEqual(
       new Int32Array([2, 1, 0])
     );
   });

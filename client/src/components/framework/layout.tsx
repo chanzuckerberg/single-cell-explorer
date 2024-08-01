@@ -2,7 +2,7 @@ import React, { Children, useState } from "react";
 import * as globals from "../../globals";
 
 interface Props {
-  datasetMetadataError: string | null;
+  addTopPadding: boolean;
   renderGraph?: (viewport: HTMLDivElement) => React.ReactNode;
 }
 
@@ -20,7 +20,7 @@ interface Props {
 const Layout: React.FC<Props> = (props) => {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
 
-  const { children, datasetMetadataError, renderGraph } = props;
+  const { children, addTopPadding, renderGraph } = props;
   const [leftSidebar, rightSidebar] = Children.toArray(children);
   let graphComponent = null;
   if (viewportRef && renderGraph) {
@@ -30,7 +30,7 @@ const Layout: React.FC<Props> = (props) => {
     <div
       style={{
         display: "grid",
-        paddingTop: !datasetMetadataError ? globals.HEADER_HEIGHT_PX : 0,
+        paddingTop: addTopPadding ? globals.HEADER_HEIGHT_PX : 0,
         gridTemplateColumns: `
         [left-sidebar-start] ${globals.leftSidebarWidth + 1}px
         [left-sidebar-end graph-start] auto
@@ -62,8 +62,9 @@ const Layout: React.FC<Props> = (props) => {
         {leftSidebar}
       </div>
       <div
+        // side panel needs to take priority in z-index
         style={{
-          zIndex: 0,
+          zIndex: 1,
           gridArea: "top / graph-start / bottom / graph-end",
           position: "relative",
           height: "inherit",

@@ -13,7 +13,12 @@ from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
-from server.common.constants import Axis, DiffExpMode, JSON_NaN_to_num_warning_msg
+from server.common.constants import (
+    CELLGUIDE_CXG_KEY_NAME,
+    Axis,
+    DiffExpMode,
+    JSON_NaN_to_num_warning_msg,
+)
 from server.common.diffexpdu import DiffExArguments
 from server.common.errors import (
     ColorFormatException,
@@ -110,9 +115,40 @@ def schema_get_helper(data_adaptor):
     return schema
 
 
+def genesets_get_helper(data_adaptor):
+    """helper function to get genesets present in the obs metadata"""
+    genesets = data_adaptor.get_genesets()
+    genesets = copy.deepcopy(genesets)
+    return genesets
+
+
 def schema_get(data_adaptor):
     schema = schema_get_helper(data_adaptor)
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
+
+
+def genesets_get(data_adaptor):
+    """
+    The genesets endpoint returns the genesets present in the obs metadata.
+
+    The genesets dictionary must be in the following format:
+        {
+            <string, a gene set name>: {
+                "geneset_name": <string, a gene set name>,
+                "geneset_description": <a string or None>,
+                "genes": [
+                    {
+                        "gene_symbol": <string, a gene symbol or name>,
+                        "gene_description": <a string or None>
+                    },
+                    ...
+                ]
+            },
+            ...
+        }
+    """
+    genesets = genesets_get_helper(data_adaptor)
+    return make_response(jsonify({"genesets": list(genesets.values())}), HTTPStatus.OK)
 
 
 def dataset_metadata_get(app_config, url_dataroot, dataset_id):
@@ -124,6 +160,13 @@ def dataset_metadata_get(app_config, url_dataroot, dataset_id):
 
 
 def s3_uri_get(app_config, url_dataroot_id, dataset_id):
+    # This is a hack to work around the fact that the flask routes
+    # need to hardcode `{CELLGUIDE_CXG_KEY_NAME}/` in the blueprint, but the
+    # s3_uri must include that prefix.
+    # TODO: make this less hacky.
+    if not dataset_id.endswith(".cxg"):
+        dataset_id = f"{CELLGUIDE_CXG_KEY_NAME}/{dataset_id}.cxg"
+
     try:
         dataset_artifact_s3_uri = get_dataset_artifact_s3_uri(url_dataroot_id, dataset_id)
     except TombstoneError as e:
@@ -341,12 +384,17 @@ def layout_obs_get(request, data_adaptor):
         return abort(HTTPStatus.BAD_REQUEST)
 
     preferred_mimetype = request.accept_mimetypes.best_match(["application/octet-stream"])
+    try:
+        spatial = data_adaptor.get_uns("spatial")
+    except KeyError:
+        spatial = None
+
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
     try:
         return make_response(
-            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins),
+            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins, spatial=spatial),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )

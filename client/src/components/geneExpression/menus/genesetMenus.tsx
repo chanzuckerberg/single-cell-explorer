@@ -18,6 +18,7 @@ import actions from "../../../actions";
 import AddGeneToGenesetDialogue from "./addGeneToGenesetDialogue";
 import { track } from "../../../analytics";
 import { EVENTS } from "../../../analytics/events";
+import { MARKER_GENE_SUFFIX_IDENTIFIER } from "../constants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -61,11 +62,17 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     });
   };
 
-  handleColorByEntireGeneset = (): void => {
-    track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
+  handleColorByEntireGeneset = (event: React.MouseEvent): void => {
+    event.preventDefault();
 
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, geneset } = this.props;
+
+    if (geneset.includes(MARKER_GENE_SUFFIX_IDENTIFIER)) {
+      track(EVENTS.EXPLORER_COLORBY_CG_MARKER_GENE_SET_CLICKED);
+    } else {
+      track(EVENTS.EXPLORER_COLOR_BY_ENTIRE_GENESET_BUTTON_CLICKED);
+    }
 
     dispatch({
       type: "color by geneset mean expression",
@@ -110,7 +117,6 @@ class GenesetMenus extends React.PureComponent<{}, State> {
             >
               <Button
                 style={{ marginLeft: 0, marginRight: 2 }}
-                data-testclass="handleAddNewGeneToGeneset"
                 data-testid={`${geneset}:add-new-gene-to-geneset`}
                 icon={<Icon icon="plus" iconSize={10} />}
                 onClick={this.activateAddGeneToGenesetMode}
@@ -128,7 +134,6 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 <Menu>
                   <MenuItem
                     icon="edit"
-                    data-testclass="activateEditGenesetNameMode"
                     data-testid={`${geneset}:edit-genesetName-mode`}
                     onClick={this.activateEditGenesetNameMode}
                     text="Edit gene set name and description"
@@ -136,7 +141,6 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                   <MenuItem
                     icon="trash"
                     intent="danger"
-                    data-testclass="handleDeleteGeneset"
                     data-testid={`${geneset}:delete-geneset`}
                     onClick={this.handleDeleteGeneset}
                     text="Delete this gene set (destructive, will remove set and collection of genes)"
@@ -146,7 +150,6 @@ class GenesetMenus extends React.PureComponent<{}, State> {
             >
               <Button
                 style={{ marginLeft: 0, marginRight: 5 }}
-                data-testclass="seeActions"
                 data-testid={`${geneset}:see-actions`}
                 icon={<Icon icon="more" iconSize={10} />}
                 small
@@ -165,7 +168,6 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 style={{ marginLeft: 0 }}
                 loading={isColorBy && colorLoading}
                 onClick={this.handleColorByEntireGeneset}
-                data-testclass="colorby-entire-geneset"
                 data-testid={`${geneset}:colorby-entire-geneset`}
                 icon={<Icon icon="tint" iconSize={16} />}
               />

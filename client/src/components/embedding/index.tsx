@@ -1,91 +1,125 @@
-import React from "react";
+import React, { FormEvent } from "react";
 import { connect } from "react-redux";
 import { useAsync } from "react-async";
 import {
   Button,
   ButtonGroup,
   H4,
-  Popover,
   Position,
   Radio,
   RadioGroup,
   Tooltip,
 } from "@blueprintjs/core";
+import { IconNames } from "@blueprintjs/icons";
+import { Popover2 } from "@blueprintjs/popover2";
 import * as globals from "../../globals";
 import actions from "../../actions";
 import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { AppDispatch, RootState } from "../../reducers";
+import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
+import { Schema } from "../../common/types/schema";
+import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
+import { sidePanelAttributeNameChange } from "../graph/util";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type EmbeddingState = any;
+interface StateProps {
+  layoutChoice: RootState["layoutChoice"];
+  schema?: Schema;
+  crossfilter: RootState["obsCrossfilter"];
+  sideIsOpen: RootState["panelEmbedding"]["open"];
+}
 
-// @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
-@connect((state) => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  layoutChoice: (state as any).layoutChoice,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  schema: (state as any).annoMatrix?.schema,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  crossfilter: (state as any).obsCrossfilter,
-}))
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class Embedding extends React.PureComponent<{}, EmbeddingState> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
-    super(props);
-    this.state = {};
-  }
+interface OwnProps {
+  isSidePanel: boolean;
+}
 
-  handleLayoutChoiceClick = (): void => {
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_BUTTON_CLICKED);
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type Props = StateProps & DispatchProps & OwnProps;
+
+const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
+  layoutChoice: props.isSidePanel
+    ? state.panelEmbedding.layoutChoice
+    : state.layoutChoice,
+  schema: state.annoMatrix?.schema,
+  crossfilter: state.obsCrossfilter,
+  sideIsOpen: state.panelEmbedding.open,
+});
+
+const Embedding = (props: Props) => {
+  const {
+    layoutChoice,
+    schema,
+    crossfilter,
+    dispatch,
+    isSidePanel,
+    sideIsOpen,
+  } = props;
+  const { annoMatrix } = crossfilter || {};
+  if (!crossfilter || !annoMatrix) return null;
+
+  const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
+
+  /**
+   * (thuang): Attach to `onOpening` event to only track the event when the user
+   * clicks on the dropdown to open the popover, not when the popover is closed.
+   */
+  const handleLayoutChoiceClick = (): void => {
+    track(
+      isSidePanel
+        ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_CLICKED
+        : EVENTS.EXPLORER_EMBEDDING_CLICKED
+    );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  handleLayoutChoiceChange = (e: any) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
-    const { dispatch } = this.props;
+  const handleLayoutChoiceChange = async (
+    e: FormEvent<HTMLInputElement>
+  ): Promise<void> => {
+    track(
+      isSidePanel
+        ? EVENTS.EXPLORER_SBS_SIDE_WINDOW_EMBEDDING_SELECTED
+        : EVENTS.EXPLORER_EMBEDDING_SELECTED,
+      {
+        embedding: e.currentTarget.value,
+      }
+    );
 
-    track(EVENTS.EXPLORER_LAYOUT_CHOICE_CHANGE_ITEM_CLICKED);
-
-    dispatch(actions.layoutChoiceAction(e.currentTarget.value));
+    await dispatch(
+      actions.layoutChoiceAction(e.currentTarget.value, isSidePanel)
+    );
   };
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'layoutChoice' does not exist on type 'Re... Remove this comment to see the full error message
-    const { layoutChoice, schema, crossfilter } = this.props;
-    const { annoMatrix } = crossfilter;
+  const handleOpenPanelEmbedding = async (): Promise<void> => {
+    dispatch({
+      type: "toggle panel embedding",
+    });
 
-    return (
-      <ButtonGroup
-        style={{
-          paddingTop: 8,
-          zIndex: 9999,
-        }}
-      >
-        <Popover
-          target={
-            <Tooltip
-              content="Select embedding for visualization"
-              position="top"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <Button
-                type="button"
-                data-testid="layout-choice"
-                id="embedding"
-                style={{
-                  cursor: "pointer",
-                }}
-                onClick={this.handleLayoutChoiceClick}
-              >
-                {layoutChoice?.current}: {crossfilter.countSelected()} of{" "}
-                {crossfilter.size()} cells
-              </Button>
-            </Tooltip>
-          }
+    /**
+     * (thuang): Product requirement to only track when the side panel goes from
+     * closed to open.
+     */
+    if (!sideIsOpen) {
+      track(EVENTS.EXPLORER_SBS_SELECTED, {
+        embedding: layoutChoice.current,
+      });
+    }
+  };
+
+  return (
+    <div
+      style={{
+        zIndex: 1,
+      }}
+    >
+      <ButtonGroup>
+        <Popover2
           // minimal /* removes arrow */
+          onOpening={handleLayoutChoiceClick}
           position={Position.TOP_LEFT}
           content={
             <div
@@ -103,24 +137,67 @@ class Embedding extends React.PureComponent<{}, EmbeddingState> {
                 There are {schema?.dataframe?.nObs} cells in the entire dataset.
               </p>
               <EmbeddingChoices
-                onChange={this.handleLayoutChoiceChange}
+                onChange={handleLayoutChoiceChange}
                 annoMatrix={annoMatrix}
                 layoutChoice={layoutChoice}
               />
             </div>
           }
-        />
+        >
+          <Tooltip
+            content="Select embedding for visualization"
+            position="top"
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
+          >
+            <Button
+              type="button"
+              data-testid={sidePanelAttributeNameChange(
+                LAYOUT_CHOICE_TEST_ID,
+                isSidePanel
+              )}
+              id="embedding"
+              style={{
+                cursor: "pointer",
+              }}
+              icon={IconNames.GRAPH}
+              rightIcon={IconNames.CARET_DOWN}
+            >
+              {layoutChoice?.current}
+            </Button>
+          </Tooltip>
+        </Popover2>
+        {!isSidePanel && isSpatial && (
+          <Button
+            icon={IconNames.MULTI_SELECT}
+            onClick={handleOpenPanelEmbedding}
+            active={sideIsOpen}
+            data-testid="side-panel-toggle"
+          />
+        )}
       </ButtonGroup>
-    );
-  }
-}
 
-export default Embedding;
+      {!isSidePanel && (
+        <span
+          style={{
+            color: "#767676",
+            fontWeight: 400,
+            marginTop: "8px",
+            position: "absolute",
+            top: "38px",
+            left: "64px",
+          }}
+        >
+          {crossfilter.countSelected()} of {crossfilter.size()} cells
+        </span>
+      )}
+    </div>
+  );
+};
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+export default connect(mapStateToProps)(Embedding);
+
 const loadAllEmbeddingCounts = async ({ annoMatrix, available }: any) => {
   const embeddings = await Promise.all(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     available.map((name: any) =>
       annoMatrix.base().fetch("emb", name, globals.numBinsEmb)
     )
@@ -133,8 +210,17 @@ const loadAllEmbeddingCounts = async ({ annoMatrix, available }: any) => {
   }));
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-const EmbeddingChoices = ({ onChange, annoMatrix, layoutChoice }: any) => {
+interface EmbeddingChoiceProps {
+  onChange: (e: FormEvent<HTMLInputElement>) => Promise<void>;
+  annoMatrix: AnnoMatrixObsCrossfilter["annoMatrix"];
+  layoutChoice: Props["layoutChoice"];
+}
+
+const EmbeddingChoices = ({
+  onChange,
+  annoMatrix,
+  layoutChoice,
+}: EmbeddingChoiceProps) => {
   const { available } = layoutChoice;
   const { data, error, isPending } = useAsync({
     promiseFn: loadAllEmbeddingCounts,
@@ -150,8 +236,7 @@ const EmbeddingChoices = ({ onChange, annoMatrix, layoutChoice }: any) => {
     /* still loading, or errored out - just omit counts (TODO: spinner?) */
     return (
       <RadioGroup onChange={onChange} selectedValue={layoutChoice.current}>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
-        {layoutChoice.available.map((name: any) => (
+        {layoutChoice.available.map((name) => (
           <Radio label={`${name}`} value={name} key={name} />
         ))}
       </RadioGroup>
@@ -160,13 +245,21 @@ const EmbeddingChoices = ({ onChange, annoMatrix, layoutChoice }: any) => {
   if (data) {
     return (
       <RadioGroup onChange={onChange} selectedValue={layoutChoice.current}>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS. */}
         {data.map((summary: any) => {
           const { discreteCellIndex, embeddingName } = summary;
           const sizeHint = `${discreteCellIndex.size()} cells`;
           return (
             <Radio
-              label={`${embeddingName}: ${sizeHint}`}
+              label={
+                (
+                  <span
+                    data-testid={`${LAYOUT_CHOICE_TEST_ID}-label-${embeddingName}`}
+                  >
+                    {embeddingName}: {sizeHint}
+                  </span>
+                ) as unknown as string // (thuang): `label` does accept React.Node, but the BlueprintJS type is incorrect
+              }
+              data-testid={`${LAYOUT_CHOICE_TEST_ID}-radio-${embeddingName}`}
               value={embeddingName}
               key={embeddingName}
             />

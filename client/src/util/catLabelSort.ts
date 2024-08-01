@@ -9,7 +9,6 @@ TL;DR: sort order is:
 */
 
 import isNumber from "is-number";
-import * as globals from "../globals";
 import { Category } from "../common/types/schema";
 
 function caseInsensitiveCompare(
@@ -26,20 +25,15 @@ function isNumberForReal(tbd: unknown): tbd is number {
   return isNumber(tbd);
 }
 
-const catLabelSort = (
-  isUserAnno: boolean,
-  values: Array<Category>
-): Array<Category> => {
+const catLabelSort = (values: Array<Category>): Array<Category> => {
   /* this sort could be memoized for perf */
 
   const strings: (string | number | boolean)[] = [];
   const ints: (string | number | boolean)[] = [];
   const unassignedOrNaN: (string | number | boolean)[] = [];
 
-  values.forEach((v) => {
-    if (isUserAnno && v === globals.unassignedCategoryLabel) {
-      unassignedOrNaN.push(v);
-    } else if (String(v).toLowerCase() === "nan") {
+  values?.forEach((v) => {
+    if (String(v).toLowerCase() === "nan") {
       unassignedOrNaN.push(v);
     } else if (isNumberForReal(v)) {
       ints.push(v);

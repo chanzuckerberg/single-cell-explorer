@@ -1,6 +1,7 @@
 /*
 Test cases for nameCreators.js.
 */
+import { expect, test } from "@playwright/test";
 import {
   layoutDimensionName,
   obsAnnoDimensionName,
@@ -8,6 +9,8 @@ import {
   userDefinedDimensionName,
   makeContinuousDimensionName,
 } from "../../src/util/nameCreators";
+
+const { describe } = test;
 
 describe("nameCreators", () => {
   const nameCreators = [

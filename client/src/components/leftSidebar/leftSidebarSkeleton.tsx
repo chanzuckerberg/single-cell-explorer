@@ -3,9 +3,9 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React, { CSSProperties } from "react";
 
 /* Styles */
-import { STYLE_LEFT_SIDEBAR } from ".";
 import StillLoading from "../brushableHistogram/loading";
 import { StillLoading as CategoryLoading } from "../categorical/category";
+import { LeftSidebarWrapper } from "./style";
 
 const STYLE_SUPER_CATEGORY: CSSProperties = {
   height: 22,
@@ -19,7 +19,7 @@ const STYLE_SUPER_CATEGORY: CSSProperties = {
  */
 function LeftSidebarSkeleton(): JSX.Element {
   return (
-    <div style={STYLE_LEFT_SIDEBAR}>
+    <LeftSidebarWrapper>
       {/* Categorical */}
       <div style={{ padding: 10 }}>
         <div style={STYLE_SUPER_CATEGORY} className={SKELETON} />
@@ -39,7 +39,7 @@ function LeftSidebarSkeleton(): JSX.Element {
           <StillLoading key={i} />
         ))}
       </div>
-    </div>
+    </LeftSidebarWrapper>
   );
 }
 

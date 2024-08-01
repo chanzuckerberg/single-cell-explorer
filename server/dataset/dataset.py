@@ -151,6 +151,13 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_genesets(self):
+        """
+        Return genesets in the obs metadata
+        """
+        pass
+
+    @abstractmethod
     def annotation_to_fbs_matrix(self, axis, field=None, uid=None, num_bins=None):
         """
         Gets annotation value for each observation
@@ -158,6 +165,13 @@ class Dataset(metaclass=ABCMeta):
         :param fields: list of keys for annotation to return, returns all annotation values if not set.
         :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         :return: flatbuffer: in fbs/matrix.fbs encoding
+        """
+        pass
+
+    @abstractmethod
+    def get_uns(self, metadata_key):
+        """
+        Extracts a metadata_key object from the uns array in a TileDB container.
         """
         pass
 
@@ -327,31 +341,51 @@ class Dataset(metaclass=ABCMeta):
         pass
 
     @staticmethod
-    def normalize_embedding(embedding):
+    def normalize_embedding(embedding, ename, spatial=None):
         """Normalize embedding layout to meet client assumptions.
         Embedding is an ndarray, shape (n_obs, n)., where n is normally 2
         """
 
-        # scale isotropically
-        try:
-            min = np.nanmin(embedding, axis=0)
-            max = np.nanmax(embedding, axis=0)
-        except RuntimeError:
-            # indicates entire array was NaN, which should propagate
-            min = np.NaN
-            max = np.NaN
+        if spatial and ename in "spatial":
 
-        scale = np.amax(max - min)
-        normalized_layout = (embedding - min) / scale
+            library_id = list(spatial.keys())[0]
+            image_properties = spatial[library_id]["image_properties"]
+            resolution = image_properties["resolution"]
 
-        # translate to center on both axis
-        translate = 0.5 - ((max - min) / scale / 2)
-        normalized_layout = normalized_layout + translate
+            scaleref = 1 if resolution == "fullres" else spatial[library_id]["scalefactors"]["tissue_hires_scalef"]
+            h, w = image_properties["height"], image_properties["width"]
+            left, upper, _, _ = image_properties["crop_coords"]
+            A = embedding * scaleref
 
-        normalized_layout = normalized_layout.astype(dtype=np.float32)
+            # offset crop coordinates
+            A[:, 0] -= left
+            A[:, 1] -= upper
+
+            A = np.column_stack([A[:, 0] / w, A[:, 1] / h])
+            normalized_layout = A.astype(dtype=np.float32)
+
+        else:
+            # scale isotropically
+            try:
+                min_emb = np.nanmin(embedding, axis=0)
+                max_emb = np.nanmax(embedding, axis=0)
+            except RuntimeError:
+                # indicates entire array was NaN, which should propagate
+                min_emb = np.NaN
+                max_emb = np.NaN
+
+            scale = np.amax(max_emb - min_emb)
+            normalized_layout = (embedding - min_emb) / scale
+
+            # translate to center on both axis
+            translate = 0.5 - ((max_emb - min_emb) / scale / 2)
+            normalized_layout = normalized_layout + translate
+
+            normalized_layout = normalized_layout.astype(dtype=np.float32)
+
         return normalized_layout
 
-    def layout_to_fbs_matrix(self, fields, num_bins=None):
+    def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None):
         """
         :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         return specified embeddings as a flatbuffer, using the cellxgene matrix fbs encoding.
@@ -368,11 +402,12 @@ class Dataset(metaclass=ABCMeta):
         with ServerTiming.time("layout.query"):
             for ename in embeddings:
                 embedding = self.get_embedding_array(ename, 2)
-                normalized_layout = Dataset.normalize_embedding(embedding)
+                normalized_layout = Dataset.normalize_embedding(embedding, ename, spatial)
                 layout_data.append(pd.DataFrame(normalized_layout, columns=[f"{ename}_0", f"{ename}_1"]))
 
         with ServerTiming.time("layout.encode"):
             df = pd.concat(layout_data, axis=1, copy=False) if layout_data else pd.DataFrame()
+
             fbs = encode_matrix_fbs(df, col_idx=df.columns, row_idx=None, num_bins=num_bins)
 
         return fbs
