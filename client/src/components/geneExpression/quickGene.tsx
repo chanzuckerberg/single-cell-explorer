@@ -2,7 +2,7 @@ import { H4, Icon, MenuItem } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import fuzzysort from "fuzzysort";
-import { Suggest } from "@blueprintjs/select";
+import { ItemRenderer, Suggest } from "@blueprintjs/select";
 import { useSelector, useDispatch } from "react-redux";
 
 import { noop } from "lodash";
@@ -13,6 +13,7 @@ import actions from "../../actions";
 import { Dataframe, DataframeValue } from "../../util/dataframe";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
+import { FuzzySortResult, Item, RenderItemProps } from "./infoSearch/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {
@@ -23,12 +24,11 @@ const usePrevious = (value: any) => {
   return ref.current;
 };
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
 function QuickGene() {
   const dispatch = useDispatch();
 
   const [isExpanded, setIsExpanded] = useState(true);
-  const [geneNames, setGeneNames] = useState([] as DataframeValue[]);
+  const [geneNames, setGeneNames] = useState([] as string[]);
   const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
 
@@ -79,12 +79,10 @@ function QuickGene() {
               df
                 .col(varIndex)
                 .asArray()
-                .filter(
-                  (_, index) => !isFilteredArray[index] && _
-                ) as DataframeValue[]
+                .filter((_, index) => !isFilteredArray[index] && _) as string[]
             );
           } else {
-            setGeneNames(df.col(varIndex).asArray() as DataframeValue[]);
+            setGeneNames(df.col(varIndex).asArray() as string[]);
           }
         } catch (error) {
           setStatus("error");
@@ -94,19 +92,20 @@ function QuickGene() {
     })();
   }, [annoMatrix, prevProps]);
 
+  useEffect(() => {
+    dispatch({ type: "request gene list success", geneNames });
+  }, [dispatch, geneNames]);
+
   const handleExpand = () => setIsExpanded(!isExpanded);
 
-  const renderGene = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    fuzzySortResult: any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    { handleClick, modifiers }: any
+  const renderGene: ItemRenderer<string | FuzzySortResult> = (
+    item: string | FuzzySortResult,
+    { modifiers }: RenderItemProps
   ) => {
     if (!modifiers.matchesPredicate) {
       return null;
     }
-    /* the fuzzysort wraps the object with other properties, like a score */
-    const geneName = fuzzySortResult.target;
+    const geneName = typeof item === "string" ? item : item.target;
 
     return (
       <MenuItem
@@ -114,19 +113,18 @@ function QuickGene() {
         disabled={modifiers.disabled}
         data-testid={`suggest-menu-item-${geneName}`}
         key={geneName}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-        onClick={(g: any /* this fires when user clicks a menu item */) => {
-          handleClick(g);
+        onClick={() => {
+          handleClick(item);
         }}
         text={geneName}
       />
     );
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const handleClick = (g: any) => {
+  const handleClick = (g: Item) => {
     if (!g) return;
-    const gene = g.target;
+    const item = typeof g === "string" ? g : g.target;
+    const gene = item;
     if (userDefinedGenes.indexOf(gene) !== -1) {
       postUserErrorToast("That gene already exists");
     } else if (geneNames.indexOf(gene) === undefined) {
@@ -139,22 +137,19 @@ function QuickGene() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  const filterGenes = (query: any, genes: any) =>
+  const filterGenes = (query: string, genes: string[]) =>
     /* fires on load, once, and then for each character typed into the input */
     fuzzysort.go(query, genes, {
       limit: 5,
-      threshold: -10000, // don't return bad results
+      threshold: -10000,
     });
 
   const QuickGenes = useMemo((): JSX.Element => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
-    const removeGene = (gene: any) => () => {
+    const removeGene = (gene: string) => () => {
       dispatch({ type: "clear user defined gene", gene });
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    return userDefinedGenes.map((gene: any) => {
+    return userDefinedGenes.map((gene: string) => {
       let geneId = geneIds[geneNames.indexOf(gene)];
       if (!geneId) {
         geneId = "";
@@ -173,12 +168,12 @@ function QuickGene() {
       );
     });
   }, [userDefinedGenes, geneNames, geneIds, dispatch]);
+
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
       <H4
         role="menuitem"
-        // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-        tabIndex="0"
+        tabIndex={0}
         data-testid="quickgene-heading-expand"
         onKeyPress={handleExpand}
         style={{
@@ -195,7 +190,7 @@ function QuickGene() {
       </H4>
       {isExpanded && (
         <>
-          <div style={{ marginBottom: "8px" }}>
+          <div style={{ marginBottom: "8px" }} data-testid="gene-search">
             <Suggest
               resetOnSelect
               closeOnSelect
@@ -203,24 +198,19 @@ function QuickGene() {
               itemDisabled={userDefinedGenesLoading ? () => true : () => false}
               noResults={<MenuItem disabled text="No matching genes." />}
               onItemSelect={(g) => {
-                // (seve): I made an attempt at typing this, but it looks like the type of g is not consistent with the type of the argument in onItemSelect
-                //          onItemSelect's arguments are typed as (DataframeValue, Event), but this expects and receives just the Event
-
-                /* this happens on 'enter' */
                 handleClick(g);
               }}
               initialContent={<MenuItem disabled text="Enter a gene…" />}
               inputProps={{
-                // @ts-expect-error ts-migrate(2322) FIXME: Type '{ "data-testid": string; placeholder: string... Remove this comment to see the full error message
-                "data-testid": "gene-search",
                 placeholder: "Quick Gene Search",
                 leftIcon: IconNames.SEARCH,
                 fill: true,
               }}
               inputValueRenderer={() => ""}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '(query: any, genes: any) => Fuzzysort.Result... Remove this comment to see the full error message
-              itemListPredicate={filterGenes}
-              itemRenderer={renderGene}
+              itemListPredicate={(query: string, items: string[]) =>
+                filterGenes(query, items) as unknown as string[]
+              }
+              itemRenderer={renderGene as ItemRenderer<string>}
               items={geneNames || ["No genes"]}
               popoverProps={{ minimal: true }}
               fill

@@ -30,8 +30,8 @@ function InfoPanel(props: Props) {
         style={{ paddingBottom: "5px" }}
       >
         <Tabs value={tabValue} sdsSize="small" onChange={handleTabsChange}>
-          <Tab label="Gene" value="Gene" />
-          <Tab label="Cell Type" value="CellType" />
+          <Tab label="Gene" value="Gene" data-testid="gene-tab" />
+          <Tab label="Cell Type" value="CellType" data-testid="cell-type-tab" />
           <Tab label="Dataset" value="Dataset" />
         </Tabs>
         <CollapseToggle>

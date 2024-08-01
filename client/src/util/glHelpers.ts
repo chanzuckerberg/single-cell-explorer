@@ -96,9 +96,9 @@ export const glPointSizeSpatial = `
 
 
     // Adjust base size based on distance (zoom level)
-    float adjustedDistance = clamp(distance, 1., 3.5); // Clamp the distance to avoid extreme values
+    float adjustedDistance = clamp(distance, 1., 2.5); // Clamp the distance to avoid extreme values
     float zoomFactor = 1.0 / adjustedDistance * distance * ${densityFactor}; // Inverse of adjustedDistance and multiply by distnace and density factor to get smoother dot size change
-    float adjustedZoomFactor = clamp(zoomFactor, 0.5, 3.5); // Clamp the zoom factor to avoid extreme values and overlapping dots
+    float adjustedZoomFactor = clamp(zoomFactor, 0.1, .9); // Clamp the zoom factor to avoid extreme values and overlapping dots
 
     float baseSize = spotDiameterFullres * scaleref * scaleFactor * adjustedZoomFactor; // Base size proportional to viewport
     

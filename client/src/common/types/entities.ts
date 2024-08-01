@@ -155,6 +155,11 @@ export interface CellInfo {
   loading: boolean;
 }
 
+export interface CellType {
+  cellTypeId: string;
+  cellTypeName: string;
+}
+
 export interface GeneInfo {
   gene: string | null;
   geneName: string;
