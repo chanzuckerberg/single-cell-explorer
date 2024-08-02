@@ -35,7 +35,7 @@ jobs:
           echo "COMMIT_SHA=$(git rev-parse --verify HEAD)" >> $GITHUB_OUTPUT
   argus_builder:
     needs: get_commit_sha
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.11.1
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.13.2
     secrets: inherit
     with:
       branches: ${{ inputs.branches }}
