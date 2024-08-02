@@ -636,6 +636,33 @@ class EndPoints(BaseTest):
                 self.assertIn("error", result.json)
                 self.assertEqual(result.json["error"], "Cell type not found")
 
+    @patch("server.common.rest.requests.get")
+    @patch("server.common.utils.cell_type_info.get_latest_snapshot_identifier")
+    @patch("server.common.utils.cell_type_info.get_celltype_metadata")
+    def test_cell_type_list_success(
+        self, mock_get_celltype_metadata, mock_get_latest_snapshot_identifier, mock_request
+    ):
+        endpoint = "celltypes"
+        mock_get_latest_snapshot_identifier.return_value = TEST_SNAPSHOT_IDENTIFIER
+        mock_get_celltype_metadata.return_value = TEST_CELL_TYPE_METADATA
+
+        def mock_requests_get(url, *args, **kwargs):
+            if "latest_snapshot_identifier" in url:
+                return MockResponse(TEST_SNAPSHOT_IDENTIFIER, 200)
+            elif "celltype_metadata.json" in url:
+                return MockResponse(TEST_CELL_METADATA_RESPONSE, 200)
+
+        mock_request.side_effect = mock_requests_get
+
+        for url_base in [self.TEST_UNS_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}"
+                result = self.client.get(url)
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                for cell_metadata in result.json:
+                    self.assertIn("cell_id", cell_metadata)
+                    self.assertIn("cell_name", cell_metadata)
+
     @unittest.skipIf(lambda x: os.getenv("SKIP_STATIC"), "Skip static test when running locally")
     def test_static(self):
         endpoint = "static"

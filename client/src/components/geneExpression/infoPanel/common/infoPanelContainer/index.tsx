@@ -8,8 +8,9 @@ import {
   ShowInfo,
 } from "../infoPanelParts";
 import { ExtendedInfoProps } from "../types";
+import InfoSearch from "../../../infoSearch";
 
-function ContainerInfo(props: ExtendedInfoProps) {
+function InfoPanelContainer(props: ExtendedInfoProps) {
   const {
     id,
     name,
@@ -22,6 +23,7 @@ function ContainerInfo(props: ExtendedInfoProps) {
     infoType,
     url,
     showWarningBanner = false,
+    quickList,
   } = props;
 
   const infoTypeTag = kebabCase(infoType);
@@ -33,6 +35,13 @@ function ContainerInfo(props: ExtendedInfoProps) {
   return (
     <InfoWrapper id={`${infoTypeTag}info_wrapper`} data-testid={wrapperTestId}>
       <InfoContainer id={`${infoTypeTag}-info`}>
+        {/* Search */}
+        <InfoSearch
+          infoType={infoType}
+          isLoading={loading}
+          quickList={quickList}
+        />
+
         {/* Loading */}
         {(name || symbol) && !error && loading && (
           <LoadingInfo name={name} infoType={infoType} />
@@ -65,4 +74,4 @@ function ContainerInfo(props: ExtendedInfoProps) {
   );
 }
 
-export default ContainerInfo;
+export default InfoPanelContainer;

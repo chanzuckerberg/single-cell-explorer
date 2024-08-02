@@ -342,6 +342,25 @@ def cell_type_info_get(request):
         raise
 
 
+def cell_type_list_get(request):
+    """
+    Request information about all cell types from cell guide
+    """
+    try:
+        latest_snapshot_identifier = get_latest_snapshot_identifier()
+        celltype_metadata = get_celltype_metadata(latest_snapshot_identifier)
+
+        cell_types = [
+            {"cell_id": info.get("id", ""), "cell_name": info.get("name", "")} for _, info in celltype_metadata.items()
+        ]
+
+        return make_response(jsonify(cell_types), HTTPStatus.OK)
+
+    except Exception:
+        current_app.logger.error("Error fetching cell type info")
+        raise
+
+
 def get_deployed_version(request):
     """
     Returns the deployed version

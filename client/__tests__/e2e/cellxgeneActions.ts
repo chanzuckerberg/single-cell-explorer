@@ -337,6 +337,8 @@ export async function clip(min = "0", max = "100", page: Page): Promise<void> {
   await clearInputAndTypeInto("clip-min-input", min, page);
   await clearInputAndTypeInto("clip-max-input", max, page);
   await page.getByTestId("clip-commit").click();
+  // close clip dialog
+  await page.getByTestId("visualization-settings").click();
 }
 
 /**
@@ -631,6 +633,10 @@ export async function minimizeInfoPanel(page: Page): Promise<void> {
   await page.getByTestId("min-info-panel").click();
 }
 
+export async function maximizeInfoPanel(page: Page): Promise<void> {
+  await page.getByTestId("max-info-panel").click();
+}
+
 export async function assertInfoPanelIsMinimized(
   id: string,
   infoType: string,
@@ -680,6 +686,30 @@ export async function assertInfoPanelClosed(
   );
 }
 
+export async function searchForInfoType(
+  infoType: string,
+  id: string,
+  page: Page
+): Promise<void> {
+  const searchLabel =
+    infoType === "cell-type" ? "Quick Cell Type Search" : "Quick Gene Search";
+  await page.getByTestId(`${infoType}-tab`).click();
+
+  await page
+    .getByTestId(`${id}:${infoType}-info-wrapper`)
+    .getByPlaceholder(searchLabel)
+    .fill(id);
+
+  await page.keyboard.press("Enter");
+  await tryUntil(
+    async () => {
+      const infoTitle = await page.getByTestId("info-type-title").innerText();
+      await expect(infoTitle).toEqual(id);
+    },
+    { page }
+  );
+}
+
 /**
  * CATEGORY
  */
@@ -722,7 +752,10 @@ export async function addGeneToSearch(
   geneName: string,
   page: Page
 ): Promise<void> {
-  await page.getByTestId("gene-search").fill(geneName);
+  await page
+    .getByTestId(`gene-search`)
+    .getByPlaceholder("Quick Gene Search")
+    .fill(geneName);
   await page.keyboard.press("Enter");
   expect(page.getByTestId(`histogram-${geneName}`)).toBeTruthy();
 }
