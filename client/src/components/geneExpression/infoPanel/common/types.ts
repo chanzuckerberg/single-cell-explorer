@@ -13,4 +13,5 @@ export interface ExtendedInfoProps extends BaseInfoProps {
   showWarningBanner?: boolean;
   error?: string | null;
   loading?: boolean;
+  quickList?: string[];
 }

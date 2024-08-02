@@ -53,6 +53,8 @@ import {
   getAllCategories,
   selectLayout,
   requestCellTypeInfo,
+  maximizeInfoPanel,
+  searchForInfoType,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -1496,6 +1498,38 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await maximizeInfoPanel(page);
+                    await assertInfoPanelExists(
+                      cellToRequestInfo,
+                      "cell-type",
+                      page
+                    );
+                  },
+                  { page }
+                );
+
+                await tryUntil(
+                  async () => {
+                    await searchForInfoType(
+                      "cell-type",
+                      cellToRequestInfo,
+                      page
+                    );
+                  },
+                  { page }
+                );
+                await snapshotTestGraph(page, testInfo);
+
+                await tryUntil(
+                  async () => {
+                    await searchForInfoType("gene", geneToRequestInfo, page);
+                  },
+                  { page }
+                );
                 await snapshotTestGraph(page, testInfo);
               });
             }

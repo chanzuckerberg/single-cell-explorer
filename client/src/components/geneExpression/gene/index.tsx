@@ -3,50 +3,20 @@ import React from "react";
 import { AnchorButton, Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import { Icon as InfoCircle, IconButton } from "czifui";
-import Truncate from "../util/truncate";
-import HistogramBrush from "../brushableHistogram";
-import { AppDispatch, RootState } from "../../reducers";
+import Truncate from "../../util/truncate";
+import HistogramBrush from "../../brushableHistogram";
 
-import actions from "../../actions";
+import actions from "../../../actions";
 
 import {
   track,
   thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
   thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
-} from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { ActiveTab } from "../../common/types/entities";
-import { DataframeValue } from "../../util/dataframe";
-
-const MINI_HISTOGRAM_WIDTH = 110;
-
-interface State {
-  geneIsExpanded: boolean;
-}
-
-interface StateProps {
-  isColorAccessor: boolean;
-  isScatterplotXXaccessor: boolean;
-  isScatterplotYYaccessor: boolean;
-  isGeneInfo: boolean;
-}
-
-interface DispatchProps {
-  dispatch: AppDispatch;
-}
-
-interface OwnProps {
-  gene: string;
-  quickGene?: boolean;
-  removeGene?: (gene: string) => () => void;
-  geneId: DataframeValue;
-  isGeneExpressionComplete: boolean;
-  onGeneExpressionComplete: () => void;
-  geneDescription?: string;
-  geneset?: string;
-}
-
-type Props = StateProps & OwnProps & DispatchProps;
+} from "../../../analytics";
+import { EVENTS } from "../../../analytics/events";
+import { ActiveTab } from "../../../common/types/entities";
+import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
+import { MINI_HISTOGRAM_WIDTH } from "../constants";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -118,7 +88,7 @@ class Gene extends React.Component<Props, State> {
     dispatch({ type: "request gene info start", gene });
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
-    const info = await actions.fetchGeneInfo(geneId, gene);
+    const info = await actions.fetchGeneInfo(gene, geneId, dispatch);
 
     if (!info) {
       return;
@@ -127,12 +97,7 @@ class Gene extends React.Component<Props, State> {
     dispatch({
       type: "open gene info",
       gene,
-      url: info?.ncbi_url,
-      name: info?.name,
-      synonyms: info.synonyms,
-      summary: info.summary,
-      infoError: null,
-      showWarningBanner: info.show_warning_banner,
+      info,
     });
   };
 
@@ -166,10 +131,8 @@ class Gene extends React.Component<Props, State> {
         >
           <div
             role="menuitem"
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-            tabIndex="0"
+            tabIndex={0}
             data-testid={`${gene}:gene-expand`}
-            onKeyPress={() => {}}
             style={{
               cursor: "pointer",
               display: "flex",
@@ -301,17 +264,4 @@ class Gene extends React.Component<Props, State> {
   }
 }
 
-export default connect(mapStateToProps)(Gene);
-
-function mapStateToProps(state: RootState, ownProps: OwnProps): StateProps {
-  const { gene } = ownProps;
-
-  return {
-    isColorAccessor:
-      state.colors.colorAccessor === gene &&
-      state.colors.colorMode !== "color by categorical metadata",
-    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
-    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.geneInfo.gene === gene,
-  };
-}
+export default connect(mapStateToProps, mapDispatchToProps)(Gene);
