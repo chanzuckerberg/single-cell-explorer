@@ -43,7 +43,10 @@ const BottomBanner = memo(
 
     return (
       <>
-        <StyledBottomBannerWrapper id={BOTTOM_BANNER_ID}>
+        <StyledBottomBannerWrapper
+          id={BOTTOM_BANNER_ID}
+          data-testid={BOTTOM_BANNER_ID}
+        >
           <StyledBanner
             dismissible
             sdsType="primary"

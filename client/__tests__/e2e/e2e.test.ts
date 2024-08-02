@@ -205,6 +205,38 @@ for (const testDataset of testDatasets) {
           });
         });
 
+
+        describe("bottom banner", () => {
+          const SURVEY_LINK = "https://airtable.com/app8fNSQ8ieIiHLOv/shrmD31azkGtSupmO";
+          test("bottom banner appears", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            const bottomBanner = page.getByTestId("bottom-banner");
+
+            await expect(bottomBanner).toBeVisible();
+
+            await expect(page.getByText("quick survey")).toHaveAttribute(
+              "href",
+              SURVEY_LINK
+            );
+
+            await snapshotTestGraph(page, testInfo);
+          });
+          test("bottom banner disappears", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            const bottomBanner = page.getByTestId("bottom-banner");
+
+            const bottomBannerClose = bottomBanner.getByRole("button"); 
+
+            await bottomBannerClose.click();
+
+            await expect(bottomBanner).not.toBeVisible();
+
+            await snapshotTestGraph(page, testInfo);
+          });
+        });
+
         test("resize graph", async ({ page }, testInfo) => {
           skipIfSidePanel(graphTestId, MAIN_PANEL);
 
