@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StylesProvider, ThemeProvider } from "@material-ui/core/styles";
 import { theme } from "./theme";
+import { BottomBanner } from "./BottomBanner";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
@@ -23,6 +24,7 @@ import Graph from "./graph/graph";
 import DiffexNotice from "./diffexNotice";
 import Scatterplot from "./scatterplot/scatterplot";
 import PanelEmbedding from "./PanelEmbedding";
+import { BANNER_FEEDBACK_SURVEY_LINK } from "./BottomBanner/constants";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -99,32 +101,35 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                 <Header tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
-                <Layout
-                  addTopPadding={!datasetMetadataError || isCellGuideCxg}
-                  renderGraph={(viewportRef: HTMLDivElement) => (
-                    <>
-                      <GlobalHotkeys />
-                      <Controls>
-                        <MenuBar />
-                      </Controls>
-                      <Legend />
-                      <Graph
-                        viewportRef={viewportRef}
-                        key={graphRenderCounter}
-                      />
-                      {scatterplotXXaccessor && scatterplotYYaccessor && (
-                        <Scatterplot />
-                      )}
-                      <PanelEmbedding />
-                      <Controls bottom={0}>
-                        <DatasetSelector />
-                      </Controls>
-                    </>
-                  )}
-                >
-                  <LeftSideBar />
-                  <RightSideBar />
-                </Layout>
+                <>
+                  <Layout
+                    addTopPadding={!datasetMetadataError || isCellGuideCxg}
+                    renderGraph={(viewportRef: HTMLDivElement) => (
+                      <>
+                        <GlobalHotkeys />
+                        <Controls>
+                          <MenuBar />
+                        </Controls>
+                        <Legend />
+                        <Graph
+                          viewportRef={viewportRef}
+                          key={graphRenderCounter}
+                        />
+                        {scatterplotXXaccessor && scatterplotYYaccessor && (
+                          <Scatterplot />
+                        )}
+                        <PanelEmbedding />
+                        <Controls bottom={0}>
+                          <DatasetSelector />
+                        </Controls>
+                      </>
+                    )}
+                  >
+                    <LeftSideBar />
+                    <RightSideBar />
+                  </Layout>
+                  <BottomBanner surveyLink={BANNER_FEEDBACK_SURVEY_LINK} />
+                </>
               )}
             </ThemeProvider>
           </EmotionThemeProvider>

@@ -27,6 +27,7 @@ import pointDilation from "./pointDilation";
 import quickGenes from "./quickGenes";
 import singleContinuousValue from "./singleContinuousValue";
 import panelEmbedding from "./panelEmbedding";
+import showBottomBanner from "./showBottomBanner";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -52,6 +53,7 @@ const AppReducer = undoable(
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDilation],
     ["datasetMetadata", datasetMetadata],
+    ["showBottomBanner", showBottomBanner],
   ] as Parameters<typeof cascadeReducers>[0]),
   [
     "annoMatrix",
@@ -101,6 +103,7 @@ export type RootState = {
   centroidLabels: ReturnType<typeof centroidLabels>;
   pointDilation: ReturnType<typeof pointDilation>;
   datasetMetadata: ReturnType<typeof datasetMetadata>;
+  showBottomBanner: ReturnType<typeof showBottomBanner>;
 };
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;
