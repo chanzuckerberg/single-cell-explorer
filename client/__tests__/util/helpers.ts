@@ -304,3 +304,15 @@ export function shouldSkipTests(
 ): boolean {
   return graphTestId === SIDE_PANEL;
 }
+
+
+export async function closeBottomBanner(page: Page): Promise<Locator> {
+  const bottomBanner = page.getByTestId("bottom-banner");
+
+  if(bottomBanner) {
+    const bottomBannerClose = bottomBanner.getByRole("button"); 
+    await bottomBannerClose.click();
+  }
+
+  return bottomBanner;
+}

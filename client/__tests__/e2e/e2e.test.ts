@@ -66,6 +66,7 @@ import {
   pageURLSpatial,
 } from "../common/constants";
 import {
+  closeBottomBanner,
   conditionallyToggleSidePanel,
   goToPage,
   shouldSkipTests,
@@ -227,12 +228,7 @@ for (const testDataset of testDatasets) {
           test("bottom banner disappears", async ({ page }, testInfo) => {
             await goToPage(page, url);
 
-            const bottomBanner = page.getByTestId("bottom-banner");
-
-            const bottomBannerClose = bottomBanner.getByRole("button"); 
-
-            await bottomBannerClose.click();
-
+            const bottomBanner = await closeBottomBanner(page) 
             await expect(bottomBanner).not.toBeVisible();
 
             await snapshotTestGraph(page, testInfo);
@@ -345,6 +341,8 @@ for (const testDataset of testDatasets) {
             await goToPage(page, url);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            await closeBottomBanner(page);
 
             const originalCellCount = await getCellSetCount(1, page);
 
@@ -537,6 +535,8 @@ for (const testDataset of testDatasets) {
             await page.getByTestId("subset-button").click();
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            await closeBottomBanner(page)
 
             const lassoSelection = await calcDragCoordinates(
               graphTestId,
