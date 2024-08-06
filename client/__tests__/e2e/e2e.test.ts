@@ -749,6 +749,7 @@ for (const testDataset of testDatasets) {
         });
 
         describe("graph overlay", () => {
+          
           test("transform centroids correctly", async ({ page }, testInfo) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
@@ -847,6 +848,7 @@ for (const testDataset of testDatasets) {
         }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -903,6 +905,7 @@ for (const testDataset of testDatasets) {
         test("lasso moves after pan", async ({ page }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -1733,7 +1736,12 @@ async function setup({
   testInfo: TestInfo;
 }) {
   await goToPage(page, url);
-
+  await tryUntil(
+    async () => {
+      await closeBottomBanner(page);
+    },
+    { page }
+  );
   if (withSubset) {
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page, testInfo);
   }
