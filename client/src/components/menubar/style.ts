@@ -5,14 +5,8 @@ import { FEATURES } from "../../util/featureFlags/features";
 
 export const MAX_VERTICAL_THRESHOLD_WIDTH_PX = 500;
 const isTest = getFeatureFlag(FEATURES.TEST);
-const isDownload = getFeatureFlag(FEATURES.DOWNLOAD);
 
-let FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 655;
-if (isTest && isDownload) {
-  FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 705;
-} else if (isTest || isDownload) {
-  FIRST_VERTICAL_THRESHOLD_WIDTH_PX = 685;
-}
+const FIRST_VERTICAL_THRESHOLD_WIDTH_PX = isTest ? 705 : 685;
 
 export const MenuBarWrapper = styled.div`
   display: flex;
