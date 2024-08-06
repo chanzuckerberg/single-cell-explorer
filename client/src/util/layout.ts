@@ -14,7 +14,7 @@ export function getCurrentLayout(
 }
 
 export function getBestDefaultLayout(layouts: Array<string>): string {
-  const preferredNames = ["umap", "tsne", "pca"];
+  const preferredNames = ["spatial", "umap", "tsne", "pca"];
   const idx = preferredNames.findIndex((name) => layouts.indexOf(name) !== -1);
   if (idx !== -1) return preferredNames[idx];
   return layouts[0];
