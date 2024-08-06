@@ -15,7 +15,7 @@ function Container(props: any) {
       <div
         className="container"
         style={{
-          height: "calc(100vh - 44px)", // 44px is the height of the bottom banner
+          height: "calc(100vh - 40px)", // 40px is the height of the bottom banner
           width: "100vw",
           position: "absolute",
           top: 0,
