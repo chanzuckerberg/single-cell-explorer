@@ -66,6 +66,7 @@ import {
   pageURLSpatial,
 } from "../common/constants";
 import {
+  closeBottomBanner,
   conditionallyToggleSidePanel,
   goToPage,
   shouldSkipTests,
@@ -207,6 +208,33 @@ for (const testDataset of testDatasets) {
           });
         });
 
+
+        describe("bottom banner", () => {
+          const SURVEY_LINK = "https://airtable.com/app8fNSQ8ieIiHLOv/shrmD31azkGtSupmO";
+          test("bottom banner appears", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            const bottomBanner = page.getByTestId("bottom-banner");
+
+            await expect(bottomBanner).toBeVisible();
+
+            await expect(page.getByText("quick survey")).toHaveAttribute(
+              "href",
+              SURVEY_LINK
+            );
+
+            await snapshotTestGraph(page, testInfo);
+          });
+          test("bottom banner disappears", async ({ page }, testInfo) => {
+            await goToPage(page, url);
+
+            const bottomBanner = await closeBottomBanner(page) 
+            await expect(bottomBanner).not.toBeVisible();
+
+            await snapshotTestGraph(page, testInfo);
+          });
+        });
+
         test("resize graph", async ({ page }, testInfo) => {
           skipIfSidePanel(graphTestId, MAIN_PANEL);
 
@@ -313,6 +341,8 @@ for (const testDataset of testDatasets) {
             await goToPage(page, url);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            await closeBottomBanner(page);
 
             const originalCellCount = await getCellSetCount(1, page);
 
@@ -505,6 +535,8 @@ for (const testDataset of testDatasets) {
             await page.getByTestId("subset-button").click();
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            await closeBottomBanner(page)
 
             const lassoSelection = await calcDragCoordinates(
               graphTestId,
@@ -717,6 +749,7 @@ for (const testDataset of testDatasets) {
         });
 
         describe("graph overlay", () => {
+          
           test("transform centroids correctly", async ({ page }, testInfo) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
@@ -815,6 +848,7 @@ for (const testDataset of testDatasets) {
         }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -871,6 +905,7 @@ for (const testDataset of testDatasets) {
         test("lasso moves after pan", async ({ page }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -1701,7 +1736,12 @@ async function setup({
   testInfo: TestInfo;
 }) {
   await goToPage(page, url);
-
+  await tryUntil(
+    async () => {
+      await closeBottomBanner(page);
+    },
+    { page }
+  );
   if (withSubset) {
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page, testInfo);
   }
