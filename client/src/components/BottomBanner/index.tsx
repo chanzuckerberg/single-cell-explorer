@@ -1,12 +1,70 @@
-import BottomBanner from "./BottomBanner";
+import React, { memo } from "react";
+import { connect } from "react-redux";
+import {
+  BOTTOM_BANNER_ID,
+  StyledBanner,
+  StyledBottomBannerWrapper,
+  StyledLink,
+} from "./style";
+import {
+  BOTTOM_BANNER_SURVEY_LINK_TEXT,
+  BOTTOM_BANNER_SURVEY_TEXT,
+} from "./constants";
+import { AppDispatch, RootState } from "../../reducers";
 
-export { BottomBanner };
+export interface BottomBannerProps {
+  surveyLink: string;
+  showBottomBanner: boolean;
+  dispatch: AppDispatch;
+}
 
-/*
- NOTE: component code should go in BottomBanner.tsx
- This index file is here so our imports are cleaner.
- This way we can use
- import { BottomBanner } from .../BottomBanner
- rather than
- import { BottomBanner } from .../BottomBanner/BottomBanner.tsx
-*/
+const mapStateToProps = (state: RootState) => ({
+  showBottomBanner: state.showBottomBanner,
+});
+
+const mapDispatchToProps = (dispatch: AppDispatch) => ({
+  dispatch,
+});
+
+const BottomBanner = memo(
+  ({
+    surveyLink,
+    showBottomBanner,
+    dispatch,
+  }: BottomBannerProps): JSX.Element | null => {
+    const setBottomBannerLastClosedTime = () => {
+      dispatch({
+        type: "update bottom banner last closed time",
+        time: Date.now(),
+      });
+    };
+
+    if (!showBottomBanner) return null;
+
+    return (
+      <>
+        <StyledBottomBannerWrapper
+          id={BOTTOM_BANNER_ID}
+          data-testid={BOTTOM_BANNER_ID}
+        >
+          <StyledBanner
+            dismissible
+            sdsType="primary"
+            onClose={setBottomBannerLastClosedTime}
+            // @ts-expect-error -- czifui Banner component types text prop as a string but the prop works with JSX as well
+            text={
+              <span>
+                {BOTTOM_BANNER_SURVEY_TEXT}
+                <StyledLink href={surveyLink} target="_blank" rel="noopener">
+                  {BOTTOM_BANNER_SURVEY_LINK_TEXT}
+                </StyledLink>
+              </span>
+            }
+          />
+        </StyledBottomBannerWrapper>
+      </>
+    );
+  }
+);
+
+export default connect(mapStateToProps, mapDispatchToProps)(BottomBanner);
