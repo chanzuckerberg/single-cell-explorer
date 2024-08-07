@@ -22,8 +22,6 @@ import { AppDispatch, RootState } from "../../reducers";
 import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
 import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
 import { sidePanelAttributeNameChange } from "../graph/util";
 import { shouldShowOpenseadragon } from "../../common/selectors";
 import { ImageToggleWrapper, ImageDropdownButton } from "./style";
@@ -80,8 +78,6 @@ const Embedding = (props: Props) => {
   } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
-
-  const isSpatial = getFeatureFlag(FEATURES.SPATIAL);
 
   const isSingleEmbedding = layoutChoice.available.length === 1;
 
@@ -207,7 +203,7 @@ const Embedding = (props: Props) => {
             </Button>
           </Tooltip2>
         </Popover2>
-        {!isSidePanel && isSpatial && !isSingleEmbedding && (
+        {!isSidePanel && !isSingleEmbedding && (
           <Button
             icon={IconNames.MULTI_SELECT}
             onClick={handleOpenPanelEmbedding}
