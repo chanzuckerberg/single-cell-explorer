@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Tooltip, Dialog, Classes, Colors } from "@blueprintjs/core";
+import { Button, Dialog, Classes, Colors, Tooltip } from "@blueprintjs/core";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;

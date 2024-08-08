@@ -1,5 +1,5 @@
 import React, { CSSProperties, cloneElement } from "react";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { Tooltip } from "@blueprintjs/core";
 
 import { tooltipHoverOpenDelayQuick } from "../../globals";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
@@ -120,17 +120,16 @@ export default (props: any) => {
   );
 
   return (
-    <Tooltip2
+    <Tooltip
       /**
        * We disable the tooltip in test mode, so we don't have flaky chromatic screenshots
        */
       disabled={isTest}
       content={isGenesetDescription ? descriptionContent : originalContent}
       hoverOpenDelay={tooltipHoverOpenDelayQuick}
-      // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
       targetProps={{ style: children.props.style }}
     >
       {newChildren}
-    </Tooltip2>
+    </Tooltip>
   );
 };

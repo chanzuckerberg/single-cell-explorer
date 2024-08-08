@@ -3,8 +3,8 @@ import { connect } from "react-redux";
 import {
   ButtonGroup,
   AnchorButton,
-  Tooltip,
   ResizeSensor,
+  Tooltip,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
@@ -311,7 +311,6 @@ const MenuBar = ({
               />
             )}
             <Clip
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
               pendingClipPercentiles={pendingClipPercentiles}
               clipPercentileMin={currentClipMin}
               clipPercentileMax={currentClipMax}
@@ -355,7 +354,6 @@ const MenuBar = ({
                 <AnchorButton
                   type="button"
                   data-testid="mode-lasso"
-                  // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
                   icon={selectionButtonIcon}
                   active={graphInteractionMode === "select"}
                   onClick={() => {

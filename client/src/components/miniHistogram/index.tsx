@@ -1,9 +1,9 @@
 import React from "react";
 import {
-  Popover,
   PopoverInteractionKind,
   Position,
   Classes,
+  Popover,
 } from "@blueprintjs/core";
 
 export default class MiniHistogram extends React.PureComponent {

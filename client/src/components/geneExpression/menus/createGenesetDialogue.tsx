@@ -2,8 +2,7 @@ import pull from "lodash.pull";
 import uniq from "lodash.uniq";
 import React from "react";
 import { connect } from "react-redux";
-import { Button, Dialog, Classes, Colors } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { Button, Dialog, Classes, Colors, Tooltip } from "@blueprintjs/core";
 import LabelInput from "../../labelInput";
 import actions from "../../../actions";
 import { track } from "../../../analytics";
@@ -218,11 +217,11 @@ class CreateGenesetDialogue extends React.PureComponent<{}, State> {
             </div>
             <div className={Classes.DIALOG_FOOTER}>
               <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-                <Tooltip2 content="Close this dialog without creating a new gene set.">
+                <Tooltip content="Close this dialog without creating a new gene set.">
                   <Button onClick={this.disableCreateGenesetMode}>
                     Cancel
                   </Button>
-                </Tooltip2>
+                </Tooltip>
                 <Button
                   data-testid="submit-geneset"
                   onClick={this.createGeneset}
