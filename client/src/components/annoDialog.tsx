@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Tooltip, Dialog, Classes, Colors } from "@blueprintjs/core";
+import { Button, Dialog, Classes, Colors } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -83,9 +84,9 @@ class AnnoDialog extends React.PureComponent<{}, State> {
           </div>
           <div className={Classes.DIALOG_FOOTER}>
             <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Tooltip content={cancelTooltipContent}>
+              <Tooltip2 content={cancelTooltipContent}>
                 <Button onClick={handleCancel}>Cancel</Button>
-              </Tooltip>
+              </Tooltip2>
               {/* we might rename, secondary button and secondary input are not related */}
               {handleSecondaryButtonSubmit && secondaryButtonText ? (
                 <Button

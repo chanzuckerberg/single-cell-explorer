@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
-import { Button, ButtonGroup, Tooltip, Icon } from "@blueprintjs/core";
+import { Button, ButtonGroup, Icon } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
 
@@ -86,7 +87,7 @@ const HistogramHeader = React.memo(
             remove
           </Button>
         ) : null}
-        <Tooltip
+        <Tooltip2
           content="Use as color scale"
           position="bottom"
           hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -98,7 +99,7 @@ const HistogramHeader = React.memo(
             data-testid={`colorby-${fieldId}`}
             icon="tint"
           />
-        </Tooltip>
+        </Tooltip2>
       </div>
     );
   }

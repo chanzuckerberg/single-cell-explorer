@@ -127,7 +127,6 @@ export default (props: any) => {
       disabled={isTest}
       content={isGenesetDescription ? descriptionContent : originalContent}
       hoverOpenDelay={tooltipHoverOpenDelayQuick}
-      // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
       targetProps={{ style: children.props.style }}
     >
       {newChildren}

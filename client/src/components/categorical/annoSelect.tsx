@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, MenuItem } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
+import { Select2 } from "@blueprintjs/select";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -29,7 +29,7 @@ class DuplicateCategorySelect extends React.PureComponent<{}, State> {
           Optionally duplicate all labels & cell assignments from existing
           category into new category:
         </p>
-        <Select
+        <Select2
           items={
             allCategoryNames ||
             [] /* this is a placeholder, could be  a subcomponent to avoid this */
@@ -55,7 +55,7 @@ class DuplicateCategorySelect extends React.PureComponent<{}, State> {
             text={categoryToDuplicate || "None (all cells 'unassigned')"}
             rightIcon="double-caret-vertical"
           />
-        </Select>
+        </Select2>
       </div>
     );
   }

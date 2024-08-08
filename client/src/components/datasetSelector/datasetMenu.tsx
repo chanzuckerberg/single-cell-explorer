@@ -1,5 +1,6 @@
 /* Core dependencies */
-import { Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
+import { Menu, MenuItem, Position } from "@blueprintjs/core";
+import { Popover2 } from "@blueprintjs/popover2";
 import React from "react";
 
 /* App dependencies */
@@ -80,8 +81,7 @@ const DatasetMenu = React.memo<Props>(
   }): JSX.Element => {
     const menuScrollable = datasets.length > maxMenuItemCount;
     return (
-      <Popover
-        boundary="viewport"
+      <Popover2
         content={
           <Menu
             className={
@@ -105,12 +105,12 @@ const DatasetMenu = React.memo<Props>(
         }
         hasBackdrop
         minimal
-        modifiers={{ offset: { offset: "0, 10" } }}
+        modifiers={{ offset: { enabled: true, options: { offset: [0, 10] } } }}
         position={Position.BOTTOM_LEFT}
-        targetClassName={styles.datasetSelectorMenuPopoverTarget}
+        className={styles.datasetSelectorMenuPopoverTarget}
       >
         {children}
-      </Popover>
+      </Popover2>
     );
   }
 );

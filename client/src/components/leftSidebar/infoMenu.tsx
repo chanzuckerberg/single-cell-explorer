@@ -1,7 +1,8 @@
 /* Core dependencies */
 import React from "react";
-import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
+import { Button, Menu, MenuItem, Position } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
+import { Popover2 } from "@blueprintjs/popover2";
 
 /* App dependencies */
 import { IconNames as CXGIconNames } from "../icon";
@@ -22,7 +23,7 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
   };
 
   return (
-    <Popover
+    <Popover2
       content={
         <Menu>
           <MenuItem
@@ -69,7 +70,7 @@ const InformationMenu = React.memo<Props>((props): JSX.Element => {
         type="button"
         onClick={handleMenuClick}
       />
-    </Popover>
+    </Popover2>
   );
 });
 

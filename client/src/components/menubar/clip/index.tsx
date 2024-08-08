@@ -5,37 +5,27 @@ import {
   Icon,
   Intent,
   NumericInput,
-  Popover,
   Position,
-  Tooltip,
 } from "@blueprintjs/core";
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { IconNames } from "@blueprintjs/icons";
 
-import { tooltipHoverOpenDelay } from "../../globals";
+import { tooltipHoverOpenDelay } from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
-import styles from "./menubar.css";
+import styles from "../menubar.css";
+import { ClipProps } from "./types";
 
-const Clip = React.memo((props) => {
+function Clip(props: ClipProps) {
   const {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'pendingClipPercentiles' does not exist o... Remove this comment to see the full error message
     pendingClipPercentiles,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMin' does not exist on typ... Remove this comment to see the full error message
     clipPercentileMin,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'clipPercentileMax' does not exist on typ... Remove this comment to see the full error message
     clipPercentileMax,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipOpening' does not exist on typ... Remove this comment to see the full error message
     handleClipOpening,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipClosing' does not exist on typ... Remove this comment to see the full error message
     handleClipClosing,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipCommit' does not exist on type... Remove this comment to see the full error message
     handleClipCommit,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isClipDisabled' does not exist on type '... Remove this comment to see the full error message
     isClipDisabled,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipOnKeyPress' does not exist on ... Remove this comment to see the full error message
     handleClipOnKeyPress,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipPercentileMaxValueChange' does... Remove this comment to see the full error message
     handleClipPercentileMaxValueChange,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleClipPercentileMinValueChange' does... Remove this comment to see the full error message
     handleClipPercentileMinValueChange,
   } = props;
 
@@ -51,9 +41,13 @@ const Clip = React.memo((props) => {
 
   return (
     <ButtonGroup className={`${styles.menubarButton}`}>
-      <Popover
-        target={
-          <Tooltip
+      <Popover2
+        renderTarget={({
+          ref: tooltipRef,
+          isOpen: _tooltipIsOpen,
+          ...tooltipProps
+        }) => (
+          <Tooltip2
             content="Clip all continuous values to a percentile range"
             position="bottom"
             hoverOpenDelay={tooltipHoverOpenDelay}
@@ -66,12 +60,14 @@ const Clip = React.memo((props) => {
               style={{
                 cursor: "pointer",
               }}
+              elementRef={tooltipRef}
+              {...tooltipProps}
             />
-          </Tooltip>
-        }
+          </Tooltip2>
+        )}
         position={Position.BOTTOM_RIGHT}
-        onOpening={handleClipOpening}
-        onClosing={handleClipClosing}
+        onOpening={() => handleClipOpening}
+        onClosing={() => handleClipClosing}
         content={
           <div
             style={{
@@ -96,7 +92,9 @@ const Clip = React.memo((props) => {
                 style={{ width: 50 }}
                 data-testid="clip-min-input"
                 onValueChange={handleClipPercentileMinValueChange}
-                onKeyPress={handleClipOnKeyPress}
+                onKeyUp={(event: React.KeyboardEvent) =>
+                  handleClipOnKeyPress(event as unknown as KeyboardEvent)
+                }
                 value={clipMin}
                 min={0}
                 max={100}
@@ -113,7 +111,9 @@ const Clip = React.memo((props) => {
                 style={{ width: 50 }}
                 data-testid="clip-max-input"
                 onValueChange={handleClipPercentileMaxValueChange}
-                onKeyPress={handleClipOnKeyPress}
+                onKeyUp={(event: React.KeyboardEvent) =>
+                  handleClipOnKeyPress(event as unknown as KeyboardEvent)
+                }
                 value={clipMax}
                 min={0}
                 max={100}
@@ -145,6 +145,6 @@ const Clip = React.memo((props) => {
       />
     </ButtonGroup>
   );
-});
+}
 
-export default Clip;
+export default React.memo(Clip);

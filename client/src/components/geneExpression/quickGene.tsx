@@ -2,7 +2,7 @@ import { H4, Icon, MenuItem } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import fuzzysort from "fuzzysort";
-import { ItemRenderer, Suggest } from "@blueprintjs/select";
+import { ItemRenderer, Suggest2 } from "@blueprintjs/select";
 import { useSelector, useDispatch } from "react-redux";
 
 import { noop } from "lodash";
@@ -191,7 +191,7 @@ function QuickGene() {
       {isExpanded && (
         <>
           <div style={{ marginBottom: "8px" }} data-testid="gene-search">
-            <Suggest
+            <Suggest2
               resetOnSelect
               closeOnSelect
               resetOnClose
@@ -204,7 +204,6 @@ function QuickGene() {
               inputProps={{
                 placeholder: "Quick Gene Search",
                 leftIcon: IconNames.SEARCH,
-                fill: true,
               }}
               inputValueRenderer={() => ""}
               itemListPredicate={(query: string, items: string[]) =>

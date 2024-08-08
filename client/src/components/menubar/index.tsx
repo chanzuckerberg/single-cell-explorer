@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
-import {
-  ButtonGroup,
-  AnchorButton,
-  Tooltip,
-  ResizeSensor,
-} from "@blueprintjs/core";
+import { ButtonGroup, AnchorButton, ResizeSensor } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import { IconNames } from "@blueprintjs/icons";
 
 import * as globals from "../../globals";
@@ -278,7 +274,7 @@ const MenuBar = ({
               />
             </ButtonGroup>
 
-            <Tooltip
+            <Tooltip2
               content="Download the current graph view as a PNG"
               position="bottom"
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -294,7 +290,7 @@ const MenuBar = ({
                 loading={screenCap}
                 onClick={() => dispatch({ type: "graph: screencap start" })}
               />
-            </Tooltip>
+            </Tooltip2>
 
             {isTest && (
               <AnchorButton
@@ -311,7 +307,6 @@ const MenuBar = ({
               />
             )}
             <Clip
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ pendingClipPercentiles: any; clipPercentil... Remove this comment to see the full error message
               pendingClipPercentiles={pendingClipPercentiles}
               clipPercentileMin={currentClipMin}
               clipPercentileMax={currentClipMax}
@@ -327,7 +322,7 @@ const MenuBar = ({
                 handleClipPercentileMinValueChange
               }
             />
-            <Tooltip
+            <Tooltip2
               content="When a category is colored by, show labels on the graph"
               position="bottom"
               disabled={graphInteractionMode === "zoom"}
@@ -343,11 +338,11 @@ const MenuBar = ({
                 intent={showCentroidLabels ? "primary" : "none"}
                 disabled={!isColoredByCategorical}
               />
-            </Tooltip>
+            </Tooltip2>
           </ResponsiveMenuGroupTwo>
           <ResponsiveMenuGroupOne>
             <ButtonGroup className={styles.menubarButton} vertical={isVertical}>
-              <Tooltip
+              <Tooltip2
                 content={selectionTooltip}
                 position="bottom"
                 hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -367,8 +362,8 @@ const MenuBar = ({
                     });
                   }}
                 />
-              </Tooltip>
-              <Tooltip
+              </Tooltip2>
+              <Tooltip2
                 content="Drag to pan, scroll to zoom"
                 position="bottom"
                 hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -387,7 +382,7 @@ const MenuBar = ({
                     });
                   }}
                 />
-              </Tooltip>
+              </Tooltip2>
             </ButtonGroup>
             <Subset
               subsetPossible={subsetPossible}

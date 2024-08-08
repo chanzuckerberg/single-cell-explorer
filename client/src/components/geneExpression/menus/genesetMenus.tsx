@@ -1,18 +1,16 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 
 import {
   Button,
   AnchorButton,
   Menu,
   MenuItem,
-  Popover,
   Position,
   Icon,
   PopoverInteractionKind,
 } from "@blueprintjs/core";
-
 import * as globals from "../../../globals";
 import actions from "../../../actions";
 import AddGeneToGenesetDialogue from "./addGeneToGenesetDialogue";
@@ -130,9 +128,8 @@ class GenesetMenus extends React.PureComponent<{}, State> {
             </Tooltip2>
             {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ geneset: any; }' is not assignable to type... Remove this comment to see the full error message */}
             <AddGeneToGenesetDialogue geneset={geneset} />
-            <Popover
+            <Popover2
               interactionKind={PopoverInteractionKind.HOVER}
-              boundary="window"
               position={Position.BOTTOM}
               content={
                 <Menu>
@@ -160,7 +157,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 minimal
                 onClick={this.handleSeeActionsClick}
               />
-            </Popover>
+            </Popover2>
             <Tooltip2
               content={`Color by gene set ${geneset} mean`}
               position={Position.BOTTOM}

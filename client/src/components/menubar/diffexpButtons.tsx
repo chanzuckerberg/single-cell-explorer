@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
-import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
+import { ButtonGroup, AnchorButton } from "@blueprintjs/core";
+import { Tooltip2 } from "@blueprintjs/popover2";
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
@@ -59,7 +60,7 @@ class DiffexpButtons extends React.PureComponent {
         <CellSetButton eitherCellSetOneOrTwo={1} />
         {/* @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call. */}
         <CellSetButton eitherCellSetOneOrTwo={2} />
-        <Tooltip
+        <Tooltip2
           content={warnMaxSizeExceeded ? tipMessageWarn : tipMessage}
           position="bottom"
           hoverOpenDelay={globals.tooltipHoverOpenDelayQuick}
@@ -74,7 +75,7 @@ class DiffexpButtons extends React.PureComponent {
             fill
             onClick={this.computeDiffExp}
           />
-        </Tooltip>
+        </Tooltip2>
       </ButtonGroup>
     );
   }
