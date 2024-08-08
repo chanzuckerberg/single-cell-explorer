@@ -56,7 +56,6 @@ function InfoSearch(props: Props) {
         inputProps={{
           placeholder: `Quick ${infoType} Search`,
           leftIcon: IconNames.SEARCH,
-          fill: true,
         }}
         inputValueRenderer={() => ""}
         itemListPredicate={(query: string, items: string[]) =>

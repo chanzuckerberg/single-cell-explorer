@@ -6,8 +6,9 @@ import {
   Intent,
   NumericInput,
   Position,
+  Popover,
+  Tooltip,
 } from "@blueprintjs/core";
-import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
 import { IconNames } from "@blueprintjs/icons";
 
 import { tooltipHoverOpenDelay } from "../../../globals";
@@ -41,13 +42,13 @@ function Clip(props: ClipProps) {
 
   return (
     <ButtonGroup className={`${styles.menubarButton}`}>
-      <Popover2
+      <Popover
         renderTarget={({
           ref: tooltipRef,
           isOpen: _tooltipIsOpen,
           ...tooltipProps
         }) => (
-          <Tooltip2
+          <Tooltip
             content="Clip all continuous values to a percentile range"
             position="bottom"
             hoverOpenDelay={tooltipHoverOpenDelay}
@@ -60,10 +61,10 @@ function Clip(props: ClipProps) {
               style={{
                 cursor: "pointer",
               }}
-              elementRef={tooltipRef}
+              ref={tooltipRef}
               {...tooltipProps}
             />
-          </Tooltip2>
+          </Tooltip>
         )}
         position={Position.BOTTOM_RIGHT}
         onOpening={() => handleClipOpening}

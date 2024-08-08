@@ -1,6 +1,5 @@
 /* Core dependencies */
-import { Colors, Menu, MenuItem, Position } from "@blueprintjs/core";
-import { Popover2 } from "@blueprintjs/popover2";
+import { Colors, Menu, MenuItem, Position, Popover } from "@blueprintjs/core";
 import React, { useState } from "react";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -27,7 +26,7 @@ function FloatingButton(props: Props): JSX.Element {
   const { baseUrl } = props;
 
   return (
-    <Popover2
+    <Popover
       content={
         <Menu>
           <MenuItem
@@ -47,7 +46,7 @@ function FloatingButton(props: Props): JSX.Element {
       hasBackdrop
       isOpen={helpMenuOpen}
       minimal
-      modifiers={{ offset: { enabled: true, options: { offset: [0, 10] } } }}
+      modifiers={{ offset: { enabled: true, options: { offset: [0, 4] } } }}
       onClose={() => setHelpMenuOpen(false)}
       position={Position.TOP_RIGHT}
       renderTarget={() => (

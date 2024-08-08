@@ -1,6 +1,5 @@
 import React from "react";
-import { AnchorButton } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { AnchorButton, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import { tooltipHoverOpenDelay } from "../../globals";
 import actions from "../../actions";
@@ -29,7 +28,7 @@ class CellSetButton extends React.PureComponent {
       ? differential[cellListName].length
       : 0;
     return (
-      <Tooltip2
+      <Tooltip
         content="Save current selection for differential expression computation"
         position="bottom"
         hoverOpenDelay={tooltipHoverOpenDelay}
@@ -48,7 +47,7 @@ class CellSetButton extends React.PureComponent {
           </span>
           {" cells"}
         </AnchorButton>
-      </Tooltip2>
+      </Tooltip>
     );
   }
 }
