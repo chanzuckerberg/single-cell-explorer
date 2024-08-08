@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.2.0...v1.2.1) (2024-08-08)
+
+
+### Tests
+
+* Fix e2e test cellCount diff by 1 ([#1069](https://github.com/chanzuckerberg/single-cell-explorer/issues/1069)) ([4ce2809](https://github.com/chanzuckerberg/single-cell-explorer/commit/4ce280939a621e36abad1ea7f450e4a8ab937eb6))
+
 ## [1.2.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.1...v1.2.0) (2024-08-07)
 
 
