@@ -2,8 +2,7 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React, { useRef, useEffect, useCallback } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
-import { Button, Classes, Position } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 
@@ -503,7 +502,7 @@ const CategoryHeader = React.memo(
         </div>
 
         <div className="ignore-capture">
-          <Tooltip2
+          <Tooltip
             content="Use as color scale"
             position={Position.LEFT}
             usePortal
@@ -520,7 +519,7 @@ const CategoryHeader = React.memo(
               intent={isColorAccessor ? "primary" : "none"}
               icon="tint"
             />
-          </Tooltip2>
+          </Tooltip>
         </div>
       </>
     );

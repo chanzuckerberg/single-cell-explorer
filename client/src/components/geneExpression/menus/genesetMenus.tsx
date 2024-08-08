@@ -1,7 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Popover2, Tooltip2 } from "@blueprintjs/popover2";
-
 import {
   Button,
   AnchorButton,
@@ -9,7 +7,9 @@ import {
   MenuItem,
   Position,
   Icon,
+  Popover,
   PopoverInteractionKind,
+  Tooltip,
 } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 import actions from "../../../actions";
@@ -112,7 +112,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
       <>
         {genesetsEditable && (
           <>
-            <Tooltip2
+            <Tooltip
               content={createText}
               position={Position.BOTTOM}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -125,10 +125,10 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 small
                 minimal
               />
-            </Tooltip2>
+            </Tooltip>
             {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ geneset: any; }' is not assignable to type... Remove this comment to see the full error message */}
             <AddGeneToGenesetDialogue geneset={geneset} />
-            <Popover2
+            <Popover
               interactionKind={PopoverInteractionKind.HOVER}
               position={Position.BOTTOM}
               content={
@@ -157,8 +157,8 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 minimal
                 onClick={this.handleSeeActionsClick}
               />
-            </Popover2>
-            <Tooltip2
+            </Popover>
+            <Tooltip
               content={`Color by gene set ${geneset} mean`}
               position={Position.BOTTOM}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -172,7 +172,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 data-testid={`${geneset}:colorby-entire-geneset`}
                 icon={<Icon icon="tint" iconSize={16} />}
               />
-            </Tooltip2>
+            </Tooltip>
           </>
         )}
       </>

@@ -1,6 +1,10 @@
 import React from "react";
-import { PopoverInteractionKind, Position, Classes } from "@blueprintjs/core";
-import { Popover2 } from "@blueprintjs/popover2";
+import {
+  PopoverInteractionKind,
+  Position,
+  Classes,
+  Popover,
+} from "@blueprintjs/core";
 
 export default class MiniHistogram extends React.PureComponent {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -68,7 +72,7 @@ export default class MiniHistogram extends React.PureComponent {
     } = this.props;
 
     return (
-      <Popover2
+      <Popover
         interactionKind={PopoverInteractionKind.HOVER_TARGET_ONLY}
         hoverOpenDelay={1500}
         hoverCloseDelay={200}
@@ -104,7 +108,7 @@ export default class MiniHistogram extends React.PureComponent {
             largest bin within the whole category.
           </p>
         </div>
-      </Popover2>
+      </Popover>
     );
   }
 }

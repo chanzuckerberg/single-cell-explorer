@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
-import { ButtonGroup, AnchorButton, ResizeSensor } from "@blueprintjs/core";
-import { Tooltip2 } from "@blueprintjs/popover2";
+import {
+  ButtonGroup,
+  AnchorButton,
+  ResizeSensor,
+  Tooltip,
+} from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 import * as globals from "../../globals";
@@ -274,7 +278,7 @@ const MenuBar = ({
               />
             </ButtonGroup>
 
-            <Tooltip2
+            <Tooltip
               content="Download the current graph view as a PNG"
               position="bottom"
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -290,7 +294,7 @@ const MenuBar = ({
                 loading={screenCap}
                 onClick={() => dispatch({ type: "graph: screencap start" })}
               />
-            </Tooltip2>
+            </Tooltip>
 
             {isTest && (
               <AnchorButton
@@ -322,7 +326,7 @@ const MenuBar = ({
                 handleClipPercentileMinValueChange
               }
             />
-            <Tooltip2
+            <Tooltip
               content="When a category is colored by, show labels on the graph"
               position="bottom"
               disabled={graphInteractionMode === "zoom"}
@@ -338,11 +342,11 @@ const MenuBar = ({
                 intent={showCentroidLabels ? "primary" : "none"}
                 disabled={!isColoredByCategorical}
               />
-            </Tooltip2>
+            </Tooltip>
           </ResponsiveMenuGroupTwo>
           <ResponsiveMenuGroupOne>
             <ButtonGroup className={styles.menubarButton} vertical={isVertical}>
-              <Tooltip2
+              <Tooltip
                 content={selectionTooltip}
                 position="bottom"
                 hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -350,7 +354,6 @@ const MenuBar = ({
                 <AnchorButton
                   type="button"
                   data-testid="mode-lasso"
-                  // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'IconName ... Remove this comment to see the full error message
                   icon={selectionButtonIcon}
                   active={graphInteractionMode === "select"}
                   onClick={() => {
@@ -362,8 +365,8 @@ const MenuBar = ({
                     });
                   }}
                 />
-              </Tooltip2>
-              <Tooltip2
+              </Tooltip>
+              <Tooltip
                 content="Drag to pan, scroll to zoom"
                 position="bottom"
                 hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -382,7 +385,7 @@ const MenuBar = ({
                     });
                   }}
                 />
-              </Tooltip2>
+              </Tooltip>
             </ButtonGroup>
             <Subset
               subsetPossible={subsetPossible}

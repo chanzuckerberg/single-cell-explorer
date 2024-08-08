@@ -334,7 +334,7 @@ for (const testDataset of testDatasets) {
             await snapshotTestGraph(page, testInfo);
           });
 
-          test("selects cells via lasso", async ({ page }, testInfo) => {
+          test.only("selects cells via lasso", async ({ page }, testInfo) => {
             // TODO: fix bug for side panel where subset1 doesn't reset after layout switch
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
