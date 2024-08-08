@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.2.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.1...v1.2.0) (2024-08-07)
+
+
+### Misc
+
+* bump argus builder version ([#1065](https://github.com/chanzuckerberg/single-cell-explorer/issues/1065)) ([cf3608f](https://github.com/chanzuckerberg/single-cell-explorer/commit/cf3608f0631f54b9df1ec30b9e9030a9f9222c1f))
+* Changes to analytics names and timing ([#1051](https://github.com/chanzuckerberg/single-cell-explorer/issues/1051)) ([ec42d18](https://github.com/chanzuckerberg/single-cell-explorer/commit/ec42d183947abdf5f1912f61c50ea7b0acde41c5))
+* DP[#7155](https://github.com/chanzuckerberg/single-cell-explorer/issues/7155) Update analytics Part 1 ([#1041](https://github.com/chanzuckerberg/single-cell-explorer/issues/1041)) ([d155d63](https://github.com/chanzuckerberg/single-cell-explorer/commit/d155d63bfdc270f5070a2a894ffc5acde93400c4))
+* DP[#7155](https://github.com/chanzuckerberg/single-cell-explorer/issues/7155) Update analytics part 2 ([#1045](https://github.com/chanzuckerberg/single-cell-explorer/issues/1045)) ([6eda411](https://github.com/chanzuckerberg/single-cell-explorer/commit/6eda4116d992838f17a132ba8f4a87e07da22bd9))
+* remove .happy directory and happy-related GH Actions ([#1052](https://github.com/chanzuckerberg/single-cell-explorer/issues/1052)) ([0b5eee9](https://github.com/chanzuckerberg/single-cell-explorer/commit/0b5eee9ba601a14588ef2836e64a28a2ad68eafd))
+* Turn off logging comments ([#1055](https://github.com/chanzuckerberg/single-cell-explorer/issues/1055)) ([0ae463c](https://github.com/chanzuckerberg/single-cell-explorer/commit/0ae463c2f3872ed20efa8dc371c34b5902311971))
+* Update conventional commit GHA ([2125709](https://github.com/chanzuckerberg/single-cell-explorer/commit/2125709abb25ba8160ce277d7c0a79f6f6993f96))
+
+
+### Features
+
+* Add survey banner to Explorer ([#1063](https://github.com/chanzuckerberg/single-cell-explorer/issues/1063)) ([a875df6](https://github.com/chanzuckerberg/single-cell-explorer/commit/a875df6653a7fbe82d541c0fe9d72b9f7bfd25e3))
+* cell type info and info panel refactor ([#1043](https://github.com/chanzuckerberg/single-cell-explorer/issues/1043)) ([f4ddb1a](https://github.com/chanzuckerberg/single-cell-explorer/commit/f4ddb1a3479eeab01d9096916daca2de5acbd0d0))
+* info panel search for gene and cell type ([#1061](https://github.com/chanzuckerberg/single-cell-explorer/issues/1061)) ([22e4f44](https://github.com/chanzuckerberg/single-cell-explorer/commit/22e4f44eb5c19395bc8b8c8d77c8a56dcd76959d))
+* Remove spatial feature flag ([#1015](https://github.com/chanzuckerberg/single-cell-explorer/issues/1015)) ([f95a8c1](https://github.com/chanzuckerberg/single-cell-explorer/commit/f95a8c198c69cc5d8936702d9d121b1e8d073162))
+
+
+### Bug Fixes
+
+* 1053 Truncate histogram and dataset info panel ([#1054](https://github.com/chanzuckerberg/single-cell-explorer/issues/1054)) ([88bf816](https://github.com/chanzuckerberg/single-cell-explorer/commit/88bf8167733a62b165fd0c7fe652ad0edbfda82f))
+* Add mix blend mode to canvas ([#1042](https://github.com/chanzuckerberg/single-cell-explorer/issues/1042)) ([f3210d0](https://github.com/chanzuckerberg/single-cell-explorer/commit/f3210d041b1fe8a226d319904989c57ab0d409ba))
+* add spatial to default layout list ([#1067](https://github.com/chanzuckerberg/single-cell-explorer/issues/1067)) ([6f3f122](https://github.com/chanzuckerberg/single-cell-explorer/commit/6f3f122a745775b0337d348091d0c1ab174a9508))
+* Add tissue_type to standard categories ([#1060](https://github.com/chanzuckerberg/single-cell-explorer/issues/1060)) ([2d9a721](https://github.com/chanzuckerberg/single-cell-explorer/commit/2d9a721e1fdb6cdf22a7842798acc32a777a118c))
+* Conditionally apply opacity to the dots ([#1047](https://github.com/chanzuckerberg/single-cell-explorer/issues/1047)) ([2cd5fd3](https://github.com/chanzuckerberg/single-cell-explorer/commit/2cd5fd37e747a58779580bd481311d6d3003d20f))
+* Make menu bar responsive ([#1059](https://github.com/chanzuckerberg/single-cell-explorer/issues/1059)) ([2856e60](https://github.com/chanzuckerberg/single-cell-explorer/commit/2856e6056b0fdde6fde6dc156689df6b18e35f76))
+
+
+### Tests
+
+* Make test more robust ([#1049](https://github.com/chanzuckerberg/single-cell-explorer/issues/1049)) ([c977612](https://github.com/chanzuckerberg/single-cell-explorer/commit/c9776124af2b6fe563c362c41403c4007cdda00e))
+
 ## [1.1.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.0...v1.1.1) (2024-07-15)
 
 
