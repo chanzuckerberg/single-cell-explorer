@@ -42,6 +42,8 @@ interface StateProps {
   // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   panelEmbedding: RootState["panelEmbedding"];
   imageUnderlay: RootState["controls"]["imageUnderlay"];
+  // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
+  unsMetadata: RootState["controls"]["unsMetadata"];
 }
 
 interface OwnProps {
@@ -64,6 +66,7 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   config: state.config,
   panelEmbedding: state.panelEmbedding,
   imageUnderlay: state.controls.imageUnderlay,
+  unsMetadata: state.controls.unsMetadata,
 });
 
 const Embedding = (props: Props) => {
