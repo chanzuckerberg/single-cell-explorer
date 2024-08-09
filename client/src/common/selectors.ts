@@ -5,7 +5,10 @@ import { selectIsDeepZoomSourceValid, selectS3URI } from "../selectors/config";
 export function isSpatialMode(props: ShouldShowOpenseadragonProps): boolean {
   const { layoutChoice, panelEmbedding, unsMetadata } = props;
 
-  const isNotSupported = unsMetadata?.resolution === ""; // In case of slide-seq, resolution is empty
+  /**
+   * In case of slide-seq, resolution is empty
+   */
+  const isNotSupported = unsMetadata?.resolution === "";
 
   const { open, layoutChoice: panelEmbeddingLayoutChoice } =
     panelEmbedding || {};
