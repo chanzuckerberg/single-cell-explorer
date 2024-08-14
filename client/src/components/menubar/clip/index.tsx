@@ -67,8 +67,8 @@ function Clip(props: ClipProps) {
           </Tooltip>
         )}
         position={Position.BOTTOM_RIGHT}
-        onOpening={() => handleClipOpening}
-        onClosing={() => handleClipClosing}
+        onOpening={handleClipOpening}
+        onClosing={handleClipClosing}
         content={
           <div
             style={{
@@ -103,7 +103,7 @@ function Clip(props: ClipProps) {
                 minorStepSize={null}
                 rightElement={
                   <div style={{ padding: "4px 2px" }}>
-                    <Icon icon="percentage" intent="primary" iconSize={14} />
+                    <Icon icon="percentage" intent="primary" size={14} />
                   </div>
                 }
               />
@@ -122,7 +122,7 @@ function Clip(props: ClipProps) {
                 minorStepSize={null}
                 rightElement={
                   <div style={{ padding: "4px 2px" }}>
-                    <Icon icon="percentage" intent="primary" iconSize={14} />
+                    <Icon icon="percentage" intent="primary" size={14} />
                   </div>
                 }
               />

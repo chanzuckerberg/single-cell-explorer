@@ -1,1 +1,0 @@
-<div class="bp3-fill bp3-text-overflow-ellipsis">Sed eu nisi condimentum</div>

@@ -10,7 +10,7 @@ const regex = new RegExp(datasetRegex.slice(1, -1));
 if (dataset && !regex.test(navigator.userAgent)) {
   const root = document.getElementById("root");
   root.remove();
-  const portals = document.getElementsByClassName("bp3-portal");
+  const portals = document.getElementsByClassName("bp5-portal");
   for (let i = 0; i < portals.length; i += 1) {
     portals[i].remove();
   }

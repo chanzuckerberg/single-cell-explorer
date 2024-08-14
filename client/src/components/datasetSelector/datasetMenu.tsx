@@ -104,7 +104,7 @@ const DatasetMenu = React.memo<Props>(
         }
         hasBackdrop
         minimal
-        modifiers={{ offset: { enabled: true, options: { offset: [0, 4] } } }}
+        modifiers={{ offset: { enabled: true, options: { offset: [0, 10] } } }}
         position={Position.BOTTOM_LEFT}
         className={styles.datasetSelectorMenuPopoverTarget}
       >

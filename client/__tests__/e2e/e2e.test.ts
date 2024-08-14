@@ -2,7 +2,7 @@
  * Smoke test suite that will be run in GHA
  * Tests included in this file are expected to be relatively stable and test core features
  *
- * (seve): `locator.click({force: true})` is required on some elements due to weirdness with bp3 elements which route clicks to non-target elements
+ * (seve): `locator.click({force: true})` is required on some elements due to weirdness with bp5 elements which route clicks to non-target elements
  *          https://playwright.dev/docs/input#forcing-the-click
  */
 

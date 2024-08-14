@@ -120,7 +120,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
               <Button
                 style={{ marginLeft: 0, marginRight: 2 }}
                 data-testid={`${geneset}:add-new-gene-to-geneset`}
-                icon={<Icon icon="plus" iconSize={10} />}
+                icon={<Icon icon="plus" size={10} />}
                 onClick={this.activateAddGeneToGenesetMode}
                 small
                 minimal
@@ -152,7 +152,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
               <Button
                 style={{ marginLeft: 0, marginRight: 5 }}
                 data-testid={`${geneset}:see-actions`}
-                icon={<Icon icon="more" iconSize={10} />}
+                icon={<Icon icon="more" size={10} />}
                 small
                 minimal
                 onClick={this.handleSeeActionsClick}
@@ -170,7 +170,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 loading={isColorBy && colorLoading}
                 onClick={(e) => this.handleColorByEntireGeneset(e, isColorBy)}
                 data-testid={`${geneset}:colorby-entire-geneset`}
-                icon={<Icon icon="tint" iconSize={16} />}
+                icon={<Icon icon="tint" size={16} />}
               />
             </Tooltip>
           </>
