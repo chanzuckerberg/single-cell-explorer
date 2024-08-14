@@ -3,7 +3,12 @@ import { RootState } from "../reducers";
 import { selectIsDeepZoomSourceValid, selectS3URI } from "../selectors/config";
 
 export function isSpatialMode(props: ShouldShowOpenseadragonProps): boolean {
-  const { layoutChoice, panelEmbedding } = props;
+  const { layoutChoice, panelEmbedding, unsMetadata } = props;
+
+  /**
+   * In case of slide-seq, resolution is empty
+   */
+  const isNotSupported = unsMetadata?.resolution === "";
 
   const { open, layoutChoice: panelEmbeddingLayoutChoice } =
     panelEmbedding || {};
@@ -16,7 +21,8 @@ export function isSpatialMode(props: ShouldShowOpenseadragonProps): boolean {
     panelEmbeddingLayoutChoice?.current?.includes(spatialEmbeddingKeyword);
 
   return Boolean(
-    layoutChoice?.current?.includes(spatialEmbeddingKeyword) ||
+    (layoutChoice?.current?.includes(spatialEmbeddingKeyword) &&
+      !isNotSupported) ||
       isPanelEmbeddingInSpatialMode
   );
 }
@@ -29,6 +35,7 @@ export interface ShouldShowOpenseadragonProps {
   config: RootState["config"];
   layoutChoice: RootState["layoutChoice"];
   panelEmbedding?: RootState["panelEmbedding"];
+  unsMetadata: RootState["controls"]["unsMetadata"];
 }
 
 export function shouldShowOpenseadragon(props: ShouldShowOpenseadragonProps) {
