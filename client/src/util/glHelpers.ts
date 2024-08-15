@@ -76,8 +76,8 @@ export const glPointSize = `
   float pointSize(float nPoints, float minViewportDimension, bool isSelected, bool isHighlight) {
       float density = nPoints / (minViewportDimension * minViewportDimension);
       float pointSize = (${scale.toFixed(4)}*density) + ${offset.toFixed(4)};
-      pointSize = clamp(pointSize, 
-      ${range[0].toFixed(4)}, 
+      pointSize = clamp(pointSize,
+      ${range[0].toFixed(4)},
       ${range[1].toFixed(4)});
 
     if (isHighlight) return 2. * pointSize;
@@ -91,7 +91,7 @@ export const densityFactor = 0.9;
 export const glPointSizeSpatial = `
 
   float pointSizeSpatial(float nPoints, float minViewportDimension, bool isSelected, bool isHighlight, float distance, float imageHeight, float scaleref, float spotDiameterFullres) {
-    
+
     float scaleFactor = (minViewportDimension / imageHeight) ;
 
 
@@ -101,11 +101,12 @@ export const glPointSizeSpatial = `
     float adjustedZoomFactor = clamp(zoomFactor, 0.1, .9); // Clamp the zoom factor to avoid extreme values and overlapping dots
 
     float baseSize = spotDiameterFullres * scaleref * scaleFactor * adjustedZoomFactor; // Base size proportional to viewport
-    
-    if (isSelected) {
-      return baseSize * 1.5; // Increase size if selected
-    } else if (isHighlight) {
-      return baseSize * 2.0; // Increase size if highlighted
+
+    // isHighlight has to be checked before isSelected to ensure that highlight works as intended
+    if (isHighlight) {
+      return baseSize * 2.0; // Increase size if selected
+    } else if (isSelected) {
+      return baseSize * 1.5; // Increase size if highlighted
     } else {
       return baseSize;
     }
