@@ -11,4 +11,5 @@ export enum ROUTES {
   DOCS = "/docs",
   CELL_GUIDE = "/cellguide",
   CENSUS_MODELS = "/census-models",
+  DE = "/differential-expression",
 }

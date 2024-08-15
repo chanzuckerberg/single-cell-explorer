@@ -97,7 +97,16 @@ const Header = (props: HeaderProps) => {
                     text="Cell Guide"
                     onClick={handleCellGuideClick}
                   />
-                  <BetaChip label="Beta" size="small" />
+                </LinkWrapper>
+                <LinkWrapper>
+                  <AnchorButton
+                    active={false}
+                    href={ROUTES.DE}
+                    minimal
+                    text="Differential Expression"
+                    onClick={handleDEClick}
+                  />
+                  <BetaChip label="New" size="small" />
                 </LinkWrapper>
               </NavItemContainer>
             </NavSection>
@@ -216,6 +225,9 @@ const Header = (props: HeaderProps) => {
   }
   function handleDocumentationClick(): void {
     track(EVENTS.DOCUMENTATION_CLICK_NAV);
+  }
+  function handleDEClick(): void {
+    track(EVENTS.DE_CLICK_NAV);
   }
 };
 Header.defaultProps = {
