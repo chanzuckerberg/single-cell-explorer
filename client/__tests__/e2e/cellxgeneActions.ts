@@ -862,43 +862,8 @@ export async function selectLayout(
   if (graphTsetId === sidePanel) {
     layoutChoiceTestId = `${LAYOUT_CHOICE_TEST_ID}-side`;
   }
-
   await page.getByTestId(layoutChoiceTestId).click({ force: true });
-
-  /**
-   * (thuang): For blueprint radio buttons, we need to tab first to go to the
-   * currently selected option before we can use the arrow keys to navigate
-   */
-  await page.keyboard.press("Tab");
-
-  const layoutChoices = await await page
-    .getByTestId(RegExp(`^${LAYOUT_CHOICE_TEST_ID}-label-`))
-    .allInnerTexts();
-
-  const currentlySelectedLayout = await page
-    .locator("label")
-    .filter({ has: page.getByRole("radio", { checked: true }) })
-    .innerText();
-
-  const currentIndex = layoutChoices.indexOf(currentlySelectedLayout);
-  const targetIndex = layoutChoices.findIndex((choice) =>
-    choice.includes(layoutChoice)
-  );
-
-  const relativePosition = targetIndex - currentIndex;
-
-  if (relativePosition > 0) {
-    // press down arrow N times
-    for (let i = 0; i < relativePosition; i += 1) {
-      await page.keyboard.press("ArrowDown");
-    }
-  } else {
-    // press up arrow N times
-    for (let i = 0; i < Math.abs(relativePosition); i += 1) {
-      await page.keyboard.press("ArrowUp");
-    }
-  }
-
+  await page.getByTestId(`layout-choice-label-${layoutChoice}`).click();
   await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);

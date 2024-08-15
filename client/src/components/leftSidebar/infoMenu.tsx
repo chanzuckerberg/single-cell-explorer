@@ -1,6 +1,6 @@
 /* Core dependencies */
 import React from "react";
-import { Button, Menu, MenuItem, Popover, Position } from "@blueprintjs/core";
+import { Button, Menu, MenuItem, Position, Popover } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 /* App dependencies */

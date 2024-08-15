@@ -1,18 +1,16 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Tooltip2 } from "@blueprintjs/popover2";
-
 import {
   Button,
   AnchorButton,
   Menu,
   MenuItem,
-  Popover,
   Position,
   Icon,
+  Popover,
   PopoverInteractionKind,
+  Tooltip,
 } from "@blueprintjs/core";
-
 import * as globals from "../../../globals";
 import actions from "../../../actions";
 import AddGeneToGenesetDialogue from "./addGeneToGenesetDialogue";
@@ -114,7 +112,7 @@ class GenesetMenus extends React.PureComponent<{}, State> {
       <>
         {genesetsEditable && (
           <>
-            <Tooltip2
+            <Tooltip
               content={createText}
               position={Position.BOTTOM}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -122,17 +120,16 @@ class GenesetMenus extends React.PureComponent<{}, State> {
               <Button
                 style={{ marginLeft: 0, marginRight: 2 }}
                 data-testid={`${geneset}:add-new-gene-to-geneset`}
-                icon={<Icon icon="plus" iconSize={10} />}
+                icon={<Icon icon="plus" size={10} />}
                 onClick={this.activateAddGeneToGenesetMode}
                 small
                 minimal
               />
-            </Tooltip2>
+            </Tooltip>
             {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ geneset: any; }' is not assignable to type... Remove this comment to see the full error message */}
             <AddGeneToGenesetDialogue geneset={geneset} />
             <Popover
               interactionKind={PopoverInteractionKind.HOVER}
-              boundary="window"
               position={Position.BOTTOM}
               content={
                 <Menu>
@@ -155,13 +152,13 @@ class GenesetMenus extends React.PureComponent<{}, State> {
               <Button
                 style={{ marginLeft: 0, marginRight: 5 }}
                 data-testid={`${geneset}:see-actions`}
-                icon={<Icon icon="more" iconSize={10} />}
+                icon={<Icon icon="more" size={10} />}
                 small
                 minimal
                 onClick={this.handleSeeActionsClick}
               />
             </Popover>
-            <Tooltip2
+            <Tooltip
               content={`Color by gene set ${geneset} mean`}
               position={Position.BOTTOM}
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -173,9 +170,9 @@ class GenesetMenus extends React.PureComponent<{}, State> {
                 loading={isColorBy && colorLoading}
                 onClick={(e) => this.handleColorByEntireGeneset(e, isColorBy)}
                 data-testid={`${geneset}:colorby-entire-geneset`}
-                icon={<Icon icon="tint" iconSize={16} />}
+                icon={<Icon icon="tint" size={16} />}
               />
-            </Tooltip2>
+            </Tooltip>
           </>
         )}
       </>
