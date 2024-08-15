@@ -53,7 +53,7 @@
     "not Explorer > 0"
   ],
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.13.0",
+    "@aws-sdk/client-secrets-manager": "^3.631.0",
     "@blueprintjs/core": "^5.11.0",
     "@blueprintjs/icons": "^5.11.0",
     "@blueprintjs/select": "^5.2.2",
