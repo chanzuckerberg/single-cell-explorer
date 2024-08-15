@@ -8,10 +8,9 @@ import {
   Position,
   Radio,
   RadioGroup,
+  Tooltip,
+  Popover,
 } from "@blueprintjs/core";
-
-import { Tooltip2, Popover2 } from "@blueprintjs/popover2";
-
 import { IconNames } from "@blueprintjs/icons";
 import * as globals from "../../globals";
 import actions from "../../actions";
@@ -157,7 +156,7 @@ const Embedding = (props: Props) => {
       }}
     >
       <ButtonGroup>
-        <Popover2
+        <Popover
           hasBackdrop
           onOpening={handleLayoutChoiceClick}
           position={Position.TOP_LEFT}
@@ -184,7 +183,7 @@ const Embedding = (props: Props) => {
             </div>
           }
         >
-          <Tooltip2
+          <Tooltip
             content="Select embedding for visualization"
             position="top"
             hoverOpenDelay={globals.tooltipHoverOpenDelay}
@@ -204,8 +203,8 @@ const Embedding = (props: Props) => {
             >
               {layoutChoice?.current}
             </Button>
-          </Tooltip2>
-        </Popover2>
+          </Tooltip>
+        </Popover>
         {!isSidePanel && !isSingleEmbedding && (
           <Button
             icon={IconNames.MULTI_SELECT}
@@ -218,7 +217,7 @@ const Embedding = (props: Props) => {
         {!isSidePanel && shouldShowOpenseadragon(props) && (
           <ImageToggleWrapper>
             <ButtonGroup>
-              <Tooltip2
+              <Tooltip
                 usePortal
                 content="Toggle image"
                 position="bottom"
@@ -246,8 +245,8 @@ const Embedding = (props: Props) => {
                     });
                   }}
                 />
-              </Tooltip2>
-              <Popover2
+              </Tooltip>
+              <Popover
                 hasBackdrop
                 onOpening={handleLayoutChoiceClick}
                 position={Position.BOTTOM_LEFT}
@@ -258,7 +257,7 @@ const Embedding = (props: Props) => {
                   data-testid="image-underlay-dropdown"
                   icon="caret-down"
                 />
-              </Popover2>
+              </Popover>
             </ButtonGroup>
           </ImageToggleWrapper>
         )}

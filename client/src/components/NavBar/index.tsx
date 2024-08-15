@@ -1,6 +1,11 @@
 import React from "react";
-import { AnchorButton, Menu, MenuItem, Position } from "@blueprintjs/core";
-import { Popover2 } from "@blueprintjs/popover2";
+import {
+  AnchorButton,
+  Menu,
+  MenuItem,
+  Position,
+  Popover,
+} from "@blueprintjs/core";
 import { IconNames as CXGIconNames } from "../icon";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -131,7 +136,7 @@ const Header = (props: HeaderProps) => {
         </Left>
         <Right>
           <LinkWrapper>
-            <Popover2
+            <Popover
               hasBackdrop
               content={
                 <Menu>
@@ -189,7 +194,7 @@ const Header = (props: HeaderProps) => {
                 rightIcon="chevron-down"
                 onClick={handleMenuClick}
               />
-            </Popover2>
+            </Popover>
           </LinkWrapper>
         </Right>
       </MainWrapper>

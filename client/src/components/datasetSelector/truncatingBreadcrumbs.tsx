@@ -1,6 +1,10 @@
 /* Core dependencies */
-import { BreadcrumbProps, Classes, ResizeSensor } from "@blueprintjs/core";
-import { ResizeEntry } from "@blueprintjs/core/src/components/resize-sensor/resizeObserverTypes";
+import {
+  BreadcrumbProps,
+  Classes,
+  ResizeSensor,
+  ResizeEntry,
+} from "@blueprintjs/core";
 import React, { CSSProperties, useCallback, useEffect, useState } from "react";
 
 /* App dependencies */

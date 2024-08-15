@@ -207,7 +207,7 @@ class Gene extends React.Component<Props, State> {
               }}
               intent="none"
               style={{ fontWeight: 700, marginRight: 2 }}
-              icon={<Icon icon="trash" iconSize={10} />}
+              icon={<Icon icon="trash" size={10} />}
             />
             <Button
               minimal
@@ -238,7 +238,7 @@ class Gene extends React.Component<Props, State> {
               onClick={this.handleGeneExpandClick}
               active={geneIsExpanded}
               intent="none"
-              icon={<Icon icon="maximize" iconSize={10} />}
+              icon={<Icon icon="maximize" size={10} />}
               style={{ marginRight: 2 }}
             />
             <Button
@@ -248,7 +248,7 @@ class Gene extends React.Component<Props, State> {
               onClick={this.onColorChangeClick}
               active={isColorAccessor}
               intent={isColorAccessor ? "primary" : "none"}
-              icon={<Icon icon="tint" iconSize={12} />}
+              icon={<Icon icon="tint" size={12} />}
             />
           </div>
         </div>

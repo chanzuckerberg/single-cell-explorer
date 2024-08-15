@@ -204,7 +204,6 @@ function QuickGene() {
               inputProps={{
                 placeholder: "Quick Gene Search",
                 leftIcon: IconNames.SEARCH,
-                fill: true,
               }}
               inputValueRenderer={() => ""}
               itemListPredicate={(query: string, items: string[]) =>

@@ -1,5 +1,5 @@
 import React from "react";
-import { InputGroup, MenuItem, Keys } from "@blueprintjs/core";
+import { InputGroup, MenuItem } from "@blueprintjs/core";
 import { Suggest } from "@blueprintjs/select";
 import fuzzysort from "fuzzysort";
 
@@ -77,11 +77,11 @@ export default class LabelInput extends React.PureComponent<{}, State> {
     and causing further side effects (eg, closing dialog, submitting
     form, etc).
     */
-    const { keyCode } = e;
-    if (keyCode === Keys.ENTER || keyCode === Keys.ESCAPE) {
+    const { eventKey } = e.key;
+    if (eventKey === "Enter" || eventKey === "Escape") {
       e.preventDefault();
     }
-    if (keyCode === Keys.ESCAPE) {
+    if (eventKey === "Escape") {
       e.stopPropagation();
     }
   };
