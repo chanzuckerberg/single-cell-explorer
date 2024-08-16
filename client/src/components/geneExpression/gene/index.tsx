@@ -1,8 +1,7 @@
 import React from "react";
 
-import { AnchorButton, Button, Icon } from "@blueprintjs/core";
+import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
-import { Icon as InfoCircle, IconButton } from "czifui";
 import Truncate from "../../util/truncate";
 import HistogramBrush from "../../brushableHistogram";
 
@@ -17,6 +16,11 @@ import { EVENTS } from "../../../analytics/events";
 import { ActiveTab } from "../../../common/types/entities";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
+import {
+  InfoButton,
+  InfoButtonWrapper,
+  InfoCircle,
+} from "../../categorical/value/style";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -112,7 +116,6 @@ class Gene extends React.Component<Props, State> {
       removeGene,
       onGeneExpressionComplete,
       isGeneExpressionComplete,
-      isGeneInfo,
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
@@ -155,30 +158,19 @@ class Gene extends React.Component<Props, State> {
                 </span>
               </Truncate>
             </div>
-            <div style={{ display: "inline-block", marginLeft: "0" }}>
-              <AnchorButton
-                small
-                minimal
-                intent={isGeneInfo ? "primary" : "none"}
+            <InfoButtonWrapper>
+              <InfoButton
                 data-testid={`get-info-${gene}`}
-                active={isGeneInfo}
                 onClick={this.handleDisplayGeneInfo}
                 disabled={!isGeneExpressionComplete}
               >
-                <IconButton
-                  disabled={!isGeneExpressionComplete}
-                  sdsSize="small"
-                >
-                  <div style={{ filter: "grayscale(100%)" }}>
-                    <InfoCircle
-                      sdsIcon="infoCircle"
-                      sdsSize="s"
-                      sdsType="iconButton"
-                    />
-                  </div>
-                </IconButton>
-              </AnchorButton>
-            </div>
+                <InfoCircle
+                  sdsIcon="InfoCircle"
+                  sdsSize="xs"
+                  sdsType="iconButton"
+                />
+              </InfoButton>
+            </InfoButtonWrapper>
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
                 <HistogramBrush

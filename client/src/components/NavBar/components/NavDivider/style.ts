@@ -1,8 +1,6 @@
-import { Divider } from "@material-ui/core";
-import { CommonThemeProps, getColors } from "czifui";
+import { Divider } from "@mui/material";
 import styled from "@emotion/styled";
-
-const gray500 = (props: CommonThemeProps) => getColors(props)?.gray[500];
+import { gray500 } from "../../../theme";
 
 export const NavDivider = styled(Divider)`
   background-color: ${gray500};

@@ -1,6 +1,6 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { Icon, LoadingIndicator } from "czifui";
+import { Icon, LoadingIndicator } from "@czi-sds/components";
 
 import {
   Content,
@@ -82,7 +82,7 @@ export function NoneSelected({
 export function ShowWarningBanner() {
   return (
     <WarningBanner>
-      <Icon sdsIcon="exclamationMarkCircle" sdsSize="l" sdsType="static" />
+      <Icon sdsIcon="ExclamationMarkCircle" sdsSize="l" sdsType="static" />
       <span>{NCBI_WARNING}</span>
     </WarningBanner>
   );
@@ -121,7 +121,9 @@ export function ShowInfo(props: ExtendedInfoProps) {
     symbol,
     showWarningBanner,
   } = props;
+
   const externalUrl = id ? url + id : url;
+
   const infoTypeTag = kebabCase(infoType);
 
   return (

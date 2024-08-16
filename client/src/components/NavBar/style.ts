@@ -1,7 +1,7 @@
 import { Classes } from "@blueprintjs/core";
 import styled from "@emotion/styled";
 import { css } from "@emotion/react";
-import { Chip, CommonThemeProps, fontCapsXxxs } from "czifui";
+import { Tag, CommonThemeProps, fontCapsXxxs } from "@czi-sds/components";
 import { PT_TEXT_COLOR } from "./theme";
 import { HEADER_HEIGHT_PX } from "../../globals";
 import {
@@ -105,7 +105,7 @@ export const NavItemContainer = styled.span`
   gap: ${spacesL}px;
 `;
 
-export const BetaChip = styled(Chip)`
+export const BetaChip = styled(Tag)`
   background: #7a41ce;
   color: white;
   margin-left: 4px;

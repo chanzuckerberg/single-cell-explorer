@@ -2,7 +2,7 @@ import React from "react";
 import Helmet from "react-helmet";
 import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
-import { StylesProvider, ThemeProvider } from "@material-ui/core/styles";
+import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme";
 import BottomBanner from "./BottomBanner";
 
@@ -78,7 +78,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
     } = this.props;
     return (
       <Container>
-        <StylesProvider injectFirst>
+        <StyledEngineProvider injectFirst>
           <EmotionThemeProvider theme={theme}>
             <ThemeProvider theme={theme}>
               <Helmet title="CELL&times;GENE | Explorer" />
@@ -134,7 +134,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
             </ThemeProvider>
           </EmotionThemeProvider>
           <DiffexNotice triggerOpen={differentialExpressionLoading} />
-        </StylesProvider>
+        </StyledEngineProvider>
       </Container>
     );
   }

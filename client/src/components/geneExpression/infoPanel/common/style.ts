@@ -1,17 +1,24 @@
 import styled from "@emotion/styled";
 import {
   fontBodyXs,
-  getFontWeights,
   fontBodyS,
-  getColors,
   fontHeaderL,
   fontHeaderM,
-} from "czifui";
+} from "@czi-sds/components";
 import { Icon } from "@blueprintjs/core";
 
 import * as globals from "../../../../globals";
 import * as styles from "../../util";
-import { gray100, gray500, spacesM } from "../../../theme";
+import {
+  fontWeightRegular,
+  fontWeightSemibold,
+  gray100,
+  gray500,
+  primary400,
+  spacesM,
+  warning100,
+  warning400,
+} from "../../../theme";
 
 export const InfoWrapper = styled.div`
   display: flex;
@@ -37,13 +44,7 @@ export const InfoSymbol = styled.h1`
   text-overflow: ellipsis;
   color: black;
   ${fontHeaderL}
-  ${(props) => {
-    const fontWeights = getFontWeights(props);
-
-    return `
-        font-weight: ${fontWeights?.semibold};
-        `;
-  }}
+  font-weight: ${fontWeightSemibold};
 `;
 
 export const InfoTitle = styled.div`
@@ -67,41 +68,21 @@ export const ContentRow = styled.p`
 
 export const InfoLabel = styled.span`
   ${fontBodyXs}
-  ${(props) => {
-    const colors = getColors(props);
-    const fontWeights = getFontWeights(props);
-
-    return `
-        color: ${colors?.gray[500]};
-        font-weight: ${fontWeights?.regular};
-        `;
-  }}
+  color: ${gray500};
+  font-weight: ${fontWeightRegular};
 `;
 
 export const Items = styled.span`
   padding: 4px;
   color: black;
-
   ${fontBodyXs}
-  ${(props) => {
-    const fontWeights = getFontWeights(props);
-
-    return `
-        font-weight: ${fontWeights?.regular};
-        `;
-  }}
+  font-weight: ${fontWeightRegular};
 `;
 
 export const Link = styled.a`
   font-weight: 500;
   ${fontBodyS}
-  ${(props) => {
-    const colors = getColors(props);
-
-    return `
-        color: ${colors?.primary[400]};
-        `;
-  }}
+  color: ${primary400};
 `;
 
 export const WarningBanner = styled.div`
@@ -112,15 +93,10 @@ export const WarningBanner = styled.div`
     margin-left: 10px;
   }
   ${fontBodyXs}
-  ${(props) => {
-    const colors = getColors(props);
-    return `
-        background-color: ${colors?.warning[100]};
-        svg {
-          fill: ${colors?.warning[400]}
-        }
-        `;
-  }}
+  background-color: ${warning100};
+  svg {
+    fill: ${warning400};
+  }
 `;
 
 export const NoGeneSelectedDiv = styled.div`
@@ -138,17 +114,16 @@ export const NoGeneSelectedDiv = styled.div`
 export const MessageDiv = styled.div`
   ${fontBodyXs}
   font-weight: 400;
-  color: ${gray500};
+
   padding: 10px;
   &.title {
     color: black;
     ${fontHeaderM}
     font-weight: 700;
   }
+  color: ${gray500};
 `;
 
 export const CustomIcon = styled(Icon)`
-  && {
-    color: ${gray500};
-  }
+  color: ${gray500};
 `;

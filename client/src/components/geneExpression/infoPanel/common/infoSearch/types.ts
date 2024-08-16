@@ -1,4 +1,4 @@
-import { AppDispatch } from "../../../reducers";
+import { AppDispatch } from "../../../../../reducers";
 
 export interface FuzzySortResult {
   target: string;

@@ -39,6 +39,15 @@ const BottomBanner = memo(
       });
     };
 
+    const bannerContent: JSX.Element = (
+      <span>
+        {BOTTOM_BANNER_SURVEY_TEXT}
+        <StyledLink href={surveyLink} target="_blank" rel="noopener">
+          {BOTTOM_BANNER_SURVEY_LINK_TEXT}
+        </StyledLink>
+      </span>
+    );
+
     if (!showBottomBanner) return null;
 
     return (
@@ -51,16 +60,9 @@ const BottomBanner = memo(
             dismissible
             sdsType="primary"
             onClose={setBottomBannerLastClosedTime}
-            // @ts-expect-error -- czifui Banner component types text prop as a string but the prop works with JSX as well
-            text={
-              <span>
-                {BOTTOM_BANNER_SURVEY_TEXT}
-                <StyledLink href={surveyLink} target="_blank" rel="noopener">
-                  {BOTTOM_BANNER_SURVEY_LINK_TEXT}
-                </StyledLink>
-              </span>
-            }
-          />
+          >
+            {bannerContent}
+          </StyledBanner>
         </StyledBottomBannerWrapper>
       </>
     );

@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { Banner, Icon } from "czifui";
+import { Banner, Icon } from "@czi-sds/components";
 import { beta100, beta400, gray500 } from "../theme";
 
 export const SKINNY_MODE_BREAKPOINT_WIDTH = 960;

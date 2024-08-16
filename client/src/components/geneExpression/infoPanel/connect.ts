@@ -1,4 +1,4 @@
-import { ChangeEvent, useEffect, useState } from "react";
+import { SyntheticEvent, useEffect, useState } from "react";
 import { AppDispatch } from "../../../reducers";
 import { ActiveTab } from "../../../common/types/entities";
 
@@ -15,7 +15,7 @@ function useConnect({
    * TODO: update to <string, ActiveTab> once we upgrade MUI
    */
   const handleTabsChange = (
-    _: ChangeEvent<Record<string, unknown>>,
+    _: SyntheticEvent<Element, Event>,
     activeTabValue: ActiveTab
   ) => {
     setTabValue(activeTabValue);

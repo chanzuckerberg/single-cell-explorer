@@ -1,9 +1,7 @@
 import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
-import { Icon as InfoCircle, IconButton } from "czifui";
-
-import { AnchorButton, Classes } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
@@ -23,6 +21,7 @@ import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
 import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
 import { ColorTable } from "../../../util/stateManager/colorHelpers";
 import { ActiveTab } from "../../../common/types/entities";
+import { InfoButton, InfoButtonWrapper, InfoCircle } from "./style";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -646,26 +645,18 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
               </span>
             </Truncate>
             {isCellInfo && (
-              <div style={{ display: "inline-block", marginLeft: "0" }}>
-                <AnchorButton
-                  small
-                  minimal
-                  intent="none"
+              <InfoButtonWrapper>
+                <InfoButton
                   data-testid={`get-info-${metadataField}-${displayString}`}
                   onClick={() => this.handleDisplayCellTypeInfo(displayString)}
-                  style={{ minHeight: "18px", minWidth: "18px", padding: 0 }}
                 >
-                  <IconButton disabled={false} sdsSize="small">
-                    <div style={{ filter: "grayscale(100%)" }}>
-                      <InfoCircle
-                        sdsIcon="infoCircle"
-                        sdsSize="s"
-                        sdsType="iconButton"
-                      />
-                    </div>
-                  </IconButton>
-                </AnchorButton>
-              </div>
+                  <InfoCircle
+                    sdsIcon="InfoCircle"
+                    sdsSize="xs"
+                    sdsType="iconButton"
+                  />
+                </InfoButton>
+              </InfoButtonWrapper>
             )}
           </div>
           <span style={{ flexShrink: 0 }}>

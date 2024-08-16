@@ -1,8 +1,8 @@
 import fuzzysort from "fuzzysort";
 
-import actions from "../../../actions";
+import actions from "../../../../../actions";
 import { Item } from "./types";
-import { AppDispatch } from "../../../reducers";
+import { AppDispatch } from "../../../../../reducers";
 
 export default function useConnect({
   infoType,

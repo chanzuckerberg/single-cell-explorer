@@ -12,7 +12,7 @@ import {
   mapDispatchToProps,
 } from "./types";
 import useConnect from "./connect";
-import { InfoSearchWrapper } from "./styles";
+import { InfoSearchWrapper } from "./style";
 
 function InfoSearch(props: Props) {
   const { infoType, isLoading, quickList, dispatch } = props;
