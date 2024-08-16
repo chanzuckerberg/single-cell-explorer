@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.3.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.2.0...v1.3.0) (2024-08-16)
+
+
+### Misc
+
+* Upgrade to BlueprintJS 5 - SCE-4 ([#1068](https://github.com/chanzuckerberg/single-cell-explorer/issues/1068)) ([f3a4184](https://github.com/chanzuckerberg/single-cell-explorer/commit/f3a4184a1affc44d7302302dd3e1237dd594f730))
+
+
+### Features
+
+* SCE-9 NavBar Update ([#1072](https://github.com/chanzuckerberg/single-cell-explorer/issues/1072)) ([deb9ec1](https://github.com/chanzuckerberg/single-cell-explorer/commit/deb9ec12acd3faccdbc0f9386cc80689c72c104c))
+
+
+### Bug Fixes
+
+* Check for slide-seq ([#1071](https://github.com/chanzuckerberg/single-cell-explorer/issues/1071)) ([0bf3040](https://github.com/chanzuckerberg/single-cell-explorer/commit/0bf3040e33af8a23743ff61caaa76ea7ea864423))
+* Spatial mode dot size on highlight ([#1074](https://github.com/chanzuckerberg/single-cell-explorer/issues/1074)) ([2190482](https://github.com/chanzuckerberg/single-cell-explorer/commit/219048280f63fe4cf7a73afb6ce76ed417089a9b))
+
+
+### Tests
+
+* Fix e2e test cellCount diff by 1 ([#1069](https://github.com/chanzuckerberg/single-cell-explorer/issues/1069)) ([4ce2809](https://github.com/chanzuckerberg/single-cell-explorer/commit/4ce280939a621e36abad1ea7f450e4a8ab937eb6))
+
 ## [1.2.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.1.1...v1.2.0) (2024-08-07)
 
 
