@@ -26,6 +26,15 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch,
 });
 
+const getBannerContent = (surveyLink: string): JSX.Element => (
+  <span>
+    {BOTTOM_BANNER_SURVEY_TEXT}
+    <StyledLink href={surveyLink} target="_blank" rel="noopener">
+      {BOTTOM_BANNER_SURVEY_LINK_TEXT}
+    </StyledLink>
+  </span>
+);
+
 const BottomBanner = memo(
   ({
     surveyLink,
@@ -38,15 +47,6 @@ const BottomBanner = memo(
         time: Date.now(),
       });
     };
-
-    const bannerContent: JSX.Element = (
-      <span>
-        {BOTTOM_BANNER_SURVEY_TEXT}
-        <StyledLink href={surveyLink} target="_blank" rel="noopener">
-          {BOTTOM_BANNER_SURVEY_LINK_TEXT}
-        </StyledLink>
-      </span>
-    );
 
     if (!showBottomBanner) return null;
 
@@ -61,7 +61,7 @@ const BottomBanner = memo(
             sdsType="primary"
             onClose={setBottomBannerLastClosedTime}
           >
-            {bannerContent}
+            {getBannerContent(surveyLink)}
           </StyledBanner>
         </StyledBottomBannerWrapper>
       </>

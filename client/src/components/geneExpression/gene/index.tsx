@@ -16,11 +16,7 @@ import { EVENTS } from "../../../analytics/events";
 import { ActiveTab } from "../../../common/types/entities";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
-import {
-  InfoButton,
-  InfoButtonWrapper,
-  InfoCircle,
-} from "../../categorical/value/style";
+import { InfoButton, InfoButtonWrapper } from "../../../common/style";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -163,13 +159,11 @@ class Gene extends React.Component<Props, State> {
                 data-testid={`get-info-${gene}`}
                 onClick={this.handleDisplayGeneInfo}
                 disabled={!isGeneExpressionComplete}
-              >
-                <InfoCircle
-                  sdsIcon="InfoCircle"
-                  sdsSize="xs"
-                  sdsType="iconButton"
-                />
-              </InfoButton>
+                sdsType="tertiary"
+                sdsStyle="icon"
+                icon="InfoCircle"
+                sdsSize="small"
+              />
             </InfoButtonWrapper>
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>

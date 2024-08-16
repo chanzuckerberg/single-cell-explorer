@@ -21,7 +21,7 @@ import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
 import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
 import { ColorTable } from "../../../util/stateManager/colorHelpers";
 import { ActiveTab } from "../../../common/types/entities";
-import { InfoButton, InfoButtonWrapper, InfoCircle } from "./style";
+import { InfoButton, InfoButtonWrapper } from "../../../common/style";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -123,13 +123,13 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     }
   }
 
-  labelNameError = (name: any) => {
+  labelNameError = (name: string) => {
     const { metadataField, schema } = this.props;
     if (name === this.currentLabelAsString()) return false;
     return isLabelErroneous(name, metadataField, schema);
   };
 
-  instruction = (label: any) =>
+  instruction = (label: string) =>
     labelPrompt(this.labelNameError(label), "New, unique label", ":");
 
   activateEditLabelMode = () => {
@@ -649,13 +649,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 <InfoButton
                   data-testid={`get-info-${metadataField}-${displayString}`}
                   onClick={() => this.handleDisplayCellTypeInfo(displayString)}
-                >
-                  <InfoCircle
-                    sdsIcon="InfoCircle"
-                    sdsSize="xs"
-                    sdsType="iconButton"
-                  />
-                </InfoButton>
+                  sdsType="tertiary"
+                  sdsStyle="icon"
+                  icon="InfoCircle"
+                  sdsSize="small"
+                />
               </InfoButtonWrapper>
             )}
           </div>

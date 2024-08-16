@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
-import { Button, Icon } from "@czi-sds/components";
-import { gray600 } from "../../theme";
+import { Button } from "@czi-sds/components";
 
 export const InfoButton = styled(Button)`
   padding: 0;
@@ -15,10 +14,4 @@ export const InfoButtonWrapper = styled.div`
   display: inline-block;
   height: 18px;
   width: 18px;
-`;
-
-export const InfoCircle = styled(Icon)`
-  width: 12px;
-  height: 12px;
-  color: ${gray600};
 `;

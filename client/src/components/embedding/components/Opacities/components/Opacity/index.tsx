@@ -28,7 +28,10 @@ const MARKS = [
 interface Props {
   name: string;
   value: number;
-  handleChange: (event: Event, value: number | number[]) => void;
+  handleChange: (
+    event: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    value: number | number[]
+  ) => void;
 }
 
 export default function Opacity({ name, value, handleChange }: Props) {
@@ -47,10 +50,7 @@ export default function Opacity({ name, value, handleChange }: Props) {
             sdsType="textField"
             value={value}
             onChange={(event) => {
-              handleChange(
-                event as unknown as Event,
-                Number(event.target.value)
-              );
+              handleChange(event, Number(event.target.value));
             }}
             type="number"
             inputProps={{

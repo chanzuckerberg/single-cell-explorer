@@ -26,14 +26,20 @@ function Opacities({ imageOpacity, dotOpacity, dispatch }: Props) {
     </Wrapper>
   );
 
-  function handleImageOpacityChange(_: Event, value: number | number[]) {
+  function handleImageOpacityChange(
+    _: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    value: number | number[]
+  ) {
     dispatch({
       type: "set image opacity",
       data: value,
     });
   }
 
-  function handleDotOpacityChange(_: Event, value: number | number[]) {
+  function handleDotOpacityChange(
+    _: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    value: number | number[]
+  ) {
     dispatch({
       type: "set dot opacity",
       data: value,
