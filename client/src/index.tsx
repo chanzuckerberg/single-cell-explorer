@@ -18,6 +18,13 @@ import "./assets/img/chrome.png";
 import "./assets/img/firefox.png";
 import "./assets/img/edge.png";
 import "./assets/img/cellxgene.png";
+
+/**
+ * These are imported for Webpack asset/resource module
+ * to bundle in order to be used in open graph meta tags
+ */
+import "./assets/img/cxg-explorer-og.jpg";
+
 import { checkFeatureFlags } from "./util/featureFlags/featureFlags";
 
 FocusStyleManager.onlyShowFocusOnTabs();
