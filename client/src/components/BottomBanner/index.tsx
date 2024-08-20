@@ -26,45 +26,45 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch,
 });
 
-const BottomBanner = memo(
-  ({
-    surveyLink,
-    showBottomBanner,
-    dispatch,
-  }: BottomBannerProps): JSX.Element | null => {
-    const setBottomBannerLastClosedTime = () => {
-      dispatch({
-        type: "update bottom banner last closed time",
-        time: Date.now(),
-      });
-    };
+function BannerContent({ surveyLink }: { surveyLink: string }): JSX.Element {
+  return (
+    <span>
+      {BOTTOM_BANNER_SURVEY_TEXT}
+      <StyledLink href={surveyLink} target="_blank" rel="noopener">
+        {BOTTOM_BANNER_SURVEY_LINK_TEXT}
+      </StyledLink>
+    </span>
+  );
+}
 
-    if (!showBottomBanner) return null;
+function BottomBanner({
+  surveyLink,
+  showBottomBanner,
+  dispatch,
+}: BottomBannerProps): JSX.Element | null {
+  const setBottomBannerLastClosedTime = () => {
+    dispatch({
+      type: "update bottom banner last closed time",
+      time: Date.now(),
+    });
+  };
 
-    return (
-      <>
-        <StyledBottomBannerWrapper
-          id={BOTTOM_BANNER_ID}
-          data-testid={BOTTOM_BANNER_ID}
-        >
-          <StyledBanner
-            dismissible
-            sdsType="primary"
-            onClose={setBottomBannerLastClosedTime}
-            // @ts-expect-error -- czifui Banner component types text prop as a string but the prop works with JSX as well
-            text={
-              <span>
-                {BOTTOM_BANNER_SURVEY_TEXT}
-                <StyledLink href={surveyLink} target="_blank" rel="noopener">
-                  {BOTTOM_BANNER_SURVEY_LINK_TEXT}
-                </StyledLink>
-              </span>
-            }
-          />
-        </StyledBottomBannerWrapper>
-      </>
-    );
-  }
-);
+  if (!showBottomBanner) return null;
 
-export default connect(mapStateToProps, mapDispatchToProps)(BottomBanner);
+  return (
+    <StyledBottomBannerWrapper
+      id={BOTTOM_BANNER_ID}
+      data-testid={BOTTOM_BANNER_ID}
+    >
+      <StyledBanner
+        dismissible
+        sdsType="primary"
+        onClose={setBottomBannerLastClosedTime}
+      >
+        <BannerContent surveyLink={surveyLink} />
+      </StyledBanner>
+    </StyledBottomBannerWrapper>
+  );
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(memo(BottomBanner));

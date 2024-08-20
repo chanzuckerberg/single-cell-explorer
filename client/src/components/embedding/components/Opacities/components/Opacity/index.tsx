@@ -1,7 +1,5 @@
-import React, { ChangeEvent } from "react";
-import { InputSlider } from "czifui";
-import { SliderProps } from "@material-ui/core";
-
+import React from "react";
+import { InputSlider } from "@czi-sds/components";
 import { kebabCase } from "lodash";
 import {
   HeaderWrapper,
@@ -31,7 +29,7 @@ interface Props {
   name: string;
   value: number;
   handleChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: number | number[]
   ) => void;
 }
@@ -73,7 +71,7 @@ export default function Opacity({ name, value, handleChange }: Props) {
         step={10}
         min={0}
         max={100}
-        onChange={handleChange as SliderProps["onChange"]}
+        onChange={handleChange}
       />
     </>
   );

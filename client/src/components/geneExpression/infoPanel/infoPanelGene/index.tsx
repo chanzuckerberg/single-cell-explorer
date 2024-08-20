@@ -6,7 +6,6 @@ import InfoPanelContainer from "../common/infoPanelContainer";
 
 import { EMPTY_ARRAY } from "../../../../common/constants";
 
-
 function GeneInfo(props: Props) {
   const { geneInfo, geneList } = props;
 

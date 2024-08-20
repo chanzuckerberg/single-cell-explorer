@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { InputText } from "czifui";
+import { InputText } from "@czi-sds/components";
 import {
   fontWeightBold,
   spacesM,
@@ -40,6 +40,7 @@ export const StyledInputText = styled(InputText)`
   /* Firefox remove up/down arrow */
   input[type="number"] {
     -moz-appearance: textfield;
+    appearance: textfield;
   }
 
   input {

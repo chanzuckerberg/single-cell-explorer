@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { AnchorButton, ButtonGroup } from "@blueprintjs/core";
-import { Tabs, Tab } from "czifui";
+import { Tabs, Tab } from "@czi-sds/components";
 
 import {
   CollapseToggle,

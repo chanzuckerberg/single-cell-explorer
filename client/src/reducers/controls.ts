@@ -301,7 +301,7 @@ const Controls = (
           geneName: action.info.name,
           geneSummary: action.info.summary,
           geneSynonyms: action.info.synonyms,
-          geneUrl: action.info.url,
+          geneUrl: action.info.ncbi_url,
           showWarningBanner: action.info.show_warning_banner,
           loading: false,
         },

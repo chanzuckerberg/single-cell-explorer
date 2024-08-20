@@ -8,7 +8,7 @@ import {
   ShowInfo,
 } from "../infoPanelParts";
 import { ExtendedInfoProps } from "../types";
-import InfoSearch from "../../../infoSearch";
+import InfoSearch from "../infoSearch";
 
 function InfoPanelContainer(props: ExtendedInfoProps) {
   const {

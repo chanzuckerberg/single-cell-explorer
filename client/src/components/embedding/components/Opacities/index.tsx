@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
 
 import { connect } from "react-redux";
 import { Section, Wrapper } from "./style";
@@ -27,7 +27,7 @@ function Opacities({ imageOpacity, dotOpacity, dispatch }: Props) {
   );
 
   function handleImageOpacityChange(
-    _: ChangeEvent<unknown>,
+    _: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: number | number[]
   ) {
     dispatch({
@@ -37,7 +37,7 @@ function Opacities({ imageOpacity, dotOpacity, dispatch }: Props) {
   }
 
   function handleDotOpacityChange(
-    _: ChangeEvent<unknown>,
+    _: Event | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: number | number[]
   ) {
     dispatch({
