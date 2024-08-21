@@ -11,8 +11,8 @@ let ToastTopCenter: Toaster | null = null;
  * OverlayToaster.create() in blueprintjs v5 throws a console error of
  * "uses ReactDOM.render which is being deprecated in React 18"
  * This is a known issue until blueprintjs v6 is released.
- * https://github.com/palantir/blueprint/issues/5212
- * using any of the other pethods invokes the same error.
+ * https://github.com/palantir/blueprint/issues/5212#issuecomment-1294958195
+ * using any of the alternative methods invokes the same error.
  * https://blueprintjs.com/docs/#core/components/toast.overlaytoaster
  */
 if (typeof document !== "undefined") {
