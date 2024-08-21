@@ -101,6 +101,7 @@ module.exports = {
       "error",
       { ignoreVoid: true, ignoreIIFE: true },
     ],
+    "jsx-a11y/label-has-associated-control": ["warn"],
   },
   overrides: [
     // Override some TypeScript rules just for .js files
