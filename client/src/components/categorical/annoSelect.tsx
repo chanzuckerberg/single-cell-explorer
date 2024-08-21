@@ -1,64 +1,62 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Button, MenuItem } from "@blueprintjs/core";
-import { Select } from "@blueprintjs/select";
+import { Select, ItemRenderer, ItemRendererProps } from "@blueprintjs/select";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-type State = any;
+type Props = {
+  allCategoryNames: string[];
+  categoryToDuplicate: string | null;
+  handleModalDuplicateCategorySelection: (item: string) => void;
+};
 
-// eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class DuplicateCategorySelect extends React.PureComponent<{}, State> {
-  // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-  constructor(props: {}) {
-    super(props);
-    this.state = {};
-  }
+function DuplicateCategorySelect(props: Props) {
+  const {
+    allCategoryNames,
+    categoryToDuplicate,
+    handleModalDuplicateCategorySelection,
+  } = props;
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
-  render() {
-    const {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'allCategoryNames' does not exist on type... Remove this comment to see the full error message
-      allCategoryNames,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryToDuplicate' does not exist on t... Remove this comment to see the full error message
-      categoryToDuplicate,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleModalDuplicateCategorySelection' d... Remove this comment to see the full error message
-      handleModalDuplicateCategorySelection,
-    } = this.props;
-    return (
-      <div>
-        <p>
-          Optionally duplicate all labels & cell assignments from existing
-          category into new category:
-        </p>
-        <Select
-          items={
-            allCategoryNames ||
-            [] /* this is a placeholder, could be  a subcomponent to avoid this */
-          }
-          filterable={false}
-          itemRenderer={(d, { handleClick }) => (
-            <MenuItem
-              data-testid="duplicate-category-dropdown-option"
-              onClick={handleClick}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type 'unknown' is not assignable to type 'Key | nu... Remove this comment to see the full error message
-              key={d}
-              text={d}
-            />
-          )}
-          noResults={<MenuItem disabled text="No results." />}
-          onItemSelect={(d) => {
-            handleModalDuplicateCategorySelection(d);
-          }}
-        >
-          {/* children become the popover target; render value here */}
-          <Button
-            data-testid="duplicate-category-dropdown"
-            text={categoryToDuplicate || "None (all cells 'unassigned')"}
-            rightIcon="double-caret-vertical"
-          />
-        </Select>
-      </div>
-    );
-  }
+  const itemRenderer: ItemRenderer<string> = useCallback(
+    (item: string, { handleClick, modifiers }: ItemRendererProps) => (
+      <MenuItem
+        data-testid="duplicate-category-dropdown-option"
+        onClick={handleClick}
+        key={item}
+        text={item}
+        active={modifiers.active}
+        disabled={modifiers.disabled}
+      />
+    ),
+    []
+  );
+
+  const onItemSelect = useCallback(
+    (item: string) => {
+      handleModalDuplicateCategorySelection(item);
+    },
+    [handleModalDuplicateCategorySelection]
+  );
+
+  return (
+    <div>
+      <p>
+        Optionally duplicate all labels & cell assignments from existing
+        category into new category:
+      </p>
+      <Select
+        items={allCategoryNames || []}
+        filterable={false}
+        itemRenderer={itemRenderer}
+        noResults={<MenuItem disabled text="No results." />}
+        onItemSelect={onItemSelect}
+      >
+        <Button
+          data-testid="duplicate-category-dropdown"
+          text={categoryToDuplicate || "None (all cells 'unassigned')"}
+          rightIcon="double-caret-vertical"
+        />
+      </Select>
+    </div>
+  );
 }
 
 export default DuplicateCategorySelect;

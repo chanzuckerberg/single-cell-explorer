@@ -35,7 +35,7 @@ interface HeaderProps {
   tosURL?: string;
   privacyURL?: string;
 }
-const Header = (props: HeaderProps) => {
+function Header(props: HeaderProps) {
   const { tosURL, privacyURL } = props;
   return (
     <Wrapper data-testid="header">
@@ -234,9 +234,6 @@ const Header = (props: HeaderProps) => {
   function handleDEClick(): void {
     track(EVENTS.DE_CLICK_NAV);
   }
-};
-Header.defaultProps = {
-  tosURL: undefined,
-  privacyURL: undefined,
-};
+}
+
 export default Header;

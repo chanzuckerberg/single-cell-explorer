@@ -29,8 +29,4 @@ function Controls(props: Props): JSX.Element {
   );
 }
 
-Controls.defaultProps = {
-  bottom: undefined,
-};
-
 export default Controls;

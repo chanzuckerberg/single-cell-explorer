@@ -1,4 +1,4 @@
-import { Position, Toaster, Intent } from "@blueprintjs/core";
+import { Position, OverlayToaster, Intent, Toaster } from "@blueprintjs/core";
 
 /* styles */
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
@@ -8,7 +8,7 @@ import styles from "./toasters.css";
 let ToastTopCenter: Toaster | null = null;
 
 if (typeof document !== "undefined") {
-  ToastTopCenter = Toaster.create({
+  ToastTopCenter = OverlayToaster.create({
     className: "recipe-toaster",
     position: Position.TOP,
     maxToasts: 4,

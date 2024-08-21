@@ -1,7 +1,8 @@
-import React, { Children, useState } from "react";
+import React, { Children, ReactNode, useState } from "react";
 import * as globals from "../../globals";
 
 interface Props {
+  children: ReactNode;
   addTopPadding: boolean;
   renderGraph?: (viewport: HTMLDivElement) => React.ReactNode;
 }
@@ -17,10 +18,8 @@ interface Props {
   should be.
 */
 
-const Layout: React.FC<Props> = (props) => {
+function Layout({ children, addTopPadding, renderGraph = undefined }: Props) {
   const [viewportRef, setViewportRef] = useState<HTMLDivElement | null>(null);
-
-  const { children, addTopPadding, renderGraph } = props;
   const [leftSidebar, rightSidebar] = Children.toArray(children);
   let graphComponent = null;
   if (viewportRef && renderGraph) {
@@ -88,9 +87,6 @@ const Layout: React.FC<Props> = (props) => {
       </div>
     </div>
   );
-};
+}
 
-Layout.defaultProps = {
-  renderGraph: undefined,
-};
 export default Layout;

@@ -22,28 +22,26 @@ function LayoutSkeleton(): JSX.Element {
   return (
     <Layout addTopPadding>
       <LeftSidebarSkeleton />
-      {() => (
-        <Controls>
-          <div
-            style={{
-              height: 30,
-              position: "relative",
-              top: 8,
-              width: `calc(100% - ${WIDTH_MENUBAR}px - ${PADDING_CONTROLS}px)`,
-            }}
-            className={SKELETON}
-          />
-          <div
-            style={{
-              height: 30,
-              position: "relative",
-              top: 8,
-              width: WIDTH_MENUBAR,
-            }}
-            className={SKELETON}
-          />
-        </Controls>
-      )}
+      <Controls>
+        <div
+          style={{
+            height: 30,
+            position: "relative",
+            top: 8,
+            width: `calc(100% - ${WIDTH_MENUBAR}px - ${PADDING_CONTROLS}px)`,
+          }}
+          className={SKELETON}
+        />
+        <div
+          style={{
+            height: 30,
+            position: "relative",
+            top: 8,
+            width: WIDTH_MENUBAR,
+          }}
+          className={SKELETON}
+        />
+      </Controls>
       <RightSidebarSkeleton />
     </Layout>
   );
