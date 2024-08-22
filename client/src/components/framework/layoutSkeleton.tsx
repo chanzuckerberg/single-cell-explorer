@@ -8,12 +8,6 @@ import Layout from "./layout";
 import LeftSidebarSkeleton from "../leftSidebar/leftSidebarSkeleton";
 import RightSidebarSkeleton from "../rightSidebar/rightSidebarSkeleton";
 
-/* Padding between dataset selector and menubar */
-const PADDING_CONTROLS = 10;
-
-/* Width of menubar */
-const WIDTH_MENUBAR = 482;
-
 /**
  * Skeleton layout component displayed when in loading state.
  * @returns Markup displaying skeleton.
@@ -22,27 +16,19 @@ function LayoutSkeleton(): JSX.Element {
   return (
     <Layout addTopPadding>
       <LeftSidebarSkeleton />
+      <RightSidebarSkeleton />
       <Controls>
         <div
           style={{
             height: 30,
             position: "relative",
             top: 8,
-            width: `calc(100% - ${WIDTH_MENUBAR}px - ${PADDING_CONTROLS}px)`,
+            width: "100%",
           }}
           className={SKELETON}
-        />
-        <div
-          style={{
-            height: 30,
-            position: "relative",
-            top: 8,
-            width: WIDTH_MENUBAR,
-          }}
-          className={SKELETON}
+          data-testid="menubar-skeleton"
         />
       </Controls>
-      <RightSidebarSkeleton />
     </Layout>
   );
 }
