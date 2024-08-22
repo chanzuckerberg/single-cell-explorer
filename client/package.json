@@ -98,6 +98,7 @@
     "regl": "^2.1.0",
     "sha1": "^1.1.1",
     "tinyqueue": "^2.0.3",
+    "web-streams-node": "^0.4.0",
     "whatwg-fetch": "^3.2.0"
   },
   "devDependencies": {
