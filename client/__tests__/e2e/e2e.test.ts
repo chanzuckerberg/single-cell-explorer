@@ -825,28 +825,39 @@ for (const testDataset of testDatasets) {
           await page.getByTestId("mode-pan-zoom").click();
 
           const categoryValue = Object.keys(data.categorical[category])[0];
+
           const initialCoordinates = await getElementCoordinates(
             `centroid-label`,
             categoryValue,
             page
           );
 
+          /*
+           * initialCoordinates needs offset for the scroll to work
+           * as the scroll function doesn't work on the centroid label
+           * directly. These are arbitrary numbers that works for the test
+           */
+          const offsetCoordinates = [
+            initialCoordinates[0] + 50,
+            initialCoordinates[1] + 150,
+          ];
+
           await tryUntil(
             async () => {
               await scroll({
                 testId: graphTestId,
                 deltaY: -10000,
-                coords: initialCoordinates,
+                coords: offsetCoordinates,
                 page,
               });
-
-              const newGraph = page.getByTestId("graph-wrapper");
-              const newDistance =
-                (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-              expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
             },
             { page }
           );
+
+          const newGraph = page.getByTestId("graph-wrapper");
+          const newDistance =
+            (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
+          expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
 
           await snapshotTestGraph(page, testInfo);
         });
