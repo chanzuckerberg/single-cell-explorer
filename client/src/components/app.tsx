@@ -1,5 +1,4 @@
 import React from "react";
-import Helmet from "react-helmet";
 import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
@@ -81,7 +80,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
         <StyledEngineProvider injectFirst>
           <EmotionThemeProvider theme={theme}>
             <ThemeProvider theme={theme}>
-              <Helmet title="CELL&times;GENE | Explorer" />
               {loading ? <LayoutSkeleton /> : null}
               {error ? (
                 <div
