@@ -756,7 +756,7 @@ export async function addGeneToSearch(
     .getByTestId(`gene-search`)
     .getByPlaceholder("Quick Gene Search")
     .fill(geneName);
-  await page.keyboard.press("Enter");
+  await page.getByTestId(`suggest-menu-item-${geneName}`).click();
   expect(page.getByTestId(`histogram-${geneName}`)).toBeTruthy();
 }
 

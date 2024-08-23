@@ -832,22 +832,12 @@ for (const testDataset of testDatasets) {
             page
           );
 
-          /*
-           * initialCoordinates needs offset for the scroll to work
-           * as the scroll function doesn't work on the centroid label
-           * directly. These are arbitrary numbers that works for the test
-           */
-          const offsetCoordinates = [
-            initialCoordinates[0] + 50,
-            initialCoordinates[1] + 150,
-          ];
-
           await tryUntil(
             async () => {
               await scroll({
                 testId: graphTestId,
                 deltaY: -10000,
-                coords: offsetCoordinates,
+                coords: initialCoordinates,
                 page,
               });
             },

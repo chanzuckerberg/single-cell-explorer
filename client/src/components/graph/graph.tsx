@@ -1375,13 +1375,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
         )}
         {/* If sidepanel don't show centroids */}
         {!isSidePanel && (
+          /**  @ts-expect-error TODO: type GraphOverlayLayer**/
           <GraphOverlayLayer
             width={viewport.width}
             height={viewport.height}
             cameraTF={cameraTF as number[]}
             modelTF={modelTF as unknown as number[]}
             projectionTF={projectionTF as number[]}
-            handleCanvasEvent={() =>
+            handleCanvasEvent={
               graphInteractionMode === "zoom"
                 ? this.handleCanvasEvent
                 : undefined
