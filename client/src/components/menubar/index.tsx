@@ -279,7 +279,11 @@ const MenuBar = ({
             </ButtonGroup>
 
             <Tooltip
-              content="Download the current graph view as a PNG"
+              content={
+                <span data-chromatic="ignore">
+                  Download the current graph view as a PNG
+                </span>
+              }
               position="bottom"
               hoverOpenDelay={globals.tooltipHoverOpenDelay}
             >

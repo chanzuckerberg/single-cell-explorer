@@ -191,6 +191,7 @@ class GeneExpression extends React.Component<{}, State> {
         <QuickGene />
         <div>
           <div
+            data-chromatic="ignore"
             style={{
               display: "flex",
               flexDirection: "row",
@@ -202,6 +203,7 @@ class GeneExpression extends React.Component<{}, State> {
               // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
               tabIndex="0"
               data-testid="geneset-heading-expand"
+              data-chromatic="ignore"
               onKeyPress={this.handleExpandGeneSets}
               style={{
                 cursor: "pointer",
