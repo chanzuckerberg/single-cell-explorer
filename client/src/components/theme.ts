@@ -60,7 +60,12 @@ export const cornersNone = (props: CommonThemeProps) => getCorners(props)?.none;
 const tabularNums = "tabular-nums";
 
 const typography = {
-  fontFamily: "Roboto Condensed",
+  fontFamily: {
+    body: "Roboto Condensed",
+    caps: "Roboto Condensed",
+    header: "Roboto Condensed",
+    tabular: "Roboto Condensed",
+  },
 
   styles: {
     body: {
@@ -428,7 +433,6 @@ export const shadowL = (props: CommonThemeProps) => getShadows(props)?.l;
 export const shadowM = (props: CommonThemeProps) => getShadows(props)?.m;
 export const shadowS = (props: CommonThemeProps) => getShadows(props)?.s;
 
-// @ts-expect-error due to Typography mismatch in ThemeOptions
 const appTheme = makeThemeOptions(themeOptions);
 
 export const theme = createTheme(appTheme);

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.0...v1.4.1) (2024-08-27)
+
+
+### Bug Fixes
+
+* og:title/image and fontFamily ([#1082](https://github.com/chanzuckerberg/single-cell-explorer/issues/1082)) ([b17d22d](https://github.com/chanzuckerberg/single-cell-explorer/commit/b17d22d41aba010e07c3a45605149922c6b56894))
+
 ## [1.4.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.3.0...v1.4.0) (2024-08-23)
 
 
