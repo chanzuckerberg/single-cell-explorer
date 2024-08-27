@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.3.0...v1.4.0) (2024-08-23)
+
+
+### Misc
+
+* Upgrade MUI and SDS - SCE-3 SCE-2 ([#1075](https://github.com/chanzuckerberg/single-cell-explorer/issues/1075)) ([270653c](https://github.com/chanzuckerberg/single-cell-explorer/commit/270653ce3aad9a45771d6ef9be94fc496e768337))
+
+
+### Features
+
+* Add og:image and og:title ([#1078](https://github.com/chanzuckerberg/single-cell-explorer/issues/1078)) ([261ff81](https://github.com/chanzuckerberg/single-cell-explorer/commit/261ff81f421b9f0a223be6e1300eff3d63da7ed7))
+
 ## [1.3.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.2.0...v1.3.0) (2024-08-16)
 
 
