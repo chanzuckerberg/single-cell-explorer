@@ -65,7 +65,6 @@
     "@mui/icons-material": "^5.16.7",
     "@mui/lab": "^5.0.0-alpha.173",
     "@mui/material": "^5.16.7",
-    "@playwright/test": "^1.46.1",
     "abort-controller": "^3.0.0",
     "core-js": "^3.6.5",
     "d3": "^4.10.0",
@@ -98,7 +97,6 @@
     "regl": "^2.1.0",
     "sha1": "^1.1.1",
     "tinyqueue": "^2.0.3",
-    "web-streams-polyfill": "^4.0.0",
     "whatwg-fetch": "^3.2.0"
   },
   "devDependencies": {
@@ -120,6 +118,7 @@
     "@babel/runtime": "^7.13.16",
     "@blueprintjs/eslint-plugin": "^0.3.0",
     "@chromatic-com/playwright": "^0.6.18",
+    "@playwright/test": "^1.46.1",
     "@sentry/webpack-plugin": "^1.15.0",
     "@storybook/addon-essentials": "^7.6.12",
     "@storybook/addon-interactions": "^7.6.12",
@@ -202,6 +201,7 @@
     "storybook": "^8.2.9",
     "terser-webpack-plugin": "^5.1.1",
     "typescript": "^4.3.5",
+    "web-streams-polyfill": "^4.0.0",
     "webpack": "^5.34.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-middleware": "^5.3.4",

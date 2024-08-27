@@ -825,7 +825,6 @@ for (const testDataset of testDatasets) {
           await page.getByTestId("mode-pan-zoom").click();
 
           const categoryValue = Object.keys(data.categorical[category])[0];
-
           const initialCoordinates = await getElementCoordinates(
             `centroid-label`,
             categoryValue,
@@ -840,14 +839,13 @@ for (const testDataset of testDatasets) {
                 coords: initialCoordinates,
                 page,
               });
+              const newGraph = page.getByTestId("graph-wrapper");
+              const newDistance =
+                (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
+              expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
             },
             { page }
           );
-
-          const newGraph = page.getByTestId("graph-wrapper");
-          const newDistance =
-            (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
-          expect(parseFloat(newDistance)).toBe(SCALE_MAX_HIRES);
 
           await snapshotTestGraph(page, testInfo);
         });

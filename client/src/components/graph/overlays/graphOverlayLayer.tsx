@@ -57,7 +57,7 @@ export default class GraphOverlayLayer extends PureComponent<{}, State> {
       modelTF,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'projectionTF' does not exist on type 'Re... Remove this comment to see the full error message
       projectionTF,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'projectionTF' does not exist on type 'Re... Remove this comment to see the full error message
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'children' does not exist on type 'Re... Remove this comment to see the full error message
       children,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCanvasEvent' does not exist on typ... Remove this comment to see the full error message
       handleCanvasEvent,

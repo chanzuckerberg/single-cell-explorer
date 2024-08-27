@@ -1379,9 +1379,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
           <GraphOverlayLayer
             width={viewport.width}
             height={viewport.height}
-            cameraTF={cameraTF as number[]}
-            modelTF={modelTF as unknown as number[]}
-            projectionTF={projectionTF as number[]}
+            cameraTF={cameraTF}
+            modelTF={modelTF}
+            projectionTF={projectionTF}
             handleCanvasEvent={
               graphInteractionMode === "zoom"
                 ? this.handleCanvasEvent

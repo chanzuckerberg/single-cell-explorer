@@ -4,7 +4,6 @@ import { Provider } from "react-redux";
 import { HotkeysProvider, FocusStyleManager } from "@blueprintjs/core";
 
 import "./index.css";
-import "web-streams-polyfill/polyfill";
 
 /* our code */
 import App from "./components/app";

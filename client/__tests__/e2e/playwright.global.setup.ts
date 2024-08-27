@@ -18,7 +18,6 @@ const LOCAL_CONSOLE_ERROR_IGNORE_LIST = [
    * (thuang): Sometimes Google Font fails to load temporarily
    */
   "https://fonts.googleapis.com",
-  "Warning: ReactDOM.render is no longer supported in React 18. ",
 ];
 
 // (seve): mocking required to simulate metadata coming from data-portal needed for navigation header and breadcrumbs

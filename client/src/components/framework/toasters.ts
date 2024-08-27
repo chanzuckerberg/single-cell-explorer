@@ -1,4 +1,5 @@
 import { Position, OverlayToaster, Intent, Toaster } from "@blueprintjs/core";
+import { createRoot } from "react-dom/client";
 
 /* styles */
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
@@ -8,19 +9,28 @@ import styles from "./toasters.css";
 let ToastTopCenter: Toaster | null = null;
 
 /**
- * OverlayToaster.create() in blueprintjs v5 throws a console error of
- * "uses ReactDOM.render which is being deprecated in React 18"
- * This is a known issue until blueprintjs v6 is released.
- * https://github.com/palantir/blueprint/issues/5212#issuecomment-1294958195
- * using any of the alternative methods invokes the same error.
+ * A future major version of Blueprint will drop support for React versions before
+ * 18 and switch the default rendering function from ReactDOM.render to createRoot.
  * https://blueprintjs.com/docs/#core/components/toast.overlaytoaster
  */
 if (typeof document !== "undefined") {
-  ToastTopCenter = OverlayToaster.create({
-    className: "recipe-toaster",
-    position: Position.TOP,
-    maxToasts: 4,
-  });
+  OverlayToaster.createAsync(
+    {
+      className: "recipe-toaster",
+      position: Position.TOP,
+      maxToasts: 4,
+    },
+    {
+      domRenderer: (toaster, containerElement) =>
+        createRoot(containerElement).render(toaster),
+    }
+  )
+    .then((toaster) => {
+      ToastTopCenter = toaster;
+    })
+    .catch((error) => {
+      console.error("Failed to create toaster:", error);
+    });
 }
 
 /*
