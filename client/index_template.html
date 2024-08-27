@@ -67,6 +67,15 @@
     </noscript>
 
     <div id="root"></div>
+    <!-- Inject open graph image -->
+    <script>
+      document
+        .querySelector('meta[property="og:image"]')
+        .setAttribute(
+          "content",
+          `${window.location.pathname}static/images/cxg-explorer-og.jpg`
+        );
+    </script>
     <!-- for local testing add / to your file path /static/... -->
     <script
       async
