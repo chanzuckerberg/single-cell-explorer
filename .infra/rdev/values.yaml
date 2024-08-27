@@ -1,4 +1,13 @@
 stack:
+  global:
+    oidcProxy:
+      enabled: true
+      image:
+        repository: quay.io/oauth2-proxy/oauth2-proxy
+        tag: v7.6.0
+      replicaCount: 1
+      additionalSecrets:
+        - dev-sc-cluster-wide
   services:
     explorer:
       image:
