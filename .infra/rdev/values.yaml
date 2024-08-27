@@ -10,6 +10,7 @@ stack:
         - dev-sc-cluster-wide
   services:
     explorer:
+      oidcProtected: true
       image:
         tag: sha-78bf2226
       replicaCount: 1
