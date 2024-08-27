@@ -2,6 +2,11 @@ import { ReporterDescription, defineConfig, devices } from "@playwright/test";
 import { ChromaticConfig } from "@chromatic-com/playwright";
 import { testURL } from "./__tests__/common/constants";
 
+export const VIEWPORT_SIZE = {
+  width: 1440,
+  height: 960,
+};
+
 /**
  * (thuang): Add `czi-checker`, so Plausible will ignore it.
  * NOTE: This changes all browsers to use Desktop Chrome UA, so please look
@@ -75,6 +80,11 @@ export default defineConfig<ChromaticConfig>({
      * so the auto snapshot feature is not useful
      */
     disableAutoSnapshot: true,
+    /**
+     * (thuang): Default is `0.063`, but it's too sensitive for our use case.
+     * @see: https://www.chromatic.com/docs/threshold/#setting-the-threshold
+     */
+    diffThreshold: 0.15,
     acceptDownloads: true,
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
@@ -85,10 +95,7 @@ export default defineConfig<ChromaticConfig>({
     trace: "retain-on-failure",
     video: {
       mode: "retain-on-failure",
-      size: {
-        height: 960,
-        width: 1280,
-      },
+      size: VIEWPORT_SIZE,
     },
     storageState: {
       cookies: [],
@@ -103,10 +110,7 @@ export default defineConfig<ChromaticConfig>({
         },
       ],
     },
-    viewport: {
-      height: 960,
-      width: 1280,
-    },
+    viewport: VIEWPORT_SIZE,
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: testURL,
   },

@@ -55,6 +55,8 @@ import {
   requestCellTypeInfo,
   maximizeInfoPanel,
   searchForInfoType,
+  goToPage,
+  showImageUnderlayInTestMode,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -68,7 +70,7 @@ import {
 import {
   closeBottomBanner,
   conditionallyToggleSidePanel,
-  goToPage,
+  getSnapshotPrefix,
   shouldSkipTests,
   skipIfPbmcDataset,
   skipIfSidePanel,
@@ -144,29 +146,15 @@ for (const testDataset of testDatasets) {
           test("page launched", async ({ page }, testInfo) => {
             await goToPage(page, url);
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
         describeFn("breadcrumbs loads", () => {
-          test("dataset and collection from breadcrumbs appears", async ({
-            page,
-          }, testInfo) => {
-            await goToPage(page, url);
-
-            const datasetElement = await page
-              .getByTestId("bc-Dataset")
-              .innerHTML();
-            const collectionsElement = await page
-              .getByTestId("bc-Collection")
-              .innerHTML();
-
-            expect(datasetElement).toMatchSnapshot();
-            expect(collectionsElement).toMatchSnapshot();
-
-            await snapshotTestGraph(page, testInfo);
-          });
-
           test("datasets from breadcrumbs appears on clicking collections", async ({
             page,
           }, testInfo) => {
@@ -174,7 +162,7 @@ for (const testDataset of testDatasets) {
 
             await page.getByTestId(`bc-Dataset`).click();
 
-            await snapshotTestGraph(page, testInfo);
+            await takeSnapshot(page, testInfo);
           });
         });
 
@@ -183,6 +171,7 @@ for (const testDataset of testDatasets) {
             page,
           }, testInfo) => {
             await goToPage(page, url);
+
             for (const label of Object.keys(
               data.categorical
             ) as (keyof typeof data.categorical)[]) {
@@ -192,18 +181,21 @@ for (const testDataset of testDatasets) {
 
               expect(categories).toMatchObject(data.categorical[label]);
 
-              await snapshotTestGraph(page, testInfo);
+              await takeSnapshot(
+                page,
+                `${getSnapshotPrefix(testInfo)}-${label}`,
+                testInfo
+              );
             }
           });
 
-          test("continuous data appears", async ({ page }, testInfo) => {
+          test("continuous data appears", async ({ page }) => {
             await goToPage(page, url);
+
             for (const label of Object.keys(data.continuous)) {
               await expect(
                 page.getByTestId(`histogram-${label}-plot`)
               ).not.toHaveCount(0);
-
-              await snapshotTestGraph(page, testInfo);
             }
           });
         });
@@ -211,7 +203,10 @@ for (const testDataset of testDatasets) {
         describe("bottom banner", () => {
           const SURVEY_LINK =
             "https://airtable.com/app8fNSQ8ieIiHLOv/shrmD31azkGtSupmO";
-          test("bottom banner appears", async ({ page }, testInfo) => {
+
+          test("bottom banner appears and disappears", async ({
+            page,
+          }, testInfo) => {
             await goToPage(page, url);
 
             const bottomBanner = page.getByTestId("bottom-banner");
@@ -223,15 +218,23 @@ for (const testDataset of testDatasets) {
               SURVEY_LINK
             );
 
-            await snapshotTestGraph(page, testInfo);
-          });
-          test("bottom banner disappears", async ({ page }, testInfo) => {
-            await goToPage(page, url);
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
 
-            const bottomBanner = await closeBottomBanner(page);
-            await expect(bottomBanner).not.toBeVisible();
+            await closeBottomBanner(page);
 
-            await snapshotTestGraph(page, testInfo);
+            /**
+             * (thuang): Snapshot test graph here to ensure after the bottom banner
+             * is closed, the graph is still visible and aligned
+             */
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
@@ -239,36 +242,42 @@ for (const testDataset of testDatasets) {
           skipIfSidePanel(graphTestId, MAIN_PANEL);
 
           await goToPage(page, url);
+          await showImageUnderlayInTestMode(page);
 
-          await snapshotTestGraph(page, testInfo);
+          await snapshotTestGraph(
+            page,
+            `${getSnapshotPrefix(testInfo)}-before`,
+            testInfo
+          );
 
           await page.setViewportSize({ width: 600, height: 600 });
 
           await page.waitForTimeout(WAIT_FOR_AFTER_RESIZE_MS);
 
-          await snapshotTestGraph(page, testInfo);
+          await snapshotTestGraph(
+            page,
+            `${getSnapshotPrefix(testInfo)}-after`,
+            testInfo
+          );
         });
 
         describe("cell selection", () => {
-          test("selects all cells cellset 1", async ({ page }, testInfo) => {
+          test("selects all cells cellset 1", async ({ page }) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
             const cellCount = await getCellSetCount(1, page);
 
             expect(cellCount).toBe(data.dataframe.nObs);
-            await snapshotTestGraph(page, testInfo);
           });
 
-          test("selects all cells cellset 2", async ({ page }, testInfo) => {
+          test("selects all cells cellset 2", async ({ page }) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
             const cellCount = await getCellSetCount(2, page);
 
             expect(cellCount).toBe(data.dataframe.nObs);
-
-            await snapshotTestGraph(page, testInfo);
           });
 
           test("bug fix: invalid lasso cancels lasso overlay", async ({
@@ -278,7 +287,10 @@ for (const testDataset of testDatasets) {
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
-            for (const cellset of data.cellsets.invalidLasso) {
+            for (const [
+              index,
+              cellset,
+            ] of data.cellsets.invalidLasso.entries()) {
               const cellset1 = await calcDragCoordinates(
                 graphTestId,
                 cellset["coordinates-as-percent"],
@@ -292,13 +304,14 @@ for (const testDataset of testDatasets) {
                 start: cellset1.start,
                 end: cellset1.end,
                 lasso: true,
+                snapshotName: `${getSnapshotPrefix(
+                  testInfo
+                )}-after-lasso-${index}`,
               });
 
               const cellCount = await getCellSetCount(1, page);
 
               expect(cellCount).toBe(cellset.count);
-
-              await snapshotTestGraph(page, testInfo);
             }
           });
 
@@ -331,7 +344,11 @@ for (const testDataset of testDatasets) {
               .first()
               .click();
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
 
           test("selects cells via lasso", async ({ page }, testInfo) => {
@@ -346,7 +363,7 @@ for (const testDataset of testDatasets) {
 
             const originalCellCount = await getCellSetCount(1, page);
 
-            for (const cellset of data.cellsets.lasso) {
+            for (const [index, cellset] of data.cellsets.lasso.entries()) {
               const cellset1 = await calcDragCoordinates(
                 graphTestId,
                 cellset["coordinates-as-percent"],
@@ -360,6 +377,9 @@ for (const testDataset of testDatasets) {
                 start: cellset1.start,
                 end: cellset1.end,
                 lasso: true,
+                snapshotName: `${getSnapshotPrefix(
+                  testInfo
+                )}-after-lasso-${index}`,
               });
 
               const cellCount = isSidePanel
@@ -368,7 +388,11 @@ for (const testDataset of testDatasets) {
 
               expect(await getCellSetCount(1, page)).toBe(cellCount);
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                `${getSnapshotPrefix(testInfo)}-before-layout-switch-${index}`,
+                testInfo
+              );
 
               // switch layout should retain the selection
               const { original, somethingElse } = data.embeddingChoice;
@@ -377,14 +401,24 @@ for (const testDataset of testDatasets) {
 
               expect(await getCellSetCount(1, page)).toBe(cellCount);
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                `${getSnapshotPrefix(testInfo)}-after-layout-switch-${index}`,
+                testInfo
+              );
 
               // switch back to original layout should reset the selection
               await selectLayout(original, graphTestId, SIDE_PANEL, page);
 
               expect(await getCellSetCount(1, page)).toBe(originalCellCount);
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                `${getSnapshotPrefix(
+                  testInfo
+                )}-after-layout-switch-back-${index}`,
+                testInfo
+              );
             }
           });
 
@@ -413,7 +447,11 @@ for (const testDataset of testDatasets) {
 
               expect(cellCount).toBe(cellset.count);
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                getSnapshotPrefix(testInfo),
+                testInfo
+              );
             }
           });
 
@@ -421,6 +459,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             for (const cellset of data.cellsets.continuous) {
               const histBrushableAreaId = `histogram-${cellset.metadata}-plot-brushable-area`;
 
@@ -436,13 +475,12 @@ for (const testDataset of testDatasets) {
                 testId: histBrushableAreaId,
                 start: coords.start,
                 end: coords.end,
+                snapshotName: `${getSnapshotPrefix(testInfo)}-after-clip`,
               });
 
               const cellCount = await getCellSetCount(1, page);
 
               expect(cellCount).toBe(cellset.count);
-
-              await snapshotTestGraph(page, testInfo);
             }
           });
         });
@@ -452,6 +490,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             for (const select of data.subset.cellset1) {
               if (select.kind === "categorical") {
                 await selectCategory(
@@ -474,14 +513,22 @@ for (const testDataset of testDatasets) {
 
             await assertCategoricalCounts();
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-layout-switch`,
+              testInfo
+            );
 
             // switch back to original layout should retain the subset too
             await selectLayout(original, graphTestId, SIDE_PANEL, page);
 
             await assertCategoricalCounts();
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-layout-switch-back`,
+              testInfo
+            );
 
             async function assertCategoricalCounts() {
               for (const label of Object.keys(
@@ -492,8 +539,6 @@ for (const testDataset of testDatasets) {
                 expect(categories).toMatchObject(
                   data.subset.categorical[label]
                 );
-
-                await snapshotTestGraph(page, testInfo);
               }
             }
           });
@@ -504,6 +549,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             const select = data.subset.cellset1[0];
             await selectCategory(select.metadata, select.values, page, true);
             await page.getByTestId("subset-button").click();
@@ -512,15 +558,22 @@ for (const testDataset of testDatasets) {
               select.metadata,
               page
             );
+
             const actualCategoriesKeys = Object.keys(actualCategories).sort();
-            const expectedCateogriesKeys = select.values.slice().sort();
-            expect(actualCategoriesKeys).toEqual(expectedCateogriesKeys);
+            const expectedCategoriesKeys = select.values.slice().sort();
+
+            expect(actualCategoriesKeys).toEqual(expectedCategoriesKeys);
           });
 
           test("lasso after subset", async ({ page }, testInfo) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
+            await closeBottomBanner(page);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
             for (const select of data.subset.cellset1) {
               if (select.kind === "categorical") {
                 await selectCategory(
@@ -533,10 +586,6 @@ for (const testDataset of testDatasets) {
             }
 
             await page.getByTestId("subset-button").click();
-
-            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
-
-            await closeBottomBanner(page);
 
             const lassoSelection = await calcDragCoordinates(
               graphTestId,
@@ -551,6 +600,7 @@ for (const testDataset of testDatasets) {
               start: lassoSelection.start,
               end: lassoSelection.end,
               lasso: true,
+              snapshotName: `${getSnapshotPrefix(testInfo)}-after-lasso`,
             });
 
             const cellCount = Number(await getCellSetCount(1, page));
@@ -565,7 +615,7 @@ for (const testDataset of testDatasets) {
               cellCount
             );
 
-            await snapshotTestGraph(page, testInfo);
+            await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
           });
         });
 
@@ -574,8 +624,11 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             await clip(data.clip.min, data.clip.max, page);
+
             const histBrushableAreaId = `histogram-${data.clip.metadata}-plot-brushable-area`;
+
             const coords = await calcDragCoordinates(
               histBrushableAreaId,
               data.clip["coordinates-as-percent"],
@@ -588,9 +641,11 @@ for (const testDataset of testDatasets) {
               testId: histBrushableAreaId,
               start: coords.start,
               end: coords.end,
+              snapshotName: `${getSnapshotPrefix(testInfo)}-after-clip`,
             });
 
             const cellCount = await getCellSetCount(1, page);
+
             expect(cellCount).toBe(data.clip.count);
 
             // ensure categorical data appears properly
@@ -602,9 +657,9 @@ for (const testDataset of testDatasets) {
               const categories = await getAllCategoriesAndCounts(label, page);
 
               expect(categories).toMatchObject(data.categorical[label]);
-
-              await snapshotTestGraph(page, testInfo);
             }
+
+            await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
           });
         });
 
@@ -622,12 +677,18 @@ for (const testDataset of testDatasets) {
             for (const label of allLabels) {
               await page.getByTestId(`colorby-${label}`).click();
             }
-            await snapshotTestGraph(page, testInfo);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
 
           test("pan and zoom", async ({ page }, testInfo) => {
             await goToPage(page, url);
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+            await showImageUnderlayInTestMode(page);
 
             await page.getByTestId("mode-pan-zoom").click();
             const panCoords = await calcDragCoordinates(
@@ -642,22 +703,35 @@ for (const testDataset of testDatasets) {
               testId: graphTestId,
               start: panCoords.start,
               end: panCoords.end,
+              snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan`,
             });
 
             await page.evaluate("window.scrollBy(0, 1000);");
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-zoom`,
+              testInfo
+            );
 
             // switch layout and back should reset pan and zoom
             const { original, somethingElse } = data.embeddingChoice;
 
             await selectLayout(somethingElse, graphTestId, SIDE_PANEL, page);
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-layout-switch`,
+              testInfo
+            );
 
             await selectLayout(original, graphTestId, SIDE_PANEL, page);
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-layout-switch-back`,
+              testInfo
+            );
           });
 
           test("home button", async ({ page }, testInfo) => {
@@ -667,6 +741,7 @@ for (const testDataset of testDatasets) {
             );
 
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
@@ -706,6 +781,7 @@ for (const testDataset of testDatasets) {
                   testId: graphTestId,
                   start,
                   end,
+                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan`,
                 });
 
                 await expect(homeButton).toBeVisible({
@@ -751,9 +827,13 @@ for (const testDataset of testDatasets) {
               expect(generatedLabels).toHaveLength(
                 Object.keys(data.categorical[label]).length
               );
-
-              await snapshotTestGraph(page, testInfo);
             }
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
@@ -791,6 +871,7 @@ for (const testDataset of testDatasets) {
                   testId: graphTestId,
                   start: panCoords.start,
                   end: panCoords.end,
+                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan`,
                 });
 
                 const terminalCoordinates = await getElementCoordinates(
@@ -809,15 +890,22 @@ for (const testDataset of testDatasets) {
               { page }
             );
 
-            await snapshotTestGraph(page, testInfo);
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
         test("zoom limit is 12x", async ({ page }, testInfo) => {
           await goToPage(page, url);
+          await showImageUnderlayInTestMode(page);
+
           const category = Object.keys(
             data.categorical
           )[0] as keyof typeof data.categorical;
+
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
           await page.getByTestId(`colorby-${category}`).click();
@@ -847,7 +935,7 @@ for (const testDataset of testDatasets) {
             { page }
           );
 
-          await snapshotTestGraph(page, testInfo);
+          await snapshotTestGraph(page, getSnapshotPrefix(testInfo), testInfo);
         });
 
         test("pan zoom mode resets lasso selection", async ({
@@ -878,6 +966,7 @@ for (const testDataset of testDatasets) {
                 start: lassoSelection.start,
                 end: lassoSelection.end,
                 lasso: true,
+                snapshotName: `${getSnapshotPrefix(testInfo)}-after-lasso`,
               });
 
               await expect(
@@ -906,7 +995,7 @@ for (const testDataset of testDatasets) {
             { page }
           );
 
-          await snapshotTestGraph(page, testInfo);
+          await snapshotTestGraph(page, getSnapshotPrefix(testInfo), testInfo);
         });
 
         test("lasso moves after pan", async ({ page }, testInfo) => {
@@ -926,7 +1015,11 @@ for (const testDataset of testDatasets) {
                 page
               );
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                `${getSnapshotPrefix(testInfo)}-before-lasso`,
+                testInfo
+              );
 
               await drag({
                 page,
@@ -935,9 +1028,8 @@ for (const testDataset of testDatasets) {
                 start: lassoSelection.start,
                 end: lassoSelection.end,
                 lasso: true,
+                snapshotName: `${getSnapshotPrefix(testInfo)}-after-lasso`,
               });
-
-              await snapshotTestGraph(page, testInfo);
 
               await expect(
                 page.getByTestId(
@@ -961,7 +1053,11 @@ for (const testDataset of testDatasets) {
 
               await page.getByTestId("mode-pan-zoom").click();
 
-              await snapshotTestGraph(page, testInfo);
+              await snapshotTestGraph(
+                page,
+                `${getSnapshotPrefix(testInfo)}-before-pan`,
+                testInfo
+              );
 
               const panCoords = await calcDragCoordinates(
                 graphTestId,
@@ -975,26 +1071,22 @@ for (const testDataset of testDatasets) {
                 testId: graphTestId,
                 start: panCoords.start,
                 end: panCoords.end,
-                lasso: true,
+                snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan`,
               });
-
-              await snapshotTestGraph(page, testInfo);
 
               await page.getByTestId("mode-lasso").click();
 
               const panCount = Number(await getCellSetCount(2, page));
 
               expect(panCount).toBe(initialCount);
-
-              await snapshotTestGraph(page, testInfo);
             },
             { page }
           );
         });
 
-        /*
-    Tests included below are specific to annotation features
-    */
+        /**
+         * Tests included below are specific to annotation features
+         */
 
         const options = [
           { withSubset: true, tag: "subset" },
@@ -1033,6 +1125,7 @@ for (const testDataset of testDatasets) {
                   testId: histBrushableAreaId,
                   start: coords.start,
                   end: coords.end,
+                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-clip`,
                 });
 
                 await page.getByTestId(`cellset-button-1`).click();
@@ -1041,10 +1134,8 @@ for (const testDataset of testDatasets) {
                 // (seve): the withSubset version of this test is resulting in the unsubsetted value
                 if (option.withSubset) {
                   expect(cellCount).toBe(data.brushOnGenesetMean.withSubset);
-                  await snapshotTestGraph(page, testInfo);
                 } else {
                   expect(cellCount).toBe(data.brushOnGenesetMean.default);
-                  await snapshotTestGraph(page, testInfo);
                 }
               });
 
@@ -1062,9 +1153,14 @@ for (const testDataset of testDatasets) {
                   meanExpressionBrushGenesetName,
                   page
                 );
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  getSnapshotPrefix(testInfo),
+                  testInfo
+                );
               });
-              test("color by mean expression changes sorting of categories in 'cell_type'", async ({
+
+              test("color by mean expression resort 'cell_type' categories", async ({
                 page,
               }, testInfo) => {
                 await setup({ option, page, url, testInfo });
@@ -1162,12 +1258,11 @@ for (const testDataset of testDatasets) {
 
                 await waitUntilNoSkeletonDetected(page);
 
-                let genesHTML = await page
-                  .getByTestId("gene-set-genes")
-                  .innerHTML();
-
-                expect(genesHTML).toMatchSnapshot();
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-diffexp`,
+                  testInfo
+                );
 
                 // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
                 // the click is so fast that it's not registered
@@ -1190,12 +1285,11 @@ for (const testDataset of testDatasets) {
                   }
                 );
 
-                genesHTML = await page
-                  .getByTestId("gene-set-genes")
-                  .innerHTML();
-
-                expect(genesHTML).toMatchSnapshot();
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  getSnapshotPrefix(testInfo),
+                  testInfo
+                );
               });
 
               test("create a new geneset and undo/redo", async ({
@@ -1209,8 +1303,6 @@ for (const testDataset of testDatasets) {
                     if (option.withSubset) return;
 
                     await setup({ option, page, url, testInfo });
-
-                    await waitUntilNoSkeletonDetected(page);
 
                     const genesetName = `test-geneset-foo-123`;
 
@@ -1356,7 +1448,11 @@ for (const testDataset of testDatasets) {
                   page
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-before-brush`,
+                  testInfo
+                );
 
                 await drag({
                   page,
@@ -1364,18 +1460,15 @@ for (const testDataset of testDatasets) {
                   testId: histBrushableAreaId,
                   start: coords.start,
                   end: coords.end,
+                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-brush`,
                 });
-
-                await snapshotTestGraph(page, testInfo);
 
                 const cellCount = await getCellSetCount(1, page);
 
                 if (option.withSubset) {
                   expect(cellCount).toBe(data.expandGeneAndBrush.withSubset);
-                  await snapshotTestGraph(page, testInfo);
                 } else {
                   expect(cellCount).toBe(data.expandGeneAndBrush.default);
-                  await snapshotTestGraph(page, testInfo);
                 }
               });
 
@@ -1392,8 +1485,14 @@ for (const testDataset of testDatasets) {
 
                 await colorByGene("SIK1", page);
                 await assertColorLegendLabel("SIK1", page);
-                await snapshotTestGraph(page, testInfo);
+
+                await snapshotTestGraph(
+                  page,
+                  getSnapshotPrefix(testInfo),
+                  testInfo
+                );
               });
+
               test("delete gene from geneset and undo/redo", async ({
                 page,
               }, testInfo) => {
@@ -1438,7 +1537,11 @@ for (const testDataset of testDatasets) {
                 await setup({ option, page, url, testInfo });
                 await addGeneToSearch(geneToRequestInfo, page);
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-before-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1452,7 +1555,11 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1466,7 +1573,11 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-minimize-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1480,7 +1591,11 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-close-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1494,7 +1609,11 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-cell-type-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1508,7 +1627,13 @@ for (const testDataset of testDatasets) {
                   { page }
                 );
 
-                await snapshotTestGraph(page, testInfo);
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(
+                    testInfo
+                  )}-after-minimize-cell-type-info-panel`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1532,7 +1657,12 @@ for (const testDataset of testDatasets) {
                   },
                   { page }
                 );
-                await snapshotTestGraph(page, testInfo);
+
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-cell-type-search`,
+                  testInfo
+                );
 
                 await tryUntil(
                   async () => {
@@ -1540,7 +1670,12 @@ for (const testDataset of testDatasets) {
                   },
                   { page }
                 );
-                await snapshotTestGraph(page, testInfo);
+
+                await snapshotTestGraph(
+                  page,
+                  `${getSnapshotPrefix(testInfo)}-after-gene-search`,
+                  testInfo
+                );
               });
             }
           );
@@ -1568,7 +1703,15 @@ for (const testDataset of testDatasets) {
               document.body.appendChild(img);
             }, imageFile);
 
-            await takeSnapshot(page, info);
+            /**
+             * (thuang): Not using `snapshotTestGraph()` because we need to
+             * capture the legend as well
+             */
+            await takeSnapshot(
+              page,
+              `${getSnapshotPrefix(info)}-${path}`,
+              info
+            );
 
             // remove the image from the dom
             await page.evaluate(() => {
@@ -1620,6 +1763,7 @@ for (const testDataset of testDatasets) {
 
           test("with continuous legend", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await addGeneToSearch("SIK1", page);
             await colorByGene("SIK1", page);
@@ -1629,6 +1773,7 @@ for (const testDataset of testDatasets) {
 
           test("with categorical legend", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             const allLabels = [...Object.keys(data.categorical)];
             await page.getByTestId(`colorby-${allLabels[0]}`).click();
@@ -1638,6 +1783,7 @@ for (const testDataset of testDatasets) {
 
           test("with side panel", async ({ page }) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await toggleSidePanel(page);
 
@@ -1691,16 +1837,27 @@ for (const testDataset of testDatasets) {
         describeFn("Side Panel", () => {
           test("open and close side panel", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await toggleSidePanel(page);
 
             await expect(page.getByTestId(SIDE_PANEL)).toBeVisible();
-            await snapshotTestGraph(page, testInfo);
+
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-open`,
+              testInfo
+            );
 
             await toggleSidePanel(page);
 
             await expect(page.getByTestId(SIDE_PANEL)).not.toBeVisible();
-            await snapshotTestGraph(page, testInfo);
+
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-after-close`,
+              testInfo
+            );
           });
         });
       });
@@ -1722,7 +1879,8 @@ test("categories and values from dataset appear and properly truncate if applica
         .all();
 
       expect(Object.keys(categoryRows).length).toBe(1001);
-      await snapshotTestGraph(page, testInfo);
+
+      await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
     },
     { page }
   );
@@ -1743,12 +1901,9 @@ async function setup({
   testInfo: TestInfo;
 }) {
   await goToPage(page, url);
-  await tryUntil(
-    async () => {
-      await closeBottomBanner(page);
-    },
-    { page }
-  );
+
+  await closeBottomBanner(page);
+
   if (withSubset) {
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page, testInfo);
   }

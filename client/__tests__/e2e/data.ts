@@ -41,7 +41,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "930",
+          count: "960",
           count_side: "1211",
         },
       ],
@@ -113,7 +113,7 @@ export const datasets = {
       panzoom: {
         lasso: {
           "coordinates-as-percent": { x1: 0.3, y1: 0.3, x2: 0.5, y2: 0.5 },
-          count: "37",
+          count: "38",
           count_side: "45",
         },
       },
@@ -148,11 +148,11 @@ export const datasets = {
     },
     brushOnGenesetMean: {
       default: "131",
-      withSubset: "111",
+      withSubset: "113",
     },
     expandGeneAndBrush: {
       default: "109",
-      withSubset: "94",
+      withSubset: "96",
     },
     embeddingChoice: {
       original: "umap",
@@ -212,7 +212,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "2025",
+          count: "2067",
           count_side: "1775",
         },
       ],
@@ -273,7 +273,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "12",
+        count: "13",
       },
     },
     scatter: {

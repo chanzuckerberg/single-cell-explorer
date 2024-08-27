@@ -7,6 +7,8 @@ import {
   GRAPH_AS_IMAGE_TEST_ID,
   LAYOUT_CHOICE_TEST_ID,
 } from "../../src/util/constants";
+import { getSnapshotPrefix } from "../util/helpers";
+import { VIEWPORT_SIZE } from "../../playwright.config";
 
 interface Coordinate {
   x: number;
@@ -15,6 +17,24 @@ interface Coordinate {
 
 const WAIT_FOR_SWITCH_LAYOUT_MS = 2_000;
 
+const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
+
+export async function goToPage(page: Page, url = ""): Promise<void> {
+  await tryUntil(
+    async () => {
+      await Promise.all([
+        page.waitForLoadState("networkidle"),
+        page.goto(url, { timeout: GO_TO_PAGE_TIMEOUT_MS }),
+      ]);
+    },
+    { page }
+  );
+
+  await waitUntilNoSkeletonDetected(page);
+
+  await resizeWindow(page);
+}
+
 export async function drag({
   testId,
   testInfo,
@@ -22,6 +42,7 @@ export async function drag({
   end,
   page,
   lasso = false,
+  snapshotName,
 }: {
   testId: string;
   testInfo: TestInfo;
@@ -29,15 +50,18 @@ export async function drag({
   end: Coordinate;
   page: Page;
   lasso?: boolean;
+  snapshotName?: string;
 }): Promise<void> {
   const layout = await page.getByTestId(testId);
   const box = await layout.boundingBox();
+
   if (!box) throw new Error("bounding box not found");
 
   const x1 = box.x + start.x;
   const x2 = box.x + end.x;
   const y1 = box.y + start.y;
   const y2 = box.y + end.y;
+
   await page.mouse.move(x1, y1);
   await page.mouse.down();
 
@@ -52,7 +76,9 @@ export async function drag({
 
   await page.mouse.up();
 
-  await snapshotTestGraph(page, testInfo);
+  if (snapshotName) {
+    await snapshotTestGraph(page, snapshotName, testInfo);
+  }
 }
 
 export async function scroll({
@@ -792,9 +818,13 @@ export async function subset(
     end: lassoSelection.end,
     page,
     lasso: true,
+    snapshotName: `${getSnapshotPrefix(testInfo)}-after-subset`,
   });
+
   await page.getByTestId("subset-button").click();
+
   const clearCoordinate = await calcCoordinate("layout-graph", 0.5, 0.99, page);
+
   await clickOnCoordinate("layout-graph", clearCoordinate, page);
 }
 
@@ -834,7 +864,11 @@ export async function assertUndoRedo(
 
 const WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS = 10_000;
 
-export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
+export async function snapshotTestGraph(
+  page: Page,
+  name: string,
+  testInfo: TestInfo
+) {
   const imageID = "graph-image";
 
   await waitUntilNoSkeletonDetected(page);
@@ -851,7 +885,12 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
          */
         .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
-      await takeSnapshot(page, testInfo);
+      /**
+       * (thuang): Ensure stable graph image before taking the snapshot
+       */
+      await page.waitForTimeout(2 * 1000);
+
+      await takeSnapshot(page, name, testInfo);
 
       /**
        * (thuang): Remove the image in the DOM after taking the snapshot
@@ -877,6 +916,66 @@ export async function selectLayout(
   await page.getByTestId(layoutChoiceTestId).click({ force: true });
 
   await page.waitForTimeout(WAIT_FOR_SWITCH_LAYOUT_MS);
+}
+
+async function resizeWindow(page: Page) {
+  await tryUntil(
+    async () => {
+      /**
+       * (thuang): Resize the viewport to ensure the spatial background image
+       * is fully aligned
+       */
+      await page.setViewportSize({
+        width: VIEWPORT_SIZE.width - 100,
+        height: VIEWPORT_SIZE.height,
+      });
+
+      // gradually increase the viewport size over 2s with 200ms pauses
+      for (const [index] of Array.from({ length: 10 }).entries()) {
+        await page.setViewportSize({
+          width: VIEWPORT_SIZE.width - 100 + (index + 1) * 10,
+          height: VIEWPORT_SIZE.height,
+        });
+
+        await page.waitForTimeout(200);
+      }
+
+      await page.setViewportSize({
+        width: VIEWPORT_SIZE.width,
+        height: VIEWPORT_SIZE.height,
+      });
+
+      const viewportSize = await page.viewportSize();
+
+      expect(viewportSize).toEqual(VIEWPORT_SIZE);
+    },
+    { page }
+  );
+}
+
+export async function showImageUnderlayInTestMode(page: Page) {
+  const imageUnderlayDropdown = page.getByTestId("image-underlay-dropdown");
+  const imageOpacityInput = page.locator("#image-opacity");
+
+  if (!(await imageUnderlayDropdown.isVisible())) return;
+
+  await tryUntil(
+    async () => {
+      await imageUnderlayDropdown.click({ force: true });
+      expect(await imageOpacityInput.isVisible()).toBe(true);
+    },
+    { page }
+  );
+
+  await imageOpacityInput.fill("100");
+
+  await tryUntil(
+    async () => {
+      await imageUnderlayDropdown.click({ force: true });
+      await imageOpacityInput.waitFor({ state: "hidden" });
+    },
+    { page }
+  );
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
