@@ -7,7 +7,9 @@ stack:
         tag: v7.6.0
       replicaCount: 1
       additionalSecrets:
-        - dev-sc-cluster-wide
+        - secretRef:
+            name: dev-sc-cluster-wide
+            optional: true
   services:
     explorer:
       oidcProtected: true
