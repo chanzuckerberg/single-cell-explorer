@@ -1,28 +1,18 @@
-import { ElementHandle, expect, Locator, Page } from "@playwright/test";
+import {
+  ElementHandle,
+  expect,
+  Locator,
+  Page,
+  TestInfo,
+} from "@playwright/test";
 import { test } from "@chromatic-com/playwright";
 
 import { ERROR_NO_TEST_ID_OR_LOCATOR } from "../common/constants";
-import { waitUntilNoSkeletonDetected } from "../e2e/cellxgeneActions";
 
 export const TIMEOUT_MS = 3 * 1000;
 export const WAIT_FOR_TIMEOUT_MS = 3 * 1000;
 
-const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
-
 const { skip } = test;
-
-export async function goToPage(page: Page, url = ""): Promise<void> {
-  await tryUntil(
-    async () => {
-      await Promise.all([
-        page.waitForLoadState("networkidle"),
-        page.goto(url, { timeout: GO_TO_PAGE_TIMEOUT_MS }),
-      ]);
-    },
-    { page }
-  );
-  await waitUntilNoSkeletonDetected(page);
-}
 
 export async function scrollToPageBottom(page: Page): Promise<void> {
   return page.evaluate(() =>
@@ -305,14 +295,19 @@ export function shouldSkipTests(
   return graphTestId === SIDE_PANEL;
 }
 
-
 export async function closeBottomBanner(page: Page): Promise<Locator> {
   const bottomBanner = page.getByTestId("bottom-banner");
 
-  if(bottomBanner) {
-    const bottomBannerClose = bottomBanner.getByRole("button"); 
+  if (bottomBanner) {
+    const bottomBannerClose = bottomBanner.getByRole("button");
     await bottomBannerClose.click();
   }
 
   return bottomBanner;
+}
+
+export function getSnapshotPrefix(testInfo: TestInfo): string {
+  const output = testInfo.titlePath.join("-");
+
+  return output;
 }

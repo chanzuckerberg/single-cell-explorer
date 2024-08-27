@@ -7,6 +7,7 @@ import {
   GRAPH_AS_IMAGE_TEST_ID,
   LAYOUT_CHOICE_TEST_ID,
 } from "../../src/util/constants";
+import { getSnapshotPrefix } from "../util/helpers";
 
 interface Coordinate {
   x: number;
@@ -15,6 +16,21 @@ interface Coordinate {
 
 const WAIT_FOR_SWITCH_LAYOUT_MS = 2_000;
 
+const GO_TO_PAGE_TIMEOUT_MS = 2 * 60 * 1000;
+
+export async function goToPage(page: Page, url = ""): Promise<void> {
+  await tryUntil(
+    async () => {
+      await Promise.all([
+        page.waitForLoadState("networkidle"),
+        page.goto(url, { timeout: GO_TO_PAGE_TIMEOUT_MS }),
+      ]);
+    },
+    { page }
+  );
+  await waitUntilNoSkeletonDetected(page);
+}
+
 export async function drag({
   testId,
   testInfo,
@@ -22,6 +38,7 @@ export async function drag({
   end,
   page,
   lasso = false,
+  snapshotName,
 }: {
   testId: string;
   testInfo: TestInfo;
@@ -29,6 +46,7 @@ export async function drag({
   end: Coordinate;
   page: Page;
   lasso?: boolean;
+  snapshotName: string;
 }): Promise<void> {
   const layout = await page.getByTestId(testId);
   const box = await layout.boundingBox();
@@ -52,7 +70,7 @@ export async function drag({
 
   await page.mouse.up();
 
-  await snapshotTestGraph(page, testInfo);
+  await snapshotTestGraph(page, snapshotName, testInfo);
 }
 
 export async function scroll({
@@ -782,9 +800,13 @@ export async function subset(
     end: lassoSelection.end,
     page,
     lasso: true,
+    snapshotName: `${getSnapshotPrefix(testInfo)}-after-subset`,
   });
+
   await page.getByTestId("subset-button").click();
+
   const clearCoordinate = await calcCoordinate("layout-graph", 0.5, 0.99, page);
+
   await clickOnCoordinate("layout-graph", clearCoordinate, page);
 }
 
@@ -824,7 +846,11 @@ export async function assertUndoRedo(
 
 const WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS = 10_000;
 
-export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
+export async function snapshotTestGraph(
+  page: Page,
+  name: string,
+  testInfo: TestInfo
+) {
   const imageID = "graph-image";
 
   await waitUntilNoSkeletonDetected(page);
@@ -841,7 +867,7 @@ export async function snapshotTestGraph(page: Page, testInfo: TestInfo) {
          */
         .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
 
-      await takeSnapshot(page, testInfo);
+      await takeSnapshot(page, name, testInfo);
 
       /**
        * (thuang): Remove the image in the DOM after taking the snapshot
