@@ -12,8 +12,6 @@ stack:
             optional: true
   services:
     explorer:
-      ingress:
-        oidcProtected: true
       image:
         tag: sha-78bf2226
       replicaCount: 1
