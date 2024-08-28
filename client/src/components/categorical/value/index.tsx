@@ -1,7 +1,7 @@
 import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
-import { Classes } from "@blueprintjs/core";
+import { Checkbox } from "@blueprintjs/core";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
@@ -601,26 +601,21 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           }}
         >
           <div style={{ display: "flex", alignItems: "baseline" }}>
-            <label
-              htmlFor={valueToggleLabel}
-              className={`${Classes.CONTROL} ${Classes.CHECKBOX} ignore-capture`}
-              style={{ margin: 0 }}
+            <span
+              className="ignore-capture"
+              style={{ margin: 0, height: "18px" }}
             >
-              <input
+              <Checkbox
                 id={valueToggleLabel}
                 onChange={isSelected ? this.toggleOff : this.toggleOn}
                 data-testid={`categorical-value-select-${metadataField}-${displayString}`}
                 checked={isSelected}
                 type="checkbox"
               />
-              <span
-                className={Classes.CONTROL_INDICATOR}
-                onMouseEnter={this.handleMouseExit}
-                onMouseLeave={this.handleMouseEnter}
-              />
-            </label>
+            </span>
             <Truncate>
-              <span
+              <label
+                htmlFor={valueToggleLabel}
                 data-testid="categorical-value"
                 tabIndex={-1}
                 style={{
@@ -642,7 +637,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 }}
               >
                 {displayString}
-              </span>
+              </label>
             </Truncate>
             {isCellInfo && (
               <InfoButtonWrapper>
