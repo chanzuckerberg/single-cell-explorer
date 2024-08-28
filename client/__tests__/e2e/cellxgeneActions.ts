@@ -770,11 +770,21 @@ export async function addGeneToSearch(
   geneName: string,
   page: Page
 ): Promise<void> {
-  await page
-    .getByTestId(`gene-search`)
-    .getByPlaceholder("Quick Gene Search")
-    .fill(geneName);
-  await page.keyboard.press("Enter");
+  await tryUntil(
+    async () => {
+      await page
+        .getByTestId("gene-search")
+        .getByPlaceholder("Quick Gene Search")
+        .fill(geneName);
+      await expect(
+        page.getByTestId(`suggest-menu-item-${geneName}`)
+      ).toBeVisible();
+    },
+    { page }
+  );
+
+  await page.getByTestId(`suggest-menu-item-${geneName}`).click();
+
   expect(page.getByTestId(`histogram-${geneName}`)).toBeTruthy();
 }
 

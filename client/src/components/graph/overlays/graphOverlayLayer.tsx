@@ -57,6 +57,7 @@ export default class GraphOverlayLayer extends PureComponent<{}, State> {
       modelTF,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'projectionTF' does not exist on type 'Re... Remove this comment to see the full error message
       projectionTF,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'children' does not exist on type 'Re... Remove this comment to see the full error message
       children,
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'handleCanvasEvent' does not exist on typ... Remove this comment to see the full error message
       handleCanvasEvent,
@@ -81,7 +82,6 @@ export default class GraphOverlayLayer extends PureComponent<{}, State> {
 
     // Copy the children passed with the overlay and add the inverse transform and onDisplayChange props
     const newChildren = React.Children.map(children, (child) =>
-      // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
       cloneElement(child, {
         inverseTransform,
         overlaySetShowing: this.overlaySetShowing,

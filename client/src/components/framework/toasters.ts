@@ -1,4 +1,5 @@
-import { Position, Toaster, Intent } from "@blueprintjs/core";
+import { Position, OverlayToaster, Intent, Toaster } from "@blueprintjs/core";
+import { createRoot } from "react-dom/client";
 
 /* styles */
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
@@ -7,12 +8,29 @@ import styles from "./toasters.css";
 /** Singleton toaster instance. Create separate instances for different options. */
 let ToastTopCenter: Toaster | null = null;
 
+/**
+ * A future major version of Blueprint will drop support for React versions before
+ * 18 and switch the default rendering function from ReactDOM.render to createRoot.
+ * https://blueprintjs.com/docs/#core/components/toast.overlaytoaster
+ */
 if (typeof document !== "undefined") {
-  ToastTopCenter = Toaster.create({
-    className: "recipe-toaster",
-    position: Position.TOP,
-    maxToasts: 4,
-  });
+  OverlayToaster.createAsync(
+    {
+      className: "recipe-toaster",
+      position: Position.TOP,
+      maxToasts: 4,
+    },
+    {
+      domRenderer: (toaster, containerElement) =>
+        createRoot(containerElement).render(toaster),
+    }
+  )
+    .then((toaster) => {
+      ToastTopCenter = toaster;
+    })
+    .catch((error) => {
+      console.error("Failed to create toaster:", error);
+    });
 }
 
 /*

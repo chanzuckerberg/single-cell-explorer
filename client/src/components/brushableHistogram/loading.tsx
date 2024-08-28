@@ -7,11 +7,8 @@ interface StillLoadingProps {
 /**
  * Render a loading indicator for the field.
  */
-const StillLoading = ({ height = 211 }: StillLoadingProps): JSX.Element => (
-  <div style={{ height }} className={SKELETON} />
-);
-StillLoading.defaultProps = {
-  height: 211,
-};
+function StillLoading({ height = 211 }: StillLoadingProps) {
+  return <div style={{ height }} className={SKELETON} />;
+}
 
 export default StillLoading;
