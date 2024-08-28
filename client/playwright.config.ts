@@ -75,6 +75,11 @@ export default defineConfig<ChromaticConfig>({
      * so the auto snapshot feature is not useful
      */
     disableAutoSnapshot: true,
+    /**
+     * (thuang): Default is `0.063`, but it's too sensitive for our use case.
+     * @see: https://www.chromatic.com/docs/threshold/#setting-the-threshold
+     */
+    diffThreshold: 0.08,
     acceptDownloads: true,
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
