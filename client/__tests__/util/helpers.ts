@@ -309,5 +309,9 @@ export async function closeBottomBanner(page: Page): Promise<Locator> {
 export function getSnapshotPrefix(testInfo: TestInfo): string {
   const output = testInfo.titlePath.join("-");
 
+  // DEBUG
+  // DEBUG
+  // DEBUG
+
   return output;
 }
