@@ -81,9 +81,6 @@ const devConfig = {
       }),
       CXG_SERVER_PORT: process.env.CXG_SERVER_PORT,
     }),
-    new webpack.ProvidePlugin({
-      ReadableStream: ["web-streams-polyfill/polyfill", "ReadableStream"],
-    }),
   ],
   infrastructureLogging: {
     level: "warn",

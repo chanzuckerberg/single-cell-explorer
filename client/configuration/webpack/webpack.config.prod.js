@@ -99,9 +99,6 @@ const prodConfig = {
         NODE_ENV: "production",
       }),
     }),
-    new webpack.ProvidePlugin({
-      ReadableStream: ["web-streams-polyfill/polyfill", "ReadableStream"],
-    }),
   ],
   performance: {
     maxEntrypointSize: 2000000,
