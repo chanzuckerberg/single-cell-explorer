@@ -1754,7 +1754,15 @@ for (const testDataset of testDatasets) {
               document.body.appendChild(img);
             }, imageFile);
 
-            await takeSnapshot(page, info);
+            /**
+             * (thuang): Not using `snapshotTestGraph()` because we need to
+             * capture the legend as well
+             */
+            await takeSnapshot(
+              page,
+              `${getSnapshotPrefix(info)}-${path}`,
+              info
+            );
 
             // remove the image from the dom
             await page.evaluate(() => {

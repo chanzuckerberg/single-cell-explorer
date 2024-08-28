@@ -859,6 +859,11 @@ export async function snapshotTestGraph(
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
+      /**
+       * (thuang): Ensure stable graph image before taking the snapshot
+       */
+      await page.waitForTimeout(2 * 1000);
+
       await page
         .getByTestId(imageID)
         /**
