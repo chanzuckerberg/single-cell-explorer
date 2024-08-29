@@ -42,6 +42,8 @@ export async function goToPage(page: Page, url = ""): Promise<void> {
   });
 
   await page.setViewportSize(VIEWPORT_SIZE);
+
+  await page.waitForTimeout(2 * 1000);
 }
 
 export async function drag({
