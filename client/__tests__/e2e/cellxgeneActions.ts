@@ -8,6 +8,7 @@ import {
   LAYOUT_CHOICE_TEST_ID,
 } from "../../src/util/constants";
 import { getSnapshotPrefix } from "../util/helpers";
+import { VIEWPORT_SIZE } from "../../playwright.config";
 
 interface Coordinate {
   x: number;
@@ -28,7 +29,19 @@ export async function goToPage(page: Page, url = ""): Promise<void> {
     },
     { page }
   );
+
   await waitUntilNoSkeletonDetected(page);
+
+  /**
+   * (thuang): Resize the viewport to ensure the spatial background image
+   * is fully aligned
+   */
+  await page.setViewportSize({
+    width: VIEWPORT_SIZE.width - 100,
+    height: VIEWPORT_SIZE.height,
+  });
+
+  await page.setViewportSize(VIEWPORT_SIZE);
 }
 
 export async function drag({
@@ -881,11 +894,6 @@ export async function snapshotTestGraph(
          * 3 minutes, which is too long for this test.
          */
         .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
-
-      /**
-       * (thuang): Ensure the background image is stable before taking the snapshot
-       */
-      await page.waitForTimeout(2 * 1000);
 
       await takeSnapshot(page, name, testInfo);
 
