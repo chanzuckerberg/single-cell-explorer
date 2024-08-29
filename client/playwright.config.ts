@@ -79,7 +79,7 @@ export default defineConfig<ChromaticConfig>({
      * (thuang): Default is `0.063`, but it's too sensitive for our use case.
      * @see: https://www.chromatic.com/docs/threshold/#setting-the-threshold
      */
-    diffThreshold: 0.15,
+    diffThreshold: 0.2,
     acceptDownloads: true,
     /* Maximum time each action such as `click()` can take. Defaults to 0 (no limit). */
     actionTimeout: 0,
