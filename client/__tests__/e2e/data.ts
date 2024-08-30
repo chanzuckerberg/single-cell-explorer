@@ -41,7 +41,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "1102",
+          count: "965",
           count_side: "1211",
         },
       ],
@@ -91,7 +91,7 @@ export const datasets = {
           values: ["B cells", "Megakaryocytes"],
         },
       ],
-      count: "332",
+      count: "330",
       categorical: {
         louvain: {
           "B cells": "342",
@@ -100,7 +100,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "329",
+        count: "330",
       },
     },
     scatter: {
@@ -212,7 +212,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "2320",
+          count: "2109",
           count_side: "1775",
         },
       ],
@@ -264,7 +264,7 @@ export const datasets = {
           values: ["glial cell", "B cell"],
         },
       ],
-      count: "332",
+      count: "330",
       categorical: {
         cell_type: {
           "B cell": "1",
@@ -273,7 +273,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "27",
+        count: "13",
       },
     },
     scatter: {

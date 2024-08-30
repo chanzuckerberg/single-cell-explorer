@@ -3,7 +3,7 @@ import { ChromaticConfig } from "@chromatic-com/playwright";
 import { testURL } from "./__tests__/common/constants";
 
 export const VIEWPORT_SIZE = {
-  width: 1280,
+  width: 1440,
   height: 960,
 };
 
