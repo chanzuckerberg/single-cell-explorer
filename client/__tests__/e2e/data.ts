@@ -41,7 +41,7 @@ export const datasets = {
       lasso: [
         {
           "coordinates-as-percent": { x1: 0.1, y1: 0.25, x2: 0.7, y2: 0.75 },
-          count: "1089",
+          count: "1102",
           count_side: "1211",
         },
       ],
@@ -100,7 +100,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "332",
+        count: "329",
       },
     },
     scatter: {
