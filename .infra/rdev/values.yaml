@@ -3,10 +3,7 @@ stack:
     oidcProxy:
       enabled: true
       replicaCount: 1
-      additionalSecrets:
-        - secretRef:
-            name: dev-sc-cluster-wide
-            optional: true
+
   services:
     explorer:
       image:

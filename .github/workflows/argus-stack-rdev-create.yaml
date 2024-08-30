@@ -23,3 +23,5 @@ jobs:
         with:
           appName: single-cell-explorer
           envName: rdev
+        env:
+          PLATFORM_BASE_URL: https://core-platform-rdev-52c98dcd.core-platform.dev.czi.team/
