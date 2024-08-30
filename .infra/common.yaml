@@ -1,3 +1,4 @@
+# bump
 stack:
   global:
     replicaCount: 1
