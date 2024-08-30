@@ -41,9 +41,14 @@ export async function goToPage(page: Page, url = ""): Promise<void> {
     height: VIEWPORT_SIZE.height,
   });
 
-  await page.waitForTimeout(2 * 1000);
-
-  await page.setViewportSize(VIEWPORT_SIZE);
+  // gradually increase the viewport size over 2s with 200ms pauses
+  Array.from({ length: 10 }).forEach(async (_, i) => {
+    await page.setViewportSize({
+      width: VIEWPORT_SIZE.width - 100 + i * 10,
+      height: VIEWPORT_SIZE.height,
+    });
+    await page.waitForTimeout(200);
+  });
 
   await page.waitForTimeout(2 * 1000);
 }
