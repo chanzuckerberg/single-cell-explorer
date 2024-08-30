@@ -251,7 +251,7 @@ const MenuBar = ({
   const isTest = getFeatureFlag(FEATURES.TEST);
 
   // constants used to create selection tool button
-  const [selectionTooltip, selectionButtonIcon] = ["select", "polygon-filter"];
+  const selectionTooltip = "select";
 
   return (
     <ResizeSensor onResize={onResize}>
@@ -354,7 +354,7 @@ const MenuBar = ({
                 <AnchorButton
                   type="button"
                   data-testid="mode-lasso"
-                  icon={selectionButtonIcon}
+                  icon={IconNames.POLYGON_FILTER}
                   active={graphInteractionMode === "select"}
                   onClick={() => {
                     track(EVENTS.EXPLORER_MODE_LASSO_BUTTON_CLICKED);
@@ -374,7 +374,7 @@ const MenuBar = ({
                 <AnchorButton
                   type="button"
                   data-testid="mode-pan-zoom"
-                  icon="zoom-in"
+                  icon={IconNames.ZOOM_IN}
                   active={graphInteractionMode === "zoom"}
                   onClick={() => {
                     track(EVENTS.EXPLORER_MODE_PAN_ZOOM_BUTTON_CLICKED);

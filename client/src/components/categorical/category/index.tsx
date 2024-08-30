@@ -450,6 +450,7 @@ const CategoryHeader = React.memo(
             alignItems: "flex-start",
           }}
         >
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control -- TODO: Need to separate expand and checkbox label */}
           <label
             className={`${Classes.CONTROL} ${Classes.CHECKBOX} ignore-capture`}
             htmlFor={checkboxID}
