@@ -1375,8 +1375,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
         )}
         {/* If sidepanel don't show centroids */}
         {!isSidePanel && (
+          /**  @ts-expect-error TODO: type GraphOverlayLayer**/
           <GraphOverlayLayer
-            /**  @ts-expect-error TODO: type GraphOverlayLayer**/
             width={viewport.width}
             height={viewport.height}
             cameraTF={cameraTF}

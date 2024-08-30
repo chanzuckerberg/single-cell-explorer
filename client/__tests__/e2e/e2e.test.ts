@@ -839,7 +839,6 @@ for (const testDataset of testDatasets) {
                 coords: initialCoordinates,
                 page,
               });
-
               const newGraph = page.getByTestId("graph-wrapper");
               const newDistance =
                 (await newGraph.getAttribute("data-camera-distance")) ?? "-1";
