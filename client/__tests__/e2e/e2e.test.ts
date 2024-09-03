@@ -154,18 +154,6 @@ for (const testDataset of testDatasets) {
         });
 
         describeFn("breadcrumbs loads", () => {
-          test("dataset and collection from breadcrumbs appears", async ({
-            page,
-          }, testInfo) => {
-            await goToPage(page, url);
-
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
-          });
-
           test("datasets from breadcrumbs appears on clicking collections", async ({
             page,
           }, testInfo) => {
@@ -182,6 +170,7 @@ for (const testDataset of testDatasets) {
             page,
           }, testInfo) => {
             await goToPage(page, url);
+
             for (const label of Object.keys(
               data.categorical
             ) as (keyof typeof data.categorical)[]) {
@@ -201,6 +190,7 @@ for (const testDataset of testDatasets) {
 
           test("continuous data appears", async ({ page }, testInfo) => {
             await goToPage(page, url);
+
             for (const label of Object.keys(data.continuous)) {
               await expect(
                 page.getByTestId(`histogram-${label}-plot`)
@@ -218,7 +208,10 @@ for (const testDataset of testDatasets) {
         describe("bottom banner", () => {
           const SURVEY_LINK =
             "https://airtable.com/app8fNSQ8ieIiHLOv/shrmD31azkGtSupmO";
-          test("bottom banner appears", async ({ page }, testInfo) => {
+
+          test("bottom banner appears and disappears", async ({
+            page,
+          }, testInfo) => {
             await goToPage(page, url);
 
             const bottomBanner = page.getByTestId("bottom-banner");
@@ -235,12 +228,8 @@ for (const testDataset of testDatasets) {
               getSnapshotPrefix(testInfo),
               testInfo
             );
-          });
-          test("bottom banner disappears", async ({ page }, testInfo) => {
-            await goToPage(page, url);
 
-            const bottomBanner = await closeBottomBanner(page);
-            await expect(bottomBanner).not.toBeVisible();
+            await closeBottomBanner(page);
 
             await snapshotTestGraph(
               page,
@@ -501,6 +490,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             for (const select of data.subset.cellset1) {
               if (select.kind === "categorical") {
                 await selectCategory(
@@ -559,6 +549,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             const select = data.subset.cellset1[0];
             await selectCategory(select.metadata, select.values, page, true);
             await page.getByTestId("subset-button").click();
@@ -567,8 +558,10 @@ for (const testDataset of testDatasets) {
               select.metadata,
               page
             );
+
             const actualCategoriesKeys = Object.keys(actualCategories).sort();
             const expectedCategoriesKeys = select.values.slice().sort();
+
             expect(actualCategoriesKeys).toEqual(expectedCategoriesKeys);
           });
 
@@ -576,6 +569,11 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
+            await closeBottomBanner(page);
+
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
             for (const select of data.subset.cellset1) {
               if (select.kind === "categorical") {
                 await selectCategory(
@@ -588,10 +586,6 @@ for (const testDataset of testDatasets) {
             }
 
             await page.getByTestId("subset-button").click();
-
-            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
-
-            await closeBottomBanner(page);
 
             const lassoSelection = await calcDragCoordinates(
               graphTestId,
@@ -634,8 +628,11 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             await clip(data.clip.min, data.clip.max, page);
+
             const histBrushableAreaId = `histogram-${data.clip.metadata}-plot-brushable-area`;
+
             const coords = await calcDragCoordinates(
               histBrushableAreaId,
               data.clip["coordinates-as-percent"],
@@ -652,6 +649,7 @@ for (const testDataset of testDatasets) {
             });
 
             const cellCount = await getCellSetCount(1, page);
+
             expect(cellCount).toBe(data.clip.count);
 
             // ensure categorical data appears properly
@@ -663,13 +661,13 @@ for (const testDataset of testDatasets) {
               const categories = await getAllCategoriesAndCounts(label, page);
 
               expect(categories).toMatchObject(data.categorical[label]);
-
-              await snapshotTestGraph(
-                page,
-                getSnapshotPrefix(testInfo),
-                testInfo
-              );
             }
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
@@ -687,6 +685,7 @@ for (const testDataset of testDatasets) {
             for (const label of allLabels) {
               await page.getByTestId(`colorby-${label}`).click();
             }
+
             await snapshotTestGraph(
               page,
               getSnapshotPrefix(testInfo),
@@ -776,7 +775,6 @@ for (const testDataset of testDatasets) {
                   testId: graphTestId,
                   start,
                   end,
-                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan-1`,
                 });
 
                 /**
@@ -789,7 +787,7 @@ for (const testDataset of testDatasets) {
                   testId: graphTestId,
                   start,
                   end,
-                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan-2`,
+                  snapshotName: `${getSnapshotPrefix(testInfo)}-after-pan`,
                 });
 
                 await expect(homeButton).toBeVisible({
@@ -835,13 +833,13 @@ for (const testDataset of testDatasets) {
               expect(generatedLabels).toHaveLength(
                 Object.keys(data.categorical[label]).length
               );
-
-              await snapshotTestGraph(
-                page,
-                getSnapshotPrefix(testInfo),
-                testInfo
-              );
             }
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
           });
         });
 
@@ -1089,9 +1087,9 @@ for (const testDataset of testDatasets) {
           );
         });
 
-        /*
-    Tests included below are specific to annotation features
-    */
+        /**
+         * Tests included below are specific to annotation features
+         */
 
         const options = [
           { withSubset: true, tag: "subset" },
@@ -1142,12 +1140,6 @@ for (const testDataset of testDatasets) {
                 } else {
                   expect(cellCount).toBe(data.brushOnGenesetMean.default);
                 }
-
-                await snapshotTestGraph(
-                  page,
-                  getSnapshotPrefix(testInfo),
-                  testInfo
-                );
               });
 
               test("color by mean expression", async ({ page }, testInfo) => {
@@ -1315,8 +1307,6 @@ for (const testDataset of testDatasets) {
 
                     await setup({ option, page, url, testInfo });
 
-                    await waitUntilNoSkeletonDetected(page);
-
                     const genesetName = `test-geneset-foo-123`;
 
                     await assertGenesetDoesNotExist(genesetName, page);
@@ -1483,12 +1473,6 @@ for (const testDataset of testDatasets) {
                 } else {
                   expect(cellCount).toBe(data.expandGeneAndBrush.default);
                 }
-
-                await snapshotTestGraph(
-                  page,
-                  getSnapshotPrefix(testInfo),
-                  testInfo
-                );
               });
 
               test("color by gene in geneset", async ({ page }, testInfo) => {
@@ -1916,12 +1900,9 @@ async function setup({
   testInfo: TestInfo;
 }) {
   await goToPage(page, url);
-  await tryUntil(
-    async () => {
-      await closeBottomBanner(page);
-    },
-    { page }
-  );
+
+  await closeBottomBanner(page);
+
   if (withSubset) {
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page, testInfo);
   }

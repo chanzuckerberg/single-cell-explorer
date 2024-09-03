@@ -295,15 +295,16 @@ export function shouldSkipTests(
   return graphTestId === SIDE_PANEL;
 }
 
-export async function closeBottomBanner(page: Page): Promise<Locator> {
+export async function closeBottomBanner(page: Page) {
   const bottomBanner = page.getByTestId("bottom-banner");
 
-  if (bottomBanner) {
-    const bottomBannerClose = bottomBanner.getByRole("button");
-    await bottomBannerClose.click();
-  }
-
-  return bottomBanner;
+  await tryUntil(
+    async () => {
+      await bottomBanner.getByRole("button").click();
+      await expect(bottomBanner).not.toBeVisible();
+    },
+    { page }
+  );
 }
 
 export function getSnapshotPrefix(testInfo: TestInfo): string {

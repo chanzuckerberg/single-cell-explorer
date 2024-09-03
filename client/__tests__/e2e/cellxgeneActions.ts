@@ -50,7 +50,7 @@ export async function drag({
   end: Coordinate;
   page: Page;
   lasso?: boolean;
-  snapshotName: string;
+  snapshotName?: string;
 }): Promise<void> {
   const layout = await page.getByTestId(testId);
   const box = await layout.boundingBox();
@@ -76,7 +76,9 @@ export async function drag({
 
   await page.mouse.up();
 
-  await snapshotTestGraph(page, snapshotName, testInfo);
+  if (snapshotName) {
+    await snapshotTestGraph(page, snapshotName, testInfo);
+  }
 }
 
 export async function scroll({
