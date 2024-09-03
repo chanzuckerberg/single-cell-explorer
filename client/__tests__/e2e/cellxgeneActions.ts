@@ -943,7 +943,7 @@ async function resizeWindow(page: Page) {
 export async function showImageUnderlayInTestMode(page: Page) {
   const imageUnderlayToggleButton = page.getByTestId("toggle-image-underlay");
 
-  if (!imageUnderlayToggleButton.isVisible) return;
+  if (!(await imageUnderlayToggleButton.isVisible())) return;
   /**
    * (thuang): We need to toggle twice to show the imageUnderlay in test mode.
    * This is because the first toggle will sync the imageUnderlay state to `false`,
