@@ -180,27 +180,21 @@ for (const testDataset of testDatasets) {
 
               expect(categories).toMatchObject(data.categorical[label]);
 
-              await snapshotTestGraph(
+              await takeSnapshot(
                 page,
-                getSnapshotPrefix(testInfo),
+                `${getSnapshotPrefix(testInfo)}-${label}`,
                 testInfo
               );
             }
           });
 
-          test("continuous data appears", async ({ page }, testInfo) => {
+          test("continuous data appears", async ({ page }) => {
             await goToPage(page, url);
 
             for (const label of Object.keys(data.continuous)) {
               await expect(
                 page.getByTestId(`histogram-${label}-plot`)
               ).not.toHaveCount(0);
-
-              await snapshotTestGraph(
-                page,
-                getSnapshotPrefix(testInfo),
-                testInfo
-              );
             }
           });
         });
@@ -231,6 +225,10 @@ for (const testDataset of testDatasets) {
 
             await closeBottomBanner(page);
 
+            /**
+             * (thuang): Snapshot test graph here to ensure after the bottom banner
+             * is closed, the graph is still visible and aligned
+             */
             await snapshotTestGraph(
               page,
               getSnapshotPrefix(testInfo),
@@ -615,11 +613,7 @@ for (const testDataset of testDatasets) {
               cellCount
             );
 
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
+            await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
           });
         });
 
@@ -663,11 +657,7 @@ for (const testDataset of testDatasets) {
               expect(categories).toMatchObject(data.categorical[label]);
             }
 
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
+            await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
           });
         });
 
@@ -1879,7 +1869,7 @@ test("categories and values from dataset appear and properly truncate if applica
 
       expect(Object.keys(categoryRows).length).toBe(1001);
 
-      await snapshotTestGraph(page, getSnapshotPrefix(testInfo), testInfo);
+      await takeSnapshot(page, getSnapshotPrefix(testInfo), testInfo);
     },
     { page }
   );
