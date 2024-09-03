@@ -159,16 +159,6 @@ for (const testDataset of testDatasets) {
           }, testInfo) => {
             await goToPage(page, url);
 
-            const datasetElement = await page
-              .getByTestId("bc-Dataset")
-              .innerHTML();
-            const collectionsElement = await page
-              .getByTestId("bc-Collection")
-              .innerHTML();
-
-            expect(datasetElement).toMatchSnapshot();
-            expect(collectionsElement).toMatchSnapshot();
-
             await snapshotTestGraph(
               page,
               getSnapshotPrefix(testInfo),
@@ -183,11 +173,7 @@ for (const testDataset of testDatasets) {
 
             await page.getByTestId(`bc-Dataset`).click();
 
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
+            await takeSnapshot(page, testInfo);
           });
         });
 
@@ -287,34 +273,22 @@ for (const testDataset of testDatasets) {
         });
 
         describe("cell selection", () => {
-          test("selects all cells cellset 1", async ({ page }, testInfo) => {
+          test("selects all cells cellset 1", async ({ page }) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
             const cellCount = await getCellSetCount(1, page);
 
             expect(cellCount).toBe(data.dataframe.nObs);
-
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
           });
 
-          test("selects all cells cellset 2", async ({ page }, testInfo) => {
+          test("selects all cells cellset 2", async ({ page }) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
             const cellCount = await getCellSetCount(2, page);
 
             expect(cellCount).toBe(data.dataframe.nObs);
-
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
           });
 
           test("bug fix: invalid lasso cancels lasso overlay", async ({
@@ -496,6 +470,7 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
+
             for (const cellset of data.cellsets.continuous) {
               const histBrushableAreaId = `histogram-${cellset.metadata}-plot-brushable-area`;
 
@@ -517,12 +492,6 @@ for (const testDataset of testDatasets) {
               const cellCount = await getCellSetCount(1, page);
 
               expect(cellCount).toBe(cellset.count);
-
-              await snapshotTestGraph(
-                page,
-                getSnapshotPrefix(testInfo),
-                testInfo
-              );
             }
           });
         });

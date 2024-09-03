@@ -54,12 +54,14 @@ export async function drag({
 }): Promise<void> {
   const layout = await page.getByTestId(testId);
   const box = await layout.boundingBox();
+
   if (!box) throw new Error("bounding box not found");
 
   const x1 = box.x + start.x;
   const x2 = box.x + end.x;
   const y1 = box.y + start.y;
   const y2 = box.y + end.y;
+
   await page.mouse.move(x1, y1);
   await page.mouse.down();
 
