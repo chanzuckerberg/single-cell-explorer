@@ -877,11 +877,6 @@ export async function snapshotTestGraph(
     async () => {
       await page.getByTestId(GRAPH_AS_IMAGE_TEST_ID).click({ force: true });
 
-      /**
-       * (thuang): Ensure stable graph image before taking the snapshot
-       */
-      await page.waitForTimeout(2 * 1000);
-
       await page
         .getByTestId(imageID)
         /**
@@ -889,6 +884,11 @@ export async function snapshotTestGraph(
          * 3 minutes, which is too long for this test.
          */
         .waitFor({ timeout: WAIT_FOR_GRAPH_AS_IMAGE_TIMEOUT_MS });
+
+      /**
+       * (thuang): Ensure stable graph image before taking the snapshot
+       */
+      await page.waitForTimeout(3 * 1000);
 
       await takeSnapshot(page, name, testInfo);
 
