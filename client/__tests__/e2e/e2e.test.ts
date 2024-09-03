@@ -56,6 +56,7 @@ import {
   maximizeInfoPanel,
   searchForInfoType,
   goToPage,
+  showImageUnderlayInTestMode,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -241,6 +242,7 @@ for (const testDataset of testDatasets) {
           skipIfSidePanel(graphTestId, MAIN_PANEL);
 
           await goToPage(page, url);
+          await showImageUnderlayInTestMode(page);
 
           await snapshotTestGraph(
             page,
@@ -686,6 +688,7 @@ for (const testDataset of testDatasets) {
           test("pan and zoom", async ({ page }, testInfo) => {
             await goToPage(page, url);
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+            await showImageUnderlayInTestMode(page);
 
             await page.getByTestId("mode-pan-zoom").click();
             const panCoords = await calcDragCoordinates(
@@ -738,6 +741,7 @@ for (const testDataset of testDatasets) {
             );
 
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
@@ -896,9 +900,12 @@ for (const testDataset of testDatasets) {
 
         test("zoom limit is 12x", async ({ page }, testInfo) => {
           await goToPage(page, url);
+          await showImageUnderlayInTestMode(page);
+
           const category = Object.keys(
             data.categorical
           )[0] as keyof typeof data.categorical;
+
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
           await page.getByTestId(`colorby-${category}`).click();
@@ -1756,6 +1763,7 @@ for (const testDataset of testDatasets) {
 
           test("with continuous legend", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await addGeneToSearch("SIK1", page);
             await colorByGene("SIK1", page);
@@ -1765,6 +1773,7 @@ for (const testDataset of testDatasets) {
 
           test("with categorical legend", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             const allLabels = [...Object.keys(data.categorical)];
             await page.getByTestId(`colorby-${allLabels[0]}`).click();
@@ -1774,6 +1783,7 @@ for (const testDataset of testDatasets) {
 
           test("with side panel", async ({ page }) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await toggleSidePanel(page);
 
@@ -1827,6 +1837,7 @@ for (const testDataset of testDatasets) {
         describeFn("Side Panel", () => {
           test("open and close side panel", async ({ page }, testInfo) => {
             await goToPage(page, url);
+            await showImageUnderlayInTestMode(page);
 
             await toggleSidePanel(page);
 

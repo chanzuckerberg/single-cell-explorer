@@ -940,4 +940,14 @@ async function resizeWindow(page: Page) {
   await page.waitForTimeout(2 * 1000);
 }
 
+export async function showImageUnderlayInTestMode(page: Page) {
+  /**
+   * (thuang): We need to toggle twice to show the imageUnderlay in test mode.
+   * This is because the first toggle will sync the imageUnderlay state to `false`,
+   * and the second toggle will set it to `true`.
+   */
+  await page.getByTestId("toggle-image-underlay").click();
+  await page.getByTestId("toggle-image-underlay").click();
+}
+
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
