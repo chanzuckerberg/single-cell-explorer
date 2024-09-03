@@ -946,8 +946,8 @@ export async function showImageUnderlayInTestMode(page: Page) {
    * This is because the first toggle will sync the imageUnderlay state to `false`,
    * and the second toggle will set it to `true`.
    */
-  await page.getByTestId("toggle-image-underlay").click();
-  await page.getByTestId("toggle-image-underlay").click();
+  await page.getByTestId("toggle-image-underlay").click({ force: true });
+  await page.getByTestId("toggle-image-underlay").click({ force: true });
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
