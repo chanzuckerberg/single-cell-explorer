@@ -1155,6 +1155,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       config: { s3URI },
       isSidePanel = false,
       imageUnderlay,
+      imageOpacity,
     } = this.props;
 
     if (
@@ -1177,6 +1178,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
        * (thuang): This is needed to prevent error `tainted canvas` when downloading the image
        */
       crossOriginPolicy: "Anonymous",
+      opacity: imageOpacity / 100,
     });
 
     /**

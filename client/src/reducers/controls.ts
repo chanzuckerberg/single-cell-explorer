@@ -6,6 +6,10 @@ import {
   DatasetUnsMetadata,
   GeneInfo,
 } from "../common/types/entities";
+import { getFeatureFlag } from "../util/featureFlags/featureFlags";
+import { FEATURES } from "../util/featureFlags/features";
+
+const isTest = getFeatureFlag(FEATURES.TEST);
 
 interface ControlsState {
   loading: boolean;
@@ -35,6 +39,7 @@ interface ControlsState {
   geneList: string[];
   expandedCategories: string[];
 }
+
 const Controls = (
   state: ControlsState = {
     // data loading flag
@@ -85,7 +90,7 @@ const Controls = (
       infoError: null,
       loading: false,
     },
-    imageOpacity: 100,
+    imageOpacity: isTest ? 0 : 100,
     dotOpacity: 100,
     expandedCategories: [],
   },

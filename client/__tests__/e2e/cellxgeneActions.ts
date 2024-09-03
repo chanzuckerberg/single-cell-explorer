@@ -888,7 +888,7 @@ export async function snapshotTestGraph(
       /**
        * (thuang): Ensure stable graph image before taking the snapshot
        */
-      await page.waitForTimeout(3 * 1000);
+      await page.waitForTimeout(2 * 1000);
 
       await takeSnapshot(page, name, testInfo);
 
