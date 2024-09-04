@@ -210,9 +210,13 @@ class GeneExpression extends React.Component<{}, State> {
             >
               Gene Sets{" "}
               {geneSetsExpanded ? (
-                <Icon data-chromatic="ignore" icon={IconNames.CHEVRON_DOWN} />
+                <span data-chromatic="ignore">
+                  <Icon icon={IconNames.CHEVRON_DOWN} />
+                </span>
               ) : (
-                <Icon data-chromatic="ignore" icon={IconNames.CHEVRON_RIGHT} />
+                <span data-chromatic="ignore">
+                  <Icon icon={IconNames.CHEVRON_RIGHT} />
+                </span>
               )}
             </H4>
 
