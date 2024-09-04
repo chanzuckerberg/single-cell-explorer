@@ -163,6 +163,7 @@ class Gene extends React.Component<Props, State> {
                 sdsStyle="icon"
                 icon="InfoCircle"
                 sdsSize="small"
+                data-chromatic="ignore"
               />
             </InfoButtonWrapper>
             {!geneIsExpanded ? (

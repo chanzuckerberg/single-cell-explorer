@@ -940,10 +940,6 @@ async function resizeWindow(page: Page) {
   await page.waitForTimeout(2 * 1000);
 }
 
-// DEBUG
-// DEBUG
-// DEBUG
-
 export async function showImageUnderlayInTestMode(page: Page) {
   const imageUnderlayToggleButton = page.getByTestId("toggle-image-underlay");
 
@@ -954,6 +950,9 @@ export async function showImageUnderlayInTestMode(page: Page) {
    * and the second toggle will set it to `true`.
    */
   await imageUnderlayToggleButton.click({ force: true });
+
+  await page.waitForTimeout(2 * 1000);
+
   await imageUnderlayToggleButton.click({ force: true });
 }
 
