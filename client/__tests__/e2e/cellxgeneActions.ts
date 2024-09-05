@@ -959,7 +959,7 @@ export async function showImageUnderlayInTestMode(page: Page) {
   await tryUntil(
     async () => {
       await imageUnderlayDropdown.click({ force: true });
-      expect(await imageOpacityInput.isVisible()).toBe(false);
+      await imageOpacityInput.waitFor({ state: "hidden" });
     },
     { page }
   );
