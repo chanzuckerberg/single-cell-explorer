@@ -59,8 +59,8 @@ import { fetchDeepZoomImageFailed } from "../../actions/config";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { DatasetUnsMetadata } from "../../common/types/entities";
-import { FEATURES } from "../../util/featureFlags/features";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -924,6 +924,23 @@ class Graph extends React.Component<GraphProps, GraphState> {
       offsetY = (offscreenCanvas.height - targetHeight) / 2;
     }
 
+    /**
+     * (thuang): In test mode, we only want to show a bit of the image underlay
+     * to prevent Chromatic snapshots from creating false positives.
+     */
+    if (getFeatureFlag(FEATURES.TEST)) {
+      // Define the square clipping area (adjust values as needed)
+      const clipX = 250; // Adjust the offset as per your need
+      const clipY = 250; // Adjust the offset as per your need
+      const clipWidth = 400; // Width of the square
+      const clipHeight = 400; // Height of the square
+
+      // Create the clipping path
+      canvasContext.beginPath();
+      canvasContext.rect(clipX, clipY, clipWidth, clipHeight);
+      canvasContext.clip();
+    }
+
     // Draw the OpenSeadragon image as background with proper scaling
     canvasContext.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
   }
@@ -1417,13 +1434,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
             style={{
               width: viewport.width,
               height: viewport.height,
-              /**
-               * (thuang): In test mode, we only want to show a bit of the image underlay
-               * to prevent Chromatic snapshots from creating false positives.
-               */
-              clipPath: getFeatureFlag(FEATURES.TEST)
-                ? "inset(30% 30% 30% 30%)"
-                : "",
               /**
                * (thuang): Copied from the style of the graph-canvas element
                * to ensure both openseadragon and the canvas are resizable
