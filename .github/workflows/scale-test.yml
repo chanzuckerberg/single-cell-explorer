@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.8
+      - name: Set up Python 3.11
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.11
       - name: Install dependencies
         run: |
           pip install -r server/tests/locust/requirements-locust.txt
@@ -26,5 +26,3 @@ jobs:
           DEV_STATS=$(tail -n 15 locust_dev_stats.txt)
           DEV_MSG="\`\`\`CELLXGENE EXPLORER DEV SCALE TEST RESULTS: ${DEV_STATS}\`\`\`"
           curl -X POST -H 'Content-type: application/json' --data "{'text':'${DEV_MSG}'}" $SLACK_WEBHOOK
-
-
