@@ -161,7 +161,10 @@ jobs:
         cache: "npm"
         cache-dependency-path: "client/package-lock.json"
     - name: Install dependencies
-      run: make dev-env-server build-for-server-dev
+      run: |
+        make dev-env-server build-for-server-dev
+        cd client
+        npx playwright install
 
     - name: Download blob reports from GitHub Actions Artifacts
       uses: actions/download-artifact@v4
