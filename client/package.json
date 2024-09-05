@@ -11,7 +11,7 @@
     "build": "npm run clean && npm run create-supported-browsers-regex && webpack --config",
     "clean": "rimraf build",
     "dev": "npm run build -- configuration/webpack/webpack.config.dev.js",
-    "e2e": "playwright test --shard=1/4 && playwright test --shard=2/4 && playwright test --shard=3/4 && playwright test --shard=4/4",
+    "e2e": "playwright test --shard=1/6 && playwright test --shard=2/6 && playwright test --shard=3/6 && playwright test --shard=4/6 && playwright test --shard=5/6 && playwright test --shard=6/6",
     "e2e-dev": "CXG_URL_BASE=https://cellxgene.dev.single-cell.czi.technology playwright test",
     "e2e-stage": "CXG_URL_BASE=https://cellxgene.staging.single-cell.czi.technology playwright test",
     "e2e-prod": "CXG_URL_BASE=https://cellxgene.cziscience.com playwright test",

@@ -148,7 +148,7 @@ for (const testDataset of testDatasets) {
           });
         });
 
-        describeFn("breadcrumbs will loads", () => {
+        describeFn("breadcrumb loads", () => {
           test("dataset and collection from breadcrumbs appears", async ({
             page,
           }, testInfo) => {
@@ -1167,6 +1167,17 @@ for (const testDataset of testDatasets) {
                 //   .innerHTML();
 
                 // expect(genesHTML).toMatchSnapshot();
+              
+                // 1. check info button opens info panel test id get-info-HBB
+                // 2. check that the gene name is expected HBB
+                // 3. check that histogram-HBB is visible (could compare to snapshot)
+                // 4. check that the gene is in the gene set
+                // 5. check that delete removes the gene from the gene set
+                // 6. check that x & y pulls up the #scatterplot_wrapper
+                // 7. check that maximize opens and closes histogram_MT2A
+                // 8. check that color colors the gene in the scatterplot and the main graph
+
+                
                 await snapshotTestGraph(page, testInfo);
 
                 // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
