@@ -119,7 +119,7 @@ jobs:
 
       - name: Smoke tests (without annotations feature)
         run: |
-          cd client && make smoke-test
+          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test-shard
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
 
       - name: Publish to Chromatic
