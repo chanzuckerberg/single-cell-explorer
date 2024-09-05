@@ -34,20 +34,17 @@ start-frontend:
 	node server/development.js
 
 # start an instance of the Explorer server and run the end-to-end tests
+# if TOTAL_SHARDS & CURRENT_SHARD is set (as in GHA), run the tests for the current shard
 .PHONY: smoke-test
 smoke-test:
+	E2E=$$(e2e); \
+	@if [ -e $(CURRENT_SHARD) ] && [ -e $(TOTAL_SHARDS) ]; then \
+		E2E=$$(e2e -- --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)); \
+	fi; \
 	start_server_and_test \
 		'../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e'
-
-# start an instance of the Explorer server and run the end-to-end tests
-.PHONY: smoke-test-shard
-smoke-test-shard:
-	start_server_and_test \
-		'../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
-		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)'
+		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run $(E2E)'
 
 .PHONY: unit-test
 unit-test:
