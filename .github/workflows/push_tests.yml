@@ -85,6 +85,11 @@ jobs:
     runs-on: ubuntu-22.04
     # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     steps:
       - uses: actions/checkout@v4
         with:
