@@ -59,6 +59,8 @@ import { fetchDeepZoomImageFailed } from "../../actions/config";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { DatasetUnsMetadata } from "../../common/types/entities";
+import { FEATURES } from "../../util/featureFlags/features";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -1415,6 +1417,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
             style={{
               width: viewport.width,
               height: viewport.height,
+              /**
+               * (thuang): In test mode, we only want to show a bit of the image underlay
+               * to prevent Chromatic snapshots from creating false positives.
+               */
+              clipPath: getFeatureFlag(FEATURES.TEST)
+                ? "inset(30% 30% 30% 30%)"
+                : "",
               /**
                * (thuang): Copied from the style of the graph-canvas element
                * to ensure both openseadragon and the canvas are resizable
