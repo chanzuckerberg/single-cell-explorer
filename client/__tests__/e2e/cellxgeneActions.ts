@@ -957,3 +957,7 @@ export async function showImageUnderlayInTestMode(page: Page) {
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
+
+// DEBUG
+// DEBUG
+// DEBUG
