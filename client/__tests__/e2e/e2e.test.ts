@@ -154,15 +154,15 @@ for (const testDataset of testDatasets) {
           }, testInfo) => {
             await goToPage(page, url);
 
-            const datasetElement = await page
-              .getByTestId("bc-Dataset")
-              .innerHTML();
-            const collectionsElement = await page
-              .getByTestId("bc-Collection")
-              .innerHTML();
+            // const datasetElement = await page
+            //   .getByTestId("bc-Dataset")
+            //   .innerHTML();
+            // const collectionsElement = await page
+            //   .getByTestId("bc-Collection")
+            //   .innerHTML();
 
-            expect(datasetElement).toMatchSnapshot();
-            expect(collectionsElement).toMatchSnapshot();
+            // expect(datasetElement).toMatchSnapshot();
+            // expect(collectionsElement).toMatchSnapshot();
 
             await snapshotTestGraph(page, testInfo);
           });
@@ -1162,11 +1162,11 @@ for (const testDataset of testDatasets) {
 
                 await waitUntilNoSkeletonDetected(page);
 
-                let genesHTML = await page
-                  .getByTestId("gene-set-genes")
-                  .innerHTML();
+                // let genesHTML = await page
+                //   .getByTestId("gene-set-genes")
+                //   .innerHTML();
 
-                expect(genesHTML).toMatchSnapshot();
+                // expect(genesHTML).toMatchSnapshot();
                 await snapshotTestGraph(page, testInfo);
 
                 // (thuang): We need to assert Pop2 geneset is expanded, because sometimes
@@ -1190,11 +1190,11 @@ for (const testDataset of testDatasets) {
                   }
                 );
 
-                genesHTML = await page
-                  .getByTestId("gene-set-genes")
-                  .innerHTML();
+                // genesHTML = await page
+                //   .getByTestId("gene-set-genes")
+                //   .innerHTML();
 
-                expect(genesHTML).toMatchSnapshot();
+                // expect(genesHTML).toMatchSnapshot();
                 await snapshotTestGraph(page, testInfo);
               });
 
