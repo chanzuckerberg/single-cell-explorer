@@ -85,6 +85,11 @@ jobs:
     runs-on: ubuntu-22.04
     # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,7 +119,7 @@ jobs:
 
       - name: Smoke tests (without annotations feature)
         run: |
-          cd client && make smoke-test
+          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
 
       - name: Publish to Chromatic
