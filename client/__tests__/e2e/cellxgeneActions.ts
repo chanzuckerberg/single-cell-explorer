@@ -955,6 +955,14 @@ export async function showImageUnderlayInTestMode(page: Page) {
   );
 
   await imageOpacityInput.fill("100");
+
+  await tryUntil(
+    async () => {
+      await imageUnderlayDropdown.click({ force: true });
+      expect(await imageOpacityInput.isVisible()).toBe(false);
+    },
+    { page }
+  );
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
