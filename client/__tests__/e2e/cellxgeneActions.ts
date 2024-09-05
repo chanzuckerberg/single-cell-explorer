@@ -888,7 +888,7 @@ export async function snapshotTestGraph(
       /**
        * (thuang): Ensure stable graph image before taking the snapshot
        */
-      await page.waitForTimeout(5 * 1000);
+      await page.waitForTimeout(2 * 1000);
 
       await takeSnapshot(page, name, testInfo);
 
@@ -941,19 +941,20 @@ async function resizeWindow(page: Page) {
 }
 
 export async function showImageUnderlayInTestMode(page: Page) {
-  const imageUnderlayToggleButton = page.getByTestId("toggle-image-underlay");
+  const imageUnderlayDropdown = page.getByTestId("image-underlay-dropdown");
+  const imageOpacityInput = page.locator("#image-opacity");
 
-  if (!(await imageUnderlayToggleButton.isVisible())) return;
-  /**
-   * (thuang): We need to toggle twice to show the imageUnderlay in test mode.
-   * This is because the first toggle will sync the imageUnderlay state to `false`,
-   * and the second toggle will set it to `true`.
-   */
-  await imageUnderlayToggleButton.click({ force: true });
+  if (!(await imageUnderlayDropdown.isVisible())) return;
 
-  await page.waitForTimeout(2 * 1000);
+  await tryUntil(
+    async () => {
+      await imageUnderlayDropdown.click({ force: true });
+      expect(await imageOpacityInput.isVisible()).toBe(true);
+    },
+    { page }
+  );
 
-  await imageUnderlayToggleButton.click({ force: true });
+  await imageOpacityInput.fill("100");
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
