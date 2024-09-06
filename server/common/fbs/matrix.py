@@ -104,7 +104,14 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
     matrix = serialize_matrix(builder, n_rows, n_cols, matrix_column_vec, cidx)
 
     builder.Finish(matrix)
-    return builder.Output()
+
+    output = builder.Output()
+
+    # Werkzeug has strict requirements that the response data must be in bytes
+    if isinstance(output, bytearray):
+        output = bytes(output)
+
+    return output
 
 
 def decode_matrix_fbs(fbs):

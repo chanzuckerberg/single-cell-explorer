@@ -20,6 +20,6 @@ requests==2.32.3
 scipy==1.11.1
 flask-server-timing==0.1.2
 s3fs==0.4.2
-tiledb # unpinned to match Portals requirements
-Werkzeug==2.2.3 # 2.3.0 breaks the binary endpoints
+tiledb # unpinned to match Portal's requirements
+Werkzeug==3.0.4
 python-json-logger==2.0.7
