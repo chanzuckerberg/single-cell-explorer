@@ -453,7 +453,7 @@ class EndPoints(BaseTest):
                 url = f"{url_base}{endpoint}"
                 headers = {"Accept": "application/octet-stream"}
                 result = self.client.put(url, headers=headers)
-                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(result.status_code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
 
                 filter = {"filter": {"var": {"index": [0, 1, 4]}}}
                 result = self.client.put(url, headers=headers, json=filter)
@@ -466,7 +466,7 @@ class EndPoints(BaseTest):
                 url = f"{url_base}{endpoint}"
                 header = {"Accept": "application/octet-stream"}
                 result = self.client.put(url, headers=header)
-                self.assertEqual(result.status_code, HTTPStatus.BAD_REQUEST)
+                self.assertEqual(result.status_code, HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
 
     def test_data_get_fbs(self):
         endpoint = "data/var"

@@ -6,10 +6,10 @@ import struct
 import sys
 import zlib
 from http import HTTPStatus
+from urllib.parse import unquote as url_unquote
 
 import requests
 from flask import abort, current_app, jsonify, make_response, redirect
-from werkzeug.urls import url_unquote
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
