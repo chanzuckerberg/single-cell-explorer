@@ -144,7 +144,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: all-blob-reports
+          name: blob-report-${{ matrix.shardIndex }}
           path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
           retention-days: 1
   merge-reports: 
@@ -168,7 +168,8 @@ jobs:
     - name: Download blob reports from GitHub Actions Artifacts
       uses: actions/download-artifact@v4
       with:
-        name: all-blob-reports
+        pattern: blob-report-*
+        merge-multiple: true
         path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
 
     - name: Merge into HTML Report
