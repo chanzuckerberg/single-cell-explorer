@@ -919,25 +919,38 @@ export async function selectLayout(
 }
 
 async function resizeWindow(page: Page) {
-  /**
-   * (thuang): Resize the viewport to ensure the spatial background image
-   * is fully aligned
-   */
-  await page.setViewportSize({
-    width: VIEWPORT_SIZE.width - 100,
-    height: VIEWPORT_SIZE.height,
-  });
+  await tryUntil(
+    async () => {
+      /**
+       * (thuang): Resize the viewport to ensure the spatial background image
+       * is fully aligned
+       */
+      await page.setViewportSize({
+        width: VIEWPORT_SIZE.width - 100,
+        height: VIEWPORT_SIZE.height,
+      });
 
-  // gradually increase the viewport size over 2s with 200ms pauses
-  Array.from({ length: 10 }).forEach(async (_, i) => {
-    await page.setViewportSize({
-      width: VIEWPORT_SIZE.width - 100 + i * 10,
-      height: VIEWPORT_SIZE.height,
-    });
-    await page.waitForTimeout(200);
-  });
+      // gradually increase the viewport size over 2s with 200ms pauses
+      for (const [index] of Array.from({ length: 10 }).entries()) {
+        await page.setViewportSize({
+          width: VIEWPORT_SIZE.width - 100 + (index + 1) * 10,
+          height: VIEWPORT_SIZE.height,
+        });
 
-  await page.waitForTimeout(2 * 1000);
+        await page.waitForTimeout(200);
+      }
+
+      await page.setViewportSize({
+        width: VIEWPORT_SIZE.width,
+        height: VIEWPORT_SIZE.height,
+      });
+
+      const viewportSize = await page.viewportSize();
+
+      expect(viewportSize).toEqual(VIEWPORT_SIZE);
+    },
+    { page }
+  );
 }
 
 export async function showImageUnderlayInTestMode(page: Page) {

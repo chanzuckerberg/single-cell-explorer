@@ -929,13 +929,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
      * to prevent Chromatic snapshots from creating false positives.
      */
     if (getFeatureFlag(FEATURES.TEST)) {
-      // Define the square clipping area (adjust values as needed)
-      const clipX = 250; // Adjust the offset as per your need
-      const clipY = 250; // Adjust the offset as per your need
-      const clipWidth = 400; // Width of the square
-      const clipHeight = 400; // Height of the square
+      const clipX = 250;
+      const clipY = 250;
+      const clipWidth = 400;
+      const clipHeight = 400;
 
-      // Create the clipping path
       canvasContext.beginPath();
       canvasContext.rect(clipX, clipY, clipWidth, clipHeight);
       canvasContext.clip();

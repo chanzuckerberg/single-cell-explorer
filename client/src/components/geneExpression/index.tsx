@@ -191,6 +191,7 @@ class GeneExpression extends React.Component<{}, State> {
         <QuickGene />
         <div>
           <div
+            data-chromatic="ignore"
             style={{
               display: "flex",
               flexDirection: "row",
