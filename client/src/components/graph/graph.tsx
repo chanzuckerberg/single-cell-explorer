@@ -59,6 +59,8 @@ import { fetchDeepZoomImageFailed } from "../../actions/config";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
 import { DatasetUnsMetadata } from "../../common/types/entities";
+import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
+import { FEATURES } from "../../util/featureFlags/features";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -922,6 +924,21 @@ class Graph extends React.Component<GraphProps, GraphState> {
       offsetY = (offscreenCanvas.height - targetHeight) / 2;
     }
 
+    /**
+     * (thuang): In test mode, we crop the image underlay and the graph
+     * to prevent Chromatic snapshots from creating false positives.
+     */
+    if (getFeatureFlag(FEATURES.TEST)) {
+      const clipX = 250;
+      const clipY = 250;
+      const clipWidth = 400;
+      const clipHeight = 400;
+
+      canvasContext.beginPath();
+      canvasContext.rect(clipX, clipY, clipWidth, clipHeight);
+      canvasContext.clip();
+    }
+
     // Draw the OpenSeadragon image as background with proper scaling
     canvasContext.drawImage(image, offsetX, offsetY, targetWidth, targetHeight);
   }
@@ -1155,6 +1172,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       config: { s3URI },
       isSidePanel = false,
       imageUnderlay,
+      imageOpacity,
     } = this.props;
 
     if (
@@ -1177,6 +1195,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
        * (thuang): This is needed to prevent error `tainted canvas` when downloading the image
        */
       crossOriginPolicy: "Anonymous",
+      opacity: imageOpacity / 100,
     });
 
     /**
