@@ -91,7 +91,7 @@ export const datasets = {
           values: ["B cells", "Megakaryocytes"],
         },
       ],
-      count: "330",
+      count: "332",
       categorical: {
         louvain: {
           "B cells": "342",
@@ -100,7 +100,7 @@ export const datasets = {
       },
       lasso: {
         "coordinates-as-percent": { x1: 0.25, y1: 0.1, x2: 0.75, y2: 0.65 },
-        count: "330",
+        count: "332",
       },
     },
     scatter: {
@@ -264,7 +264,7 @@ export const datasets = {
           values: ["glial cell", "B cell"],
         },
       ],
-      count: "330",
+      count: "332",
       categorical: {
         cell_type: {
           "B cell": "1",
