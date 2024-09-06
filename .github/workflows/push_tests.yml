@@ -85,6 +85,11 @@ jobs:
     runs-on: ubuntu-22.04
     # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -114,7 +119,7 @@ jobs:
 
       - name: Smoke tests (without annotations feature)
         run: |
-          cd client && make smoke-test
+          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
           ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
 
       - name: Publish to Chromatic
@@ -136,9 +141,43 @@ jobs:
           retention-days: 14
 
       - name: Upload blob report to GitHub Actions Artifacts
-        if: always()
-        uses: actions/upload-artifact@v3
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
         with:
-          name: all-blob-reports
-          path: ~/**/blob-report/*
+          name: blob-report-${{ matrix.shardIndex }}
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
           retention-days: 1
+  merge-reports: 
+    # Merge reports after playwright-tests, even if some shards have failed
+    if: always()
+    needs: [smoke-tests]
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
+      - name: Install dependencies
+        run: npm ci
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          merge-multiple: true
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+
+      - name: Merge into HTML Report
+        run: npx playwright merge-reports --reporter html ./blob-report
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report--attempt-${{ github.run_attempt }}
+          path: playwright-report
+          retention-days: 14
