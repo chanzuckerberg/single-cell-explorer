@@ -17,11 +17,12 @@ import {
   snapshotTestGraph,
   expandGeneset,
   expandMarkerGeneSetsHeader,
+  goToPage,
 } from "./cellxgeneActions";
 
 import { pageURLCellGuide } from "../common/constants";
 
-import { goToPage } from "../util/helpers";
+import { getSnapshotPrefix } from "../util/helpers";
 
 const { describe } = test;
 
@@ -32,7 +33,7 @@ describe("CellGuideCXG", () => {
   test("page launched", async ({ page }, testInfo) => {
     await goToPage(page, pageURLCellGuide);
 
-    await snapshotTestGraph(page, testInfo);
+    await snapshotTestGraph(page, getSnapshotPrefix(testInfo), testInfo);
   });
 
   test("assert absence of 'Standard Categories' and 'Author Categories'", async ({
