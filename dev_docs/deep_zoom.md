@@ -26,5 +26,6 @@ It is built on the OpenSeadragon (OSD) JavaScript library, integrated into the E
 
 ### Resources and Links
 [Spatial Mode Deep Zooming Tech Spec Design Doc](https://docs.google.com/document/d/1Jp5ePtAk6uXYZjY8XVkdfr0jf1IG0MJj8H_clPuRdFY)
+
 [CELLxGENE Platform Technical Overview](https://docs.google.com/document/d/19IZbojtc7eofV75NnL5C6fCgBJB13KIswWNOn12xAa0)
 
