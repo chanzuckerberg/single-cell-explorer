@@ -340,7 +340,9 @@ def _un_byteshuffle(buf: Union[bytes, bytearray, memoryview], dtype) -> np.ndarr
 
 
 def _delta(arr: np.ndarray) -> np.ndarray:
-    return np.diff(arr, prepend=arr.dtype.type(0))
+    delta_arr = arr.astype(np.int64)  # Cast to higher precision
+    delta_arr[1:] -= delta_arr[:-1]  # Subtract to compute delta
+    return delta_arr.astype(np.uint16)  # Cast back to uint16 if needed
 
 
 def _un_delta(arr: np.ndarray) -> np.ndarray:
@@ -365,7 +367,7 @@ def _interval_invert(arr: np.ndarray, interval=None) -> np.ndarray:
     assert arr.dtype.kind == "u"
     assert interval is not None or len(arr) > 0
     if interval is None:
-        interval = (arr[0], arr[-1] + 1)
+        interval = (int(arr[0]), int(arr[-1]) + 1)  # Cast to int to prevent overflow
     assert len(arr) == 0 or (arr[0] >= interval[0] and arr[0] < interval[1])
     assert len(arr) == 0 or (arr[-1] >= interval[0] and arr[-1] < interval[1])
     return _interval_invert_inner(
