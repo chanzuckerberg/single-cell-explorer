@@ -46,7 +46,14 @@ For any errors, [report bugs on Github](https://github.com/chanzuckerberg/single
 
 ### Contributing
 
-Please see our [contributing guide](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/contribute.md) and don't hesitate to open an issue or send a pull request to improve CZ CELLxGENE Explorer. Please see the [dev_docs](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs) for pull request suggestions, unit test details, local documentation preview, and other development specifics. 
+Please see our [contributing guide](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/contribute.md) and don't hesitate to open an issue or send a pull request to improve CZ CELLxGENE Explorer.
+
+#### START HERE:
+(Set Up Local Dev Environment)[https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/developer_guidelines.md]
+(Design Principles)[https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/design_principles.md]
+(How to write Tests)[https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/e2e_tests.md]
+(Pull Request Suggestions)[https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/pull_request_guidelines.md]
+...and [more](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs)
 
 This project adheres to the Contributor Covenant [code of conduct](https://github.com/chanzuckerberg/.github/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to opensource@chanzuckerberg.com.
 
