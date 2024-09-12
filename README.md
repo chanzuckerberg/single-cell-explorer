@@ -12,11 +12,11 @@ Whether you need to visualize one thousand cells or one million, CELLxGENE Explo
 
 #### Highlighted Features
 
-- **Interactive Exploration**: Provides intuitive navigation of 2D matrices with dimensions, allowing users to explore and annotate datasets.
+- **Interactive Exploration**: Provides intuitive navigation of 2D matrices with dimensions, allowing users to explore datasets.
 - **Data Visualization**: Offers clear, intuitive visual representations of datasets and related artifacts.
 - **Spatial Mode with Deep Zoom**: Enables seamless zooming in and out of high-resolution images & spatial data (e.g., Slide-seq V2, Visium) to examine fine details.
 - **Gating/Selection**: Allows users to sub-select data and integrate multiple selections.
-- **Annotation**: Users can label cells and create gene sets.
+- **Dynamic**: Users can create their own gene sets to investigate.
 - **Analytics**: Provides on-demand, interactive analytical tools such as differential expression analysis (gene/var t-tests).
 
 ## Getting started

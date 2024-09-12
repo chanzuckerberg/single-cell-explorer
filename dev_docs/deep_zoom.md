@@ -8,7 +8,7 @@ It is built on the OpenSeadragon (OSD) JavaScript library, integrated into the E
 
 - [OpenSeadragon (OSD)](https://openseadragon.github.io/): The OSD library is imported into the frontend to handle interactive zoom and pan operations. OSD dynamically loads image tiles based on the user’s zoom level and position.
 - Zoom & Pan Synchronization: Zooming and panning are kept in sync with spatial layers (e.g., dot layers) in the Explorer to ensure smooth interaction across different dataset views.
-- Dynamic Resource Loading: URLs for the image tiles are generated based on the current environment (local, dev, staging, prod), ensuring the correct assets are fetched dynamically.
+- Dynamic Resource Loading: URLs for the image tiles are generated based on the current environment (dev, staging, prod), ensuring the correct assets are fetched dynamically.
 
 ## Backend Image Processing & Storage
 
@@ -21,10 +21,11 @@ It is built on the OpenSeadragon (OSD) JavaScript library, integrated into the E
 
 ## Validation & Testing
 
-- Frontend Tests: Screenshot testing ensures correct tile rendering across different zoom levels. Functional testing verifies that image export, toggle, and panning features work seamlessly.
-- Backend Tests: Ensure that the CXG conversion process correctly generates deep zoom tiles, uploads them to S3, and that CloudFront caches the assets properly.
+- Frontend Tests: Screenshot testing ensures correct tile rendering across different zoom levels. E2E testing verifies that image export, toggle, and panning features work seamlessly.
+- (TODO: Aug 2024) Backend Tests: Ensure that the CXG conversion process correctly generates deep zoom tiles, uploads them to S3, and that CloudFront caches the assets properly.
 
 ### Resources and Links
+
 [Spatial Mode Deep Zooming Tech Spec Design Doc](https://docs.google.com/document/d/1Jp5ePtAk6uXYZjY8XVkdfr0jf1IG0MJj8H_clPuRdFY)
 
 [CELLxGENE Platform Technical Overview](https://docs.google.com/document/d/19IZbojtc7eofV75NnL5C6fCgBJB13KIswWNOn12xAa0)
