@@ -33,13 +33,15 @@ start-frontend:
 	export CXG_SERVER_PORT=$${port:-$$CXG_SERVER_PORT}; \
 	node server/development.js
 
-# start an instance of the Explorer server and run the end-to-end tests
+# start an instance of the Explorer server and run the end-to-end tests in shard mode
 .PHONY: smoke-test
 smoke-test:
 	start_server_and_test \
 		'../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e'
+		$(if $(and $(CURRENT_SHARD),$(TOTAL_SHARDS)), \
+			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
+			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e')
 
 .PHONY: unit-test
 unit-test:

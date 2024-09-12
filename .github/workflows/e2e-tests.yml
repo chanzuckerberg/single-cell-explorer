@@ -1,0 +1,165 @@
+name: E2E Tests
+
+# (thuang): Chromatic recommends ONLY running on push instead of pull_request
+# https://www.chromatic.com/docs/github-actions/#recommended-configuration-for-build-events
+on: push
+
+env:
+  JEST_ENV: prod
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+jobs:
+  run-smoke-tests:
+    runs-on: ubuntu-22.04
+    # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2, 3, 4, 5]
+        shardTotal: [5]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Chromatic needs full Git history graph
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.11
+      - name: Python cache
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
+      - name: Install dependencies
+        run: |
+          make dev-env-server build-for-server-dev
+          cd client
+          npx playwright install
+
+      - name: Smoke tests (without annotations feature)
+        run: |
+          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
+          ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
+
+      - name: Upload Chromatic artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chromatic-report-${{ matrix.shardIndex }}
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report/chromatic-archives
+          retention-days: 14
+
+      - name: Upload FE test results as an artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.shardIndex }}
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          retention-days: 14
+
+      - name: Upload blob report to GitHub Actions Artifacts
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+          retention-days: 1
+
+  merge-reports:
+    # Merge reports after playwright-tests, even if some shards have failed
+    if: always()
+    needs: [run-smoke-tests]
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "client/.nvmrc"
+          cache: "npm"
+          cache-dependency-path: "client/package-lock.json"
+      - name: Install dependencies
+        run: npm ci
+      - name: Download blob reports from GitHub Actions Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          merge-multiple: true
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/blob-report
+
+      - name: Merge into HTML Report
+        run: npx playwright merge-reports --reporter html ./blob-report
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report--attempt-${{ github.run_attempt }}
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report
+          retention-days: 14
+
+  # https://github.com/myieye/web-languageforge/blob/develop/.github/workflows/e2e-tests.yml
+  smoke-tests:
+    if: always()
+    name: smoke-tests
+    runs-on: ubuntu-latest
+    needs:
+      - run-smoke-tests
+    steps:
+      - name: Check result
+        run: |
+          passed="${{ needs.run-smoke-tests.result }}"
+          if [[ $passed == "success" ]]; then
+            echo "Shards passed"
+            exit 0
+          else
+            echo "Shards failed"
+            exit 1
+          fi
+
+  merge-chromatic:
+    name: Run Chromatic
+    needs: [run-smoke-tests]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # (thuang): Matches the `name` and `path` specified in `Upload Chromatic artifacts` step
+          path: /home/runner/work/single-cell-explorer/single-cell-explorer/client/playwright-report/chromatic-archives
+          pattern: chromatic-report-*
+          merge-multiple: true
+
+      - name: Run Chromatic tests
+        uses: chromaui/action@latest
+        with:
+          workingDir: ./client
+          buildScriptName: "build-archive-storybook"
+          exitOnceUploaded: true
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        env:
+          # 👇 Sets environment variables
+          CHROMATIC_ARCHIVE_LOCATION: playwright-report/
