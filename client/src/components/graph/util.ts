@@ -169,12 +169,18 @@ function getSpatialUrl(s3URI: string) {
 
   // TODO(thuang): Take rdev into account
 
-  if (hostname.includes("staging")) {
+  if (
+    /**
+     * (thuang): `dev` env for Explorer is out of sync with Terraform, so don't
+     * use it anymore
+     */
+    hostname.includes("dev") ||
+    hostname.includes("staging") ||
+    hostname.includes("localhost")
+  ) {
     return `https://cellxgene.staging.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
   }
-  if (hostname.includes("dev") || hostname.includes("localhost")) {
-    return `https://cellxgene.dev.single-cell.czi.technology/spatial-deep-zoom/${datasetVersionId}/`;
-  }
+
   return `https://cellxgene.cziscience.com/spatial-deep-zoom/${datasetVersionId}/`;
 }
 
