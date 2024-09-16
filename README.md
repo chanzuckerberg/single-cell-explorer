@@ -10,6 +10,15 @@ CZ CELLxGENE Explorer (pronounced "cell-by-gene") is an interactive data explore
 
 Whether you need to visualize one thousand cells or one million, CELLxGENE Explorer helps you gain insight into your single-cell data.
 
+#### Highlighted Features
+
+- **Interactive Exploration**: Provides intuitive navigation of 2D matrices with dimensions, allowing users to explore datasets.
+- **Data Visualization**: Offers clear, intuitive visual representations of datasets and related artifacts.
+- **Spatial Mode with Deep Zoom**: Enables seamless zooming in and out of high-resolution images & spatial data (e.g., Slide-seq V2, Visium) to examine fine details.
+- **Gating/Selection**: Allows users to sub-select data and integrate multiple selections.
+- **Dynamic**: Users can create their own gene sets to investigate.
+- **Analytics**: Provides on-demand, interactive analytical tools such as differential expression analysis (gene/var t-tests).
+
 ## Getting started
 
 ### The comprehensive guide to CZ CELLxGENE
@@ -37,9 +46,16 @@ For any errors, [report bugs on Github](https://github.com/chanzuckerberg/single
 
 ### Contributing
 
-Please see our [contributing guide](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/contribute.md) and don't hesitate to open an issue or send a pull request to improve CZ CELLxGENE Explorer. Please see the [dev_docs](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs) for pull request suggestions, unit test details, local documentation preview, and other development specifics. 
+Please see our [contributing guide](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/contribute.md) and don't hesitate to open an issue or send a pull request to improve CZ CELLxGENE Explorer.
 
 This project adheres to the Contributor Covenant [code of conduct](https://github.com/chanzuckerberg/.github/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to opensource@chanzuckerberg.com.
+
+#### Start Here
+- [Set Up Local Dev Environment](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/developer_guidelines.md)
+- [Design Principles](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/design_principles.md)
+- [How to write Tests](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/e2e_tests.md)
+- [Pull Request Suggestions](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/pull_request_guidelines.md)
+- ...and [more](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs)
 
 ### Reuse
 
