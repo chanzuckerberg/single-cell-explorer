@@ -1,4 +1,4 @@
-# Developer guidelines
+# Developer Guidelines
 
 ## Requirements
 
@@ -6,42 +6,45 @@
 - Python 3.6+
 - Chrome
 
-**All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified.**
-
 ### Environment
 
 For all `make` commands, `common.mk` automatically checks whether required environment variables are set and, if they are not set, assigns them default values from `environment.default.json`.
 
 You can set these environment variables manually with the `export` shell command, as in `export JEST_ENV=debug`, or you can just pass the variables as part of the command. E.g., `HEADFUL=true make e2e` or `JEST_ENV=debug npm run e2e`
 
-## Start developing locally
+## Dev Environment Setup
 
-1. Ensure that you have a [Python virtual environment](https://docs.python.org/3/library/venv.html) set up and activated (`source venv/bin/activate`).
-1. Run `make dev-env` to install the appropriate dependencies for both the frontend and backend.
+**All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified.**
 
-### If you are only developing for the server...
+### 1. Install dependencies
 
-1. Run `make build-for-server-dev`. This will build the client and put static files in place.
-1. Run `./launch_dev_server.sh [dataset] [options]`. This will launch at server at http://localhost:5005.
-   1. Note: you will need to ensure that the dataset format is in CXG. A small dataset is included in this repository [here](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg). To use this dataset, you would run `./launch_dev_server.sh example-dataset/ [options]`. Note that the `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets.
-1. You may navigate to http://localhost:5005/d/{dataset_name} to view the dataset. Note that there will not be hot-loading for the frontend if you make changes to the client.
+- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) set up and activated (`source venv/bin/activate`).
+- `make dev-env`
 
-If you make changes to the server, you will need to restart the server in order for the changes to take.
+### 2. Run the server
 
-### If you are also developing for the frontend...
+- `make build-for-server-dev` - builds the client and puts static files in place.
+- `./launch_dev_server.sh [dataset] [options]` launchs server at http://localhost:5005.
+   Note: you will need to ensure that the dataset format is in CXG. A small dataset is included in this repository [here](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg). To use this dataset, you would run `./launch_dev_server.sh example-dataset/`. Note that the `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` avaiblable, go to [TODO].
+- Go to http://localhost:5005/d/{dataset_name} to view the dataset. ie. <http://localhost:5005/d/pbmc3k.cxg/>
+   Note: there will not be hot-loading for the frontend for changes to the client at this port.
+   If you make changes to the server, you will need to restart the server in order for the changes to take.
 
-To launch with hot reloading, you need to launch the server and the client separately. Node's hot reloading starts the client on its own node server and auto-refreshes when changes are made to source files.
+### 3. Run the client (optionally for hot-reloading on the front end)
 
-1. First, ensure that you have a server running.
-1. Run `cd client/` and then `make start-frontend`.
-1. Navigate to `localhost:3000/d/<dataset>` in your web browser. This is where your client will be served.
-   - Default base_url of `d` is hard-coded.
-   - The `dataset` will be the argument passed to the server launch script OR will default to example dataset.
-   - The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar.
+- Ensure that you have a server running at http://localhost:5005/d/{dataset_name}
+- Run `cd client/ && make start-frontend`
+- Go to http://localhost:3000/d/{dataset_name} to view live changes. ie. <http://localhost:3000/d/super-cool-spatial.cxg/>
 
-Note: in case you need to just build the client alone, you can run `make build-client`.
+#### FYI
 
-### If you have an M1 or M2 chip...
+- Default base_url of `d` is hard-coded.
+- The `{dataset_name}` will be the argument passed to the server launch script OR will default to example dataset.
+- The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar.
+- Hot Reloading launchs the server and the client separately. Node starts the client on its own node server and auto-refreshes when changes are made to source files.
+- In case you need to just build the client alone, you can run `make build-client`.
+
+#### If you have an M1 or M2 chip...
 
 Attempting to run Explorer locally (server and/or client) will fail with something that looks like:
 
@@ -59,7 +62,7 @@ Puppeteer is a dependency for e2e tests, but it's not used for running Explorer 
 
 If you want to actually run e2e tests, then you'll need to set up Chromium to enable Puppeteer. [This blog post](https://broddin.be/2022/09/19/fixing-the-chromium-binary-is-not-available-for-arm64/) should show you how to do that on an M1/M2 machine.
 
-### Mocking the dataset-metadata endpoint
+#### Mocking the dataset-metadata endpoint
 
 The dataset-metadata endpoint requires using data-portal. A true local build would require running an instance of data-portal locally. An easier solution that works for most use cases is to just mock the response of dataset-metadata. To do this, you can update the `DatasetMetadataAPI` class in `server/app/api/v3.py` to:
 
@@ -77,7 +80,7 @@ class DatasetMetadataAPI(DatasetResource):
 
 Note that you'll need to `import json` and also add `Response` to the `flask` import. This will mock the expected response to the `liver.cxg` dataset that is in the `example-dataset/` directory. After updating the mock response, you can build the backend + frontend the same way you normally would.
 
-### Before you request a PR review...
+## How to request a PR review
 
 Please lint and format your code before requesting a PR review.
 
