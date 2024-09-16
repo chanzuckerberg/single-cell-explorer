@@ -12,7 +12,7 @@
 
 - `$ git clone git@github.com:chanzuckerberg/single-cell-explorer.git`
 - `$ cd single-cell-explorer/`
-- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `$ source venv/bin/activate`)
+- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `$ source venv/bin/activate`) [See here](#one-way-to-set-up-a-python-virtual-environment) for one way to set up a Python Virtual Environment
 - `$ make dev-env`
 
 ### 2. Run the server
@@ -71,6 +71,17 @@ class DatasetMetadataAPI(DatasetResource):
 ```
 
 Note that you'll need to `import json` and also add `Response` to the `flask` import. This will mock the expected response to the `liver.cxg` dataset that is in the `example-dataset/` directory. After updating the mock response, you can build the backend + frontend the same way you normally would.
+
+#### One way to set up a Python Virtual Environment
+
+There are many tools you can use to setup a Python Virtual Environment, here is one using [pyenv](https://github.com/pyenv/pyenv) & [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv):
+
+- `brew install pyenv-virtualenv`
+- [Set up your shell environment for pyenv](https://github.com/pyenv/pyenv?tab=readme-ov-file#set-up-your-shell-environment-for-pyenv)
+- `pyenv install 3.12.4`
+- `pyenv virtualenv 3.12.4 single-cell-env`
+- `pyenv activate single-cell-env`
+- `python3 -v` should output `3.12.4`
 
 ## How to request a PR review
 
