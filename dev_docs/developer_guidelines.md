@@ -1,6 +1,6 @@
 # Developer Guidelines
 
-## Requirements
+### Requirements
 
 - npm
 - Python 3.6+
@@ -14,17 +14,17 @@ You can set these environment variables manually with the `export` shell command
 
 ## Dev Environment Setup
 
-_All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified._
-
 ### 1. Install dependencies
 
-- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `source venv/bin/activate`).
-- `make dev-env`
+- $ `git clone git@github.com:chanzuckerberg/single-cell-explorer.git`
+- $ `cd single-cell-explorer/`
+- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `$ source venv/bin/activate`).
+- `$ make dev-env`
 
 ### 2. Run the server
 
-- `make build-for-server-dev` - builds the client and puts static files in place.
-- `./launch_dev_server.sh [dataset] [options]` (ie. `./launch_dev_server.sh example-dataset/` runs [this](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg) a small dataset included in this repository)
+- `$ make build-for-server-dev` - builds the client and puts static files in place.
+- `$ ./launch_dev_server.sh [dataset] [options]` (ie. `./launch_dev_server.sh example-dataset/` runs [this](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg) a small dataset included in this repository)
 
    **Note:** you will need to ensure that the dataset format is in CXG. The `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` avaiblable, go to [TODO].
 - Navivate to `http://localhost:5005/d/{dataset_name}` to view the dataset. ie. <http://localhost:5005/d/pbmc3k.cxg/>
@@ -35,7 +35,7 @@ _All instructions are expected to be run from the top level single-cell-explorer
 ### 3. Run the client (optionally for hot-reloading on the front end)
 
 - Ensure that you have a server running on `http://localhost:5005`
-- Run `cd client/ && make start-frontend`
+- `$ cd client/ && make start-frontend`
 - Go to `http://localhost:3000/d/{dataset_name}` to view live changes. ie. <http://localhost:3000/d/super-cool-spatial.cxg/> ✅ Success! ✅
 - **FYI**
   - Default base_url of `d` is hard-coded.
