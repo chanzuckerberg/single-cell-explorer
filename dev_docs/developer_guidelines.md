@@ -124,18 +124,18 @@ Client and server tests run on [Github Actions](https://github.com/chanzuckerber
 
 ### Run end to end tests interactively during development
 
-1. The Explorer requirements should be installed as [specified in client dev](#Start-developing-locally)
-1. Follow [launch](#If-you-are-also-developing-for-the-frontend...) instructions for client dev (defaults to `example-dataset/pbmc3k.cxg` dataset unless otherwise specified)
+1. The Explorer requirements should be installed as [specified in client dev](#1-install-dependencies)
+1. Follow [launch](#3-run-the-client-optionally-for-hot-reloading-on-the-front-end) instructions for client dev (defaults to `example-dataset/pbmc3k.cxg` dataset unless otherwise specified)
 1. Run `npm run e2e` from the `client` directory
 1. To debug a failing test, add `debugger` in any line of JS code as breakpoint, and launch the test again with [`ndb`](https://github.com/GoogleChromeLabs/ndb). E.g., `ndb make e2e` or `ndb npm run e2e`.
 
    1. Please make sure to install `ndb` via `npm install -g ndb`
    1. Check out [Debugging Tips](e2e_tests.md#debugging-tips) for more ideas!
 
-**See more** on E2E testing [here](e2e_tests.md).
-
 #### To run end to end tests _exactly_ as they will be run on CI use the following command
 
 ```shell
 JEST_ENV=prod make dev-env smoke-test
 ```
+
+### See more on E2E testing [here](e2e_tests.md)
