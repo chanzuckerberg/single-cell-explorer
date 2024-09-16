@@ -48,9 +48,10 @@ For any errors, [report bugs on Github](https://github.com/chanzuckerberg/single
 
 Please see our [contributing guide](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/contribute.md) and don't hesitate to open an issue or send a pull request to improve CZ CELLxGENE Explorer.
 
-This project adheres to the Contributor Covenant [code of conduct](https://github.com/chanzuckerberg/.github/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to opensource@chanzuckerberg.com.
+This project adheres to the Contributor Covenant [code of conduct](https://github.com/chanzuckerberg/.github/blob/master/CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to <opensource@chanzuckerberg.com>.
 
 #### Start Here
+
 - [Set Up Local Dev Environment](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/developer_guidelines.md)
 - [Design Principles](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/design_principles.md)
 - [How to write Tests](https://github.com/chanzuckerberg/single-cell-explorer/blob/main/dev_docs/e2e_tests.md)
@@ -59,14 +60,9 @@ This project adheres to the Contributor Covenant [code of conduct](https://githu
 
 ### Reuse
 
-This project was started with the sole goal of empowering the scientific community to explore and understand their data. 
-As such, we encourage other scientific tool builders in academia or industry to adopt the patterns, tools, and code from 
-this project. All code is freely available for reuse under the [MIT license](https://opensource.org/licenses/MIT).
+This project was started with the sole goal of empowering the scientific community to explore and understand their data.As such, we encourage other scientific tool builders in academia or industry to adopt the patterns, tools, and code from this project. All code is freely available for reuse under the [MIT license](https://opensource.org/licenses/MIT).
 
-
-Before extending CZ CELLxGENE Explorer, we encourage you to reach out to us with ideas or questions. It might be possible that an 
-extension could be added directly to the Explorer repo, which would make it available for a wider audience, or that it's on our 
-[roadmap](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md) and under active development. 
+Before extending CZ CELLxGENE Explorer, we encourage you to reach out to us with ideas or questions. It might be possible that an extension could be added directly to the Explorer repo, which would make it available for a wider audience, or that it's on our [roadmap](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/roadmap.md) and under active development.
 
 See the [CELLxGENE extensions](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/community-extensions.md) section of our documentation for examples of community use and CELLxGENE extensions. 
 
@@ -74,7 +70,7 @@ See the [CELLxGENE extensions](https://github.com/chanzuckerberg/cellxgene-docum
 
 If you believe you have found a security issue, we would appreciate notification. Please send email to <security@chanzuckerberg.com>.
 
-# Inspiration
+## Inspiration
 
 We've been heavily inspired by several other related single-cell visualization projects, including the [UCSC Cell Browser](http://cells.ucsc.edu/), [Cytoscape](http://www.cytoscape.org/), [Xena](https://xena.ucsc.edu/), [ASAP](https://asap.epfl.ch/), [GenePattern](http://genepattern-notebook.org/), and many others. We hope to explore collaborations where useful as this community works together on improving interactive visualization for single-cell data.
 
