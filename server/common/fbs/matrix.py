@@ -72,7 +72,7 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
         raise ValueError("FBS Matrix must be 2D")
 
     if sparse.issparse(matrix):
-        matrix = matrix.A
+        matrix = matrix.toarray()
 
     (n_rows, n_cols) = matrix.shape
     # estimate size needed, so we don't unnecessarily realloc.

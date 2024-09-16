@@ -55,8 +55,8 @@ Installs requirements files.
 
 **Usage:** from the `$PROJECT_ROOT/client` directory run `make start-frontend`
 
-NB: the frontend server reads in the desired base_url and dataset name to form the complete url base for API calls. _In
-order to use an arbitrary dataset successfully, the frontend server must be started **after** the backend server_, which
+NB: the frontend server reads in the desired base_url and dataset name to form the complete url base for API calls. \_In
+order to use an arbitrary dataset successfully, the frontend server must be started **after** the backend server\*, which
 writes out the given base_url and dataset anew each time.
 
 #### backend_dev
@@ -67,7 +67,7 @@ the FE developer gets the current version of the backend with a single command
 and no knowledge of python necessary. It creates and activates a virtual
 environment and installs explorer requirements from the current branch.
 
-**Requires** `Python3.6+`, `virtual-env`, `pip`
+**Requires** `Python3.10+`, `virtual-env`, `pip`
 
 **Usage:** from the `$PROJECT_ROOT` directory run `./scripts/backend_dev`
 
@@ -83,7 +83,7 @@ environment and installs explorer requirements from the current branch.
 
 | command                              | purpose                                           |
 | ------------------------------------ | ------------------------------------------------- |
-| python3.11 -m venv explorer          | creates explorer virtual environment              |
+| python3.12 -m venv explorer          | creates explorer virtual environment              |
 | source explorer/bin/activate         | activates virtual environment                     |
 | ./launch_dev_server.sh [cli options] | launches api server (can supply arbitrary config) |
 

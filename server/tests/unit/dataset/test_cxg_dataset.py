@@ -51,7 +51,11 @@ class TestCxgDataset(unittest.TestCase):
                 )
                 dat = data.summarize_var("mean", filt, 0)
                 summary = decode_fbs.decode_matrix_FBS(dat)
-                self.assertDictContainsSubset({"n_rows": 2638, "n_cols": 1, "row_idx": None}, summary)
+
+                expected_subset = {"n_rows": 2638, "n_cols": 1, "row_idx": None}
+                actual_subset = {key: summary[key] for key in expected_subset if key in summary}
+
+                self.assertEqual(expected_subset, actual_subset)
                 self.assertIs(type(summary["columns"]), list)
                 self.assertEqual(len(summary["columns"]), 1)
                 self.assertEqual(len(summary["columns"][0]), 2638)
@@ -74,7 +78,11 @@ class TestCxgDataset(unittest.TestCase):
         )
         dat = data.summarize_var("mean", filt, 0, 500)
         summary = decode_fbs.decode_matrix_FBS(dat)
-        self.assertDictContainsSubset({"n_rows": 2638, "n_cols": 1, "row_idx": None}, summary)
+
+        expected_subset = {"n_rows": 2638, "n_cols": 1, "row_idx": None}
+        actual_subset = {key: summary[key] for key in expected_subset if key in summary}
+
+        self.assertEqual(expected_subset, actual_subset)
         self.assertIs(type(summary["columns"]), list)
         self.assertEqual(len(summary["columns"]), 1)
         self.assertEqual(len(summary["columns"][0]), 2638)
