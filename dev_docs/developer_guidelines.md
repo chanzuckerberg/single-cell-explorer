@@ -18,17 +18,16 @@ You can set these environment variables manually with the `export` shell command
 
 - `$ git clone git@github.com:chanzuckerberg/single-cell-explorer.git`
 - `$ cd single-cell-explorer/`
-- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `$ source venv/bin/activate`).
+- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `$ source venv/bin/activate`)
 - `$ make dev-env`
 
 ### 2. Run the server
 
 - `$ make build-for-server-dev` - builds the client and puts static files in place.
-- `$ ./launch_dev_server.sh [dataset] [options]` (ie. `./launch_dev_server.sh example-dataset/` runs [a small dataset included in this repository](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg))
-
+- `$ ./launch_dev_server.sh [dataset] [options]`
+   (ie. `$ ./launch_dev_server.sh example-dataset/` runs [a small dataset included in this repository](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg))
    **Note:** Ensure that the dataset format is in CXG. The `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` available, go to [TODO].
 - Navivate to `http://localhost:5005/d/{dataset_name}` to view the dataset. (ie. <http://localhost:5005/d/pbmc3k.cxg/>)
-
    **Note:** there will not be hot-loading for the frontend for changes to the client at this port.
    If you make changes to the server, you will need to restart the server in order for the changes to take.
 
@@ -36,7 +35,8 @@ You can set these environment variables manually with the `export` shell command
 
 - Ensure that you have the server running on `http://localhost:5005`
 - `$ cd client/ && make start-frontend`
-- Go to `http://localhost:3000/d/{dataset_name}` (ie. <http://localhost:3000/d/super-cool-spatial.cxg/>) ✅
+- Navigate to `http://localhost:3000/d/{dataset_name}` to view frontend.
+  (ie. <http://localhost:3000/d/super-cool-spatial.cxg/>)
 - **FYI**
   - Default base_url of `d` is hard-coded.
   - The `{dataset_name}` will be the argument passed to the server launch script OR will default to example dataset.
@@ -84,8 +84,8 @@ Note that you'll need to `import json` and also add `Response` to the `flask` im
 
 Please lint and format your code before requesting a PR review.
 
-- We use [`flake8`](https://github.com/PyCQA/flake8) to lint Python and [`black`](https://pypi.org/project/black/) for auto-formatting Python.
-- The frontend Javascript/Typescript code is linted by `eslint` and formatted by `prettier`.
+We use [`flake8`](https://github.com/PyCQA/flake8) to lint Python and [`black`](https://pypi.org/project/black/) for auto-formatting Python.
+The frontend Javascript/Typescript code is linted by `eslint` and formatted by `prettier`.
 
 1. Format your code by running `make fmt`. Note that this command will make changes to your files that you will need to commit to your branch.
 1. Lint your code by running `make lint`. This command will only emit errors and warnings and will not make changes to your files. You will have to manually address the issues.
