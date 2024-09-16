@@ -1,12 +1,12 @@
 # Developer Guidelines
 
-## Dev Environment Setup
-
 ### Requirements
 
 - npm
 - Python 3.10+
 - Chrome
+
+## Dev Environment Setup
 
 ### 1. Install dependencies
 
@@ -17,20 +17,18 @@
 
 ### 2. Run the server
 
-- `$ make build-for-server-dev` - builds the client and puts static files in place.
+- `$ make build-for-server-dev` to build the client and put static files in place.
 - `$ ./launch_dev_server.sh [dataset] [options]`
-   (ie. `$ ./launch_dev_server.sh example-dataset/` runs [a small dataset included in this repository](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg))
-   **Note:** Ensure that the dataset format is in [CXG](https://github.com/chanzuckerberg/single-cell-explorer/blob/28c3c4565154b454b5345c3cc113e38780119bce/dev_docs/cxg.md). The `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` available, go to [TODO].
+  - (ie. `$ ./launch_dev_server.sh example-dataset/` runs [a small dataset included in this repository](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg)) **Note:** Ensure that the dataset format is in [CXG](https://github.com/chanzuckerberg/single-cell-explorer/blob/28c3c4565154b454b5345c3cc113e38780119bce/dev_docs/cxg.md). The `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` available, go to [TODO].
 - Navivate to `http://localhost:5005/d/{dataset_name}` to view the dataset. (ie. <http://localhost:5005/d/pbmc3k.cxg/>)
-   **Note:** there will not be hot-loading for the frontend for changes to the client at this port.
+  - **Note:** there will not be hot-loading for the frontend for changes to the client at this port.
    If you make changes to the server, you will need to restart the server in order for the changes to take.
 
 ### 3. Run the client (optionally for hot-reloading on the front end)
 
 - Ensure that you have the server running on `http://localhost:5005`
 - `$ cd client/ && make start-frontend`
-- Navigate to `http://localhost:3000/d/{dataset_name}` to view frontend.
-  (ie. <http://localhost:3000/d/super-cool-spatial.cxg/>)
+- Navigate to `http://localhost:3000/d/{dataset_name}` to view frontend. (ie. <http://localhost:3000/d/super-cool-spatial.cxg/>)
 - **FYI**
   - Default base_url of `d` is hard-coded.
   - The `{dataset_name}` will be the argument passed to the server launch script OR will default to example dataset.
