@@ -14,35 +14,35 @@ You can set these environment variables manually with the `export` shell command
 
 ## Dev Environment Setup
 
-**All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified.**
+_All instructions are expected to be run from the top level single-cell-explorer directory unless otherwise specified._
 
 ### 1. Install dependencies
 
-- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) set up and activated (`source venv/bin/activate`).
+- Set up & Activate [Python virtual environment](https://docs.python.org/3/library/venv.html) (ie. `source venv/bin/activate`).
 - `make dev-env`
 
 ### 2. Run the server
 
 - `make build-for-server-dev` - builds the client and puts static files in place.
-- `./launch_dev_server.sh [dataset] [options]` launchs server at http://localhost:5005.
-   Note: you will need to ensure that the dataset format is in CXG. A small dataset is included in this repository [here](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg). To use this dataset, you would run `./launch_dev_server.sh example-dataset/`. Note that the `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` avaiblable, go to [TODO].
-- Go to http://localhost:5005/d/{dataset_name} to view the dataset. ie. <http://localhost:5005/d/pbmc3k.cxg/>
-   Note: there will not be hot-loading for the frontend for changes to the client at this port.
+- `./launch_dev_server.sh [dataset] [options]` (ie. `./launch_dev_server.sh example-dataset/` runs [this](https://github.com/chanzuckerberg/single-cell-explorer/tree/main/example-dataset/pbmc3k.cxg) a small dataset included in this repository)
+
+   **Note:** you will need to ensure that the dataset format is in CXG. The `pbmc3k.cxg` is not specified in the command because the program expects a directory of datasets. To view the `[options]` avaiblable, go to [TODO].
+- Navivate to `http://localhost:5005/d/{dataset_name}` to view the dataset. ie. <http://localhost:5005/d/pbmc3k.cxg/>
+
+   **Note:** there will not be hot-loading for the frontend for changes to the client at this port.
    If you make changes to the server, you will need to restart the server in order for the changes to take.
 
 ### 3. Run the client (optionally for hot-reloading on the front end)
 
-- Ensure that you have a server running at http://localhost:5005/d/{dataset_name}
+- Ensure that you have a server running on `http://localhost:5005`
 - Run `cd client/ && make start-frontend`
-- Go to http://localhost:3000/d/{dataset_name} to view live changes. ie. <http://localhost:3000/d/super-cool-spatial.cxg/>
-
-#### FYI
-
-- Default base_url of `d` is hard-coded.
-- The `{dataset_name}` will be the argument passed to the server launch script OR will default to example dataset.
-- The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar.
-- Hot Reloading launchs the server and the client separately. Node starts the client on its own node server and auto-refreshes when changes are made to source files.
-- In case you need to just build the client alone, you can run `make build-client`.
+- Go to `http://localhost:3000/d/{dataset_name}` to view live changes. ie. <http://localhost:3000/d/super-cool-spatial.cxg/> ✅ Success! ✅
+- **FYI**
+  - Default base_url of `d` is hard-coded.
+  - The `{dataset_name}` will be the argument passed to the server launch script OR will default to example dataset.
+  - The entire url is automatically copied to the clipboard on MacOS -- simply paste in browser address bar.
+  - Hot Reloading launchs the server and the client separately. Node starts the client on its own node server and auto-refreshes when changes are made to source files.
+  - In case you need to just build the client alone, you can run `make build-client`.
 
 #### If you have an M1 or M2 chip...
 
