@@ -23,7 +23,6 @@ import Graph from "./graph/graph";
 import DiffexNotice from "./diffexNotice";
 import Scatterplot from "./scatterplot/scatterplot";
 import PanelEmbedding from "./PanelEmbedding";
-import { BANNER_FEEDBACK_SURVEY_LINK } from "./BottomBanner/constants";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -126,7 +125,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                     <LeftSideBar />
                     <RightSideBar />
                   </Layout>
-                  <BottomBanner surveyLink={BANNER_FEEDBACK_SURVEY_LINK} />
+                  <BottomBanner />
                 </>
               )}
             </ThemeProvider>

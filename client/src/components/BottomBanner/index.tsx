@@ -7,13 +7,16 @@ import {
   StyledLink,
 } from "./style";
 import {
+  BANNER_FEEDBACK_SURVEY_LINK,
+  BOTTOM_BANNER_NEWSLETTER_LINK,
+  BOTTOM_BANNER_NEWSLETTER_LINK_TEXT,
+  BOTTOM_BANNER_NEWSLETTER_TEXT,
   BOTTOM_BANNER_SURVEY_LINK_TEXT,
   BOTTOM_BANNER_SURVEY_TEXT,
 } from "./constants";
 import { AppDispatch, RootState } from "../../reducers";
 
 export interface BottomBannerProps {
-  surveyLink: string;
   showBottomBanner: boolean;
   dispatch: AppDispatch;
 }
@@ -26,19 +29,34 @@ const mapDispatchToProps = (dispatch: AppDispatch) => ({
   dispatch,
 });
 
-function BannerContent({ surveyLink }: { surveyLink: string }): JSX.Element {
+function BannerContent(): JSX.Element {
   return (
     <span>
-      {BOTTOM_BANNER_SURVEY_TEXT}
-      <StyledLink href={surveyLink} target="_blank" rel="noopener">
-        {BOTTOM_BANNER_SURVEY_LINK_TEXT}
-      </StyledLink>
+      <span>
+        <StyledLink
+          href={BOTTOM_BANNER_NEWSLETTER_LINK}
+          target="_blank"
+          rel="noopener"
+        >
+          {BOTTOM_BANNER_NEWSLETTER_LINK_TEXT}
+        </StyledLink>
+        {BOTTOM_BANNER_NEWSLETTER_TEXT}{" "}
+      </span>
+      <span>
+        {BOTTOM_BANNER_SURVEY_TEXT}
+        <StyledLink
+          href={BANNER_FEEDBACK_SURVEY_LINK}
+          target="_blank"
+          rel="noopener"
+        >
+          {BOTTOM_BANNER_SURVEY_LINK_TEXT}
+        </StyledLink>
+      </span>
     </span>
   );
 }
 
 function BottomBanner({
-  surveyLink,
   showBottomBanner,
   dispatch,
 }: BottomBannerProps): JSX.Element | null {
@@ -61,7 +79,7 @@ function BottomBanner({
         sdsType="primary"
         onClose={setBottomBannerLastClosedTime}
       >
-        <BannerContent surveyLink={surveyLink} />
+        <BannerContent />
       </StyledBanner>
     </StyledBottomBannerWrapper>
   );
