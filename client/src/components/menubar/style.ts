@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { spacesS } from "../theme";
+import { spacesS } from "../../util/theme";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 

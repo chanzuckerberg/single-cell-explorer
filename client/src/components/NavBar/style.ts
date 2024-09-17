@@ -11,7 +11,7 @@ import {
   gray500,
   grayWhite,
   spacesL,
-} from "../theme";
+} from "../../util/theme";
 
 export const Wrapper = styled.div`
   background-color: ${PT_TEXT_COLOR};

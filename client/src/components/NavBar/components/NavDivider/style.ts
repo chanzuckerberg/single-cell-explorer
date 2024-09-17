@@ -1,6 +1,6 @@
 import { Divider } from "@mui/material";
 import styled from "@emotion/styled";
-import { gray500 } from "../../../theme";
+import { gray500 } from "~/util/theme";
 
 export const NavDivider = styled(Divider)`
   background-color: ${gray500};

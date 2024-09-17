@@ -1,4 +1,4 @@
-import { storageGet, storageSet } from "../../components/util/localStorage";
+import { storageGet, storageSet } from "../localStorage";
 import { FEATURES } from "./features";
 
 const FEATURE_FLAG_PREFIX = "cxg-ff-";

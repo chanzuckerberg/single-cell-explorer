@@ -24,11 +24,11 @@ import type {
   CellType,
 } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
-import { KEYS } from "../components/util/localStorage";
+import { KEYS } from "../util/localStorage";
 import {
   storageGetTransient,
   storageSetTransient,
-} from "../components/util/transientLocalStorage";
+} from "../util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
 import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";

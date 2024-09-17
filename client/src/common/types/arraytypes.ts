@@ -2,9 +2,9 @@
  * Utility type and interface definitions.
  */
 
-import { DictEncoded16Array } from "../../util/stateManager/dict-encoded16_array";
-import { DictEncoded8Array } from "../../util/stateManager/dict-encoded8_array";
-import { DictEncoded32Array } from "../../util/stateManager/dict-encoded32_array";
+import { DictEncoded16Array } from "~/util/stateManager/dict-encoded16_array";
+import { DictEncoded8Array } from "~/util/stateManager/dict-encoded8_array";
+import { DictEncoded32Array } from "~/util/stateManager/dict-encoded32_array";
 
 /**
  * Arrays of numeric values.

@@ -8,7 +8,7 @@ import {
 import React, { CSSProperties, useCallback, useEffect, useState } from "react";
 
 /* App dependencies */
-import Truncate from "../util/truncate";
+import Truncate from "../../util/truncate";
 
 interface Props {
   breadcrumbRenderer: (item: TruncatingBreadcrumbProps) => JSX.Element;
