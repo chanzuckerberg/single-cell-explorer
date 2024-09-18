@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme";
-import BottomBanner from "./BottomBanner";
+import BottomBanner from "./BottomBanner/BottomBanner";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";

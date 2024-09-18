@@ -1,6 +1,6 @@
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { GetState } from "../../reducers";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { GetState } from "reducers";
 
 export function thunkTrackColorByContinuousHistogram() {
   return (_: unknown, getState: GetState) => {

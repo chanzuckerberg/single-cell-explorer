@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "baseUrl": "./src/",
     "esModuleInterop": true,
     // Allow @connect
     "experimentalDecorators": true,
@@ -13,6 +14,9 @@
     "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "paths": {
+      "~/globals": ["globals.ts"],
+    },
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext",

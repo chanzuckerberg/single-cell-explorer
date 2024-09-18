@@ -1,15 +1,15 @@
 import React from "react";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
+import BrushableHistogram from "common/components/BrushableHistogram/BrushableHistogram";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
 import Gene from "./gene";
 import Truncate from "../util/truncate";
-import * as globals from "../../globals";
+import * as globals from "~/globals";
 import GenesetMenus from "./menus/genesetMenus";
 import EditGenesetNameDialogue from "./menus/editGenesetNameDialogue";
-import HistogramBrush from "../brushableHistogram";
 
-import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "../../globals";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
+import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "~/globals";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -158,7 +158,7 @@ class GeneSet extends React.Component<{}, State> {
           )}
         </div>
         {isOpen && !genesetIsEmpty && (
-          <HistogramBrush
+          <BrushableHistogram
             isGeneSetSummary
             field={setName}
             setGenes={setGenes}

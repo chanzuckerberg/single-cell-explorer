@@ -2,11 +2,11 @@
 
 import React from "react";
 import { connect } from "react-redux";
-import HistogramBrush from "../brushableHistogram";
-import Collapse from "../../util/collapse";
-import { RootState } from "../../reducers";
-import AnnoMatrix from "../../annoMatrix/annoMatrix";
-import { AnnotationColumnSchema } from "../../common/types/schema";
+import BrushableHistogram from "common/components/BrushableHistogram/BrushableHistogram";
+import Collapse from "util/collapse";
+import { RootState } from "reducers";
+import AnnoMatrix from "annoMatrix/annoMatrix";
+import { AnnotationColumnSchema } from "common/types/schema";
 import { CONTINUOUS_SECTION_TEST_ID } from "./constants";
 
 interface StateProps {
@@ -37,7 +37,7 @@ class Continuous extends React.PureComponent<StateProps> {
         <Collapse>
           <span style={{ paddingLeft: 10 }}>Continuous</span>
           {allContinuousNames.map((key, index) => (
-            <HistogramBrush
+            <BrushableHistogram
               key={key}
               field={key}
               isObs
