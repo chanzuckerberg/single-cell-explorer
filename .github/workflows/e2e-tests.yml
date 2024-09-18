@@ -28,19 +28,12 @@ jobs:
         with:
           python-version: 3.12
       - name: Python cache
-        uses: actions/cache@v4
+        uses: actions/cache@v1
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Node cache
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-node-
       - uses: actions/setup-node@v4
         with:
           node-version-file: "client/.nvmrc"

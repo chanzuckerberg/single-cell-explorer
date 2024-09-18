@@ -12,7 +12,7 @@ import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
 import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
-import Legend from "./ContinuousLegend";
+import Legend from "./continuousLegend";
 import MenuBar from "./menubar";
 import Header from "./NavBar";
 import actions from "../actions";
