@@ -5,7 +5,7 @@ import Continuous from "./components/Continuous/Continuous";
 import { LeftSidebarContainer } from "./style";
 import { LeftSidebarWrapper } from "~/common/components/LeftSidebarWrapper/LeftSidebarWrapper";
 
-function LeftSideBar() {
+function LeftSidebar() {
   return (
     <LeftSidebarWrapper>
       <LeftSidebarContainer>
@@ -16,4 +16,4 @@ function LeftSideBar() {
   );
 }
 
-export default LeftSideBar;
+export default LeftSidebar;

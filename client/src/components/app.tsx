@@ -10,8 +10,8 @@ import DatasetSelector from "./datasetSelector/datasetSelector";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/LayoutSkeleton/LayoutSkeleton";
-import LeftSideBar from "./LeftSidebar/LeftSideBar";
-import RightSideBar from "./RightSidebar/RightSidebar";
+import LeftSidebar from "./LeftSidebar/LeftSidebar";
+import RightSidebar from "./RightSidebar/RightSidebar";
 import Legend from "./continuousLegend";
 import MenuBar from "./menubar";
 import Header from "./NavBar";
@@ -123,8 +123,8 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                       </>
                     )}
                   >
-                    <LeftSideBar />
-                    <RightSideBar />
+                    <LeftSidebar />
+                    <RightSidebar />
                   </Layout>
                   <BottomBanner surveyLink={BANNER_FEEDBACK_SURVEY_LINK} />
                 </>

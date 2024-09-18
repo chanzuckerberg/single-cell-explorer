@@ -8,7 +8,7 @@ import {
 import { Icon } from "@blueprintjs/core";
 
 import * as globals from "~/globals";
-import * as styles from "../../../GeneExpression/util";
+import * as styles from "../../../../util";
 import {
   fontWeightRegular,
   fontWeightSemibold,
