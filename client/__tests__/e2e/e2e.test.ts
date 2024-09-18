@@ -16,7 +16,7 @@ import fs from "fs/promises";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "components/PanelEmbedding/constants";
 import { CONTINUOUS_SECTION_TEST_ID } from "components/continuous/constants";
 import { CATEGORICAL_SECTION_TEST_ID } from "components/categorical/constants";
-import { sidePanelAttributeNameChange } from "components/GraphNew/util";
+import { sidePanelAttributeNameChange } from "components/Graph/util";
 
 import { SCALE_MAX_HIRES } from "util/constants";
 
