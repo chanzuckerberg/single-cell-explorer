@@ -19,7 +19,7 @@ import actions from "../actions";
 import { RootState, AppDispatch } from "../reducers";
 import GlobalHotkeys from "./hotkeys";
 import { selectIsSeamlessEnabled } from "../selectors/datasetMetadata";
-import Graph from "./Graph/Graph";
+import Graph from "./GraphNew/GraphNew";
 import DiffexNotice from "./diffexNotice";
 import Scatterplot from "./scatterplot/scatterplot";
 import PanelEmbedding from "./PanelEmbedding";

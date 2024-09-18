@@ -21,7 +21,7 @@ import { AppDispatch, RootState } from "../../reducers";
 import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
 import { Schema } from "../../common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
-import { sidePanelAttributeNameChange } from "../Graph/util";
+import { sidePanelAttributeNameChange } from "../GraphNew/util";
 import { shouldShowOpenseadragon } from "../../common/selectors";
 import { ImageToggleWrapper, ImageDropdownButton } from "./style";
 import Opacities from "./components/Opacities";
