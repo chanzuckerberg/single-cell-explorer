@@ -35,6 +35,7 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", "..."],
     modules: [path.resolve(__dirname, "../../src"), "node_modules"],
+    fullySpecified: false,
     alias: {
       "~/globals": path.resolve(__dirname, "../../src/globals"),
     },
