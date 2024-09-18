@@ -7,7 +7,7 @@ import { RootState, AppDispatch } from "reducers";
 import Controls from "common/components/Controls/Controls";
 import { theme } from "util/theme";
 import BottomBanner from "../BottomBanner/BottomBanner";
-import DatasetSelector from "../DatasetSelector/DatasetSelector";
+import DatasetSelector from "../DatasetSelector/DatasetSelectorTemp";
 import Container from "../framework/container";
 import Layout from "../framework/layout";
 import LayoutSkeleton from "../framework/layoutSkeleton";
