@@ -6,7 +6,7 @@ import { theme } from "./theme";
 import BottomBanner from "./BottomBanner/BottomBanner";
 
 import Controls from "./controls";
-import DatasetSelector from "./datasetSelector/datasetSelector";
+import DatasetSelector from "./DatasetSelector/datasetSelector";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
