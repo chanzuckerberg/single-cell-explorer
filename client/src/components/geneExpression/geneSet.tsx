@@ -5,7 +5,7 @@ import Truncate from "../util/truncate";
 import * as globals from "../../globals";
 import GenesetMenus from "./menus/genesetMenus";
 import EditGenesetNameDialogue from "./menus/editGenesetNameDialogue";
-import HistogramBrush from "../brushableHistogram";
+import BrushableHistogram from "~/common/components/BrushableHistogram/BrushableHistogram";
 
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "../../globals";
 import { track } from "../../analytics";
@@ -158,7 +158,7 @@ class GeneSet extends React.Component<{}, State> {
           )}
         </div>
         {isOpen && !genesetIsEmpty && (
-          <HistogramBrush
+          <BrushableHistogram
             isGeneSetSummary
             field={setName}
             setGenes={setGenes}

@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import Truncate from "../../util/truncate";
-import HistogramBrush from "../../brushableHistogram";
+import HistogramBrush from "~/common/components/BrushableHistogram/BrushableHistogram";
 
 import actions from "../../../actions";
 
