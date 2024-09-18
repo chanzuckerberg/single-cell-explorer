@@ -5,7 +5,7 @@ import { Button } from "@blueprintjs/core";
 
 import * as globals from "../../globals";
 import { height, width } from "./util";
-import Graph from "../graph/graph";
+import Graph from "../Graph/Graph";
 import Controls from "../controls";
 import Embedding from "../embedding";
 import { AppDispatch, RootState } from "../../reducers";

@@ -2,14 +2,14 @@ import React, { PureComponent } from "react";
 import { connect, shallowEqual } from "react-redux";
 import Async from "react-async";
 
-import { categoryLabelDisplayStringLongLength } from "../../../globals";
-import calcCentroid from "../../../util/centroid";
-import { createColorQuery } from "../../../util/stateManager/colorHelpers";
+import { categoryLabelDisplayStringLongLength } from "../../../../globals";
+import calcCentroid from "../../../../util/centroid";
+import { createColorQuery } from "../../../../util/stateManager/colorHelpers";
 import {
   DataframeDictEncodedColumn,
   isDataframeDictEncodedColumn,
-} from "../../../util/dataframe/types";
-import * as globals from "../../../globals";
+} from "../../../../util/dataframe/types";
+import * as globals from "../../../../globals";
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -27,7 +27,7 @@ import * as globals from "../../../globals";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   genesets: (state as any).genesets.genesets,
 }))
-export default class CentroidLabels extends PureComponent {
+export class CentroidLabels extends PureComponent {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
