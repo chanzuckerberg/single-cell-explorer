@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import { connect } from "react-redux";
 import { IconNames } from "@blueprintjs/icons";
 import { Button } from "@blueprintjs/core";
-
-import * as globals from "../../globals";
+import Controls from "common/components/Controls/Controls";
+import { AppDispatch, RootState } from "reducers";
+import actions from "actions";
+import * as globals from "~/globals";
 import { height, width } from "./util";
 import Graph from "../graph/graph";
-import Controls from "../controls";
 import Embedding from "../embedding";
-import { AppDispatch, RootState } from "../../reducers";
-import actions from "../../actions";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "./constants";
 
 interface StateProps {

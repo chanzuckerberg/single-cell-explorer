@@ -3,6 +3,7 @@ import { H3, HTMLTable, Classes } from "@blueprintjs/core";
 import React, { CSSProperties } from "react";
 
 // App dependencies
+import Truncate from "common/components/Truncate/Truncate";
 import {
   Author,
   Consortium,
@@ -12,7 +13,6 @@ import {
 import { Category } from "../../../../common/types/schema";
 import * as globals from "../../../../globals";
 import { RootState } from "../../../../reducers";
-import Truncate from "../../../util/truncate";
 
 const COLLECTION_LINK_ORDER_BY = [
   "DOI",

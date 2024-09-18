@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { gray300 } from "../../theme";
+import { gray300 } from "util/theme";
 
 interface InfoPanelWrapperProps {
   isHidden: boolean;

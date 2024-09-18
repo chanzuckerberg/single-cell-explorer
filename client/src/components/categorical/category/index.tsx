@@ -5,9 +5,8 @@ import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
-
+import Truncate from "common/components/Truncate/Truncate";
 import Value from "../value";
-import Truncate from "../../util/truncate";
 import { CategoryCrossfilterContext } from "../categoryContext";
 
 import * as globals from "../../../globals";
