@@ -3,8 +3,8 @@ import { interpolateCool } from "d3-scale-chromatic";
 import * as d3 from "d3";
 
 import { AxisDomain } from "d3";
-import maybeScientific from "~/util/maybeScientific";
-import clamp from "~/util/clamp";
+import maybeScientific from "util/maybeScientific";
+import clamp from "util/clamp";
 import { truncateText } from "../../utils";
 
 const TRUNCATION_MAX_WIDTH_PX = 45;

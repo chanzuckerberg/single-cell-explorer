@@ -7,38 +7,36 @@ import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async, { AsyncProps } from "react-async";
 import { Button, Icon } from "@blueprintjs/core";
-
 import Openseadragon, { Viewer } from "openseadragon";
-
 import { throttle } from "lodash";
 import { IconNames } from "@blueprintjs/icons";
-import { setupBrush, setupLasso } from "./setupSVGandBrush";
-import _camera, { Camera } from "../../util/camera";
-import _drawPoints from "./drawPointsRegl";
+import _camera, { Camera } from "util/camera";
 import {
   createColorTable,
   createColorQuery,
   ColorTable,
-} from "../../util/stateManager/colorHelpers";
-import * as globals from "../../globals";
-
-import GraphOverlayLayer from "./overlays/graphOverlayLayer";
-import CentroidLabels from "./overlays/centroidLabels";
-import actions from "../../actions";
-import renderThrottle from "../../util/renderThrottle";
-
-import {
-  flagBackground,
-  flagSelected,
-  flagHighlight,
-} from "../../util/glHelpers";
-
-import { Dataframe } from "../../util/dataframe";
-import { RootState } from "../../reducers";
+} from "util/stateManager/colorHelpers";
+import actions from "actions";
+import renderThrottle from "util/renderThrottle";
+import { flagBackground, flagSelected, flagHighlight } from "util/glHelpers";
+import { Dataframe } from "util/dataframe";
+import { RootState } from "reducers";
+import { Field } from "common/types/schema";
+import { Query } from "annoMatrix/query";
+import { THROTTLE_MS } from "util/constants";
+import { isSpatialMode, shouldShowOpenseadragon } from "common/selectors";
+import { fetchDeepZoomImageFailed } from "actions/config";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { DatasetUnsMetadata } from "common/types/entities";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
+import { FEATURES } from "util/featureFlags/features";
 import { LassoFunctionWithAttributes } from "./setupLasso";
-import { Field } from "../../common/types/schema";
-import { Query } from "../../annoMatrix/query";
-
+import CentroidLabels from "./overlays/centroidLabels";
+import GraphOverlayLayer from "./overlays/graphOverlayLayer";
+import * as globals from "~/globals";
+import _drawPoints from "./drawPointsRegl";
+import { setupBrush, setupLasso } from "./setupSVGandBrush";
 import {
   captureLegend,
   createModelTF,
@@ -50,17 +48,8 @@ import {
   shouldSkipSidePanelImage,
   sidePanelAttributeNameChange,
 } from "./util";
-
 import { COMMON_CANVAS_STYLE } from "./constants";
-import { THROTTLE_MS } from "../../util/constants";
 import { GraphProps, OwnProps, GraphState, StateProps } from "./types";
-import { isSpatialMode, shouldShowOpenseadragon } from "../../common/selectors";
-import { fetchDeepZoomImageFailed } from "../../actions/config";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { DatasetUnsMetadata } from "../../common/types/entities";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
 
 interface GraphAsyncProps {
   positions: Float32Array;

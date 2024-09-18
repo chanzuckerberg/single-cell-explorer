@@ -1,22 +1,19 @@
 import React from "react";
-
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
-import Truncate from "../../util/truncate";
-import BrushableHistogram from "~/common/components/BrushableHistogram/BrushableHistogram";
-
-import actions from "../../../actions";
-
+import BrushableHistogram from "common/components/BrushableHistogram/BrushableHistogram";
+import actions from "actions";
 import {
   track,
   thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
   thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
-} from "../../../analytics";
-import { EVENTS } from "../../../analytics/events";
-import { ActiveTab } from "../../../common/types/entities";
+} from "analytics";
+import { EVENTS } from "analytics/events";
+import { ActiveTab } from "common/types/entities";
+import { InfoButton, InfoButtonWrapper } from "common/style";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
-import { InfoButton, InfoButtonWrapper } from "../../../common/style";
+import Truncate from "../../util/truncate";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
