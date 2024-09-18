@@ -3,14 +3,14 @@ import { connect } from "react-redux";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme";
-import BottomBanner from "./BottomBanner";
+import BottomBanner from "./BottomBanner/BottomBanner";
 
 import Controls from "./controls";
 import DatasetSelector from "./datasetSelector/datasetSelector";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
-import LeftSideBar from "./leftSidebar";
+import LeftSideBar from "./LeftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import MenuBar from "./menubar";

@@ -34,6 +34,14 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", "..."],
+    alias: {
+      "~/common": path.resolve(__dirname, '../../src/common/'),
+      "~/util": path.resolve(__dirname, '../../src/util/'),
+      "~/reducers": path.resolve(__dirname, '../../src/reducers'),
+      "~/actions": path.resolve(__dirname, '../../src/actions/'),
+      "~/analytics": path.resolve(__dirname, '../../src/analytics/'),
+      "~/globals": path.resolve(__dirname, '../../src/globals/'),
+    }
   },
   module: {
     rules: [

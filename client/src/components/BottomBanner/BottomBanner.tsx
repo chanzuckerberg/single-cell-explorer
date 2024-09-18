@@ -10,7 +10,7 @@ import {
   BOTTOM_BANNER_SURVEY_LINK_TEXT,
   BOTTOM_BANNER_SURVEY_TEXT,
 } from "./constants";
-import { AppDispatch, RootState } from "../../reducers";
+import { AppDispatch, RootState } from "~/reducers";
 
 export interface BottomBannerProps {
   surveyLink: string;
