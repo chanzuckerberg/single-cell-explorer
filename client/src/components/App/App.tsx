@@ -7,7 +7,7 @@ import { RootState, AppDispatch } from "reducers";
 import Controls from "common/components/Controls/Controls";
 import { theme } from "util/theme";
 import DatasetSelector from "components/DatasetSelectorTempFolder/DatasetSelector";
-import DiffexNotice from "components/DiffexNotice/DiffexNotice";
+import DiffexNotice from "components/DiffexNoticeTempFolder/DiffexNotice";
 import BottomBanner from "../BottomBanner/BottomBanner";
 import Container from "../framework/container";
 import Layout from "../framework/layout";
