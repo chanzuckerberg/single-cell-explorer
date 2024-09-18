@@ -13,6 +13,12 @@ import { test, expect, takeSnapshot } from "@chromatic-com/playwright";
 import os from "os";
 import fs from "fs/promises";
 
+import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "components/PanelEmbedding/constants";
+import { CONTINUOUS_SECTION_TEST_ID } from "components/continuous/constants";
+import { CATEGORICAL_SECTION_TEST_ID } from "components/categorical/constants";
+import { sidePanelAttributeNameChange } from "components/Graph/util";
+import { SCALE_MAX_HIRES } from "util/constants";
+
 import { getElementCoordinates, tryUntil } from "./puppeteerUtils";
 import mockSetup from "./playwright.global.setup";
 
@@ -76,11 +82,6 @@ import {
   skipIfSidePanel,
   toggleSidePanel,
 } from "../util/helpers";
-import { SCALE_MAX_HIRES } from "../../src/util/constants";
-import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
-import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/continuous/constants";
-import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/categorical/constants";
-import { sidePanelAttributeNameChange } from "../../src/components/graph/util";
 
 const { describe, skip } = test;
 

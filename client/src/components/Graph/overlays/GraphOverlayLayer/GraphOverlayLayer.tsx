@@ -7,7 +7,7 @@ import styles from "../graph.css";
 type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-export default class GraphOverlayLayer extends PureComponent<{}, State> {
+export class GraphOverlayLayer extends PureComponent<{}, State> {
   /*
     This component takes its children (assumed in the data coordinate space ([0, 1] range, origin in bottom left corner))
     and transforms itself multiple times resulting in screen space ([0, screenWidth/Height] range, origin in top left corner)
