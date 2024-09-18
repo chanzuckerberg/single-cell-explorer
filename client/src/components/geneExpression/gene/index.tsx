@@ -3,7 +3,7 @@ import React from "react";
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import Truncate from "../../util/truncate";
-import HistogramBrush from "~/common/components/BrushableHistogram/BrushableHistogram";
+import BrushableHistogram from "~/common/components/BrushableHistogram/BrushableHistogram";
 
 import actions from "../../../actions";
 
@@ -168,7 +168,7 @@ class Gene extends React.Component<Props, State> {
             </InfoButtonWrapper>
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
-                <HistogramBrush
+                <BrushableHistogram
                   isUserDefined
                   field={gene}
                   mini
@@ -240,7 +240,7 @@ class Gene extends React.Component<Props, State> {
           </div>
         </div>
         {geneIsExpanded && (
-          <HistogramBrush
+          <BrushableHistogram
             isUserDefined
             field={gene}
             onGeneExpressionComplete={() => {}}
