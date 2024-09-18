@@ -10,7 +10,7 @@ import DatasetSelector from "./datasetSelector/datasetSelector";
 import Container from "./framework/container";
 import Layout from "./framework/layout";
 import LayoutSkeleton from "./framework/layoutSkeleton";
-import LeftSideBar from "./LeftSidebar";
+import LeftSideBar from "./leftSidebar";
 import RightSideBar from "./rightSidebar";
 import Legend from "./continuousLegend";
 import MenuBar from "./menubar";

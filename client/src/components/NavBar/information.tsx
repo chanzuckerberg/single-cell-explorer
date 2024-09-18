@@ -3,7 +3,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 /* App dependencies */
-import InformationMenu from "../LeftSidebar/infoMenu";
+import InformationMenu from "../leftSidebar/infoMenu";
 import { RootState } from "../../reducers";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
