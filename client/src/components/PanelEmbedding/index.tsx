@@ -7,7 +7,7 @@ import { AppDispatch, RootState } from "reducers";
 import actions from "actions";
 import * as globals from "~/globals";
 import { height, width } from "./util";
-import Graph from "../graph/graph";
+import Graph from "../Graph/Graph";
 import Embedding from "../embedding";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "./constants";
 
