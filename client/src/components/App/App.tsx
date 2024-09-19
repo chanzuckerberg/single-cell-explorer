@@ -21,7 +21,7 @@ import GlobalHotkeys from "../GlobalHotkeys/GlobalHotkeys";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
-import PanelEmbedding from "../PanelEmbedding";
+import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { BANNER_FEEDBACK_SURVEY_LINK } from "../BottomBanner/constants";
 
 interface StateProps {
