@@ -12,12 +12,12 @@ import actions from "actions";
 import { Dataframe, DataframeValue } from "util/dataframe";
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
-import Gene from "./gene";
+import Gene from "../Gene/Gene";
 import {
   FuzzySortResult,
   Item,
   RenderItemProps,
-} from "./infoPanel/common/infoSearch/types";
+} from "../InfoPanel/components/InfoPanelContainer/components/InfoSearch/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {

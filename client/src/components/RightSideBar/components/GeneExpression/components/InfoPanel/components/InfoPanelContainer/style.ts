@@ -16,8 +16,8 @@ import {
   warning100,
   warning400,
 } from "util/theme";
+import * as styles from "../../../../util";
 import * as globals from "~/globals";
-import * as styles from "../../util";
 
 export const InfoWrapper = styled.div`
   display: flex;

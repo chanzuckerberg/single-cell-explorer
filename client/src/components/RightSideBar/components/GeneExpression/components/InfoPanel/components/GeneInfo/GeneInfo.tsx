@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 
 import { EMPTY_ARRAY } from "common/constants";
 import { Props, mapStateToProps } from "./types";
-import InfoPanelContainer from "../common/infoPanelContainer";
+import InfoPanelContainer from "../InfoPanelContainer/InfoPanelContainer";
 
 function GeneInfo(props: Props) {
   const { geneInfo, geneList } = props;

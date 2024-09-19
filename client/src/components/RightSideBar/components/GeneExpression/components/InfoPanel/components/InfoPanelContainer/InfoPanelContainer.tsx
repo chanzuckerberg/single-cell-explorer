@@ -1,14 +1,13 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { InfoContainer, InfoWrapper } from "../style";
-import {
-  ErrorInfo,
-  LoadingInfo,
-  NoneSelected,
-  ShowInfo,
-} from "../infoPanelParts";
-import { ExtendedInfoProps } from "../types";
-import InfoSearch from "../infoSearch";
+import { InfoContainer, InfoWrapper } from "./style";
+
+import { ErrorInfo } from "./components/ErrorInfo/ErrorInfo";
+import { NoneSelected } from "./components/NoneSelected/NoneSelected";
+import { LoadingInfo } from "./components/LoadingInfo/LoadingInfo";
+import { ShowInfo } from "./components/ShowInfo/ShowInfo";
+import { ExtendedInfoProps } from "./types";
+import InfoSearch from "./components/InfoSearch/InfoSearch";
 
 function InfoPanelContainer(props: ExtendedInfoProps) {
   const {

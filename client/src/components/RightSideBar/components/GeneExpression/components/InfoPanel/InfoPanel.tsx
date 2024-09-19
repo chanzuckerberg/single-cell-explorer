@@ -10,9 +10,9 @@ import {
   InfoPanelHeader,
   InfoPanelWrapper,
 } from "./style";
-import CellTypeInfo from "./infoPanelCellType";
-import GeneInfo from "./infoPanelGene";
-import DatasetInfo from "./infoPanelDataset";
+import CellTypeInfo from "./components/CellTypeInfo/CellTypeInfo";
+import GeneInfo from "./components/GeneInfo/GeneInfo";
+import DatasetInfo from "./components/DatasetInfo/DatasetInfo";
 import { Props, mapStateToProps } from "./types";
 import useConnect from "./connect";
 

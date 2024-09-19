@@ -1,113 +1,20 @@
 import React from "react";
 import { kebabCase } from "lodash";
-import { Icon, LoadingIndicator } from "@czi-sds/components";
 
 import {
   Content,
   ContentRow,
-  CustomIcon,
   InfoDiv,
   InfoLabel,
   InfoOpenIn,
   InfoSymbol,
   InfoTitle,
   Link,
-  MessageDiv,
-  NoGeneSelectedDiv,
   Items,
-  WarningBanner,
-} from "../style";
-import { BaseInfoProps, ExtendedInfoProps } from "../types";
-import {
-  ENTITY_NOT_FOUND,
-  NCBI_WARNING,
-  NO_ENTITY_SELECTED,
-  OPEN_IN,
-  SEARCH_ON_GOOGLE,
-  SELECT_GENE_OR_CELL_TYPE,
-  LABELS,
-} from "../constants";
-
-export function LoadingInfo(props: BaseInfoProps) {
-  const { name } = props;
-  return (
-    <InfoDiv>
-      <InfoTitle>
-        <InfoSymbol data-testid="info-type-loading">{name}</InfoSymbol>
-      </InfoTitle>
-      <div
-        style={{
-          margin: 0,
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          <span style={{ textAlign: "center" }}>
-            <LoadingIndicator sdsStyle="minimal" />
-          </span>
-        </div>
-      </div>
-    </InfoDiv>
-  );
-}
-
-export function NoneSelected({
-  infoType,
-}: {
-  infoType: BaseInfoProps["infoType"];
-}) {
-  return (
-    <InfoDiv>
-      <NoGeneSelectedDiv>
-        <CustomIcon icon="search" size={33} />
-        <MessageDiv className="title">
-          {NO_ENTITY_SELECTED(infoType)}
-        </MessageDiv>
-        <MessageDiv>{SELECT_GENE_OR_CELL_TYPE}</MessageDiv>
-      </NoGeneSelectedDiv>
-    </InfoDiv>
-  );
-}
-
-export function ShowWarningBanner() {
-  return (
-    <WarningBanner>
-      <Icon sdsIcon="ExclamationMarkCircle" sdsSize="l" sdsType="static" />
-      <span>{NCBI_WARNING}</span>
-    </WarningBanner>
-  );
-}
-
-export function ErrorInfo(props: BaseInfoProps) {
-  const { name, infoType } = props;
-  return (
-    <InfoDiv>
-      <InfoTitle>
-        <InfoSymbol>{name}</InfoSymbol>
-      </InfoTitle>
-      <Content style={{ paddingBottom: "10px" }}>
-        {ENTITY_NOT_FOUND(infoType)}
-      </Content>
-      <Link
-        href={`https://www.google.com/search?q=${name}`}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        {SEARCH_ON_GOOGLE}
-      </Link>
-    </InfoDiv>
-  );
-}
+} from "../../style";
+import { ExtendedInfoProps } from "../../types";
+import { OPEN_IN, LABELS } from "../../constants";
+import { ShowWarningBanner } from "./components/ShowWarningBanner/ShowWarningBanner";
 
 export function ShowInfo(props: ExtendedInfoProps) {
   const {

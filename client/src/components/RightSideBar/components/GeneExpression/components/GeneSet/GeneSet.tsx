@@ -4,10 +4,10 @@ import BrushableHistogram from "common/components/BrushableHistogram/BrushableHi
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
 import Truncate from "common/components/Truncate/Truncate";
-import Gene from "./gene";
+import Gene from "../Gene/Gene";
 import * as globals from "~/globals";
-import GenesetMenus from "./menus/genesetMenus";
-import EditGenesetNameDialogue from "./menus/editGenesetNameDialogue";
+import GenesetMenus from "./components/GeneSetMenus/GenesetMenus";
+import EditGenesetNameDialogue from "./components/EditGenesetNameDialogue/EditGenesetNameDialogue";
 
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "~/globals";
 
