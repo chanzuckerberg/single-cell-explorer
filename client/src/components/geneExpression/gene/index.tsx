@@ -1,22 +1,19 @@
 import React from "react";
-
 import { Button, Icon } from "@blueprintjs/core";
 import { connect } from "react-redux";
-import Truncate from "../../util/truncate";
-import HistogramBrush from "../../brushableHistogram";
-
-import actions from "../../../actions";
-
+import BrushableHistogram from "common/components/BrushableHistogram/BrushableHistogram";
+import actions from "actions";
 import {
   track,
   thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
   thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
-} from "../../../analytics";
-import { EVENTS } from "../../../analytics/events";
-import { ActiveTab } from "../../../common/types/entities";
+} from "analytics";
+import { EVENTS } from "analytics/events";
+import { ActiveTab } from "common/types/entities";
+import { InfoButton, InfoButtonWrapper } from "common/style";
+import Truncate from "common/components/Truncate/Truncate";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
-import { InfoButton, InfoButtonWrapper } from "../../../common/style";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
@@ -168,7 +165,7 @@ class Gene extends React.Component<Props, State> {
             </InfoButtonWrapper>
             {!geneIsExpanded ? (
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
-                <HistogramBrush
+                <BrushableHistogram
                   isUserDefined
                   field={gene}
                   mini
@@ -240,7 +237,7 @@ class Gene extends React.Component<Props, State> {
           </div>
         </div>
         {geneIsExpanded && (
-          <HistogramBrush
+          <BrushableHistogram
             isUserDefined
             field={gene}
             onGeneExpressionComplete={() => {}}

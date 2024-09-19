@@ -3,7 +3,7 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React, { CSSProperties } from "react";
 
 /* Styles */
-import StillLoading from "../brushableHistogram/loading";
+import StillLoading from "common/components/BrushableHistogram/components/StillLoading/StillLoading";
 import { StillLoading as CategoryLoading } from "../categorical/category";
 import { LeftSidebarWrapper } from "./style";
 

@@ -3,15 +3,9 @@ import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import Async from "react-async";
 import memoize from "memoize-one";
-import * as globals from "../../globals";
-import actions from "../../actions";
-import { makeContinuousDimensionName } from "../../util/nameCreators";
-import HistogramHeader from "./header";
-import Histogram from "./histogram";
-import HistogramFooter from "./footer";
-import StillLoading from "./loading";
-import ErrorLoading from "./error";
-import { Dataframe } from "../../util/dataframe";
+import actions from "actions";
+import { makeContinuousDimensionName } from "util/nameCreators";
+import { Dataframe } from "util/dataframe";
 import {
   isColorByHistogramColorMode,
   track,
@@ -19,12 +13,18 @@ import {
   thunkTrackColorByHistogramExpandCategoryFromColorByHistogram,
   trackColorByHistogramHighlightHistogram,
   thunkTrackColorByHistogramHighlightHistogramFromColorByHistogram,
-} from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { AppDispatch, RootState } from "../../reducers";
-import { AnnoMatrixClipView } from "../../annoMatrix/views";
-import { Query } from "../../annoMatrix/query";
-import { Field } from "../../common/types/schema";
+} from "analytics";
+import { EVENTS } from "analytics/events";
+import { AppDispatch, RootState } from "reducers";
+import { AnnoMatrixClipView } from "annoMatrix/views";
+import { Query } from "annoMatrix/query";
+import { Field } from "common/types/schema";
+import * as globals from "~/globals";
+import StillLoading from "./components/StillLoading/StillLoading";
+import HistogramFooter from "./components/HistogramFooter/HistogramFooter";
+import Histogram from "./components/Histogram/Histogram";
+import HistogramHeader from "./components/HistogramHeader/HistogramHeader";
+import ErrorLoading from "./components/ErrorLoading/ErrorLoading";
 import { thunkTrackColorByContinuousHistogram } from "./analytics";
 
 const MARGIN = {

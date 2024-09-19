@@ -6,9 +6,6 @@ import {
   fontHeaderM,
 } from "@czi-sds/components";
 import { Icon } from "@blueprintjs/core";
-
-import * as globals from "../../../../globals";
-import * as styles from "../../util";
 import {
   fontWeightRegular,
   fontWeightSemibold,
@@ -18,7 +15,9 @@ import {
   spacesM,
   warning100,
   warning400,
-} from "../../../theme";
+} from "util/theme";
+import * as styles from "../../util";
+import * as globals from "~/globals";
 
 export const InfoWrapper = styled.div`
   display: flex;

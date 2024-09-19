@@ -85,6 +85,17 @@ module.exports = {
     "function-paren-newline": "off",
     "prefer-destructuring": ["error", { object: true, array: false }],
     "import/prefer-default-export": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "": "never", // https://github.com/import-js/eslint-plugin-import/issues/1573#issuecomment-565973643
+        js: "never",
+        jsx: "never",
+        ts: "never",
+        tsx: "never",
+      },
+    ],
     "no-restricted-syntax": [
       "error",
       "ForInStatement",

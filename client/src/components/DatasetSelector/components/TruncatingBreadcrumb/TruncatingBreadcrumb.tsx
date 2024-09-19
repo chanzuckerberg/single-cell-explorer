@@ -1,13 +1,10 @@
-/* Core dependencies */
 import { Breadcrumb } from "@blueprintjs/core";
 import React from "react";
-
-/* App dependencies */
-import { TruncatingBreadcrumbProps } from "./truncatingBreadcrumbs";
+import { TruncatingBreadcrumbProps } from "../TruncatingBreadcrumbs/TruncatingBreadcrumbs";
 
 // Styles
 // @ts-expect-error --- TODO fix import
-import styles from "./datasetSelector.css";
+import styles from "../../datasetSelector.css";
 
 interface Props {
   children?: React.ReactNode;

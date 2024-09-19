@@ -6,7 +6,7 @@ import { HotkeysProvider, FocusStyleManager } from "@blueprintjs/core";
 import "./index.css";
 
 /* our code */
-import App from "./components/app";
+import App from "./components/App/App";
 import store from "./reducers";
 
 /**

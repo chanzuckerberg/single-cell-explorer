@@ -3,12 +3,12 @@ import { Menu, MenuItem, Position, Popover } from "@blueprintjs/core";
 import React from "react";
 
 /* App dependencies */
-import { Dataset } from "../../common/types/entities";
-import { maxMenuItemCount } from "../../globals";
+import { Dataset } from "common/types/entities";
+import { maxMenuItemCount } from "~/globals";
 
 /* Styles */
 // @ts-expect-error --- TODO fix import
-import styles from "./datasetSelector.css";
+import styles from "../../datasetSelector.css";
 
 /**
  * Function invoked on select of dataset.

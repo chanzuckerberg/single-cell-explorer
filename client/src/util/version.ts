@@ -1,4 +1,4 @@
-import { DataPortalProps } from "../../common/types/entities";
+import { DataPortalProps } from "common/types/entities";
 
 const VERSION_ONES = ["1.0.0", "1.1.0"];
 const VERSION_TWOS = ["2.0.0"];

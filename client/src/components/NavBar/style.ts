@@ -2,8 +2,6 @@ import { Classes } from "@blueprintjs/core";
 import styled from "@emotion/styled";
 import { css } from "@emotion/react";
 import { Tag, CommonThemeProps, fontCapsXxxs } from "@czi-sds/components";
-import { PT_TEXT_COLOR } from "./theme";
-import { HEADER_HEIGHT_PX } from "../../globals";
 import {
   fontWeightBold,
   fontWeightSemibold,
@@ -11,7 +9,9 @@ import {
   gray500,
   grayWhite,
   spacesL,
-} from "../theme";
+} from "util/theme";
+import { PT_TEXT_COLOR } from "./theme";
+import { HEADER_HEIGHT_PX } from "~/globals";
 
 export const Wrapper = styled.div`
   background-color: ${PT_TEXT_COLOR};
