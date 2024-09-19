@@ -11,7 +11,7 @@ import DiffexNotice from "../DiffexNotice/DiffexNotice";
 import BottomBanner from "../BottomBanner/BottomBanner";
 import Container from "../framework/container";
 import Layout from "../framework/layout";
-import LayoutSkeleton from "../framework/LayoutSkeleton/LayoutSkeleton";
+import { LayoutSkeleton } from "../framework/LayoutSkeleton/LayoutSkeleton";
 import LeftSideBar from "../LeftSidebar/LeftSidebar";
 import RightSideBar from "../RightSideBar/RightSideBar";
 import Legend from "../Legend/Legend";

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { connect } from "react-redux";
 import { Props, mapStateToProps } from "./types";
-import InfoPanelContainer from "../InfoPanelContainer/InfoPanelContainer";
+import { InfoPanelContainer } from "../InfoPanelContainer/InfoPanelContainer";
 import { CELLGUIDE_URL } from "../InfoPanelContainer/constants";
 
 function CellTypeInfo(props: Props) {

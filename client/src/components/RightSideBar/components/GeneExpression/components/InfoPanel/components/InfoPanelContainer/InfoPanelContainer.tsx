@@ -9,7 +9,7 @@ import { ShowInfo } from "./components/ShowInfo/ShowInfo";
 import { ExtendedInfoProps } from "./types";
 import InfoSearch from "./components/InfoSearch/InfoSearch";
 
-function InfoPanelContainer(props: ExtendedInfoProps) {
+export function InfoPanelContainer(props: ExtendedInfoProps) {
   const {
     id,
     name,
@@ -72,5 +72,3 @@ function InfoPanelContainer(props: ExtendedInfoProps) {
     </InfoWrapper>
   );
 }
-
-export default InfoPanelContainer;

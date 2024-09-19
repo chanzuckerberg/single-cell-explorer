@@ -6,8 +6,8 @@ import { EVENTS } from "analytics/events";
 import Truncate from "common/components/Truncate/Truncate";
 import Gene from "../Gene/Gene";
 import * as globals from "~/globals";
-import GenesetMenus from "./components/GeneSetMenus/GenesetMenus";
-import EditGenesetNameDialogue from "./components/EditGenesetNameDialogue/EditGenesetNameDialogue";
+import { GenesetMenus } from "./components/GeneSetMenus/GenesetMenus";
+import { EditGenesetNameDialogue } from "./components/EditGenesetNameDialogue/EditGenesetNameDialogue";
 
 import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "~/globals";
 
@@ -15,7 +15,7 @@ import { diffexpPopNamePrefix1, diffexpPopNamePrefix2 } from "~/globals";
 type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class GeneSet extends React.Component<{}, State> {
+export class GeneSet extends React.Component<{}, State> {
   isGeneExpressionLoadComplete = false;
 
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
@@ -175,5 +175,3 @@ class GeneSet extends React.Component<{}, State> {
     );
   }
 }
-
-export default GeneSet;

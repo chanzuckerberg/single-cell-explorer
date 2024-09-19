@@ -7,7 +7,7 @@ import fuzzysort from "fuzzysort";
 type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-export default class LabelInput extends React.PureComponent<{}, State> {
+export class LabelInput extends React.PureComponent<{}, State> {
   /*
   Input widget for text labels, which acts like an InputGroup, but will also 
   accept a suggestion list (of labels), with sublime-like suggest search.

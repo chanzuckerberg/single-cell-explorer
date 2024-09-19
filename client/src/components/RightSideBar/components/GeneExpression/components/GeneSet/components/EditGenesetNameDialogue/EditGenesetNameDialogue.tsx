@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
-import AnnoDialog from "components/annoDialog";
-import LabelInput from "components/labelInput";
+import { AnnoDialog } from "components/AnnoDialog/AnnoDialog";
+import { LabelInput } from "components/LabelInput/LabelInput";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
@@ -20,7 +20,7 @@ type State = any;
   genesets: (state as any).genesets.genesets,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class RenameGeneset extends React.PureComponent<{}, State> {
+export class EditGenesetNameDialogue extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
@@ -150,5 +150,3 @@ class RenameGeneset extends React.PureComponent<{}, State> {
     );
   }
 }
-
-export default RenameGeneset;

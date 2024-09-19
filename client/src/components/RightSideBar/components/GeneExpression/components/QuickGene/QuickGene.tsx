@@ -28,7 +28,7 @@ const usePrevious = (value: any) => {
   return ref.current;
 };
 
-function QuickGene() {
+export function QuickGene() {
   const dispatch = useDispatch();
 
   const [isExpanded, setIsExpanded] = useState(true);
@@ -225,5 +225,3 @@ function QuickGene() {
     </div>
   );
 }
-
-export default QuickGene;

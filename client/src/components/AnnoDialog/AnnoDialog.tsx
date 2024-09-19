@@ -5,7 +5,7 @@ import { Button, Dialog, Classes, Colors, Tooltip } from "@blueprintjs/core";
 type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class AnnoDialog extends React.PureComponent<{}, State> {
+export class AnnoDialog extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
@@ -113,5 +113,3 @@ class AnnoDialog extends React.PureComponent<{}, State> {
     );
   }
 }
-
-export default AnnoDialog;

@@ -6,13 +6,13 @@ import React from "react";
 import Controls from "common/components/Controls/Controls";
 import LeftSidebarSkeleton from "components/LeftSidebar/LeftSidebarSkeleton";
 import Layout from "../layout";
-import RightSidebarSkeleton from "./components/RightSidebarSkeleton/RightSidebarSkeleton";
+import { RightSidebarSkeleton } from "./components/RightSidebarSkeleton/RightSidebarSkeleton";
 
 /**
  * Skeleton layout component displayed when in loading state.
  * @returns Markup displaying skeleton.
  */
-function LayoutSkeleton(): JSX.Element {
+export function LayoutSkeleton(): JSX.Element {
   return (
     <Layout addTopPadding>
       <LeftSidebarSkeleton />
@@ -32,5 +32,3 @@ function LayoutSkeleton(): JSX.Element {
     </Layout>
   );
 }
-
-export default LayoutSkeleton;

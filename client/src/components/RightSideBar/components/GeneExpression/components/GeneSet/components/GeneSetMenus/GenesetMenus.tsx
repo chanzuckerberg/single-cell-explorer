@@ -15,7 +15,7 @@ import actions from "actions";
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
 import * as globals from "~/globals";
-import AddGeneToGenesetDialogue from "./components/AddGeneToGenesetDialogue/AddGeneToGenesetDialogue";
+import { AddGeneToGenesetDialogue } from "./components/AddGeneToGenesetDialogue/AddGeneToGenesetDialogue";
 import { MARKER_GENE_SUFFIX_IDENTIFIER } from "../../../../constants";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -31,7 +31,7 @@ type State = any;
   colorLoading: (state as any).controls.colorLoading,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class GenesetMenus extends React.PureComponent<{}, State> {
+export class GenesetMenus extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
@@ -179,5 +179,3 @@ class GenesetMenus extends React.PureComponent<{}, State> {
     );
   }
 }
-
-export default GenesetMenus;

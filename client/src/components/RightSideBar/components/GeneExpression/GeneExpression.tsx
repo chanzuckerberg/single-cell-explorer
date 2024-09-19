@@ -7,9 +7,9 @@ import { track } from "analytics";
 import { EVENTS } from "analytics/events";
 import { Dataframe, DataframeValue } from "util/dataframe";
 
-import GeneSet from "./components/GeneSet/GeneSet";
-import QuickGene from "./components/QuickGene/QuickGene";
-import CreateGenesetDialogue from "./components/CreateGenesetDialogue/CreateGenesetDialogueTmp";
+import { GeneSet } from "./components/GeneSet/GeneSet";
+import { QuickGene } from "./components/QuickGene/QuickGene";
+import { CreateGenesetDialogue } from "./components/CreateGenesetDialogue/CreateGenesetDialogue";
 
 import * as globals from "~/globals";
 import { MARKER_GENE_SUFFIX_IDENTIFIER } from "./constants";

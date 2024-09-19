@@ -1,7 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
-import AnnoDialog from "components/annoDialog";
-import LabelInput from "components/labelInput";
+import { AnnoDialog } from "components/AnnoDialog/AnnoDialog";
+import { LabelInput } from "components/LabelInput/LabelInput";
 import parseBulkGeneString from "util/parseBulkGeneString";
 import actions from "actions";
 import { track } from "analytics";
@@ -16,7 +16,7 @@ type State = any;
   genesetsUI: (state as any).genesetsUI,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
+export class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
@@ -102,5 +102,3 @@ class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
     );
   }
 }
-
-export default AddGeneToGenesetDialogue;

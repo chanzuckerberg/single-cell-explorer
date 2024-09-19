@@ -1,13 +1,13 @@
 /* Core dependencies */
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
-import { RightSidebarWrapper } from "components/RightSideBar/style";
+import { RightSidebarWrapper } from "components/RightSidebarWrapper/RightSidebarWrapper";
 
 /**
  * Skeleton of right side bar, to be displayed during data load.
  * @returns Markup displaying right side bar skeleton.
  */
-function RightSidebarSkeleton(): JSX.Element {
+export function RightSidebarSkeleton(): JSX.Element {
   return (
     <RightSidebarWrapper style={{ top: -2 }}>
       {/* Quick gene search */}
@@ -45,5 +45,3 @@ function RightSidebarSkeleton(): JSX.Element {
     </RightSidebarWrapper>
   );
 }
-
-export default RightSidebarSkeleton;

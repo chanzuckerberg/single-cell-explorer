@@ -3,7 +3,7 @@ import uniq from "lodash.uniq";
 import React from "react";
 import { connect } from "react-redux";
 import { Button, Dialog, Classes, Colors, Tooltip } from "@blueprintjs/core";
-import LabelInput from "components/labelInput";
+import { LabelInput } from "components/LabelInput/LabelInput";
 import actions from "actions";
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
@@ -25,7 +25,7 @@ type State = any;
   genesetsUI: (state as any).genesetsUI,
 }))
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-class CreateGenesetDialogue extends React.PureComponent<{}, State> {
+export class CreateGenesetDialogue extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
   constructor(props: {}) {
     super(props);
@@ -239,5 +239,3 @@ class CreateGenesetDialogue extends React.PureComponent<{}, State> {
     );
   }
 }
-
-export default CreateGenesetDialogue;
