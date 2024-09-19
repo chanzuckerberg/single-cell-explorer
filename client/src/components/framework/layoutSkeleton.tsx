@@ -5,7 +5,7 @@ import React from "react";
 /* App dependencies */
 import Controls from "common/components/Controls/Controls";
 import Layout from "./layout";
-import LeftSidebarSkeleton from "../LeftSidebarTemp/LeftSidebarSkeletonTemp";
+import LeftSidebarSkeleton from "../LeftSidebar/LeftSidebarSkeleton";
 import RightSidebarSkeleton from "../rightSidebar/rightSidebarSkeleton";
 
 /**

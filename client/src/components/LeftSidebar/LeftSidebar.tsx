@@ -1,7 +1,7 @@
 import React from "react";
 
-import Categorical from "./components/CategoricalTemp/Categorical";
-import Continuous from "./components/ContinuousTemp/ContinuousTemp";
+import Categorical from "./components/Categorical/Categorical";
+import Continuous from "./components/Continuous/Continuous";
 import { LeftSidebarContainer, LeftSidebarWrapper } from "./style";
 
 function LeftSideBar() {

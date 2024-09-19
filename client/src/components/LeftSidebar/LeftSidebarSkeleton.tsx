@@ -4,7 +4,7 @@ import React, { CSSProperties } from "react";
 
 /* Styles */
 import StillLoading from "common/components/BrushableHistogram/components/StillLoading/StillLoading";
-import { StillLoading as CategoryLoading } from "./components/CategoricalTemp/components/CategoryTemp/Category";
+import { StillLoading as CategoryLoading } from "./components/Categorical/components/Category/Category";
 import { LeftSidebarWrapper } from "./style";
 
 const STYLE_SUPER_CATEGORY: CSSProperties = {

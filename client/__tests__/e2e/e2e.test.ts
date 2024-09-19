@@ -78,8 +78,8 @@ import {
 } from "../util/helpers";
 import { SCALE_MAX_HIRES } from "../../src/util/constants";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "../../src/components/PanelEmbedding/constants";
-import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/LeftSidebarTemp/components/ContinuousTemp/constants";
-import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/LeftSidebarTemp/components/CategoricalTemp/constants";
+import { CONTINUOUS_SECTION_TEST_ID } from "../../src/components/LeftSidebar/components/Continuous/constants";
+import { CATEGORICAL_SECTION_TEST_ID } from "../../src/components/LeftSidebar/components/Categorical/constants";
 import { sidePanelAttributeNameChange } from "../../src/components/Graph/util";
 
 const { describe, skip } = test;

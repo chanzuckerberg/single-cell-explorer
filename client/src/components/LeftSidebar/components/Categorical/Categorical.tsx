@@ -11,7 +11,7 @@ import { track } from "analytics";
 import { EVENTS } from "analytics/events";
 import { RootState } from "reducers";
 import { toggleCategoryExpansion } from "actions/controls";
-import Category from "./components/CategoryTemp/Category";
+import Category from "./components/Category/Category";
 import * as globals from "~/globals";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
 import { Props, StateProps } from "./types";
