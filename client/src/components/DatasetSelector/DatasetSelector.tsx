@@ -5,15 +5,17 @@ import React, { FC, useEffect, useState } from "react";
 import { connect } from "react-redux";
 
 /* App dependencies */
-import actions from "../../actions";
-import { DatasetMetadata, Dataset } from "../../common/types/entities";
-import DatasetMenu, { DatasetSelectedFn } from "./datasetMenu";
-import { AppDispatch, RootState } from "../../reducers";
-import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
-import TruncatingBreadcrumb from "./truncatingBreadcrumb";
+import actions from "actions";
+import { DatasetMetadata, Dataset } from "common/types/entities";
+import { AppDispatch, RootState } from "reducers";
+import { selectIsSeamlessEnabled } from "selectors/datasetMetadata";
+import DatasetMenu, {
+  DatasetSelectedFn,
+} from "./components/DatasetMenu/DatasetMenu";
+import TruncatingBreadcrumb from "./components/TruncatingBreadcrumb/TruncatingBreadcrumb";
 import TruncatingBreadcrumbs, {
   TruncatingBreadcrumbProps,
-} from "./truncatingBreadcrumbs";
+} from "./components/TruncatingBreadcrumbs/TruncatingBreadcrumbs";
 
 /**
  * Actions dispatched by dataset selector.

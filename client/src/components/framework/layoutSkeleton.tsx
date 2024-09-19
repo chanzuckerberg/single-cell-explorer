@@ -3,7 +3,7 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
 
 /* App dependencies */
-import Controls from "../controls";
+import Controls from "common/components/Controls/Controls";
 import Layout from "./layout";
 import LeftSidebarSkeleton from "../leftSidebar/leftSidebarSkeleton";
 import RightSidebarSkeleton from "../rightSidebar/rightSidebarSkeleton";

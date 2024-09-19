@@ -1,4 +1,9 @@
 import { AnyAction } from "redux";
+import {
+  storageGetTransient,
+  storageSetTransient,
+} from "util/transientLocalStorage";
+import { KEYS } from "util/localStorage";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
@@ -24,11 +29,6 @@ import type {
   CellType,
 } from "../common/types/entities";
 import { postExplainNewTab } from "../components/framework/toasters";
-import { KEYS } from "../components/util/localStorage";
-import {
-  storageGetTransient,
-  storageSetTransient,
-} from "../components/util/transientLocalStorage";
 import { selectIsUserStateDirty } from "../selectors/global";
 import { DataframeValue, LabelArray, LabelIndex } from "../util/dataframe";
 import { packDiffExPdu, DiffExMode, DiffExArguments } from "../util/diffexpdu";

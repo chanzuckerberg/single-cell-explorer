@@ -1,9 +1,9 @@
 import React, { CSSProperties, cloneElement } from "react";
 import { Tooltip } from "@blueprintjs/core";
 
-import { tooltipHoverOpenDelayQuick } from "../../globals";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
+import { FEATURES } from "util/featureFlags/features";
+import { tooltipHoverOpenDelayQuick } from "~/globals";
 
 const SPLIT_STYLE = {
   display: "flex",

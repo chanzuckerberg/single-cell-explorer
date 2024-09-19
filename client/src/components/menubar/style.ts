@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
-import { spacesS } from "../theme";
-import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
-import { FEATURES } from "../../util/featureFlags/features";
+import { spacesS } from "util/theme";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
+import { FEATURES } from "util/featureFlags/features";
 
 export const MAX_VERTICAL_THRESHOLD_WIDTH_PX = 500;
 const isTest = getFeatureFlag(FEATURES.TEST);
