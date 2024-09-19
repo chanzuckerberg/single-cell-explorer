@@ -15,9 +15,9 @@ import LayoutSkeleton from "../framework/layoutSkeleton";
 import LeftSideBar from "../leftSidebar";
 import RightSideBar from "../rightSidebar";
 import Legend from "../Legend/Legend";
-import MenuBar from "../menubar";
-import Header from "../NavBar";
-import GlobalHotkeys from "../hotkeys";
+import MenuBar from "../MenuBarTemp/MenuBar";
+import NavBar from "../NavBar/NavBar";
+import GlobalHotkeys from "../GlobalHotkeys/GlobalHotkeys";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
@@ -95,7 +95,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
               {(seamlessEnabled ||
                 datasetMetadataError === null ||
                 isCellGuideCxg) && (
-                <Header tosURL={tosURL} privacyURL={privacyURL} />
+                <NavBar tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
                 <>

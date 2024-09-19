@@ -12,19 +12,19 @@ import {
   Popover,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
-import * as globals from "../../globals";
-import actions from "../../actions";
-import { getDiscreteCellEmbeddingRowIndex } from "../../util/stateManager/viewStackHelpers";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { AppDispatch, RootState } from "../../reducers";
-import { LAYOUT_CHOICE_TEST_ID } from "../../util/constants";
-import { Schema } from "../../common/types/schema";
-import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
-import { sidePanelAttributeNameChange } from "../Graph/util";
-import { shouldShowOpenseadragon } from "../../common/selectors";
+import actions from "actions";
+import { getDiscreteCellEmbeddingRowIndex } from "util/stateManager/viewStackHelpers";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { AppDispatch, RootState } from "reducers";
+import { LAYOUT_CHOICE_TEST_ID } from "util/constants";
+import { Schema } from "common/types/schema";
+import { AnnoMatrixObsCrossfilter } from "annoMatrix";
+import { shouldShowOpenseadragon } from "common/selectors";
+import { sidePanelAttributeNameChange } from "../../../components/Graph/util";
+import * as globals from "~/globals";
 import { ImageToggleWrapper, ImageDropdownButton } from "./style";
-import Opacities from "./components/Opacities";
+import Opacities from "./components/Opacities/Opacities";
 import {
   thunkTrackColorByCategoryChangeEmbedding,
   thunkTrackColorByHistogramChangeEmbedding,

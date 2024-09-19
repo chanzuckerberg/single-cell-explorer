@@ -2,7 +2,7 @@ import React from "react";
 import { AnchorButton, ButtonGroup, Tooltip } from "@blueprintjs/core";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
-import * as globals from "../../globals";
+import * as globals from "../../../../globals";
 
 interface SubsetProps {
   subsetPossible: boolean;

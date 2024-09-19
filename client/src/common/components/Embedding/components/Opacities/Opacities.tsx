@@ -1,9 +1,9 @@
 import React from "react";
 
 import { connect } from "react-redux";
+import { RootState } from "reducers";
 import { Section, Wrapper } from "./style";
-import Opacity from "./components/Opacity";
-import { RootState } from "../../../../reducers";
+import Opacity from "./components/Opacity/Opacity";
 import { Props, StateProps } from "./types";
 
 function Opacities({ imageOpacity, dotOpacity, dispatch }: Props) {

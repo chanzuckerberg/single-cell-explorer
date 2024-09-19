@@ -8,7 +8,9 @@ import {
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
-import * as globals from "../../globals";
+import actions from "actions";
+import Embedding from "common/components/Embedding/Embedding";
+import * as globals from "~/globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
 import styles from "./menubar.css";
 import {
@@ -19,15 +21,13 @@ import {
   ResponsiveMenuGroupTwo,
   MAX_VERTICAL_THRESHOLD_WIDTH_PX,
 } from "./style";
-import actions from "../../actions";
-import Clip from "./clip";
+import Clip from "./components/Clip/Clip";
 
-import Subset from "./subset";
-import DiffexpButtons from "./diffexpButtons";
+import Subset from "./components/Subset/Subset";
+import DiffexpButtons from "./components/DiffExpButtons/DiffExpButtons";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
-import Embedding from "../embedding";
 import { getFeatureFlag } from "../../util/featureFlags/featureFlags";
 import { FEATURES } from "../../util/featureFlags/features";
 import { GRAPH_AS_IMAGE_TEST_ID } from "../../util/constants";
