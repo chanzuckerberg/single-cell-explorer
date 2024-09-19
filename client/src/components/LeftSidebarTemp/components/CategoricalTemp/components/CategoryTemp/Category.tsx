@@ -6,21 +6,20 @@ import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 import Truncate from "common/components/Truncate/Truncate";
-import Value from "../value";
-import { CategoryCrossfilterContext } from "../categoryContext";
-
-import * as globals from "../../../globals";
-import { createCategorySummaryFromDfCol } from "../../../util/stateManager/controlsHelpers";
+import { createCategorySummaryFromDfCol } from "util/stateManager/controlsHelpers";
 import {
   createColorTable,
   createColorQuery,
   ColorTable,
-} from "../../../util/stateManager/colorHelpers";
-import actions from "../../../actions";
-import { Dataframe } from "../../../util/dataframe";
-import { track } from "../../../analytics";
-import { EVENTS } from "../../../analytics/events";
-import { RootState } from "../../../reducers";
+} from "util/stateManager/colorHelpers";
+import actions from "actions";
+import { Dataframe } from "util/dataframe";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { RootState } from "reducers";
+import * as globals from "~/globals";
+import { CategoryCrossfilterContext } from "../../categoryContext";
+import CategoryValue from "./components/CategoryValue/CategoryValue";
 import {
   thunkTrackColorByCategoryExpand,
   thunkTrackColorByCategoryHighlightHistogram,
@@ -403,14 +402,21 @@ const ErrorLoading = ({ metadataField, error }: any) => {
 };
 
 interface CategoryHeaderProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   metadataField: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   checkboxID: any;
   isColorAccessor: boolean;
   isExpanded: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   selectionState: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   onColorChangeClick: (isColorAccessor: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   onCategoryMenuClick: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   onCategoryMenuKeyPress: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   onCategoryToggleAllClick: any;
 }
 
@@ -626,11 +632,16 @@ const CategoryRender = React.memo(
 );
 
 interface CategoryValueListProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   metadataField: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   categoryData: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   categorySummary: any;
   colorAccessor: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   colorData: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   colorTable: any;
   colorMode: string;
 }
@@ -686,7 +697,7 @@ const CategoryValueList = React.memo(
     return (
       <>
         {tuples.map(([value, index]) => (
-          <Value
+          <CategoryValue
             key={value}
             metadataField={metadataField}
             categoryIndex={index}

@@ -1,6 +1,6 @@
-import { Schema } from "../../common/types/schema";
+import { Schema } from "common/types/schema";
 
-import { AppDispatch, RootState } from "../../reducers";
+import { AppDispatch, RootState } from "reducers";
 
 export interface DispatchProps {
   dispatch: AppDispatch;

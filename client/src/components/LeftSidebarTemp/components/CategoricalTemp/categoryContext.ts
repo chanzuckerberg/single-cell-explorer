@@ -1,5 +1,5 @@
 import React from "react";
-import { AnnoMatrixObsCrossfilter } from "../../annoMatrix";
+import { AnnoMatrixObsCrossfilter } from "annoMatrix";
 
 /*
 CategoryCrossfilterContext is used to pass a snapshot of the crossfilter

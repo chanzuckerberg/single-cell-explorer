@@ -1,25 +1,22 @@
 import React from "react";
 import { connect } from "react-redux";
-import * as globals from "../../globals";
-import Category from "./category";
 import {
   EXCLUDED_CATEGORY_NAMES,
   STANDARD_CATEGORY_NAMES,
-} from "../../common/types/entities";
-import {
-  CategoricalAnnotationColumnSchema,
-  Schema,
-} from "../../common/types/schema";
-import Collapse from "../../util/collapse";
-import { ControlsHelpers } from "../../util/stateManager";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
+} from "common/types/entities";
+import { CategoricalAnnotationColumnSchema, Schema } from "common/types/schema";
+import Collapse from "util/collapse";
+import { ControlsHelpers } from "util/stateManager";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { RootState } from "reducers";
+import { toggleCategoryExpansion } from "actions/controls";
+import Category from "./components/CategoryTemp/Category";
+import * as globals from "~/globals";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
-import { RootState } from "../../reducers";
-import { toggleCategoryExpansion } from "../../actions/controls";
 import { Props, StateProps } from "./types";
 
-class Categories extends React.Component<Props> {
+class Categorical extends React.Component<Props> {
   onExpansionChange = async (catName: string) => {
     const { expandedCategories, dispatch } = this.props;
 
@@ -190,4 +187,4 @@ function mapStateToProps(state: RootState): StateProps {
   };
 }
 
-export default connect(mapStateToProps)(Categories);
+export default connect(mapStateToProps)(Categorical);

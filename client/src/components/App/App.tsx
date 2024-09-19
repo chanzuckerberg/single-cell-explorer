@@ -12,7 +12,7 @@ import BottomBanner from "../BottomBanner/BottomBanner";
 import Container from "../framework/container";
 import Layout from "../framework/layout";
 import LayoutSkeleton from "../framework/layoutSkeleton";
-import LeftSideBar from "../leftSidebar";
+import LeftSideBar from "../LeftSidebarTemp/LeftSidebar";
 import RightSideBar from "../rightSidebar";
 import Legend from "../Legend/Legend";
 import MenuBar from "../menubar";
