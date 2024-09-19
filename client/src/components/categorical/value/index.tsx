@@ -2,11 +2,10 @@ import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
 import { Checkbox } from "@blueprintjs/core";
+import Truncate from "common/components/Truncate/Truncate";
 import * as globals from "../../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../categorical.css";
-import Truncate from "../../util/truncate";
-
 import { AnnotationsHelpers } from "../../../util/stateManager";
 import { labelPrompt, isLabelErroneous } from "../labelUtil";
 import actions from "../../../actions";

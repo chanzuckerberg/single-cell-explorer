@@ -4,17 +4,16 @@ import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import { interpolateCool } from "d3-scale-chromatic";
 import Async, { AsyncProps } from "react-async";
-import { AppDispatch, RootState } from "../../reducers";
-
 import {
   createColorTable,
   createColorQuery,
   ColorTable,
   ColorRange,
-} from "../../util/stateManager/colorHelpers";
-import { ColorsState } from "../../reducers/colors";
-import { Genesets } from "../../reducers/genesets";
-import * as globals from "../../globals";
+} from "util/stateManager/colorHelpers";
+import { ColorsState } from "reducers/colors";
+import { Genesets } from "reducers/genesets";
+import { AppDispatch, RootState } from "reducers";
+import * as globals from "~/globals";
 
 /**
  * (thuang): The legend needs to be positioned below the cell count element
@@ -22,6 +21,7 @@ import * as globals from "../../globals";
 const CELL_COUNT_ELEMENT_HEIGHT_PX = 20;
 
 // create continuous color legend
+// eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const continuous = (selectorId: any, colorScale: any, colorAccessor: any) => {
   const legendHeight = 200;
   const legendWidth = 80;
@@ -150,6 +150,7 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
 type Props = StateProps & DispatchProps;
 
 class ContinuousLegend extends React.Component<Props> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
   }

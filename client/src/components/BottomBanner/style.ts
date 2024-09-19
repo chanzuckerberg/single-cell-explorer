@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { Banner, Icon } from "@czi-sds/components";
-import { beta100, beta400, gray500 } from "../theme";
+import { beta100, beta400, gray500 } from "util/theme";
 
 export const SKINNY_MODE_BREAKPOINT_WIDTH = 960;
 export const BOTTOM_BANNER_ID = "bottom-banner";

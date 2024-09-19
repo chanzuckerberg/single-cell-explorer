@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { spacesM, spacesS } from "../../../theme";
+import { spacesM, spacesS } from "util/theme";
 
 export const Wrapper = styled.div`
   padding: ${spacesS}px ${spacesM}px;

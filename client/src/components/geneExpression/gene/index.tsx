@@ -11,9 +11,9 @@ import {
 import { EVENTS } from "analytics/events";
 import { ActiveTab } from "common/types/entities";
 import { InfoButton, InfoButtonWrapper } from "common/style";
+import Truncate from "common/components/Truncate/Truncate";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../constants";
-import Truncate from "../../util/truncate";
 
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {

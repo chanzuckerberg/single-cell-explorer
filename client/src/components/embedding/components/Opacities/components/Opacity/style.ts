@@ -6,7 +6,7 @@ import {
   spacesS,
   spacesXs,
   textSecondary,
-} from "../../../../../theme";
+} from "util/theme";
 
 export const Mark = styled.span`
   color: ${textSecondary};
