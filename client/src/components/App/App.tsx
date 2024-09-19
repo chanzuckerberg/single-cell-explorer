@@ -19,7 +19,7 @@ import MenuBar from "../menubar";
 import Header from "../NavBar";
 import GlobalHotkeys from "../hotkeys";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
-import Graph from "../graph/graph";
+import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding";
 import { BANNER_FEEDBACK_SURVEY_LINK } from "../BottomBanner/constants";
