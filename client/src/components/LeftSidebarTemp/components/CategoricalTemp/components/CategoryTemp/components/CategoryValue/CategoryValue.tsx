@@ -19,7 +19,7 @@ import MiniStackedBar from "./components/MiniStackedBarTemp/MiniStackedBar";
 import MiniHistogram from "./components/MiniHistogramTemp/MiniHistogram";
 import { labelPrompt, isLabelErroneous } from "./labelUtil";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
-import styles from "../categorical.css";
+import styles from "../../../../categorical.css";
 import * as globals from "~/globals";
 
 const STACKED_BAR_HEIGHT = 11;
