@@ -1,7 +1,7 @@
 /* Core dependencies */
 import React, { useState, useEffect } from "react";
 import { noop } from "lodash";
-import { Link } from "../geneExpression/infoPanel/common/style";
+import { Link } from "components/RightSideBar/components/GeneExpression/components/InfoPanel/components/InfoPanelContainer/style";
 import { StyledSnackbar, StyledAlert } from "./style";
 
 interface Props {

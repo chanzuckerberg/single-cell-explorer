@@ -1,0 +1,41 @@
+import React, { useMemo } from "react";
+import { connect } from "react-redux";
+import { Props, mapStateToProps } from "./types";
+import { InfoPanelContainer } from "../InfoPanelContainer/InfoPanelContainer";
+import { CELLGUIDE_URL } from "../InfoPanelContainer/constants";
+
+function CellTypeInfo(props: Props) {
+  const { cellInfo, cellTypes } = props;
+
+  const {
+    cellId,
+    cellName,
+    cellDescription,
+    synonyms,
+    references,
+    error,
+    loading,
+  } = cellInfo;
+
+  const cellTypeList = useMemo(
+    () => cellTypes.map((cellType) => cellType.cellTypeName),
+    [cellTypes]
+  );
+
+  return (
+    <InfoPanelContainer
+      id={cellId}
+      name={cellName}
+      description={cellDescription}
+      synonyms={synonyms}
+      references={references}
+      error={error}
+      loading={loading}
+      infoType="Cell Type"
+      url={CELLGUIDE_URL}
+      quickList={cellTypeList}
+    />
+  );
+}
+
+export default connect(mapStateToProps)(CellTypeInfo);
