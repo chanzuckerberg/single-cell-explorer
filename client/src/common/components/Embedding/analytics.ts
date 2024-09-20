@@ -1,7 +1,7 @@
-import { isColorByHistogramColorMode, track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
-import { GetState } from "../../reducers";
-import { SelectionMode } from "../../util/typedCrossfilter/types";
+import { isColorByHistogramColorMode, track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { GetState } from "reducers";
+import { SelectionMode } from "util/typedCrossfilter/types";
 
 export function thunkTrackColorByCategoryChangeEmbedding() {
   return (_: unknown, getState: GetState) => {

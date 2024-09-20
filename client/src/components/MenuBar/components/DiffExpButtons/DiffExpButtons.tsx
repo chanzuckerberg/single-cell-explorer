@@ -1,11 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ButtonGroup, AnchorButton, Tooltip } from "@blueprintjs/core";
-import * as globals from "../../globals";
+import actions from "actions";
+import * as globals from "~/globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './menubar.css' or its correspo... Remove this comment to see the full error message
-import styles from "./menubar.css";
-import actions from "../../actions";
-import CellSetButton from "./cellSetButtons";
+import styles from "../../menubar.css";
+import CellSetButton from "./components/CellSetButton/CellSetButton";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({

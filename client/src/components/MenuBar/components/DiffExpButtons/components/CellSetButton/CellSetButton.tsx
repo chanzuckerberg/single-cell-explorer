@@ -1,10 +1,10 @@
 import React from "react";
 import { AnchorButton, Tooltip } from "@blueprintjs/core";
 import { connect } from "react-redux";
-import { tooltipHoverOpenDelay } from "../../globals";
-import actions from "../../actions";
-import { track } from "../../analytics";
-import { EVENTS } from "../../analytics/events";
+import actions from "actions";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { tooltipHoverOpenDelay } from "~/globals";
 
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
 @connect((state) => ({

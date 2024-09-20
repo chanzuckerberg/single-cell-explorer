@@ -5,10 +5,10 @@ import { Button } from "@blueprintjs/core";
 import Controls from "common/components/Controls/Controls";
 import { AppDispatch, RootState } from "reducers";
 import actions from "actions";
+import Embedding from "common/components/Embedding/Embedding";
 import * as globals from "~/globals";
 import { height, width } from "./util";
 import Graph from "../Graph/Graph";
-import Embedding from "../embedding";
 import { PANEL_EMBEDDING_MINIMIZE_TOGGLE_TEST_ID } from "./constants";
 
 interface StateProps {
