@@ -1,7 +1,7 @@
 /* Core dependencies */
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import React from "react";
-import { RightSidebarWrapper } from "components/RightSidebarWrapper/RightSidebarWrapper";
+import { RightSidebarWrapper } from "components/RightSideBar/style";
 
 /**
  * Skeleton of right side bar, to be displayed during data load.

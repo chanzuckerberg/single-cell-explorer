@@ -2,7 +2,7 @@ import React from "react";
 
 import GeneExpression from "./components/GeneExpression/GeneExpression";
 import InfoPanel from "./components/GeneExpression/components/InfoPanel/InfoPanel";
-import { RightSidebarWrapper } from "../RightSidebarWrapper/RightSidebarWrapper";
+import { RightSidebarWrapper } from "./style";
 
 function RightSidebar() {
   return (
