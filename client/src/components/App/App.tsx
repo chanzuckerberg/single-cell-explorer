@@ -15,13 +15,13 @@ import { LayoutSkeleton } from "../framework/LayoutSkeleton/LayoutSkeleton";
 import LeftSideBar from "../LeftSidebar/LeftSidebar";
 import RightSideBar from "../RightSideBar/RightSideBar";
 import Legend from "../Legend/Legend";
-import MenuBar from "../menubar";
-import Header from "../NavBar";
-import GlobalHotkeys from "../hotkeys";
+import MenuBar from "../MenuBar/MenuBar";
+import NavBar from "../NavBar/NavBar";
+import GlobalHotkeys from "../GlobalHotkeys/GlobalHotkeys";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
-import PanelEmbedding from "../PanelEmbedding";
+import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { BANNER_FEEDBACK_SURVEY_LINK } from "../BottomBanner/constants";
 
 interface StateProps {
@@ -95,7 +95,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
               {(seamlessEnabled ||
                 datasetMetadataError === null ||
                 isCellGuideCxg) && (
-                <Header tosURL={tosURL} privacyURL={privacyURL} />
+                <NavBar tosURL={tosURL} privacyURL={privacyURL} />
               )}
               {loading || error ? null : (
                 <>

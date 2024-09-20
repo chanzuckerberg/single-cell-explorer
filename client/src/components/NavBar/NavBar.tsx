@@ -23,7 +23,7 @@ import {
   Right,
   Wrapper,
 } from "./style";
-import NavDivider from "./components/NavDivider";
+import NavDivider from "./components/NavDivider/NavDivider";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);

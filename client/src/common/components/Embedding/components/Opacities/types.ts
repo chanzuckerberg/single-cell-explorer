@@ -1,4 +1,4 @@
-import { AppDispatch, RootState } from "../../../../reducers";
+import { AppDispatch, RootState } from "reducers";
 
 export type Props = StateProps & DispatchProps;
 
