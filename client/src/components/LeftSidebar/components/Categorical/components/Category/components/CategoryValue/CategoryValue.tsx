@@ -15,8 +15,8 @@ import { CategorySummary } from "util/stateManager/controlsHelpers";
 import { ColorTable } from "util/stateManager/colorHelpers";
 import { ActiveTab } from "common/types/entities";
 import { InfoButton, InfoButtonWrapper } from "common/style";
-import MiniStackedBar from "./components/MiniStackedBarTemp/MiniStackedBar";
-import MiniHistogram from "./components/MiniHistogramTemp/MiniHistogram";
+import MiniStackedBar from "./components/MiniStackedBar/MiniStackedBar";
+import MiniHistogram from "./components/MiniHistogram/MiniHistogram";
 import { labelPrompt, isLabelErroneous } from "./labelUtil";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../../../../categorical.css";
