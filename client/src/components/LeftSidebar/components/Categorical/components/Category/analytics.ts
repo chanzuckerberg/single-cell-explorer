@@ -1,8 +1,8 @@
 import {
   trackColorByCategoryExpand,
   trackColorByCategoryHighlightHistogram,
-} from "../../../analytics";
-import { GetState } from "../../../reducers";
+} from "analytics";
+import { GetState } from "reducers";
 
 export function thunkTrackColorByCategoryExpand(isColorByCategory: boolean) {
   return (_: unknown, getState: GetState) => {
