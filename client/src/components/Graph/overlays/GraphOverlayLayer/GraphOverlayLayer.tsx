@@ -1,13 +1,13 @@
 import React, { PureComponent, cloneElement } from "react";
 
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../graph.css' or its correspon... Remove this comment to see the full error message
-import styles from "../graph.css";
+import styles from "../../graph.css";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 type State = any;
 
 // eslint-disable-next-line @typescript-eslint/ban-types --- FIXME: disabled temporarily on migrate to TS.
-export default class GraphOverlayLayer extends PureComponent<{}, State> {
+export class GraphOverlayLayer extends PureComponent<{}, State> {
   /*
     This component takes its children (assumed in the data coordinate space ([0, 1] range, origin in bottom left corner))
     and transforms itself multiple times resulting in screen space ([0, screenWidth/Height] range, origin in top left corner)

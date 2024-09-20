@@ -3,24 +3,24 @@ import React from "react";
 import * as d3 from "d3";
 import { Checkbox } from "@blueprintjs/core";
 import Truncate from "common/components/Truncate/Truncate";
-import * as globals from "../../../globals";
+import { AnnotationsHelpers } from "util/stateManager";
+import actions from "actions";
+import { Dataframe, ContinuousHistogram } from "util/dataframe";
+import { track } from "analytics";
+import { EVENTS } from "analytics/events";
+import { RootState, AppDispatch } from "reducers";
+import { Schema, Category } from "common/types/schema";
+import { isDataframeDictEncodedColumn } from "util/dataframe/types";
+import { CategorySummary } from "util/stateManager/controlsHelpers";
+import { ColorTable } from "util/stateManager/colorHelpers";
+import { ActiveTab } from "common/types/entities";
+import { InfoButton, InfoButtonWrapper } from "common/style";
+import MiniStackedBar from "./components/MiniStackedBar/MiniStackedBar";
+import MiniHistogram from "./components/MiniHistogram/MiniHistogram";
+import { labelPrompt, isLabelErroneous } from "./labelUtil";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
-import styles from "../categorical.css";
-import { AnnotationsHelpers } from "../../../util/stateManager";
-import { labelPrompt, isLabelErroneous } from "../labelUtil";
-import actions from "../../../actions";
-import MiniHistogram from "../../miniHistogram";
-import MiniStackedBar from "../../miniStackedBar";
-import { Dataframe, ContinuousHistogram } from "../../../util/dataframe";
-import { track } from "../../../analytics";
-import { EVENTS } from "../../../analytics/events";
-import { RootState, AppDispatch } from "../../../reducers";
-import { Schema, Category } from "../../../common/types/schema";
-import { isDataframeDictEncodedColumn } from "../../../util/dataframe/types";
-import { CategorySummary } from "../../../util/stateManager/controlsHelpers";
-import { ColorTable } from "../../../util/stateManager/colorHelpers";
-import { ActiveTab } from "../../../common/types/entities";
-import { InfoButton, InfoButtonWrapper } from "../../../common/style";
+import styles from "../../../../categorical.css";
+import * as globals from "~/globals";
 
 const STACKED_BAR_HEIGHT = 11;
 const STACKED_BAR_WIDTH = 100;
@@ -391,6 +391,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     return _currentLabelAsString(labelName);
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   isAddCurrentSelectionDisabled(crossfilter: any, category: any, value: any) {
     /*
     disable "add current selection to label", if one of the following is true:
