@@ -21,7 +21,7 @@ import {
   ResponsiveMenuGroupTwo,
   MAX_VERTICAL_THRESHOLD_WIDTH_PX,
 } from "./style";
-import Clip from "./components/ClipTemp/Clip";
+import Clip from "./components/Clip/Clip";
 
 import Subset from "./components/Subset/Subset";
 import DiffexpButtons from "./components/DiffExpButtons/DiffExpButtons";

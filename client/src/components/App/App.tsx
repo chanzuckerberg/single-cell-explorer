@@ -15,7 +15,7 @@ import LayoutSkeleton from "../framework/layoutSkeleton";
 import LeftSideBar from "../leftSidebar";
 import RightSideBar from "../rightSidebar";
 import Legend from "../Legend/Legend";
-import MenuBar from "../MenuBarTemp/MenuBar";
+import MenuBar from "../MenuBar/MenuBar";
 import NavBar from "../NavBar/NavBar";
 import GlobalHotkeys from "../GlobalHotkeys/GlobalHotkeys";
 import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
