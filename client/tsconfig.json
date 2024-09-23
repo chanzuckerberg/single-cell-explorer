@@ -15,7 +15,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "paths": {
-      "~/globals": ["globals.ts"],
+      "~/globals": ["globals.ts"]
     },
     "skipLibCheck": true,
     "strict": true,
