@@ -236,6 +236,30 @@ for (const testDataset of testDatasets) {
               testInfo
             );
           });
+
+          test("newsletter signup modal opens and closes", async ({ page }) => {
+            await goToPage(page, url);
+
+            await page.getByTestId("newsletter-modal-open-button").click();
+
+            await expect(
+              page.getByTestId("newsletter-modal-content")
+            ).toBeVisible();
+
+            await page.getByTestId("newsletter-email-input").fill("test");
+
+            await page.getByTestId("newsletter-subscribe-button").click();
+
+            await expect(
+              page.getByText("Please provide a valid email address.")
+            ).toBeVisible();
+
+            await page.getByTestId("newsletter-modal-close-button").click();
+
+            await expect(
+              page.getByTestId("newsletter-modal-content")
+            ).not.toBeVisible();
+          });
         });
 
         test("resize graph", async ({ page }, testInfo) => {

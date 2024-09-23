@@ -18,7 +18,7 @@ import {
   BOTTOM_BANNER_NEWSLETTER_TEXT,
   FORM_CONTAINER_ID,
 } from "./constants";
-import { NewsletterSignup } from "./components/NewsletterSignup/NewsletterModal";
+import { NewsletterSignup } from "./components/NewsletterSignup/NewsletterSignup";
 import { useConnect } from "./connect";
 
 export interface BottomBannerProps {
