@@ -28,10 +28,6 @@ Deletes generated files.
 - `make clean-lite` cleans built directories
 - `make clean-server` cleans source tree
 
-### Release
-
-See `release_process.md`.
-
 ### Development environment
 
 Installs requirements files.
