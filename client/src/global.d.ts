@@ -37,6 +37,6 @@ namespace HubSpotFormAPI {
 
 declare global {
   interface Window {
-    hbspt: HubSpotFormAPI.HubSpot; // Or provide a more specific type if you know it
+    hbspt: HubSpotFormAPI.HubSpot;
   }
 }
