@@ -20,6 +20,23 @@ export const Wrapper = styled.div`
   top: 0;
   width: 100%;
   z-index: 1;
+
+  /* Increase specificity for targeted elements specified in index.html and index_template.html */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span,
+  button,
+  input,
+  label,
+  text,
+  div {
+    font-family: "Inter", sans-serif;
+  }
 `;
 
 export const MainWrapper = styled.div`
@@ -110,4 +127,14 @@ export const BetaChip = styled(Tag)`
   color: white;
   margin-left: 4px;
   height: 16px !important;
+  margin-bottom: 0;
+  padding: 4px 6px;
+
+  .MuiChip-label {
+    font-family: "Inter", sans-serif;
+    font-weight: ${fontWeightSemibold};
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
 `;
