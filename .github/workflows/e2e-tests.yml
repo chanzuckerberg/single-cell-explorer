@@ -23,10 +23,12 @@ jobs:
         with:
           # Chromatic needs full Git history graph
           fetch-depth: 0
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v1
         with:
           python-version: 3.12
+
       - name: Python cache
         uses: actions/cache@v1
         with:
@@ -34,11 +36,13 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: "client/.nvmrc"
           cache: "npm"
           cache-dependency-path: "client/package-lock.json"
+
       - name: Install dependencies
         run: |
           make dev-env-server build-for-server-dev
@@ -48,7 +52,17 @@ jobs:
       - name: Smoke tests (without annotations feature)
         run: |
           cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
-          ./node_modules/codecov/bin/codecov --yml=../.codecov.yml --root=../ --gcov-root=../ -C -F frontend,javascript,smokeTest
+
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v4.2.0
+        with:
+          root_dir: ../
+          flags: frontend,javascript,smokeTest
+          verbose: true
+          commit_parent: false
+          directory: client/
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload Chromatic artifacts
         uses: actions/upload-artifact@v4

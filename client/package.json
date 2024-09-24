@@ -163,7 +163,7 @@
     "chromatic-playwright": "^0.4.1",
     "clean-css": "^5.1.2",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
-    "codecov": "^3.7.1",
+    "codecov": "^3.8.3",
     "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^5.2.4",
     "css-minimizer-webpack-plugin": "^4.0.0",
