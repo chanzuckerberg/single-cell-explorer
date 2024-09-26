@@ -8,6 +8,7 @@ import memoize from "memoize-one";
 import Async, { AsyncProps } from "react-async";
 import { Button, Icon } from "@blueprintjs/core";
 import Openseadragon, { Viewer } from "openseadragon";
+import "./openseadragon-scalebar";
 import { throttle } from "lodash";
 import { IconNames } from "@blueprintjs/icons";
 import _camera, { Camera } from "util/camera";
@@ -1185,6 +1186,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
        */
       crossOriginPolicy: "Anonymous",
       opacity: imageOpacity / 100,
+    });
+
+    this.openseadragon.scalebar({
+      type: Openseadragon.ScalebarType.MICROSCOPY,
+      pixelsPerMeter: 1000000, // this needs to be adjusted based on the image
+      minWidth: "75px",
+      location: Openseadragon.ScalebarLocation.BOTTOM_LEFT,
+      color: "white",
+      fontColor: "black",
+      backgroundColor: "rgba(255, 255, 255, 0.5)",
+      barThickness: 3,
     });
 
     /**

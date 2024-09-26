@@ -121,6 +121,26 @@ module.exports = {
         "@typescript-eslint/no-var-requires": "off",
       },
     },
+    {
+      files: ["src/components/Graph/openseadragon-scalebar.js"],
+      rules: {
+        "func-names": "off",
+        "@typescript-eslint/no-redeclare": "off",
+        "global-require": "off",
+        "no-var": "off",
+        "vars-on-top": "off",
+        "block-scoped-var": "off",
+        "@typescript-eslint/no-this-alias": "off",
+        "consistent-return": "off",
+        "no-restricted-properties": [
+          "off",
+          {
+            object: "Math",
+            property: "pow",
+          },
+        ],
+      },
+    },
   ],
 };
 /* eslint-enable @blueprintjs/classes-constants -- we don't import blueprint here  */
