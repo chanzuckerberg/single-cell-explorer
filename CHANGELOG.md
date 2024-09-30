@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.4.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.1...v1.4.2) (2024-09-26)
+
+
+### Misc
+
+* Add aliases and shared folders for renaming ([#1107](https://github.com/chanzuckerberg/single-cell-explorer/issues/1107)) ([e15a2a4](https://github.com/chanzuckerberg/single-cell-explorer/commit/e15a2a4f95df8ab53e3e20be96fb1e016e2a8175))
+* Add new readme section and dev_doc file ([#1101](https://github.com/chanzuckerberg/single-cell-explorer/issues/1101)) ([7218253](https://github.com/chanzuckerberg/single-cell-explorer/commit/721825305c03540cd282cd9296d94aa58c630a45))
+* bump chart version for prod ([#1118](https://github.com/chanzuckerberg/single-cell-explorer/issues/1118)) ([5ddf710](https://github.com/chanzuckerberg/single-cell-explorer/commit/5ddf710042e11b1dcdbaba788de545a471324bd9))
+* bump chart versions ([#1117](https://github.com/chanzuckerberg/single-cell-explorer/issues/1117)) ([e442d6c](https://github.com/chanzuckerberg/single-cell-explorer/commit/e442d6c3ffeeafd1e9aba7433febbb2d05b19ad3))
+* default dot opacity 50% (SCE-27) ([#1124](https://github.com/chanzuckerberg/single-cell-explorer/issues/1124)) ([c2552bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/c2552bf7c566f9b0052950b7f83c50f46a8064ac))
+* Fractal renaming - Graph ([#1111](https://github.com/chanzuckerberg/single-cell-explorer/issues/1111)) ([5cfc851](https://github.com/chanzuckerberg/single-cell-explorer/commit/5cfc851daa7307312322354681a1726bdd6ddae2))
+* Move `src/components/utils` into `src/utils` ([#1109](https://github.com/chanzuckerberg/single-cell-explorer/issues/1109)) ([1dfdbf7](https://github.com/chanzuckerberg/single-cell-explorer/commit/1dfdbf7adbb0453367ad0398ae675243c8152ca9))
+* Python 3.12 (SCE-16) ([#1100](https://github.com/chanzuckerberg/single-cell-explorer/issues/1100)) ([f767f66](https://github.com/chanzuckerberg/single-cell-explorer/commit/f767f66dd97605a04fff5e2f985fe412ce37cb54))
+* Rename - Right Sidebar ([#1112](https://github.com/chanzuckerberg/single-cell-explorer/issues/1112)) ([52ec34a](https://github.com/chanzuckerberg/single-cell-explorer/commit/52ec34a419e99040f9f609c0348e026528bea9ec))
+* Rename Left Sidebar ([#1113](https://github.com/chanzuckerberg/single-cell-explorer/issues/1113)) ([487de2f](https://github.com/chanzuckerberg/single-cell-explorer/commit/487de2f57a29be18449302e4c8e23599fa7c8c1a))
+* Rename NavBar, MenuBar, Hotkeys ([#1114](https://github.com/chanzuckerberg/single-cell-explorer/issues/1114)) ([ba2087a](https://github.com/chanzuckerberg/single-cell-explorer/commit/ba2087aa73276c13f8957af66d04a4f314bb552d))
+* Update Dev Docs ([#1104](https://github.com/chanzuckerberg/single-cell-explorer/issues/1104)) ([a891910](https://github.com/chanzuckerberg/single-cell-explorer/commit/a89191035e83089f7e462609c2f378afcd09b885))
+* Upgrade BE deps (SCE-18) ([#1092](https://github.com/chanzuckerberg/single-cell-explorer/issues/1092)) ([284dd6c](https://github.com/chanzuckerberg/single-cell-explorer/commit/284dd6c44641eac5253e15e8dff6e9ff5e8103aa))
+* Upgrade codecov ([#1119](https://github.com/chanzuckerberg/single-cell-explorer/issues/1119)) ([920c0fb](https://github.com/chanzuckerberg/single-cell-explorer/commit/920c0fb1375b8dd0521d0a77ef512ffea2b0c197))
+* Upgrade React 18 (SCE-1)  ([#1079](https://github.com/chanzuckerberg/single-cell-explorer/issues/1079)) ([5607bf3](https://github.com/chanzuckerberg/single-cell-explorer/commit/5607bf375a34f1b8500efb9f535476ac2bfaa06c))
+* Use staging env deep zoom assets for localhost ([#1103](https://github.com/chanzuckerberg/single-cell-explorer/issues/1103)) ([c951f21](https://github.com/chanzuckerberg/single-cell-explorer/commit/c951f21848c85841126d62a63a9c45df783717e3))
+
+
+### Bug Fixes
+
+* SCE-20 Navbar use font Inter ([#1115](https://github.com/chanzuckerberg/single-cell-explorer/issues/1115)) ([2ffd87b](https://github.com/chanzuckerberg/single-cell-explorer/commit/2ffd87b1ce58a3a296d10a2764bb13e2aa8b73a9))
+
+
+### Tests
+
+* Chromatic auto accept main ([78427b4](https://github.com/chanzuckerberg/single-cell-explorer/commit/78427b41422171381a08e6d3762bd199186bf388))
+* SCE-6 e2e tests tabilize snapshots ([#1086](https://github.com/chanzuckerberg/single-cell-explorer/issues/1086)) ([901355a](https://github.com/chanzuckerberg/single-cell-explorer/commit/901355a47b20d097fa4f44478033e9799625b0d3))
+
 ## [1.4.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.0...v1.4.1) (2024-08-27)
 
 
