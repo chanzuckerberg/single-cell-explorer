@@ -61,3 +61,7 @@ export const StyledCloseButtonIcon = styled(Icon, {
   shouldForwardProp: (prop) =>
     !STYLED_CLOSE_BUTTON_ICON_DENY_PROPS.includes(prop),
 })``;
+
+export const HiddenHubspotForm = styled.div`
+  display: none;
+`;

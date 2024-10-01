@@ -22,7 +22,6 @@ import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
-import { BANNER_FEEDBACK_SURVEY_LINK } from "../BottomBanner/constants";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -125,7 +124,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                     <LeftSideBar />
                     <RightSideBar />
                   </Layout>
-                  <BottomBanner surveyLink={BANNER_FEEDBACK_SURVEY_LINK} />
+                  <BottomBanner />
                 </>
               )}
             </ThemeProvider>
