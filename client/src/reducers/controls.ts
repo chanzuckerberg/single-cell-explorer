@@ -91,7 +91,7 @@ const Controls = (
       loading: false,
     },
     imageOpacity: isTest ? 0 : 100,
-    dotOpacity: 50,
+    dotOpacity: 100,
     expandedCategories: [],
   },
   action: AnyAction

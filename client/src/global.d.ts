@@ -3,7 +3,8 @@ import { Viewer, Options } from "openseadragon";
 /**
  * We use v4, but the types are for v3. This is a temporary workaround.
  * https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/openseadragon
- */ declare module "openseadragon" {
+ */
+declare module "openseadragon" {
   interface Viewer {
     scalebar: (options: ScalebarOptions) => void;
   }

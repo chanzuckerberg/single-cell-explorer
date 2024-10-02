@@ -24,7 +24,7 @@ import { Dataframe } from "util/dataframe";
 import { RootState } from "reducers";
 import { Field } from "common/types/schema";
 import { Query } from "annoMatrix/query";
-import { THROTTLE_MS } from "util/constants";
+import { SLIDE_SIZE, THROTTLE_MS } from "util/constants";
 import { isSpatialMode, shouldShowOpenseadragon } from "common/selectors";
 import { fetchDeepZoomImageFailed } from "actions/config";
 import { track } from "analytics";
@@ -1163,6 +1163,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       isSidePanel = false,
       imageUnderlay,
       imageOpacity,
+      unsMetadata,
     } = this.props;
 
     if (
@@ -1188,15 +1189,19 @@ class Graph extends React.Component<GraphProps, GraphState> {
       opacity: imageOpacity / 100,
     });
 
+    const { imageHeight } = unsMetadata;
+
+    const calculatedPixelsPerMeter = imageHeight / SLIDE_SIZE;
+
     this.openseadragon.scalebar({
       type: Openseadragon.ScalebarType.MICROSCOPY,
-      pixelsPerMeter: 1000000, // this needs to be adjusted based on the image
+      pixelsPerMeter: calculatedPixelsPerMeter,
       minWidth: "75px",
       location: Openseadragon.ScalebarLocation.BOTTOM_LEFT,
-      color: "white",
+      color: "black",
       fontColor: "black",
       backgroundColor: "rgba(255, 255, 255, 0.5)",
-      barThickness: 3,
+      barThickness: 2,
     });
 
     /**

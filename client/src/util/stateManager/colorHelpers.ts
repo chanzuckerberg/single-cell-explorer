@@ -87,7 +87,7 @@ export function createColorQuery(
 
 function _defaultColors(nObs: number): ColorTable {
   return {
-    rgb: new Float32Array(3 * nObs).fill(0),
+    rgb: new Float32Array(3 * nObs).fill(0.3),
     scale: undefined,
   };
 }
