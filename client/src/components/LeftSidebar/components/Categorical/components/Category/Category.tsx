@@ -253,13 +253,14 @@ class Category extends React.PureComponent<CategoryProps> {
         colorMode === "color by categorical metadata",
       colorAccessor,
       colorMode,
-      colorTable: createColorTable(
+      colorTable: createColorTable({
         colorMode,
-        colorAccessor,
-        colorData,
+        colorByAccessor: colorAccessor,
+        colorByData: colorData,
         schema,
-        userColors
-      ),
+        userColors,
+        isSpatial: false,
+      }),
     };
   }
 

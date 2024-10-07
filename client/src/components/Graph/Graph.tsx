@@ -847,7 +847,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const Y = layoutDf.col(currentDimNames[1]).asArray();
 
     const positions = this.computePointPositions(X, Y, modelTF);
-    const colorTable = this.updateColorTable(colorsProp, colorDf);
+    const colorTable = this.updateColorTable(
+      colorsProp,
+      colorDf,
+      isSpatialMode(this.props)
+    );
     const colorByData = colorDf?.icol(0)?.asArray();
 
     const {
@@ -1121,28 +1125,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   updateColorTable(
     colors: RootState["colors"],
-    colorDf: Dataframe | null
+    colorDf: Dataframe | null,
+    isSpatial: boolean
   ): ColorTable {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
+
     /* update color table state */
     if (!colors || !colorDf) {
-      return createColorTable(
-        null, // default mode
-        null,
-        null,
+      return createColorTable({
         schema,
-        null
-      );
+        isSpatial,
+      });
     }
     const { colorAccessor, userColors, colorMode } = colors;
-    return createColorTable(
+    return createColorTable({
       colorMode,
-      colorAccessor,
-      colorDf,
+      colorByAccessor: colorAccessor,
+      colorByData: colorDf,
       schema,
-      userColors
-    );
+      userColors,
+      isSpatial,
+    });
   }
 
   createColorByQuery(colors: RootState["colors"]): [Field, Query] | null {

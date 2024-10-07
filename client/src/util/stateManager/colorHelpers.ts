@@ -85,9 +85,10 @@ export function createColorQuery(
   }
 }
 
-function _defaultColors(nObs: number): ColorTable {
+function _defaultColors(nObs: number, isSpatial: boolean): ColorTable {
+  const DEFAULT_COLOR = isSpatial ? 0.3 : 0;
   return {
-    rgb: new Float32Array(3 * nObs).fill(0.3),
+    rgb: new Float32Array(3 * nObs).fill(DEFAULT_COLOR),
     scale: undefined,
   };
 }
@@ -121,22 +122,34 @@ export interface ColorTable {
  * @param colorByDataframe - the actual color-by data
  * @param schema - the entire schema
  * @param userColors - optional user color table
+ * @param isSpatial - is in spatial mode
  * @returns colors scale and RGB array as an object
  */
-function _createColorTable(
-  colorMode: string | null,
-  colorByAccessor: LabelType | null,
-  colorByData: Dataframe | null,
-  schema: Schema,
-  userColors: ConvertedUserColors | null = null
-): ColorTable {
+function _createColorTable(params: {
+  colorMode?: string | null;
+  colorByAccessor?: LabelType | null;
+  colorByData?: Dataframe | null;
+  schema: Schema;
+  userColors?: ConvertedUserColors | null;
+  isSpatial: boolean;
+}): ColorTable {
+  const {
+    colorMode = null,
+    colorByAccessor = null,
+    colorByData = null,
+    schema,
+    userColors = null,
+    isSpatial,
+  } = params;
+
   if (colorMode === null || colorByData === null) {
-    return defaultColors(schema.dataframe.nObs);
+    return defaultColors(schema.dataframe.nObs, isSpatial);
   }
 
   switch (colorMode) {
     case "color by categorical metadata": {
-      if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
+      if (colorByAccessor === null)
+        return defaultColors(schema.dataframe.nObs, isSpatial);
 
       const col = colorByData.col(colorByAccessor);
 
@@ -147,7 +160,8 @@ function _createColorTable(
       return createColorsByCategoricalMetadata(col, colorByAccessor, schema);
     }
     case "color by continuous metadata": {
-      if (colorByAccessor === null) return defaultColors(schema.dataframe.nObs);
+      if (colorByAccessor === null)
+        return defaultColors(schema.dataframe.nObs, isSpatial);
       const col = colorByData.col(colorByAccessor);
       const { min, max } = col.summarizeContinuous();
       return createColorsByContinuousMetadata(col.asArray(), min, max);
@@ -163,7 +177,7 @@ function _createColorTable(
       return createColorsByContinuousMetadata(col.asArray(), min, max);
     }
     default: {
-      return defaultColors(schema.dataframe.nObs);
+      return defaultColors(schema.dataframe.nObs, isSpatial);
     }
   }
 }
