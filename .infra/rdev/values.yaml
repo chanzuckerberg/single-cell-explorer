@@ -1,4 +1,8 @@
 stack:
+  global:
+    ingress:
+      annotations:
+        external-dns.alpha.kubernetes.io/exclude: "true"
   services:
     explorer:
       image:
