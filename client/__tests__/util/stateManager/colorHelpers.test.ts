@@ -72,6 +72,7 @@ describe("categorical color helpers", () => {
   });
 
   const catColCategories = schema.annotations.obs.columns[2].categories;
+  const isSpatial = false;
   const obsDataframe = new Dataframe.Dataframe(
     [schema.dataframe.nObs, 2],
     [
@@ -88,12 +89,14 @@ describe("categorical color helpers", () => {
   );
 
   test("default category order", () => {
-    const ct = createColorTable(
-      "color by categorical metadata",
-      "categoricalColumn",
-      obsDataframe,
-      schema
-    );
+    const ct = createColorTable({
+      colorMode: "color by categorical metadata",
+      colorByAccessor: "categoricalColumn",
+      colorByData: obsDataframe,
+      schema,
+      userColors: null,
+      isSpatial,
+    });
     expect(ct).toBeDefined();
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schema.annotations.obsByName.categoricalColumn.categories;
@@ -105,12 +108,14 @@ describe("categorical color helpers", () => {
   test("shuffle category order", () => {
     const schemaClone = indexSchema(JSON.parse(JSON.stringify(schema)));
     shuffle(schemaClone.annotations.obsByName.categoricalColumn.categories);
-    const ct = createColorTable(
-      "color by categorical metadata",
-      "categoricalColumn",
-      obsDataframe,
-      schemaClone
-    );
+    const ct = createColorTable({
+      colorMode: "color by categorical metadata",
+      colorByAccessor: "categoricalColumn",
+      colorByData: obsDataframe,
+      schema: schemaClone,
+      userColors: null,
+      isSpatial,
+    });
     expect(ct).toBeDefined();
     const data = obsDataframe.col("categoricalColumn").asArray();
     const cats = schemaClone.annotations.obsByName.categoricalColumn.categories;
@@ -139,13 +144,14 @@ describe("categorical color helpers", () => {
     const userColors = loadUserColorConfig(userDefinedColorTable);
     expect(userColors).toBeDefined();
 
-    const ct = createColorTable(
-      "color by categorical metadata",
-      "categoricalColumn",
-      obsDataframe,
+    const ct = createColorTable({
+      colorMode: "color by categorical metadata",
+      colorByAccessor: "categoricalColumn",
+      colorByData: obsDataframe,
       schema,
-      userColors
-    );
+      userColors,
+      isSpatial,
+    });
     expect(ct).toBeDefined();
     const data = obsDataframe.col("categoricalColumn").asArray();
     for (let i = 0; i < schema.dataframe.nObs; i += 1) {

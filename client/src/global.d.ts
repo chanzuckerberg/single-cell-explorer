@@ -5,9 +5,30 @@ import { Viewer, Options } from "openseadragon";
  * https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/openseadragon
  */
 declare module "openseadragon" {
-  function openseadragon(options: Options): Viewer;
+  interface Viewer {
+    scalebar: (options: ScalebarOptions) => void;
+  }
 
-  export default openseadragon;
+  interface ScalebarOptions {
+    type?: string;
+    pixelsPerMeter?: number;
+    minWidth?: string;
+    location?: string;
+    color?: string;
+    fontColor?: string;
+    backgroundColor?: string;
+    barThickness?: number;
+  }
+
+  const ScalebarType: {
+    MICROSCOPY: string;
+    MAP: string;
+  };
+
+  const ScalebarLocation: {
+    BOTTOM_LEFT: string;
+    BOTTOM_RIGHT: string;
+  };
 }
 
 namespace HubSpotFormAPI {

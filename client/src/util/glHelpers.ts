@@ -86,29 +86,27 @@ export const glPointSize = `
   }
 `;
 
-export const densityFactor = 0.9;
-
 export const glPointSizeSpatial = `
-
-  float pointSizeSpatial(float nPoints, float minViewportDimension, bool isSelected, bool isHighlight, float distance, float imageHeight, float scaleref, float spotDiameterFullres) {
-
+  float pointSizeSpatial(float minViewportDimension, bool isSelected, bool isHighlight, float distance, float imageHeight, float scaleref, float spotDiameterFullres) {
     float scaleFactor = (minViewportDimension / imageHeight) ;
 
+    /*
+    * Spot size in full or high resolution
+    */
+    float defaultPointSize = spotDiameterFullres * scaleref; 
 
-    // Adjust base size based on distance (zoom level)
-    float adjustedDistance = clamp(distance, 1., 2.5); // Clamp the distance to avoid extreme values
-    float zoomFactor = 1.0 / adjustedDistance * distance * ${densityFactor}; // Inverse of adjustedDistance and multiply by distnace and density factor to get smoother dot size change
-    float adjustedZoomFactor = clamp(zoomFactor, 0.1, .9); // Clamp the zoom factor to avoid extreme values and overlapping dots
-
-    float baseSize = spotDiameterFullres * scaleref * scaleFactor * adjustedZoomFactor; // Base size proportional to viewport
+    /*
+    * Adjusted for zoom/distance and viewport to image size ratio
+    */
+    float pointSize = defaultPointSize * sqrt(distance) * scaleFactor;
 
     // isHighlight has to be checked before isSelected to ensure that highlight works as intended
     if (isHighlight) {
-      return baseSize * 2.0; // Increase size if selected
+      return pointSize * 1.25; // Increase size if highlighted
     } else if (isSelected) {
-      return baseSize * 1.5; // Increase size if highlighted
+      return pointSize;
     } else {
-      return baseSize;
+      return pointSize * 0.75; // Decrease size for unselected
     }
   }
 `;

@@ -349,13 +349,14 @@ class Scatterplot extends React.PureComponent<{}, State> {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
     const { colorAccessor, userColors, colorMode } = colors;
-    return createColorTable(
+    return createColorTable({
       colorMode,
-      colorAccessor,
-      colorDf,
+      colorByAccessor: colorAccessor,
+      colorByData: colorDf,
       schema,
-      userColors
-    );
+      userColors,
+      isSpatial: false,
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

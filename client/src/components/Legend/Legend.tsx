@@ -183,13 +183,14 @@ class ContinuousLegend extends React.Component<Props> {
     const colorDf = colorQuery
       ? await annoMatrix.fetch(...colorQuery, globals.numBinsObsX)
       : null;
-    const colorTable = createColorTable(
+    const colorTable = createColorTable({
       colorMode,
-      colorAccessor,
-      colorDf,
+      colorByAccessor: colorAccessor,
+      colorByData: colorDf,
       schema,
-      userColors
-    );
+      userColors,
+      isSpatial: false,
+    });
     const colorScale = colorTable.scale;
     const range = (colorScale?.range ?? (() => [0, 0])) as ColorRange;
     const [domainMin, domainMax] = colorScale?.domain?.() ?? [0, 0];

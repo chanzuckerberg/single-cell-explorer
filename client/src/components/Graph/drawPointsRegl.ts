@@ -61,7 +61,7 @@ export default function drawPointsRegl(regl: Regl) {
       getFlags(flag, isBackground, isSelected, isHighlight);
 
       if (isSpatial) {
-        size = pointSizeSpatial(nPoints, minViewportDimension, isSelected, isHighlight, distance, imageHeight, scaleref, spotDiameterFullres);
+        size = pointSizeSpatial(minViewportDimension, isSelected, isHighlight, distance, imageHeight, scaleref, spotDiameterFullres);
       } else {
         size = pointSize(nPoints, minViewportDimension, isSelected, isHighlight);
       }

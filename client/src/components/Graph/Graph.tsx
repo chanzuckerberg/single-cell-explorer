@@ -8,6 +8,7 @@ import memoize from "memoize-one";
 import Async, { AsyncProps } from "react-async";
 import { Button, Icon } from "@blueprintjs/core";
 import Openseadragon, { Viewer } from "openseadragon";
+import "./openseadragon-scalebar";
 import { throttle } from "lodash";
 import { IconNames } from "@blueprintjs/icons";
 import _camera, { Camera } from "util/camera";
@@ -23,7 +24,7 @@ import { Dataframe } from "util/dataframe";
 import { RootState } from "reducers";
 import { Field } from "common/types/schema";
 import { Query } from "annoMatrix/query";
-import { THROTTLE_MS } from "util/constants";
+import { SLIDE_SIZE, THROTTLE_MS } from "util/constants";
 import { isSpatialMode, shouldShowOpenseadragon } from "common/selectors";
 import { fetchDeepZoomImageFailed } from "actions/config";
 import { track } from "analytics";
@@ -846,7 +847,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const Y = layoutDf.col(currentDimNames[1]).asArray();
 
     const positions = this.computePointPositions(X, Y, modelTF);
-    const colorTable = this.updateColorTable(colorsProp, colorDf);
+    const colorTable = this.updateColorTable(
+      colorsProp,
+      colorDf,
+      isSpatialMode(this.props)
+    );
     const colorByData = colorDf?.icol(0)?.asArray();
 
     const {
@@ -1120,28 +1125,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
   updateColorTable(
     colors: RootState["colors"],
-    colorDf: Dataframe | null
+    colorDf: Dataframe | null,
+    isSpatial: boolean
   ): ColorTable {
     const { annoMatrix } = this.props;
     const { schema } = annoMatrix;
+
     /* update color table state */
     if (!colors || !colorDf) {
-      return createColorTable(
-        null, // default mode
-        null,
-        null,
+      return createColorTable({
         schema,
-        null
-      );
+        isSpatial,
+      });
     }
     const { colorAccessor, userColors, colorMode } = colors;
-    return createColorTable(
+    return createColorTable({
       colorMode,
-      colorAccessor,
-      colorDf,
+      colorByAccessor: colorAccessor,
+      colorByData: colorDf,
       schema,
-      userColors
-    );
+      userColors,
+      isSpatial,
+    });
   }
 
   createColorByQuery(colors: RootState["colors"]): [Field, Query] | null {
@@ -1162,6 +1167,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       isSidePanel = false,
       imageUnderlay,
       imageOpacity,
+      unsMetadata,
     } = this.props;
 
     if (
@@ -1185,6 +1191,21 @@ class Graph extends React.Component<GraphProps, GraphState> {
        */
       crossOriginPolicy: "Anonymous",
       opacity: imageOpacity / 100,
+    });
+
+    const { imageHeight } = unsMetadata;
+
+    const calculatedPixelsPerMeter = imageHeight / SLIDE_SIZE;
+
+    this.openseadragon.scalebar({
+      type: Openseadragon.ScalebarType.MICROSCOPY,
+      pixelsPerMeter: calculatedPixelsPerMeter,
+      minWidth: "75px",
+      location: Openseadragon.ScalebarLocation.BOTTOM_LEFT,
+      color: "black",
+      fontColor: "black",
+      backgroundColor: "rgba(255, 255, 255, 0.5)",
+      barThickness: 2,
     });
 
     /**
