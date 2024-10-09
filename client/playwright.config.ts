@@ -91,6 +91,11 @@ export default defineConfig<ChromaticConfig>({
     actionTimeout: 0,
     headless: !isHeadful,
     ignoreHTTPSErrors: true,
+    /**
+     * Pause animation at the first frame.
+     * https://www.chromatic.com/docs/animations/#css-animations
+     */
+    pauseAnimationAtEnd: false,
     screenshot: "only-on-failure",
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "retain-on-failure",
