@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.2...v1.5.0) (2024-10-09)
+
+
+### Misc
+
+* Add newsletter signup to bottom banner (SCE-29) ([#1116](https://github.com/chanzuckerberg/single-cell-explorer/issues/1116)) ([1f0048f](https://github.com/chanzuckerberg/single-cell-explorer/commit/1f0048f7efb69cd5094edeee35f27debad858ede))
+* update playwright to pause animation ([#1128](https://github.com/chanzuckerberg/single-cell-explorer/issues/1128)) ([284eb4f](https://github.com/chanzuckerberg/single-cell-explorer/commit/284eb4f590f69b85eea61e1a690e1ea0fa548e07))
+
+
+### Features
+
+* scale bar for zoom (SCE-26, SCE-25, SCE-27) ([#1125](https://github.com/chanzuckerberg/single-cell-explorer/issues/1125)) ([49e8d14](https://github.com/chanzuckerberg/single-cell-explorer/commit/49e8d145f45520c524b56483b4cecea691fd7452))
+
 ## [1.4.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.1...v1.4.2) (2024-09-26)
 
 
