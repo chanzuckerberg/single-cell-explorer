@@ -1200,8 +1200,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
     this.openseadragon.scalebar({
       type: Openseadragon.ScalebarType.MICROSCOPY,
       pixelsPerMeter: calculatedPixelsPerMeter,
+      yOffset: 60,
+      xOffset: 80,
       minWidth: "75px",
-      location: Openseadragon.ScalebarLocation.BOTTOM_LEFT,
+      location: Openseadragon.ScalebarLocation.BOTTOM_RIGHT,
       color: "black",
       fontColor: "black",
       backgroundColor: "rgba(255, 255, 255, 0.5)",

@@ -13,6 +13,8 @@ declare module "openseadragon" {
     type?: string;
     pixelsPerMeter?: number;
     minWidth?: string;
+    yOffset?: number;
+    xOffset?: number;
     location?: string;
     color?: string;
     fontColor?: string;
