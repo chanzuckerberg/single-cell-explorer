@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.0...v1.5.1) (2024-10-10)
+
+
+### Misc
+
+* add codecov github action to unit tests ([#1134](https://github.com/chanzuckerberg/single-cell-explorer/issues/1134)) ([a6c8564](https://github.com/chanzuckerberg/single-cell-explorer/commit/a6c8564c29c907d927025af3ab30fca37f3ec3fa))
+* **deps:** bump body-parser and express in /client ([#1131](https://github.com/chanzuckerberg/single-cell-explorer/issues/1131)) ([358b0a0](https://github.com/chanzuckerberg/single-cell-explorer/commit/358b0a0328bcf7b7e53a05aa14da103df1ad858a))
+* **deps:** bump dset from 3.1.3 to 3.1.4 in /client ([#1102](https://github.com/chanzuckerberg/single-cell-explorer/issues/1102)) ([33a88a3](https://github.com/chanzuckerberg/single-cell-explorer/commit/33a88a32c5622bbf316972e8caeb70ee867bfd9c))
+* update scale bar position ([#1136](https://github.com/chanzuckerberg/single-cell-explorer/issues/1136)) ([6b0933d](https://github.com/chanzuckerberg/single-cell-explorer/commit/6b0933d6438fa2f7d2131f412578e7cb6375f865))
+
 ## [1.5.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.2...v1.5.0) (2024-10-09)
 
 
