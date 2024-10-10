@@ -268,11 +268,6 @@
       this.divElt.style.top = `${location.y}px`;
     },
     drawMicroscopyScalebar(size, text) {
-      // this.divElt.style.display = "flex";
-      // this.divElt.style.alignItems = "flex-end"; // Align the ticks to the bottom
-      // this.divElt.style.justifyContent = "space-between";
-
-      // OG code ****************************************************
       this.divElt.style.fontSize = this.fontSize;
       this.divElt.style.fontFamily = this.fontFamily;
       this.divElt.style.textAlign = "center";
@@ -286,26 +281,6 @@
       this.divElt.style.backgroundColor = this.backgroundColor;
       this.divElt.innerHTML = text;
       this.divElt.style.width = `${size}px`;
-
-      // // New code ****************************************************
-
-      // // Create the first label (0)
-      // const label0 = document.createElement("div");
-      // label0.className = "label";
-      // label0.innerHTML = "0";
-      // label0.style.top = "3px";
-      // label0.style.fontSize = "12px";
-
-      // const tick1 = document.createElement("span");
-      // tick1.className = "tick";
-      // tick1.style.position = "absolute";
-      // tick1.style.top = "10px"; // Align tick above the line
-      // tick1.style.left = "7px";
-      // tick1.style.height = "6px"; // Smaller tick
-      // tick1.style.width = "2px";
-      // tick1.style.backgroundColor = "black";
-      // label0.appendChild(tick1);
-      // this.divElt.appendChild(label0);
     },
     drawMapScalebar(size, text) {
       this.divElt.style.fontSize = this.fontSize;
