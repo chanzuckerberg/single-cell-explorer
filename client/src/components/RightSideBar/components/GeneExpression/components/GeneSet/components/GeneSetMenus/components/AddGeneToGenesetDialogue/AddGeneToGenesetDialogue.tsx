@@ -70,9 +70,7 @@ export class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
     return (
       <>
         <AnnoDialog
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isActive: boolean; inputProps: { "data-tes... Remove this comment to see the full error message
           isActive={genesetsUI.isAddingGenesToGeneset === geneset}
-          inputProps={{ "data-testid": `${geneset}:create-label-dialog` }}
           primaryButtonProps={{
             "data-testid": `${geneset}:submit-gene`,
           }}

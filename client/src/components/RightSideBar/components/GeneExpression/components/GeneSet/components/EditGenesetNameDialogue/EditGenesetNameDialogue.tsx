@@ -101,11 +101,7 @@ export class EditGenesetNameDialogue extends React.PureComponent<{}, State> {
     return (
       <>
         <AnnoDialog
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ isActive: boolean; inputProps: { "data-tes... Remove this comment to see the full error message
           isActive={genesetsUI.isEditingGenesetName === parentGeneset}
-          inputProps={{
-            "data-testid": `${genesetsUI.isEditingGenesetName}:rename-geneset-dialog`,
-          }}
           primaryButtonProps={{
             "data-testid": `${genesetsUI.isEditingGenesetName}:submit-geneset`,
           }}
@@ -114,7 +110,6 @@ export class EditGenesetNameDialogue extends React.PureComponent<{}, State> {
           cancelTooltipContent="Close this dialog without renaming the gene set."
           primaryButtonText="Edit gene set name and description"
           text={newGenesetName}
-          secondaryText={newGenesetDescription}
           validationError={
             this.validate(newGenesetName, genesets) &&
             parentGenesetDescription === newGenesetDescription
