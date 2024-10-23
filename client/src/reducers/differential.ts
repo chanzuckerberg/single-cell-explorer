@@ -1,7 +1,7 @@
 import { AnyAction } from "redux";
 import { LabelArray } from "../util/dataframe";
 
-interface DifferentialState {
+export interface DifferentialState {
   loading: boolean | null;
   error: Error | string | null;
   celllist1: LabelArray | null;
