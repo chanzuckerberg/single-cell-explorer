@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import Snackbar from "@mui/material/Snackbar";
-import { Alert } from "@mui/lab";
+import { Alert } from "@mui/material";
 
 export const StyledSnackbar = styled(Snackbar)`
   width: 423px;

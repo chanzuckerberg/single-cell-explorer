@@ -69,6 +69,10 @@ export interface Config {
   };
   portalUrl: string;
   links: Record<ConfigLink, unknown>;
+  limits: {
+    column_request_max?: number;
+    diffexp_cellcount_max?: number;
+  };
 }
 
 /* shape of config library_versions */
