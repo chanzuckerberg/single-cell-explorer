@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.1...v1.5.2) (2024-10-24)
+
+
+### Code Refactoring
+
+* AnnoDialog (SCE-34) ([#1138](https://github.com/chanzuckerberg/single-cell-explorer/issues/1138)) ([d494730](https://github.com/chanzuckerberg/single-cell-explorer/commit/d494730a5c5fe05ad0c309eaf20820a141bb3efa))
+* DiffExpButtons (SCE-34) ([#1140](https://github.com/chanzuckerberg/single-cell-explorer/issues/1140)) ([186fea8](https://github.com/chanzuckerberg/single-cell-explorer/commit/186fea88a42bc452e55adfe6fa1347c531f19cdd))
+
 ## [1.5.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.0...v1.5.1) (2024-10-10)
 
 
