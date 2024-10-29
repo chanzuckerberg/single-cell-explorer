@@ -280,6 +280,20 @@ class CxgDataset(Dataset):
         coordindices = mapindex[coord_data]
         return ncoord, coordindices
 
+    def sort_by_gene_expression(self, data):
+        """
+        Helper function to sort observations by highest gene expression.
+        
+        Parameters:
+        - data: 2D array where rows are observations and columns are genes.
+        
+        Returns:
+        - data sorted by descending order of gene expression sums.
+            """
+        gene_expression_sums = np.sum(data, axis=1)
+        sorted_indices = np.argsort(gene_expression_sums)
+        return data[sorted_indices, :]
+
     def get_X_array(self, obs_mask=None, var_mask=None):
         obs_items = pack_selector_from_mask(obs_mask)
         var_items = pack_selector_from_mask(var_mask)
@@ -300,10 +314,13 @@ class CxgDataset(Dataset):
             ncols, varindices = self.__remap_indices(shape[1], var_mask, data.get("coords", data)["var"])
             densedata = np.zeros((nrows, ncols), dtype=self.get_X_array_dtype())
             densedata[obsindices, varindices] = data[""]
+            densedata = self.sort_by_gene_expression(densedata)
             return densedata
         else:
             X = self.open_X_array()
             data = X.multi_index[obs_items, var_items][""]
+            data = self.sort_by_gene_expression(data)
+
             return data
 
     def get_X_approximate_distribution(self) -> XApproximateDistribution:
