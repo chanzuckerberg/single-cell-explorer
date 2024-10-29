@@ -283,13 +283,13 @@ class CxgDataset(Dataset):
     def sort_by_gene_expression(self, data):
         """
         Helper function to sort observations by highest gene expression.
-        
+
         Parameters:
         - data: 2D array where rows are observations and columns are genes.
-        
+
         Returns:
         - data sorted by descending order of gene expression sums.
-            """
+        """
         gene_expression_sums = np.sum(data, axis=1)
         sorted_indices = np.argsort(gene_expression_sums)
         return data[sorted_indices, :]
