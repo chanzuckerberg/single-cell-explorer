@@ -39,6 +39,8 @@ stack:
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
       ingress:
+        annotations:
+          cert-manager.io/cluster-issuer: nginx-issuer
         rules:
           - host: cellxgene.cziscience.com
           - host: api.cellxgene.cziscience.com
