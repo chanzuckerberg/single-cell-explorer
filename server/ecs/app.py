@@ -43,6 +43,8 @@ class WSGIServer(Server):
 
         HUBSPOT_FORMS_URL = "https://forms.hsforms.com"
 
+        HUBSPOT_FORMS_URL_CDN = "https://forms-na1.hsforms.com"
+
         EXPLORER_DEV_URL = "https://cellxgene.dev.single-cell.czi.technology"
 
         EXPLORER_STAGING_URL = "https://cellxgene.staging.single-cell.czi.technology"
@@ -55,7 +57,13 @@ class WSGIServer(Server):
             "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com"],
-            "img-src": ["'self'", "https://cellxgene.cziscience.com", EXPLORER_DEV_URL, EXPLORER_STAGING_URL]
+            "img-src": [
+                "'self'",
+                "https://cellxgene.cziscience.com",
+                EXPLORER_DEV_URL,
+                EXPLORER_STAGING_URL,
+                HUBSPOT_FORMS_URL_CDN,
+            ]
             + extra_connect_src
             + ["data:", HUBSPOT_FORMS_URL],
             "object-src": ["'none'"],

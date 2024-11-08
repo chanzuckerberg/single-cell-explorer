@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.5.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.1...v1.5.2) (2024-11-05)
+
+
+### Misc
+
+* **deps:** bump werkzeug from 3.0.4 to 3.0.6 in /server ([#1141](https://github.com/chanzuckerberg/single-cell-explorer/issues/1141)) ([a6aca42](https://github.com/chanzuckerberg/single-cell-explorer/commit/a6aca42ba60edaac64943900592de7d982b5181d))
+
+
+### Code Refactoring
+
+* AnnoDialog (SCE-34) ([#1138](https://github.com/chanzuckerberg/single-cell-explorer/issues/1138)) ([d494730](https://github.com/chanzuckerberg/single-cell-explorer/commit/d494730a5c5fe05ad0c309eaf20820a141bb3efa))
+* DiffExpButtons (SCE-34) ([#1140](https://github.com/chanzuckerberg/single-cell-explorer/issues/1140)) ([186fea8](https://github.com/chanzuckerberg/single-cell-explorer/commit/186fea88a42bc452e55adfe6fa1347c531f19cdd))
+
+## [1.5.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.0...v1.5.1) (2024-10-10)
+
+
+### Misc
+
+* add codecov github action to unit tests ([#1134](https://github.com/chanzuckerberg/single-cell-explorer/issues/1134)) ([a6c8564](https://github.com/chanzuckerberg/single-cell-explorer/commit/a6c8564c29c907d927025af3ab30fca37f3ec3fa))
+* **deps:** bump body-parser and express in /client ([#1131](https://github.com/chanzuckerberg/single-cell-explorer/issues/1131)) ([358b0a0](https://github.com/chanzuckerberg/single-cell-explorer/commit/358b0a0328bcf7b7e53a05aa14da103df1ad858a))
+* **deps:** bump dset from 3.1.3 to 3.1.4 in /client ([#1102](https://github.com/chanzuckerberg/single-cell-explorer/issues/1102)) ([33a88a3](https://github.com/chanzuckerberg/single-cell-explorer/commit/33a88a32c5622bbf316972e8caeb70ee867bfd9c))
+* update scale bar position ([#1136](https://github.com/chanzuckerberg/single-cell-explorer/issues/1136)) ([6b0933d](https://github.com/chanzuckerberg/single-cell-explorer/commit/6b0933d6438fa2f7d2131f412578e7cb6375f865))
+
+## [1.5.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.2...v1.5.0) (2024-10-09)
+
+
+### Misc
+
+* Add newsletter signup to bottom banner (SCE-29) ([#1116](https://github.com/chanzuckerberg/single-cell-explorer/issues/1116)) ([1f0048f](https://github.com/chanzuckerberg/single-cell-explorer/commit/1f0048f7efb69cd5094edeee35f27debad858ede))
+* update playwright to pause animation ([#1128](https://github.com/chanzuckerberg/single-cell-explorer/issues/1128)) ([284eb4f](https://github.com/chanzuckerberg/single-cell-explorer/commit/284eb4f590f69b85eea61e1a690e1ea0fa548e07))
+
+
+### Features
+
+* scale bar for zoom (SCE-26, SCE-25, SCE-27) ([#1125](https://github.com/chanzuckerberg/single-cell-explorer/issues/1125)) ([49e8d14](https://github.com/chanzuckerberg/single-cell-explorer/commit/49e8d145f45520c524b56483b4cecea691fd7452))
+
 ## [1.4.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.4.1...v1.4.2) (2024-09-26)
 
 

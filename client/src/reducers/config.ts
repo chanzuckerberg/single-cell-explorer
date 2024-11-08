@@ -5,6 +5,7 @@ export interface ConfigState {
   features: Config["features"] | null;
   parameters: Config["parameters"] | null;
   displayNames: Config["displayNames"] | null;
+  limits: Config["limits"] | null;
   loading?: boolean;
   error?: Error | null;
   corpora_props?: Config["corpora_props"];
@@ -20,6 +21,7 @@ const ConfigReducer = (
     features: null,
     parameters: null,
     isDeepZoomSourceValid: true,
+    limits: null,
   },
   action: AnyAction
 ): ConfigState => {
