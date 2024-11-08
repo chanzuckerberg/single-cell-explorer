@@ -4,6 +4,6 @@ type: application
 version: 1.0.0
 
 dependencies:
-- name: stack
-  version: 1.16.3
-  repository: https://chanzuckerberg.github.io/argo-helm-charts
+  - name: stack
+    version: 1.16.3
+    repository: https://chanzuckerberg.github.io/argo-helm-charts
