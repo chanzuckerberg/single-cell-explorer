@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.2...v1.5.3) (2024-11-08)
+
+
+### Misc
+
+* upgrade argus helm stack chart ([#1127](https://github.com/chanzuckerberg/single-cell-explorer/issues/1127)) ([642d6cc](https://github.com/chanzuckerberg/single-cell-explorer/commit/642d6cc1c448f554affd47109e59fae2199623c6))
+
 ## [1.5.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.1...v1.5.2) (2024-11-05)
 
 
