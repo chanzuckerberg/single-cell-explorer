@@ -97,7 +97,8 @@
     "regl": "^2.1.0",
     "sha1": "^1.1.1",
     "tinyqueue": "^2.0.3",
-    "whatwg-fetch": "^3.2.0"
+    "whatwg-fetch": "^3.2.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/core": "^7.13.16",

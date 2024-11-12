@@ -22,6 +22,7 @@ import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
+import { AgentComponent } from "../Agent/AgentComponent";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -103,6 +104,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                     renderGraph={(viewportRef: HTMLDivElement) => (
                       <>
                         <GlobalHotkeys />
+                        <AgentComponent />
                         <Controls>
                           <MenuBar />
                         </Controls>

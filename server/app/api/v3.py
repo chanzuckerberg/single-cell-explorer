@@ -12,6 +12,7 @@ from flask import (
 from flask_restful import Api, Resource
 
 import server.common.rest as common_rest
+import server.common.agent as common_agent
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.common.constants import CELLGUIDE_CXG_KEY_NAME
 from server.common.errors import (
@@ -177,6 +178,14 @@ class UnsMetaAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.uns_metadata_get(request, data_adaptor)
 
+    # Add agent endpoint
+
+
+class AgentAPI(S3URIResource):  # Inherit from S3URIResource instead of Resource
+    @rest_get_s3uri_data_adaptor
+    def post(self, data_adaptor):
+        return common_agent.agent_step_post(request)
+
 
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
@@ -249,6 +258,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
     add_resource(UnsMetaAPI, "/uns/meta")
+    add_resource(AgentAPI, "/agent/step")
     return api
 
 
@@ -299,4 +309,12 @@ def register_api_v3(app, app_config, api_url_prefix):
             f"static_assets_{url_dataroot}_cellguide_cxgs/",
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
+        )
+
+        # Add agent endpoint for each dataroot
+        app.add_url_rule(
+            f"{api_url_prefix}/{url_dataroot}/<string:dataset>/api/v0.3/agent/step",
+            f"agent_step_{url_dataroot}",
+            view_func=lambda: common_agent.agent_step_post(request),
+            methods=["POST"],
         )
