@@ -43,8 +43,9 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   },
 
   categorical_selection: {
-    action: async (dispatch) => {
-      dispatch(performCategoricalSelection());
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Categorical selection args are required");
+      await dispatch(performCategoricalSelection(args));
       return "Performed categorical selection";
     },
   },

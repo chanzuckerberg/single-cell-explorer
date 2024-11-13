@@ -73,7 +73,7 @@ def agent_step_post(request, data_adaptor):
                 formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
 
         # Initialize LLM and create agent with data_adaptor-aware tools
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
         tools = create_tools(data_adaptor)
         agent = create_openai_tools_agent(llm, tools, get_prompt_template())
 
