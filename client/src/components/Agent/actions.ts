@@ -75,6 +75,25 @@ export const performHistogramSelection =
     console.log("Performed histogram selection");
   };
 
+export const performExpandCategory = (args: Record<string, string>) => () => {
+  const categoryElement = document.querySelector(
+    `[data-testid="category-${args.category_name}"]`
+  );
+  if (categoryElement instanceof HTMLElement) {
+    console.log(categoryElement);
+    const isNotExpandedElement = categoryElement.querySelector(
+      '[data-testid="category-expand-is-not-expanded"]'
+    );
+    if (isNotExpandedElement) {
+      (
+        categoryElement.querySelector(
+          `[data-testid="${args.category_name}:category-expand"]`
+        ) as HTMLElement
+      )?.click();
+    }
+  }
+};
+
 export const performPanning =
   () => (dispatch: AppDispatch, getState: GetState) => {
     console.log("Performed panning");

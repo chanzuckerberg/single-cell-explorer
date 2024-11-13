@@ -72,6 +72,13 @@ class CategoricalSelectionSchema(BaseModel):
     ]
 
 
+class ExpandCategorySchema(BaseModel):
+    category_name: Annotated[
+        str,
+        Field(description="The name of the category to expand."),
+    ]
+
+
 class CategoryColorBySchema(BaseModel):
     category_name: Annotated[
         str,
@@ -166,6 +173,17 @@ def create_geneset(geneset_name: str, geneset_description: str, genes_to_populat
     }
 
 
+def expand_category(data_adaptor, category_name: str):
+    schema = data_adaptor.get_schema()
+    prompt = f"The category name the user wishes to perform expand by is: {category_name}."
+    prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid column names to expand by. Do NOT select any of the values in the column."
+
+    class CategorySelectionSchema(BaseModel):
+        category_name: str
+
+    return call_llm_with_structured_output(prompt, CategorySelectionSchema)
+
+
 def xy_scatterplot():
     return {"status": "success"}
 
@@ -248,6 +266,12 @@ def create_tools(data_adaptor):
             description="Color the visualization by category",
             func=partial(color_by_category, data_adaptor),
             args_schema=CategoryColorBySchema,
+        ),
+        Tool(
+            name="expand_category",
+            description="Expand the category element to show more information about the category",
+            func=partial(expand_category, data_adaptor),
+            args_schema=ExpandCategorySchema,
         ),
         Tool(
             name="color_by_continuous",

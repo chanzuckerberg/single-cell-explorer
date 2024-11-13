@@ -9,6 +9,7 @@ import {
   performZoomOut,
   performColorByGene,
   performExpandGene,
+  performExpandCategory,
   performColorByGeneset,
   performColorByCategory,
   performColorByContinuous,
@@ -113,6 +114,14 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
       if (!args) throw new Error("Category name is required");
       await dispatch(performColorByCategory(args));
       return `Colored by category: ${args.category_name}`;
+    },
+  },
+
+  expand_category: {
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Category name is required");
+      await dispatch(performExpandCategory(args));
+      return `Expanded category: ${args.category_name}`;
     },
   },
 

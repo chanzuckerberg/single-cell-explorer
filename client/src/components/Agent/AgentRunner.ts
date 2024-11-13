@@ -1,10 +1,18 @@
 import { UITool } from "./UITool";
 import { AgentMessage, getNextAgentStep } from "./agent";
 
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  timestamp: number;
+};
+
 // We need an intermediate message history PER QUERY and then we need a persistent chat history
 // Which will contain the user's initial inputs and the agent's final outputs.
 export class AgentRunner {
   private messages: AgentMessage[] = [];
+
+  public chatHistory: ChatMessage[] = [];
 
   private tools: Record<string, UITool>;
 
@@ -17,9 +25,17 @@ export class AgentRunner {
 
   async processQuery(userInput: string, maxSteps = 20): Promise<string> {
     /* eslint-disable no-await-in-loop -- Steps must be executed sequentially */
-    this.messages.push({
-      role: "user",
+    this.messages = []; // Reset intermediate messages for new query
+
+    // Add the user's message to both histories
+    const userMessage = {
+      role: "user" as const,
       content: userInput,
+    };
+    this.messages.push(userMessage);
+    this.chatHistory.push({
+      ...userMessage,
+      timestamp: Date.now(),
     });
 
     let stepCount = 0;
@@ -29,11 +45,13 @@ export class AgentRunner {
         const step = await getNextAgentStep(this.messages);
 
         if (step.type === "final") {
-          this.messages.push({
+          const finalResponse = step.content ?? "";
+          this.chatHistory.push({
             role: "assistant",
-            content: step.content ?? "",
+            content: finalResponse,
+            timestamp: Date.now(),
           });
-          return step.content ?? "";
+          return finalResponse;
         }
 
         if (step.type === "tool" && step.tool) {
@@ -66,7 +84,6 @@ export class AgentRunner {
         return `Error: ${errorMessage}`;
       }
     }
-    /* eslint-enable no-await-in-loop -- Steps must be executed sequentially */
     const timeoutMessage = `Conversation exceeded maximum of ${maxSteps} steps`;
     this.messages.push({
       role: "assistant",
