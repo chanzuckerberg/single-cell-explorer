@@ -109,8 +109,9 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   },
 
   create_geneset: {
-    action: async (dispatch) => {
-      dispatch(performCreateGeneset());
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Geneset args are required");
+      await dispatch(performCreateGeneset(args));
       return "Created new geneset";
     },
   },

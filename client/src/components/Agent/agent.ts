@@ -5,7 +5,7 @@ const AgentStepResponseSchema = z.object({
   tool: z
     .object({
       name: z.string(),
-      result: z.record(z.string(), z.string()),
+      result: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
     })
     .optional(),
   content: z.string().optional(),

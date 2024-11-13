@@ -21,6 +21,25 @@ class ColorByGeneSchema(BaseModel):
     ]
 
 
+class CreateGenesetSchema(BaseModel):
+    geneset_name: Annotated[
+        str,
+        Field(description="The name of the geneset to create."),
+    ]
+    geneset_description: Annotated[
+        str,
+        Field(
+            description="The description of the geneset to create. If not provided by the user, the tool will set the description to an empty string."
+        ),
+    ]
+    genes_to_populate_geneset: Annotated[
+        List[str],
+        Field(
+            description="The genes to populate the geneset with. If not provided by the user, the tool will set the genes to an empty list."
+        ),
+    ]
+
+
 class CategoricalSelectionSchema(BaseModel):
     category_value: Annotated[
         str,
@@ -89,8 +108,12 @@ def color_by_continuous():
     return {"status": "success"}
 
 
-def create_geneset():
-    return {"status": "success"}
+def create_geneset(geneset_name: str, geneset_description: str, genes_to_populate_geneset: List[str]):
+    return {
+        "geneset_name": geneset_name,
+        "geneset_description": geneset_description,
+        "genes_to_populate_geneset": [i.upper() for i in genes_to_populate_geneset],
+    }
 
 
 def xy_scatterplot():
@@ -177,6 +200,7 @@ def create_tools(data_adaptor):
             name="create_geneset",
             description="Create a new geneset",
             func=create_geneset,
+            args_schema=CreateGenesetSchema,
         ),
         Tool(
             name="xy_scatterplot",

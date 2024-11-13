@@ -111,8 +111,25 @@ export const performColorByContinuous =
   };
 
 export const performCreateGeneset =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed create geneset");
+  (args: Record<string, string | string[]>) =>
+  async (dispatch: AppDispatch) => {
+    const genesetName = args.geneset_name as string;
+    const genesToPopulateGeneset = args.genes_to_populate_geneset as string[];
+    const genesetDescription = args.geneset_description as string;
+    dispatch({
+      type: "geneset: create",
+      genesetName: genesetName.trim(),
+      genesetDescription,
+    });
+
+    if (genesToPopulateGeneset && genesToPopulateGeneset.length > 0) {
+      const genesTmpHardcodedFormat = genesToPopulateGeneset.map((gene) => ({
+        geneSymbol: gene.trim(),
+      }));
+      await dispatch(
+        actions.genesetAddGenes(genesetName, genesTmpHardcodedFormat)
+      );
+    }
   };
 
 export const performXYScatterplot =
