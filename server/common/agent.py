@@ -36,7 +36,10 @@ def get_system_prompt() -> str:
     return f"""You are an assistant that helps users control an interface for visualizing single-cell data.
 
 Your sole job is to respond with the appropriate tool call and its input. The client will handle execution of the tool and will come back to you for next steps.
-If there are no next steps, you should respond with final.
+If there are no next steps, you should respond with a summary of the actions you took.
+
+The user's request might require a complex composition of multiple tools. You should only respond with the next tool to be called given the tools that have already been invoked.
+The tools that have already been invoked will be provided to you as a sequence of JSON tool call objects.
 """
 
 
@@ -69,10 +72,6 @@ def agent_step_post(request, data_adaptor):
             elif msg.role == "function":
                 formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
 
-        # Add tool results if present
-        if tool_results:
-            formatted_messages.append(FunctionMessage(content=tool_results, name="function"))
-
         # Initialize LLM and create agent with data_adaptor-aware tools
         llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
         tools = create_tools(data_adaptor)
@@ -90,30 +89,46 @@ def agent_step_post(request, data_adaptor):
             }
         )
 
+        response = {}
         if isinstance(next_step, AgentFinish):
             response = {"type": "final", "content": next_step.return_values["output"]}
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
             tool_action = next_step[0]  # Get first (and only) action
-            # Convert string arguments to a dictionary format
+
+            # Find the matching tool
+            selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)
+
+            # Execute the tool with its arguments
             tool_arguments = (
                 {"input": tool_action.tool_input} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
             )
-            response = {
-                "type": "tool",
-                "tool": {"name": tool_action.tool, "arguments": tool_arguments},
-                "content": tool_action.log,
-            }
+
+            try:
+                # Execute the tool and get results
+                tool_result = selected_tool.func(**tool_arguments)
+
+                response = {
+                    "type": "tool",
+                    "tool": {"name": tool_action.tool, "result": tool_result},
+                }
+            except Exception as tool_error:
+                # Handle tool execution errors
+                error_message = f"Error executing tool {tool_action.tool}: {str(tool_error)}"
+                current_app.logger.error(error_message, exc_info=True)
+                return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, error_message, loglevel=logging.ERROR)
         else:
             raise ValueError(f"Unknown agent step type: {type(next_step)}")
 
         return make_response(jsonify(response), HTTPStatus.OK)
 
     except Exception as e:
-        return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, str(e), loglevel=logging.ERROR, include_exc_info=True)
+        return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, str(e), loglevel=logging.ERROR)
 
 
-def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
+def abort_and_log(code, logmsg, loglevel=logging.DEBUG):
     """Log the message, then abort with HTTP code"""
-    exc_info = sys.exc_info() if include_exc_info else False
+    print("ABORTING")
+    exc_info = sys.exc_info()
+    print(exc_info)
     current_app.logger.log(loglevel, logmsg, exc_info=exc_info)
     return abort(code)

@@ -1,6 +1,8 @@
 import { UITool } from "./UITool";
 import { AgentMessage, getNextAgentStep } from "./agent";
 
+// We need an intermediate message history PER QUERY and then we need a persistent chat history
+// Which will contain the user's initial inputs and the agent's final outputs.
 export class AgentRunner {
   private messages: AgentMessage[] = [];
 
@@ -29,9 +31,9 @@ export class AgentRunner {
         if (step.type === "final") {
           this.messages.push({
             role: "assistant",
-            content: step.content,
+            content: step.content ?? "",
           });
-          return step.content;
+          return step.content ?? "";
         }
 
         if (step.type === "tool" && step.tool) {
@@ -39,11 +41,18 @@ export class AgentRunner {
           if (!tool) {
             throw new Error(`Unknown tool: ${step.tool.name}`);
           }
-
-          const result = await tool.invoke(JSON.stringify(step.tool.arguments));
           this.messages.push({
             role: "function",
             name: step.tool.name,
+            content: `The following tool was invoked: ${
+              step.tool.name
+            }. The result of the tool invocation is: ${JSON.stringify(
+              step.tool.result
+            )}`,
+          });
+          const result = await tool.invoke(JSON.stringify(step.tool.result));
+          this.messages.push({
+            role: "assistant",
             content: result,
           });
         }

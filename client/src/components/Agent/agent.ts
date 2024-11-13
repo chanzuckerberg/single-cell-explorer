@@ -2,13 +2,13 @@ import { z } from "zod";
 
 const AgentStepResponseSchema = z.object({
   type: z.enum(["tool", "final"]),
-  content: z.string(),
   tool: z
     .object({
       name: z.string(),
-      arguments: z.record(z.string()),
+      result: z.record(z.string(), z.string()),
     })
     .optional(),
+  content: z.string().optional(),
 });
 
 export type AgentStepResponse = z.infer<typeof AgentStepResponseSchema>;
