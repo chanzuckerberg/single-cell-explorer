@@ -84,6 +84,7 @@ export class AgentRunner {
         return `Error: ${errorMessage}`;
       }
     }
+    /* eslint-enable no-await-in-loop -- Steps must be executed sequentially */
     const timeoutMessage = `Conversation exceeded maximum of ${maxSteps} steps`;
     this.messages.push({
       role: "assistant",
