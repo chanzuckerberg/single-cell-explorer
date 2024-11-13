@@ -21,6 +21,24 @@ class ColorByGeneSchema(BaseModel):
     ]
 
 
+class ColorByGenesetSchema(BaseModel):
+    geneset: Annotated[
+        str,
+        Field(description="The name of the geneset to color the visualization by."),
+    ]
+    available_genesets: Annotated[
+        List[str] | None,
+        Field(description="The list of available genesets to color the visualization by."),
+    ]
+
+
+class ExpandGeneSchema(BaseModel):
+    gene: Annotated[
+        str,
+        Field(description="The gene symbol to expand."),
+    ]
+
+
 class CreateGenesetSchema(BaseModel):
     geneset_name: Annotated[
         str,
@@ -51,6 +69,13 @@ class CategoricalSelectionSchema(BaseModel):
             description="The column name that the category value belongs to. If not provided, the tool will attempt to infer the column name from the category value.",
             default=None,
         ),
+    ]
+
+
+class CategoryColorBySchema(BaseModel):
+    category_name: Annotated[
+        str,
+        Field(description="The name of the category to color the visualization by."),
     ]
 
 
@@ -93,15 +118,40 @@ def zoom_out():
 
 
 def color_by_gene(gene: str):
-    return {"status": "success", "gene": gene}
+    return {
+        "gene": gene.upper(),
+    }
 
 
-def color_by_geneset():
-    return {"status": "success"}
+def expand_gene(gene: str):
+    return {
+        "gene": gene.upper(),
+    }
 
 
-def color_by_category():
-    return {"status": "success"}
+def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
+    if available_genesets is None:
+        return {}
+
+    prompt = f"The geneset the user wishes to perform color by is: {geneset}."
+    prompt += f"The available genesets are: {available_genesets}."
+    prompt += "Please select one of the available genesets to color by."
+
+    class GenesetSelectionSchema(BaseModel):
+        geneset: str
+
+    return call_llm_with_structured_output(prompt, GenesetSelectionSchema)
+
+
+def color_by_category(data_adaptor, category_name: str):
+    schema = data_adaptor.get_schema()
+    prompt = f"The category name the user wishes to perform color by is: {category_name}."
+    prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid column names to color by. Do NOT select any of the values in the column."
+
+    class CategorySelectionSchema(BaseModel):
+        category_name: str
+
+    return call_llm_with_structured_output(prompt, CategorySelectionSchema)
 
 
 def color_by_continuous():
@@ -141,7 +191,7 @@ def create_tools(data_adaptor):
     return [
         Tool(
             name="subset",
-            description="Create a subset from the currently selected data points",
+            description="Subset down to the selected data points. Note that this is different from selection. Subsetting means to filter down to the currently selected data points. Users can subset without specifying a selection.",
             func=subset,
         ),
         Tool(
@@ -182,14 +232,22 @@ def create_tools(data_adaptor):
             args_schema=ColorByGeneSchema,
         ),
         Tool(
+            name="expand_gene",
+            description="Expand the gene element to show more information about the gene",
+            func=expand_gene,
+            args_schema=ExpandGeneSchema,
+        ),
+        Tool(
             name="color_by_geneset",
-            description="Color the visualization by geneset",
+            description="Color the visualization by a geneset. If the set of available genesets is not provided, the tool will first return that it decided to perform the color by geneset action. Then, the tool will receive the list of available genesets and will be able to select one to color by.",
             func=color_by_geneset,
+            args_schema=ColorByGenesetSchema,
         ),
         Tool(
             name="color_by_category",
             description="Color the visualization by category",
-            func=color_by_category,
+            func=partial(color_by_category, data_adaptor),
+            args_schema=CategoryColorBySchema,
         ),
         Tool(
             name="color_by_continuous",

@@ -8,6 +8,7 @@ import {
   performZoomIn,
   performZoomOut,
   performColorByGene,
+  performExpandGene,
   performColorByGeneset,
   performColorByCategory,
   performColorByContinuous,
@@ -80,24 +81,38 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
 
   color_by_gene: {
     action: async (dispatch, _getState, args) => {
-      const gene = args?.gene;
-      if (!gene) throw new Error("Gene name is required");
-      dispatch(performColorByGene());
-      return `Colored by gene: ${gene}`;
+      if (!args) throw new Error("Gene name is required");
+      await dispatch(performColorByGene(args));
+      return `Colored by gene: ${args.gene}`;
+    },
+  },
+
+  expand_gene: {
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Gene name is required");
+      await dispatch(performExpandGene(args));
+      return `Expanded gene: ${args.gene}`;
     },
   },
 
   color_by_geneset: {
-    action: async (dispatch) => {
-      dispatch(performColorByGeneset());
-      return "Performed color by geneset";
+    action: async (dispatch, getState, args) => {
+      if (!args || Object.keys(args).length === 0) {
+        const { genesets } = getState();
+        const genesetNames = Array.from(genesets.genesets.keys());
+        return `I have decided to perform the color by geneset action. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to color by.`;
+      }
+
+      await dispatch(performColorByGeneset(args));
+      return `Colored by geneset: ${args.geneset}`;
     },
   },
 
   color_by_category: {
-    action: async (dispatch) => {
-      dispatch(performColorByCategory());
-      return "Performed color by category";
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Category name is required");
+      await dispatch(performColorByCategory(args));
+      return `Colored by category: ${args.category_name}`;
     },
   },
 

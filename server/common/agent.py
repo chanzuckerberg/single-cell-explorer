@@ -38,6 +38,12 @@ def get_system_prompt() -> str:
 Your sole job is to respond with the appropriate tool call and its input. The client will handle execution of the tool and will come back to you for next steps.
 If there are no next steps, you should respond with a summary of the actions you took.
 
+Concepts:
+- Subsetting: Subsetting means to filter down to the currently selected data points. Users can subset without specifying a selection.
+- Selection: Selection means to highlight a subset of the data points. Users can select without subsetting.
+- Coloring: Coloring means to color the data points by a particular feature.
+- Expanding: Expanding means to show more information about a particular feature.
+
 The user's request might require a complex composition of multiple tools. You should only respond with the next tool to be called given the tools that have already been invoked.
 The tools that have already been invoked will be provided to you as a sequence of JSON tool call objects.
 """
@@ -60,7 +66,6 @@ def agent_step_post(request, data_adaptor):
     try:
         data = request.get_json()
         messages: List[AgentMessage] = [AgentMessage(**msg) for msg in data["messages"]]
-        tool_results: Optional[str] = data.get("toolResults")
 
         # Convert messages to LangChain format
         formatted_messages = []
@@ -99,9 +104,8 @@ def agent_step_post(request, data_adaptor):
             selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)
 
             # Execute the tool with its arguments
-            tool_arguments = (
-                {"input": tool_action.tool_input} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
-            )
+            # If the tool input is a string, then there is no argument schema and so we have no arguments.
+            tool_arguments = {} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
 
             try:
                 # Execute the tool and get results

@@ -91,18 +91,65 @@ export const performZoomOut =
   };
 
 export const performColorByGene =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed color by gene");
+  (args: Record<string, string>) => async (dispatch: AppDispatch) => {
+    const { gene } = args;
+
+    dispatch({ type: "single user defined gene start" });
+    dispatch(actions.requestUserDefinedGene(gene));
+    dispatch({ type: "single user defined gene complete" });
+    dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+  };
+
+export const performExpandGene =
+  (args: Record<string, string>) => async (dispatch: AppDispatch) => {
+    const { gene } = args;
+    const element = document.querySelector(`[data-testid="maximize-${gene}"]`);
+    if (element instanceof HTMLElement) {
+      element.click();
+    }
   };
 
 export const performColorByGeneset =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed color by geneset");
+  (args: Record<string, string>) => (dispatch: AppDispatch) => {
+    const { geneset } = args;
+    dispatch({
+      type: "color by geneset mean expression",
+      geneset,
+    });
   };
 
 export const performColorByCategory =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed color by category");
+  (args: Record<string, string>) =>
+  (dispatch: AppDispatch, getState: GetState) => {
+    const {
+      colors: { colorAccessor },
+    } = getState();
+
+    const categoryElement = document.querySelector(
+      `[data-testid="category-${args.category_name}"]`
+    );
+    if (categoryElement instanceof HTMLElement) {
+      console.log(categoryElement);
+      const isNotExpandedElement = categoryElement.querySelector(
+        '[data-testid="category-expand-is-not-expanded"]'
+      );
+      if (isNotExpandedElement) {
+        (
+          categoryElement.querySelector(
+            `[data-testid="${args.category_name}:category-expand"]`
+          ) as HTMLElement
+        )?.click();
+      }
+    }
+
+    if (colorAccessor === args.category_name) {
+      return;
+    }
+
+    dispatch({
+      type: "color by categorical metadata",
+      colorAccessor: args.category_name,
+    });
   };
 
 export const performColorByContinuous =
