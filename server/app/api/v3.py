@@ -184,7 +184,7 @@ class UnsMetaAPI(DatasetResource):
 class AgentAPI(S3URIResource):  # Inherit from S3URIResource instead of Resource
     @rest_get_s3uri_data_adaptor
     def post(self, data_adaptor):
-        return common_agent.agent_step_post(request)
+        return common_agent.agent_step_post(request, data_adaptor)
 
 
 def rest_get_dataset_explorer_location_data_adaptor(func):

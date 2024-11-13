@@ -11,7 +11,7 @@ from langchain.agents import create_openai_tools_agent
 from langchain.schema import HumanMessage, AIMessage, FunctionMessage, SystemMessage
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-from server.common.tools import tools
+from server.common.tools import create_tools
 
 
 class ToolSpec(BaseModel):
@@ -52,7 +52,7 @@ def get_prompt_template() -> ChatPromptTemplate:
     )
 
 
-def agent_step_post(request):
+def agent_step_post(request, data_adaptor):
     """Handle agent step requests"""
     try:
         data = request.get_json()
@@ -73,8 +73,9 @@ def agent_step_post(request):
         if tool_results:
             formatted_messages.append(FunctionMessage(content=tool_results, name="function"))
 
-        # Initialize LLM and create agent
+        # Initialize LLM and create agent with data_adaptor-aware tools
         llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
+        tools = create_tools(data_adaptor)
         agent = create_openai_tools_agent(llm, tools, get_prompt_template())
 
         # Add system message to formatted messages
@@ -88,9 +89,6 @@ def agent_step_post(request):
                 "intermediate_steps": [],  # For tool execution tracking
             }
         )
-
-        print("FUCKFUCKFUCK")
-        print(messages)
 
         if isinstance(next_step, AgentFinish):
             response = {"type": "final", "content": next_step.return_values["output"]}
