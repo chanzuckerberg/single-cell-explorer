@@ -76,9 +76,10 @@ export const performHistogramSelection =
   async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
     const { annoMatrix } = getState();
     let query;
+    let df: Dataframe;
 
     if (args.histogram_type === "geneset") {
-      if (!Object.keys(args).includes("available_genesets")) {
+      if (args?.status === "need_available_genesets") {
         const { genesets } = getState();
         const genesetNames = Array.from(genesets.genesets.keys());
         if (genesetNames.length === 0) {
@@ -86,6 +87,12 @@ export const performHistogramSelection =
         }
         return `I have decided to perform histogram selection on a geneset. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to perform selection on. If there are no matching genesets, I must create a new geneset. I will now proceed with the next step.`;
       }
+
+      const geneset = getState().genesets.genesets.get(args.histogram_name);
+      if (!geneset || geneset.genes.size === 0) {
+        return "The selected geneset is empty. Please select a different geneset or add genes to this one.";
+      }
+
       query = [
         Field.X,
         {
@@ -93,10 +100,7 @@ export const performHistogramSelection =
             method: "mean",
             field: "var",
             column: "name_0",
-            values: [
-              ...(getState().genesets.genesets.get(args.histogram_name)
-                ?.genes || []),
-            ],
+            values: [...geneset.genes.keys()],
           },
         },
       ];
@@ -116,7 +120,7 @@ export const performHistogramSelection =
     } else {
       return "Invalid histogram type specified.";
     }
-    let df: Dataframe;
+
     try {
       df = await annoMatrix.fetch(query[0] as Field, query[1] as Query);
     } catch (error) {
@@ -124,7 +128,18 @@ export const performHistogramSelection =
     }
 
     const column = df.icol(0);
-    const summary = column.summarizeContinuous();
+    let summary;
+
+    if (args.histogram_type === "geneset") {
+      // For genesets, we need to calculate min/max directly since it's already averaged
+      const values = column.asArray() as number[];
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      summary = { min, max };
+    } else {
+      summary = column.summarizeContinuous();
+    }
+
     const { min, max } = summary;
 
     let lo = args.range_low ? parseFloat(args.range_low) : min;
@@ -132,6 +147,10 @@ export const performHistogramSelection =
 
     lo = Math.max(lo, min);
     hi = Math.min(hi, max);
+
+    console.log("lo", lo);
+    console.log("hi", hi);
+    console.log("summary", summary);
 
     try {
       await dispatch(
