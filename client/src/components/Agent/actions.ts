@@ -77,15 +77,16 @@ export const performHistogramSelection =
     const { annoMatrix } = getState();
     let query;
     let df: Dataframe;
-
+    const { schema } = annoMatrix;
+    const varIndex = schema?.annotations?.var?.index;
     if (args.histogram_type === "geneset") {
       if (args?.status === "need_available_genesets") {
         const { genesets } = getState();
         const genesetNames = Array.from(genesets.genesets.keys());
         if (genesetNames.length === 0) {
-          return "There are no genesets available to perform selection on. I must now create a new geneset and then try again. I will now proceed with the next step.";
+          return "There are no genesets available to perform selection on. I must now create a new geneset and then try again. I will continue execution.";
         }
-        return `I have decided to perform histogram selection on a geneset. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to perform selection on. If there are no matching genesets, I must create a new geneset. I will now proceed with the next step.`;
+        return `I have decided to perform histogram selection on a geneset. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to perform selection on. If there are no matching genesets, I must create a new geneset. I will continue execution.`;
       }
 
       const geneset = getState().genesets.genesets.get(args.histogram_name);
@@ -99,7 +100,7 @@ export const performHistogramSelection =
           summarize: {
             method: "mean",
             field: "var",
-            column: "name_0",
+            column: varIndex,
             values: [...geneset.genes.keys()],
           },
         },
@@ -111,7 +112,7 @@ export const performHistogramSelection =
         "X",
         {
           where: {
-            column: "name_0",
+            column: varIndex,
             field: Field.var,
             value: args.histogram_name,
           },
@@ -124,14 +125,13 @@ export const performHistogramSelection =
     try {
       df = await annoMatrix.fetch(query[0] as Field, query[1] as Query);
     } catch (error) {
-      return `${args.histogram_type} is not a valid histogram type for ${args.histogram_name}. I must now try a different histogram type for the same data: ${args.histogram_name}. I will now proceed with the next step.`;
+      return `${args.histogram_type} is not a valid histogram type for ${args.histogram_name}. I must now try a different histogram type for the same data: ${args.histogram_name}. I will continue execution.`;
     }
 
     const column = df.icol(0);
     let summary;
 
     if (args.histogram_type === "geneset") {
-      // For genesets, we need to calculate min/max directly since it's already averaged
       const values = column.asArray() as number[];
       const min = Math.min(...values);
       const max = Math.max(...values);
@@ -147,10 +147,6 @@ export const performHistogramSelection =
 
     lo = Math.max(lo, min);
     hi = Math.min(hi, max);
-
-    console.log("lo", lo);
-    console.log("hi", hi);
-    console.log("summary", summary);
 
     try {
       await dispatch(
@@ -276,9 +272,9 @@ export const performColorByGeneset =
       const { genesets } = getState();
       const genesetNames = Array.from(genesets.genesets.keys());
       if (genesetNames.length === 0) {
-        return "There are no genesets available. I must now create a new geneset and then try again. I will now proceed with the next step.";
+        return "There are no genesets available. I must now create a new geneset and then try again. I will continue execution.";
       }
-      return `I have decided to perform the color by geneset action. Here are the available geneset names: ${genesetNames}. If there are no matching genesets, I must create a new geneset. I will now proceed with the next step.`;
+      return `I have decided to perform the color by geneset action. If there are no matching genesets, I must create a new geneset. IMPORTANT: Here are the available geneset names: ${genesetNames}. I will continue execution.`;
     }
 
     dispatch({

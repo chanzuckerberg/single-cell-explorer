@@ -135,8 +135,8 @@ def select_category(data_adaptor, category_value: str, column_name: str | None =
     prompt = f"The category value the user wishes to perform selection on is: {category_value}."
     if column_name is not None:
         prompt += f"The column name that the category value belongs to is: {column_name}."
-    cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
-    prompt += f"The valid categorical metadata columns are: {cols}. Please select one of the valid categories along with the name of the column that most closely matches the user's request."
+    cols = [i for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
+    prompt += f"The valid categorical metadata labels are: {cols}. Please select one of the valid category labels along with the name of the column that most closely matches the user's request."
 
     class CategorySelectionSchema(BaseModel):
         category_value: str
@@ -227,7 +227,7 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
     if available_genesets is None:
         return {}
 
-    prompt = f"The geneset the user wishes to perform color by is: {geneset}."
+    prompt = f"The geneset the user wishes to color by is: {geneset}."
     prompt += f"The available genesets are: {available_genesets}."
     prompt += "Please select one of the available genesets to color by."
 

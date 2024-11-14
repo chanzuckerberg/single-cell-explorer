@@ -64,8 +64,13 @@ export class AgentRunner {
 
         const result = await tool.invoke(JSON.stringify(step.tool.result));
         this.messages.push({
+          role: "function",
+          name: step.tool.name,
+          content: `Arguments: ${JSON.stringify(step.tool.result)}`,
+        });
+        this.messages.push({
           role: "assistant",
-          content: `The following tool was invoked: ${step.tool.name}. Status message: ${result}`,
+          content: `Status message: ${result}`,
         });
       }
     }

@@ -26,7 +26,9 @@ export const selectContinuousMetadataAction =
           inclusive: true, // [lo, hi] incluisve selection
         }
       : { mode: "all" };
+
     const obsCrossfilter = await prevObsCrossfilter.select(...query, selection);
+
     dispatch({
       type,
       obsCrossfilter,
