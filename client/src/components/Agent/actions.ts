@@ -122,6 +122,10 @@ export const performColorByGene =
 export const performExpandGene =
   (args: Record<string, string>) => async (dispatch: AppDispatch) => {
     const { gene } = args;
+    dispatch({ type: "single user defined gene start" });
+    dispatch(actions.requestUserDefinedGene(gene));
+    dispatch({ type: "single user defined gene complete" });
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const element = document.querySelector(`[data-testid="maximize-${gene}"]`);
     if (element instanceof HTMLElement) {
       element.click();

@@ -102,25 +102,35 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                   <Layout
                     addTopPadding={!datasetMetadataError || isCellGuideCxg}
                     renderGraph={(viewportRef: HTMLDivElement) => (
-                      <>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          height: "100%",
+                        }}
+                      >
                         <GlobalHotkeys />
-                        <AgentComponent />
                         <Controls>
                           <MenuBar />
                         </Controls>
                         <Legend />
-                        <Graph
-                          viewportRef={viewportRef}
-                          key={graphRenderCounter}
-                        />
-                        {scatterplotXXaccessor && scatterplotYYaccessor && (
-                          <Scatterplot />
-                        )}
-                        <PanelEmbedding />
+                        <div style={{ flex: 1, position: "relative" }}>
+                          <Graph
+                            viewportRef={viewportRef}
+                            key={graphRenderCounter}
+                          />
+                          {scatterplotXXaccessor && scatterplotYYaccessor && (
+                            <Scatterplot />
+                          )}
+                          <PanelEmbedding />
+                        </div>
+                        <div style={{ padding: "20px", zIndex: 2 }}>
+                          <AgentComponent />
+                        </div>
                         <Controls bottom={0}>
                           <DatasetSelector />
                         </Controls>
-                      </>
+                      </div>
                     )}
                   >
                     <LeftSideBar />
