@@ -155,6 +155,7 @@ export const AgentComponent: FC = () => {
               <div
                 style={{
                   padding: "12px",
+                  paddingBottom: "0",
                   borderRadius: "12px",
                   backgroundColor:
                     message.role === "user" ? "#007bff" : "#f5f5f5",
@@ -162,15 +163,6 @@ export const AgentComponent: FC = () => {
                   maxWidth: "70%",
                 }}
               >
-                <div
-                  style={{
-                    marginBottom: "2px",
-                    fontSize: "0.9em",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {message.role === "user" ? "You" : "Assistant"}
-                </div>
                 <ReactMarkdown>{message.content}</ReactMarkdown>
               </div>
             </div>
