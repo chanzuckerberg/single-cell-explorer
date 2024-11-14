@@ -21,6 +21,7 @@ export const AgentComponent: FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const chatHistoryRef = useRef<HTMLDivElement>(null);
 
   const agentRunner = useMemo(() => {
     const tools = createUITools(dispatch, getState);
@@ -41,12 +42,25 @@ export const AgentComponent: FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (chatHistoryRef.current) {
+      chatHistoryRef.current.scrollTop = chatHistoryRef.current.scrollHeight;
+    }
+  }, [chatHistory]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
     setIsDrawerOpen(true);
     setIsLoading(true);
+    const userMessage = {
+      role: "user" as const,
+      content: input.trim(),
+      timestamp: Date.now(),
+    };
+    setChatHistory((prev) => [...prev, userMessage]);
+
     try {
       await agentRunner.processQuery(input);
       setChatHistory([...agentRunner.chatHistory]);
@@ -80,8 +94,13 @@ export const AgentComponent: FC = () => {
       className="agent-component"
       style={{
         width: "100%",
-        borderRadius: "8px",
+        borderRadius: "12px",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+        border: "1px solid #eaeaea",
+        backgroundColor: "white",
       }}
       onBlur={(e) => {
         if (!cardRef.current?.contains(e.relatedTarget as Node)) {
@@ -97,35 +116,61 @@ export const AgentComponent: FC = () => {
             isDrawerOpen && chatHistory.length > 0 ? "0" : "100%"
           })`,
           opacity: isDrawerOpen && chatHistory.length > 0 ? 1 : 0,
-          transition: "all 0.3s ease",
+          // transition: "all 0.3s ease",
           backgroundColor: "white",
           visibility:
             isDrawerOpen && chatHistory.length > 0 ? "visible" : "hidden",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+          boxShadow:
+            isDrawerOpen && chatHistory.length > 0
+              ? "0 -8px 24px -4px rgba(0,0,0,0.15)"
+              : "none",
+          zIndex: 2,
+          maxHeight: isDrawerOpen && chatHistory.length > 0 ? "500px" : "0",
+          overflow: "hidden",
         }}
       >
         <div
+          ref={chatHistoryRef}
           className="chat-history"
           style={{
-            maxHeight: "300px",
+            height: "auto",
+            maxHeight: "500px",
             overflowY: "auto",
             padding: "20px 20px 0",
-            borderBottom: "1px solid #eee",
           }}
         >
           {chatHistory.map((message) => (
             <div
               key={message.timestamp}
               style={{
-                padding: "8px",
-                margin: "4px 0",
-                borderRadius: "4px",
-                backgroundColor:
-                  message.role === "user" ? "#e3f2fd" : "#f5f5f5",
+                display: "flex",
+                justifyContent:
+                  message.role === "user" ? "flex-end" : "flex-start",
+                margin: "12px 0",
+                width: "100%",
               }}
             >
-              <strong>{message.role === "user" ? "You" : "Assistant"}: </strong>
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <div
+                style={{
+                  padding: "12px",
+                  borderRadius: "12px",
+                  backgroundColor:
+                    message.role === "user" ? "#007bff" : "#f5f5f5",
+                  color: message.role === "user" ? "white" : "black",
+                  maxWidth: "70%",
+                }}
+              >
+                <div
+                  style={{
+                    marginBottom: "2px",
+                    fontSize: "0.9em",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {message.role === "user" ? "You" : "Assistant"}
+                </div>
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              </div>
             </div>
           ))}
         </div>
@@ -134,7 +179,7 @@ export const AgentComponent: FC = () => {
         className="input-section"
         style={{
           backgroundColor: "white",
-          boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+          zIndex: 1,
         }}
       >
         <form

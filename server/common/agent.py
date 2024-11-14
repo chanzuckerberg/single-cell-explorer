@@ -42,20 +42,16 @@ IMPORTANT: You must continue processing until ALL requested actions are complete
 When there are multiple actions to perform, execute them one at a time and wait for the result of each action before proceeding to the next one.
 
 Concepts:
-- Subsetting: Subsetting means to filter down to the currently selected data points. Users can subset without specifying a selection.
-- Selection: Selection means to highlight a subset of the data points. Users can select without subsetting.
+- Subsetting: Subsetting means to filter down to the currently selected/highlighted data points.
+- Selection: Selection means to highlight a subset of the data points.
 - Coloring: Coloring means to color the data points by a particular feature.
 - Expanding: Expanding means to show more information about a particular feature.
 
 You should only respond with the next tool to be called given the tools that have already been invoked.
 The tools that have already been invoked will be provided to you as a sequence of JSON tool call objects.
-If there are no next steps, you should respond with a summary of all the actions you took.
+If there are no next steps, you should terminate the conversation.
 
-IMPORTANT:
-- Be direct and concise
-- Only state what actions were completed
-- Do not add phrases like "no further actions required" or "let me know if you need anything else"
-- Do not offer additional help or suggestions
+IMPORTANT: DO NOT SUBSET UNLESS THE USER SPECIFICALLY REQUESTS IT.
 """
 
 
@@ -106,7 +102,14 @@ def agent_step_post(request, data_adaptor):
 
         response = {}
         if isinstance(next_step, AgentFinish):
-            response = {"type": "final", "content": next_step.return_values["output"]}
+            output = agent.invoke(
+                {
+                    "input": "Please succinctly summarize the actions you took in the above conversation. Do not mention the tools you used, only the actions. Do not add any additional text like 'no further actions required' or 'let me know if you need anything else'.",
+                    "chat_history": formatted_messages,
+                    "intermediate_steps": [],
+                }
+            )
+            response = {"type": "final", "content": output.return_values["output"]}
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
             tool_action = next_step[0]  # Get first (and only) action
 

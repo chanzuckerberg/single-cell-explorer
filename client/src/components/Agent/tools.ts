@@ -4,19 +4,18 @@ import {
   performUnsubset,
   performCategoricalSelection,
   performHistogramSelection,
-  performPanning,
-  performZoomIn,
-  performZoomOut,
+  // performPanning,
+  // performZoomIn,
+  // performZoomOut,
   performColorByGene,
   performExpandGene,
   performExpandCategory,
   performColorByGeneset,
-  performColorByCategory,
-  performColorByContinuous,
+  performColorByMetadata,
   performCreateGeneset,
-  performXYScatterplot,
-  performShowCellGuide,
-  performShowGeneCard,
+  // performXYScatterplot,
+  // performShowCellGuide,
+  // performShowGeneCard,
 } from "./actions";
 import { UITool } from "./UITool";
 
@@ -48,43 +47,43 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
     action: async (dispatch, _getState, args) => {
       if (!args) throw new Error("Categorical selection args are required");
       await dispatch(performCategoricalSelection(args));
-      return "Performed categorical selection";
+      return `Performed categorical selection on ${args.category_value}.`;
     },
   },
 
   histogram_selection: {
     action: async (dispatch) => {
       dispatch(performHistogramSelection());
-      return "Performed histogram selection";
+      return "Performed histogram selection. Only subset if users explicitly asked for it.";
     },
   },
 
-  panning: {
-    action: async (dispatch) => {
-      dispatch(performPanning());
-      return "Performed panning";
-    },
-  },
+  // panning: {
+  //   action: async (dispatch) => {
+  //     dispatch(performPanning());
+  //     return "Performed panning";
+  //   },
+  // },
 
-  zoom_in: {
-    action: async (dispatch) => {
-      dispatch(performZoomIn());
-      return "Performed zoom in";
-    },
-  },
+  // zoom_in: {
+  //   action: async (dispatch) => {
+  //     dispatch(performZoomIn());
+  //     return "Performed zoom in";
+  //   },
+  // },
 
-  zoom_out: {
-    action: async (dispatch) => {
-      dispatch(performZoomOut());
-      return "Performed zoom out";
-    },
-  },
+  // zoom_out: {
+  //   action: async (dispatch) => {
+  //     dispatch(performZoomOut());
+  //     return "Performed zoom out";
+  //   },
+  // },
 
   color_by_gene: {
     action: async (dispatch, _getState, args) => {
       if (!args) throw new Error("Gene name is required");
-      await dispatch(performColorByGene(args));
-      return `Colored by gene: ${args.gene}`;
+      const returnMessage = await dispatch(performColorByGene(args));
+      return returnMessage;
     },
   },
 
@@ -101,6 +100,9 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
       if (!args || Object.keys(args).length === 0) {
         const { genesets } = getState();
         const genesetNames = Array.from(genesets.genesets.keys());
+        if (genesetNames.length === 0) {
+          return "There are no genesets available to color by. You must create the geneset first.";
+        }
         return `I have decided to perform the color by geneset action. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to color by.`;
       }
 
@@ -109,11 +111,11 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
     },
   },
 
-  color_by_category: {
+  color_by_metadata: {
     action: async (dispatch, _getState, args) => {
-      if (!args) throw new Error("Category name is required");
-      await dispatch(performColorByCategory(args));
-      return `Colored by category: ${args.category_name}`;
+      if (!args) throw new Error("Metadata name is required");
+      await dispatch(performColorByMetadata(args));
+      return `Colored by metadata: ${args.metadata_name}`;
     },
   },
 
@@ -125,13 +127,6 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
     },
   },
 
-  color_by_continuous: {
-    action: async (dispatch) => {
-      dispatch(performColorByContinuous());
-      return "Performed color by continuous variable";
-    },
-  },
-
   create_geneset: {
     action: async (dispatch, _getState, args) => {
       if (!args) throw new Error("Geneset args are required");
@@ -140,26 +135,26 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
     },
   },
 
-  xy_scatterplot: {
-    action: async (dispatch) => {
-      dispatch(performXYScatterplot());
-      return "Created XY scatterplot";
-    },
-  },
+  // xy_scatterplot: {
+  //   action: async (dispatch) => {
+  //     dispatch(performXYScatterplot());
+  //     return "Created XY scatterplot";
+  //   },
+  // },
 
-  show_cell_guide: {
-    action: async (dispatch) => {
-      dispatch(performShowCellGuide());
-      return "Showed cell guide";
-    },
-  },
+  // show_cell_guide: {
+  //   action: async (dispatch) => {
+  //     dispatch(performShowCellGuide());
+  //     return "Showed cell guide";
+  //   },
+  // },
 
-  show_gene_card: {
-    action: async (dispatch) => {
-      dispatch(performShowGeneCard());
-      return "Showed gene card";
-    },
-  },
+  // show_gene_card: {
+  //   action: async (dispatch) => {
+  //     dispatch(performShowGeneCard());
+  //     return "Showed gene card";
+  //   },
+  // },
 };
 
 export function createUITools(dispatch: AppDispatch, getState: GetState) {

@@ -80,7 +80,6 @@ export const performExpandCategory = (args: Record<string, string>) => () => {
     `[data-testid="category-${args.category_name}"]`
   );
   if (categoryElement instanceof HTMLElement) {
-    console.log(categoryElement);
     const isNotExpandedElement = categoryElement.querySelector(
       '[data-testid="category-expand-is-not-expanded"]'
     );
@@ -94,29 +93,58 @@ export const performExpandCategory = (args: Record<string, string>) => () => {
   }
 };
 
-export const performPanning =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed panning");
-  };
+// export const performPanning =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed panning");
+//   };
 
-export const performZoomIn =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed zoom in");
-  };
+// export const performZoomIn =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed zoom in");
+//   };
 
-export const performZoomOut =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed zoom out");
-  };
+// export const performZoomOut =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed zoom out");
+//   };
 
 export const performColorByGene =
-  (args: Record<string, string>) => async (dispatch: AppDispatch) => {
+  (args: Record<string, string>) =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
     const { gene } = args;
 
+    // Get valid gene names from the matrix
+    const { annoMatrix } = getState();
+    const { schema } = annoMatrix;
+    const varIndex = schema.annotations.var.index;
+    const df = await annoMatrix.fetch(Field.var, varIndex);
+
+    // Check if there is a filtered column
+    const isFilteredCol = "feature_is_filtered";
+    const isFiltered =
+      annoMatrix.getMatrixColumns(Field.var).includes(isFilteredCol) &&
+      (await annoMatrix.fetch(Field.var, isFilteredCol));
+
+    let validGenes;
+    if (isFiltered) {
+      const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
+      validGenes = df
+        .col(varIndex)
+        .asArray()
+        .filter((_, index: number) => !isFilteredArray[index] && _) as string[];
+    } else {
+      validGenes = df.col(varIndex).asArray() as string[];
+    }
+
+    // Verify gene is valid before proceeding
+    if (!validGenes.includes(gene)) {
+      return "The requested gene name is not present in the dataset. Please instruct the user to select a valid gene.";
+    }
     dispatch({ type: "single user defined gene start" });
     dispatch(actions.requestUserDefinedGene(gene));
     dispatch({ type: "single user defined gene complete" });
     dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
+    return "Successfully colored the visualization by the requested gene.";
   };
 
 export const performExpandGene =
@@ -141,43 +169,50 @@ export const performColorByGeneset =
     });
   };
 
-export const performColorByCategory =
+export const performColorByMetadata =
   (args: Record<string, string>) =>
   (dispatch: AppDispatch, getState: GetState) => {
     const {
       colors: { colorAccessor },
     } = getState();
+    // Determine if the metadata is categorical or continuous
+    const { annoMatrix } = getState();
+    const { schema } = annoMatrix;
+    const metadata = schema.annotations.obsByName[args.metadata_name];
+    const { categories: allCategoryValues } = metadata;
+    const isCategorical = allCategoryValues !== undefined;
 
-    const categoryElement = document.querySelector(
-      `[data-testid="category-${args.category_name}"]`
-    );
-    if (categoryElement instanceof HTMLElement) {
-      console.log(categoryElement);
-      const isNotExpandedElement = categoryElement.querySelector(
-        '[data-testid="category-expand-is-not-expanded"]'
+    if (isCategorical) {
+      const categoryElement = document.querySelector(
+        `[data-testid="category-${args.metadata_name}"]`
       );
-      if (isNotExpandedElement) {
-        (
-          categoryElement.querySelector(
-            `[data-testid="${args.category_name}:category-expand"]`
-          ) as HTMLElement
-        )?.click();
+      if (categoryElement instanceof HTMLElement) {
+        const isNotExpandedElement = categoryElement.querySelector(
+          '[data-testid="category-expand-is-not-expanded"]'
+        );
+        if (isNotExpandedElement) {
+          (
+            categoryElement.querySelector(
+              `[data-testid="${args.metadata_name}:category-expand"]`
+            ) as HTMLElement
+          )?.click();
+        }
       }
+
+      if (colorAccessor === args.metadata_name) {
+        return;
+      }
+
+      dispatch({
+        type: "color by categorical metadata",
+        colorAccessor: args.metadata_name,
+      });
+    } else {
+      dispatch({
+        type: "color by continuous metadata",
+        colorAccessor: args.metadata_name,
+      });
     }
-
-    if (colorAccessor === args.category_name) {
-      return;
-    }
-
-    dispatch({
-      type: "color by categorical metadata",
-      colorAccessor: args.category_name,
-    });
-  };
-
-export const performColorByContinuous =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed color by continuous variable");
   };
 
 export const performCreateGeneset =
@@ -202,17 +237,17 @@ export const performCreateGeneset =
     }
   };
 
-export const performXYScatterplot =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed XY scatterplot");
-  };
+// export const performXYScatterplot =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed XY scatterplot");
+//   };
 
-export const performShowCellGuide =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed show cell guide");
-  };
+// export const performShowCellGuide =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed show cell guide");
+//   };
 
-export const performShowGeneCard =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed show gene card");
-  };
+// export const performShowGeneCard =
+//   () => (dispatch: AppDispatch, getState: GetState) => {
+//     console.log("Performed show gene card");
+//   };

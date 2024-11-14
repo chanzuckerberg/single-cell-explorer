@@ -25,7 +25,10 @@ export class AgentRunner {
 
   async processQuery(userInput: string, maxSteps = 20): Promise<string> {
     /* eslint-disable no-await-in-loop -- Steps must be executed sequentially */
-    this.messages = []; // Reset intermediate messages for new query
+    this.messages = this.chatHistory.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
 
     // Add the user's message to both histories
     const userMessage = {

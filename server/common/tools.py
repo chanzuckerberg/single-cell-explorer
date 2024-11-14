@@ -79,10 +79,10 @@ class ExpandCategorySchema(BaseModel):
     ]
 
 
-class CategoryColorBySchema(BaseModel):
-    category_name: Annotated[
+class MetadataColorBySchema(BaseModel):
+    metadata_name: Annotated[
         str,
-        Field(description="The name of the category to color the visualization by."),
+        Field(description="The name of the metadata to color the visualization by."),
     ]
 
 
@@ -150,19 +150,16 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
     return call_llm_with_structured_output(prompt, GenesetSelectionSchema)
 
 
-def color_by_category(data_adaptor, category_name: str):
+def color_by_metadata(data_adaptor, metadata_name: str):
     schema = data_adaptor.get_schema()
-    prompt = f"The category name the user wishes to perform color by is: {category_name}."
+    prompt = f"The metadata name the user wishes to perform color by is: {metadata_name}."
     prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid column names to color by. Do NOT select any of the values in the column."
+    prompt += "Metadata can be categorical or continuous, which can be inferred from the schema."
 
-    class CategorySelectionSchema(BaseModel):
-        category_name: str
+    class MetadataSelectionSchema(BaseModel):
+        metadata_name: str
 
-    return call_llm_with_structured_output(prompt, CategorySelectionSchema)
-
-
-def color_by_continuous():
-    return {"status": "success"}
+    return call_llm_with_structured_output(prompt, MetadataSelectionSchema)
 
 
 def create_geneset(geneset_name: str, geneset_description: str, genes_to_populate_geneset: List[str]):
@@ -204,12 +201,11 @@ def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
     return llm.invoke(query).model_dump()
 
 
-# Define the tools as LangChain Tool objects
 def create_tools(data_adaptor):
     return [
         Tool(
             name="subset",
-            description="Subset down to the selected data points. Note that this is different from selection. Subsetting means to filter down to the currently selected data points. Users can subset without specifying a selection.",
+            description="Subset down to the selected data points. Note that this is different from selection. Subsetting means to filter down to the currently selected data points.",
             func=subset,
         ),
         Tool(
@@ -219,7 +215,7 @@ def create_tools(data_adaptor):
         ),
         Tool(
             name="categorical_selection",
-            description="Perform a categorical selection",
+            description="Perform a categorical selection. This is NOT subsetting. It is merely highlighting the data points that match the category value.",
             func=partial(select_category, data_adaptor),
             args_schema=CategoricalSelectionSchema,
         ),
@@ -228,21 +224,21 @@ def create_tools(data_adaptor):
             description="Perform a histogram selection",
             func=histogram_selection,
         ),
-        Tool(
-            name="panning",
-            description="Perform panning on the current view",
-            func=panning,
-        ),
-        Tool(
-            name="zoom_in",
-            description="Zoom in on the current view",
-            func=zoom_in,
-        ),
-        Tool(
-            name="zoom_out",
-            description="Zoom out on the current view",
-            func=zoom_out,
-        ),
+        # Tool(
+        #     name="panning",
+        #     description="Perform panning on the current view",
+        #     func=panning,
+        # ),
+        # Tool(
+        #     name="zoom_in",
+        #     description="Zoom in on the current view",
+        #     func=zoom_in,
+        # ),
+        # Tool(
+        #     name="zoom_out",
+        #     description="Zoom out on the current view",
+        #     func=zoom_out,
+        # ),
         Tool(
             name="color_by_gene",
             description="Color the visualization by gene expression",
@@ -262,10 +258,10 @@ def create_tools(data_adaptor):
             args_schema=ColorByGenesetSchema,
         ),
         Tool(
-            name="color_by_category",
-            description="Color the visualization by category",
-            func=partial(color_by_category, data_adaptor),
-            args_schema=CategoryColorBySchema,
+            name="color_by_metadata",
+            description="Color the visualization by metadata",
+            func=partial(color_by_metadata, data_adaptor),
+            args_schema=MetadataColorBySchema,
         ),
         Tool(
             name="expand_category",
@@ -274,29 +270,24 @@ def create_tools(data_adaptor):
             args_schema=ExpandCategorySchema,
         ),
         Tool(
-            name="color_by_continuous",
-            description="Color the visualization by a continuous variable",
-            func=color_by_continuous,
-        ),
-        Tool(
             name="create_geneset",
             description="Create a new geneset",
             func=create_geneset,
             args_schema=CreateGenesetSchema,
         ),
-        Tool(
-            name="xy_scatterplot",
-            description="Create an XY scatterplot",
-            func=xy_scatterplot,
-        ),
-        Tool(
-            name="show_cell_guide",
-            description="Show the cell guide",
-            func=show_cell_guide,
-        ),
-        Tool(
-            name="show_gene_card",
-            description="Show the gene card",
-            func=show_gene_card,
-        ),
+        # Tool(
+        #     name="xy_scatterplot",
+        #     description="Create an XY scatterplot",
+        #     func=xy_scatterplot,
+        # ),
+        # Tool(
+        #     name="show_cell_guide",
+        #     description="Show the cell guide",
+        #     func=show_cell_guide,
+        # ),
+        # Tool(
+        #     name="show_gene_card",
+        #     description="Show the gene card",
+        #     func=show_gene_card,
+        # ),
     ]
