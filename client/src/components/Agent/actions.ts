@@ -2,6 +2,7 @@ import actions from "actions";
 import { Dataframe } from "util/dataframe";
 import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { Field } from "common/types/schema";
+import { Query } from "annoMatrix/query";
 import { AppDispatch, GetState } from "../../reducers";
 import { subsetAction, resetSubsetAction } from "../../actions/viewStack";
 
@@ -71,8 +72,96 @@ export const performCategoricalSelection =
   };
 
 export const performHistogramSelection =
-  () => (dispatch: AppDispatch, getState: GetState) => {
-    console.log("Performed histogram selection");
+  (args: Record<string, string>) =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
+    const { annoMatrix } = getState();
+    let query;
+
+    if (args.histogram_type === "geneset") {
+      if (!Object.keys(args).includes("available_genesets")) {
+        const { genesets } = getState();
+        const genesetNames = Array.from(genesets.genesets.keys());
+        if (genesetNames.length === 0) {
+          return "There are no genesets available to perform selection on. I must now create a new geneset and then try again. I will now proceed with the next step.";
+        }
+        return `I have decided to perform histogram selection on a geneset. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to perform selection on. If there are no matching genesets, I must create a new geneset. I will now proceed with the next step.`;
+      }
+      query = [
+        Field.X,
+        {
+          summarize: {
+            method: "mean",
+            field: "var",
+            column: "name_0",
+            values: [
+              ...(getState().genesets.genesets.get(args.histogram_name)
+                ?.genes || []),
+            ],
+          },
+        },
+      ];
+    } else if (args.histogram_type === "metadata") {
+      query = [Field.obs, args.histogram_name];
+    } else if (args.histogram_type === "gene") {
+      query = [
+        "X",
+        {
+          where: {
+            column: "name_0",
+            field: Field.var,
+            value: args.histogram_name,
+          },
+        },
+      ];
+    } else {
+      return "Invalid histogram type specified.";
+    }
+    let df: Dataframe;
+    try {
+      df = await annoMatrix.fetch(query[0] as Field, query[1] as Query);
+    } catch (error) {
+      return `${args.histogram_type} is not a valid histogram type for ${args.histogram_name}. I must now try a different histogram type for the same data: ${args.histogram_name}. I will now proceed with the next step.`;
+    }
+
+    const column = df.icol(0);
+    const summary = column.summarizeContinuous();
+    const { min, max } = summary;
+
+    let lo = args.range_low ? parseFloat(args.range_low) : min;
+    let hi = args.range_high ? parseFloat(args.range_high) : max;
+
+    lo = Math.max(lo, min);
+    hi = Math.min(hi, max);
+
+    try {
+      await dispatch(
+        actions.selectContinuousMetadataAction(
+          "type continuous metadata histogram start",
+          query,
+          [lo, hi]
+        )
+      );
+
+      await dispatch(
+        actions.selectContinuousMetadataAction(
+          "type continuous metadata histogram brush",
+          query,
+          [lo, hi]
+        )
+      );
+
+      await dispatch(
+        actions.selectContinuousMetadataAction(
+          "type continuous metadata histogram end",
+          query,
+          [lo, hi]
+        )
+      );
+    } catch (error) {
+      console.log(error);
+    }
+
+    return `Successfully performed histogram selection for ${args.histogram_name} with range ${lo} to ${hi}.`;
   };
 
 export const performExpandCategory = (args: Record<string, string>) => () => {
@@ -161,12 +250,23 @@ export const performExpandGene =
   };
 
 export const performColorByGeneset =
-  (args: Record<string, string>) => (dispatch: AppDispatch) => {
+  (args: Record<string, string>) =>
+  async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
     const { geneset } = args;
+    if (!args || Object.keys(args).length === 0) {
+      const { genesets } = getState();
+      const genesetNames = Array.from(genesets.genesets.keys());
+      if (genesetNames.length === 0) {
+        return "There are no genesets available. I must now create a new geneset and then try again. I will now proceed with the next step.";
+      }
+      return `I have decided to perform the color by geneset action. Here are the available geneset names: ${genesetNames}. If there are no matching genesets, I must create a new geneset. I will now proceed with the next step.`;
+    }
+
     dispatch({
       type: "color by geneset mean expression",
       geneset,
     });
+    return `Successfully colored by geneset: ${geneset}`;
   };
 
 export const performColorByMetadata =

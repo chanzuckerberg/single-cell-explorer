@@ -43,48 +43,30 @@ export class AgentRunner {
 
     let stepCount = 0;
     while (stepCount < maxSteps) {
-      try {
-        stepCount += 1;
-        const step = await getNextAgentStep(this.messages);
+      stepCount += 1;
+      const step = await getNextAgentStep(this.messages);
 
-        if (step.type === "final") {
-          const finalResponse = step.content ?? "";
-          this.chatHistory.push({
-            role: "assistant",
-            content: finalResponse,
-            timestamp: Date.now(),
-          });
-          return finalResponse;
+      if (step.type === "final") {
+        const finalResponse = step.content ?? "";
+        this.chatHistory.push({
+          role: "assistant",
+          content: finalResponse,
+          timestamp: Date.now(),
+        });
+        return finalResponse;
+      }
+
+      if (step.type === "tool" && step.tool) {
+        const tool = this.tools[step.tool.name];
+        if (!tool) {
+          throw new Error(`Unknown tool: ${step.tool.name}`);
         }
 
-        if (step.type === "tool" && step.tool) {
-          const tool = this.tools[step.tool.name];
-          if (!tool) {
-            throw new Error(`Unknown tool: ${step.tool.name}`);
-          }
-          this.messages.push({
-            role: "function",
-            name: step.tool.name,
-            content: `The following tool was invoked: ${
-              step.tool.name
-            }. The result of the tool invocation is: ${JSON.stringify(
-              step.tool.result
-            )}`,
-          });
-          const result = await tool.invoke(JSON.stringify(step.tool.result));
-          this.messages.push({
-            role: "assistant",
-            content: result,
-          });
-        }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
+        const result = await tool.invoke(JSON.stringify(step.tool.result));
         this.messages.push({
           role: "assistant",
-          content: `Error: ${errorMessage}`,
+          content: `The following tool was invoked: ${step.tool.name}. Status message: ${result}`,
         });
-        return `Error: ${errorMessage}`;
       }
     }
     /* eslint-enable no-await-in-loop -- Steps must be executed sequentially */

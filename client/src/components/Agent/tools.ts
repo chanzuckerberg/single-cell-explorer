@@ -52,9 +52,10 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   },
 
   histogram_selection: {
-    action: async (dispatch) => {
-      dispatch(performHistogramSelection());
-      return "Performed histogram selection. Only subset if users explicitly asked for it.";
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Histogram selection args are required");
+      const message = await dispatch(performHistogramSelection(args));
+      return message;
     },
   },
 
@@ -96,18 +97,10 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   },
 
   color_by_geneset: {
-    action: async (dispatch, getState, args) => {
-      if (!args || Object.keys(args).length === 0) {
-        const { genesets } = getState();
-        const genesetNames = Array.from(genesets.genesets.keys());
-        if (genesetNames.length === 0) {
-          return "There are no genesets available to color by. You must create the geneset first.";
-        }
-        return `I have decided to perform the color by geneset action. Here are the available geneset names: ${genesetNames}. I must select one of these genesets to color by.`;
-      }
-
-      await dispatch(performColorByGeneset(args));
-      return `Colored by geneset: ${args.geneset}`;
+    action: async (dispatch, _getState, args) => {
+      if (!args) throw new Error("Geneset name is required");
+      const message = await dispatch(performColorByGeneset(args));
+      return message;
     },
   },
 

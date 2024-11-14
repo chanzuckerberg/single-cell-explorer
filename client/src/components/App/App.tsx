@@ -114,7 +114,12 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                           <MenuBar />
                         </Controls>
                         <Legend />
-                        <div style={{ flex: 1, position: "relative" }}>
+                        <div
+                          style={{
+                            flex: 1,
+                            position: "relative",
+                          }}
+                        >
                           <Graph
                             viewportRef={viewportRef}
                             key={graphRenderCounter}

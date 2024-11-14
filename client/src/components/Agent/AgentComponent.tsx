@@ -63,11 +63,13 @@ export const AgentComponent: FC = () => {
 
     try {
       await agentRunner.processQuery(input);
-      setChatHistory([...agentRunner.chatHistory]);
+      const lastMessage =
+        agentRunner.chatHistory[agentRunner.chatHistory.length - 1];
+      setChatHistory((prev) => [...prev, lastMessage]);
       setInput("");
     } catch (error) {
-      setChatHistory([
-        ...agentRunner.chatHistory,
+      setChatHistory((prev) => [
+        ...prev,
         {
           role: "assistant",
           content: `Error: ${

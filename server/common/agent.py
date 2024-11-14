@@ -43,9 +43,14 @@ When there are multiple actions to perform, execute them one at a time and wait 
 
 Concepts:
 - Subsetting: Subsetting means to filter down to the currently selected/highlighted data points.
-- Selection: Selection means to highlight a subset of the data points.
+- Selection: Selection means to highlight a subset of the data points. Selections can be made on categorical or continuous data. Selections on on continuous data use histograms in the UI to select the range of values.
 - Coloring: Coloring means to color the data points by a particular feature.
 - Expanding: Expanding means to show more information about a particular feature.
+
+Terminology:
+ - Genesets are collections of genes that have been curated by the user.
+ - Genes are single genes that have been curated by the user.
+ - Metadata is any other information about the data points that is not a gene or a geneset.
 
 You should only respond with the next tool to be called given the tools that have already been invoked.
 The tools that have already been invoked will be provided to you as a sequence of JSON tool call objects.
@@ -102,10 +107,24 @@ def agent_step_post(request, data_adaptor):
 
         response = {}
         if isinstance(next_step, AgentFinish):
+            # Find index of last user message
+            # Find index of last user message
+            last_user_idx = len(formatted_messages) - 1
+            for i in range(len(formatted_messages) - 1, -1, -1):
+                if isinstance(formatted_messages[i], HumanMessage):
+                    last_user_idx = i
+                    break
+
+            summary_messages = [formatted_messages[0]] + formatted_messages[last_user_idx:]
             output = agent.invoke(
                 {
-                    "input": "Please succinctly summarize the actions you took in the above conversation. Do not mention the tools you used, only the actions. Do not add any additional text like 'no further actions required' or 'let me know if you need anything else'.",
-                    "chat_history": formatted_messages,
+                    "input": (
+                        "Please succinctly summarize the actions you took in the above conversation. "
+                        "Do not mention the tools you used, only the actions. "
+                        "Do not add any additional text like 'no further actions required' or "
+                        "'let me know if you need anything else'."
+                    ),
+                    "chat_history": summary_messages,
                     "intermediate_steps": [],
                 }
             )

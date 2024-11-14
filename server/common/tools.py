@@ -1,4 +1,5 @@
 from typing import List, Annotated, TypeVar, Type
+from enum import Enum
 from langchain_core.tools import Tool
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -17,6 +18,41 @@ class ColorByGeneSchema(BaseModel):
         str,
         Field(
             description="The gene symbol to color the visualization by. This should be a valid gene symbol (e.g., CD4, IL2, etc.)."
+        ),
+    ]
+
+
+class HistogramType(Enum):
+    METADATA = "metadata"
+    GENE = "gene"
+    GENESET = "geneset"
+
+
+class HistogramSelectionSchema(BaseModel):
+    range_low: Annotated[
+        float,
+        Field(description="The low end of the range to select. If not provided, the tool will set the low end to 0."),
+    ]
+    range_high: Annotated[
+        float | None,
+        Field(
+            description="The high end of the range to select. If not provided, the tool will set the high end to None."
+        ),
+    ]
+    histogram_type: Annotated[
+        HistogramType,
+        Field(
+            description="The type of histogram to select - gene, geneset, or metadata. IMPORTANT: GENES MUST BE GENE SYMBOLS."
+        ),
+    ]
+    available_genesets: Annotated[
+        List[str] | None,
+        Field(description="The list of available genesets to select from. Only used if the histogram type is geneset."),
+    ]
+    histogram_name: Annotated[
+        str,
+        Field(
+            description="The name of the histogram to select. This can be a metadata column name, gene, or geneset name. IMPORTANT: GENES MUST BE GENE SYMBOLS."
         ),
     ]
 
@@ -99,7 +135,8 @@ def select_category(data_adaptor, category_value: str, column_name: str | None =
     prompt = f"The category value the user wishes to perform selection on is: {category_value}."
     if column_name is not None:
         prompt += f"The column name that the category value belongs to is: {column_name}."
-    prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid categories along with the name of the column that most closely matches the user's request."
+    cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
+    prompt += f"The valid categorical metadata columns are: {cols}. Please select one of the valid categories along with the name of the column that most closely matches the user's request."
 
     class CategorySelectionSchema(BaseModel):
         category_value: str
@@ -108,8 +145,58 @@ def select_category(data_adaptor, category_value: str, column_name: str | None =
     return call_llm_with_structured_output(prompt, CategorySelectionSchema)
 
 
-def histogram_selection():
-    return {"status": "success"}
+def histogram_selection(
+    data_adaptor,
+    histogram_name: str,
+    histogram_type: HistogramType,
+    range_low: float,
+    range_high: float | None = None,
+    available_genesets: List[str] | None = None,
+):
+    if histogram_type == HistogramType.GENESET.value:
+        if available_genesets is None:
+            return {
+                "histogram_type": histogram_type,
+                "status": "need_available_genesets",
+            }
+        prompt = f"The geneset the user wishes to perform histogram selection on is: {histogram_name}."
+        prompt += f"The available genesets are: {available_genesets}."
+        prompt += "Please select one of the available genesets to perform histogram selection on."
+
+        class GenesetSelectionSchema(BaseModel):
+            geneset: str
+
+        return {
+            "histogram_name": call_llm_with_structured_output(prompt, GenesetSelectionSchema)["geneset"],
+            "histogram_type": histogram_type,
+            "range_low": range_low,
+            "range_high": range_high,
+        }
+    elif histogram_type == HistogramType.METADATA.value:
+        schema = data_adaptor.get_schema()
+        prompt = f"The metadata name the user wishes to perform histogram selection on is: {histogram_name}."
+        cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" not in i and i != "name_0"]
+        prompt += f"The valid metadata columns are: {cols}. Please select one of the column names to perform histogram selection on."
+        prompt += "Metadata can be categorical or continuous. Please only select one of the continuous columns to perform histogram selection on."
+
+        class MetadataSelectionSchema(BaseModel):
+            metadata_name: str
+
+        response = {
+            "histogram_name": call_llm_with_structured_output(prompt, MetadataSelectionSchema)["metadata_name"],
+            "histogram_type": histogram_type,
+            "range_low": range_low,
+            "range_high": range_high,
+        }
+        print(response)
+        return response
+    elif histogram_type == HistogramType.GENE.value:
+        return {
+            "histogram_name": histogram_name.upper(),
+            "histogram_type": histogram_type,
+            "range_low": range_low,
+            "range_high": range_high,
+        }
 
 
 def panning():
@@ -153,8 +240,12 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
 def color_by_metadata(data_adaptor, metadata_name: str):
     schema = data_adaptor.get_schema()
     prompt = f"The metadata name the user wishes to perform color by is: {metadata_name}."
-    prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid column names to color by. Do NOT select any of the values in the column."
-    prompt += "Metadata can be categorical or continuous, which can be inferred from the schema."
+    categorical_cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
+    continuous_cols = [
+        i["name"] for i in schema["annotations"]["obs"]["columns"] if i != "name_0" and "categories" not in i
+    ]
+    prompt += f"The valid categorical metadata columns are: {categorical_cols}. The valid continuous metadata columns are: {continuous_cols}."
+    prompt += "Please select one of the valid metadata columns to color by."
 
     class MetadataSelectionSchema(BaseModel):
         metadata_name: str
@@ -173,7 +264,9 @@ def create_geneset(geneset_name: str, geneset_description: str, genes_to_populat
 def expand_category(data_adaptor, category_name: str):
     schema = data_adaptor.get_schema()
     prompt = f"The category name the user wishes to perform expand by is: {category_name}."
-    prompt += f"The valid metadata columns are: {schema['annotations']['obs']['columns']}. Please select one of the valid column names to expand by. Do NOT select any of the values in the column."
+    categorical_cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
+    prompt += f"The valid categorical metadata columns are: {categorical_cols}."
+    prompt += "Please select one of the valid categorical metadata columns to expand by."
 
     class CategorySelectionSchema(BaseModel):
         category_name: str
@@ -221,8 +314,9 @@ def create_tools(data_adaptor):
         ),
         Tool(
             name="histogram_selection",
-            description="Perform a histogram selection",
-            func=histogram_selection,
+            description="Perform a histogram selection. If selecting a geneset histogram and the set of available genesets is not provided, the tool will first return that it decided to perform the histogram selection action. Then, the tool will receive the list of available genesets and will be able to select one to perform histogram selection on.",
+            func=partial(histogram_selection, data_adaptor),
+            args_schema=HistogramSelectionSchema,
         ),
         # Tool(
         #     name="panning",
