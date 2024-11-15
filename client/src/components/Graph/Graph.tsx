@@ -743,7 +743,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       };
     }
     return {
-      height: viewportRef.clientHeight,
+      height: viewportRef.clientHeight * 0.9,
       width: viewportRef.clientWidth,
     };
   };

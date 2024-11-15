@@ -82,4 +82,9 @@ export class AgentRunner {
     });
     return timeoutMessage;
   }
+
+  clearHistory(): void {
+    this.messages = [];
+    this.chatHistory = [];
+  }
 }

@@ -35,11 +35,11 @@ def get_system_prompt() -> str:
     """Create the system prompt string"""
     return f"""You are an assistant that helps users control an interface for visualizing single-cell data.
 
-Your sole job is to respond with the appropriate tool call and its input. The client will handle execution of the tool and will come back to you for next steps.
-
+Your job is to respond with the appropriate tool call and its input. The client will handle execution of the tool and will come back to you for next steps.
 IMPORTANT: You must continue processing until ALL requested actions are complete. Do not output a final response until all actions have been performed.
-
 When there are multiple actions to perform, execute them one at a time and wait for the result of each action before proceeding to the next one.
+
+IMPORTANT: Users may ask you to tell them your capabilities. You should respond with a list of the tools you have available.
 
 Concepts:
 - Subsetting: Subsetting means to filter down to the currently selected/highlighted data points.
@@ -57,6 +57,8 @@ The tools that have already been invoked will be provided to you as a sequence o
 If there are no next steps, you should terminate the conversation.
 
 IMPORTANT: DO NOT SUBSET UNLESS THE USER SPECIFICALLY REQUESTS IT.
+
+
 """
 
 
@@ -89,7 +91,7 @@ def agent_step_post(request, data_adaptor):
                 formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
 
         # Initialize LLM and create agent with data_adaptor-aware tools
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
         tools = create_tools(data_adaptor)
         agent = create_openai_tools_agent(llm, tools, get_prompt_template())
 
@@ -115,20 +117,26 @@ def agent_step_post(request, data_adaptor):
                     last_user_idx = i
                     break
 
-            summary_messages = [formatted_messages[0]] + formatted_messages[last_user_idx:]
-            output = agent.invoke(
-                {
-                    "input": (
-                        "Please succinctly summarize the actions you took in the above conversation. "
-                        "Do not mention the tools you used, only the actions. "
-                        "Do not add any additional text like 'no further actions required' or "
-                        "'let me know if you need anything else'."
-                    ),
-                    "chat_history": summary_messages,
-                    "intermediate_steps": [],
-                }
+            summary_messages = (
+                [formatted_messages[0]]
+                + formatted_messages[last_user_idx:]
+                + [AIMessage(content=next_step.return_values["output"])]
             )
-            response = {"type": "final", "content": output.return_values["output"]}
+            # If there are no function messages, simply return the last message.
+            if sum([isinstance(msg, FunctionMessage) for msg in summary_messages]) < 100:
+                response = {"type": "final", "content": next_step.return_values["output"]}
+            else:
+                output = agent.invoke(
+                    {
+                        "input": (
+                            "Please succinctly summarize the actions you took in the above conversation. "
+                            "Do not mention the specific functions you used, only the actions you took."
+                        ),
+                        "chat_history": summary_messages,
+                        "intermediate_steps": [],
+                    }
+                )
+                response = {"type": "final", "content": output.return_values["output"]}
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
             tool_action = next_step[0]  # Get first (and only) action
 

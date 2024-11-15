@@ -26,7 +26,11 @@ export const performUnsubset = () => (dispatch: AppDispatch) => {
 
 export const performCategoricalSelection =
   (args: Record<string, string>) =>
-  async (dispatch: AppDispatch, getState: GetState) => {
+  async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
+    if (args?.error) {
+      return `${args.error}. I will halt execution and report this error to the user.`;
+    }
+
     const { annoMatrix, obsCrossfilter } = getState();
     const { schema } = annoMatrix;
 
@@ -69,6 +73,7 @@ export const performCategoricalSelection =
         true
       )
     );
+    return `Performed categorical selection on ${args.category_value}.`;
   };
 
 export const performHistogramSelection =

@@ -137,10 +137,12 @@ def select_category(data_adaptor, category_value: str, column_name: str | None =
         prompt += f"The column name that the category value belongs to is: {column_name}."
     cols = [i for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
     prompt += f"The valid categorical metadata labels are: {cols}. Please select one of the valid category labels along with the name of the column that most closely matches the user's request."
+    prompt += "IMPORTANT: If the user's request does not match any of the valid category labels, please return an error message."
 
     class CategorySelectionSchema(BaseModel):
         category_value: str
         column_name: str
+        error: str | None = None
 
     return call_llm_with_structured_output(prompt, CategorySelectionSchema)
 
@@ -287,7 +289,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini").with_structured_output(schema)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o").with_structured_output(schema)
     return llm.invoke(query).model_dump()
 
 

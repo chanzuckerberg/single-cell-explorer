@@ -44,10 +44,10 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   },
 
   categorical_selection: {
-    action: async (dispatch, _getState, args) => {
+    action: async (dispatch, _getState, args): Promise<string> => {
       if (!args) throw new Error("Categorical selection args are required");
-      await dispatch(performCategoricalSelection(args));
-      return `Performed categorical selection on ${args.category_value}.`;
+      const message = await dispatch(performCategoricalSelection(args));
+      return message;
     },
   },
 
