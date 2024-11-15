@@ -123,7 +123,7 @@ def agent_step_post(request, data_adaptor):
                 + [AIMessage(content=next_step.return_values["output"])]
             )
             # If there are no function messages, simply return the last message.
-            if sum([isinstance(msg, FunctionMessage) for msg in summary_messages]) < 100:
+            if True:
                 response = {"type": "final", "content": next_step.return_values["output"]}
             else:
                 output = agent.invoke(
