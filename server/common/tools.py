@@ -240,12 +240,9 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
 def color_by_metadata(data_adaptor, metadata_name: str):
     schema = data_adaptor.get_schema()
     prompt = f"The metadata name the user wishes to perform color by is: {metadata_name}."
-    categorical_cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
-    continuous_cols = [
-        i["name"] for i in schema["annotations"]["obs"]["columns"] if i != "name_0" and "categories" not in i
-    ]
-    prompt += f"The valid categorical metadata columns are: {categorical_cols}. The valid continuous metadata columns are: {continuous_cols}."
-    prompt += "Please select one of the valid metadata columns to color by."
+    cols = [i["name"] for i in schema["annotations"]["obs"]["columns"]]
+    prompt += f"The valid metadata columns are: {cols}."
+    prompt += "Please select the column that most closely matches the user's request to color by."
 
     class MetadataSelectionSchema(BaseModel):
         metadata_name: str
