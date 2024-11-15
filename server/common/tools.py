@@ -227,7 +227,9 @@ def expand_gene(gene: str):
 
 def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
     if available_genesets is None:
-        return {}
+        return {
+            "status": "need_available_genesets",
+        }
 
     prompt = f"The geneset the user wishes to color by is: {geneset}."
     prompt += f"The available genesets are: {available_genesets}."
@@ -297,7 +299,7 @@ def create_tools(data_adaptor):
     return [
         Tool(
             name="subset",
-            description="Subset down to the selected data points. Note that this is different from selection. Subsetting means to filter down to the currently selected data points.",
+            description="Filter dataset to show only currently selected data points",
             func=subset,
         ),
         Tool(
@@ -307,13 +309,13 @@ def create_tools(data_adaptor):
         ),
         Tool(
             name="categorical_selection",
-            description="Perform a categorical selection. This is NOT subsetting. It is merely highlighting the data points that match the category value.",
+            description="Highlight data points matching a specific category value (does not filter/subset the data)",
             func=partial(select_category, data_adaptor),
             args_schema=CategoricalSelectionSchema,
         ),
         Tool(
             name="histogram_selection",
-            description="Perform a histogram selection. If selecting a geneset histogram and the set of available genesets is not provided, the tool will first return that it decided to perform the histogram selection action. Then, the tool will receive the list of available genesets and will be able to select one to perform histogram selection on.",
+            description="Perform a histogram selection. For geneset histograms, returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
             func=partial(histogram_selection, data_adaptor),
             args_schema=HistogramSelectionSchema,
         ),
@@ -346,7 +348,7 @@ def create_tools(data_adaptor):
         ),
         Tool(
             name="color_by_geneset",
-            description="Color the visualization by a geneset. If the set of available genesets is not provided, the tool will first return that it decided to perform the color by geneset action. Then, the tool will receive the list of available genesets and will be able to select one to color by.",
+            description="Color by average expression of a geneset. Returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
             func=color_by_geneset,
             args_schema=ColorByGenesetSchema,
         ),

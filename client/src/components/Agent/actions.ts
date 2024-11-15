@@ -223,7 +223,10 @@ export const performColorByGene =
     const { gene } = args;
 
     // Get valid gene names from the matrix
-    const { annoMatrix } = getState();
+    const {
+      annoMatrix,
+      colors: { colorAccessor },
+    } = getState();
     const { schema } = annoMatrix;
     const varIndex = schema.annotations.var.index;
     const df = await annoMatrix.fetch(Field.var, varIndex);
@@ -249,6 +252,9 @@ export const performColorByGene =
     if (!validGenes.includes(gene)) {
       return "The requested gene name is not present in the dataset. Please instruct the user to select a valid gene.";
     }
+    if (colorAccessor === gene) {
+      return "The visualization is already colored by the requested gene.";
+    }
     dispatch({ type: "single user defined gene start" });
     dispatch(actions.requestUserDefinedGene(gene));
     dispatch({ type: "single user defined gene complete" });
@@ -273,7 +279,7 @@ export const performColorByGeneset =
   (args: Record<string, string>) =>
   async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
     const { geneset } = args;
-    if (!args || Object.keys(args).length === 0) {
+    if (args?.status === "need_available_genesets") {
       const { genesets } = getState();
       const genesetNames = Array.from(genesets.genesets.keys());
       if (genesetNames.length === 0) {
