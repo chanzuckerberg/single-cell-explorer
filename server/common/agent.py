@@ -1,10 +1,11 @@
 import logging
 import sys
+import json
 from http import HTTPStatus
 from flask import abort, current_app, jsonify, make_response
 from typing import List, Dict, Literal, Optional
 from pydantic import BaseModel
-from langchain.agents.output_parsers.tools import ToolAgentAction
+from langchain.agents.output_parsers.tools import ToolAgentAction, AgentAction
 from langchain_core.agents import AgentFinish
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_openai_tools_agent
@@ -33,34 +34,32 @@ class AgentMessage(BaseModel):
 
 def get_system_prompt() -> str:
     """Create the system prompt string"""
-    return f"""Please do not assist with queries that are not related to single-cell data analysis and visualization.
+    return """You are an assistant that helps users control an interface for visualizing single-cell data. Your primary task is to respond with the appropriate tool call and its input. The client will execute the tool and return to you for the next steps.
 
-You are an assistant that helps users control an interface for visualizing single-cell data.
+Guidelines:
 
-Your job is to respond with the appropriate tool call and its input. The client will handle execution of the tool and will come back to you for next steps.
-IMPORTANT: You must continue processing until ALL requested actions are complete. Do not output a final response until all actions have been performed.
-When there are multiple actions to perform, execute them one at a time and wait for the result of each action before proceeding to the next one.
-
-IMPORTANT: For tools that may need additional information (like available_genesets), you should still invoke them. The tool will return a status indicating what additional information is needed, and you will receive that information in a subsequent call.
-
-IMPORTANT: Users may ask you to tell them your capabilities. You should respond with a list of the tools you have available.
+- Process all requested actions until complete; do not output a final response until all actions are performed.
+- When multiple actions are requested, execute them one at a time, waiting for each result before proceeding.
+- If a tool requires additional information (e.g., available_genesets), still invoke it; the tool will indicate what information is needed, which you will receive in a subsequent call.
+- If asked about your capabilities, list the available tools.
+- If a user requests an action already done, execute the tool again.
+- Respond only with the next tool to be called, based on prior invocations.
+- Terminate the conversation if there are no further steps.
+- Do not perform subsetting unless specifically requested.
+- Assist only with queries related to single-cell data analysis and visualization.
 
 Concepts:
-- Subsetting: Subsetting means to filter down to the currently selected/highlighted data points.
-- Selection: Selection means to highlight a subset of the data points. Selections can be made on categorical or continuous data. Selections on on continuous data use histograms in the UI to select the range of values.
-- Coloring: Coloring means to color the data points by a particular feature.
-- Expanding: Expanding means to show more information about a particular feature.
+
+- **Subsetting**: Filtering the data to only the currently selected or highlighted data points.
+- **Selection**: Highlighting a subset of data points based on categorical or continuous data. For continuous data, selections use histograms in the UI to select value ranges.
+- **Coloring**: Applying colors to data points based on a specific feature.
+- **Expanding**: Displaying more information about a particular feature.
 
 Terminology:
- - Genesets are collections of genes that have been curated by the user.
- - Genes are single genes that have been curated by the user.
- - Metadata is any other information about the data points that is not a gene or a geneset.
 
-You should only respond with the next tool to be called given the tools that have already been invoked.
-If there are no next steps, you should terminate the conversation.
-
-IMPORTANT: DO NOT SUBSET UNLESS THE USER SPECIFICALLY REQUESTS IT.
-"""
+- **Genesets**: Collections of genes curated by the user.
+- **Genes**: Individual genes curated by the user.
+- **Metadata**: Any other information about the data points that is not a gene or geneset."""
 
 
 def get_prompt_template() -> ChatPromptTemplate:
@@ -68,8 +67,13 @@ def get_prompt_template() -> ChatPromptTemplate:
     return ChatPromptTemplate.from_messages(
         [
             ("system", get_system_prompt()),
+            (
+                "system",
+                "The following conversation history provides context. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested:",
+            ),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
-            ("human", "{input}"),
+            ("system", "Now focus on the current request."),
+            MessagesPlaceholder(variable_name="input"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
     )
@@ -91,76 +95,81 @@ def agent_step_post(request, data_adaptor):
             elif msg.role == "function":
                 formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
 
+        # Find index of last human message
+        last_human_idx = len(formatted_messages) - 1
+        for i in range(len(formatted_messages) - 1, -1, -1):
+            if isinstance(formatted_messages[i], HumanMessage):
+                last_human_idx = i
+                break
+
+        # Split messages into chat history and current request
+        chat_history = formatted_messages[:last_human_idx]
+        current_request = formatted_messages[last_human_idx:]
+
         # Initialize LLM and create agent with data_adaptor-aware tools
         llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
         tools = create_tools(data_adaptor)
         agent = create_openai_tools_agent(llm, tools, get_prompt_template())
-
-        # Add system message to formatted messages
-        formatted_messages = [SystemMessage(content=get_system_prompt())] + formatted_messages
-
-        # Get structured response
+        # Get structured response with split history
         next_step = agent.invoke(
             {
-                "input": formatted_messages[-1].content,  # Latest user message
-                "chat_history": formatted_messages[:-1],  # Previous messages
-                "intermediate_steps": [],  # For tool execution tracking
+                "input": current_request,
+                "chat_history": chat_history,
+                "intermediate_steps": [],
             }
         )
 
         response = {}
         if isinstance(next_step, AgentFinish):
-            # Find index of last user message
-            # Find index of last user message
-            last_user_idx = len(formatted_messages) - 1
-            for i in range(len(formatted_messages) - 1, -1, -1):
-                if isinstance(formatted_messages[i], HumanMessage):
-                    last_user_idx = i
-                    break
+            response = {"type": "final", "content": next_step.return_values["output"]}
+        elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
+            tool_action = next_step[0]  # Get first (and only) action
+            if tool_action.tool == "no_more_steps":
+                # Hmm, this technically works okay-ish but i don't like the fact we have to summarize.
+                # Failure mode: when we do complex sequence of actions, the final step is a summary of only the previous action.
+                # The agent should just decide when to stop and it should be able to do that without having to say "no further steps".
+                # What if we summarize just the status messages SINCE THE LAST SUMMARY MESSAGE?
+                # Summary message only generated when the no more steps message is received.
+                # We can have a flag for it marking messages as summary messages.
+                # We can generate summary of everything since the last summary message.
+                action_history = []
+                for msg in messages[last_human_idx + 1 :]:
+                    if not isinstance(msg, FunctionMessage):
+                        action_history.append(msg.content)
 
-            summary_messages = (
-                [formatted_messages[0]]
-                + formatted_messages[last_user_idx:]
-                + [AIMessage(content=next_step.return_values["output"])]
-            )
-            # If there are no function messages, simply return the last message.
-            if True:
-                response = {"type": "final", "content": next_step.return_values["output"]}
-            else:
                 output = agent.invoke(
                     {
-                        "input": (
-                            "Please succinctly summarize the actions you took in the above conversation. "
-                            "Do not mention the specific functions you used, only the actions you took."
-                        ),
-                        "chat_history": summary_messages,
+                        "input": [
+                            HumanMessage(
+                                content="Please summarize these actions in a succinct, neutral, efficient way."
+                            )
+                        ],
+                        "chat_history": action_history,
                         "intermediate_steps": [],
                     }
                 )
                 response = {"type": "final", "content": output.return_values["output"]}
-        elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
-            tool_action = next_step[0]  # Get first (and only) action
+            else:
+                # Find the matching tool
+                selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)
 
-            # Find the matching tool
-            selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)
+                # Execute the tool with its arguments
+                # If the tool input is a string, then there is no argument schema and so we have no arguments.
+                tool_arguments = {} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
 
-            # Execute the tool with its arguments
-            # If the tool input is a string, then there is no argument schema and so we have no arguments.
-            tool_arguments = {} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
+                try:
+                    # Execute the tool and get results
+                    tool_result = selected_tool.func(**tool_arguments)
 
-            try:
-                # Execute the tool and get results
-                tool_result = selected_tool.func(**tool_arguments)
-
-                response = {
-                    "type": "tool",
-                    "tool": {"name": tool_action.tool, "result": tool_result},
-                }
-            except Exception as tool_error:
-                # Handle tool execution errors
-                error_message = f"Error executing tool {tool_action.tool}: {str(tool_error)}"
-                current_app.logger.error(error_message, exc_info=True)
-                return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, error_message, loglevel=logging.ERROR)
+                    response = {
+                        "type": "tool",
+                        "tool": {"name": tool_action.tool, "result": tool_result},
+                    }
+                except Exception as tool_error:
+                    # Handle tool execution errors
+                    error_message = f"Error executing tool {tool_action.tool}: {str(tool_error)}"
+                    current_app.logger.error(error_message, exc_info=True)
+                    return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, error_message, loglevel=logging.ERROR)
         else:
             raise ValueError(f"Unknown agent step type: {type(next_step)}")
 

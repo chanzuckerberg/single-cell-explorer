@@ -25,10 +25,11 @@ export class AgentRunner {
 
   async processQuery(userInput: string, maxSteps = 20): Promise<string> {
     /* eslint-disable no-await-in-loop -- Steps must be executed sequentially */
-    this.messages = this.chatHistory.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    }));
+    // this.messages = this.chatHistory.map((msg) => ({
+    //   role: msg.role,
+    //   content: msg.content,
+    // }));
+    console.log(this.messages);
 
     // Add the user's message to both histories
     const userMessage = {
@@ -53,6 +54,10 @@ export class AgentRunner {
           content: finalResponse,
           timestamp: Date.now(),
         });
+        this.messages.push({
+          role: "assistant",
+          content: finalResponse,
+        });
         return finalResponse;
       }
 
@@ -66,7 +71,7 @@ export class AgentRunner {
         this.messages.push({
           role: "function",
           name: step.tool.name,
-          content: `Arguments: ${JSON.stringify(step.tool.result)}`,
+          content: JSON.stringify(step.tool.result),
         });
         this.messages.push({
           role: "assistant",

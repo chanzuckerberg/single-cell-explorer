@@ -6,13 +6,6 @@ from langchain_openai import ChatOpenAI
 from functools import partial
 
 
-class ToolParameter(BaseModel):
-    name: str
-    description: str
-    required: bool
-    type: str
-
-
 class ColorByGeneSchema(BaseModel):
     gene: Annotated[
         str,
@@ -287,6 +280,10 @@ def show_gene_card():
     return {"status": "success"}
 
 
+def no_more_steps():
+    return {"status": "no_more_steps"}
+
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -297,6 +294,11 @@ def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
 
 def create_tools(data_adaptor):
     return [
+        Tool(
+            name="no_more_steps",
+            description="Indicate that there are no more steps to take",
+            func=no_more_steps,
+        ),
         Tool(
             name="subset",
             description="Filter dataset to show only currently selected data points",
@@ -319,21 +321,6 @@ def create_tools(data_adaptor):
             func=partial(histogram_selection, data_adaptor),
             args_schema=HistogramSelectionSchema,
         ),
-        # Tool(
-        #     name="panning",
-        #     description="Perform panning on the current view",
-        #     func=panning,
-        # ),
-        # Tool(
-        #     name="zoom_in",
-        #     description="Zoom in on the current view",
-        #     func=zoom_in,
-        # ),
-        # Tool(
-        #     name="zoom_out",
-        #     description="Zoom out on the current view",
-        #     func=zoom_out,
-        # ),
         Tool(
             name="color_by_gene",
             description="Color the visualization by gene expression",
@@ -384,5 +371,20 @@ def create_tools(data_adaptor):
         #     name="show_gene_card",
         #     description="Show the gene card",
         #     func=show_gene_card,
+        # ),
+        # Tool(
+        #     name="panning",
+        #     description="Perform panning on the current view",
+        #     func=panning,
+        # ),
+        # Tool(
+        #     name="zoom_in",
+        #     description="Zoom in on the current view",
+        #     func=zoom_in,
+        # ),
+        # Tool(
+        #     name="zoom_out",
+        #     description="Zoom out on the current view",
+        #     func=zoom_out,
         # ),
     ]
