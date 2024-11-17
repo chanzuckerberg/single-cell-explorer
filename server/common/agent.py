@@ -15,21 +15,11 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from server.common.tools import create_tools
 
 
-class ToolSpec(BaseModel):
-    name: str
-    arguments: Dict[str, str]
-
-
-class AgentStep(BaseModel):
-    type: Literal["tool", "final"]
-    content: str
-    tool: Optional[ToolSpec] = None
-
-
 class AgentMessage(BaseModel):
     role: Literal["user", "assistant", "function"]
     content: str
     name: Optional[str] = None
+    type: Literal["summary", "tool", "message"] = "message"
 
 
 def get_system_prompt() -> str:
@@ -44,7 +34,7 @@ Guidelines:
 - If asked about your capabilities, list the available tools.
 - If a user requests an action already done, execute the tool again.
 - Respond only with the next tool to be called, based on prior invocations.
-- Terminate the conversation if there are no further steps.
+- When a workflow is complete, use the no_more_steps tool to summarize the actions taken.
 - Do not perform subsetting unless specifically requested.
 - Assist only with queries related to single-cell data analysis and visualization.
 
@@ -72,7 +62,10 @@ def get_prompt_template() -> ChatPromptTemplate:
                 "The following conversation history provides context. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested:",
             ),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
-            ("system", "Now focus on the current request."),
+            (
+                "system",
+                "Now focus on the current request. If you are asked to summarize, use the <start_summary/> tag to indicate where to start summarizing from.",
+            ),
             MessagesPlaceholder(variable_name="input"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
@@ -95,16 +88,22 @@ def agent_step_post(request, data_adaptor):
             elif msg.role == "function":
                 formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
 
-        # Find index of last human message
-        last_human_idx = len(formatted_messages) - 1
-        for i in range(len(formatted_messages) - 1, -1, -1):
-            if isinstance(formatted_messages[i], HumanMessage):
-                last_human_idx = i
+        # Find index of last summary message
+        last_summary_idx = -1
+        for i in range(len(messages) - 1, -1, -1):
+            if messages[i].type == "summary":
+                last_summary_idx = i
                 break
 
         # Split messages into chat history and current request
-        chat_history = formatted_messages[:last_human_idx]
-        current_request = formatted_messages[last_human_idx:]
+        print(f"last_summary_idx: {last_summary_idx}")
+        print(f"formatted_messages: {formatted_messages}")
+
+        formatted_messages[last_summary_idx].content = (
+            f"{formatted_messages[last_summary_idx].content}\n\n<start_summary/>"
+        )
+        chat_history = formatted_messages[: last_summary_idx + 1]
+        current_request = formatted_messages[last_summary_idx + 1 :]
 
         # Initialize LLM and create agent with data_adaptor-aware tools
         llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
@@ -121,34 +120,11 @@ def agent_step_post(request, data_adaptor):
 
         response = {}
         if isinstance(next_step, AgentFinish):
-            response = {"type": "final", "content": next_step.return_values["output"]}
+            response = {"type": "message", "content": next_step.return_values["output"]}
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
-            tool_action = next_step[0]  # Get first (and only) action
+            tool_action = next_step[0]
             if tool_action.tool == "no_more_steps":
-                # Hmm, this technically works okay-ish but i don't like the fact we have to summarize.
-                # Failure mode: when we do complex sequence of actions, the final step is a summary of only the previous action.
-                # The agent should just decide when to stop and it should be able to do that without having to say "no further steps".
-                # What if we summarize just the status messages SINCE THE LAST SUMMARY MESSAGE?
-                # Summary message only generated when the no more steps message is received.
-                # We can have a flag for it marking messages as summary messages.
-                # We can generate summary of everything since the last summary message.
-                action_history = []
-                for msg in messages[last_human_idx + 1 :]:
-                    if not isinstance(msg, FunctionMessage):
-                        action_history.append(msg.content)
-
-                output = agent.invoke(
-                    {
-                        "input": [
-                            HumanMessage(
-                                content="Please summarize these actions in a succinct, neutral, efficient way."
-                            )
-                        ],
-                        "chat_history": action_history,
-                        "intermediate_steps": [],
-                    }
-                )
-                response = {"type": "final", "content": output.return_values["output"]}
+                response = {"type": "summary", "content": tool_action.tool_input["summary"]}
             else:
                 # Find the matching tool
                 selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)

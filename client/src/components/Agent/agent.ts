@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const AgentStepResponseSchema = z.object({
-  type: z.enum(["tool", "final"]),
+  type: z.enum(["tool", "message", "summary"]),
   tool: z
     .object({
       name: z.string(),
@@ -20,7 +20,14 @@ export type AgentMessage = {
   role: "user" | "assistant" | "function";
   content: string;
   name?: string;
+  type: MessageType;
 };
+
+export enum MessageType {
+  Message = "message",
+  Summary = "summary",
+  Tool = "tool",
+}
 
 export async function getNextAgentStep(
   messages: AgentMessage[],

@@ -1,5 +1,5 @@
 import { UITool } from "./UITool";
-import { AgentMessage, getNextAgentStep } from "./agent";
+import { AgentMessage, getNextAgentStep, MessageType } from "./agent";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -29,12 +29,12 @@ export class AgentRunner {
     //   role: msg.role,
     //   content: msg.content,
     // }));
-    console.log(this.messages);
 
     // Add the user's message to both histories
     const userMessage = {
       role: "user" as const,
       content: userInput,
+      type: MessageType.Message,
     };
     this.messages.push(userMessage);
     this.chatHistory.push({
@@ -47,7 +47,7 @@ export class AgentRunner {
       stepCount += 1;
       const step = await getNextAgentStep(this.messages);
 
-      if (step.type === "final") {
+      if (step.type === "message" || step.type === "summary") {
         const finalResponse = step.content ?? "";
         this.chatHistory.push({
           role: "assistant",
@@ -57,6 +57,8 @@ export class AgentRunner {
         this.messages.push({
           role: "assistant",
           content: finalResponse,
+          type:
+            step.type === "message" ? MessageType.Message : MessageType.Summary,
         });
         return finalResponse;
       }
@@ -72,10 +74,12 @@ export class AgentRunner {
           role: "function",
           name: step.tool.name,
           content: JSON.stringify(step.tool.result),
+          type: MessageType.Tool,
         });
         this.messages.push({
           role: "assistant",
-          content: `Status message: ${result}`,
+          content: result,
+          type: MessageType.Message,
         });
       }
     }
@@ -84,6 +88,7 @@ export class AgentRunner {
     this.messages.push({
       role: "assistant",
       content: timeoutMessage,
+      type: MessageType.Message,
     });
     return timeoutMessage;
   }

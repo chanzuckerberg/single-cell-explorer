@@ -15,6 +15,15 @@ class ColorByGeneSchema(BaseModel):
     ]
 
 
+class SummarySchema(BaseModel):
+    summary: Annotated[
+        str,
+        Field(
+            description="A summary of the actions taken in this workflow execution after the <start_summary/> tag in a concise manner to the user."
+        ),
+    ]
+
+
 class HistogramType(Enum):
     METADATA = "metadata"
     GENE = "gene"
@@ -280,8 +289,8 @@ def show_gene_card():
     return {"status": "success"}
 
 
-def no_more_steps():
-    return {"status": "no_more_steps"}
+def no_more_steps(summary: str):
+    return {"status": "no_more_steps", "summary": summary}
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -294,10 +303,12 @@ def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
 
 def create_tools(data_adaptor):
     return [
+        # TODO, FIXME: This is still summarizing actions that were already taken.
         Tool(
             name="no_more_steps",
-            description="Indicate that there are no more steps to take",
+            description="When a workflow is complete, use this tool to summarize the actions taken since the <start_summary/> tag.",
             func=no_more_steps,
+            args_schema=SummarySchema,
         ),
         Tool(
             name="subset",
