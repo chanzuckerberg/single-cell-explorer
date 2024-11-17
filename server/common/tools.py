@@ -134,12 +134,15 @@ def unsubset():
 
 def select_category(data_adaptor, category_value: str, column_name: str | None = None):
     schema = data_adaptor.get_schema()
-    prompt = f"The category value the user wishes to perform selection on is: {category_value}."
+
+    prompt = "IMPORTANT: Be flexible with matching - for example, 'B cells' should match 'B cell', plurals should match singular forms, and common variations should be recognized. Only return an error if there is no conceptually matching category.\n"
+    prompt += "IMPORTANT: You must return the exact category value from the dataset, not the user's input value.\n"
+    prompt += f"The category value the user wishes to perform selection on is: {category_value}.\n"
     if column_name is not None:
-        prompt += f"The column name that the category value belongs to is: {column_name}."
+        prompt += f"The column name that the category value belongs to is: {column_name}.\n"
     cols = [i for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
-    prompt += f"The valid categorical metadata labels are: {cols}. Please select one of the valid category labels along with the name of the column that most closely matches the user's request."
-    prompt += "IMPORTANT: If the user's request does not match any of the valid category labels, please return an error message."
+    prompt += f"The valid categorical metadata labels are: {cols}.\n"
+    prompt += "Please select one of the valid category labels along with the name of the column that most closely matches the user's request."
 
     class CategorySelectionSchema(BaseModel):
         category_value: str
@@ -245,13 +248,16 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
 
 def color_by_metadata(data_adaptor, metadata_name: str):
     schema = data_adaptor.get_schema()
-    prompt = f"The metadata name the user wishes to perform color by is: {metadata_name}."
+    prompt = "IMPORTANT: Be flexible with matching - for example, 'cell types' should match 'cell_type', plurals should match singular forms, and common variations should be recognized. Only return an error if there is no conceptually matching metadata.\n"
+    prompt += "IMPORTANT: You must return the exact metadata name from the dataset, not the user's input value.\n"
+    prompt += f"The metadata name the user wishes to color by is: {metadata_name}.\n"
     cols = [i["name"] for i in schema["annotations"]["obs"]["columns"]]
-    prompt += f"The valid metadata columns are: {cols}."
-    prompt += "Please select the column that most closely matches the user's request to color by."
+    prompt += f"The valid metadata columns are: {cols}.\n"
+    prompt += "Please select one of the valid metadata columns that most closely matches the user's request."
 
     class MetadataSelectionSchema(BaseModel):
         metadata_name: str
+        error: str | None = None
 
     return call_llm_with_structured_output(prompt, MetadataSelectionSchema)
 
@@ -306,7 +312,7 @@ def create_tools(data_adaptor):
         # TODO, FIXME: This is still summarizing actions that were already taken.
         Tool(
             name="no_more_steps",
-            description="When a workflow is complete, use this tool to summarize the actions taken since the <start_summary/> tag.",
+            description="When a workflow is complete, use this tool to summarize ONLY the actions taken after the <start_summary/> tag. Use the conversation history before this tag for context, but do not include it in the summary.",
             func=no_more_steps,
             args_schema=SummarySchema,
         ),

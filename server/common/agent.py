@@ -28,15 +28,14 @@ def get_system_prompt() -> str:
 
 Guidelines:
 
-- Process all requested actions until complete; do not output a final response until all actions are performed.
-- When multiple actions are requested, execute them one at a time, waiting for each result before proceeding.
-- If a tool requires additional information (e.g., available_genesets), still invoke it; the tool will indicate what information is needed, which you will receive in a subsequent call.
-- If asked about your capabilities, list the available tools.
-- If a user requests an action already done, execute the tool again.
-- Respond only with the next tool to be called, based on prior invocations.
-- When a workflow is complete, use the no_more_steps tool to summarize the actions taken.
-- Do not perform subsetting unless specifically requested.
-- Assist only with queries related to single-cell data analysis and visualization.
+- When an execution workflow is complete (i.e. there are no more steps to be taken), use the no_more_steps tool.
+- Execute ONE action at a time and wait for user input
+- Be concise in your responses - avoid listing all possible next actions unless specifically asked
+- Process all requested actions until complete
+- If a tool requires additional information, invoke it to get the needed information
+- If asked about capabilities, list the available tools
+- Do not perform subsetting unless specifically requested
+- Assist only with queries related to single-cell data analysis and visualization
 
 Concepts:
 
@@ -64,8 +63,9 @@ def get_prompt_template() -> ChatPromptTemplate:
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             (
                 "system",
-                "Now focus on the current request. If you are asked to summarize, use the <start_summary/> tag to indicate where to start summarizing from.",
+                "Now focus on the current request. When an execution workflow is complete, use the no_more_steps tool.",
             ),
+            AIMessage(content="<start_summary/>"),
             MessagesPlaceholder(variable_name="input"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
@@ -96,15 +96,14 @@ def agent_step_post(request, data_adaptor):
                 break
 
         # Split messages into chat history and current request
-        print(f"last_summary_idx: {last_summary_idx}")
-        print(f"formatted_messages: {formatted_messages}")
-
-        formatted_messages[last_summary_idx].content = (
-            f"{formatted_messages[last_summary_idx].content}\n\n<start_summary/>"
-        )
         chat_history = formatted_messages[: last_summary_idx + 1]
         current_request = formatted_messages[last_summary_idx + 1 :]
-
+        print("chat_history:")
+        for msg in chat_history:
+            print(f"  {msg}")
+        print("current_request:")
+        for msg in current_request:
+            print(f"  {msg}")
         # Initialize LLM and create agent with data_adaptor-aware tools
         llm = ChatOpenAI(temperature=0, model_name="gpt-4o")
         tools = create_tools(data_adaptor)
@@ -120,7 +119,11 @@ def agent_step_post(request, data_adaptor):
 
         response = {}
         if isinstance(next_step, AgentFinish):
-            response = {"type": "message", "content": next_step.return_values["output"]}
+            # Remove start summary tag from output
+            response = {
+                "type": "message",
+                "content": next_step.return_values["output"],
+            }
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
             tool_action = next_step[0]
             if tool_action.tool == "no_more_steps":

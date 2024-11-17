@@ -1,11 +1,18 @@
 import { UITool } from "./UITool";
-import { AgentMessage, getNextAgentStep, MessageType } from "./agent";
+import {
+  AgentMessage,
+  BaseMessage,
+  getNextAgentStep,
+  MessageType,
+} from "./agent";
 
-export type ChatMessage = {
+export interface ChatMessage extends BaseMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
-};
+  type: MessageType;
+  actionCount: number;
+}
 
 // We need an intermediate message history PER QUERY and then we need a persistent chat history
 // Which will contain the user's initial inputs and the agent's final outputs.
@@ -23,24 +30,24 @@ export class AgentRunner {
     }, {} as Record<string, UITool>);
   }
 
-  async processQuery(userInput: string, maxSteps = 20): Promise<string> {
+  async processQuery(
+    userInput: string,
+    maxSteps = 20,
+    isEdit = false
+  ): Promise<string> {
     /* eslint-disable no-await-in-loop -- Steps must be executed sequentially */
-    // this.messages = this.chatHistory.map((msg) => ({
-    //   role: msg.role,
-    //   content: msg.content,
-    // }));
 
-    // Add the user's message to both histories
-    const userMessage = {
-      role: "user" as const,
-      content: userInput,
-      type: MessageType.Message,
-    };
-    this.messages.push(userMessage);
-    this.chatHistory.push({
-      ...userMessage,
-      timestamp: Date.now(),
-    });
+    const messageId = Date.now();
+
+    // Only add to internal messages array - chat history is handled by the component
+    if (!isEdit) {
+      this.messages.push({
+        role: "user",
+        content: userInput,
+        type: MessageType.Message,
+        messageId,
+      });
+    }
 
     let stepCount = 0;
     while (stepCount < maxSteps) {
@@ -49,17 +56,24 @@ export class AgentRunner {
 
       if (step.type === "message" || step.type === "summary") {
         const finalResponse = step.content ?? "";
-        this.chatHistory.push({
+        const assistantMessage = {
           role: "assistant",
           content: finalResponse,
           timestamp: Date.now(),
-        });
+          type: step.type as MessageType,
+          messageId,
+        };
+
+        // Add to messages without timestamp
         this.messages.push({
-          role: "assistant",
-          content: finalResponse,
-          type:
-            step.type === "message" ? MessageType.Message : MessageType.Summary,
+          role: assistantMessage.role as "user" | "assistant" | "function",
+          content: assistantMessage.content,
+          type: assistantMessage.type,
+          messageId: assistantMessage.messageId,
         });
+
+        // Add to chat history with timestamp
+        this.chatHistory.push(assistantMessage as ChatMessage);
         return finalResponse;
       }
 
@@ -75,26 +89,57 @@ export class AgentRunner {
           name: step.tool.name,
           content: JSON.stringify(step.tool.result),
           type: MessageType.Tool,
+          messageId,
         });
         this.messages.push({
           role: "assistant",
           content: result,
           type: MessageType.Message,
+          messageId,
         });
       }
     }
-    /* eslint-enable no-await-in-loop -- Steps must be executed sequentially */
     const timeoutMessage = `Conversation exceeded maximum of ${maxSteps} steps`;
     this.messages.push({
       role: "assistant",
       content: timeoutMessage,
       type: MessageType.Message,
+      messageId,
     });
+    /* eslint-enable no-await-in-loop -- Steps must be executed sequentially */
+
     return timeoutMessage;
   }
 
   clearHistory(): void {
     this.messages = [];
     this.chatHistory = [];
+  }
+
+  replaceMessage(messageId: number, newContent: string): void {
+    // Replace in messages array
+    const messageIndex = this.messages.findIndex(
+      (m) => m.messageId === messageId
+    );
+    if (messageIndex !== -1) {
+      this.messages = this.messages.slice(0, messageIndex + 1);
+      this.messages[messageIndex] = {
+        ...this.messages[messageIndex],
+        content: newContent,
+      };
+    }
+
+    // Replace in chat history
+    const chatIndex = this.chatHistory.findIndex(
+      (m) => m.messageId === messageId
+    );
+    if (chatIndex !== -1) {
+      this.chatHistory = this.chatHistory.slice(0, chatIndex + 1);
+      this.chatHistory[chatIndex] = {
+        ...this.chatHistory[chatIndex],
+        content: newContent,
+        timestamp: Date.now(),
+      };
+    }
   }
 }

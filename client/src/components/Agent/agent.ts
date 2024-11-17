@@ -16,12 +16,16 @@ const AgentStepResponseSchema = z.object({
 
 export type AgentStepResponse = z.infer<typeof AgentStepResponseSchema>;
 
-export type AgentMessage = {
+export interface BaseMessage {
+  messageId: number;
+}
+
+export interface AgentMessage extends BaseMessage {
   role: "user" | "assistant" | "function";
   content: string;
   name?: string;
   type: MessageType;
-};
+}
 
 export enum MessageType {
   Message = "message",

@@ -107,8 +107,8 @@ const TOOL_IMPLEMENTATIONS: Record<string, ToolImplementation> = {
   color_by_metadata: {
     action: async (dispatch, _getState, args) => {
       if (!args) throw new Error("Metadata name is required");
-      await dispatch(performColorByMetadata(args));
-      return `Colored by metadata: ${args.metadata_name}`;
+      const message = await dispatch(performColorByMetadata(args));
+      return message;
     },
   },
 

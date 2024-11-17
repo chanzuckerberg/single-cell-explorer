@@ -28,8 +28,6 @@ const skipOnActions = new Set<string>([
   "graph brush change",
   "continuous metadata histogram brush",
 
-  "request user defined gene success",
-
   "category value mouse hover start",
   "category value mouse hover end",
 
@@ -56,6 +54,11 @@ const skipOnActions = new Set<string>([
   /* geneInfo actions */
   "minimize/maximize gene info",
   "open gene info",
+
+  "single user defined gene start",
+  "single user defined gene complete",
+  "type continuous metadata histogram start",
+  "type continuous metadata histogram brush",
 ]);
 
 /*
@@ -120,6 +123,9 @@ const saveOnActions = new Set<string>([
   /* geneInfo actions */
   "load gene info",
   "clear gene info",
+
+  "type continuous metadata histogram end",
+  "request user defined gene success",
 ]);
 
 /**

@@ -138,9 +138,18 @@ export const performHistogramSelection =
 
     if (args.histogram_type === "geneset") {
       const values = column.asArray() as number[];
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      summary = { min, max };
+      if (!values || !values.length) {
+        return "No valid data found for this geneset.";
+      }
+
+      try {
+        const min = values.reduce((a, b) => Math.min(a, b), values[0]);
+        const max = values.reduce((a, b) => Math.max(a, b), values[0]);
+        summary = { min, max };
+      } catch (error) {
+        console.error("Error calculating min/max:", error);
+        return "Error processing geneset data.";
+      }
     } else {
       summary = column.summarizeContinuous();
     }
@@ -297,7 +306,10 @@ export const performColorByGeneset =
 
 export const performColorByMetadata =
   (args: Record<string, string>) =>
-  (dispatch: AppDispatch, getState: GetState) => {
+  async (dispatch: AppDispatch, getState: GetState): Promise<string> => {
+    if (args?.error) {
+      return `${args.error}. I will halt execution and report this error to the user.`;
+    }
     const {
       colors: { colorAccessor },
     } = getState();
@@ -326,7 +338,7 @@ export const performColorByMetadata =
       }
 
       if (colorAccessor === args.metadata_name) {
-        return;
+        return `The visualization is already colored by the requested metadata: ${args.metadata_name}.`;
       }
 
       dispatch({
@@ -339,6 +351,7 @@ export const performColorByMetadata =
         colorAccessor: args.metadata_name,
       });
     }
+    return `Successfully colored by metadata: ${args.metadata_name}`;
   };
 
 export const performCreateGeneset =
