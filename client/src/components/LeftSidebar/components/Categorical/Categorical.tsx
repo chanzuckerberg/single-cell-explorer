@@ -123,6 +123,7 @@ class Categorical extends React.Component<Props> {
         style={{
           padding: globals.leftSidebarSectionPadding,
           paddingBottom: 0,
+          backgroundColor: "pink",
         }}
       >
         {isCellGuideCxg ? (

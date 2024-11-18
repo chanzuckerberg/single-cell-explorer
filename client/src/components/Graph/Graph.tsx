@@ -1381,7 +1381,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
           flexDirection: "column",
           display: isHidden ? "none" : "flex",
           alignItems: "center",
-          backgroundColor: "pink",
         }}
         data-testid={sidePanelAttributeNameChange(`graph-wrapper`, isSidePanel)}
         data-camera-distance={camera?.distance()}
