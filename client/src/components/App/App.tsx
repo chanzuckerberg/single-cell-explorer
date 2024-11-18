@@ -99,6 +99,16 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
               )}
               {loading || error ? null : (
                 <>
+                  <div
+                    style={{
+                      position: "fixed",
+                      bottom: 20,
+                      right: 20,
+                      zIndex: 9999,
+                    }}
+                  >
+                    <AgentComponent />
+                  </div>
                   <Layout
                     addTopPadding={!datasetMetadataError || isCellGuideCxg}
                     renderGraph={(viewportRef: HTMLDivElement) => (
@@ -128,9 +138,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                             <Scatterplot />
                           )}
                           <PanelEmbedding />
-                        </div>
-                        <div style={{ padding: "20px", zIndex: 2 }}>
-                          <AgentComponent />
                         </div>
                         <Controls bottom={0}>
                           <DatasetSelector />
