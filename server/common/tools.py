@@ -316,7 +316,7 @@ def create_tools(data_adaptor):
         # TODO, FIXME: This is still summarizing actions that were already taken.
         Tool(
             name="no_more_steps",
-            description="When a workflow is complete, use this tool to summarize ONLY the actions taken after the <start_summary/> tag.",
+            description="When a workflow is complete, use this tool to summarize ONLY the actions taken after the <start_summary/> tag. Use the conversation history before this tag for context, but do not summarize previous actions.",
             func=no_more_steps,
             args_schema=SummarySchema,
         ),
