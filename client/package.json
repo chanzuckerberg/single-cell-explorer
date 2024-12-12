@@ -85,11 +85,14 @@
     "memoize-one": "^5.1.1",
     "openseadragon": "^4.1.1",
     "pako": "^2.0.3",
+    "re-resizable": "^6.10.1",
     "react": "^18.3.1",
     "react-async": "^10.0.1",
     "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
     "react-flip-toolkit": "^7.0.12",
     "react-icons": "^4.2.0",
+    "react-markdown": "^9.0.1",
     "react-redux": "^7.2.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
@@ -97,7 +100,8 @@
     "regl": "^2.1.0",
     "sha1": "^1.1.1",
     "tinyqueue": "^2.0.3",
-    "whatwg-fetch": "^3.2.0"
+    "whatwg-fetch": "^3.2.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/core": "^7.13.16",

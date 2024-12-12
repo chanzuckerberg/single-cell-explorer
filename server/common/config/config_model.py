@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 from urllib.parse import quote_plus
 
-from pydantic import BaseModel, Extra, Field, root_validator, validator
+from pydantic import BaseModel, Extra, Field, model_validator, validator
 
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import custom_format_warning, find_available_port, is_port_available
@@ -24,11 +24,13 @@ class CspDirectives(BaseModel):
     script_src: Union[str, List[str]] = Field(default_factory=list, alias="script-src")
     connect_src: Union[str, List[str]] = Field(default_factory=list, alias="connect-src")
 
-    @root_validator(skip_on_failure=True)
+    @model_validator(mode="before")
+    @classmethod
     def string_to_list(cls, values):
-        for key, value in values.items():
-            if isinstance(value, str):
-                values[key] = [value]
+        if isinstance(values, dict):
+            for key, value in values.items():
+                if isinstance(value, str):
+                    values[key] = [value]
         return values
 
 
@@ -42,52 +44,46 @@ class ServerApp(BaseModel):
     flask_secret_key: Optional[str]
     generate_cache_control_headers: bool
     server_timing_headers: bool
-    csp_directives: Optional[CspDirectives]
+    csp_directives: Optional[CspDirectives] = Field(default_factory=dict)
     api_base_url: Optional[str]
     web_base_url: Optional[str]
 
-    @root_validator(skip_on_failure=True)
-    def check_port(cls, values):
-        host = values["host"]
-        port = values.get("port")
-        if port:
-            if not is_port_available(host, port):
-                raise ValueError(f"The port selected {port} is in use or invalid, please configure an open port.")
+    @model_validator(mode="after")
+    def check_port(self) -> "ServerApp":
+        if self.port:
+            if not is_port_available(self.host, self.port):
+                raise ValueError(f"The port selected {self.port} is in use or invalid, please configure an open port.")
         else:
-            values["port"] = find_available_port(host)
-        return values
+            self.port = find_available_port(self.host)
+        return self
 
-    @root_validator(skip_on_failure=True)
-    def check_debug(cls, values):
-        if values["debug"]:
-            values["verbose"] = True
-            values["open_brower"] = False
+    @model_validator(mode="after")
+    def check_debug(self) -> "ServerApp":
+        if self.debug:
+            self.verbose = True
+            self.open_browser = False
         else:
             warnings.formatwarning = custom_format_warning
-        return values
+        return self
 
-    @root_validator(skip_on_failure=True)
-    def check_api_base_url(cls, values):
-        api_base_url = values.get("api_base_url")
-        if api_base_url == "local":
-            api_base_url = f"http://{values['host']}:{values['port']}"
-        if api_base_url and api_base_url.endswith("/"):
-            api_base_url = api_base_url[:-1]
-        values["api_base_url"] = api_base_url
-        return values
+    @model_validator(mode="after")
+    def check_api_base_url(self) -> "ServerApp":
+        if self.api_base_url == "local":
+            self.api_base_url = f"http://{self.host}:{self.port}"
+        if self.api_base_url and self.api_base_url.endswith("/"):
+            self.api_base_url = self.api_base_url[:-1]
+        return self
 
-    @root_validator(skip_on_failure=True)
-    def check_web_base_url(cls, values):
-        web_base_url = values["web_base_url"]
-        if web_base_url is None:
-            web_base_url = values["api_base_url"]
-        if web_base_url:
-            if web_base_url == "local":
-                web_base_url = f"http://{values['host']}:{values['port']}"
-            elif web_base_url.endswith("/"):
-                web_base_url = web_base_url[:-1]
-        values["web_base_url"] = web_base_url
-        return values
+    @model_validator(mode="after")
+    def check_web_base_url(self) -> "ServerApp":
+        if self.web_base_url is None:
+            self.web_base_url = self.api_base_url
+        if self.web_base_url:
+            if self.web_base_url == "local":
+                self.web_base_url = f"http://{self.host}:{self.port}"
+            elif self.web_base_url.endswith("/"):
+                self.web_base_url = self.web_base_url[:-1]
+        return self
 
     @validator("verbose")
     def check_verbose(cls, value):
@@ -96,10 +92,6 @@ class ServerApp(BaseModel):
         else:
             sys.tracebacklimit = 1000
         return value
-
-    @validator("csp_directives")
-    def check_csp_directives(cls, value):
-        return value if value else {}
 
 
 class DatarootValue(BaseModel):
@@ -128,21 +120,21 @@ class MultiDataset(BaseModel):
     dataroots: Optional[Dict[str, DatarootValue]] = {}
     index: Union[bool, str] = Field(default=False)
 
-    @root_validator(skip_on_failure=True)
-    def check_dataroot(cls, values):
-        if all([values["dataroot"], values["dataroots"]]):
+    @model_validator(mode="after")
+    def check_dataroot(self) -> "MultiDataset":
+        if all([self.dataroot, self.dataroots]):
             raise ValueError("Must set dataroot or dataroots.")
-        elif values["dataroot"]:
-            default = dict(base_url="d", dataroot=values["dataroot"])
-            values["dataroots"]["d"] = DatarootValue(**default)
-            values["dataroot"] = None
+        elif self.dataroot:
+            default = dict(base_url="d", dataroot=self.dataroot)
+            self.dataroots["d"] = DatarootValue(**default)
+            self.dataroot = None
 
         # verify all the base_urls are unique
-        base_urls = [d.base_url for d in values["dataroots"].values()]
+        base_urls = [d.base_url for d in self.dataroots.values()]
         if len(base_urls) > len(set(base_urls)):
             raise ValueError("error in multi_dataset__dataroot:  base_urls must be unique")
         # TODO check that at least one dataroot is set. Then we can remove AppConfig.handle_data_source.
-        return values
+        return self
 
 
 class DataLocator(BaseModel):
@@ -181,10 +173,10 @@ class Server(BaseModel):
     adaptor: Adaptor
     limits: Limits
 
-    @root_validator(skip_on_failure=True)
-    def check_data_locator(cls, values):
-        if values["data_locator"].s3_region_name is True:
-            path = values["multi_dataset"].dataroots or values["multi_dataset"].dataroot
+    @model_validator(mode="after")
+    def check_data_locator(self) -> "Server":
+        if self.data_locator.s3_region_name is True:
+            path = self.multi_dataset.dataroots or self.multi_dataset.dataroot
             # except KeyError as ex:
             #     return values
             if isinstance(path, dict):
@@ -199,18 +191,16 @@ class Server(BaseModel):
                 region_name = discover_s3_region_name(path)
                 if region_name is None:
                     raise ValueError(f"Unable to discover s3 region name from {path}")
-                values["data_locator"].s3_region_name = region_name
+                self.data_locator.s3_region_name = region_name
             else:
-                values["data_locator"].s3_region_name = None
-        return values
+                self.data_locator.s3_region_name = None
+        return self
 
-    @root_validator(skip_on_failure=True)
-    def check_cxg_adaptor(cls, values):
-        if not values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region and isinstance(
-            values["data_locator"].s3_region_name, str
-        ):
-            values["adaptor"].cxg_adaptor.tiledb_ctx.vfs_s3_region = values["data_locator"].s3_region_name
-        return values
+    @model_validator(mode="after")
+    def check_cxg_adaptor(self) -> "Server":
+        if not self.adaptor.cxg_adaptor.tiledb_ctx.vfs_s3_region and isinstance(self.data_locator.s3_region_name, str):
+            self.adaptor.cxg_adaptor.tiledb_ctx.vfs_s3_region = self.data_locator.s3_region_name
+        return self
 
 
 class ScriptsItem(BaseModel):
