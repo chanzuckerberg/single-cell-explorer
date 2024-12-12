@@ -113,7 +113,6 @@ class AppConfigTest(ConfigTests):
             changes = self.compare_configs(app_config, default_config)
             self.assertCountEqual(changes, [("default_dataset__app__about_legal_tos", "expected_value", None)])
 
-    @unittest.skip("Configuration needs to be updated to satisfy v2 pydantic validation criteria")
     def test_csp_directives(self):
         default_config = AppConfig()
         with tempfile.TemporaryDirectory() as tempdir:
