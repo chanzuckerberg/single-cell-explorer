@@ -1,5 +1,7 @@
 import os
+
 from flask import current_app
+
 from server.common.utils.aws_secret_utils import get_secret_key
 
 

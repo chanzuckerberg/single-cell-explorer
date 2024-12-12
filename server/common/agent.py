@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 from http import HTTPStatus
 from typing import List, Literal, Optional
