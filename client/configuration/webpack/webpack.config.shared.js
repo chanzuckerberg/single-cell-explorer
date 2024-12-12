@@ -28,15 +28,32 @@ module.exports = {
     "abort-controller/polyfill",
     "./src/index",
   ],
+  externals: {
+    "react-draggable": {
+      commonjs: "react-draggable",
+      commonjs2: "react-draggable",
+      amd: "react-draggable",
+      root: "ReactDraggable",
+    },
+  },
   output: {
     path: path.resolve("build"),
     publicPath,
+    library: {
+      type: "umd",
+      umdNamedDefine: true,
+    },
+    globalObject: "typeof self !== 'undefined' ? self : this",
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", "..."],
     modules: [path.resolve(__dirname, "../../src"), "node_modules"],
     alias: {
       "~/globals": path.resolve(__dirname, "../../src/globals"),
+    },
+    fallback: {
+      path: false,
+      fs: false,
     },
   },
   module: {
@@ -68,6 +85,27 @@ module.exports = {
         include: [src, nodeModules],
         loader: "json-loader",
         exclude: /manifest.json$/,
+      },
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
+      {
+        test: /\.(js|jsx|ts|tsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: "babel-loader",
+          options: {
+            presets: [
+              "@babel/preset-env",
+              "@babel/preset-react",
+              "@babel/preset-typescript",
+            ],
+            plugins: ["@babel/plugin-transform-runtime"],
+          },
+        },
       },
     ],
   },

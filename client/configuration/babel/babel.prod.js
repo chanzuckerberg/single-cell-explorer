@@ -6,7 +6,7 @@ module.exports = {
       {
         useBuiltIns: "entry",
         corejs: 3,
-        modules: false,
+        modules: "auto",
       },
     ],
     "@babel/preset-react",

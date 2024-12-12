@@ -87,11 +87,6 @@ const setup = async ({ page }: { page: Page }) => {
    * Use Case: Useful for detecting and debugging runtime errors in the web page's JavaScript
    */
   page.on("pageerror", (error) => {
-    // Hack: Always ignore "exports is not defined" error regardless of environment
-    // TODO: Fix the underlying issue
-    if (error.toString().includes("exports is not defined")) {
-      return;
-    }
     // if this is running locally don't fail on error
     if (process.env.CI !== "true") {
       return;
