@@ -16,8 +16,13 @@ from pydantic import BaseModel
 from server.common.tools import create_tools
 from server.common.utils.aws_secret_utils import get_secret_key
 
-DEPLOYMENT_STAGE = os.getenv("DEPLOYMENT_STAGE", "dev")
-OPENAI_API_KEY = get_secret_key(f"{DEPLOYMENT_STAGE}/explorer/agent", region_name="us-west-2")["OPENAI_API_KEY"]
+DEPLOYMENT_STAGE = os.getenv("DEPLOYMENT_STAGE", "test")
+
+# Tests will need to set the OPENAI_API_KEY environment variable
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if DEPLOYMENT_STAGE != "test":
+    OPENAI_API_KEY = get_secret_key(f"{DEPLOYMENT_STAGE}/explorer/agent", region_name="us-west-2")["OPENAI_API_KEY"]
 
 
 class AgentMessage(BaseModel):
