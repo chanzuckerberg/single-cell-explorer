@@ -16,13 +16,19 @@ from pydantic import BaseModel
 from server.common.tools import create_tools
 from server.common.utils.aws_secret_utils import get_secret_key
 
-DEPLOYMENT_STAGE = os.getenv("DEPLOYMENT_STAGE", "test")
 
-# Tests will need to set the OPENAI_API_KEY environment variable
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+def get_openai_api_key():
+    deployment_stage = os.getenv("DEPLOYMENT_STAGE", "test")
+    if deployment_stage == "test":
+        return os.getenv("OPENAI_API_KEY")
+    return get_secret_key(f"{deployment_stage}/explorer/agent", region_name="us-west-2")["OPENAI_API_KEY"]
 
-if DEPLOYMENT_STAGE != "test":
-    OPENAI_API_KEY = get_secret_key(f"{DEPLOYMENT_STAGE}/explorer/agent", region_name="us-west-2")["OPENAI_API_KEY"]
+
+def get_cached_openai_api_key():
+    """Get OpenAI API key from cache or fetch it if not cached"""
+    if not hasattr(current_app, "openai_api_key"):
+        current_app.openai_api_key = get_openai_api_key()
+    return current_app.openai_api_key
 
 
 class AgentMessage(BaseModel):
@@ -115,7 +121,9 @@ def agent_step_post(request, data_adaptor):
         for msg in current_request:
             print(f"  {msg}")
         # Initialize LLM and create agent with data_adaptor-aware tools
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=OPENAI_API_KEY)
+
+        api_key = get_cached_openai_api_key()
+        llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=api_key)
         tools = create_tools(data_adaptor)
         agent = create_openai_tools_agent(llm, tools, get_prompt_template())
         # Get structured response with split history
