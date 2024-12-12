@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Union
 from urllib.parse import quote_plus
 
-from pydantic import BaseModel, Extra, Field, root_validator, validator
+from pydantic.v1 import BaseModel, Extra, Field, root_validator, validator
 
 from server.common.utils.data_locator import discover_s3_region_name
 from server.common.utils.utils import custom_format_warning, find_available_port, is_port_available

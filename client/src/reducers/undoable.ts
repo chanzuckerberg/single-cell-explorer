@@ -12,10 +12,11 @@ Requires three parameters:
       See below for details.
     * debug: if truish, will print helpful log messages about history manipulation
 
-This meta reducer accepts three actions types:
+This meta reducer accepts four actions types:
 * @@undoable/undo - move back in history
 * @@undoable/redo - move forward in history
 * @@undoable/clear - clear history
+* @@undoable/revert-to-action - revert to a specific action count
 
 ---
 
@@ -87,6 +88,7 @@ export interface UndoableState<FilterStateType extends UndoableFilterState> {
   [futureKey]: [string, unknown][][];
   [pendingKey]: [string, unknown][] | null;
   [filterStateKey]: FilterStateType | undefined;
+  actionCount: number;
 }
 
 const Undoable = <FilterStateType extends UndoableFilterState>(
@@ -126,6 +128,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [pastKey]: newPast,
       [futureKey]: newFuture,
       [pendingKey]: null,
+      actionCount: currentState.actionCount - 1,
     };
     return nextState;
   }
@@ -151,6 +154,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [pastKey]: newPast,
       [futureKey]: newFuture,
       [pendingKey]: null,
+      actionCount: currentState.actionCount + 1,
     };
     return nextState;
   }
@@ -167,6 +171,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [futureKey]: [],
       [filterStateKey]: undefined,
       [pendingKey]: null,
+      actionCount: 0,
     };
   }
 
@@ -188,6 +193,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [futureKey]: future,
       [filterStateKey]: filterState,
       [pendingKey]: pending,
+      actionCount: currentState.actionCount,
     };
   }
 
@@ -211,6 +217,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [futureKey]: [],
       [filterStateKey]: filterState,
       [pendingKey]: null,
+      actionCount: (currentState.actionCount || 0) + 1,
     };
     return nextState;
   }
@@ -227,6 +234,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
     return {
       ...currentState,
       [pendingKey]: currentUndoableState,
+      actionCount: currentState.actionCount,
     };
   }
 
@@ -239,6 +247,7 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
     return {
       ...currentState,
       [pendingKey]: null,
+      actionCount: currentState.actionCount,
     };
   }
 
@@ -257,8 +266,43 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [pastKey]: newPast,
       [futureKey]: [],
       [pendingKey]: null,
+      actionCount: (currentState.actionCount || 0) + 1,
     };
     return nextState;
+  }
+
+  /*
+  Revert to a specific action count
+  */
+  function revertToAction(
+    currentState: UndoableState<FilterStateType>,
+    targetCount: number
+  ): UndoableState<FilterStateType> {
+    const past = currentState[pastKey];
+    const currentCount = currentState.actionCount || 0;
+
+    if (targetCount >= currentCount) return currentState;
+
+    // Calculate how many steps we need to go back
+    const stepsBack = currentCount - targetCount;
+
+    // Get the state at that point
+    const targetState = past[past.length - stepsBack] || [];
+
+    // Store everything after this point in the future stack
+    const newFuture = [
+      ...past.slice(past.length - stepsBack + 1),
+      Object.entries(currentState).filter((kv) => undoableKeysSet.has(kv[0])),
+    ];
+
+    return {
+      ...currentState,
+      ...fromEntries(targetState),
+      [pastKey]: past.slice(0, past.length - stepsBack),
+      [futureKey]: newFuture,
+      [pendingKey]: null,
+      actionCount: targetCount,
+    };
   }
 
   return (
@@ -267,10 +311,12 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       [futureKey]: [],
       [filterStateKey]: undefined,
       [pendingKey]: null,
+      actionCount: 0,
     },
     action: AnyAction
   ) => {
-    if (debug > 1) console.log("---- ACTION", action.type);
+    if (debug && typeof debug === "number" && debug > 1)
+      console.log("---- ACTION", action.type);
     const aType = action.type;
     switch (aType) {
       case "@@undoable/undo": {
@@ -282,7 +328,14 @@ const Undoable = <FilterStateType extends UndoableFilterState>(
       }
 
       case "@@undoable/clear": {
-        return clear(currentState);
+        return {
+          ...clear(currentState),
+          actionCount: 0,
+        };
+      }
+
+      case "@@undoable/revert-to-action": {
+        return revertToAction(currentState, action.targetCount);
       }
 
       default: {

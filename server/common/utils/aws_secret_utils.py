@@ -6,7 +6,7 @@ from flask import json
 from server.common.errors import SecretKeyRetrievalError  # type: ignore
 
 
-def get_secret_key(region_name, secret_name):  # type: ignore
+def get_secret_key(secret_name, region_name="us-west-2"):  # type: ignore
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
 

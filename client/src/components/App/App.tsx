@@ -6,6 +6,8 @@ import actions from "actions";
 import { RootState, AppDispatch } from "reducers";
 import Controls from "common/components/Controls/Controls";
 import { theme } from "util/theme";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
+import { FEATURES } from "util/featureFlags/features";
 import DatasetSelector from "../DatasetSelector/DatasetSelector";
 import DiffexNotice from "../DiffexNotice/DiffexNotice";
 import BottomBanner from "../BottomBanner/BottomBanner";
@@ -22,6 +24,7 @@ import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
+import { AgentComponent } from "../Agent/AgentComponent";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -73,6 +76,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
       scatterplotXXaccessor,
       scatterplotYYaccessor,
     } = this.props;
+
     return (
       <Container>
         <StyledEngineProvider injectFirst>
@@ -98,27 +102,52 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
               )}
               {loading || error ? null : (
                 <>
+                  {getFeatureFlag(FEATURES.AGENT) && (
+                    <div
+                      style={{
+                        position: "fixed",
+                        bottom: 20,
+                        right: 20,
+                        zIndex: 9999,
+                      }}
+                    >
+                      <AgentComponent />
+                    </div>
+                  )}
                   <Layout
                     addTopPadding={!datasetMetadataError || isCellGuideCxg}
                     renderGraph={(viewportRef: HTMLDivElement) => (
-                      <>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          height: "100%",
+                        }}
+                      >
                         <GlobalHotkeys />
                         <Controls>
                           <MenuBar />
                         </Controls>
                         <Legend />
-                        <Graph
-                          viewportRef={viewportRef}
-                          key={graphRenderCounter}
-                        />
-                        {scatterplotXXaccessor && scatterplotYYaccessor && (
-                          <Scatterplot />
-                        )}
-                        <PanelEmbedding />
+                        <div
+                          style={{
+                            flex: 1,
+                            position: "relative",
+                          }}
+                        >
+                          <Graph
+                            viewportRef={viewportRef}
+                            key={graphRenderCounter}
+                          />
+                          {scatterplotXXaccessor && scatterplotYYaccessor && (
+                            <Scatterplot />
+                          )}
+                          <PanelEmbedding />
+                        </div>
                         <Controls bottom={0}>
                           <DatasetSelector />
                         </Controls>
-                      </>
+                      </div>
                     )}
                   >
                     <LeftSideBar />

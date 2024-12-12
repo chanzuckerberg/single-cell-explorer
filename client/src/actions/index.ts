@@ -585,6 +585,11 @@ function fetchJson<T>(pathAndQuery: string, apiPrefix?: string): Promise<T> {
   ) as Promise<T>;
 }
 
+export const revertToAction = (targetCount: number) => ({
+  type: "@@undoable/revert-to-action",
+  targetCount,
+});
+
 export default {
   doInitialDataLoad,
   requestDifferentialExpression,

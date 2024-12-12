@@ -84,7 +84,8 @@ const RootReducer: Reducer = (state: RootState, action: Action) => {
 
 const store = createStore(RootReducer, applyMiddleware(thunk, annoMatrixGC));
 
-export type RootState = {
+export interface RootState {
+  actionCount: number;
   config: ReturnType<typeof config>;
   annoMatrix: ReturnType<typeof annoMatrix>;
   obsCrossfilter: ReturnType<typeof obsCrossfilter>;
@@ -104,7 +105,7 @@ export type RootState = {
   pointDilation: ReturnType<typeof pointDilation>;
   datasetMetadata: ReturnType<typeof datasetMetadata>;
   showBottomBanner: ReturnType<typeof showBottomBanner>;
-};
+}
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;
 
