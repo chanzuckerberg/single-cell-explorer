@@ -1,9 +1,10 @@
-from typing import List, Annotated, TypeVar, Type
 from enum import Enum
-from langchain_core.tools import Tool
-from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
 from functools import partial
+from typing import Annotated, List, Type, TypeVar
+
+from langchain_core.tools import Tool
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 
 class ColorByGeneSchema(BaseModel):
