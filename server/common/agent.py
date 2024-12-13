@@ -29,7 +29,8 @@ def get_system_prompt() -> str:
 
 Guidelines:
 
-- When an execution workflow is complete (i.e. there are no more steps to be taken), use the no_more_steps tool.
+- An execution workflow is a series of one or more actions taken in response to a user request
+- Use the no_more_steps tool to summarize when a workflow is complete
 - Execute ONE action at a time and wait for user input
 - Be concise in your responses - avoid listing all possible next actions unless specifically asked
 - Process all requested actions until complete
@@ -59,14 +60,13 @@ def get_prompt_template() -> ChatPromptTemplate:
             ("system", get_system_prompt()),
             (
                 "system",
-                "The following conversation history provides context. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested:",
+                "The following conversation history includes completed workflows. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested:",
             ),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             (
                 "system",
-                "Now focus on the current request. When an execution workflow is complete, use the no_more_steps tool.",
+                "The following conversation has not yet been summarized and is part of the current workflow. Do NOT summarize the conversation history when using the no_more_steps tool.",
             ),
-            AIMessage(content="<start_summary/>"),
             MessagesPlaceholder(variable_name="input"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
@@ -82,12 +82,14 @@ def agent_step_post(request, data_adaptor):
         # Convert messages to LangChain format
         formatted_messages = []
         for msg in messages:
+            type = msg.type
+            content = f"<{type}>{msg.content}</{type}>" if type else msg.content
             if msg.role == "user":
-                formatted_messages.append(HumanMessage(content=msg.content))
+                formatted_messages.append(HumanMessage(content=content))
             elif msg.role == "assistant":
-                formatted_messages.append(AIMessage(content=msg.content))
+                formatted_messages.append(AIMessage(content=content))
             elif msg.role == "function":
-                formatted_messages.append(FunctionMessage(content=msg.content, name=msg.name or "function"))
+                formatted_messages.append(FunctionMessage(content=content, name=msg.name or "function"))
 
         # Find index of last summary message
         last_summary_idx = -1
@@ -101,10 +103,10 @@ def agent_step_post(request, data_adaptor):
         current_request = formatted_messages[last_summary_idx + 1 :]
         print("chat_history:")
         for msg in chat_history:
-            print(f"  {msg}")
+            print(f"{msg.type}: {msg.content}")
         print("current_request:")
         for msg in current_request:
-            print(f"  {msg}")
+            print(f"{msg.type}: {msg.content}")
         # Initialize LLM and create agent with data_adaptor-aware tools
 
         api_key = get_cached_openai_api_key()
@@ -122,10 +124,18 @@ def agent_step_post(request, data_adaptor):
 
         response = {}
         if isinstance(next_step, AgentFinish):
-            # Remove start summary tag from output
+            # Strip any type tags from the output
+            content = next_step.return_values["output"]
+            # Remove any wrapping tags like <message>, <summary>, <tool>
+            if content.startswith("<") and content.endswith(">"):
+                # Find the first closing bracket and last opening bracket
+                first_close = content.find(">")
+                last_open = content.rfind("<")
+                if first_close != -1 and last_open != -1:
+                    content = content[first_close + 1 : last_open]
             response = {
                 "type": "message",
-                "content": next_step.return_values["output"],
+                "content": content,
             }
         elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
             tool_action = next_step[0]

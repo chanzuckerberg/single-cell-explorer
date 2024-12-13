@@ -1,12 +1,9 @@
+from typing import List, Annotated, TypeVar, Type
 from enum import Enum
-from functools import partial
-from typing import Annotated, List, Type, TypeVar
-
 from langchain_core.tools import Tool
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
-
-from server.common.openai_utils import get_cached_openai_api_key
+from langchain_openai import ChatOpenAI
+from functools import partial
 
 
 class ColorByGeneSchema(BaseModel):
@@ -306,8 +303,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
-    api_key = get_cached_openai_api_key()
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=api_key).with_structured_output(schema)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o").with_structured_output(schema)
     return llm.invoke(query).model_dump()
 
 
@@ -316,7 +312,7 @@ def create_tools(data_adaptor):
         # TODO, FIXME: This is still summarizing actions that were already taken.
         Tool(
             name="no_more_steps",
-            description="When a workflow is complete, use this tool to summarize ONLY the actions taken after the <start_summary/> tag. Use the conversation history before this tag for context, but do not summarize previous actions.",
+            description="When a workflow is complete, this tool MUST BE USED to summarize the actions taken. Do NOT summarize the previous conversation history when using this tool.",
             func=no_more_steps,
             args_schema=SummarySchema,
         ),
