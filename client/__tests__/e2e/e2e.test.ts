@@ -1549,6 +1549,7 @@ for (const testDataset of testDatasets) {
                 );
               });
 
+              // FIXME: Gene info endpoint is returning null in test environments
               test.skip("open info panel and hide/remove", async ({
                 page,
               }, testInfo) => {
