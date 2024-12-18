@@ -5,6 +5,7 @@ from typing import Annotated, List, Type, TypeVar
 from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
+from server.common.openai_utils import get_cached_openai_api_key
 
 
 class ColorByGeneSchema(BaseModel):
@@ -304,7 +305,9 @@ T = TypeVar("T", bound=BaseModel)
 
 
 def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4o").with_structured_output(schema)
+    llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=get_cached_openai_api_key()).with_structured_output(
+        schema
+    )
     return llm.invoke(query).model_dump()
 
 
