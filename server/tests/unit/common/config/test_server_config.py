@@ -65,14 +65,14 @@ class TestServerConfig(ConfigTests):
         mock_discover_region_name.return_value = "us-west-2"
         dataroots = {
             "d1": {"base_url": "set1", "dataroot": "/path/to/set1_datasets/"},
-            "d2": {"base_url": "set2/subdir", "dataroot": "s3://hosted-cellxgene-dev"},
+            "d2": {"base_url": "set2/subdir", "dataroot": "s3://hosted-cellxgene-staging"},
         }
         file_name = self.custom_app_config(
             dataroots=dataroots, config_file_name=self.config_file_name, data_locator_region_name="true"
         )
         config = AppConfig(file_name)
         self.assertEqual(config.server__data_locator__s3_region_name, "us-west-2")
-        mock_discover_region_name.assert_called_once_with("s3://hosted-cellxgene-dev")
+        mock_discover_region_name.assert_called_once_with("s3://hosted-cellxgene-staging")
 
     def test_handle_app__sets_web_base_url(self):
         config = self.get_config(web_base_url="anything.com")

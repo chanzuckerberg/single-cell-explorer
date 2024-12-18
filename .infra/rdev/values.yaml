@@ -22,4 +22,4 @@ stack:
         - name: DATA_LOCATOR_DOMAIN
           value: $(__ARGUS_STACK_INGRESS_HOST)
         - name: CXG_BUCKET_PATH
-          value: hosted-cellxgene-dev
+          value: hosted-cellxgene-staging
