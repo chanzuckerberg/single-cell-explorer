@@ -5,6 +5,7 @@ from typing import Annotated, List, Type, TypeVar
 from langchain_core.tools import Tool
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
+
 from server.common.openai_utils import get_cached_openai_api_key
 
 
