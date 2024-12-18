@@ -6,7 +6,7 @@ server:
     verbose: false
 
   gene_info:
-    api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"
+    api_base: "https://api.cellxgene.staging.single-cell.czi.technology/gene_info/v1"
 default_dataset:
   presentation:
     max_categories: 1000
