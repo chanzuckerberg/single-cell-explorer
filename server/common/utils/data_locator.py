@@ -141,18 +141,29 @@ def discover_s3_region_name(uri):  # type: ignore
     """If this is an s3 protocol, discover and return the (aws) region name.
     If a return name could not be discovered, or if the uri is not an s3 protocol, return None."""
 
-    protocol, _ = DataLocator._get_protocol_and_path(uri)  # type: ignore
-    if protocol == "s3":
-        bucket = urlparse(uri).netloc
-        client = boto3.client("s3")
-        try:
-            res = client.head_bucket(Bucket=bucket)
-        except botocore.exceptions.ClientError:
-            return None
+    try:
+        protocol, _ = DataLocator._get_protocol_and_path(uri)  # type: ignore
+        if protocol == "s3":
+            bucket = urlparse(uri).netloc
+            print(f"Attempting to discover region for bucket: {bucket}")
+            client = boto3.client("s3")
+            try:
+                res = client.head_bucket(Bucket=bucket)
+                print(f"Received response for head_bucket: {res}")
+            except botocore.exceptions.ClientError as e:
+                print(f"ClientError occurred while accessing bucket {bucket}: {e}")
+                return None
 
-        region = res.get("ResponseMetadata", {}).get("HTTPHeaders", {}).get("x-amz-bucket-region")
-        if region:
-            return region
+            region = res.get("ResponseMetadata", {}).get("HTTPHeaders", {}).get("x-amz-bucket-region")
+            if region:
+                print(f"Region for bucket {bucket} discovered: {region}")
+                return region
+            else:
+                print(f"Region not found in response for bucket {bucket}")
+                return None
         else:
+            print(f"URI does not use the S3 protocol: {uri}")
             return None
-    return None
+    except Exception as e:
+        print(f"An unexpected error occurred while processing URI: {uri}. Error: {e}")
+        return None
