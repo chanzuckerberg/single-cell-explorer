@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.2...v1.6.0) (2024-12-19)
+
+
+### Misc
+
+* tweak prompts ([#1151](https://github.com/chanzuckerberg/single-cell-explorer/issues/1151)) ([e744538](https://github.com/chanzuckerberg/single-cell-explorer/commit/e74453816857d2cb4923ccdb8eb69c69a4cdf085))
+* upgrade argus helm stack chart ([#1127](https://github.com/chanzuckerberg/single-cell-explorer/issues/1127)) ([642d6cc](https://github.com/chanzuckerberg/single-cell-explorer/commit/642d6cc1c448f554affd47109e59fae2199623c6))
+
+
+### Features
+
+* agent ([#1148](https://github.com/chanzuckerberg/single-cell-explorer/issues/1148)) ([6d162bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/6d162bfbeb4cc1c64e721a1e90d3fc129b40ddce))
+
 ## [1.5.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.1...v1.5.2) (2024-11-05)
 
 
