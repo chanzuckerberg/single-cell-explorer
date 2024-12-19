@@ -147,6 +147,14 @@ def discover_s3_region_name(uri):  # type: ignore
             bucket = urlparse(uri).netloc
             print(f"Attempting to discover region for bucket: {bucket}")
             client = boto3.client("s3")
+
+            # DEBUG
+            # DEBUG
+            # DEBUG Check identity of assumed role
+            sts_client = boto3.client("sts")
+            response = sts_client.get_caller_identity()
+            print(f"Assumed role details: {response}")
+
             try:
                 res = client.head_bucket(Bucket=bucket)
                 print(f"Received response for head_bucket: {res}")
