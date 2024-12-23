@@ -298,6 +298,12 @@ def gene_info_get(request):
             url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}", headers=headers
         )
         if response.status_code == 200:
+            # DEBUG
+            # DEBUG
+            # DEBUG
+            print("################################################# 😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎 OK")
+            print(f"Response content: {response.content}")
+
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
             # in the event of a failed search, return empty response
