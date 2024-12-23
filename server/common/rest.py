@@ -301,8 +301,8 @@ def gene_info_get(request):
             # DEBUG
             # DEBUG
             # DEBUG
-            print("################################################# 😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎 OK")
-            print(f"Response content: {response.content}")
+            current_app.logger.info("😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎 OK")
+            current_app.logger.info(f"Response content: {response.content}")
 
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
@@ -310,8 +310,8 @@ def gene_info_get(request):
             # DEBUG
             # DEBUG
             # DEBUG
-            print(f"Error: Received status code {response.status_code} from API")
-            print(f"Response content: {response.text}")
+            current_app.logger.error(f"Error: Received status code {response.status_code} from API")
+            current_app.logger.error(f"Response content: {response.text}")
             return None
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
