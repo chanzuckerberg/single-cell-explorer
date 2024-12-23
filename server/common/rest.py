@@ -293,14 +293,27 @@ def gene_info_get(request):
     """
     api_base_url = current_app.app_config.server__gene_info__api_base
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    url = f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}"
+
+    current_app.logger.info(f"&&&&&&&&&&&&&&&&&&&&&&&&&&& Requesting gene info from {url}")
+
     try:
-        response = requests.get(
-            url=f"{api_base_url}/gene_info?geneID={request.args['geneID']}&gene={request.args['gene']}", headers=headers
-        )
+        response = requests.get(url=url, headers=headers)
         if response.status_code == 200:
+            # DEBUG
+            # DEBUG
+            # DEBUG
+            current_app.logger.info("😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎😎 OK")
+            current_app.logger.info(f"Response content: {response.content}")
+
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
             # in the event of a failed search, return empty response
+            # DEBUG
+            # DEBUG
+            # DEBUG
+            current_app.logger.error(f"Error:!!!!!!!!!!!!!!! Received status code {response.status_code} from API")
+            current_app.logger.error(f"Response content: {response.text}")
             return None
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)

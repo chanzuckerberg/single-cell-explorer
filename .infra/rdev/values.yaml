@@ -2,7 +2,7 @@ stack:
   services:
     explorer:
       image:
-        tag: sha-b62ceb99
+        tag: sha-47925f47
       replicaCount: 1
       env:
         # env vars common to all deployment stages
@@ -22,4 +22,4 @@ stack:
         - name: DATA_LOCATOR_DOMAIN
           value: $(__ARGUS_STACK_INGRESS_HOST)
         - name: CXG_BUCKET_PATH
-          value: hosted-cellxgene-dev
+          value: hosted-cellxgene-staging
