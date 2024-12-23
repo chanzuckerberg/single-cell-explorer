@@ -301,6 +301,11 @@ def gene_info_get(request):
             return make_response(response.content, HTTPStatus.OK, {"Content-Type": "application/json"})
         else:
             # in the event of a failed search, return empty response
+            # DEBUG
+            # DEBUG
+            # DEBUG
+            print(f"Error: Received status code {response.status_code} from API")
+            print(f"Response content: {response.text}")
             return None
     except Exception as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
