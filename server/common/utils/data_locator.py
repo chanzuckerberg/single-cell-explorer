@@ -153,7 +153,9 @@ def discover_s3_region_name(uri):  # type: ignore
             # DEBUG Check identity of assumed role
             sts_client = boto3.client("sts")
             response = sts_client.get_caller_identity()
+            print("~~~~~~~~~~~~~~~~~~~~~~~~😎~~~~~~~~~~~~~~~~~~~~~~~~")
             print(f"Assumed role details: {response}")
+            print("~~~~~~~~~~~~~~~~~~~~~~~~😎~~~~~~~~~~~~~~~~~~~~~~~~")
 
             try:
                 res = client.head_bucket(Bucket=bucket)
