@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.0...v1.6.1) (2024-12-24)
+
+
+### Misc
+
+* Upgrade GHA actions ([#1155](https://github.com/chanzuckerberg/single-cell-explorer/issues/1155)) ([e9be54e](https://github.com/chanzuckerberg/single-cell-explorer/commit/e9be54e4844d5bb7ada78dcfef274dd8e1ecb41d))
+
 ## [1.6.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.2...v1.6.0) (2024-12-19)
 
 
