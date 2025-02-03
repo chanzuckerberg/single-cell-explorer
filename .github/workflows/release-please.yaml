@@ -8,7 +8,7 @@ concurrency:
 name: release-please
 jobs:
   release-please:
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: [ARM64]
     steps:
       # See https://docs.github.com/en/actions/security-guides/automatic-token-authentication#using-the-github_token-in-a-workflow
       # For why we need to generate a token and not use the default
