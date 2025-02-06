@@ -14,6 +14,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   conventional_commit_title:
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     steps:
       - uses: chanzuckerberg/github-actions/.github/actions/conventional-commits@v2.13.0

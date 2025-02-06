@@ -12,7 +12,7 @@ jobs:
     if: github.head_ref == 'release-please--branches--main'
     outputs:
       changes: ${{ steps.filter.outputs.staging_config }}
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     steps:
       - run: echo "The head branch of this PR is the release please branch"
       - uses: dorny/paths-filter@v3
@@ -26,7 +26,7 @@ jobs:
   staging_stack_upsert:
     needs: run_if
     if: needs.run_if.outputs.changes == 'true'
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     permissions:
       id-token: write
       issues: write
