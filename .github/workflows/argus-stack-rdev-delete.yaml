@@ -6,7 +6,7 @@ on:
 
 jobs:
   delete-rdev-stack:
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'stack') || github.event.pull_request.state == 'closed' }}
     permissions:
       id-token: write

@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   prod_stack_upsert:
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     permissions:
       id-token: write
       issues: write

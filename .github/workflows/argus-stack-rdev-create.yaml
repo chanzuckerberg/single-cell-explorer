@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   create-rdev-stack:
-    runs-on: [ARM64, self-hosted, Linux]
+    runs-on: ARM64
     if: contains(github.event.pull_request.labels.*.name, 'stack')
     permissions:
       id-token: write
