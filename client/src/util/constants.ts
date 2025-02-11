@@ -13,6 +13,14 @@ export const SCALE_MAX_HIRES = 12.0;
  *  https://kb.10xgenomics.com/hc/en-us/articles/360035487572-What-is-the-spatial-resolution-and-configuration-of-the-capture-area-of-the-Visium-v1-Gene-Expression-Slide
  */
 export const SLIDE_SIZE = 0.008;
+export const SLIDE_SIZE_CYT_ASSIST = 0.011;
+
+export function getSlideSize(assayOntologyTermId: string): number {
+  if (assayOntologyTermId === "EFO:0022860") {
+    return SLIDE_SIZE_CYT_ASSIST;
+  }
+  return SLIDE_SIZE;
+}
 
 export const LAYOUT_CHOICE_TEST_ID = "layout-choice";
 

@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-import pickle
+import pickle  # TODO: remove this after 5.3.0 migration
 import threading
 
 import numpy as np
@@ -388,7 +388,9 @@ class CxgDataset(Dataset):
         for key in uns.meta:
             if key == metadata_key:
                 try:
-                    return pickle.loads(uns.meta[key])
+                    if type(uns.meta[key]) == bytes:  # TODO: remove this after 5.3.0 migration
+                        return pickle.loads(uns.meta[key])  # for backwards compatibility
+                    return json.loads(uns.meta[key])
                 except Exception as e:
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None

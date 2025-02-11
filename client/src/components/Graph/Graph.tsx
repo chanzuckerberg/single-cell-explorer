@@ -24,7 +24,7 @@ import { Dataframe } from "util/dataframe";
 import { RootState } from "reducers";
 import { Field } from "common/types/schema";
 import { Query } from "annoMatrix/query";
-import { SLIDE_SIZE, THROTTLE_MS } from "util/constants";
+import { getSlideSize, THROTTLE_MS } from "util/constants";
 import { isSpatialMode, shouldShowOpenseadragon } from "common/selectors";
 import { fetchDeepZoomImageFailed } from "actions/config";
 import { track } from "analytics";
@@ -32,6 +32,7 @@ import { EVENTS } from "analytics/events";
 import { DatasetUnsMetadata } from "common/types/entities";
 import { getFeatureFlag } from "util/featureFlags/featureFlags";
 import { FEATURES } from "util/featureFlags/features";
+import { allSingleValues } from "util/singleValues";
 import { LassoFunctionWithAttributes } from "./setupLasso";
 import { CentroidLabels } from "./overlays/CentroidLabels/CentroidLabels";
 import { GraphOverlayLayer } from "./overlays/GraphOverlayLayer/GraphOverlayLayer";
@@ -1168,6 +1169,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay,
       imageOpacity,
       unsMetadata,
+      annoMatrix: { schema },
     } = this.props;
 
     if (
@@ -1193,9 +1195,14 @@ class Graph extends React.Component<GraphProps, GraphState> {
       opacity: imageOpacity / 100,
     });
 
+    const assayOntologyTermId = allSingleValues({ schema }).get(
+      "assay_ontology_term_id"
+    );
+
     const { imageHeight } = unsMetadata;
 
-    const calculatedPixelsPerMeter = imageHeight / SLIDE_SIZE;
+    const calculatedPixelsPerMeter =
+      imageHeight / getSlideSize(assayOntologyTermId);
 
     this.openseadragon.scalebar({
       type: Openseadragon.ScalebarType.MICROSCOPY,
