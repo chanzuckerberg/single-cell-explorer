@@ -21,6 +21,11 @@ on:
         required: false
         type: string
         default: ''
+      force_update_manifests:
+        description: 'Whether to always update ArgoCD manifests after building the Docker images'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   get_commit_sha:
@@ -33,24 +38,47 @@ jobs:
         id: get_sha
         run: |
           echo "COMMIT_SHA=$(git rev-parse --verify HEAD)" >> $GITHUB_OUTPUT
-  argus_builder:
-    needs: get_commit_sha
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v2.13.2
+  merge_images:
+    name: Merge images inputs
+    runs-on: ARM64
+    outputs:
+      images: ${{ steps.merge_images.outputs.result }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install lodash
+      - name: Merge images inputs with defaults
+        id: merge_images
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const _ = require('lodash');
+            const defaultImages = {
+              "explorer": {
+                "context": ".",
+                "dockerfile": "hosted/Dockerfile",
+                "platform": "linux/amd64",
+                "build_args": [
+                  "COMMIT_SHA=${{ needs.get_commit_sha.outputs.commit_sha }}"
+                ]
+              }
+            };
+            const images = JSON.parse(`${{ inputs.images }}`);
+            const mergedImages = _.merge(defaultImages, images);
+            console.log('Default images:', JSON.stringify(defaultImages, null, 2));
+            console.log('Input images:', JSON.stringify(images, null, 2));
+            console.log('Merged images:', JSON.stringify(mergedImages, null, 2));
+            return JSON.stringify(mergedImages);
+  argus_docker_build:
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v4.2.0
     secrets: inherit
+    needs: merge_images
     with:
-      branches: ${{ inputs.branches }}
+      branches_include: ${{ inputs.branches }}
       branches_ignore: ${{ inputs.branches_ignore }}
       path_filters: ${{ inputs.path_filters }}
       envs: ${{ inputs.envs }}
-      images: |
-        [
-          {
-            "name": "explorer",
-            "context": ".",
-            "dockerfile": "hosted/Dockerfile",
-            "platform": "linux/amd64",
-            "build_args": [
-              "COMMIT_SHA=${{ needs.get_commit_sha.outputs.commit_sha }}"
-            ]
-          }
-        ]
+      images: ${{ needs.merge_images.outputs.images }}
+      force_update_manifests: ${{ inputs.force_update_manifests }}
