@@ -11,3 +11,4 @@ jobs:
       envs: staging,prod
       path_filters: '!.infra/**'
       branches: release-please--branches--main
+      force_update_manifests: true
