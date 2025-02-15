@@ -7,8 +7,13 @@ on:
         description: 'Env names, comma delimited'
         required: true
         type: string
+      images:
+        description: 'Image configurations (JSON object of images to build)'
+        required: false
+        type: string
+        default: '{}'
       path_filters:
-        description: 'Glob patterns to match against changed files in the repository, comma delimited'
+        description: 'String with path filters to match before building, comma delimited'
         required: true
         type: string
       branches:
