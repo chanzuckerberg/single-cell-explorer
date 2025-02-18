@@ -40,4 +40,3 @@ LABEL commit=${COMMIT_SHA}
 ENV COMMIT_SHA=${COMMIT_SHA}
 
 CMD ["/start.sh"]
-# bump
