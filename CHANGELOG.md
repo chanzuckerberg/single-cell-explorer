@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.6.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.0...v1.6.1) (2025-02-19)
+
+
+### Misc
+
+* remove deprecated tags ([#1158](https://github.com/chanzuckerberg/single-cell-explorer/issues/1158)) ([81e7471](https://github.com/chanzuckerberg/single-cell-explorer/commit/81e7471c626aab0d48f9d391e14058a3232a570c))
+* update for CytAssist ([#1162](https://github.com/chanzuckerberg/single-cell-explorer/issues/1162)) ([d9e63fa](https://github.com/chanzuckerberg/single-cell-explorer/commit/d9e63fa42223f167ff96768a5e447b9b86bcbc8c))
+* upgrade docker builder ([#1163](https://github.com/chanzuckerberg/single-cell-explorer/issues/1163)) ([6aee4b7](https://github.com/chanzuckerberg/single-cell-explorer/commit/6aee4b7bdc5082eafc8b12739dc6c7cb2883580c))
+* Upgrade GHA actions ([#1155](https://github.com/chanzuckerberg/single-cell-explorer/issues/1155)) ([e9be54e](https://github.com/chanzuckerberg/single-cell-explorer/commit/e9be54e4844d5bb7ada78dcfef274dd8e1ecb41d))
+
+
+### Bug Fixes
+
+* Update runs-on labels in GitHub Actions workflows ([#1161](https://github.com/chanzuckerberg/single-cell-explorer/issues/1161)) ([875058c](https://github.com/chanzuckerberg/single-cell-explorer/commit/875058c01364adc64914073d94bcd6d1e5697aa5))
+* upload artifact v4 ([#1164](https://github.com/chanzuckerberg/single-cell-explorer/issues/1164)) ([9abd814](https://github.com/chanzuckerberg/single-cell-explorer/commit/9abd814714458cf5000e3e9d00ef4122e8b8c0d7))
+
 ## [1.6.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.5.2...v1.6.0) (2024-12-19)
 
 
