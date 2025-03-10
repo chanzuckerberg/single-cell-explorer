@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.1...v1.6.2) (2025-03-10)
+
+
+### Bug Fixes
+
+* Update Argus to latest ([#1165](https://github.com/chanzuckerberg/single-cell-explorer/issues/1165)) ([2119ca7](https://github.com/chanzuckerberg/single-cell-explorer/commit/2119ca77f9ba75e38108f57c06b6876dd742a666))
+
 ## [1.6.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.0...v1.6.1) (2025-02-19)
 
 
