@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.2...v1.6.3) (2025-03-12)
+
+
+### Misc
+
+* bump helm charts to make use of NLB ([#1167](https://github.com/chanzuckerberg/single-cell-explorer/issues/1167)) ([44002bb](https://github.com/chanzuckerberg/single-cell-explorer/commit/44002bbbe9642456f6ee7e4e9b5950373f8e41fe))
+
 ## [1.6.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.1...v1.6.2) (2025-03-10)
 
 
