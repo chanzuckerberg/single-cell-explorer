@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.3...v1.7.0) (2025-03-14)
+
+
+### Features
+
+* Add noindex for unpublished datasets ([#1169](https://github.com/chanzuckerberg/single-cell-explorer/issues/1169)) ([9069895](https://github.com/chanzuckerberg/single-cell-explorer/commit/9069895f88e7d86dab62e3c91386400e9391c4f6))
+
 ## [1.6.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.2...v1.6.3) (2025-03-12)
 
 
