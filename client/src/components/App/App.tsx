@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Helmet } from "react-helmet-async";
+import { Helmet, HelmetData } from "react-helmet-async";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import actions from "actions";
@@ -83,10 +83,11 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
 
     const isPublished =
       datasetMetadata?.datasetMetadata?.collection_datasets[0]?.published;
+    const helmetData = new HelmetData({});
 
     return (
       <Container>
-        <Helmet>
+        <Helmet helmetData={helmetData} prioritizeSeoTags>
           {!isPublished && <meta name="robots" content="noindex" />}
         </Helmet>
         <StyledEngineProvider injectFirst>
