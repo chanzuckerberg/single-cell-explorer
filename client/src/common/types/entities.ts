@@ -90,6 +90,7 @@ export interface Dataset {
   cell_count: number;
   dataset_deployments: DatasetDeployment[];
   name: string;
+  published?: boolean;
 }
 
 /**
