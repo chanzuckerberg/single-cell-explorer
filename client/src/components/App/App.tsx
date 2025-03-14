@@ -1,5 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
+import { Helmet } from "react-helmet-async";
 import { ThemeProvider as EmotionThemeProvider } from "@emotion/react";
 import { StyledEngineProvider, ThemeProvider } from "@mui/material/styles";
 import actions from "actions";
@@ -34,6 +35,7 @@ interface StateProps {
   privacyURL: string;
   seamlessEnabled: boolean;
   datasetMetadataError: RootState["datasetMetadata"]["error"];
+  datasetMetadata: RootState["datasetMetadata"];
   isCellGuideCxg: RootState["controls"]["isCellGuideCxg"];
   scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
   scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
@@ -48,6 +50,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
   privacyURL: state.config?.parameters?.about_legal_privacy || "",
   seamlessEnabled: selectIsSeamlessEnabled(state),
   datasetMetadataError: state.datasetMetadata.error,
+  datasetMetadata: state.datasetMetadata,
   isCellGuideCxg: state.controls.isCellGuideCxg,
   scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
   scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
@@ -71,14 +74,21 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
       privacyURL,
       seamlessEnabled,
       datasetMetadataError,
+      datasetMetadata,
       isCellGuideCxg,
       differentialExpressionLoading,
       scatterplotXXaccessor,
       scatterplotYYaccessor,
     } = this.props;
 
+    const isPublished =
+      datasetMetadata?.datasetMetadata?.collection_datasets[0]?.published;
+
     return (
       <Container>
+        <Helmet>
+          {!isPublished && <meta name="robots" content="noindex" />}
+        </Helmet>
         <StyledEngineProvider injectFirst>
           <EmotionThemeProvider theme={theme}>
             <ThemeProvider theme={theme}>
