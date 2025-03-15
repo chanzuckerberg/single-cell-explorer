@@ -77,7 +77,7 @@ jobs:
             console.log('Merged images:', JSON.stringify(mergedImages, null, 2));
             return JSON.stringify(mergedImages);
   argus_docker_build:
-    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v4.2.0
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v5
     secrets: inherit
     needs: merge_images
     with:
