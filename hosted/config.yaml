@@ -35,6 +35,9 @@ server:
       corpora_data_portal:
         base_url: e
         dataroot: s3://${CXG_BUCKET_PATH}
+      user_data:
+        base_url: f
+        dataroot: s3://${CXG_BUCKET_PATH}
 
     # The index page when in multi-dataset mode:
     #   false or null:  this returns a 404 code
