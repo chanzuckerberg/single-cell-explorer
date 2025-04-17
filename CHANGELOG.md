@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.7.0...v1.8.0) (2025-04-15)
+
+
+### Misc
+
+* bump argus docker builder ([#1171](https://github.com/chanzuckerberg/single-cell-explorer/issues/1171)) ([4d4ddbd](https://github.com/chanzuckerberg/single-cell-explorer/commit/4d4ddbd588037e4663eefb3f1a521cb8ad8636d4))
+
+
+### Features
+
+* update argus docker builder ([#1174](https://github.com/chanzuckerberg/single-cell-explorer/issues/1174)) ([90bcd57](https://github.com/chanzuckerberg/single-cell-explorer/commit/90bcd57c7cc6325793ae5e59575f41fde958bfc1))
+
 ## [1.7.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.6.3...v1.7.0) (2025-03-14)
 
 
