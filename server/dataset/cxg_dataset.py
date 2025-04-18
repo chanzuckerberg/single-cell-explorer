@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-import pickle  # TODO: remove this after 5.3.0 migration
+import pickle  # TODO: remove this after 5.3.0 migration!
 import threading
 
 import numpy as np
