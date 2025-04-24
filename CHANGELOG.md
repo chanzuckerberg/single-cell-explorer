@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.9.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.8.0...v1.9.0) (2025-04-24)
+
+
+### Misc
+
+* CCIE-4313 replace tibdex/github-app-token ([#1177](https://github.com/chanzuckerberg/single-cell-explorer/issues/1177)) ([1bd5651](https://github.com/chanzuckerberg/single-cell-explorer/commit/1bd565146726b665577dfd450a4215fc819c884e))
+* update default to us-west-2 ([#1181](https://github.com/chanzuckerberg/single-cell-explorer/issues/1181)) ([27a9960](https://github.com/chanzuckerberg/single-cell-explorer/commit/27a996023ffc4989c4cb272245068e78e5b140fc))
+
+
+### Features
+
+* add new data root for byod workflow outputs ([#1179](https://github.com/chanzuckerberg/single-cell-explorer/issues/1179)) ([2fa13b5](https://github.com/chanzuckerberg/single-cell-explorer/commit/2fa13b52ac19d762707b5cc6f2defeadf309830c))
+
+
+### Bug Fixes
+
+* update Argus create and delete stack to v0 ([#1180](https://github.com/chanzuckerberg/single-cell-explorer/issues/1180)) ([a842b85](https://github.com/chanzuckerberg/single-cell-explorer/commit/a842b858e2d2ed23d9540392caffbc45a8bd7f36))
+
 ## [1.8.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.7.0...v1.8.0) (2025-04-15)
 
 
