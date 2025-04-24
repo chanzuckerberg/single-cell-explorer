@@ -28,7 +28,7 @@ class CxgDataset(Dataset):
         {
             "sm.tile_cache_size": 8 * 1024**3,
             "py.init_buffer_bytes": 512 * 1024**2,
-            "vfs.s3.region": "us-east-1",
+            "vfs.s3.region": "us-west-2",
         }
     )
 
