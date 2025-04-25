@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.9.0...v1.10.0) (2025-04-25)
+
+
+### Features
+
+* fix w routing to exclude static assets from glob ([#1185](https://github.com/chanzuckerberg/single-cell-explorer/issues/1185)) ([3cfe12e](https://github.com/chanzuckerberg/single-cell-explorer/commit/3cfe12e6937715e5a1e35d9b009a40594bfe083c))
+* update url routing for w dataroot ([#1183](https://github.com/chanzuckerberg/single-cell-explorer/issues/1183)) ([465b638](https://github.com/chanzuckerberg/single-cell-explorer/commit/465b6389a4fdd0c88a52315c4d788ebbd8b1642c))
+
 ## [1.9.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.8.0...v1.9.0) (2025-04-24)
 
 
