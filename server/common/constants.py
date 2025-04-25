@@ -35,5 +35,6 @@ REACTIVE_LIMIT = 1_000_000
 MAX_LAYOUTS = 30
 
 CELLGUIDE_CXG_KEY_NAME = "cellguide-cxgs"
+CUSTOM_CXG_KEY_NAME = "custom-cxgs"
 
 CELLGUIDE_BASE_URL = "https://cellguide.cellxgene.cziscience.com"
