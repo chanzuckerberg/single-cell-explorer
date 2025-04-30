@@ -26,6 +26,7 @@ import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { AgentComponent } from "../Agent/AgentComponent";
+import { BottomSideBar } from "../BottomSideBar/BottomSideBar";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -163,6 +164,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                   >
                     <LeftSideBar />
                     <RightSideBar />
+                    <BottomSideBar />
                   </Layout>
                   <BottomBanner />
                 </>

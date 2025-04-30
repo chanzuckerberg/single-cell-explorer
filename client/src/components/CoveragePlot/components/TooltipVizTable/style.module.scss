@@ -1,0 +1,93 @@
+@use "~@czi-sds/components/dist/variables" as *;
+
+.table {
+  font: $sds-font-body-xxs-400-font;
+  letter-spacing: $sds-font-body-xxs-400-letter-spacing;
+  background-color: $sds-color-primitive-common-white;
+  border-radius: $sds-corner-m;
+  border: $sds-border-base-table;
+  box-shadow: $sds-drop-shadow-m;
+  pointer-events: none;
+  padding: 0 $sds-space-m;
+
+  .title {
+    font: $sds-font-caps-xxxxs-600-font;
+    text-transform: $sds-font-caps-xxxxs-600-text-transform;
+    letter-spacing: $sds-font-caps-xxxxs-600-letter-spacing;
+    border-bottom: $sds-color-primitive-gray-200;
+    color: $sds-color-primitive-gray-500;
+    margin-bottom: $sds-space-m;
+  }
+
+  .subtitle {
+    font: $sds-font-body-xxs-400-font;
+    letter-spacing: $sds-font-body-xxs-400-letter-spacing;
+    padding-top: $sds-space-l;
+  }
+
+  .description {
+    font: $sds-font-body-xxs-400-font;
+    letter-spacing: $sds-font-body-xxs-400-letter-spacing;
+    color: $sds-color-primitive-gray-500;
+    margin-top: $sds-space-s;
+    margin-bottom: $sds-space-l;
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    margin: $sds-space-l 0;
+
+    &:not(:first-child) {
+      border-top: $sds-color-primitive-gray-200;
+      padding-top: $sds-space-l;
+    }
+
+    &.disabled {
+      color: $sds-color-primitive-gray-300;
+    }
+
+    .name {
+      font: $sds-font-caps-xxxxs-600-font;
+      text-transform: $sds-font-caps-xxxxs-600-text-transform;
+      letter-spacing: $sds-font-caps-xxxxs-600-letter-spacing;
+      color: $sds-color-primitive-gray-500;
+      margin-bottom: $sds-space-m;
+
+      &.disabled {
+        color: $sds-color-primitive-gray-300;
+      }
+    }
+
+    .data {
+      display: flex;
+      flex-direction: column;
+
+      .dataRow {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        width: 100%;
+
+        .label {
+          font: $sds-font-header-xs-600-font;
+          letter-spacing: $sds-font-header-xs-600-letter-spacing;
+          width: auto;
+          margin-right: $sds-space-l;
+          flex-grow: 1;
+        }
+
+        .compact {
+          width: auto;
+        }
+
+        .value {
+          font: $sds-font-body-xs-400-font;
+          letter-spacing: $sds-font-body-xs-400-letter-spacing;
+          text-align: right;
+          flex-grow: 1;
+        }
+      }
+    }
+  }
+}
