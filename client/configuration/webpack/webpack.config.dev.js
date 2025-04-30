@@ -18,12 +18,12 @@ const sharedConfig = require("./webpack.config.shared");
 // eslint-disable-next-line @typescript-eslint/no-var-requires --- FIXME: disabled temporarily on migrate to TS.
 const babelOptions = require("../babel/babel.dev");
 
-const fonts = path.resolve("src/fonts");
-const nodeModules = path.resolve("node_modules");
-
 const devConfig = {
   mode: "development",
   devtool: "eval",
+  resolve: {
+    extensions: [".ts", ".tsx", ".js", ".json", ".scss"],
+  },
   output: {
     pathinfo: true,
     filename: "static/js/bundle.js",
@@ -44,6 +44,28 @@ const devConfig = {
         test: /\.(jpg|png|gif|eot|svg|ttf|woff|woff2|otf)$/i,
         type: "asset/resource",
       },
+      {
+        test: /\.module\.scss$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true, // Enable CSS modules
+            },
+          },
+          'sass-loader'
+        ]
+      },
+      {
+        test: /\.scss$/,
+        exclude: /\.module\.scss$/,
+        use: [
+          'style-loader',
+          'css-loader', // regular css (no modules)
+          'sass-loader'
+        ]
+      }
     ],
   },
   plugins: [
