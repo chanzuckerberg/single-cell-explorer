@@ -164,7 +164,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                   >
                     <LeftSideBar />
                     <RightSideBar />
-                    <BottomSideBar />
+                    {getFeatureFlag(FEATURES.MULTIOME_VIZ) && <BottomSideBar />}
                   </Layout>
                   <BottomBanner />
                 </>
