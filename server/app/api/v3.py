@@ -14,7 +14,7 @@ from flask_restful import Api, Resource
 import server.common.agent as common_agent
 import server.common.rest as common_rest
 from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
-from server.common.constants import CELLGUIDE_CXG_KEY_NAME
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME, CUSTOM_CXG_KEY_NAME
 from server.common.errors import (
     DatasetAccessError,
     DatasetMetadataError,
@@ -279,6 +279,7 @@ def register_api_v3(app, app_config, api_url_prefix):
     for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
         url_dataroot = dataroot_dict["base_url"]
 
+        # Regular datasets
         bp_dataroot = Blueprint(
             name=f"api_dataset_{url_dataroot}_{api_version.replace('.',',')}",
             import_name=__name__,
@@ -287,6 +288,7 @@ def register_api_v3(app, app_config, api_url_prefix):
         dataroot_resources = get_api_dataroot_resources(bp_dataroot, url_dataroot)
         app.register_blueprint(dataroot_resources.blueprint)
 
+        # Cellguide CXGs
         bp_dataroot_cg = Blueprint(
             name=f"api_dataset_{url_dataroot}_cellguide_cxgs_{api_version.replace('.',',')}",
             import_name=__name__,
@@ -294,10 +296,22 @@ def register_api_v3(app, app_config, api_url_prefix):
                 f"{api_url_prefix}/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg" + api_version
             ).replace("//", "/"),
         )
-
         dataroot_resources_cg = get_api_dataroot_resources(bp_dataroot_cg, url_dataroot)
         app.register_blueprint(dataroot_resources_cg.blueprint)
 
+        # Custom CXGs (only for "w" dataroot)
+        if url_dataroot == "w":
+            bp_dataroot_custom = Blueprint(
+                name=f"api_dataset_{url_dataroot}_custom_cxgs_{api_version.replace('.',',')}",
+                import_name=__name__,
+                url_prefix=(
+                    f"{api_url_prefix}/{url_dataroot}/{CUSTOM_CXG_KEY_NAME}/<path:dataset>.cxg" + api_version
+                ).replace("//", "/"),
+            )
+            dataroot_resources_custom = get_api_dataroot_resources(bp_dataroot_custom, url_dataroot)
+            app.register_blueprint(dataroot_resources_custom.blueprint)
+
+        # Static asset routes
         app.add_url_rule(
             f"/{url_dataroot}/<string:dataset>/static/<path:filename>",
             f"static_assets_{url_dataroot}",
@@ -310,6 +324,13 @@ def register_api_v3(app, app_config, api_url_prefix):
             view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
             methods=["GET"],
         )
+        if url_dataroot == "w":
+            app.add_url_rule(
+                f"/{url_dataroot}/{CUSTOM_CXG_KEY_NAME}/<path:dataset>.cxg/static/<path:filename>",
+                f"static_assets_{url_dataroot}_custom_cxgs/",
+                view_func=lambda dataset, filename: send_from_directory("../common/web/static", filename),
+                methods=["GET"],
+            )
 
         # Add agent endpoint for each dataroot
         app.add_url_rule(

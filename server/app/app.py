@@ -27,7 +27,7 @@ from server.app.api.v3 import register_api_v3
 from server.app.logging import configure_logging
 from server.app.request_id import generate_request_id, get_request_id
 from server.common.config.app_config import AppConfig
-from server.common.constants import CELLGUIDE_CXG_KEY_NAME
+from server.common.constants import CELLGUIDE_CXG_KEY_NAME, CUSTOM_CXG_KEY_NAME
 from server.common.errors import (
     DatasetAccessError,
     DatasetNotFoundError,
@@ -197,20 +197,30 @@ class Server:
 
         for dataroot_dict in app_config.server__multi_dataset__dataroots.values():
             url_dataroot = dataroot_dict["base_url"]
-            self.app.add_url_rule(
-                f"/{url_dataroot}/<string:dataset>/",
-                f"dataset_index_{url_dataroot}/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
-                methods=["GET"],
-            )
-            self.app.add_url_rule(
-                f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/",
-                f"dataset_index_{url_dataroot}_cellguide_cxgs/",
-                lambda dataset, url_dataroot=url_dataroot: dataset_index(
-                    url_dataroot, f"{CELLGUIDE_CXG_KEY_NAME}/{dataset}.cxg"
-                ),
-                methods=["GET"],
-            )
+            if url_dataroot == "w":
+                self.app.add_url_rule(
+                    f"/{url_dataroot}/{CUSTOM_CXG_KEY_NAME}/<path:dataset>.cxg/",
+                    f"dataset_index_{url_dataroot}/",
+                    lambda dataset, url_dataroot=url_dataroot: dataset_index(
+                        url_dataroot, f"{CUSTOM_CXG_KEY_NAME}/{dataset}.cxg"
+                    ),
+                    methods=["GET"],
+                )
+            else:
+                self.app.add_url_rule(
+                    f"/{url_dataroot}/<string:dataset>/",
+                    f"dataset_index_{url_dataroot}/",
+                    lambda dataset, url_dataroot=url_dataroot: dataset_index(url_dataroot, dataset),
+                    methods=["GET"],
+                )
+                self.app.add_url_rule(
+                    f"/{url_dataroot}/{CELLGUIDE_CXG_KEY_NAME}/<path:dataset>.cxg/",
+                    f"dataset_index_{url_dataroot}_cellguide_cxgs/",
+                    lambda dataset, url_dataroot=url_dataroot: dataset_index(
+                        url_dataroot, f"{CELLGUIDE_CXG_KEY_NAME}/{dataset}.cxg"
+                    ),
+                    methods=["GET"],
+                )
 
         self.app.app_config = app_config
 

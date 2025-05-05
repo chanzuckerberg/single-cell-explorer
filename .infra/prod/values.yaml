@@ -9,7 +9,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::231426846575:role/data_portal_prod_explorer
       image:
-        tag: sha-80ecda4
+        tag: sha-1c198fd
       replicaCount: 3
       resources:
         limits:
@@ -37,6 +37,8 @@ stack:
           value: api.cellxgene.cziscience.com
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
+        - name: BYOD_WORKFLOWS_BUCKET_PATH
+          value: byod-workflows
       ingress:
         rules:
           - host: cellxgene.cziscience.com
