@@ -30,6 +30,7 @@ interface ControlsState {
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
+  bottomPanelHidden: boolean;
   imageOpacity: number;
   dotOpacity: number;
   geneInfo: GeneInfo;
@@ -62,6 +63,7 @@ const Controls = (
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
+    bottomPanelHidden: true,
     unsMetadata: {
       imageWidth: 1955,
       imageHeight: 1955,
@@ -233,6 +235,21 @@ const Controls = (
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
+      };
+    }
+    /**************************
+          Bottom Multiome Viz Panel
+    **************************/
+    case "open multiome viz panel": {
+      return {
+        ...state,
+        bottomPanelHidden: false,
+      };
+    }
+    case "close multiome viz panel": {
+      return {
+        ...state,
+        bottomPanelHidden: true,
       };
     }
     /**************************

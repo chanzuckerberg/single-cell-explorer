@@ -33,7 +33,7 @@ module.exports = {
     publicPath,
   },
   resolve: {
-    extensions: [".ts", ".tsx", ".js", ".jsx", "..."],
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".scss", "..."],
     modules: [path.resolve(__dirname, "../../src"), "node_modules"],
     alias: {
       "~/globals": path.resolve(__dirname, "../../src/globals"),
@@ -41,6 +41,28 @@ module.exports = {
   },
   module: {
     rules: [
+      {
+        test: /\.module\.scss$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true, // Enable CSS modules
+            },
+          },
+          'sass-loader'
+        ]
+      },
+      {
+        test: /\.scss$/,
+        exclude: /\.module\.scss$/,
+        use: [
+          'style-loader',
+          'css-loader', // regular css (no modules)
+          'sass-loader'
+        ]
+      },
       {
         test: /\.css$/,
         include: src,

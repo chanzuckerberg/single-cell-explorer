@@ -1,0 +1,7 @@
+.hoverTooltip {
+  position: fixed;
+  background-color: white;
+  z-index: 104;
+  // So the tooltip appears on the top-right instead of bottom-right of mouse.
+  transform: translateY(-100%);
+}

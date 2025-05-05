@@ -26,6 +26,7 @@ import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { AgentComponent } from "../Agent/AgentComponent";
+import BottomPanel from "../BottomPanel/BottomPanel";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -163,6 +164,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                   >
                     <LeftSideBar />
                     <RightSideBar />
+                    {getFeatureFlag(FEATURES.MULTIOME_VIZ) && <BottomPanel />}
                   </Layout>
                   <BottomBanner />
                 </>

@@ -1,0 +1,38 @@
+@use "~@czi-sds/components/dist/variables" as *;
+
+.xAxis {
+  stroke: $sds-color-primitive-gray-300;
+}
+
+.xAxisTickText,
+.yAxisTickText {
+  font: $sds-font-body-xxxs-400-font;
+  color: $sds-color-primitive-gray-500;
+}
+
+.yAxisTickLine,
+.xAxisTickLine {
+  color: $sds-color-primitive-gray-300;
+}
+
+.labelX,
+.labelY {
+  color: $sds-color-primitive-common-black;
+
+  &.large {
+    font: $sds-font-body-xxs-600-font;
+  }
+
+  &.bold {
+    font: $sds-font-header-xxs-600-font;
+  }
+}
+
+.labelXSubtext {
+  font: $sds-font-body-xxs-400-font;
+  fill: $sds-color-primitive-gray-600;
+}
+
+.hoverRect {
+  fill: transparent;
+}
