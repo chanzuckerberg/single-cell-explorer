@@ -1,7 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import ReactDOM from "react-dom";
 import { H2 } from "@blueprintjs/core";
 import memoize from "memoize-one";
+import { RootState } from "reducers";
+import { useSelector } from "react-redux";
+import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
+import { useCoverageQuery } from "hooks/useCoverageQuery";
 import Histogram from "./components/Histogram/Histogram";
 import { Cytoband } from "./components/Cytoband/Cytoband";
 import { AccessionsData, TooltipData } from "./types";
@@ -61,6 +65,35 @@ export function CoveragePlot() {
     TooltipData[] | null
   >(null);
 
+  const {
+    bottomPanelHidden,
+  } = useSelector((state: RootState) => ({
+    bottomPanelHidden: state.controls.bottomPanelHidden,
+  }))
+
+  const coverageQuery = useCoverageQuery({
+    cellType: "cell",
+    chromosome: "chr2",
+    options: {
+      enabled: !bottomPanelHidden,
+      retry: 3,
+    }
+  })
+
+  const coverageData = useMemo(() => ({
+    ...currentAccessionData,
+    coverage: coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
+  }), [coverageQuery.data?.coveragePlot])
+
+  const handleHistogramBarEnter = useCallback((hoverData: [number, number]) => {
+    if (hoverData && hoverData[0] === 0) {
+      setHistogramTooltipData(
+        getHistogramTooltipData(coverageData, hoverData[1])
+      )
+    }
+  }, [coverageData])
+
+
   const coverageVizContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!coverageVizContainer.current) return;
@@ -99,16 +132,8 @@ export function CoveragePlot() {
       );
       coverageViz.update();
     };
-    renderHistogram(currentAccessionData);
-  }, []);
-
-  const handleHistogramBarEnter = (hoverData: [number, number]) => {
-    if (hoverData && hoverData[0] === 0) {
-      setHistogramTooltipData(
-        getHistogramTooltipData(currentAccessionData, hoverData[1])
-      );
-    }
-  };
+    renderHistogram(coverageData);
+  }, [coverageData, handleHistogramBarEnter]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({
@@ -121,6 +146,19 @@ export function CoveragePlot() {
     setHistogramTooltipLocation(null);
     setHistogramTooltipData(null);
   };
+
+  if (coverageQuery.isLoading) {
+    return (
+      <div
+        className={SKELETON}
+        style={{
+          display: 'flex',
+          margin: '16px',
+          height: '80%',
+        }}
+      />
+    );
+  }
 
   return (
     <div>
