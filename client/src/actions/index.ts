@@ -4,12 +4,12 @@ import {
   storageSetTransient,
 } from "util/transientLocalStorage";
 import { KEYS } from "util/localStorage";
+import { fetchJson } from "util/fetch";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
 import {
   catchErrorsWrap,
-  doJsonRequest,
   dispatchNetworkErrorMessageToUser,
 } from "../util/actionHelpers";
 import { loadUserColorConfig } from "../util/stateManager/colorHelpers";
@@ -577,13 +577,6 @@ const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   window.history.pushState(null, "", url);
 };
 
-function fetchJson<T>(pathAndQuery: string, apiPrefix?: string): Promise<T> {
-  if (!globals.API) throw new Error("API not initialized");
-  if (!apiPrefix) apiPrefix = globals.API.prefix;
-  return doJsonRequest<T>(
-    `${apiPrefix}${globals.API.version}${pathAndQuery}`
-  ) as Promise<T>;
-}
 
 export const revertToAction = (targetCount: number) => ({
   type: "@@undoable/revert-to-action",
