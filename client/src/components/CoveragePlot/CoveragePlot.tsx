@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { H2 } from "@blueprintjs/core";
 import memoize from "memoize-one";
 import Histogram from "./components/Histogram/Histogram";
+import { Cytoband } from "./components/Cytoband/Cytoband";
 import { AccessionsData, TooltipData } from "./types";
 import { currentAccessionData } from "./mockData";
 import { formatPercent } from "./components/Histogram/ArrayUtils";
@@ -126,6 +127,7 @@ export function CoveragePlot() {
       <header>
         <H2>Cell Name</H2>
       </header>
+      <Cytoband chromosomeId="chr2" svgWidth={1310} />
       <div ref={coverageVizContainer} />
       {histogramTooltipLocation &&
         histogramTooltipData &&
