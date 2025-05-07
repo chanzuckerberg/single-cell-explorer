@@ -178,7 +178,23 @@ class UnsMetaAPI(DatasetResource):
     def get(self, data_adaptor):
         return common_rest.uns_metadata_get(request, data_adaptor)
 
-    # Add agent endpoint
+
+class ATACCoverageAPI(DatasetResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.atac_coverage_get(request, data_adaptor)
+
+
+class ATACGeneInfoAPI(DatasetResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.atac_gene_info_get(request, data_adaptor)
+
+
+class ATACCytobandAPI(DatasetResource):
+    @rest_get_s3uri_data_adaptor
+    def get(self, data_adaptor):
+        return common_rest.atac_cytoband_get(request, data_adaptor)
 
 
 class AgentAPI(S3URIResource):  # Inherit from S3URIResource instead of Resource
@@ -257,7 +273,13 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DiffExpObsAPI, "/diffexp/obs")
     add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
+    # Uns/Spatial
     add_resource(UnsMetaAPI, "/uns/meta")
+    # ATAC
+    add_resource(ATACCoverageAPI, "/atac/coverage")
+    add_resource(ATACGeneInfoAPI, "/atac/geneinfo")
+    add_resource(ATACCytobandAPI, "/atac/cytoband")
+    # Agent
     add_resource(AgentAPI, "/agent/step")
     return api
 

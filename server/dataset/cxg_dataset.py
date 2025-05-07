@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
+import random
 import threading
 
 import numpy as np
@@ -394,6 +395,53 @@ class CxgDataset(Dataset):
                 except Exception as e:
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
+
+    def get_atac_coverage(self, chr_key, cell_type):
+        """
+        Extracts ATAC coverage data - currently random mock data
+        """
+        region_length = 248956422
+        bin_size = 10_000
+        coverage_plot = []
+        for start in range(0, region_length, bin_size):
+            end = min(start + bin_size, region_length)
+            coverage = random.randint(0, 100)  # mock read count
+            coverage_plot.append([coverage, start, end])
+        return {"cellType": cell_type, "coveragePlot": coverage_plot}
+
+    def get_atac_gene_info(self, gene_name, genome_version):
+        """
+        Extracts ATAC gene info data
+        """
+        # TODO: Store in S3 bucket
+        try:
+            with open(f"gene_data_{genome_version}.json") as f:
+                gene_data = {genome_version: json.load(f)}  # You can extend this to support other genome versions
+        except FileNotFoundError:
+            raise
+
+        try:
+            gene_info = gene_data[genome_version].get(gene_name)
+        except KeyError:
+            raise
+
+        return gene_info
+
+    def get_atac_cytoband(self, chr_key, genome_version):
+        """
+        Extracts ATAC cytoband data
+        """
+        # TODO: Store in S3 bucket
+        try:
+            with open(f"cytoband_{genome_version}.json") as f:
+                cytoband_data = {genome_version: json.load(f)}  # You can extend this to support other genome versions
+        except FileNotFoundError:
+            raise
+        try:
+            cytoband_info = cytoband_data[genome_version].get(chr_key)
+        except KeyError:
+            raise
+        return cytoband_info
 
     # function to get the embedding
     # this function to iterate through embeddings.
