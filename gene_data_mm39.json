@@ -1,0 +1,30 @@
+{
+  "4933401J01Rik": {
+    "geneName": "4933401J01Rik",
+    "geneStart": 3143476,
+    "geneEnd": 3144545,
+    "geneStrand": "+",
+    "geneChromosome": "chr1"
+  },
+  "Gm26206": {
+    "geneName": "Gm26206",
+    "geneStart": 3172239,
+    "geneEnd": 3172348,
+    "geneStrand": "+",
+    "geneChromosome": "chr1"
+  },
+  "Xkr4": {
+    "geneName": "Xkr4",
+    "geneStart": 3276124,
+    "geneEnd": 3741721,
+    "geneStrand": "-",
+    "geneChromosome": "chr1"
+  },
+  "Gm18956": {
+    "geneName": "Gm18956",
+    "geneStart": 3322980,
+    "geneEnd": 3323459,
+    "geneStrand": "+",
+    "geneChromosome": "chr1"
+  }
+}

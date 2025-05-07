@@ -1,0 +1,382 @@
+{
+  "chr1": [
+    {
+      "start": 0,
+      "end": 2300000,
+      "name": "p36.33",
+      "stain": "gneg"
+    },
+    {
+      "start": 2300000,
+      "end": 5300000,
+      "name": "p36.32",
+      "stain": "gpos25"
+    },
+    {
+      "start": 5300000,
+      "end": 7100000,
+      "name": "p36.31",
+      "stain": "gneg"
+    },
+    {
+      "start": 7100000,
+      "end": 9100000,
+      "name": "p36.23",
+      "stain": "gpos25"
+    },
+    {
+      "start": 9100000,
+      "end": 12500000,
+      "name": "p36.22",
+      "stain": "gneg"
+    },
+    {
+      "start": 12500000,
+      "end": 15900000,
+      "name": "p36.21",
+      "stain": "gpos50"
+    },
+    {
+      "start": 15900000,
+      "end": 20100000,
+      "name": "p36.13",
+      "stain": "gneg"
+    },
+    {
+      "start": 20100000,
+      "end": 23600000,
+      "name": "p36.12",
+      "stain": "gpos25"
+    },
+    {
+      "start": 23600000,
+      "end": 27600000,
+      "name": "p36.11",
+      "stain": "gneg"
+    },
+    {
+      "start": 27600000,
+      "end": 29900000,
+      "name": "p35.3",
+      "stain": "gpos25"
+    },
+    {
+      "start": 29900000,
+      "end": 32300000,
+      "name": "p35.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 32300000,
+      "end": 34300000,
+      "name": "p35.1",
+      "stain": "gpos25"
+    },
+    {
+      "start": 34300000,
+      "end": 39600000,
+      "name": "p34.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 39600000,
+      "end": 43700000,
+      "name": "p34.2",
+      "stain": "gpos25"
+    },
+    {
+      "start": 43700000,
+      "end": 46300000,
+      "name": "p34.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 46300000,
+      "end": 50200000,
+      "name": "p33",
+      "stain": "gpos75"
+    },
+    {
+      "start": 50200000,
+      "end": 55600000,
+      "name": "p32.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 55600000,
+      "end": 58500000,
+      "name": "p32.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 58500000,
+      "end": 60800000,
+      "name": "p32.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 60800000,
+      "end": 68500000,
+      "name": "p31.3",
+      "stain": "gpos50"
+    },
+    {
+      "start": 68500000,
+      "end": 69300000,
+      "name": "p31.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 69300000,
+      "end": 84400000,
+      "name": "p31.1",
+      "stain": "gpos100"
+    },
+    {
+      "start": 84400000,
+      "end": 87900000,
+      "name": "p22.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 87900000,
+      "end": 91500000,
+      "name": "p22.2",
+      "stain": "gpos75"
+    },
+    {
+      "start": 91500000,
+      "end": 94300000,
+      "name": "p22.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 94300000,
+      "end": 99300000,
+      "name": "p21.3",
+      "stain": "gpos75"
+    },
+    {
+      "start": 99300000,
+      "end": 101800000,
+      "name": "p21.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 101800000,
+      "end": 106700000,
+      "name": "p21.1",
+      "stain": "gpos100"
+    },
+    {
+      "start": 106700000,
+      "end": 111200000,
+      "name": "p13.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 111200000,
+      "end": 115500000,
+      "name": "p13.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 115500000,
+      "end": 117200000,
+      "name": "p13.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 117200000,
+      "end": 120400000,
+      "name": "p12",
+      "stain": "gpos50"
+    },
+    {
+      "start": 120400000,
+      "end": 121700000,
+      "name": "p11.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 121700000,
+      "end": 123400000,
+      "name": "p11.1",
+      "stain": "acen"
+    },
+    {
+      "start": 123400000,
+      "end": 125100000,
+      "name": "q11",
+      "stain": "acen"
+    },
+    {
+      "start": 125100000,
+      "end": 143200000,
+      "name": "q12",
+      "stain": "gvar"
+    },
+    {
+      "start": 143200000,
+      "end": 147500000,
+      "name": "q21.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 147500000,
+      "end": 150600000,
+      "name": "q21.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 150600000,
+      "end": 155100000,
+      "name": "q21.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 155100000,
+      "end": 156600000,
+      "name": "q22",
+      "stain": "gpos50"
+    },
+    {
+      "start": 156600000,
+      "end": 159100000,
+      "name": "q23.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 159100000,
+      "end": 160500000,
+      "name": "q23.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 160500000,
+      "end": 165500000,
+      "name": "q23.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 165500000,
+      "end": 167200000,
+      "name": "q24.1",
+      "stain": "gpos50"
+    },
+    {
+      "start": 167200000,
+      "end": 170900000,
+      "name": "q24.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 170900000,
+      "end": 173000000,
+      "name": "q24.3",
+      "stain": "gpos75"
+    },
+    {
+      "start": 173000000,
+      "end": 176100000,
+      "name": "q25.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 176100000,
+      "end": 180300000,
+      "name": "q25.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 180300000,
+      "end": 185800000,
+      "name": "q25.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 185800000,
+      "end": 190800000,
+      "name": "q31.1",
+      "stain": "gpos100"
+    },
+    {
+      "start": 190800000,
+      "end": 193800000,
+      "name": "q31.2",
+      "stain": "gneg"
+    },
+    {
+      "start": 193800000,
+      "end": 198700000,
+      "name": "q31.3",
+      "stain": "gpos100"
+    },
+    {
+      "start": 198700000,
+      "end": 207100000,
+      "name": "q32.1",
+      "stain": "gneg"
+    },
+    {
+      "start": 207100000,
+      "end": 211300000,
+      "name": "q32.2",
+      "stain": "gpos25"
+    },
+    {
+      "start": 211300000,
+      "end": 214400000,
+      "name": "q32.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 214400000,
+      "end": 223900000,
+      "name": "q41",
+      "stain": "gpos100"
+    },
+    {
+      "start": 223900000,
+      "end": 224400000,
+      "name": "q42.11",
+      "stain": "gneg"
+    },
+    {
+      "start": 224400000,
+      "end": 226800000,
+      "name": "q42.12",
+      "stain": "gpos25"
+    },
+    {
+      "start": 226800000,
+      "end": 230500000,
+      "name": "q42.13",
+      "stain": "gneg"
+    },
+    {
+      "start": 230500000,
+      "end": 234600000,
+      "name": "q42.2",
+      "stain": "gpos50"
+    },
+    {
+      "start": 234600000,
+      "end": 236400000,
+      "name": "q42.3",
+      "stain": "gneg"
+    },
+    {
+      "start": 236400000,
+      "end": 243500000,
+      "name": "q43",
+      "stain": "gpos75"
+    },
+    {
+      "start": 243500000,
+      "end": 248956422,
+      "name": "q44",
+      "stain": "gneg"
+    }
+  ]
+}
