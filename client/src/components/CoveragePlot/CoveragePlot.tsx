@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import ReactDOM from "react-dom";
-import { H2 } from "@blueprintjs/core";
 import memoize from "memoize-one";
 import { RootState } from "reducers";
 import { useSelector } from "react-redux";
@@ -14,6 +13,7 @@ import { formatPercent } from "./components/Histogram/ArrayUtils";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
+import { ViewerBody, ViewerWrapper, Title, Subtitle } from "./style";
 
 export const READ_FILL_COLOR = "#A9BDFC";
 export const CONTIG_FILL_COLOR = "#3867FA";
@@ -108,22 +108,21 @@ export function CoveragePlot() {
         coverageVizContainer.current,
         [coverageVizData],
         {
-          labelY: "Coverage",
           domain: [0, data.total_length],
           skipBins: true,
           numBins: Math.round(data.total_length / data.coverage_bin_size),
           showStatistics: false,
           colors: [READ_FILL_COLOR],
           hoverColors: [CONTIG_FILL_COLOR],
+          xTickValues: [],
           barOpacity: 1,
           margins: {
-            left: 50,
+            left: 25,
             right: 40,
             top: 30,
             bottom: 30,
           },
           numTicksY: 2,
-          labelYHorizontalOffset: 15,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
           onHistogramBarEnter: handleHistogramBarEnter,
@@ -161,23 +160,26 @@ export function CoveragePlot() {
   }
 
   return (
-    <div>
+    <ViewerWrapper>
       <header>
-        <H2>Cell Name</H2>
+        <Title>Chromatin Accessibility Viewer</Title>
+        <Subtitle>Chromosome 1</Subtitle>
       </header>
-      <Cytoband chromosomeId="chr2" svgWidth={1310} />
-      <div ref={coverageVizContainer} />
-      {histogramTooltipLocation &&
-        histogramTooltipData &&
-        ReactDOM.createPortal(
-          <div
-            style={getTooltipStyle(histogramTooltipLocation)}
-            className={cs.hoverTooltip}
-          >
-            <TooltipVizTable data={histogramTooltipData} />
-          </div>,
-          document.body
-        )}
-    </div>
+      <ViewerBody>
+        <Cytoband chromosomeId="chr2" svgWidth={1310} />
+        <div ref={coverageVizContainer} />
+        {histogramTooltipLocation &&
+          histogramTooltipData &&
+          ReactDOM.createPortal(
+            <div
+              style={getTooltipStyle(histogramTooltipLocation)}
+              className={cs.hoverTooltip}
+            >
+              <TooltipVizTable data={histogramTooltipData} />
+            </div>,
+            document.body
+          )}
+      </ViewerBody>
+    </ViewerWrapper>
   );
 }

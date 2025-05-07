@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 
 export const CytobandWrapper = styled.div`
+  margin-left: 25px;
   .gneg {
     fill: #f3f3f3;
   }
