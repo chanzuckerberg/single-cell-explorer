@@ -83,6 +83,7 @@ export default class Histogram {
       seriesNames: null,
       showStatistics: true,
       refValues: [],
+      numTicksY: 2,
       // If true, the data is already binned, i.e. the data is an array of
       // { x0, length }
       skipBins: false,
@@ -134,8 +135,8 @@ export default class Histogram {
       g.call(axis.ticks(nTicks));
     }
 
-    if (this.options.tickValues) {
-      g.call(axis.tickValues(this.options.tickValues));
+    if (this.options.xTickValues) {
+      g.call(axis.tickValues(this.options.xTickValues));
     }
 
     g.append("text")
