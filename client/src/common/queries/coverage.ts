@@ -1,4 +1,5 @@
 import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
+import { fetchJson } from "util/fetch";
 import { ENTITIES } from "./entites";
 
 type CoveragePlotData = [number, number, number, number, number][];
@@ -13,15 +14,9 @@ async function fetchCoverage(chromosome: string, cellType: string): Promise<Fetc
   params.set("chr", chromosome);
   params.set("cell_type", cellType);
 
-  const response = await fetch(
+  return fetchJson<FetchCoverageResponse>(
     `/atac/coverage?${params.toString()}`
   );
-
-  if (!response.ok) {
-    throw new Error(`Error fetching coverage data: ${response.statusText}`);
-  }
-
-  return response.json();
 }
 
 interface UseCoverageQueryOptions {
