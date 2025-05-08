@@ -22,6 +22,8 @@ export const BottomPanelContainer = styled.div`
   height: 200px;
   width: 100%;
   overflow-x: scroll;
+  // TODO: (smccanny) make the 56px dynamic?
+  padding: 16px 16px 16px 56px;
 `;
 
 export const BottomPanelButton = styled(Button)`

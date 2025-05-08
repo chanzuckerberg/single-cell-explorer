@@ -11,13 +11,11 @@ type $TSFixMe = any;
 export const HISTOGRAM_SCALE = {
   LINEAR: "linear",
   LOG: "log",
-  SYM_LOG: "sym_log",
 };
 
 const HISTOGRAM_SCALE_FUNCTIONS = {
   [HISTOGRAM_SCALE.LINEAR]: d3.scaleLinear,
   [HISTOGRAM_SCALE.LOG]: d3.scaleLog,
-  // [HISTOGRAM_SCALE.SYM_LOG]: scaleSymlog, TODO: do we need this?
 };
 
 const TICK_LINE = ".tick line";
@@ -56,22 +54,17 @@ export default class Histogram {
     this.g = null;
     this.container = d3.select(container);
     this.data = parseData(data);
-
     this.margins = options.margins || {
       top: 20,
       right: 40,
       bottom: 40,
-      left: 40,
-    };
-
-    this.size = {
-      width: container.clientWidth || 800,
-      height: container.clientHeight || 100,
+      left: 20,
     };
 
     this.options = {
       barOpacity: 0.8,
       colormap: "viridis",
+      innerWidth: 800,
       labelsBold: false,
       labelsLarge: false,
       labelX: "",
@@ -100,6 +93,12 @@ export default class Histogram {
       ...options,
     };
 
+    this.size = {
+      innerWidth: this.options.innerWidth,
+      width: this.options.innerWidth + this.margins.left + this.margins.right,
+      height: 50,
+    };
+
     // The x-center of the last bar that was hovered over.
     // Since the histogram can take multiple data series, this is easier to store than [seriesIndex, dataIndex]
     this.lastHoveredBarX = null;
@@ -110,7 +109,8 @@ export default class Histogram {
     this.svg = this.container
       .append("svg")
       .attr("width", this.size.width)
-      .attr("height", this.size.height);
+      .attr("height", this.size.height)
+      .attr("transform", `translate(-${this.margins.left}, 0)`);
   }
 
   xAxis(g: $TSFixMe, x: $TSFixMe) {
@@ -127,10 +127,7 @@ export default class Histogram {
 
     // if using log10 scale, set the number of ticks according to the size of
     // the domain (in powers of 10) to prevent extra labels from showing up
-    if (
-      this.options.xScaleType === HISTOGRAM_SCALE.LOG ||
-      this.options.xScaleType === HISTOGRAM_SCALE.SYM_LOG
-    ) {
+    if (this.options.xScaleType === HISTOGRAM_SCALE.LOG) {
       const nTicks = Math.log10(x.domain()[1]) + 1;
       g.call(axis.ticks(nTicks));
     }
@@ -140,7 +137,7 @@ export default class Histogram {
     }
 
     g.append("text")
-      .attr("x", (this.size.width + this.margins.left) / 2 - 2)
+      .attr("x", (this.size.innerWidth + this.margins.left) / 2 - 2)
       .attr("y", 30 + this.options.labelXVerticalOffset)
       .attr("fill", "#000")
       .attr(FONT_WEIGHT, 600)
@@ -157,7 +154,7 @@ export default class Histogram {
 
     if (this.options.labelXSubtext) {
       g.append("text")
-        .attr("x", this.size.width / 2)
+        .attr("x", this.size.innerWidth / 2)
         .attr("y", 47 + this.options.labelXVerticalOffset)
         .attr(TEXT_ANCHOR, "middle")
         .attr("class", cs.labelXSubtext)
@@ -262,8 +259,6 @@ export default class Histogram {
       // Due to historical reasons we return a fixed min for log scales
       case HISTOGRAM_SCALE.LOG:
         return [1, d3.max(maxs)];
-      case HISTOGRAM_SCALE.SYM_LOG:
-        return [0, d3.max(maxs)];
       default:
         throw new Error(
           `Histogram: unknown xScaleType ${this.options.xScaleType}`
@@ -534,12 +529,6 @@ export default class Histogram {
       .nice()
       .range([this.size.height - this.margins.bottom, this.margins.top]);
 
-    if (this.options.yScaleType === HISTOGRAM_SCALE.SYM_LOG) {
-      // fix the ticks function
-      // this fix was not applied to the x axis yet
-      this.fixSymLogScaleTicks(y);
-    }
-
     this.svg.append("g").call(this.xAxis.bind(this), x);
     this.svg.append("g").call(this.yAxis.bind(this), y);
 
@@ -661,7 +650,6 @@ export default class Histogram {
       }
     }
 
-    this.barCentersToIndices = barCentersToIndices;
     this.sortedBarCenters = barCenters.sort(
       (a: $TSFixMe, b: $TSFixMe) => a - b
     );

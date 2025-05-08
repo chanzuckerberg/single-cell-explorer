@@ -18,10 +18,9 @@ import { formatPercent } from "./components/Histogram/ArrayUtils";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
-import { ViewerWrapper } from "./style";
 
-export const READ_FILL_COLOR = "#A9BDFC";
-export const CONTIG_FILL_COLOR = "#3867FA";
+export const READ_FILL_COLOR = "#CCCCCC";
+export const CONTIG_FILL_COLOR = "#767676";
 
 const generateCoverageVizData = (
   coverageData: AccessionsData["coverage"],
@@ -61,7 +60,7 @@ export const getHistogramTooltipData = memoize(
   }
 );
 
-export function CoveragePlot() {
+export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
     top: number;
@@ -113,6 +112,13 @@ export function CoveragePlot() {
         data.coverage_bin_size
       );
 
+      const formatTick = (n: number) => {
+        if (n >= 1_000_000_000) return `${Math.round(n / 1_000_000_000)}B`;
+        if (n >= 1_000_000) return `${Math.round(n / 1_000_000)}M`;
+        if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+        return n.toString();
+      };
+
       const coverageViz = new Histogram(
         coverageVizContainer.current,
         [coverageVizData],
@@ -124,14 +130,16 @@ export function CoveragePlot() {
           colors: [READ_FILL_COLOR],
           hoverColors: [CONTIG_FILL_COLOR],
           xTickValues: [],
+          yTickFormat: formatTick,
           barOpacity: 1,
           margins: {
-            left: 25,
-            right: 40,
-            top: 30,
-            bottom: 30,
+            left: 40,
+            right: 10,
+            top: 10,
+            bottom: 5,
           },
-          numTicksY: 2,
+          innerWidth: svgWidth,
+          numTicksY: 1,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
           onHistogramBarEnter: handleHistogramBarEnter,
@@ -141,7 +149,7 @@ export function CoveragePlot() {
       coverageViz.update();
     };
     renderHistogram(coverageData);
-  }, [coverageData, handleHistogramBarEnter]);
+  }, [coverageData, handleHistogramBarEnter, svgWidth]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({
@@ -169,7 +177,7 @@ export function CoveragePlot() {
   }
 
   return (
-    <ViewerWrapper>
+    <>
       <div ref={coverageVizContainer} />
       {histogramTooltipLocation &&
         histogramTooltipData &&
@@ -182,6 +190,6 @@ export function CoveragePlot() {
           </div>,
           document.body
         )}
-    </ViewerWrapper>
+    </>
   );
 }
