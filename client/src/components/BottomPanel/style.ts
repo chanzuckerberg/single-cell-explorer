@@ -21,6 +21,7 @@ export const BottomPanelWrapper = styled.div<BottomPanelWrapperProps>`
 export const BottomPanelContainer = styled.div`
   height: 200px;
   width: 100%;
+  overflow-x: scroll;
 `;
 
 export const BottomPanelButton = styled(Button)`
@@ -32,24 +33,24 @@ export const BottomPanelButton = styled(Button)`
   &:hover {
     background-color: ${globals.lightGrey};
   }
-`
+`;
 
 export const BottomPanelHeader = styled.div`
   align-items: center;
   display: flex;
   justify-content: space-between;
   padding: 16px;
-`
+`;
 
 export const BottomPanelHeaderTitle = styled.h3`
   font-size: 16px;
   font-weight: 600;
   line-height: 22px;
   margin: 0;
-`
+`;
 
 export const BottomPanelHeaderActions = styled.div`
   align-items: center;
   display: flex;
   gap: 8px;
-`
+`;

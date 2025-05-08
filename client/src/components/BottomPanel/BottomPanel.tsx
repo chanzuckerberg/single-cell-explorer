@@ -1,8 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
+import { ScaleBar } from "./components/ScaleBar/ScaleBar";
 import { Props, mapStateToProps } from "./types";
-
-import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
+import { Cytoband } from "./components/Cytoband/Cytoband";
+import { CoveragePlot } from "./components/CoveragePlot/CoveragePlot";
 import {
   BottomPanelContainer,
   BottomPanelHeader,
@@ -54,6 +55,8 @@ const BottomSideBar = ({
 
     {!bottomPanelMinimized && (
       <BottomPanelContainer>
+        <ScaleBar svgWidth={1310} />
+        <Cytoband chromosomeId="chr2" svgWidth={1310} />
         <CoveragePlot />
       </BottomPanelContainer>
     )}

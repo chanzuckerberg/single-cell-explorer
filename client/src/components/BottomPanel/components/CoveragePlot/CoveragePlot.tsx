@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import ReactDOM from "react-dom";
 import memoize from "memoize-one";
 import { RootState } from "reducers";
@@ -6,14 +12,13 @@ import { useSelector } from "react-redux";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useCoverageQuery } from "hooks/useCoverageQuery";
 import Histogram from "./components/Histogram/Histogram";
-import { Cytoband } from "./components/Cytoband/Cytoband";
 import { AccessionsData, TooltipData } from "./types";
 import { currentAccessionData } from "./mockData";
 import { formatPercent } from "./components/Histogram/ArrayUtils";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
-import { ViewerBody, ViewerWrapper, Title, Subtitle } from "./style";
+import { ViewerWrapper } from "./style";
 
 export const READ_FILL_COLOR = "#A9BDFC";
 export const CONTIG_FILL_COLOR = "#3867FA";
@@ -65,34 +70,38 @@ export function CoveragePlot() {
     TooltipData[] | null
   >(null);
 
-  const {
-    bottomPanelHidden,
-  } = useSelector((state: RootState) => ({
+  const { bottomPanelHidden } = useSelector((state: RootState) => ({
     bottomPanelHidden: state.controls.bottomPanelHidden,
-  }))
+  }));
 
   const coverageQuery = useCoverageQuery({
     cellType: "cell",
-    chromosome: "chr2",
+    chromosome: "chr1",
     options: {
       enabled: !bottomPanelHidden,
       retry: 3,
-    }
-  })
+    },
+  });
 
-  const coverageData = useMemo(() => ({
-    ...currentAccessionData,
-    coverage: coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
-  }), [coverageQuery.data?.coveragePlot])
+  const coverageData = useMemo(
+    () => ({
+      ...currentAccessionData,
+      coverage:
+        coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
+    }),
+    [coverageQuery.data?.coveragePlot]
+  );
 
-  const handleHistogramBarEnter = useCallback((hoverData: [number, number]) => {
-    if (hoverData && hoverData[0] === 0) {
-      setHistogramTooltipData(
-        getHistogramTooltipData(coverageData, hoverData[1])
-      )
-    }
-  }, [coverageData])
-
+  const handleHistogramBarEnter = useCallback(
+    (hoverData: [number, number]) => {
+      if (hoverData && hoverData[0] === 0) {
+        setHistogramTooltipData(
+          getHistogramTooltipData(coverageData, hoverData[1])
+        );
+      }
+    },
+    [coverageData]
+  );
 
   const coverageVizContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -151,9 +160,9 @@ export function CoveragePlot() {
       <div
         className={SKELETON}
         style={{
-          display: 'flex',
-          margin: '16px',
-          height: '80%',
+          display: "flex",
+          margin: "16px",
+          height: "80%",
         }}
       />
     );
@@ -161,25 +170,18 @@ export function CoveragePlot() {
 
   return (
     <ViewerWrapper>
-      <header>
-        <Title>Chromatin Accessibility Viewer</Title>
-        <Subtitle>Chromosome 1</Subtitle>
-      </header>
-      <ViewerBody>
-        <Cytoband chromosomeId="chr2" svgWidth={1310} />
-        <div ref={coverageVizContainer} />
-        {histogramTooltipLocation &&
-          histogramTooltipData &&
-          ReactDOM.createPortal(
-            <div
-              style={getTooltipStyle(histogramTooltipLocation)}
-              className={cs.hoverTooltip}
-            >
-              <TooltipVizTable data={histogramTooltipData} />
-            </div>,
-            document.body
-          )}
-      </ViewerBody>
+      <div ref={coverageVizContainer} />
+      {histogramTooltipLocation &&
+        histogramTooltipData &&
+        ReactDOM.createPortal(
+          <div
+            style={getTooltipStyle(histogramTooltipLocation)}
+            className={cs.hoverTooltip}
+          >
+            <TooltipVizTable data={histogramTooltipData} />
+          </div>,
+          document.body
+        )}
     </ViewerWrapper>
   );
 }
