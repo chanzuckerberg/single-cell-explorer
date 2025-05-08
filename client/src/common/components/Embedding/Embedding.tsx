@@ -228,7 +228,7 @@ const Embedding = (props: Props) => {
           />
         )}
 
-        {getFeatureFlag(FEATURES.MULTIOME_VIZ) && (
+        {!isSidePanel && getFeatureFlag(FEATURES.MULTIOME_VIZ) && (
           <Button
             icon={(
               <ChromatinIconContainer active={!bottomPanelHidden}>
