@@ -1,4 +1,5 @@
 import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
+import { ENTITIES } from "./entites";
 
 type CoveragePlotData = [number, number, number, number, number][];
 
@@ -26,14 +27,19 @@ async function fetchCoverage(chromosome: string, cellType: string): Promise<Fetc
 interface UseCoverageQueryOptions {
   chromosome: string;
   cellType: string;
-  options?: Partial<UndefinedInitialDataOptions<FetchCoverageResponse, Error>>
+  options?: Partial<UndefinedInitialDataOptions<FetchCoverageResponse>>
+}
+
+export const USE_COVERAGE = {
+  entities: [ENTITIES.COVERAGE],
+  id: "coverage",
 }
 
 export function useCoverageQuery(
   { chromosome, cellType, options }: UseCoverageQueryOptions
 ) {
-  return useQuery<FetchCoverageResponse, Error>({
-    queryKey: ['fetch-coverage', chromosome, cellType],
+  return useQuery<FetchCoverageResponse>({
+    queryKey: [USE_COVERAGE, chromosome, cellType],
     queryFn: () => fetchCoverage(chromosome, cellType),
     ...options,
   })
