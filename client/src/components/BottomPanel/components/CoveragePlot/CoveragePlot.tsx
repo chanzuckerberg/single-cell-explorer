@@ -10,7 +10,7 @@ import memoize from "memoize-one";
 import { RootState } from "reducers";
 import { useSelector } from "react-redux";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
-import { useCoverageQuery } from "hooks/useCoverageQuery";
+import { useCoverageQuery } from "common/queries/coverage";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { currentAccessionData } from "./mockData";
