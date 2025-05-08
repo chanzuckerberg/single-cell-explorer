@@ -3,7 +3,6 @@ import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import random
-import sys
 import threading
 
 import numpy as np
@@ -421,48 +420,31 @@ class CxgDataset(Dataset):
         gene_data_<genome_version>.json
         """
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
-
         dl = DataLocator(file_uri)
-        if not dl.exists():
-            sys.stderr.write(f"NOT FOUND: {file_uri}\n")
-            return None
 
         try:
             with dl.open("r") as f:
-                gene_data = {genome_version: json.load(f)}
-        except FileNotFoundError:
-            raise
-
-        try:
-            gene_info = gene_data[genome_version].get(gene_name)
-        except KeyError:
-            raise
-
-        return gene_info
+                gene_data = json.load(f)
+            return gene_data.get(gene_name)
+        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+            logging.error(f"Error accessing gene data: {e}")
+            return None
 
     def get_atac_cytoband(self, chr_key, genome_version):
         """
         Extracts ATAC cytoband data from a JSON file
         cytoband_<genome_version>.json
         """
-
         file_uri = f"{self.atac_base_uri}/cytoband_{genome_version}.json"
-
         dl = DataLocator(file_uri)
-        if not dl.exists():
-            sys.stderr.write(f"NOT FOUND: {file_uri}\n")
-            return None
 
         try:
             with dl.open("r") as f:
-                cytoband_data = {genome_version: json.load(f)}
-        except FileNotFoundError:
-            raise
-        try:
-            cytoband_info = cytoband_data[genome_version].get(chr_key)
-        except KeyError:
-            raise
-        return cytoband_info
+                cytoband_data = json.load(f)
+            return cytoband_data.get(chr_key)
+        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+            logging.error(f"Error accessing cytoband data: {e}")
+            return None
 
     # function to get the embedding
     # this function to iterate through embeddings.
