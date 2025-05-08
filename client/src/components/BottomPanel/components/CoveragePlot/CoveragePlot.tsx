@@ -1,13 +1,17 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import ReactDOM from "react-dom";
-import { H2 } from "@blueprintjs/core";
 import memoize from "memoize-one";
 import { RootState } from "reducers";
 import { useSelector } from "react-redux";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useCoverageQuery } from "hooks/useCoverageQuery";
 import Histogram from "./components/Histogram/Histogram";
-import { Cytoband } from "./components/Cytoband/Cytoband";
 import { AccessionsData, TooltipData } from "./types";
 import { currentAccessionData } from "./mockData";
 import { formatPercent } from "./components/Histogram/ArrayUtils";
@@ -15,8 +19,8 @@ import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
 
-export const READ_FILL_COLOR = "#A9BDFC";
-export const CONTIG_FILL_COLOR = "#3867FA";
+export const READ_FILL_COLOR = "#CCCCCC";
+export const CONTIG_FILL_COLOR = "#767676";
 
 const generateCoverageVizData = (
   coverageData: AccessionsData["coverage"],
@@ -56,7 +60,7 @@ export const getHistogramTooltipData = memoize(
   }
 );
 
-export function CoveragePlot() {
+export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
     top: number;
@@ -65,34 +69,38 @@ export function CoveragePlot() {
     TooltipData[] | null
   >(null);
 
-  const {
-    bottomPanelHidden,
-  } = useSelector((state: RootState) => ({
+  const { bottomPanelHidden } = useSelector((state: RootState) => ({
     bottomPanelHidden: state.controls.bottomPanelHidden,
-  }))
+  }));
 
   const coverageQuery = useCoverageQuery({
     cellType: "cell",
-    chromosome: "chr2",
+    chromosome: "chr1",
     options: {
       enabled: !bottomPanelHidden,
       retry: 3,
-    }
-  })
+    },
+  });
 
-  const coverageData = useMemo(() => ({
-    ...currentAccessionData,
-    coverage: coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
-  }), [coverageQuery.data?.coveragePlot])
+  const coverageData = useMemo(
+    () => ({
+      ...currentAccessionData,
+      coverage:
+        coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
+    }),
+    [coverageQuery.data?.coveragePlot]
+  );
 
-  const handleHistogramBarEnter = useCallback((hoverData: [number, number]) => {
-    if (hoverData && hoverData[0] === 0) {
-      setHistogramTooltipData(
-        getHistogramTooltipData(coverageData, hoverData[1])
-      )
-    }
-  }, [coverageData])
-
+  const handleHistogramBarEnter = useCallback(
+    (hoverData: [number, number]) => {
+      if (hoverData && hoverData[0] === 0) {
+        setHistogramTooltipData(
+          getHistogramTooltipData(coverageData, hoverData[1])
+        );
+      }
+    },
+    [coverageData]
+  );
 
   const coverageVizContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -104,26 +112,34 @@ export function CoveragePlot() {
         data.coverage_bin_size
       );
 
+      const formatTick = (n: number) => {
+        if (n >= 1_000_000_000) return `${Math.round(n / 1_000_000_000)}B`;
+        if (n >= 1_000_000) return `${Math.round(n / 1_000_000)}M`;
+        if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
+        return n.toString();
+      };
+
       const coverageViz = new Histogram(
         coverageVizContainer.current,
         [coverageVizData],
         {
-          labelY: "Coverage",
           domain: [0, data.total_length],
           skipBins: true,
           numBins: Math.round(data.total_length / data.coverage_bin_size),
           showStatistics: false,
           colors: [READ_FILL_COLOR],
           hoverColors: [CONTIG_FILL_COLOR],
+          xTickValues: [],
+          yTickFormat: formatTick,
           barOpacity: 1,
           margins: {
-            left: 50,
-            right: 40,
-            top: 30,
-            bottom: 30,
+            left: 40,
+            right: 10,
+            top: 10,
+            bottom: 5,
           },
-          numTicksY: 2,
-          labelYHorizontalOffset: 15,
+          innerWidth: svgWidth,
+          numTicksY: 1,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
           onHistogramBarEnter: handleHistogramBarEnter,
@@ -133,7 +149,7 @@ export function CoveragePlot() {
       coverageViz.update();
     };
     renderHistogram(coverageData);
-  }, [coverageData, handleHistogramBarEnter]);
+  }, [coverageData, handleHistogramBarEnter, svgWidth]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({
@@ -152,20 +168,16 @@ export function CoveragePlot() {
       <div
         className={SKELETON}
         style={{
-          display: 'flex',
-          margin: '16px',
-          height: '80%',
+          display: "flex",
+          margin: "16px",
+          height: "80%",
         }}
       />
     );
   }
 
   return (
-    <div>
-      <header>
-        <H2>Cell Name</H2>
-      </header>
-      <Cytoband chromosomeId="chr2" svgWidth={1310} />
+    <>
       <div ref={coverageVizContainer} />
       {histogramTooltipLocation &&
         histogramTooltipData &&
@@ -178,6 +190,6 @@ export function CoveragePlot() {
           </div>,
           document.body
         )}
-    </div>
+    </>
   );
 }
