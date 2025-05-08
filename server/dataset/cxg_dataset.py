@@ -16,6 +16,7 @@ from server.common.constants import XApproximateDistribution
 from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
+from server.common.utils.data_locator import DataLocator
 from server.common.utils.type_conversion_utils import get_schema_type_hint_from_dtype
 from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
@@ -47,6 +48,10 @@ class CxgDataset(Dataset):
         self.schema = None
         self.genesets = None
         self.X_approximate_distribution = None
+
+        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
+        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
+        self.atac_base_uri = f"s3://atac-static-{self.env}"
 
         self._validate_and_initialize()
 
@@ -411,37 +416,35 @@ class CxgDataset(Dataset):
 
     def get_atac_gene_info(self, gene_name, genome_version):
         """
-        Extracts ATAC gene info data
+        Extracts ATAC gene info data from a JSON file
+        gene_data_<genome_version>.json
         """
-        # TODO: Store in S3 bucket
-        try:
-            with open(f"gene_data_{genome_version}.json") as f:
-                gene_data = {genome_version: json.load(f)}  # You can extend this to support other genome versions
-        except FileNotFoundError:
-            raise
+        file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
+        dl = DataLocator(file_uri)
 
         try:
-            gene_info = gene_data[genome_version].get(gene_name)
-        except KeyError:
-            raise
-
-        return gene_info
+            with dl.open("r") as f:
+                gene_data = json.load(f)
+            return gene_data.get(gene_name)
+        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+            logging.error(f"Error accessing gene data: {e}")
+            return None
 
     def get_atac_cytoband(self, chr_key, genome_version):
         """
-        Extracts ATAC cytoband data
+        Extracts ATAC cytoband data from a JSON file
+        cytoband_<genome_version>.json
         """
-        # TODO: Store in S3 bucket
+        file_uri = f"{self.atac_base_uri}/cytoband_{genome_version}.json"
+        dl = DataLocator(file_uri)
+
         try:
-            with open(f"cytoband_{genome_version}.json") as f:
-                cytoband_data = {genome_version: json.load(f)}  # You can extend this to support other genome versions
-        except FileNotFoundError:
-            raise
-        try:
-            cytoband_info = cytoband_data[genome_version].get(chr_key)
-        except KeyError:
-            raise
-        return cytoband_info
+            with dl.open("r") as f:
+                cytoband_data = json.load(f)
+            return cytoband_data.get(chr_key)
+        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+            logging.error(f"Error accessing cytoband data: {e}")
+            return None
 
     # function to get the embedding
     # this function to iterate through embeddings.
