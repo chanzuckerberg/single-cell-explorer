@@ -20,7 +20,7 @@ export const Cytoband = ({
         (maxEnd, band) => Math.max(maxEnd, band.end),
         0
       ); // Get the maximum end position for the chromosome
-      const yPos = 20;
+      const yPos = 1; // account for the border stroke
       const borderRadius = chrHeight / 2;
       const pillId = `clip-${chromosomeId}`;
 
@@ -47,6 +47,7 @@ export const Cytoband = ({
         .attr("width", svgWidth)
         .attr("height", chrHeight)
         .attr("fill", "none")
+        .style("transform", `translate(1px, 0)`) // account for the border stroke
         .attr("stroke", "#C3C3C3");
 
       // Group for bands with clipping
@@ -54,6 +55,7 @@ export const Cytoband = ({
         .append("g")
         .attr("id", chromosomeId)
         .attr("class", "cytoband-group")
+        .style("transform", `translate(1px, 0)`) // account for the border stroke
         .attr("clip-path", `url(#${pillId})`);
 
       bands.forEach((band, index) => {
@@ -103,7 +105,7 @@ export const Cytoband = ({
 
   return (
     <CytobandWrapper>
-      <svg id="cytoband-svg" width={svgWidth} height="60">
+      <svg id="cytoband-svg" width={svgWidth + 2} height="20">
         <g id="cytoband-groups" />
       </svg>
     </CytobandWrapper>
