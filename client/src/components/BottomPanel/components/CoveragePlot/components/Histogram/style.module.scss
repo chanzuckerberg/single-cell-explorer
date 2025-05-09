@@ -6,13 +6,14 @@
 
 .xAxisTickText,
 .yAxisTickText {
-  font: $sds-font-body-xxxs-400-font;
-  color: $sds-color-primitive-gray-500;
+  font: $sds-font-caps-xxxxs-600-font;
+  font-weight: 400;
+  fill: $sds-color-primitive-gray-400;
 }
 
 .yAxisTickLine,
 .xAxisTickLine {
-  color: $sds-color-primitive-gray-300;
+  stroke: $sds-color-primitive-gray-400;
 }
 
 .labelX,
