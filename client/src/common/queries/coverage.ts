@@ -2,11 +2,16 @@ import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
 import { fetchJson } from "util/fetch";
 import { ENTITIES } from "./entites";
 
-type CoveragePlotData = [number, number, number, number, number][];
+
+/**
+ * Coverage plot data represented as [yValue, startBP, endBP].
+ * TODO add descriptions for remaining values.
+ */
+export type CoveragePlotDataPoint = [number, number, number, number, number];
 
 interface FetchCoverageResponse {
   cellType: string;
-  coveragePlot: CoveragePlotData;
+  coveragePlot: CoveragePlotDataPoint[];
 }
 
 async function fetchCoverage(chromosome: string, cellType: string): Promise<FetchCoverageResponse> {
