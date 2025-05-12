@@ -13,8 +13,6 @@ import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useCoverageQuery } from "common/queries/coverage";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
-import { currentAccessionData } from "./mockData";
-import { formatPercent } from "./components/Histogram/ArrayUtils";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
@@ -34,33 +32,30 @@ const generateCoverageVizData = (
 // Gets called on every mouse move, so need to memoize.
 export const getHistogramTooltipData = memoize(
   (accessionData: AccessionsData, coverageIndex: number): TooltipData[] => {
-    // coverageObj format:
-    //   [binIndex, averageCoverageDepth, coverageBreadth, numberContigs, numberReads]
     const coverageObj = accessionData.coverage[coverageIndex];
-    const binSize = accessionData.coverage_bin_size;
 
     return [
       {
-        name: "Coverage",
+        name: "Chromatin Accessibility",
         data: [
-          [
-            "Base Pair Range",
-            // \u2013 is en-dash
-            `${Math.round(coverageObj[0] * binSize)}\u2013${Math.round(
-              (coverageObj[0] + 1) * binSize
-            )}`,
-          ],
-          ["Coverage Depth", `${coverageObj[1]}x`],
-          ["Coverage Breadth", formatPercent(coverageObj[2])],
-          ["Overlapping Contigs", `${coverageObj[3]}`],
-          ["Overlapping Loose Reads", `${coverageObj[4]}`],
+          ["Cell Type", `${coverageObj[3]}`],
+          ["ChromosomeID", coverageObj[2]],
+          ["Bin Size", `${coverageObj[4]}`],
+          ["Tn5 Insertions", `${coverageObj[1]}`],
         ],
       },
     ];
   }
 );
 
-export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
+export function CoveragePlot({
+  svgWidth,
+  chromosome,
+}: {
+  svgWidth: number;
+  chromosome: string;
+}) {
+  const cellType = "T cell";
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
     top: number;
@@ -74,26 +69,40 @@ export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
   }));
 
   const coverageQuery = useCoverageQuery({
-    cellType: "cell",
-    chromosome: "chr1",
+    cellType,
+    chromosome,
     options: {
       enabled: !bottomPanelHidden,
       retry: 3,
     },
   });
 
-  const coverageData = useMemo(
-    () => ({
-      ...currentAccessionData,
-      coverage:
-        coverageQuery.data?.coveragePlot ?? currentAccessionData.coverage,
-    }),
-    [coverageQuery.data?.coveragePlot]
-  );
+  const coverageData = useMemo(() => {
+    function transformData(
+      data: [number, number, number][]
+    ): AccessionsData["coverage"] {
+      return data.map((item, index) => {
+        const barIndex = item[0];
+        const chromosomeId = `${chromosome}:${item[1]}-${item[2]}`;
+        const binSize = item[2] - item[1];
+
+        return [index + 1, barIndex, chromosomeId, cellType, binSize];
+      });
+    }
+    if (!coverageQuery.data?.coveragePlot) {
+      return {};
+    }
+    const coverage = transformData(coverageQuery.data.coveragePlot);
+    return {
+      coverage_bin_size: 1, // this is required for the histogram to render correctly - there should be a better name for this.
+      total_length: coverageQuery.data.coveragePlot.length,
+      coverage,
+    };
+  }, [coverageQuery.data?.coveragePlot, chromosome]);
 
   const handleHistogramBarEnter = useCallback(
     (hoverData: [number, number]) => {
-      if (hoverData && hoverData[0] === 0) {
+      if (hoverData && hoverData[0] === 0 && coverageData.coverage) {
         setHistogramTooltipData(
           getHistogramTooltipData(coverageData, hoverData[1])
         );
@@ -105,6 +114,7 @@ export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
   const coverageVizContainer = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!coverageVizContainer.current) return;
+    if (!coverageData.coverage) return;
 
     const renderHistogram = (data: AccessionsData) => {
       const coverageVizData = generateCoverageVizData(
@@ -138,7 +148,7 @@ export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
             top: 10,
             bottom: 5,
           },
-          innerWidth: svgWidth,
+          innerWidth: data.total_length,
           numTicksY: 1,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
@@ -170,7 +180,7 @@ export function CoveragePlot({ svgWidth }: { svgWidth: number }) {
         style={{
           display: "flex",
           margin: "16px",
-          height: "80%",
+          height: "50px",
         }}
       />
     );

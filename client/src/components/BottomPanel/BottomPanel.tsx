@@ -57,7 +57,7 @@ const BottomSideBar = ({
       <BottomPanelContainer>
         <ScaleBar svgWidth={1310} />
         <Cytoband chromosomeId="chr2" svgWidth={1310} />
-        <CoveragePlot svgWidth={1310} />
+        <CoveragePlot chromosome="chr2" svgWidth={1310} />
       </BottomPanelContainer>
     )}
   </BottomPanelWrapper>

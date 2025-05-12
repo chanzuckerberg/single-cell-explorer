@@ -27,9 +27,6 @@ export const TooltipVizTable = ({
           className={cx(cs.section, section.disabled && cs.disabled)}
           key={`section-${section.name}`}
         >
-          <div className={cx(cs.name, section.disabled && cs.disabled)}>
-            {section.name}
-          </div>
           <div className={cs.data}>
             {section.data.map((datum) => {
               const [label, value] = datum;
