@@ -1,10 +1,14 @@
-import { UndefinedInitialDataOptions, useQuery } from "@tanstack/react-query";
+import {
+  UndefinedInitialDataOptions,
+  useQueries,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import { fetchJson } from "util/fetch";
 import { ENTITIES } from "./entites";
 
 type CoveragePlotData = [number, number, number][]; // [y, startBasePair, endBasePair]
 
-interface FetchCoverageResponse {
+export interface FetchCoverageResponse {
   cellType: string;
   coveragePlot: CoveragePlotData;
 }
@@ -24,7 +28,7 @@ async function fetchCoverage(
 
 interface UseCoverageQueryOptions {
   chromosome: string;
-  cellType: string;
+  cellTypes: string[];
   options?: Partial<UndefinedInitialDataOptions<FetchCoverageResponse>>;
 }
 
@@ -35,12 +39,14 @@ export const USE_COVERAGE = {
 
 export function useCoverageQuery({
   chromosome,
-  cellType,
+  cellTypes,
   options,
-}: UseCoverageQueryOptions) {
-  return useQuery<FetchCoverageResponse>({
-    queryKey: [USE_COVERAGE, chromosome, cellType],
-    queryFn: () => fetchCoverage(chromosome, cellType),
-    ...options,
+}: UseCoverageQueryOptions): UseQueryResult<FetchCoverageResponse>[] {
+  return useQueries({
+    queries: cellTypes.map((cellType) => ({
+      queryKey: ["coverage", chromosome, cellType],
+      queryFn: () => fetchCoverage(chromosome, cellType),
+      ...options,
+    })),
   });
 }

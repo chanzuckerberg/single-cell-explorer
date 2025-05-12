@@ -1,16 +1,15 @@
+import { H4 } from "@blueprintjs/core";
 import React, {
   useEffect,
   useState,
   useRef,
-  useMemo,
   useCallback,
+  useMemo,
 } from "react";
 import ReactDOM from "react-dom";
 import memoize from "memoize-one";
-import { RootState } from "reducers";
-import { useSelector } from "react-redux";
-import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
-import { useCoverageQuery } from "common/queries/coverage";
+import { UseQueryResult } from "@tanstack/react-query";
+import { FetchCoverageResponse } from "common/queries/coverage";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
@@ -51,11 +50,14 @@ export const getHistogramTooltipData = memoize(
 export function CoveragePlot({
   svgWidth,
   chromosome,
+  cellType,
+  coverageQuery,
 }: {
   svgWidth: number;
   chromosome: string;
+  cellType: string;
+  coverageQuery: UseQueryResult<FetchCoverageResponse> | undefined;
 }) {
-  const cellType = "T cell";
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
     top: number;
@@ -63,19 +65,6 @@ export function CoveragePlot({
   const [histogramTooltipData, setHistogramTooltipData] = useState<
     TooltipData[] | null
   >(null);
-
-  const { bottomPanelHidden } = useSelector((state: RootState) => ({
-    bottomPanelHidden: state.controls.bottomPanelHidden,
-  }));
-
-  const coverageQuery = useCoverageQuery({
-    cellType,
-    chromosome,
-    options: {
-      enabled: !bottomPanelHidden,
-      retry: 3,
-    },
-  });
 
   const coverageData = useMemo(() => {
     function transformData(
@@ -89,7 +78,7 @@ export function CoveragePlot({
         return [index + 1, barIndex, chromosomeId, cellType, binSize];
       });
     }
-    if (!coverageQuery.data?.coveragePlot) {
+    if (!coverageQuery?.data?.coveragePlot) {
       return {};
     }
     const coverage = transformData(coverageQuery.data.coveragePlot);
@@ -97,8 +86,8 @@ export function CoveragePlot({
       coverage_bin_size: 1, // this is required for the histogram to render correctly - there should be a better name for this.
       total_length: coverageQuery.data.coveragePlot.length,
       coverage,
-    };
-  }, [coverageQuery.data?.coveragePlot, chromosome]);
+    }; //
+  }, [coverageQuery?.data?.coveragePlot, chromosome, cellType]);
 
   const handleHistogramBarEnter = useCallback(
     (hoverData: [number, number]) => {
@@ -173,21 +162,9 @@ export function CoveragePlot({
     setHistogramTooltipData(null);
   };
 
-  if (coverageQuery.isLoading) {
-    return (
-      <div
-        className={SKELETON}
-        style={{
-          display: "flex",
-          margin: "16px",
-          height: "50px",
-        }}
-      />
-    );
-  }
-
   return (
     <>
+      <H4>{cellType}</H4>
       <div ref={coverageVizContainer} />
       {histogramTooltipLocation &&
         histogramTooltipData &&

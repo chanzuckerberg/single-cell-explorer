@@ -1,18 +1,20 @@
 import React, { useEffect } from "react";
 import * as d3 from "d3";
 
-export const ScaleBar = ({ svgWidth }: { svgWidth: number }) => {
+export const ScaleBar = ({
+  svgWidth,
+  totalMb,
+}: {
+  svgWidth: number;
+  totalMb: number;
+}) => {
   useEffect(() => {
     const svg = d3.select("#scalebar-svg");
     svg.selectAll("*").remove(); // Clear previous content
     const innerWidth = svgWidth;
     const height = +svg.attr("height");
 
-    // TODO: coordinate all the SVGs to have the same width and the same starting margins
-    // be sure to think about labels that overflow the exact graph area and the overall width of the svg
-
     // === CONFIG ===
-    const totalMb = 25; // or dynamic input
     const margin = { top: 20, right: 10, bottom: 20, left: 7 }; // margins to account for label overflow
     const width = innerWidth + margin.left + margin.right;
     const axisY = height / 2;
@@ -59,6 +61,6 @@ export const ScaleBar = ({ svgWidth }: { svgWidth: number }) => {
       .attr("fill", "#C3C3C3")
       .style("font-size", "12px")
       .text((d) => (d === 0 ? "mb" : d));
-  }, [svgWidth]);
+  }, [svgWidth, totalMb]);
   return <svg id="scalebar-svg" height="60" />;
 };

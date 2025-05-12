@@ -509,9 +509,10 @@ export default class Histogram {
         this.size.width - this.margins.right,
       ]);
     } else {
-      x.domain(xDomain)
-        .nice()
-        .range([this.margins.left, this.size.width - this.margins.right]);
+      x.domain(xDomain).range([
+        this.margins.left,
+        this.size.width - this.margins.right,
+      ]);
     }
     const bins = this.getBins();
     this.bins = bins;
@@ -539,7 +540,6 @@ export default class Histogram {
 
     // Maps from x-coordinate to the data plotted at that x-coordinate.
     // Used for hovering.
-
     const barCenters: $TSFixMe = [];
 
     // If there should be gaps between the bars, offset the bar positions by 1px.
