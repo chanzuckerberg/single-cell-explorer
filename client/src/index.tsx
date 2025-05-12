@@ -6,6 +6,8 @@ import { HotkeysProvider, FocusStyleManager } from "@blueprintjs/core";
 import "./index.css";
 
 /* our code */
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "util/queryClient";
 import App from "./components/App/App";
 import store from "./reducers";
 
@@ -36,9 +38,11 @@ const container = document.getElementById("root") as HTMLElement;
 const root = createRoot(container);
 
 root.render(
-  <Provider store={store}>
-    <HotkeysProvider>
-      <App />
-    </HotkeysProvider>
-  </Provider>
+  <QueryClientProvider client={queryClient}>
+    <Provider store={store}>
+      <HotkeysProvider>
+        <App />
+      </HotkeysProvider>
+    </Provider>
+  </QueryClientProvider>
 );
