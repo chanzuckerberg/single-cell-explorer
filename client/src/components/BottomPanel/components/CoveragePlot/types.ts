@@ -1,12 +1,6 @@
-export interface AccessionsData
-  extends Pick<
-    AccessionsSummary,
-    "id" | "name" | "coverage_depth" | "coverage_breadth"
-  > {
-  coverage: [number, number, number, number, number][];
-  max_aligned_length: number;
+export interface AccessionsData {
+  coverage: [number, number, string, string, number][]; // [index, barIndex, chromosomeId, cellType, binSize]
   coverage_bin_size: number;
-  avg_prop_mismatch: number;
   total_length: number;
 }
 

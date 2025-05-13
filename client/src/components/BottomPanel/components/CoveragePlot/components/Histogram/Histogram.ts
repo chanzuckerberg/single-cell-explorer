@@ -26,7 +26,7 @@ export const TRANSFORM = "transform";
 export const TRANSLATE = "translate";
 
 export default class Histogram {
-  barCentersToIndices: $TSFixMe;
+  barCentersToIndices: { [x: number]: [number, number] };
 
   barWidth: $TSFixMe;
 
@@ -102,6 +102,7 @@ export default class Histogram {
     // The x-center of the last bar that was hovered over.
     // Since the histogram can take multiple data series, this is easier to store than [seriesIndex, dataIndex]
     this.lastHoveredBarX = null;
+    this.barCentersToIndices = {};
 
     // remove any previous charts
     this.container.selectAll("svg").remove();
@@ -508,9 +509,10 @@ export default class Histogram {
         this.size.width - this.margins.right,
       ]);
     } else {
-      x.domain(xDomain)
-        .nice()
-        .range([this.margins.left, this.size.width - this.margins.right]);
+      x.domain(xDomain).range([
+        this.margins.left,
+        this.size.width - this.margins.right,
+      ]);
     }
     const bins = this.getBins();
     this.bins = bins;
@@ -538,7 +540,6 @@ export default class Histogram {
 
     // Maps from x-coordinate to the data plotted at that x-coordinate.
     // Used for hovering.
-    const barCentersToIndices: { [x: number]: [number, number] } = {};
     const barCenters: $TSFixMe = [];
 
     // If there should be gaps between the bars, offset the bar positions by 1px.
@@ -584,7 +585,7 @@ export default class Histogram {
         const barWidth = this.getBarWidth(x, innerBin);
         this.barWidth = this.getBarWidth(x, innerBin);
         const xMidpoint = x(innerBin.x0) + i * barWidth + barWidth / 2;
-        barCentersToIndices[xMidpoint] = [i, index];
+        this.barCentersToIndices[xMidpoint] = [i, index];
         barCenters.push(xMidpoint);
       });
 
