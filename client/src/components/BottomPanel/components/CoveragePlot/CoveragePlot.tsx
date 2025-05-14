@@ -14,14 +14,16 @@ import {
 } from "common/queries/coverage";
 import { useCellTypesQuery } from "common/queries/cellType";
 import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AutocompleteValue } from "@mui/material";
+import { RootState } from "reducers";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
-import { CellTypeInputDropdown } from "./style";
+import { CellTypeInputDropdown} from "./style";
+import { Button } from "@blueprintjs/core";
 
 export const READ_FILL_COLOR = "#CCCCCC";
 export const CONTIG_FILL_COLOR = "#767676";
@@ -167,10 +169,30 @@ export function CoveragePlot({
     setHistogramTooltipData(null);
   };
 
+  const dispatch = useDispatch();
+  const { selectedCellTypes } = useSelector((state: RootState) => ({
+    selectedCellTypes: state.controls.chromatinSelectedCellTypes,
+  }))
+
   return (
     <>
       <CellTypeDropdown cellType={cellType} />
+
+      {selectedCellTypes.length > 1 && (
+        <Button
+          minimal
+          icon="trash"
+          onClick={() =>
+            dispatch({
+              type: "toggle chromatin histogram",
+              cellType,
+            })
+          }
+        />
+      )}
+
       <div ref={coverageVizContainer} />
+
       {histogramTooltipLocation &&
         histogramTooltipData &&
         ReactDOM.createPortal(
@@ -181,7 +203,7 @@ export function CoveragePlot({
             <TooltipVizTable data={histogramTooltipData} />
           </div>,
           document.body
-        )}
+      )}
     </>
   );
 }
