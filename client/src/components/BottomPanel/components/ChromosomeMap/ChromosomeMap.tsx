@@ -6,6 +6,7 @@ import { RootState } from "reducers";
 import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { Cytoband } from "../Cytoband/Cytoband";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
+import { GeneMap } from "../GeneMap/GeneMap";
 
 export const ChromosomeMap = () => {
   const chromosome = "chr2";
@@ -94,6 +95,7 @@ export const ChromosomeMap = () => {
           )}
         />
       ))}
+      <GeneMap chromosomeId={chromosome} svgWidth={totalBasePairs} />
     </>
   );
 };

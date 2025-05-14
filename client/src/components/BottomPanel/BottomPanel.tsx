@@ -4,6 +4,7 @@ import { useCellTypesQuery } from "common/queries/cellType";
 import { RootState } from "reducers";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
+import { GeneSelect } from "./components/GeneSelect/GeneSelect";
 import {
   BottomPanelContainer,
   BottomPanelHeader,
@@ -48,6 +49,7 @@ const BottomSideBar = ({
         </BottomPanelHeaderTitle>
 
         <BottomPanelHeaderActions>
+          <GeneSelect />
           <BottomPanelButton
             active={false}
             data-testid="add-cell-type"
@@ -81,7 +83,6 @@ const BottomSideBar = ({
               })
             }
           />
-
           <BottomPanelButton
             active={false}
             data-testid="close-bottom-panel"

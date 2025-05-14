@@ -19,7 +19,7 @@ export const BottomPanelWrapper = styled.div<BottomPanelWrapperProps>`
 `;
 
 export const BottomPanelContainer = styled.div`
-  height: 200px;
+  min-height: 200px;
   width: 100%;
   overflow-x: scroll;
   // TODO: (smccanny) make the 56px dynamic?
