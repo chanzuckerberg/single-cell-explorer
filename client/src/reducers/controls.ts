@@ -40,6 +40,7 @@ interface ControlsState {
   cellTypes: CellType[];
   geneList: string[];
   expandedCategories: string[];
+  chromatinSelectedCellTypes: string[];
 }
 
 const Controls = (
@@ -97,6 +98,7 @@ const Controls = (
     imageOpacity: isTest ? 0 : 100,
     dotOpacity: 100,
     expandedCategories: [],
+    chromatinSelectedCellTypes: [],
   },
   action: AnyAction
 ): ControlsState => {
@@ -453,6 +455,28 @@ const Controls = (
         expandedCategories: [...expandedCategories, category],
       };
     }
+
+    /**************************
+         Chromatin View
+    **************************/
+    case "toggle chromatin histogram": {
+      const { cellType } = action;
+
+      if (state.chromatinSelectedCellTypes.includes(cellType)) {
+        return {
+          ...state,
+          chromatinSelectedCellTypes: state.chromatinSelectedCellTypes.filter(
+            (type) => type !== cellType
+          ),
+        }
+      }
+
+      return {
+        ...state,
+        chromatinSelectedCellTypes: [...state.chromatinSelectedCellTypes, cellType],
+      };
+    }
+
     default:
       return state;
   }
