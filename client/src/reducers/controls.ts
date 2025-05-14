@@ -460,7 +460,7 @@ const Controls = (
          Chromatin View
     **************************/
     case "toggle chromatin histogram": {
-      const { cellType } = action;
+      const { cellType, removeCellType } = action;
 
       if (state.chromatinSelectedCellTypes.includes(cellType)) {
         return {
@@ -473,7 +473,10 @@ const Controls = (
 
       return {
         ...state,
-        chromatinSelectedCellTypes: [...state.chromatinSelectedCellTypes, cellType],
+        chromatinSelectedCellTypes: 
+          state.chromatinSelectedCellTypes
+            .filter(type => type !== removeCellType)
+            .concat(cellType)
       };
     }
 
