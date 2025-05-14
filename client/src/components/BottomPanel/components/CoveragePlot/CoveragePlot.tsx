@@ -17,13 +17,13 @@ import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
 import { useDispatch, useSelector } from "react-redux";
 import { AutocompleteValue } from "@mui/material";
 import { RootState } from "reducers";
+import { Button } from "@blueprintjs/core";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
 import { CellTypeInputDropdown} from "./style";
-import { Button } from "@blueprintjs/core";
 
 export const READ_FILL_COLOR = "#CCCCCC";
 export const CONTIG_FILL_COLOR = "#767676";
@@ -220,7 +220,7 @@ function CellTypeDropdown({
   );
 
   const [open, setOpen] = useState(false);
-  const anchorElRef = useRef<HTMLElement>();
+  const anchorElRef = useRef<HTMLElement | null>(null);
 
   type Option = DefaultAutocompleteOption;
   type Multiple = false;
@@ -249,7 +249,7 @@ function CellTypeDropdown({
           if (open) {
             setOpen(false);
             anchorElRef.current?.focus();
-            anchorElRef.current = undefined;
+            anchorElRef.current = null;
           } else {
             anchorElRef.current = event.currentTarget;
             setOpen(true);
@@ -262,7 +262,7 @@ function CellTypeDropdown({
       />
 
       <DropdownMenu<Option, Multiple, DisableClearable, FreeSolo>
-        anchorEl={anchorElRef.current ?? null}
+        anchorEl={anchorElRef.current}
         onClickAway={() => setOpen(false)}
         open={open}
         onClose={() => setOpen(false)}
@@ -274,7 +274,7 @@ function CellTypeDropdown({
           value: AutocompleteValue<Option, Multiple, DisableClearable, FreeSolo>,
         ) => {
           setOpen(false);
-          anchorElRef.current = undefined;
+          anchorElRef.current = null;
 
           if (value) {
             dispatch({
