@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
+import { GeneSelect } from "./components/GeneSelect/GeneSelect";
 import {
   BottomPanelContainer,
   BottomPanelHeader,
@@ -23,6 +24,7 @@ const BottomSideBar = ({
       </BottomPanelHeaderTitle>
 
       <BottomPanelHeaderActions>
+        <GeneSelect />
         <BottomPanelButton
           active={false}
           data-testid="minimize-bottom-panel"
@@ -35,7 +37,6 @@ const BottomSideBar = ({
             })
           }
         />
-
         <BottomPanelButton
           active={false}
           data-testid="close-bottom-panel"

@@ -13,8 +13,6 @@ import { ActiveTab } from "common/types/entities";
 import { InfoButton, InfoButtonWrapper } from "common/style";
 import Truncate from "common/components/Truncate/Truncate";
 
-import { getFeatureFlag } from "util/featureFlags/featureFlags";
-import { FEATURES } from "util/featureFlags/features";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../../constants";
 
@@ -162,20 +160,6 @@ class Gene extends React.Component<Props, State> {
                 </span>
               </Truncate>
             </div>
-            {getFeatureFlag(FEATURES.MULTIOME_VIZ) && (
-              <InfoButtonWrapper>
-                <InfoButton
-                  data-testid={`open-viz-${gene}`}
-                  onClick={this.handleOpenMultiomeViz}
-                  disabled={!isGeneExpressionComplete}
-                  sdsType="tertiary"
-                  sdsStyle="icon"
-                  icon="PuzzlePiece"
-                  sdsSize="small"
-                  data-chromatic="ignore"
-                />
-              </InfoButtonWrapper>
-            )}
             <InfoButtonWrapper>
               <InfoButton
                 data-testid={`get-info-${gene}`}
