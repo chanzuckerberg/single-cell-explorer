@@ -1,4 +1,3 @@
-import { H4 } from "@blueprintjs/core";
 import React, {
   useEffect,
   useState,
@@ -13,11 +12,18 @@ import {
   CoveragePlotData,
   FetchCoverageResponse,
 } from "common/queries/coverage";
+import { useCellTypesQuery } from "common/queries/cellType";
+import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
+import { useDispatch, useSelector } from "react-redux";
+import { AutocompleteValue } from "@mui/material";
+import { RootState } from "reducers";
+import { Button } from "@blueprintjs/core";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
+import { CellTypeInputDropdown} from "./style";
 
 export const READ_FILL_COLOR = "#CCCCCC";
 export const CONTIG_FILL_COLOR = "#767676";
@@ -163,10 +169,30 @@ export function CoveragePlot({
     setHistogramTooltipData(null);
   };
 
+  const dispatch = useDispatch();
+  const { selectedCellTypes } = useSelector((state: RootState) => ({
+    selectedCellTypes: state.controls.chromatinSelectedCellTypes,
+  }))
+
   return (
     <>
-      <H4>{cellType}</H4>
+      <CellTypeDropdown cellType={cellType} />
+
+      {selectedCellTypes.length > 1 && (
+        <Button
+          minimal
+          icon="trash"
+          onClick={() =>
+            dispatch({
+              type: "toggle chromatin histogram",
+              cellType,
+            })
+          }
+        />
+      )}
+
       <div ref={coverageVizContainer} />
+
       {histogramTooltipLocation &&
         histogramTooltipData &&
         ReactDOM.createPortal(
@@ -177,7 +203,89 @@ export function CoveragePlot({
             <TooltipVizTable data={histogramTooltipData} />
           </div>,
           document.body
-        )}
+      )}
+    </>
+  );
+}
+
+function CellTypeDropdown({
+  cellType,
+}: {
+  cellType: string;
+}) {
+  const cellTypesQuery = useCellTypesQuery();
+  const cellTypes = useMemo(
+    () => cellTypesQuery.data ?? [],
+    [cellTypesQuery.data],
+  );
+
+  const [open, setOpen] = useState(false);
+  const anchorElRef = useRef<HTMLElement | null>(null);
+
+  type Option = DefaultAutocompleteOption;
+  type Multiple = false;
+  type DisableClearable = false;
+  type FreeSolo = false;
+
+  const cellTypeOptions = useMemo(
+    () => cellTypes.map<Option>(
+      name => ({ name })
+    ),
+    [cellTypes],
+  )
+
+  const activeOption = useMemo(
+    () => ({ name: cellType } as Option),
+    [cellType],
+  )
+
+  const dispatch = useDispatch();
+
+  return (
+    <>
+      <CellTypeInputDropdown
+        label={cellType}
+        onClick={event => {
+          if (open) {
+            setOpen(false);
+            anchorElRef.current?.focus();
+            anchorElRef.current = null;
+          } else {
+            anchorElRef.current = event.currentTarget;
+            setOpen(true);
+          }
+        }}
+        sdsStage="default"
+        sdsStyle="minimal"
+        sdsType="value"
+        value={cellType}
+      />
+
+      <DropdownMenu<Option, Multiple, DisableClearable, FreeSolo>
+        anchorEl={anchorElRef.current}
+        onClickAway={() => setOpen(false)}
+        open={open}
+        onClose={() => setOpen(false)}
+        options={cellTypeOptions}
+        search
+        width={244}
+        onChange={(
+          _: unknown,
+          value: AutocompleteValue<Option, Multiple, DisableClearable, FreeSolo>,
+        ) => {
+          setOpen(false);
+          anchorElRef.current = null;
+
+          if (value) {
+            dispatch({
+              type: "toggle chromatin histogram",
+              cellType: value.name,
+              removeCellType: cellType,
+            })
+          }
+        }}
+        value={activeOption}
+      />
     </>
   );
 }

@@ -44,7 +44,7 @@ export function useCoverageQuery({
 }: UseCoverageQueryOptions): UseQueryResult<FetchCoverageResponse>[] {
   return useQueries({
     queries: cellTypes.map((cellType) => ({
-      queryKey: ["coverage", chromosome, cellType],
+      queryKey: [USE_COVERAGE, chromosome, cellType],
       queryFn: () => fetchCoverage(chromosome, cellType),
       ...options,
     })),

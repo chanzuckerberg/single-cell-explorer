@@ -9,10 +9,10 @@ import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 
 export const ChromosomeMap = () => {
   const chromosome = "chr2";
-  const selectedCellTypes = ["T cell", "Astrocyte"]; // Ideally passed as prop
 
-  const { bottomPanelHidden } = useSelector((state: RootState) => ({
+  const { bottomPanelHidden, selectedCellTypes } = useSelector((state: RootState) => ({
     bottomPanelHidden: state.controls.bottomPanelHidden,
+    selectedCellTypes: state.controls.chromatinSelectedCellTypes,
   }));
 
   const coverageQueries = useCoverageQuery({
