@@ -1,3 +1,4 @@
 export enum ENTITIES {
-  COVERAGE = "coverage",
+  CELL_TYPE = 'cell-type',
+  COVERAGE = 'coverage',
 }
