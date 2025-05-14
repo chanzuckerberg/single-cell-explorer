@@ -562,7 +562,7 @@ def atac_gene_info_get(request, data_adaptor):
     if not gene_name or not genome_version:
         return make_response("No gene_name or genome_version provided", HTTPStatus.BAD_REQUEST)
 
-    atac_gene_info = data_adaptor.get_atac_gene_info(gene_name, genome_version)
+    atac_gene_info = data_adaptor.get_atac_gene_info(request, data_adaptor)
     if atac_gene_info is None:
         return make_response("No ATAC gene info found", HTTPStatus.NOT_FOUND)
 

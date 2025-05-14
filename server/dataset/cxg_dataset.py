@@ -1,3 +1,4 @@
+from http import HTTPStatus
 import json
 import logging
 import os
@@ -5,6 +6,7 @@ import pickle  # TODO: remove this after 5.3.0 migration
 import random
 import threading
 
+from flask import make_response
 import numpy as np
 import pandas as pd
 import tiledb
@@ -414,10 +416,32 @@ class CxgDataset(Dataset):
             coverage_plot.append([coverage, start, end])
         return {"cellType": cell_type, "coveragePlot": coverage_plot}
 
-    def get_atac_gene_info(self, gene_name, genome_version):
+    def get_atac_gene_info(self, request, data_adaptor):
         """
-        Extracts ATAC gene info data from a JSON file
-        gene_data_<genome_version>.json
+        Given a gene_name, returns:
+        - the chromosome it belongs to
+        - all gene info on that chromosome
+        """
+        gene_name = request.args.get("gene_name")
+        genome_version = request.args.get("genome_version")
+
+        print(f"gene_name: {gene_name}, request: {request}, genome_version: {genome_version}")
+
+        if not gene_name or not genome_version:
+            return make_response("Missing gene_name or genome_version", HTTPStatus.BAD_REQUEST)
+
+        response = data_adaptor.get_gene_and_chromosome_gene_info(gene_name, genome_version)
+        if response is None:
+            return make_response("Gene not found or data unavailable", HTTPStatus.NOT_FOUND)
+
+        return make_response(response, HTTPStatus.OK, {"Content-Type": "application/json"})
+
+    def get_gene_and_chromosome_gene_info(self, gene_name, genome_version):
+        """
+            Returns:
+            - selected gene
+            - its chromosome
+            - all genes on that chromosome, as a list of gene dicts including geneName
         """
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
         dl = DataLocator(file_uri)
@@ -425,8 +449,37 @@ class CxgDataset(Dataset):
         try:
             with dl.open("r") as f:
                 gene_data = json.load(f)
-            return gene_data.get(gene_name)
-        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+
+            if gene_name not in gene_data:
+                return None
+
+            gene_info = gene_data[gene_name]
+            chromosome = gene_info.get("geneChromosome")
+            print(f"[DEBUG] Selected gene: {gene_name}, Chromosome: {chromosome}")
+
+            if not chromosome:
+                return None
+
+            # Filter and flatten all genes on the same chromosome
+            genes_on_chromosome = [
+                {
+                    "geneName": name,
+                    **info,
+                }
+                for name, info in gene_data.items()
+                if info.get("geneChromosome") == chromosome
+            ]
+
+            # Optional: sort by geneStart
+            genes_on_chromosome.sort(key=lambda g: g["geneStart"])
+
+            return {
+                "selectedGene": gene_name,
+                "chromosomeId": chromosome,
+                "allGenesOnChromosome": genes_on_chromosome,
+            }
+
+        except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
             return None
 

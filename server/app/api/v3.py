@@ -188,7 +188,12 @@ class ATACCoverageAPI(DatasetResource):
 class ATACGeneInfoAPI(DatasetResource):
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.atac_gene_info_get(request, data_adaptor)
+        try:
+            return common_rest.atac_gene_info_get(request, data_adaptor)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {"error": str(e)}, 500
 
 
 class ATACCytobandAPI(DatasetResource):
