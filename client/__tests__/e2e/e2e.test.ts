@@ -68,7 +68,6 @@ import {
   pageURLSpatial,
 } from "../common/constants";
 import {
-  closeBottomBanner,
   conditionallyToggleSidePanel,
   getSnapshotPrefix,
   shouldSkipTests,
@@ -200,68 +199,6 @@ for (const testDataset of testDatasets) {
           });
         });
 
-        describe("bottom banner", () => {
-          const SURVEY_LINK =
-            "https://airtable.com/app8fNSQ8ieIiHLOv/shrmD31azkGtSupmO";
-
-          test("bottom banner appears and disappears", async ({
-            page,
-          }, testInfo) => {
-            await goToPage(page, url);
-
-            const bottomBanner = page.getByTestId("bottom-banner");
-
-            await expect(bottomBanner).toBeVisible();
-
-            await expect(page.getByText("quick survey")).toHaveAttribute(
-              "href",
-              SURVEY_LINK
-            );
-
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
-
-            await closeBottomBanner(page);
-
-            /**
-             * (thuang): Snapshot test graph here to ensure after the bottom banner
-             * is closed, the graph is still visible and aligned
-             */
-            await snapshotTestGraph(
-              page,
-              getSnapshotPrefix(testInfo),
-              testInfo
-            );
-          });
-
-          test("newsletter signup modal opens and closes", async ({ page }) => {
-            await goToPage(page, url);
-
-            await page.getByTestId("newsletter-modal-open-button").click();
-
-            await expect(
-              page.getByTestId("newsletter-modal-content")
-            ).toBeVisible();
-
-            await page.getByTestId("newsletter-email-input").fill("test");
-
-            await page.getByTestId("newsletter-subscribe-button").click();
-
-            await expect(
-              page.getByText("Please provide a valid email address.")
-            ).toBeVisible();
-
-            await page.getByTestId("newsletter-modal-close-button").click();
-
-            await expect(
-              page.getByTestId("newsletter-modal-content")
-            ).not.toBeVisible();
-          });
-        });
-
         test("resize graph", async ({ page }, testInfo) => {
           skipIfSidePanel(graphTestId, MAIN_PANEL);
 
@@ -382,8 +319,6 @@ for (const testDataset of testDatasets) {
             await goToPage(page, url);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
-
-            await closeBottomBanner(page);
 
             const originalCellCount = await getCellSetCount(1, page);
 
@@ -593,8 +528,6 @@ for (const testDataset of testDatasets) {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);
-
-            await closeBottomBanner(page);
 
             await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
 
@@ -967,7 +900,6 @@ for (const testDataset of testDatasets) {
         }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
-          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -1025,7 +957,6 @@ for (const testDataset of testDatasets) {
         test("lasso moves after pan", async ({ page }, testInfo) => {
           await goToPage(page, url);
           await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
-          await closeBottomBanner(page);
 
           await tryUntil(
             async () => {
@@ -1930,8 +1861,6 @@ async function setup({
   testInfo: TestInfo;
 }) {
   await goToPage(page, url);
-
-  await closeBottomBanner(page);
 
   if (withSubset) {
     await subset({ x1: 0.1, y1: 0.15, x2: 0.8, y2: 0.85 }, page, testInfo);
