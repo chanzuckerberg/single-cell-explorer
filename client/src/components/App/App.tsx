@@ -11,7 +11,7 @@ import { getFeatureFlag } from "util/featureFlags/featureFlags";
 import { FEATURES } from "util/featureFlags/features";
 import DatasetSelector from "../DatasetSelector/DatasetSelector";
 import DiffexNotice from "../DiffexNotice/DiffexNotice";
-import BottomBanner from "../BottomBanner/BottomBanner";
+// import BottomBanner from "../BottomBanner/BottomBanner";
 import Container from "../framework/container";
 import Layout from "../framework/layout";
 import { LayoutSkeleton } from "../framework/LayoutSkeleton/LayoutSkeleton";
@@ -166,7 +166,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                     <RightSideBar />
                     {getFeatureFlag(FEATURES.MULTIOME_VIZ) && <BottomPanel />}
                   </Layout>
-                  <BottomBanner />
+                  {/* <BottomBanner /> */}
                 </>
               )}
             </ThemeProvider>
