@@ -66,6 +66,12 @@ Before extending CZ CELLxGENE Explorer, we encourage you to reach out to us with
 
 See the [CELLxGENE extensions](https://github.com/chanzuckerberg/cellxgene-documentation/blob/main/community-extensions.md) section of our documentation for examples of community use and CELLxGENE extensions. 
 
+### Trademarks
+
+CZ CELLXGENE, CZ CELLXGENE DISCOVER, and CZ CELLXGENE ANNOTATE are trademarks of the Chan Zuckerberg Initiative. All rights reserved.
+
+Use, reuse, modification, and re-distribution of the source code in this repository is subject to the terms of the applicable open source [license](LICENSE.txt). However, that license does not grant permission to use the trademarks without separate, express permission from the Chan Zuckerberg Initiative.
+
 ### Security
 
 If you believe you have found a security issue, we would appreciate notification. Please send email to <security@chanzuckerberg.com>.
