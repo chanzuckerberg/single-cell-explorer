@@ -86,7 +86,6 @@ const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
   unsMetadata: state.controls.unsMetadata,
   imageOpacity: state.controls.imageOpacity,
   dotOpacity: state.controls.dotOpacity,
-  showBottomBanner: state.showBottomBanner,
 });
 
 class Graph extends React.Component<GraphProps, GraphState> {
@@ -309,7 +308,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
       isHidden,
       isSidePanel,
       imageOpacity,
-      showBottomBanner,
     } = this.props;
 
     const { toolSVG, viewport } = this.state;
@@ -370,10 +368,6 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     if (!prevProps.imageUnderlay && imageUnderlay) {
       this.showOpenseadragon();
-    }
-
-    if (prevProps.showBottomBanner !== showBottomBanner) {
-      this.handleResize();
     }
 
     // Re-center when switching embedding mode

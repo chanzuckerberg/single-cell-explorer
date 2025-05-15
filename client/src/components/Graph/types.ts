@@ -65,7 +65,6 @@ export interface StateProps {
   unsMetadata: RootState["controls"]["unsMetadata"];
   imageOpacity: RootState["controls"]["imageOpacity"];
   dotOpacity: RootState["controls"]["dotOpacity"];
-  showBottomBanner: RootState["showBottomBanner"];
 }
 
 export interface OwnProps {
