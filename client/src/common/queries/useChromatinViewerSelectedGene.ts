@@ -5,10 +5,12 @@ const SELECTED_GENE_QUERY_KEY = ["selectedGene"];
 export function useChromatinViewerSelectedGene() {
   const queryClient = useQueryClient();
 
+  const defaultGene = "MYC";
+
   const selectedGeneQuery = useQuery({
     queryKey: SELECTED_GENE_QUERY_KEY,
-    queryFn: () => null, // default value
-    initialData: null,
+    queryFn: () => defaultGene, // return default value
+    initialData: defaultGene,
   });
 
   const setSelectedGene = (gene: string) => {

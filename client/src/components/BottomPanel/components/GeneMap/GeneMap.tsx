@@ -1,4 +1,3 @@
-import { H4 } from "@blueprintjs/core";
 import React from "react";
 import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
 import { useGeneInfoQuery } from "common/queries/useGenomeReferenceInfo";
@@ -13,7 +12,7 @@ export const GeneMap = ({
   console.log("GeneMap sees:", { chromosomeId, svgWidth });
   const { selectedGene } = useChromatinViewerSelectedGene();
   const { data, isLoading, isError, error } = useGeneInfoQuery({
-    geneName: selectedGene || "ACTRT2",
+    geneName: selectedGene,
     genomeVersion: "hg38",
     options: {
       enabled: true,
@@ -36,7 +35,9 @@ export const GeneMap = ({
   // console.log("GeneMap sees grouped:", grouped);
   return (
     <div>
-      <H4>GeneMap</H4>
+      <div>
+        <strong>Selected Gene:</strong> {geneInfo.selectedGene}
+      </div>
       {/* <GeneListByMb geneInfo={geneInfo}/> */}
     </div>
   );

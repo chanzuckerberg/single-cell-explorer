@@ -18,14 +18,6 @@ export const BottomPanelWrapper = styled.div<BottomPanelWrapperProps>`
   visibility: ${(props) => (props.isHidden ? "hidden" : "visible")};
 `;
 
-export const BottomPanelContainer = styled.div`
-  min-height: 200px;
-  width: 100%;
-  overflow-x: scroll;
-  // TODO: (smccanny) make the 56px dynamic?
-  padding: 16px 16px 16px 56px;
-`;
-
 export const BottomPanelButton = styled(Button)`
   cursor: pointer;
   border: 1px solid ${gray300} !important;

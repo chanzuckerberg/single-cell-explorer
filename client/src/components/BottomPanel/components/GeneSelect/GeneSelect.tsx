@@ -1,8 +1,7 @@
 import { MenuItem } from "@blueprintjs/core";
-import { IconNames } from "@blueprintjs/icons";
 import React, { useState, useEffect, useRef } from "react";
 import fuzzysort from "fuzzysort";
-import { ItemRenderer, Suggest } from "@blueprintjs/select";
+import { ItemRenderer, Select } from "@blueprintjs/select";
 import { useSelector } from "react-redux";
 import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
 
@@ -12,6 +11,8 @@ import {
   Item,
   RenderItemProps,
 } from "components/RightSideBar/components/GeneExpression/components/InfoPanel/components/InfoPanelContainer/components/InfoSearch/types";
+import { BottomPanelButton } from "components/BottomPanel/style";
+import { SelectedGenePrefix } from "./style";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {
@@ -113,31 +114,40 @@ export function GeneSelect() {
 
   return (
     <div data-testid="gene-search">
-      <Suggest
-        resetOnSelect
-        closeOnSelect
-        resetOnClose
-        itemDisabled={() => false}
+      <Select<string>
+        items={geneNames || ["No genes"]}
+        itemListPredicate={(query: string, items: string[]) => {
+          console.log("itemListPredicate", query, items);
+          if (!query) {
+            return [...items].sort((a, b) => a.localeCompare(b)).slice(0, 20);
+          }
+          return filterGenes(query, items) as unknown as string[];
+        }}
+        itemRenderer={renderGene as ItemRenderer<string>}
         noResults={<MenuItem disabled text="No matching genes." />}
         onItemSelect={(g) => {
           handleClick(g);
         }}
-        initialContent={<MenuItem disabled text="Enter a gene…" />}
-        inputProps={{
-          placeholder: selectedGene
-            ? `Gene: ${selectedGene}`
-            : "Select a gene...",
-          leftIcon: IconNames.SEARCH,
-        }}
-        inputValueRenderer={() => ""}
-        itemListPredicate={(query: string, items: string[]) =>
-          filterGenes(query, items) as unknown as string[]
-        }
-        itemRenderer={renderGene as ItemRenderer<string>}
-        items={geneNames || ["No genes"]}
         popoverProps={{ minimal: true }}
-        fill
-      />
+        placeholder="Search"
+      >
+        <BottomPanelButton
+          active={false}
+          data-testid="select-gene"
+          minimal
+          text={
+            selectedGene ? (
+              <span>
+                <SelectedGenePrefix>Gene:</SelectedGenePrefix>
+                {`${selectedGene}`}
+              </span>
+            ) : (
+              "Select a gene..."
+            )
+          }
+          rightIcon="chevron-down"
+        />
+      </Select>
     </div>
   );
 }

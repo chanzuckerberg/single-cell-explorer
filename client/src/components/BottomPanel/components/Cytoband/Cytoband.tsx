@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CytobandWrapper } from "./style";
 import { mockCytobandData, Band } from "./mockCytobandData";
 
@@ -8,8 +8,31 @@ export const Cytoband = ({
   svgWidth,
 }: {
   chromosomeId: string;
-  svgWidth: number;
+  svgWidth?: number;
 }) => {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [cytobandWidth, setCytobandWidth] = useState<number>(0);
+
+  const updateWidth = () => {
+    if (wrapperRef.current) {
+      const newWidth = wrapperRef.current.clientWidth - 32; // Subtract padding
+      setCytobandWidth(newWidth > 2 ? newWidth - 2 : 0); // Subtract for border stroke
+    }
+  };
+
+  useEffect(() => {
+    if (svgWidth) {
+      setCytobandWidth(svgWidth);
+    } else {
+      updateWidth(); // initial measure
+
+      window.addEventListener("resize", updateWidth);
+    }
+    return () => {
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [svgWidth]);
+
   useEffect(() => {
     const renderCytobands = (bands: Band[]) => {
       const svg = d3.select("#cytoband-svg");
@@ -34,7 +57,7 @@ export const Cytoband = ({
         .attr("y", yPos)
         .attr("rx", borderRadius)
         .attr("ry", borderRadius)
-        .attr("width", svgWidth)
+        .attr("width", cytobandWidth)
         .attr("height", chrHeight);
 
       // Draw border outline
@@ -44,7 +67,7 @@ export const Cytoband = ({
         .attr("y", yPos)
         .attr("rx", borderRadius)
         .attr("ry", borderRadius)
-        .attr("width", svgWidth)
+        .attr("width", cytobandWidth)
         .attr("height", chrHeight)
         .attr("fill", "none")
         .style("transform", `translate(1px, 0)`) // account for the border stroke
@@ -59,8 +82,8 @@ export const Cytoband = ({
         .attr("clip-path", `url(#${pillId})`);
 
       bands.forEach((band, index) => {
-        const x = (band.start / chrLength) * svgWidth;
-        const width = ((band.end - band.start) / chrLength) * svgWidth;
+        const x = (band.start / chrLength) * cytobandWidth;
+        const width = ((band.end - band.start) / chrLength) * cytobandWidth;
 
         if (band.stain === "acen") {
           const prevBand = bands[index - 1];
@@ -101,13 +124,13 @@ export const Cytoband = ({
     };
 
     renderCytobands(mockCytobandData[chromosomeId]);
-  }, [svgWidth, chromosomeId]);
+  }, [cytobandWidth, chromosomeId]);
 
   return (
-    <CytobandWrapper>
-      <svg id="cytoband-svg" width={svgWidth + 2} height="20">
-        <g id="cytoband-groups" />
-      </svg>
+    <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
+      <p>Chromosome 2 - HG38</p>
+      <svg id="cytoband-svg" width={cytobandWidth + 2} height="20" />
+      <g id="cytoband-groups" />
     </CytobandWrapper>
   );
 };
