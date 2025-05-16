@@ -419,7 +419,12 @@ class CxgDataset(Dataset):
             coverage_plot.append([coverage, start, end])
 
         # assemble the response
-        return {"chromosome": target_chromosome, "cellType": cell_type, "coverage": coverage_plot, "geneInfo": sorted_genes}
+        return {
+            "chromosome": target_chromosome,
+            "cellType": cell_type,
+            "coverage": coverage_plot,
+            "geneInfo": sorted_genes,
+        }
 
     def get_atac_gene_info(self, gene_name, genome_version):
         """
