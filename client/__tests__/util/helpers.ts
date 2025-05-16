@@ -295,18 +295,6 @@ export function shouldSkipTests(
   return graphTestId === SIDE_PANEL;
 }
 
-export async function closeBottomBanner(page: Page) {
-  const bottomBanner = page.getByTestId("bottom-banner");
-
-  await tryUntil(
-    async () => {
-      await bottomBanner.getByRole("button").click();
-      await expect(bottomBanner).not.toBeVisible();
-    },
-    { page }
-  );
-}
-
 export function getSnapshotPrefix(testInfo: TestInfo): string {
   const output = testInfo.titlePath.join("-");
 
