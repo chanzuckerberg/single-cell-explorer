@@ -1,6 +1,6 @@
 import React from "react";
-import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
-import { useGeneInfoQuery } from "common/queries/useGenomeReferenceInfo";
+// import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
+// import { useGeneInfoQuery } from "common/queries/useGenomeReferenceInfo";
 
 export const GeneMap = ({
   chromosomeId,
@@ -10,34 +10,32 @@ export const GeneMap = ({
   svgWidth: number;
 }) => {
   console.log("GeneMap sees:", { chromosomeId, svgWidth });
-  const { selectedGene } = useChromatinViewerSelectedGene();
-  const { data, isLoading, isError, error } = useGeneInfoQuery({
-    geneName: selectedGene,
-    genomeVersion: "hg38",
-    options: {
-      enabled: true,
-      retry: 3,
-    },
-  });
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-  if (isError) {
-    console.error("Error fetching gene info:", error);
-    return <div>Error loading gene info</div>;
-  }
-  const geneInfo = data;
-  if (!geneInfo) {
-    return <div>No gene info available</div>;
-  }
-  console.log("GeneMap sees geneInfo:", geneInfo);
+  // const { selectedGene } = useChromatinViewerSelectedGene();
+  // const { data, isLoading, isError, error } = useGeneInfoQuery({
+  //   geneName: selectedGene,
+  //   genomeVersion: "hg38",
+  //   options: {
+  //     enabled: true,
+  //     retry: 3,
+  //   },
+  // });
+  // if (isLoading) {
+  //   return <div>Loading...</div>;
+  // }
+  // if (isError) {
+  //   console.error("Error fetching gene info:", error);
+  //   return <div>Error loading gene info</div>;
+  // }
+  // const geneInfo = data;
+  // if (!geneInfo) {
+  //   return <div>No gene info available</div>;
+  // }
+  // console.log("GeneMap sees geneInfo:", geneInfo);
   // const grouped = groupGenesByStrandAndBins(geneInfo.allGenesOnChromosome);
   // console.log("GeneMap sees grouped:", grouped);
   return (
     <div>
-      <div>
-        <strong>Selected Gene:</strong> {geneInfo.selectedGene}
-      </div>
+      <div>{/* <strong>Selected Gene:</strong> {geneInfo.selectedGene} */}</div>
       {/* <GeneListByMb geneInfo={geneInfo}/> */}
     </div>
   );
