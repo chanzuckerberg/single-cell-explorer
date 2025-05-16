@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.11.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.10.0...v1.11.0) (2025-05-16)
+
+
+### Misc
+
+* Remove bottom banner ([#1202](https://github.com/chanzuckerberg/single-cell-explorer/issues/1202)) ([7bdc174](https://github.com/chanzuckerberg/single-cell-explorer/commit/7bdc174b658c4c2756b65cf4040d01cec3decc31))
+* Update LICENSE.txt ([#1200](https://github.com/chanzuckerberg/single-cell-explorer/issues/1200)) ([cd3987b](https://github.com/chanzuckerberg/single-cell-explorer/commit/cd3987b795ea066e31335acf971f9f82b1acc9ea))
+* Update README.md ([#1198](https://github.com/chanzuckerberg/single-cell-explorer/issues/1198)) ([d9135a4](https://github.com/chanzuckerberg/single-cell-explorer/commit/d9135a4994cd228733f668aaeea0230ddda44d10))
+
+
+### Features
+
+* Add cellType to coverage response ([#1205](https://github.com/chanzuckerberg/single-cell-explorer/issues/1205)) ([3dd6b33](https://github.com/chanzuckerberg/single-cell-explorer/commit/3dd6b337421263f934181b519225a0f1498e626c))
+* Add Cytoband to Chromatin Viz ([#1189](https://github.com/chanzuckerberg/single-cell-explorer/issues/1189)) ([fe56c24](https://github.com/chanzuckerberg/single-cell-explorer/commit/fe56c24b80318684a4272749e5af43a5807a7b38))
+* Add CZID histogram to Explorer  ([#1186](https://github.com/chanzuckerberg/single-cell-explorer/issues/1186)) ([fade735](https://github.com/chanzuckerberg/single-cell-explorer/commit/fade7354aa18c5849ac5c61fc822929e7513d08d))
+* add histogram by cell type ([#1197](https://github.com/chanzuckerberg/single-cell-explorer/issues/1197)) ([361075a](https://github.com/chanzuckerberg/single-cell-explorer/commit/361075a431efa79446ad11b58d5994bafe35c4ef))
+* ATAC endpoints ([#1188](https://github.com/chanzuckerberg/single-cell-explorer/issues/1188)) ([35240bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/35240bf2866e9d11d5bfe8536121ceaf1f2ed314))
+* multiome coverage plot setup ([#1191](https://github.com/chanzuckerberg/single-cell-explorer/issues/1191)) ([486a08c](https://github.com/chanzuckerberg/single-cell-explorer/commit/486a08c2867a61a2a86ee0ae90efa2a5e0471984))
+* Read data objects from S3 ([#1193](https://github.com/chanzuckerberg/single-cell-explorer/issues/1193)) ([38531ac](https://github.com/chanzuckerberg/single-cell-explorer/commit/38531acfc63bf62ab8b988d538262dd5769ec4ae))
+* unite scales for all svgs ([#1196](https://github.com/chanzuckerberg/single-cell-explorer/issues/1196)) ([5d3963d](https://github.com/chanzuckerberg/single-cell-explorer/commit/5d3963de0b6d6b531783ae05221ac6f9b3e90585))
+* Update coverage endpoint ([#1204](https://github.com/chanzuckerberg/single-cell-explorer/issues/1204)) ([f44f1bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/f44f1bfb8371ce16a2be1a044f23af9e2b2a28b1))
+
 ## [1.10.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.9.0...v1.10.0) (2025-04-25)
 
 
