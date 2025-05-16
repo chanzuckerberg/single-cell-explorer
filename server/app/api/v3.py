@@ -185,10 +185,10 @@ class ATACCoverageAPI(DatasetResource):
         return common_rest.atac_coverage_get(request, data_adaptor)
 
 
-class ATACGeneInfoAPI(DatasetResource):
-    @rest_get_s3uri_data_adaptor
-    def get(self, data_adaptor):
-        return common_rest.atac_gene_info_get(request, data_adaptor)
+# class ATACGeneInfoAPI(DatasetResource):
+#     @rest_get_s3uri_data_adaptor
+#     def get(self, data_adaptor):
+#         return common_rest.atac_gene_info_get(request, data_adaptor)
 
 
 class ATACCytobandAPI(DatasetResource):
@@ -277,7 +277,7 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(UnsMetaAPI, "/uns/meta")
     # ATAC
     add_resource(ATACCoverageAPI, "/atac/coverage")
-    add_resource(ATACGeneInfoAPI, "/atac/geneinfo")
+    # add_resource(ATACGeneInfoAPI, "/atac/geneinfo")
     add_resource(ATACCytobandAPI, "/atac/cytoband")
     # Agent
     add_resource(AgentAPI, "/agent/step")
