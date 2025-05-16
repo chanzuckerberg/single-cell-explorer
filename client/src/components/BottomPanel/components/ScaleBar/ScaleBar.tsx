@@ -3,10 +3,20 @@ import * as d3 from "d3";
 
 export const ScaleBar = ({
   svgWidth,
-  totalMb,
+  totalMb, // TODO: (smccanny) this needs to be more dynamic
+  startBasePair,
+  marginLeft = 7,
+  marginRight = 10,
+  marginTop = 20,
+  marginBottom = 20, // default value for marginBottom
 }: {
   svgWidth: number;
   totalMb: number;
+  startBasePair: number;
+  marginLeft?: number;
+  marginRight?: number;
+  marginTop?: number;
+  marginBottom?: number;
 }) => {
   useEffect(() => {
     const svg = d3.select("#scalebar-svg");
@@ -15,7 +25,12 @@ export const ScaleBar = ({
     const height = +svg.attr("height");
 
     // === CONFIG ===
-    const margin = { top: 20, right: 10, bottom: 20, left: 7 }; // margins to account for label overflow
+    const margin = {
+      top: marginTop,
+      right: marginRight,
+      bottom: marginBottom,
+      left: marginLeft,
+    }; // margins to account for label overflow
     const width = innerWidth + margin.left + margin.right;
     const axisY = height / 2;
     const tickLength = 8;
@@ -25,7 +40,10 @@ export const ScaleBar = ({
     const g = svg.append("g").attr("transform", `translate(${margin.left}, 0)`);
 
     // === SCALE ===
-    const xScale = d3.scaleLinear().domain([0, totalMb]).range([0, innerWidth]);
+    const xScale = d3
+      .scaleLinear()
+      .domain([0 + startBasePair, totalMb + startBasePair])
+      .range([0, innerWidth]);
 
     // === BASE LINE ===
     g.append("line")
@@ -37,7 +55,11 @@ export const ScaleBar = ({
       .attr("stroke-width", 1);
 
     // === TICKS ===
-    const tickValues = d3.range(0, totalMb + 1, 5); // every 5mb
+    const tickValues = d3.range(
+      0 + startBasePair,
+      totalMb + 1 + startBasePair,
+      100
+    ); // every 100kb TODO: (smccanny) this needs to be more dynamic
 
     g.selectAll(".tick-line")
       .data(tickValues)
@@ -60,7 +82,15 @@ export const ScaleBar = ({
       .attr("text-anchor", "middle")
       .attr("fill", "#C3C3C3")
       .style("font-size", "12px")
-      .text((d) => (d === 0 ? "mb" : d));
-  }, [svgWidth, totalMb]);
+      .text((d) => (d === 0 ? "kb" : d));
+  }, [
+    svgWidth,
+    totalMb,
+    marginBottom,
+    marginLeft,
+    marginRight,
+    marginTop,
+    startBasePair,
+  ]);
   return <svg id="scalebar-svg" height="60" />;
 };
