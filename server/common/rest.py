@@ -540,33 +540,35 @@ def atac_coverage_get(request, data_adaptor):
     """
     Returns the ATAC coverage for the requested chromosome and cell type.
     """
-    chr_key = request.args.get("chr")
+    gene_name = request.args.get("gene_name")
+    genome_version = request.args.get("genome_version")
     cell_type = request.args.get("cell_type")
-    if not chr_key or not cell_type:
+    if not gene_name or not cell_type or not genome_version:
+        return make_response("No gene name, cell type or genome version provided", HTTPStatus.BAD_REQUEST)
         return make_response("No chromosome or cell type provided", HTTPStatus.BAD_REQUEST)
 
-    atac_coverage = data_adaptor.get_atac_coverage(chr_key, cell_type)
+    atac_coverage = data_adaptor.get_atac_coverage(gene_name, genome_version, cell_type)
     if atac_coverage is None:
         return make_response("No ATAC coverage found", HTTPStatus.NOT_FOUND)
 
     return make_response(atac_coverage, HTTPStatus.OK, {"Content-Type": "application/json"})
 
 
-def atac_gene_info_get(request, data_adaptor):
-    """
-    Returns Gene Metadata for the requested gene.
-    """
-    gene_name = request.args.get("gene_name")
-    genome_version = request.args.get("genome_version")
+# def atac_gene_info_get(request, data_adaptor):
+#     """
+#     Returns Gene Metadata for the requested gene.
+#     """
+#     chr = request.args.get("chr")
+#     genome_version = request.args.get("genome_version")
 
-    if not gene_name or not genome_version:
-        return make_response("No gene_name or genome_version provided", HTTPStatus.BAD_REQUEST)
+#     if not chr or not genome_version:
+#         return make_response("No chr or genome_version provided", HTTPStatus.BAD_REQUEST)
 
-    atac_gene_info = data_adaptor.get_atac_gene_info(gene_name, genome_version)
-    if atac_gene_info is None:
-        return make_response("No ATAC gene info found", HTTPStatus.NOT_FOUND)
+#     atac_gene_info = data_adaptor.get_atac_gene_info(chr, genome_version)
+#     if atac_gene_info is None:
+#         return make_response("No ATAC gene info found", HTTPStatus.NOT_FOUND)
 
-    return make_response(atac_gene_info, HTTPStatus.OK, {"Content-Type": "application/json"})
+#     return make_response(atac_gene_info, HTTPStatus.OK, {"Content-Type": "application/json"})
 
 
 def atac_cytoband_get(request, data_adaptor):

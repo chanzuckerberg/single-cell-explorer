@@ -401,10 +401,15 @@ class CxgDataset(Dataset):
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
 
-    def get_atac_coverage(self, chr_key, cell_type):
+    def get_atac_coverage(self, gene_name, genome_version, cell_type):
         """
         Extracts ATAC coverage data - currently random mock data
         """
+
+        # get gene info
+        target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
+
+        # get coverage data (currently random mock data)
         region_length = 248956422
         bin_size = 10_000
         coverage_plot = []
@@ -412,12 +417,19 @@ class CxgDataset(Dataset):
             end = min(start + bin_size, region_length)
             coverage = random.randint(0, 100)  # mock read count
             coverage_plot.append([coverage, start, end])
-        return {"cellType": cell_type, "coveragePlot": coverage_plot}
+
+        # assemble the response
+        return {
+            "chromosome": target_chromosome,
+            "cellType": cell_type,
+            "coverage": coverage_plot,
+            "geneInfo": sorted_genes,
+        }
 
     def get_atac_gene_info(self, gene_name, genome_version):
         """
-        Extracts ATAC gene info data from a JSON file
-        gene_data_<genome_version>.json
+        Given a gene name, finds its chromosome and returns all genes
+        on that chromosome sorted by geneStart.
         """
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
         dl = DataLocator(file_uri)
@@ -425,8 +437,28 @@ class CxgDataset(Dataset):
         try:
             with dl.open("r") as f:
                 gene_data = json.load(f)
-            return gene_data.get(gene_name)
-        except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+
+            target_gene = gene_data.get(gene_name)
+            if not target_gene:
+                logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
+                return None
+
+            target_chromosome = target_gene.get("geneChromosome")
+            if not target_chromosome:
+                logging.warning(f"No chromosome info for gene '{gene_name}'.")
+                return None
+
+            # Filter genes on the same chromosome
+            same_chr_genes = [
+                gene_info for gene_info in gene_data.values() if gene_info.get("geneChromosome") == target_chromosome
+            ]
+
+            # Sort by geneStart
+            sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
+
+            return target_chromosome, sorted_genes
+
+        except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
             return None
 
