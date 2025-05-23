@@ -407,14 +407,13 @@ class CxgDataset(Dataset):
         """
 
         # get gene info
-        target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
+        target_chromosome, sorted_genes, range_start, range_end = self.get_atac_gene_info(gene_name, genome_version)
 
         # get coverage data (currently random mock data)
-        region_length = 248956422
-        bin_size = 10_000
+        bin_size = 100
         coverage_plot = []
-        for start in range(0, region_length, bin_size):
-            end = min(start + bin_size, region_length)
+        for start in range(range_start, range_end, bin_size):
+            end = min(start + bin_size, range_end)
             coverage = random.randint(0, 100)  # mock read count
             coverage_plot.append([coverage, start, end])
 
@@ -443,6 +442,9 @@ class CxgDataset(Dataset):
                 logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
                 return None
 
+            range_start = target_gene.get("geneStart") - 10_000
+            range_end = target_gene.get("geneEnd") + 10_000
+
             target_chromosome = target_gene.get("geneChromosome")
             if not target_chromosome:
                 logging.warning(f"No chromosome info for gene '{gene_name}'.")
@@ -456,7 +458,7 @@ class CxgDataset(Dataset):
             # Sort by geneStart
             sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
 
-            return target_chromosome, sorted_genes
+            return target_chromosome, sorted_genes, range_start, range_end
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
