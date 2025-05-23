@@ -9,8 +9,11 @@ export function useChromatinViewerSelectedGene() {
 
   const selectedGeneQuery = useQuery({
     queryKey: SELECTED_GENE_QUERY_KEY,
-    queryFn: () => defaultGene, // return default value
+    queryFn: () => {
+      throw new Error("This should not be called");
+    },
     initialData: defaultGene,
+    enabled: false, // Prevent the query from running
   });
 
   const setSelectedGene = (gene: string) => {

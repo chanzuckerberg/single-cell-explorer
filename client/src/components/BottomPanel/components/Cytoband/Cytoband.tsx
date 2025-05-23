@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import React, { useEffect, useRef, useState } from "react";
+import { useCytobandQuery, CytobandSegment } from "common/queries/useCytoband";
 import { CytobandWrapper } from "./style";
-import { mockCytobandData, Band } from "./mockCytobandData";
 
 export const Cytoband = ({
   chromosomeId,
@@ -33,8 +33,19 @@ export const Cytoband = ({
     };
   }, [svgWidth]);
 
+  const cytobandData = useCytobandQuery({
+    chromosome: chromosomeId,
+    genomeVersion: "hg38",
+    options: {
+      enabled: true,
+      retry: 3,
+    },
+  });
+
+  const { isLoading, isError, isSuccess, data } = cytobandData;
+
   useEffect(() => {
-    const renderCytobands = (bands: Band[]) => {
+    const renderCytobands = (bands: CytobandSegment[]) => {
       const svg = d3.select("#cytoband-svg");
       svg.selectAll("*").remove(); // Clear previous content
 
@@ -123,12 +134,33 @@ export const Cytoband = ({
         .text(chromosomeId);
     };
 
-    renderCytobands(mockCytobandData[chromosomeId]);
-  }, [cytobandWidth, chromosomeId]);
+    // Only render when data is successfully loaded and cytobandWidth is set
+    if (isSuccess && data && cytobandWidth > 0) {
+      console.log("Cytoband data:", data);
+      renderCytobands(data);
+    }
+  }, [cytobandWidth, chromosomeId, isSuccess, data, isLoading]);
+
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
+        <p>Loading chromosome data...</p>
+      </CytobandWrapper>
+    );
+  }
+
+  if (isError) {
+    return (
+      <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
+        <p>Error loading chromosome data</p>
+      </CytobandWrapper>
+    );
+  }
 
   return (
     <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
-      <p>Chromosome 2 - HG38</p>
+      <p>Chromosome {chromosomeId} - HG38</p>
       <svg id="cytoband-svg" width={cytobandWidth + 2} height="20" />
       <g id="cytoband-groups" />
     </CytobandWrapper>

@@ -3,7 +3,7 @@ import { useCoverageQuery } from "common/queries/coverage";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
-// import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
+import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
 import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
@@ -11,9 +11,8 @@ import { Cytoband } from "../Cytoband/Cytoband";
 import { CoverageAtScale } from "./style";
 
 export const ChromosomeMap = () => {
-  const chromosome = "chr2";
-  const BAR_WIDTH = 8;
-  // const { selectedGene } = useChromatinViewerSelectedGene();
+  const BAR_WIDTH = 6;
+  const { selectedGene } = useChromatinViewerSelectedGene();
 
   const { bottomPanelHidden, selectedCellTypes } = useSelector(
     (state: RootState) => ({
@@ -24,7 +23,7 @@ export const ChromosomeMap = () => {
 
   const coverageQueries = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    geneName: "MYC", // next we will get this from the selectedGene
+    geneName: selectedGene,
     genomeVersion: "hg38",
     options: {
       enabled: !bottomPanelHidden,
@@ -134,6 +133,23 @@ export const ChromosomeMap = () => {
         }}
       >
         Error loading data
+      </div>
+    );
+  }
+
+  console.log("coverage Queries", coverageQueries);
+  const chromosome = coverageQueries[0]?.data?.chromosome;
+  if (!chromosome) {
+    return (
+      <div
+        className={SKELETON}
+        style={{
+          display: "flex",
+          margin: "16px",
+          height: "50px",
+        }}
+      >
+        No chromosome data
       </div>
     );
   }
