@@ -3,6 +3,7 @@ import { useCoverageQuery } from "common/queries/coverage";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
+// import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
 import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
@@ -12,6 +13,7 @@ import { CoverageAtScale } from "./style";
 export const ChromosomeMap = () => {
   const chromosome = "chr2";
   const BAR_WIDTH = 8;
+  // const { selectedGene } = useChromatinViewerSelectedGene();
 
   const { bottomPanelHidden, selectedCellTypes } = useSelector(
     (state: RootState) => ({
@@ -20,52 +22,60 @@ export const ChromosomeMap = () => {
     })
   );
 
-  const rawCoverageQueries = useCoverageQuery({
-    // START: temporary until we have new coverage endpoint
+  const coverageQueries = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    chromosome,
+    geneName: "MYC", // next we will get this from the selectedGene
+    genomeVersion: "hg38",
     options: {
       enabled: !bottomPanelHidden,
       retry: 3,
     },
   });
 
-  const isLoading = rawCoverageQueries.some((q) => q.isLoading);
-  const isError = rawCoverageQueries.some((q) => q.isError);
+  const isLoading = coverageQueries.some((q) => q.isLoading);
+  const isError = coverageQueries.some((q) => q.isError);
 
-  const coverageQueries = useMemo(
-    () =>
-      // for each query, if the data is not null,
-      // shorten the array to the first 56 bins
-      rawCoverageQueries.map((q) => {
-        if (q.data?.coveragePlot) {
-          const shortenedCoveragePlot = q.data.coveragePlot.slice(0, 239);
-          return {
-            ...q,
-            data: {
-              ...q.data,
-              coveragePlot: shortenedCoveragePlot,
-            },
-          };
-        }
-        return q;
-      }),
-    [rawCoverageQueries]
-  );
+  // Start: TEMPORARY UNTIL WE HAVE A SMALLER BIN SIZE
+  // const coverageQueries = useMemo(
+  //   () =>
+  //     // for each query, if the data is not null,
+  //     // shorten the array to the first 56 bins
+  //     rawCoverageQueries.map((q) => {
+  //       if (q.data?.coverage) {
+  //         const shortenedCoveragePlot = q.data.coverage.slice(0, 239);
+  //         // TEMPORARY UNTIL WE HAVE A SMALLER BIN SIZE
+  //         // for each item in shortenedCoveragePlot,
+  //         // starting at x =  0, change item[1] to be x and item[2] to be x + binSize
+  //         // them x = item[2]
+  //         for (let i = 0; i < shortenedCoveragePlot.length; i += 1) {
+  //           const item = shortenedCoveragePlot[i];
+  //           const binSize = 100; // 100 bp
+  //           item[1] = i * binSize;
+  //           item[2] = item[1] + binSize;
+  //         }
+  //         return {
+  //           ...q,
+  //           data: {
+  //             ...q.data,
+  //             coverage: shortenedCoveragePlot,
+  //           },
+  //         };
+  //       }
+  //       return q;
+  //     }),
+  //   [rawCoverageQueries]
+  // );
   // END: temporary until we have new coverage endpoint
 
   const totalBasePairs = useMemo(
     () =>
-      Math.max(
-        ...coverageQueries.map((q) => q.data?.coveragePlot.length ?? 0),
-        0
-      ),
+      Math.max(...coverageQueries.map((q) => q.data?.coverage.length ?? 0), 0),
     [coverageQueries]
   );
 
   const startBasePair = useMemo(() => {
     for (const q of coverageQueries) {
-      const plot = q.data?.coveragePlot;
+      const plot = q.data?.coverage;
       if (plot && plot.length > 0) {
         const start = plot[0][1]; // startBasePair
         return start;
@@ -74,9 +84,20 @@ export const ChromosomeMap = () => {
     return 0;
   }, [coverageQueries]);
 
+  const endBasePair = useMemo(() => {
+    for (const q of coverageQueries) {
+      const plot = q.data?.coverage;
+      if (plot && plot.length > 0) {
+        const end = plot[plot.length - 1][2]; // endBasePair
+        return end;
+      }
+    }
+    return 0;
+  }, [coverageQueries]);
+
   const binSize = useMemo(() => {
     for (const q of coverageQueries) {
-      const plot = q.data?.coveragePlot;
+      const plot = q.data?.coverage;
       if (plot && plot.length > 1) {
         const start = plot[0][1]; // startBasePair
         const end = plot[0][2]; // endBasePair
@@ -86,7 +107,7 @@ export const ChromosomeMap = () => {
     return 0;
   }, [coverageQueries]);
 
-  const totalKiloBasePairs = (totalBasePairs * binSize) / 1_000;
+  const totalBPAtScale = (totalBasePairs * binSize) / 1_000; // this gives us a scale in kb
 
   if (isLoading) {
     return (
@@ -116,16 +137,17 @@ export const ChromosomeMap = () => {
       </div>
     );
   }
-
   return (
     <>
       <Cytoband chromosomeId={chromosome} />
       <CoverageAtScale>
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
-          totalMb={totalKiloBasePairs}
+          totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
-          marginLeft={15}
+          marginLeft={25}
+          labelScale="kb"
+          labelFrequency={1}
         />
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot
@@ -142,6 +164,9 @@ export const ChromosomeMap = () => {
         <GeneMap
           chromosomeId={chromosome}
           svgWidth={totalBasePairs * BAR_WIDTH}
+          geneInfo={coverageQueries[0]?.data?.geneInfo ?? undefined}
+          startBasePair={startBasePair}
+          endBasePair={endBasePair}
         />
       </CoverageAtScale>
     </>

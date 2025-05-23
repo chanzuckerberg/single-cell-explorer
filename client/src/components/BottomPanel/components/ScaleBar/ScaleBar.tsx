@@ -3,20 +3,24 @@ import * as d3 from "d3";
 
 export const ScaleBar = ({
   svgWidth,
-  totalMb, // TODO: (smccanny) this needs to be more dynamic
+  totalBPAtScale,
   startBasePair,
   marginLeft = 7,
   marginRight = 10,
   marginTop = 20,
   marginBottom = 20, // default value for marginBottom
+  labelFrequency = 100, // default value for labelFrequency
+  labelScale,
 }: {
   svgWidth: number;
-  totalMb: number;
+  totalBPAtScale: number;
   startBasePair: number;
   marginLeft?: number;
   marginRight?: number;
   marginTop?: number;
   marginBottom?: number;
+  labelFrequency?: number;
+  labelScale: string;
 }) => {
   useEffect(() => {
     const svg = d3.select("#scalebar-svg");
@@ -42,7 +46,7 @@ export const ScaleBar = ({
     // === SCALE ===
     const xScale = d3
       .scaleLinear()
-      .domain([0 + startBasePair, totalMb + startBasePair])
+      .domain([0 + startBasePair, totalBPAtScale + startBasePair])
       .range([0, innerWidth]);
 
     // === BASE LINE ===
@@ -57,9 +61,9 @@ export const ScaleBar = ({
     // === TICKS ===
     const tickValues = d3.range(
       0 + startBasePair,
-      totalMb + 1 + startBasePair,
-      100
-    ); // every 100kb TODO: (smccanny) this needs to be more dynamic
+      totalBPAtScale + 1 + startBasePair,
+      labelFrequency
+    );
 
     g.selectAll(".tick-line")
       .data(tickValues)
@@ -82,15 +86,17 @@ export const ScaleBar = ({
       .attr("text-anchor", "middle")
       .attr("fill", "#C3C3C3")
       .style("font-size", "12px")
-      .text((d) => (d === 0 ? "kb" : d));
+      .text((d) => (d === 0 ? labelScale : d));
   }, [
     svgWidth,
-    totalMb,
+    totalBPAtScale,
     marginBottom,
     marginLeft,
     marginRight,
     marginTop,
     startBasePair,
+    labelFrequency,
+    labelScale,
   ]);
   return <svg id="scalebar-svg" height="60" />;
 };

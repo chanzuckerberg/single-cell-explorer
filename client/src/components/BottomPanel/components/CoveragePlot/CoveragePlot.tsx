@@ -84,16 +84,16 @@ export function CoveragePlot({
         return [index + 1, barIndex, chromosomeId, cellType, binSize];
       });
     }
-    if (!coverageQuery?.data?.coveragePlot) {
+    if (!coverageQuery?.data?.coverage) {
       return {};
     }
-    const coverage = transformData(coverageQuery.data.coveragePlot);
+    const coverage = transformData(coverageQuery.data.coverage);
     return {
       coverage_bin_size: 1, // this is required for the histogram to render correctly - there should be a better name for this.
-      total_length: coverageQuery.data.coveragePlot.length,
+      total_length: coverageQuery.data.coverage.length,
       coverage,
     };
-  }, [coverageQuery?.data?.coveragePlot, chromosome, cellType]);
+  }, [coverageQuery?.data?.coverage, chromosome, cellType]);
 
   const handleHistogramBarEnter = useCallback(
     (hoverData: [number, number]) => {
