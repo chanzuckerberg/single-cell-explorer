@@ -11,7 +11,7 @@ from packaging import version
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
-from server.common.constants import XApproximateDistribution
+from server.common.constants import ATAC_BIN_SIZE, ATAC_RANGE_BUFFER, XApproximateDistribution
 from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
@@ -412,12 +412,12 @@ class CxgDataset(Dataset):
             return None
 
         coverage = self.open_array("coverage")
-        bin_size = 100
+        bin_size = ATAC_BIN_SIZE
         target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
 
         gene_start, gene_end = get_gene_start_end(gene_name, sorted_genes)
 
-        range_buffer = 10_000  # Buffer around the gene
+        range_buffer = ATAC_RANGE_BUFFER  # Buffer around the gene
 
         # Determine genomic region of interest
         bin_start = (gene_start - range_buffer) // bin_size
