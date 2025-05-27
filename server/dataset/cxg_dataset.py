@@ -417,7 +417,7 @@ class CxgDataset(Dataset):
 
         gene_start, gene_end = get_gene_start_end(gene_name, sorted_genes)
 
-        range_buffer = 10_000  # 1 Mbp buffer around the gene
+        range_buffer = 10_000  # Buffer around the gene
 
         # Determine genomic region of interest
         bin_start = (gene_start - range_buffer) // bin_size
@@ -434,9 +434,6 @@ class CxgDataset(Dataset):
                 & (result["bin"] >= bin_start)
                 & (result["bin"] <= bin_end)
             ].copy()
-
-            print("Filtered coverage data:")
-            print(filtered)
 
             coverage_plot = []
             if not filtered.empty:
