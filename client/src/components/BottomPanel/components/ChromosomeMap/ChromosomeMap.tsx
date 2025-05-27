@@ -172,6 +172,7 @@ export const ChromosomeMap = () => {
   }
   return (
     <>
+      <p>Hello</p>
       <Cytoband chromosomeId={chromosome} />
       <CoverageAtScale ref={scrollContainerRef}>
         <ScaleBar
