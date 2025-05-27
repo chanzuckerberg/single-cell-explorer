@@ -160,7 +160,7 @@ export const Cytoband = ({
 
   return (
     <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
-      <p>Chromosome {chromosomeId} - HG38</p>
+      <p>{chromosomeId} - HG38</p>
       <svg id="cytoband-svg" width={cytobandWidth + 2} height="20" />
       <g id="cytoband-groups" />
     </CytobandWrapper>

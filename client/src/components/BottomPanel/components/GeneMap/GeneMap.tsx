@@ -38,6 +38,8 @@ export const GeneMap = ({
     <div>
       <GeneMapSVG
         data={genesInRange}
+        startBasePair={startBasePair}
+        endBasePair={endBasePair}
         selectedGene={selectedGene}
         svgWidth={svgWidth}
       />

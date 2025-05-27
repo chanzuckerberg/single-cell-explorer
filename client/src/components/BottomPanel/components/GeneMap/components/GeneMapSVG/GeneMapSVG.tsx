@@ -7,12 +7,10 @@ export const GeneMapSVG = ({
   data,
   selectedGene,
   svgWidth,
+  startBasePair,
+  endBasePair,
 }: GeneMapSVGProps) => {
-  const [geneData, setGeneData] = useState<GeneMapSVGProps["data"] | null>(
-    null
-  );
-  const [minPosition, setMinPosition] = useState(0);
-  const [maxPosition, setMaxPosition] = useState(0);
+  const [geneData, setGeneData] = useState<GeneInfo[] | null>(null);
   const [svgHeight, setSvgHeight] = useState(100);
   const [organizedRows, setOrganizedRows] = useState<GeneInfo[][]>([]);
 
@@ -21,48 +19,31 @@ export const GeneMapSVG = ({
   const trackHeight = 25;
   const trackSpacing = 9;
 
-  // Scale a genomic position to SVG x-coordinate
+  // Scale a genomic position to SVG x-coordinate based on viewport
   const scaleX = useMemo(
     () => (position: number) => {
       const availableWidth = svgWidth - margin.left - margin.right;
       return (
         margin.left +
-        ((position - minPosition) / (maxPosition - minPosition)) *
+        ((position - startBasePair) / (endBasePair - startBasePair)) *
           availableWidth
       );
     },
-    [svgWidth, margin.left, margin.right, minPosition, maxPosition]
+    [svgWidth, margin.left, margin.right, startBasePair, endBasePair]
   );
 
   useEffect(() => {
     setGeneData(data);
 
-    // Calculate min and max positions for scaling
-    let min = Infinity;
-    let max = -Infinity;
-
-    // Process all genes to find min and max positions
-    const processGenes = (genesArray: GeneInfo[]) => {
-      for (const gene of genesArray) {
-        min = Math.min(min, gene.geneStart);
-        max = Math.max(max, gene.geneEnd);
-      }
-    };
-
-    // Process data
-    processGenes(data);
-    // Add some padding to min and max for better visualization
-    const padding = (max - min) * 0.05;
-    setMinPosition(min - padding);
-    setMaxPosition(max + padding);
-
     // Calculate SVG height based on gene organization
     if (data.length > 0) {
-      // Sort genes by start position for row calculation
-      const sortedGenes = [...data].sort((a, b) => a.geneStart - b.geneStart);
-
       // Organize genes into rows
-      const rows = organizeGenesIntoRows(sortedGenes, scaleX);
+      const rows = organizeGenesIntoRows(
+        data,
+        startBasePair,
+        endBasePair,
+        scaleX
+      );
       setOrganizedRows(rows);
 
       // Calculate SVG height based on number of rows
@@ -73,7 +54,7 @@ export const GeneMapSVG = ({
         margin.bottom;
       setSvgHeight(calculatedHeight);
     }
-  }, [data, margin.bottom, margin.top, scaleX]);
+  }, [data, startBasePair, endBasePair, margin.bottom, margin.top, scaleX]);
 
   // Determine color for each gene
   const getGeneColor = (geneName: string) => {
@@ -111,8 +92,12 @@ export const GeneMapSVG = ({
 
       // Draw genes in this row
       row.forEach((gene) => {
-        const startX = scaleX(gene.geneStart);
-        const endX = scaleX(gene.geneEnd);
+        // Clip gene coordinates to viewport
+        const clippedStart = Math.max(gene.geneStart, startBasePair);
+        const clippedEnd = Math.min(gene.geneEnd, endBasePair);
+
+        const startX = scaleX(clippedStart);
+        const endX = scaleX(clippedEnd);
         const width = endX - startX;
 
         const direction = gene.geneStrand === "+" ? 1 : -1;
@@ -149,8 +134,8 @@ export const GeneMapSVG = ({
             />
           );
 
-          // Start tick on left for positive strands
-          if (direction === 1) {
+          // Only draw start tick if the actual gene start is visible in viewport
+          if (direction === 1 && gene.geneStart >= startBasePair) {
             tracks.push(
               <line
                 key={`${gene.geneName}-start-line`}
@@ -164,8 +149,8 @@ export const GeneMapSVG = ({
             );
           }
 
-          // Start tick on right for negative strands
-          if (direction === -1) {
+          // Only draw end tick if the actual gene end is visible in viewport
+          if (direction === -1 && gene.geneEnd <= endBasePair) {
             tracks.push(
               <line
                 key={`${gene.geneName}-start-line`}
@@ -231,10 +216,38 @@ export const GeneMapSVG = ({
         }
         // Gene name
         // Display at the top left of the gene body
+
+        // Add double left caret if gene starts before viewport
+        if (gene.geneStart < startBasePair) {
+          tracks.push(
+            <g>
+              <path
+                key={`${gene.geneName}-left-indicator-1`}
+                d={`M ${startX + 6} ${currentY - 6 - 4} 
+                 L ${startX + 2} ${currentY - 6} 
+                 L ${startX + 6} ${currentY - 6 + 4}`}
+                fill="none"
+                stroke={getGeneColor(gene.geneName)}
+                strokeWidth={1}
+              />
+              <path
+                key={`${gene.geneName}-left-indicator-2`}
+                d={`M ${startX + 12} ${currentY - 6 - 4} 
+                 L ${startX + 8} ${currentY - 6} 
+                 L ${startX + 12} ${currentY - 6 + 4}`}
+                fill="none"
+                stroke={getGeneColor(gene.geneName)}
+                strokeWidth={1}
+              />
+            </g>
+          );
+        }
+        // Position label based on gene start position
+        const labelXOffset = gene.geneStart >= startBasePair ? -3 : 15;
         tracks.push(
           <text
             key={`${gene.geneName}-label`}
-            x={startX - 3} // Position at the left of the gene body
+            x={startX + labelXOffset} // Position at the left of the gene body
             y={currentY - 1} // Position above the gene body
             fontSize={10}
             textAnchor="start"
