@@ -12,10 +12,7 @@ import {
   CoveragePlotData,
   FetchCoverageResponse,
 } from "common/queries/coverage";
-import { useCellTypesQuery } from "common/queries/cellType";
-import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
 import { useDispatch, useSelector } from "react-redux";
-import { AutocompleteValue } from "@mui/material";
 import { RootState } from "reducers";
 import { Button } from "@blueprintjs/core";
 import Histogram from "./components/Histogram/Histogram";
@@ -23,7 +20,7 @@ import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
-import { CellTypeInputDropdown} from "./style";
+import { CellTypeDropdown } from "./components/CellTypeDropdown/CellTypeDropdown";
 
 export const READ_FILL_COLOR = "#CCCCCC";
 export const CONTIG_FILL_COLOR = "#767676";
@@ -44,7 +41,7 @@ export const getHistogramTooltipData = memoize(
 
     return [
       {
-        name: "Chromatin Accessibility",
+        name: "Chromatin Accessibility", // not shown in tooltip
         data: [
           ["Cell Type", `${coverageObj[3]}`],
           ["ChromosomeID", coverageObj[2]],
@@ -61,10 +58,12 @@ export function CoveragePlot({
   chromosome,
   cellType,
   coverageQuery,
+  barWidth,
 }: {
   svgWidth: number;
   chromosome: string;
   cellType: string;
+  barWidth: number;
   coverageQuery: UseQueryResult<FetchCoverageResponse> | undefined;
 }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
@@ -85,16 +84,16 @@ export function CoveragePlot({
         return [index + 1, barIndex, chromosomeId, cellType, binSize];
       });
     }
-    if (!coverageQuery?.data?.coveragePlot) {
+    if (!coverageQuery?.data?.coverage) {
       return {};
     }
-    const coverage = transformData(coverageQuery.data.coveragePlot);
+    const coverage = transformData(coverageQuery.data.coverage);
     return {
       coverage_bin_size: 1, // this is required for the histogram to render correctly - there should be a better name for this.
-      total_length: coverageQuery.data.coveragePlot.length,
+      total_length: coverageQuery.data.coverage.length,
       coverage,
     };
-  }, [coverageQuery?.data?.coveragePlot, chromosome, cellType]);
+  }, [coverageQuery?.data?.coverage, chromosome, cellType]);
 
   const handleHistogramBarEnter = useCallback(
     (hoverData: [number, number]) => {
@@ -144,7 +143,7 @@ export function CoveragePlot({
             top: 10,
             bottom: 5,
           },
-          innerWidth: data.total_length,
+          innerWidth: data.total_length * barWidth,
           numTicksY: 1,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
@@ -155,7 +154,7 @@ export function CoveragePlot({
       coverageViz.update();
     };
     renderHistogram(coverageData);
-  }, [coverageData, handleHistogramBarEnter, svgWidth]);
+  }, [coverageData, handleHistogramBarEnter, svgWidth, barWidth]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({
@@ -172,12 +171,11 @@ export function CoveragePlot({
   const dispatch = useDispatch();
   const { selectedCellTypes } = useSelector((state: RootState) => ({
     selectedCellTypes: state.controls.chromatinSelectedCellTypes,
-  }))
+  }));
 
   return (
-    <>
+    <div>
       <CellTypeDropdown cellType={cellType} />
-
       {selectedCellTypes.length > 1 && (
         <Button
           minimal
@@ -203,89 +201,7 @@ export function CoveragePlot({
             <TooltipVizTable data={histogramTooltipData} />
           </div>,
           document.body
-      )}
-    </>
-  );
-}
-
-function CellTypeDropdown({
-  cellType,
-}: {
-  cellType: string;
-}) {
-  const cellTypesQuery = useCellTypesQuery();
-  const cellTypes = useMemo(
-    () => cellTypesQuery.data ?? [],
-    [cellTypesQuery.data],
-  );
-
-  const [open, setOpen] = useState(false);
-  const anchorElRef = useRef<HTMLElement | null>(null);
-
-  type Option = DefaultAutocompleteOption;
-  type Multiple = false;
-  type DisableClearable = false;
-  type FreeSolo = false;
-
-  const cellTypeOptions = useMemo(
-    () => cellTypes.map<Option>(
-      name => ({ name })
-    ),
-    [cellTypes],
-  )
-
-  const activeOption = useMemo(
-    () => ({ name: cellType } as Option),
-    [cellType],
-  )
-
-  const dispatch = useDispatch();
-
-  return (
-    <>
-      <CellTypeInputDropdown
-        label={cellType}
-        onClick={event => {
-          if (open) {
-            setOpen(false);
-            anchorElRef.current?.focus();
-            anchorElRef.current = null;
-          } else {
-            anchorElRef.current = event.currentTarget;
-            setOpen(true);
-          }
-        }}
-        sdsStage="default"
-        sdsStyle="minimal"
-        sdsType="value"
-        value={cellType}
-      />
-
-      <DropdownMenu<Option, Multiple, DisableClearable, FreeSolo>
-        anchorEl={anchorElRef.current}
-        onClickAway={() => setOpen(false)}
-        open={open}
-        onClose={() => setOpen(false)}
-        options={cellTypeOptions}
-        search
-        width={244}
-        onChange={(
-          _: unknown,
-          value: AutocompleteValue<Option, Multiple, DisableClearable, FreeSolo>,
-        ) => {
-          setOpen(false);
-          anchorElRef.current = null;
-
-          if (value) {
-            dispatch({
-              type: "toggle chromatin histogram",
-              cellType: value.name,
-              removeCellType: cellType,
-            })
-          }
-        }}
-        value={activeOption}
-      />
-    </>
+        )}
+    </div>
   );
 }
