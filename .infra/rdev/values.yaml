@@ -4,6 +4,7 @@ stack:
       image:
         tag: sha-5a569d4
       replicaCount: 1
+      
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
