@@ -460,6 +460,8 @@ class CxgDataset(Dataset):
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
         dl = DataLocator(file_uri)
 
+        print(f"Loading gene data from {file_uri}")
+
         try:
             with dl.open("r") as f:
                 gene_data = json.load(f)
