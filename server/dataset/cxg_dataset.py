@@ -12,7 +12,7 @@ from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
 from server.common.constants import ATAC_BIN_SIZE, ATAC_RANGE_BUFFER, XApproximateDistribution
-from server.common.errors import ConfigurationError, DatasetAccessError, GeneNotFoundError, GeneDataLoadError
+from server.common.errors import ConfigurationError, DatasetAccessError, GeneDataLoadError, GeneNotFoundError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
 from server.common.utils.data_locator import DataLocator
