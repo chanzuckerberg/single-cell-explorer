@@ -59,12 +59,14 @@ export function CoveragePlot({
   cellType,
   coverageQuery,
   barWidth,
+  yMax,
 }: {
   svgWidth: number;
   chromosome: string;
   cellType: string;
   barWidth: number;
   coverageQuery: UseQueryResult<FetchCoverageResponse> | undefined;
+  yMax: number;
 }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
@@ -138,6 +140,8 @@ export function CoveragePlot({
           hoverColors: [CONTIG_FILL_COLOR],
           xTickValues: [],
           yTickFormat: formatTick,
+          numTicksY: 2,
+          yMax,
           barOpacity: 1,
           margins: {
             left: 40,
@@ -146,7 +150,6 @@ export function CoveragePlot({
             bottom: 5,
           },
           innerWidth: data.total_length * barWidth,
-          numTicksY: 1,
           labelsLarge: false,
           onHistogramBarHover: handleHistogramBarHover,
           onHistogramBarEnter: handleHistogramBarEnter,
@@ -156,7 +159,7 @@ export function CoveragePlot({
       coverageViz.update();
     };
     renderHistogram(coverageData);
-  }, [coverageData, handleHistogramBarEnter, svgWidth, barWidth]);
+  }, [coverageData, yMax, handleHistogramBarEnter, svgWidth, barWidth]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({

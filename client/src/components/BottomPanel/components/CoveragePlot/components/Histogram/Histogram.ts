@@ -180,7 +180,7 @@ export default class Histogram {
 
     if (this.options.yTickFilter) {
       let tickVals = this.options.numTicksY
-        ? // TODO (smccanny) fix these types
+        ? // TODO: (smccanny) fix these types
           (axis.scale() as d3.ScaleLinear<number, number>).ticks(
             this.options.numTicksY
           )
@@ -521,15 +521,13 @@ export default class Histogram {
     const yScaleMin = this.options.yScaleType === HISTOGRAM_SCALE.LOG ? 1 : 0;
     y.domain([
       yScaleMin,
-      // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-      d3.max(
-        bins.map((seriesBins: $TSFixMe) =>
-          d3.max(seriesBins, (d: $TSFixMe) => d.length)
-        )
-      ),
-    ])
-      .nice()
-      .range([this.size.height - this.margins.bottom, this.margins.top]);
+      this.options.yMax ||
+        d3.max(
+          bins.map((seriesBins: $TSFixMe) =>
+            d3.max(seriesBins, (d: $TSFixMe) => d.length)
+          )
+        ),
+    ]).range([this.size.height - this.margins.bottom, this.margins.top]);
 
     this.svg.append("g").call(this.xAxis.bind(this), x);
     this.svg.append("g").call(this.yAxis.bind(this), y);

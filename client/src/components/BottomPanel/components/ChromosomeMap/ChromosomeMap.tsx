@@ -123,6 +123,19 @@ export const ChromosomeMap = () => {
     return () => {}; // Cleanup function
   }, [selectedGeneInfo, isLoading, totalBasePairs, startBasePair, binSize]);
 
+  const yMax = useMemo(
+    () =>
+      Math.max(
+        ...coverageQueries.map((q) => {
+          const coverage = q.data?.coverage;
+          if (!coverage || coverage.length === 0) return 0;
+          return Math.ceil(Math.max(...coverage.map((c) => c[0])) / 5) * 5; // Get the max y value
+        }),
+        0 // Ensure we return at least 0
+      ),
+    [coverageQueries]
+  );
+
   if (isLoading) {
     return (
       <div
@@ -187,6 +200,7 @@ export const ChromosomeMap = () => {
             chromosome={chromosome}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
+            yMax={yMax}
             cellType={cellType}
             coverageQuery={coverageQueries.find(
               (q) => q.data?.cellType === cellType
