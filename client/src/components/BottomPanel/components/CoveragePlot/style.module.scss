@@ -5,3 +5,14 @@
   // So the tooltip appears on the top-right instead of bottom-right of mouse.
   transform: translateY(-100%);
 }
+
+.trashButton {
+  position: absolute;
+  margin-top: 10px;
+  right: 20px;
+  z-index: 105;
+}
+
+.coverageVizContainer {
+  padding-top: 14px;
+}

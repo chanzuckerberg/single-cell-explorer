@@ -14,7 +14,7 @@ export const BottomPanelWrapper = styled.div<BottomPanelWrapperProps>`
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 2;
+  z-index: 100;
   visibility: ${(props) => (props.isHidden ? "hidden" : "visible")};
 `;
 

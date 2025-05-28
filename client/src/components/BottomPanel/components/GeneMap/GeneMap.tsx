@@ -1,5 +1,4 @@
 import React from "react";
-import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
 import { GeneInfo } from "common/queries/coverage";
 import { GeneMapSVG } from "./components/GeneMapSVG/GeneMapSVG";
 
@@ -9,29 +8,30 @@ export const GeneMap = ({
   geneInfo,
   startBasePair,
   endBasePair,
+  formatSelectedGenes,
 }: {
   chromosomeId: string;
   svgWidth: number;
   geneInfo?: GeneInfo[];
   startBasePair: number;
   endBasePair: number;
+  formatSelectedGenes: string;
 }) => {
-  const { selectedGene } = useChromatinViewerSelectedGene();
   console.log("GeneMap sees:", {
     chromosomeId,
     svgWidth,
     geneInfo,
     startBasePair,
     endBasePair,
-    selectedGene,
+    formatSelectedGenes,
   });
   // get selectedGene from gene info
   if (!geneInfo) return null;
   const selectedGeneInfo = geneInfo.find(
-    (gene) => gene.geneName === selectedGene
+    (gene) => gene.geneName === formatSelectedGenes
   );
   if (!selectedGeneInfo) {
-    return <>`${selectedGene} not found in gene info`</>;
+    return <>`${formatSelectedGenes} not found in gene info`</>;
   }
   const genesInRange = getGenesInRange(geneInfo, startBasePair, endBasePair);
   return (
@@ -40,7 +40,7 @@ export const GeneMap = ({
         data={genesInRange}
         startBasePair={startBasePair}
         endBasePair={endBasePair}
-        selectedGene={selectedGene}
+        selectedGene={formatSelectedGenes}
         svgWidth={svgWidth}
       />
     </div>

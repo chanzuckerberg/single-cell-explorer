@@ -14,7 +14,7 @@ import {
 } from "common/queries/coverage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "reducers";
-import { Button } from "@blueprintjs/core";
+import { Button } from "@czi-sds/components";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
@@ -126,8 +126,6 @@ export function CoveragePlot({
         return n.toString();
       };
 
-      console.log("Coverage data for histogram:", coverageVizData); // Debugging log
-
       const coverageViz = new Histogram(
         coverageVizContainer.current,
         [coverageVizData],
@@ -183,8 +181,11 @@ export function CoveragePlot({
       <CellTypeDropdown cellType={cellType} />
       {selectedCellTypes.length > 1 && (
         <Button
-          minimal
-          icon="trash"
+          className={cs.trashButton}
+          sdsStyle="icon"
+          sdsType="tertiary"
+          sdsSize="small"
+          icon="TrashCan"
           onClick={() =>
             dispatch({
               type: "toggle chromatin histogram",
@@ -194,7 +195,7 @@ export function CoveragePlot({
         />
       )}
 
-      <div ref={coverageVizContainer} />
+      <div ref={coverageVizContainer} className={cs.coverageVizContainer} />
 
       {histogramTooltipLocation &&
         histogramTooltipData &&

@@ -22,9 +22,13 @@ export const ChromosomeMap = () => {
     })
   );
 
+  const parts = selectedGene.split("_");
+  const formatSelectedGenes =
+    parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
+
   const coverageQueries = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    geneName: selectedGene,
+    geneName: formatSelectedGenes,
     genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
     options: {
       enabled: !bottomPanelHidden,
@@ -165,9 +169,6 @@ export const ChromosomeMap = () => {
     );
   }
 
-  const coverageData = coverageQueries.map((q) => q.data);
-  console.log("coverage Data", coverageData); // TODO: (smccanny) remove this log
-
   const chromosome = coverageQueries[0]?.data?.chromosome;
   if (!chromosome) {
     return (
@@ -185,7 +186,11 @@ export const ChromosomeMap = () => {
   }
   return (
     <>
-      <Cytoband chromosomeId={chromosome} />
+      <Cytoband
+        chromosomeId={chromosome}
+        startBasePair={startBasePair}
+        endBasePair={endBasePair}
+      />
       <CoverageAtScale ref={scrollContainerRef}>
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
@@ -213,6 +218,7 @@ export const ChromosomeMap = () => {
           geneInfo={coverageQueries[0]?.data?.geneInfo ?? undefined}
           startBasePair={startBasePair}
           endBasePair={endBasePair}
+          formatSelectedGenes={formatSelectedGenes}
         />
       </CoverageAtScale>
     </>
