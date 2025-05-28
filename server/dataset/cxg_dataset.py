@@ -415,8 +415,8 @@ class CxgDataset(Dataset):
             target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
         except GeneNotFoundError as e:
             raise ValueError(f"Invalid gene query: {e}") from None
-        except GeneDataLoadError:
-            raise DatasetAccessError("Failed to load gene data for ATAC coverage")
+        except GeneDataLoadError as e:
+            raise DatasetAccessError(f"Failed to load gene data for ATAC coverage: {e}") from None
 
         gene_start_end = get_gene_start_end(gene_name, sorted_genes)
         if not gene_start_end:
