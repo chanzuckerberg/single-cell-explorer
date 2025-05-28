@@ -75,6 +75,19 @@ define_request_exception(  # type: ignore
     default_status_code=HTTPStatus.UNPROCESSABLE_ENTITY,
 )
 
+define_request_exception(  # type: ignore
+    "GeneNotFoundError",
+    "Raised when a requested gene is not found in the genome data.",
+    default_status_code=HTTPStatus.NOT_FOUND,
+)
+
+define_request_exception(  # type: ignore
+    "GeneDataLoadError",
+    "Raised when gene metadata fails to load or parse.",
+    default_status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+)
+
+
 # Define TombstoneException Errors
 define_tombstone_exception(  # type: ignore
     "TombstoneError",

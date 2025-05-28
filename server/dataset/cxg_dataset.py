@@ -12,7 +12,7 @@ from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
 from server.common.constants import ATAC_BIN_SIZE, ATAC_RANGE_BUFFER, XApproximateDistribution
-from server.common.errors import ConfigurationError, DatasetAccessError
+from server.common.errors import ConfigurationError, DatasetAccessError, GeneNotFoundError, GeneDataLoadError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
 from server.common.utils.data_locator import DataLocator
@@ -411,21 +411,27 @@ class CxgDataset(Dataset):
                     return gene["geneStart"], gene["geneEnd"]
             return None
 
-        coverage = self.open_array("coverage")
+        try:
+            target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
+        except GeneNotFoundError as e:
+            raise ValueError(f"Invalid gene query: {e}") from None
+        except GeneDataLoadError:
+            raise DatasetAccessError("Failed to load gene data for ATAC coverage")
+
+        gene_start_end = get_gene_start_end(gene_name, sorted_genes)
+        if not gene_start_end:
+            raise ValueError(f"Start/end information not found for gene '{gene_name}'.")
+
+        gene_start, gene_end = gene_start_end
         bin_size = ATAC_BIN_SIZE
-        target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
-
-        gene_start, gene_end = get_gene_start_end(gene_name, sorted_genes)
-
-        range_buffer = ATAC_RANGE_BUFFER  # Buffer around the gene
-
-        # Determine genomic region of interest
+        range_buffer = ATAC_RANGE_BUFFER
         bin_start = (gene_start - range_buffer) // bin_size
         bin_end = (gene_end + range_buffer) // bin_size
 
         chromosome = int(target_chromosome.replace("chr", ""))
 
         try:
+            coverage = self.open_array("coverage")
             result = coverage.query().df[:]
 
             filtered = result[
@@ -439,11 +445,10 @@ class CxgDataset(Dataset):
             if not filtered.empty:
                 filtered.loc[:, "start"] = filtered["bin"] * bin_size
                 filtered.loc[:, "end"] = filtered["start"] + bin_size
-
                 coverage_plot = filtered[["normalized_coverage", "start", "end"]].sort_values("start").values.tolist()
 
         except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError("get_atac_coverage") from None
+            raise DatasetAccessError("Failed to query ATAC coverage TileDB array") from None
 
         return {
             "chromosome": target_chromosome,
@@ -466,14 +471,12 @@ class CxgDataset(Dataset):
 
             target_gene = gene_data.get(gene_name)
             if not target_gene:
-                logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
-                return None
+                raise GeneNotFoundError(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
 
             target_chromosome = target_gene.get("geneChromosome")
 
             if not target_chromosome:
-                logging.warning(f"No chromosome info for gene '{gene_name}'.")
-                return None
+                raise GeneNotFoundError(f"No chromosome info for gene '{gene_name}'.")
 
             # Filter genes on the same chromosome
             same_chr_genes = [
@@ -487,7 +490,7 @@ class CxgDataset(Dataset):
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
-            return None
+            raise GeneDataLoadError("Failed to load gene data") from e
 
     def get_atac_cytoband(self, chr_key, genome_version):
         """

@@ -77,6 +77,11 @@ class EndPoints(BaseTest):
         cls.TEST_UNS_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_UNS_S3_URI_ENCODED}"
         cls.TEST_UNS_URL_BASE = f"{cls.TEST_UNS_DATASET_URL_BASE}/api/v0.3/"
 
+        cls.TEST_ATAC_S3_URI = f"{FIXTURES_ROOT_UNS}/super-cool-atac.cxg"
+        cls.TEST_ATAC_S3_URI_ENCODED = cls.encode_s3_uri(cls.TEST_ATAC_S3_URI)
+        cls.TEST_ATAC_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_ATAC_S3_URI_ENCODED}"
+        cls.TEST_ATAC_URL_BASE = f"{cls.TEST_ATAC_DATASET_URL_BASE}/api/v0.3/"
+
         cls.app.testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
@@ -877,6 +882,75 @@ class EndPoints(BaseTest):
 
                 result_data = json.loads(result.data)
                 self.assertEqual(result_data, uns_meta_expected_response)
+
+    def test_atac_cytoband_get(self):
+        endpoint = "atac/cytoband"
+        query = "chr=chr7&genome_version=mm39"
+        atac_cytoband_expected_response_sample =     {
+        "end": 15156292,
+        "name": "qA1",
+        "stain": "gpos100",
+        "start": 0
+        }
+        for url_base in [self.TEST_ATAC_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/json"}
+                result = self.client.get(url, headers=header)
+
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+                result_data = json.loads(result.data)
+                self.assertEqual(result_data[0], atac_cytoband_expected_response_sample)
+
+    def test_atac_coverage_get(self):
+        endpoint = "atac/coverage"
+        query = "gene_name=RERGL&genome_version=hg38&cell_type=pericyte"
+        expected_first_coverage = [0.040941983461380005, 18070800.0, 18070900.0]
+        expected_first_gene_info = {
+            "geneChromosome": "chr12",
+            "geneEnd": 13501,
+            "geneName": "DDX11L8",
+            "geneStart": 12310,
+            "geneStrand": "+"
+        }
+        expected_cell_type = "pericyte"
+        expected_chromosome = "chr12"
+
+        for url_base in [self.TEST_ATAC_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{query}"
+                header = {"Accept": "application/json"}
+                result = self.client.get(url, headers=header)
+
+                self.assertEqual(result.status_code, HTTPStatus.OK)
+                self.assertEqual(result.headers["Content-Type"], "application/json")
+
+                result_data = json.loads(result.data)
+
+                self.assertIn("coverage", result_data)
+                self.assertIn("geneInfo", result_data)
+
+                self.assertEqual(result_data["cellType"], expected_cell_type)
+                self.assertEqual(result_data["chromosome"], expected_chromosome)
+                self.assertEqual(result_data["coverage"][0], expected_first_coverage)
+                self.assertEqual(result_data["geneInfo"][0], expected_first_gene_info)
+
+    def test_atac_coverage_get_bad_query(self):
+        endpoint = "atac/coverage"
+        bad_query = "gene_name=&genome_version=badversion&cell_type="
+        header = {"Accept": "application/json"}
+
+        for url_base in [self.TEST_ATAC_URL_BASE]:
+            with self.subTest(url_base=url_base):
+                url = f"{url_base}{endpoint}?{bad_query}"
+                result = self.client.get(url, headers=header)
+
+                self.assertEqual(
+                    result.status_code,
+                    HTTPStatus.BAD_REQUEST,
+                    msg=f"Expected 400 for bad query but got {result.status_code}",
+                )
 
 
 class TestDatasetMetadata(BaseTest):

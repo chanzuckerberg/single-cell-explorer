@@ -554,23 +554,6 @@ def atac_coverage_get(request, data_adaptor):
     return make_response(atac_coverage, HTTPStatus.OK, {"Content-Type": "application/json"})
 
 
-# def atac_gene_info_get(request, data_adaptor):
-#     """
-#     Returns Gene Metadata for the requested gene.
-#     """
-#     chr = request.args.get("chr")
-#     genome_version = request.args.get("genome_version")
-
-#     if not chr or not genome_version:
-#         return make_response("No chr or genome_version provided", HTTPStatus.BAD_REQUEST)
-
-#     atac_gene_info = data_adaptor.get_atac_gene_info(chr, genome_version)
-#     if atac_gene_info is None:
-#         return make_response("No ATAC gene info found", HTTPStatus.NOT_FOUND)
-
-#     return make_response(atac_gene_info, HTTPStatus.OK, {"Content-Type": "application/json"})
-
-
 def atac_cytoband_get(request, data_adaptor):
     """
     Returns the cytoband information for the requested chromosome.
