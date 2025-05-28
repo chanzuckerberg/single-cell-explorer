@@ -33,14 +33,13 @@ export const GeneMap = ({
   if (!selectedGeneInfo) {
     return <>`${selectedGene} not found in gene info`</>;
   }
-  // THIS IS TEMPORARY - WE SHOULD GET THIS FROM THE BACKEND
-  const geneRangeStart = selectedGeneInfo.geneStart - 100000;
-  const geneRangeEnd = selectedGeneInfo.geneEnd + 100000;
-  const genesInRange = getGenesInRange(geneInfo, geneRangeStart, geneRangeEnd);
+  const genesInRange = getGenesInRange(geneInfo, startBasePair, endBasePair);
   return (
     <div>
       <GeneMapSVG
         data={genesInRange}
+        startBasePair={startBasePair}
+        endBasePair={endBasePair}
         selectedGene={selectedGene}
         svgWidth={svgWidth}
       />

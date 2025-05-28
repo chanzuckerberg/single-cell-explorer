@@ -1,5 +1,4 @@
 import { GeneInfo } from "common/queries/coverage";
-import { GeneMapSVGProps } from "./types";
 
 // Calculate the estimated width of a text string in SVG
 export const estimateTextWidth = (text: string, fontSize = 10) =>
@@ -10,12 +9,14 @@ export const estimateTextWidth = (text: string, fontSize = 10) =>
 const checkOverlap = (
   gene: GeneInfo,
   otherGene: GeneInfo,
+  startBasePair: number,
+  endBasePair: number,
   scaleX: (x: number) => number
 ): boolean => {
-  const geneStartX = scaleX(gene.geneStart);
-  const geneEndX = scaleX(gene.geneEnd);
-  const otherStartX = scaleX(otherGene.geneStart);
-  const otherEndX = scaleX(otherGene.geneEnd);
+  const geneStartX = scaleX(Math.max(gene.geneStart, startBasePair));
+  const geneEndX = scaleX(Math.min(gene.geneEnd, endBasePair));
+  const otherStartX = scaleX(Math.max(otherGene.geneStart, startBasePair));
+  const otherEndX = scaleX(Math.min(otherGene.geneEnd, endBasePair));
 
   // Calculate gene label dimensions
   const labelWidth = estimateTextWidth(gene.geneName);
@@ -46,20 +47,26 @@ const checkOverlap = (
 
 // Organize genes into rows across strands
 export const organizeGenesIntoRows = (
-  geneData: GeneMapSVGProps["data"],
-  scaleX: (x: number) => number
+  genes: GeneInfo[],
+  startBasePair: number,
+  endBasePair: number,
+  scaleX: (position: number) => number
 ) => {
-  if (!geneData) return [];
+  // Filter genes that overlap with the viewport
+  const visibleGenes = genes.filter(
+    (gene) =>
+      // Gene overlaps with viewport if gene start < viewport end AND gene end > viewport start
+      gene.geneStart < endBasePair && gene.geneEnd > startBasePair
+  );
 
   // Sort genes by start position
-  // This is important to ensure that we can find overlaps correctly
-  const allGenes = [...geneData].sort((a, b) => a.geneStart - b.geneStart);
-
-  // Array to hold all rows of genes
-  const rows: Array<Array<GeneInfo & { originalStrand?: string }>> = [];
+  const sortedGenes = [...visibleGenes].sort(
+    (a, b) => a.geneStart - b.geneStart
+  );
+  const rows: GeneInfo[][] = [];
 
   // Process each gene
-  for (const gene of allGenes) {
+  for (const gene of sortedGenes) {
     // Try to find a suitable row for the gene
     let foundRow = false;
 
@@ -70,7 +77,9 @@ export const organizeGenesIntoRows = (
 
       // Check for overlaps with genes already in this row
       for (const existingGene of row) {
-        if (checkOverlap(gene, existingGene, scaleX)) {
+        if (
+          checkOverlap(gene, existingGene, startBasePair, endBasePair, scaleX)
+        ) {
           canAddToRow = false;
           break;
         }

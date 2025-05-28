@@ -30,7 +30,7 @@ const generateCoverageVizData = (
   coverageBinSize: number
 ) =>
   coverageData.map((valueArr) => ({
-    x0: valueArr[0] * coverageBinSize,
+    x0: valueArr[0] * coverageBinSize - 1, // This is the start of the bin, minus 1 for correct alignment.
     length: valueArr[1], // Actually the height. This is a d3-histogram naming convention.
   }));
 
@@ -123,6 +123,8 @@ export function CoveragePlot({
         if (n >= 1_000) return `${Math.round(n / 1_000)}K`;
         return n.toString();
       };
+
+      console.log("Coverage data for histogram:", coverageVizData); // Debugging log
 
       const coverageViz = new Histogram(
         coverageVizContainer.current,

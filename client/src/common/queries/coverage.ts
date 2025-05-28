@@ -34,9 +34,7 @@ async function fetchCoverage(
   params.set("genome_version", genomeVersion);
   params.set("cell_type", cellType);
 
-  return fetchJson<FetchCoverageResponse>(
-    `/atac/coverage?${params.toString()}`
-  );
+  return fetchJson<FetchCoverageResponse>(`atac/coverage?${params.toString()}`);
 }
 
 interface UseCoverageQueryOptions {

@@ -4,4 +4,6 @@ export interface GeneMapSVGProps {
   data: GeneInfo[];
   selectedGene: string;
   svgWidth: number;
+  startBasePair: number;
+  endBasePair: number;
 }

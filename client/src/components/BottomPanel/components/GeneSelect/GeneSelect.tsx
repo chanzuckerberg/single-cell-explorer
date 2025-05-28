@@ -117,7 +117,6 @@ export function GeneSelect() {
       <Select<string>
         items={geneNames || ["No genes"]}
         itemListPredicate={(query: string, items: string[]) => {
-          console.log("itemListPredicate", query, items);
           if (!query) {
             return [...items].sort((a, b) => a.localeCompare(b)).slice(0, 20);
           }
