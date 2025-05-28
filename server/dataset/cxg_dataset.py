@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
-import random
 import threading
 
 import numpy as np
@@ -12,7 +11,7 @@ from packaging import version
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
-from server.common.constants import XApproximateDistribution
+from server.common.constants import ATAC_BIN_SIZE, ATAC_RANGE_BUFFER, XApproximateDistribution
 from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
@@ -403,21 +402,49 @@ class CxgDataset(Dataset):
 
     def get_atac_coverage(self, gene_name, genome_version, cell_type):
         """
-        Extracts ATAC coverage data - currently random mock data
+        Extracts ATAC coverage data for a gene and cell type from TileDB.
         """
 
-        # get gene info
-        target_chromosome, sorted_genes, range_start, range_end = self.get_atac_gene_info(gene_name, genome_version)
+        def get_gene_start_end(gene_name, genes):
+            for gene in genes:
+                if gene["geneName"] == gene_name:
+                    return gene["geneStart"], gene["geneEnd"]
+            return None
 
-        # get coverage data (currently random mock data)
-        bin_size = 100
-        coverage_plot = []
-        for start in range(range_start, range_end, bin_size):
-            end = min(start + bin_size, range_end)
-            coverage = random.randint(0, 100)  # mock read count
-            coverage_plot.append([coverage, start, end])
+        coverage = self.open_array("coverage")
+        bin_size = ATAC_BIN_SIZE
+        target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
 
-        # assemble the response
+        gene_start, gene_end = get_gene_start_end(gene_name, sorted_genes)
+
+        range_buffer = ATAC_RANGE_BUFFER  # Buffer around the gene
+
+        # Determine genomic region of interest
+        bin_start = (gene_start - range_buffer) // bin_size
+        bin_end = (gene_end + range_buffer) // bin_size
+
+        chromosome = int(target_chromosome.replace("chr", ""))
+
+        try:
+            result = coverage.query().df[:]
+
+            filtered = result[
+                (result["chrom"] == chromosome)
+                & (result["cell_type"] == cell_type)
+                & (result["bin"] >= bin_start)
+                & (result["bin"] <= bin_end)
+            ].copy()
+
+            coverage_plot = []
+            if not filtered.empty:
+                filtered.loc[:, "start"] = filtered["bin"] * bin_size
+                filtered.loc[:, "end"] = filtered["start"] + bin_size
+
+                coverage_plot = filtered[["normalized_coverage", "start", "end"]].sort_values("start").values.tolist()
+
+        except tiledb.libtiledb.TileDBError:
+            raise DatasetAccessError("get_atac_coverage") from None
+
         return {
             "chromosome": target_chromosome,
             "cellType": cell_type,
@@ -442,10 +469,8 @@ class CxgDataset(Dataset):
                 logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
                 return None
 
-            range_start = target_gene.get("geneStart") - 10_000
-            range_end = target_gene.get("geneEnd") + 10_000
-
             target_chromosome = target_gene.get("geneChromosome")
+
             if not target_chromosome:
                 logging.warning(f"No chromosome info for gene '{gene_name}'.")
                 return None
@@ -458,7 +483,7 @@ class CxgDataset(Dataset):
             # Sort by geneStart
             sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
 
-            return target_chromosome, sorted_genes, range_start, range_end
+            return target_chromosome, sorted_genes
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
