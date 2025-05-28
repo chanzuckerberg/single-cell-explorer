@@ -30,7 +30,7 @@ const generateCoverageVizData = (
   coverageBinSize: number
 ) =>
   coverageData.map((valueArr) => ({
-    x0: valueArr[0] * coverageBinSize - 1,
+    x0: valueArr[0] * coverageBinSize - 1, // minus 1 to start the count at 0
     length: valueArr[1], // Actually the height. This is a d3-histogram naming convention.
   }));
 
