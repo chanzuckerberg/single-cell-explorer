@@ -886,12 +886,7 @@ class EndPoints(BaseTest):
     def test_atac_cytoband_get(self):
         endpoint = "atac/cytoband"
         query = "chr=chr7&genome_version=mm39"
-        atac_cytoband_expected_response_sample =     {
-        "end": 15156292,
-        "name": "qA1",
-        "stain": "gpos100",
-        "start": 0
-        }
+        atac_cytoband_expected_response_sample = {"end": 15156292, "name": "qA1", "stain": "gpos100", "start": 0}
         for url_base in [self.TEST_ATAC_URL_BASE]:
             with self.subTest(url_base=url_base):
                 url = f"{url_base}{endpoint}?{query}"
@@ -912,7 +907,7 @@ class EndPoints(BaseTest):
             "geneEnd": 13501,
             "geneName": "DDX11L8",
             "geneStart": 12310,
-            "geneStrand": "+"
+            "geneStrand": "+",
         }
         expected_cell_type = "pericyte"
         expected_chromosome = "chr12"
