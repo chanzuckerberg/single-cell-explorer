@@ -172,7 +172,6 @@ export const ChromosomeMap = () => {
   }
   return (
     <>
-      <p>Hello</p>
       <Cytoband chromosomeId={chromosome} />
       <CoverageAtScale ref={scrollContainerRef}>
         <ScaleBar
@@ -180,8 +179,7 @@ export const ChromosomeMap = () => {
           totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
           marginLeft={25}
-          labelScale="kb"
-          labelFrequency={1}
+          labelScale="bp"
         />
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot

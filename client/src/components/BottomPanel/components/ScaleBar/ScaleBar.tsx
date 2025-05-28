@@ -9,7 +9,7 @@ export const ScaleBar = ({
   marginRight = 10,
   marginTop = 20,
   marginBottom = 20, // default value for marginBottom
-  labelFrequency = 100, // default value for labelFrequency
+  labelFrequency = 1, // default value for labelFrequency
   labelScale,
 }: {
   svgWidth: number;
@@ -46,7 +46,7 @@ export const ScaleBar = ({
     // === SCALE ===
     const xScale = d3
       .scaleLinear()
-      .domain([0 + startBasePair, totalBPAtScale + startBasePair])
+      .domain([0, totalBPAtScale])
       .range([0, innerWidth]);
 
     // === BASE LINE ===
@@ -59,11 +59,7 @@ export const ScaleBar = ({
       .attr("stroke-width", 1);
 
     // === TICKS ===
-    const tickValues = d3.range(
-      0 + startBasePair,
-      totalBPAtScale + 1 + startBasePair,
-      labelFrequency
-    );
+    const tickValues = d3.range(0, totalBPAtScale + 1, labelFrequency);
 
     g.selectAll(".tick-line")
       .data(tickValues)
@@ -76,6 +72,34 @@ export const ScaleBar = ({
       .attr("stroke", "#C3C3C3")
       .attr("stroke-width", 1);
 
+    // Function to format labels based on scale and increment properly
+    const formatLabel = (tickValue: number) => {
+      if (tickValue === 0) return labelScale;
+
+      // Determine increment based on label scale
+      let increment;
+      let formatValue;
+
+      switch (labelScale.toLowerCase()) {
+        // TODO: (smccanny) add support for other scales
+        // case 'kb':
+        //   increment = 1; // increment by 1 kb (which is 1000 bp)
+        //   formatValue = Math.round((startBasePair + (tickValue * 1000)) / 1000);
+        //   return formatValue.toString();
+
+        // case 'mb':
+        //   increment = 0.001; // increment by 0.001 mb (which is 1000 bp)
+        //   formatValue = ((startBasePair + (tickValue * 1000)) / 1000000).toFixed(3);
+        //   return parseFloat(formatValue).toString();
+
+        default:
+          // case 'bp'
+          increment = 1000; // increment by 1000 bp
+          formatValue = startBasePair + tickValue * increment;
+          return formatValue.toString();
+      }
+    };
+
     // === LABELS ===
     g.selectAll(".tick-label")
       .data(tickValues)
@@ -86,7 +110,7 @@ export const ScaleBar = ({
       .attr("text-anchor", "middle")
       .attr("fill", "#C3C3C3")
       .style("font-size", "12px")
-      .text((d) => (d === 0 ? labelScale : d));
+      .text((d) => formatLabel(d));
   }, [
     svgWidth,
     totalBPAtScale,

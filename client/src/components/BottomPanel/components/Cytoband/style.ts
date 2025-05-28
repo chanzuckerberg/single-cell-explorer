@@ -24,6 +24,9 @@ export const CytobandWrapper = styled.div`
     stroke: black;
   }
   .gvar {
-    fill: lightpink;
+    fill: #969696;
+  }
+  .stalk {
+    fill: #f9f9f9;
   }
 `;
