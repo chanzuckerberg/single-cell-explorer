@@ -38,3 +38,6 @@ CELLGUIDE_CXG_KEY_NAME = "cellguide-cxgs"
 CUSTOM_CXG_KEY_NAME = "custom-cxgs"
 
 CELLGUIDE_BASE_URL = "https://cellguide.cellxgene.cziscience.com"
+
+ATAC_BIN_SIZE = 100  # in bp
+ATAC_RANGE_BUFFER = 10_000  # genomic range buffer in bp
