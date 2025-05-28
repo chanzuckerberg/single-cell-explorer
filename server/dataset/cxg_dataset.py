@@ -463,8 +463,10 @@ class CxgDataset(Dataset):
         print(f"Loading gene data from {file_uri}")
 
         try:
-            with dl.open("r") as f:
-                gene_data = json.load(f)
+            if dl.exists():
+                print(dl.size())
+                with dl.open("r") as f:
+                    gene_data = json.load(f)
 
             target_gene = gene_data.get(gene_name)
             if not target_gene:
