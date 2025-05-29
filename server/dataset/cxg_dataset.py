@@ -464,7 +464,7 @@ class CxgDataset(Dataset):
 
         try:
             
-            with dl.open("r") as f:
+            with dl.open() as f:
                 gene_data = json.load(f)
 
             target_gene = gene_data.get(gene_name)
@@ -501,7 +501,7 @@ class CxgDataset(Dataset):
         dl = DataLocator(file_uri)
 
         try:
-            with dl.open("r") as f:
+            with dl.open() as f:
                 cytoband_data = json.load(f)
             return cytoband_data.get(chr_key)
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
