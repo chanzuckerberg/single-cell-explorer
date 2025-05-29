@@ -10,8 +10,8 @@ class AugmentedEnum(Enum):
             return self.value == other
         return False
 
-    def __str__(self) -> str:  # type: ignore
-        return self.value  # type: ignore
+    def __str__(self) -> str:
+        return self.value
 
 
 class Axis(AugmentedEnum):
