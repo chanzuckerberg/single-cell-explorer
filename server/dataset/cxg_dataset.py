@@ -3,6 +3,7 @@ import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import threading
+import s3fs
 
 import numpy as np
 import pandas as pd
@@ -458,13 +459,14 @@ class CxgDataset(Dataset):
         on that chromosome sorted by geneStart.
         """
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
-        dl = DataLocator(file_uri)
-        logging.info("DEBUG!!")
-        logging.info(f"Loading gene data from {file_uri}")
+        # dl = DataLocator(file_uri)
+        # logging.info("DEBUG!!")
+        # logging.info(f"Loading gene data from {file_uri}")
 
         try:
             
-            with dl.open() as f:
+            fs = s3fs.S3FileSystem(anon=False)  # Use `anon=True` if the bucket is public
+            with fs.open(file_uri, mode='r') as f:
                 gene_data = json.load(f)
 
             target_gene = gene_data.get(gene_name)
