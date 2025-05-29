@@ -3,7 +3,7 @@ import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import threading
-import s3fs
+import fsspec
 
 import numpy as np
 import pandas as pd
@@ -49,8 +49,8 @@ class CxgDataset(Dataset):
         self.genesets = None
         self.X_approximate_distribution = None
 
-        self.env = os.getenv("DEPLOYMENT_STAGE", "dev")
-        self.env = "dev" if self.env not in ["staging", "prod"] else self.env
+        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
+        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
         self.atac_base_uri = f"s3://atac-static-{self.env}"
 
         self._validate_and_initialize()
@@ -460,14 +460,14 @@ class CxgDataset(Dataset):
         """
         file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
         # dl = DataLocator(file_uri)
-        # logging.info("DEBUG!!")
-        # logging.info(f"Loading gene data from {file_uri}")
+        logging.info("DEBUG!!")
+        logging.info(f"Loading gene data from {file_uri}")
 
         try:
-            
-            fs = s3fs.S3FileSystem(anon=False)  # Use `anon=True` if the bucket is public
-            with fs.open(file_uri, mode='r') as f:
+            with fsspec.open(file_uri, mode='r') as f:
                 gene_data = json.load(f)
+            # with dl.open() as f:
+            #     gene_data = json.load(f)
 
             target_gene = gene_data.get(gene_name)
             if not target_gene:
@@ -500,11 +500,13 @@ class CxgDataset(Dataset):
         cytoband_<genome_version>.json
         """
         file_uri = f"{self.atac_base_uri}/cytoband_{genome_version}.json"
-        dl = DataLocator(file_uri)
+        # dl = DataLocator(file_uri)
 
         try:
-            with dl.open() as f:
-                cytoband_data = json.load(f)
+            with fsspec.open(file_uri, mode='r') as f:
+                cytoband_data = json.load(f) 
+            # with dl.open() as f:
+            #     cytoband_data = json.load(f)
             return cytoband_data.get(chr_key)
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing cytoband data: {e}")
