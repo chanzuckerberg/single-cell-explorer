@@ -435,12 +435,21 @@ class CxgDataset(Dataset):
                 & (result["bin"] <= bin_end)
             ].copy()
 
-            coverage_plot = []
-            if not filtered.empty:
-                filtered.loc[:, "start"] = filtered["bin"] * bin_size
-                filtered.loc[:, "end"] = filtered["start"] + bin_size
+            # Map bin -> normalized_coverage
+            coverage_map = dict(
+                zip(
+                    filtered["bin"],
+                    filtered["normalized_coverage"]
+                )
+            )
 
-                coverage_plot = filtered[["normalized_coverage", "start", "end"]].sort_values("start").values.tolist()
+            # Fill all bins in range, default to 0.0
+            coverage_plot = []
+            for b in range(bin_start, bin_end + 1):
+                start = b * bin_size
+                end = start + bin_size
+                norm_cov = coverage_map.get(b, 0.0)
+                coverage_plot.append([norm_cov, float(start), float(end)])
 
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError("get_atac_coverage") from None
