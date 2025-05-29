@@ -48,8 +48,8 @@ class CxgDataset(Dataset):
         self.genesets = None
         self.X_approximate_distribution = None
 
-        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
-        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
+        self.env = os.getenv("DEPLOYMENT_STAGE", "dev")
+        self.env = "dev" if self.env not in ["staging", "prod"] else self.env
         self.atac_base_uri = f"s3://atac-static-{self.env}"
 
         self._validate_and_initialize()
