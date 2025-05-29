@@ -436,12 +436,7 @@ class CxgDataset(Dataset):
             ].copy()
 
             # Map bin -> normalized_coverage
-            coverage_map = dict(
-                zip(
-                    filtered["bin"],
-                    filtered["normalized_coverage"]
-                )
-            )
+            coverage_map = dict(zip(filtered["bin"], filtered["normalized_coverage"]))
 
             # Fill all bins in range, default to 0.0
             coverage_plot = []
