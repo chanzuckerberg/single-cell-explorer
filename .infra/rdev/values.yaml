@@ -25,3 +25,5 @@ stack:
           value: hosted-cellxgene-dev
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows
+        - name: ATAC_ASSETS_BUCKET_PATH
+          value: atac-static-staging

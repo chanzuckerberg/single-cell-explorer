@@ -39,6 +39,8 @@ stack:
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows
+        - name: ATAC_ASSETS_BUCKET_PATH
+          value: atac-static-staging
       ingress:
         rules:
           - host: cellxgene.staging.single-cell.czi.technology

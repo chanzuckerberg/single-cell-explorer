@@ -49,9 +49,7 @@ class CxgDataset(Dataset):
         self.genesets = None
         self.X_approximate_distribution = None
 
-        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
-        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
-        self.atac_base_uri = f"s3://atac-static-{self.env}"
+        self.atac_base_uri = os.getenv("ATAC_ASSETS_BUCKET_PATH", "atac-static-staging")
 
         self._validate_and_initialize()
 
@@ -458,7 +456,7 @@ class CxgDataset(Dataset):
         Given a gene name, finds its chromosome and returns all genes
         on that chromosome sorted by geneStart.
         """
-        file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
+        file_uri = f"s3://{self.atac_base_uri}/gene_data_{genome_version}.json"
         # dl = DataLocator(file_uri)
         logging.info("DEBUG!!")
         logging.info(f"Loading gene data from {file_uri}")
@@ -499,7 +497,7 @@ class CxgDataset(Dataset):
         Extracts ATAC cytoband data from a JSON file
         cytoband_<genome_version>.json
         """
-        file_uri = f"{self.atac_base_uri}/cytoband_{genome_version}.json"
+        file_uri = f"s3://{self.atac_base_uri}/cytoband_{genome_version}.json"
         # dl = DataLocator(file_uri)
 
         try:
