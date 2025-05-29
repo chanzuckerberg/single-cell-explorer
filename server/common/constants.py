@@ -11,7 +11,7 @@ class AugmentedEnum(Enum):
         return False
 
     def __str__(self) -> str:
-        return self.value
+        return self.value  # type: ignore
 
 
 class Axis(AugmentedEnum):
