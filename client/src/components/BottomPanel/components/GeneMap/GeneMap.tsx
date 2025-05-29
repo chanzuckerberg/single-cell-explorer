@@ -3,28 +3,18 @@ import { GeneInfo } from "common/queries/coverage";
 import { GeneMapSVG } from "./components/GeneMapSVG/GeneMapSVG";
 
 export const GeneMap = ({
-  chromosomeId,
   svgWidth,
   geneInfo,
   startBasePair,
   endBasePair,
   formatSelectedGenes,
 }: {
-  chromosomeId: string;
   svgWidth: number;
   geneInfo?: GeneInfo[];
   startBasePair: number;
   endBasePair: number;
   formatSelectedGenes: string;
 }) => {
-  console.log("GeneMap sees:", {
-    chromosomeId,
-    svgWidth,
-    geneInfo,
-    startBasePair,
-    endBasePair,
-    formatSelectedGenes,
-  });
   // get selectedGene from gene info
   if (!geneInfo) return null;
   const selectedGeneInfo = geneInfo.find(

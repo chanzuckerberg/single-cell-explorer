@@ -108,9 +108,11 @@ export function CoveragePlot({
     [coverageData]
   );
 
-  const coverageVizContainer = useRef<HTMLDivElement>(null);
+  const histogramRef = useRef<HTMLDivElement>(null);
+  const yAxisRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!coverageVizContainer.current) return;
+    if (!histogramRef.current) return;
     if (!coverageData.coverage) return;
 
     const renderHistogram = (data: AccessionsData) => {
@@ -126,35 +128,39 @@ export function CoveragePlot({
         return n.toString();
       };
 
+      const options = {
+        domain: [0, data.total_length],
+        skipBins: true,
+        numBins: Math.round(data.total_length / data.coverage_bin_size),
+        showStatistics: false,
+        colors: [READ_FILL_COLOR],
+        hoverColors: [CONTIG_FILL_COLOR],
+        xTickValues: [],
+        yTickFormat: formatTick,
+        numTicksY: 2,
+        yMax,
+        barOpacity: 1,
+        margins: {
+          left: 40,
+          right: 10,
+          top: 10,
+          bottom: 5,
+        },
+        innerWidth: data.total_length * barWidth,
+        labelsLarge: false,
+        onHistogramBarHover: handleHistogramBarHover,
+        onHistogramBarEnter: handleHistogramBarEnter,
+        onHistogramBarExit: handleHistogramBarExit,
+      };
+
       const coverageViz = new Histogram(
-        coverageVizContainer.current,
+        histogramRef.current,
         [coverageVizData],
-        {
-          domain: [0, data.total_length],
-          skipBins: true,
-          numBins: Math.round(data.total_length / data.coverage_bin_size),
-          showStatistics: false,
-          colors: [READ_FILL_COLOR],
-          hoverColors: [CONTIG_FILL_COLOR],
-          xTickValues: [],
-          yTickFormat: formatTick,
-          numTicksY: 2,
-          yMax,
-          barOpacity: 1,
-          margins: {
-            left: 40,
-            right: 10,
-            top: 10,
-            bottom: 5,
-          },
-          innerWidth: data.total_length * barWidth,
-          labelsLarge: false,
-          onHistogramBarHover: handleHistogramBarHover,
-          onHistogramBarEnter: handleHistogramBarEnter,
-          onHistogramBarExit: handleHistogramBarExit,
-        }
+        options
       );
+
       coverageViz.update();
+      coverageViz.renderYAxisOnly(yAxisRef.current);
     };
     renderHistogram(coverageData);
   }, [coverageData, yMax, handleHistogramBarEnter, svgWidth, barWidth]);
@@ -195,7 +201,18 @@ export function CoveragePlot({
         />
       )}
 
-      <div ref={coverageVizContainer} className={cs.coverageVizContainer} />
+      <div className={cs.coverageVizContainer}>
+        <div
+          ref={yAxisRef}
+          style={{
+            position: "absolute",
+            zIndex: 10,
+            left: 0,
+            backgroundColor: "white",
+          }}
+        />
+        <div ref={histogramRef} />
+      </div>
 
       {histogramTooltipLocation &&
         histogramTooltipData &&

@@ -218,6 +218,37 @@ export default class Histogram {
       .text(this.options.labelY);
   }
 
+  renderYAxisOnly(container: $TSFixMe) {
+    // Create a separate SVG just for the y-axis
+    const yAxisContainer = d3.select(container);
+    yAxisContainer.selectAll("svg").remove(); // Clear any existing
+
+    const yAxisSvg = yAxisContainer
+      .append("svg")
+      .attr("width", 40) // Just wide enough for y-axis
+      .attr("height", this.size.height);
+
+    // Calculate the same y-scale as the main chart
+    const bins = this.getBins();
+    const y = HISTOGRAM_SCALE_FUNCTIONS[this.options.yScaleType]();
+    const yScaleMin = this.options.yScaleType === HISTOGRAM_SCALE.LOG ? 1 : 0;
+
+    y.domain([
+      yScaleMin,
+      this.options.yMax ||
+        d3.max(
+          bins.map((seriesBins: $TSFixMe) =>
+            d3.max(seriesBins, (d: $TSFixMe) => d.length)
+          )
+        ),
+    ]).range([this.size.height - this.margins.bottom, this.margins.top]);
+
+    // Render just the y-axis
+    yAxisSvg.append("g").call(this.yAxis.bind(this), y);
+
+    return yAxisSvg;
+  }
+
   getXDomain = () => {
     if (this.options.domain) {
       return this.options.domain;
@@ -530,7 +561,7 @@ export default class Histogram {
     ]).range([this.size.height - this.margins.bottom, this.margins.top]);
 
     this.svg.append("g").call(this.xAxis.bind(this), x);
-    this.svg.append("g").call(this.yAxis.bind(this), y);
+    // this.svg.append("g").call(this.yAxis.bind(this), y);
 
     this.svg.on("click", this.options.onHistogramEmptyClick);
 

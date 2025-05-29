@@ -246,6 +246,7 @@ export const GeneMapSVG = ({
         const labelXOffset = gene.geneStart >= startBasePair ? -3 : 15;
         tracks.push(
           <text
+            id={`${gene.geneName}-label`}
             key={`${gene.geneName}-label`}
             x={startX + labelXOffset} // Position at the left of the gene body
             y={currentY - 1} // Position above the gene body

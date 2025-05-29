@@ -1,7 +1,15 @@
 import styled from "@emotion/styled";
 
-export const CoverageAtScale = styled.div`
+export const CoverageToScale = styled.div`
   width: 100%;
   overflow-x: scroll;
   padding: 16px 16px 16px 40px;
+  div.margin-overlay {
+    position: absolute;
+    width: 34px;
+    height: 100%;
+    left: 0;
+    background-color: white;
+    z-index: 1;
+  }
 `;

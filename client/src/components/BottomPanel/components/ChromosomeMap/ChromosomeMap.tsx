@@ -8,10 +8,10 @@ import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { Cytoband } from "../Cytoband/Cytoband";
-import { CoverageAtScale } from "./style";
+import { CoverageToScale } from "./style";
 
 export const ChromosomeMap = () => {
-  const BAR_WIDTH = 6;
+  const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { selectedGene } = useChromatinViewerSelectedGene();
 
@@ -93,39 +93,28 @@ export const ChromosomeMap = () => {
     }
     return null;
   }, [coverageQueries, selectedGene]);
+
   useEffect(() => {
-    // Calculate scroll position for the selected gene
-    const scrollToGene = () => {
-      if (
-        !scrollContainerRef.current ||
-        !selectedGeneInfo ||
-        !startBasePair ||
-        !binSize
-      ) {
-        return;
-      }
-
-      // Calculate the pixel position relative to the start of the coverage data
-      const relativePosition = selectedGeneInfo.geneStart - startBasePair;
-      const pixelPosition = (relativePosition / binSize) * BAR_WIDTH;
-      // Subtracting 20px to place the gene nicely in the viewport
-      const scrollPosition = Math.max(0, pixelPosition - 20);
-
-      // Smooth scroll to the position
-      scrollContainerRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      });
-    };
-
-    // Auto-scroll when selected gene changes and data is loaded
     if (selectedGeneInfo && !isLoading && totalBasePairs > 0) {
-      // Add a small delay to ensure the DOM is updated
-      const timeoutId = setTimeout(scrollToGene, 100);
+      const timeoutId = setTimeout(() => {
+        const geneId = `${selectedGeneInfo.geneName}-label`;
+        const geneElement = scrollContainerRef.current?.querySelector(
+          `#${geneId}`
+        );
+
+        if (geneElement) {
+          geneElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center",
+          });
+        }
+      }, 100);
+
       return () => clearTimeout(timeoutId);
     }
-    return () => {}; // Cleanup function
-  }, [selectedGeneInfo, isLoading, totalBasePairs, startBasePair, binSize]);
+    return () => {};
+  }, [selectedGeneInfo, isLoading, totalBasePairs]);
 
   const yMax = useMemo(
     () =>
@@ -191,7 +180,8 @@ export const ChromosomeMap = () => {
         startBasePair={startBasePair}
         endBasePair={endBasePair}
       />
-      <CoverageAtScale ref={scrollContainerRef}>
+      <CoverageToScale ref={scrollContainerRef}>
+        <div className="margin-overlay" />
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
           totalBPAtScale={totalBPAtScale}
@@ -213,14 +203,13 @@ export const ChromosomeMap = () => {
           />
         ))}
         <GeneMap
-          chromosomeId={chromosome}
           svgWidth={totalBasePairs * BAR_WIDTH}
           geneInfo={coverageQueries[0]?.data?.geneInfo ?? undefined}
           startBasePair={startBasePair}
           endBasePair={endBasePair}
           formatSelectedGenes={formatSelectedGenes}
         />
-      </CoverageAtScale>
+      </CoverageToScale>
     </>
   );
 };

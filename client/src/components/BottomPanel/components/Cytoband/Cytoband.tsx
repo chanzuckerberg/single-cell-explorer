@@ -16,6 +16,7 @@ export const Cytoband = ({
 }) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [cytobandWidth, setCytobandWidth] = useState<number>(0);
+  const GENOME_VERSION = "hg38"; // TODO: (smccanny) make this dynamic
 
   const updateWidth = () => {
     if (wrapperRef.current) {
@@ -39,11 +40,7 @@ export const Cytoband = ({
 
   const cytobandData = useCytobandQuery({
     chromosome: chromosomeId,
-    genomeVersion: "hg38",
-    options: {
-      enabled: true,
-      retry: 3,
-    },
+    genomeVersion: GENOME_VERSION, // TODO: (smccanny) make this dynamic
   });
 
   const { isLoading, isError, isSuccess, data } = cytobandData;
@@ -192,7 +189,6 @@ export const Cytoband = ({
 
     // Only render when data is successfully loaded and cytobandWidth is set
     if (isSuccess && data && cytobandWidth > 0) {
-      console.log("Cytoband data:", data);
       renderCytobands(data);
     }
   }, [
@@ -243,7 +239,7 @@ export const Cytoband = ({
   return (
     <CytobandWrapper id="cytoband-wrapper" ref={wrapperRef}>
       <p>
-        {chromosomeId} - HG38 {rangeText && `| ${rangeText}`}
+        {chromosomeId} - {GENOME_VERSION} {rangeText && `| ${rangeText}`}
       </p>
       <svg id="cytoband-svg" width={cytobandWidth + 2} height="20" />
       <g id="cytoband-groups" />
