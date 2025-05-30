@@ -10,7 +10,7 @@ class AugmentedEnum(Enum):
             return self.value == other
         return False
 
-    def __str__(self) -> str:  # type: ignore
+    def __str__(self) -> str:
         return self.value  # type: ignore
 
 
