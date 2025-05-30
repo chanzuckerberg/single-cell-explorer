@@ -11,6 +11,7 @@ on:
 env:
   JEST_ENV: prod
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  SKIP_ATAC_CACHE: true
 
 jobs:
   lint:
