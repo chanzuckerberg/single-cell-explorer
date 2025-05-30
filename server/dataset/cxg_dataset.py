@@ -3,7 +3,6 @@ import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import threading
-import time
 
 import numpy as np
 import pandas as pd
@@ -12,11 +11,11 @@ from packaging import version
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
+from server.common.cache.atac_cache import CYTOBAND_DATA_CACHE, GENE_DATA_CACHE
 from server.common.constants import ATAC_BIN_SIZE, ATAC_RANGE_BUFFER, XApproximateDistribution
 from server.common.errors import ConfigurationError, DatasetAccessError
 from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.immutable_kvcache import ImmutableKVCache
-from server.common.utils.data_locator import DataLocator
 from server.common.utils.type_conversion_utils import get_schema_type_hint_from_dtype
 from server.common.utils.utils import path_join
 from server.compute import diffexp_cxg
@@ -48,10 +47,6 @@ class CxgDataset(Dataset):
         self.schema = None
         self.genesets = None
         self.X_approximate_distribution = None
-
-        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
-        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
-        self.atac_base_uri = f"s3://atac-static-{self.env}"
 
         self._validate_and_initialize()
 
@@ -416,51 +411,42 @@ class CxgDataset(Dataset):
         bin_end = (gene_end + range_buffer) // bin_size
 
         CHROM_MAPPING = {
-            **{f"chr{i}": i for i in range(1, 23)},  # chr1 to chr22
+            **{f"chr{i}": i for i in range(1, 23)},
             "chrX": 23,
             "chrY": 24,
             "chrM": 25,
         }
 
-        def chrom_str_to_int(chrom_str: str) -> int:
-            try:
-                return CHROM_MAPPING[chrom_str]
-            except KeyError:
-                raise ValueError(f"Unknown chromosome: {chrom_str}")
-
-        chromosome = int(target_chromosome.replace("chr", ""))
+        chromosome = CHROM_MAPPING.get(target_chromosome)
+        if chromosome is None:
+            raise ValueError(f"Unknown chromosome: {target_chromosome}")
 
         try:
             coverage = self.open_array("coverage")
 
             qc = (
-                f"(chrom == {repr(chromosome)}) and "
-                f"(cell_type == {repr(cell_type)}) and "
-                f"(bin >= {bin_start}) and "
-                f"(bin <= {bin_end})"
+                f"(chrom == {chromosome}) and "
+                f"(cell_type == '{cell_type}') and "
+                f"(bin >= {bin_start}) and (bin <= {bin_end})"
             )
 
-            start = time.time()
             result = coverage.query(cond=qc).df[:]
-            end = time.time()
 
-            print(f"Query took {end - start:.4f} seconds")
+            bins = np.arange(bin_start, bin_end + 1)
+            starts = bins * bin_size
+            ends = starts + bin_size
 
-            filtered = result.copy()
+            # Convert to a dict for fast lookup
+            coverage_map = dict(zip(result["bin"], result["normalized_coverage"]))
 
-            # Map bin -> normalized_coverage
-            coverage_map = dict(zip(filtered["bin"], filtered["normalized_coverage"]))
+            # Normalize coverage values to the bins
+            # If a bin is not present in the coverage_map, it will default to 0.0
+            norm_covs = [coverage_map.get(b, 0.0) for b in bins]
 
-            # Fill all bins in range, default to 0.0
-            coverage_plot = []
-            for b in range(bin_start, bin_end + 1):
-                start = b * bin_size
-                end = start + bin_size
-                norm_cov = coverage_map.get(b, 0.0)
-                coverage_plot.append([norm_cov, float(start), float(end)])
+            coverage_plot = list(zip(norm_covs, starts.astype(float), ends.astype(float)))
 
-        except tiledb.libtiledb.TileDBError:
-            raise DatasetAccessError("get_atac_coverage") from None
+        except tiledb.libtiledb.TileDBError as e:
+            raise DatasetAccessError(f"get_atac_coverage failed: {str(e)}") from e
 
         return {
             "chromosome": target_chromosome,
@@ -471,54 +457,41 @@ class CxgDataset(Dataset):
 
     def get_atac_gene_info(self, gene_name, genome_version):
         """
-        Given a gene name, finds its chromosome and returns all genes
-        on that chromosome sorted by geneStart.
+        Given a gene name and genome version, returns the chromosome, start, end,
+        and sorted list of genes on the same chromosome.
         """
-        file_uri = f"{self.atac_base_uri}/gene_data_{genome_version}.json"
-        dl = DataLocator(file_uri)
-
         try:
-            with dl.open("r") as f:
-                gene_data = json.load(f)
+            gene_data = GENE_DATA_CACHE[genome_version]
+        except KeyError:
+            raise DatasetAccessError(f"Genome version {genome_version} not preloaded")
 
-            target_gene = gene_data.get(gene_name)
-            gene_start, gene_end = target_gene["geneStart"], target_gene["geneEnd"]
-
-            if not target_gene:
-                logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
-                return None
-
-            target_chromosome = target_gene.get("geneChromosome")
-
-            if not target_chromosome:
-                logging.warning(f"No chromosome info for gene '{gene_name}'.")
-                return None
-
-            # Filter genes on the same chromosome
-            same_chr_genes = [
-                gene_info for gene_info in gene_data.values() if gene_info.get("geneChromosome") == target_chromosome
-            ]
-
-            # Sort by geneStart
-            sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
-
-            return target_chromosome, gene_start, gene_end, sorted_genes
-
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            logging.error(f"Error accessing gene data: {e}")
+        target_gene = gene_data.get(gene_name)
+        if not target_gene:
+            logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
             return None
+
+        target_chromosome = target_gene.get("geneChromosome")
+        if not target_chromosome:
+            logging.warning(f"No chromosome info for gene '{gene_name}'.")
+            return None
+
+        gene_start = target_gene["geneStart"]
+        gene_end = target_gene["geneEnd"]
+
+        # Filter genes on the same chromosome
+        same_chr_genes = [
+            gene_info for gene_info in gene_data.values() if gene_info.get("geneChromosome") == target_chromosome
+        ]
+        sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
+
+        return target_chromosome, gene_start, gene_end, sorted_genes
 
     def get_atac_cytoband(self, chr_key, genome_version):
         """
-        Extracts ATAC cytoband data from a JSON file
-        cytoband_<genome_version>.json
+        Given a chromosome key and genome version, returns cytoband data for that chromosome.
         """
-        file_uri = f"{self.atac_base_uri}/cytoband_{genome_version}.json"
-        dl = DataLocator(file_uri)
-
         try:
-            with dl.open("r") as f:
-                cytoband_data = json.load(f)
+            cytoband_data = CYTOBAND_DATA_CACHE[genome_version]
             return cytoband_data.get(chr_key)
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing cytoband data: {e}")
