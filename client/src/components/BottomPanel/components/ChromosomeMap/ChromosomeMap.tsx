@@ -29,7 +29,7 @@ export const ChromosomeMap = () => {
   const coverageQueries = useCoverageQuery({
     cellTypes: selectedCellTypes,
     geneName: formatSelectedGenes,
-    genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
+    genomeVersion: "hg38", // TODO: (smccanny) make this dynamic from organism
     options: {
       enabled: !bottomPanelHidden,
       retry: 3,
