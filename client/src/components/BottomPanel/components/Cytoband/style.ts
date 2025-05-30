@@ -4,6 +4,8 @@ export const CytobandWrapper = styled.div`
   padding: 0px 16px;
   border-bottom: 1px solid #c5c5c5;
   width: 100%;
+  position: relative;
+  z-index: 2;
   .gneg {
     fill: #f3f3f3;
   }

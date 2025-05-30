@@ -4,7 +4,7 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { fetchJson } from "util/fetch";
-import { ENTITIES } from "./entites";
+import { ENTITIES } from "./entities";
 
 export type CoveragePlotData = [number, number, number][]; // [y, startBasePair, endBasePair]
 

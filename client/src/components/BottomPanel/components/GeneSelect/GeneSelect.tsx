@@ -103,15 +103,12 @@ export function GeneSelect() {
     setSelectedGene(gene);
   };
 
-  const filterGenes = (query: string, genes: string[]) => {
-    console.log("filter genes", query);
+  const filterGenes = (query: string, genes: string[]) =>
     /* fires on load, once, and then for each character typed into the input */
-    return fuzzysort.go(query, genes, {
+    fuzzysort.go(query, genes, {
       limit: 20,
       threshold: -10000,
     });
-  };
-
   return (
     <div data-testid="gene-search">
       <Select<string>

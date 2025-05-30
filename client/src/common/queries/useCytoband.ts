@@ -4,7 +4,7 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { fetchJson } from "util/fetch";
-import { ENTITIES } from "./entites";
+import { ENTITIES } from "./entities";
 
 export interface CytobandSegment {
   start: number;
@@ -48,15 +48,3 @@ export function useCytobandQuery({
     ...options,
   });
 }
-
-// export function useGeneInfoQuery({
-//   geneName,
-//   genomeVersion,
-//   ...options
-// }: UseGeneInfoQueryOptions) {
-//   return useQuery<FetchGeneInfoResponse>({
-//     queryKey: ["geneInfo", geneName, genomeVersion],
-//     queryFn: () => fetchGeneInfo(geneName, genomeVersion),
-//     ...options,
-//   });
-// }

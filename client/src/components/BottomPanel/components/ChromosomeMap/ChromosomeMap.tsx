@@ -8,10 +8,10 @@ import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { Cytoband } from "../Cytoband/Cytoband";
-import { CoverageAtScale } from "./style";
+import { CoverageToScale } from "./style";
 
 export const ChromosomeMap = () => {
-  const BAR_WIDTH = 6;
+  const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { selectedGene } = useChromatinViewerSelectedGene();
 
@@ -22,9 +22,13 @@ export const ChromosomeMap = () => {
     })
   );
 
+  const parts = selectedGene.split("_");
+  const formatSelectedGenes =
+    parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
+
   const coverageQueries = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    geneName: selectedGene,
+    geneName: formatSelectedGenes,
     genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
     options: {
       enabled: !bottomPanelHidden,
@@ -89,39 +93,41 @@ export const ChromosomeMap = () => {
     }
     return null;
   }, [coverageQueries, selectedGene]);
+
   useEffect(() => {
-    // Calculate scroll position for the selected gene
-    const scrollToGene = () => {
-      if (
-        !scrollContainerRef.current ||
-        !selectedGeneInfo ||
-        !startBasePair ||
-        !binSize
-      ) {
-        return;
-      }
-
-      // Calculate the pixel position relative to the start of the coverage data
-      const relativePosition = selectedGeneInfo.geneStart - startBasePair;
-      const pixelPosition = (relativePosition / binSize) * BAR_WIDTH;
-      // Subtracting 20px to place the gene nicely in the viewport
-      const scrollPosition = Math.max(0, pixelPosition - 20);
-
-      // Smooth scroll to the position
-      scrollContainerRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      });
-    };
-
-    // Auto-scroll when selected gene changes and data is loaded
     if (selectedGeneInfo && !isLoading && totalBasePairs > 0) {
-      // Add a small delay to ensure the DOM is updated
-      const timeoutId = setTimeout(scrollToGene, 100);
+      const timeoutId = setTimeout(() => {
+        const geneId = `${selectedGeneInfo.geneName}-label`;
+        const geneElement = scrollContainerRef.current?.querySelector(
+          `#${geneId}`
+        );
+
+        if (geneElement) {
+          geneElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center",
+          });
+        }
+      }, 100);
+
       return () => clearTimeout(timeoutId);
     }
-    return () => {}; // Cleanup function
-  }, [selectedGeneInfo, isLoading, totalBasePairs, startBasePair, binSize]);
+    return () => {};
+  }, [selectedGeneInfo, isLoading, totalBasePairs]);
+
+  const yMax = useMemo(
+    () =>
+      Math.max(
+        ...coverageQueries.map((q) => {
+          const coverage = q.data?.coverage;
+          if (!coverage || coverage.length === 0) return 0;
+          return Math.ceil(Math.max(...coverage.map((c) => c[0]))); // Get the max y value
+        }),
+        0 // Ensure we return at least 0
+      ),
+    [coverageQueries]
+  );
 
   if (isLoading) {
     return (
@@ -152,9 +158,6 @@ export const ChromosomeMap = () => {
     );
   }
 
-  const coverageData = coverageQueries.map((q) => q.data);
-  console.log("coverage Data", coverageData); // TODO: (smccanny) remove this log
-
   const chromosome = coverageQueries[0]?.data?.chromosome;
   if (!chromosome) {
     return (
@@ -172,14 +175,20 @@ export const ChromosomeMap = () => {
   }
   return (
     <>
-      <Cytoband chromosomeId={chromosome} />
-      <CoverageAtScale ref={scrollContainerRef}>
+      <Cytoband
+        chromosomeId={chromosome}
+        startBasePair={startBasePair}
+        endBasePair={endBasePair}
+      />
+      <CoverageToScale ref={scrollContainerRef}>
+        <div className="margin-overlay" />
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
           totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
           marginLeft={25}
-          labelScale="bp"
+          labelScale="kb"
+          labelFrequency={2}
         />
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot
@@ -187,6 +196,7 @@ export const ChromosomeMap = () => {
             chromosome={chromosome}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
+            yMax={yMax}
             cellType={cellType}
             coverageQuery={coverageQueries.find(
               (q) => q.data?.cellType === cellType
@@ -194,13 +204,13 @@ export const ChromosomeMap = () => {
           />
         ))}
         <GeneMap
-          chromosomeId={chromosome}
           svgWidth={totalBasePairs * BAR_WIDTH}
           geneInfo={coverageQueries[0]?.data?.geneInfo ?? undefined}
           startBasePair={startBasePair}
           endBasePair={endBasePair}
+          formatSelectedGenes={formatSelectedGenes}
         />
-      </CoverageAtScale>
+      </CoverageToScale>
     </>
   );
 };

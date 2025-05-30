@@ -14,7 +14,7 @@ import {
 } from "common/queries/coverage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "reducers";
-import { Button } from "@blueprintjs/core";
+import { Button } from "@czi-sds/components";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
@@ -59,12 +59,14 @@ export function CoveragePlot({
   cellType,
   coverageQuery,
   barWidth,
+  yMax,
 }: {
   svgWidth: number;
   chromosome: string;
   cellType: string;
   barWidth: number;
   coverageQuery: UseQueryResult<FetchCoverageResponse> | undefined;
+  yMax: number;
 }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
     left: number;
@@ -106,9 +108,11 @@ export function CoveragePlot({
     [coverageData]
   );
 
-  const coverageVizContainer = useRef<HTMLDivElement>(null);
+  const histogramRef = useRef<HTMLDivElement>(null);
+  const yAxisRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (!coverageVizContainer.current) return;
+    if (!histogramRef.current) return;
     if (!coverageData.coverage) return;
 
     const renderHistogram = (data: AccessionsData) => {
@@ -124,39 +128,42 @@ export function CoveragePlot({
         return n.toString();
       };
 
-      console.log("Coverage data for histogram:", coverageVizData); // Debugging log
+      const options = {
+        domain: [0, data.total_length],
+        skipBins: true,
+        numBins: Math.round(data.total_length / data.coverage_bin_size),
+        showStatistics: false,
+        colors: [READ_FILL_COLOR],
+        hoverColors: [CONTIG_FILL_COLOR],
+        xTickValues: [],
+        yTickFormat: formatTick,
+        numTicksY: 2,
+        yMax,
+        barOpacity: 1,
+        margins: {
+          left: 40,
+          right: 10,
+          top: 10,
+          bottom: 5,
+        },
+        innerWidth: data.total_length * barWidth,
+        labelsLarge: false,
+        onHistogramBarHover: handleHistogramBarHover,
+        onHistogramBarEnter: handleHistogramBarEnter,
+        onHistogramBarExit: handleHistogramBarExit,
+      };
 
       const coverageViz = new Histogram(
-        coverageVizContainer.current,
+        histogramRef.current,
         [coverageVizData],
-        {
-          domain: [0, data.total_length],
-          skipBins: true,
-          numBins: Math.round(data.total_length / data.coverage_bin_size),
-          showStatistics: false,
-          colors: [READ_FILL_COLOR],
-          hoverColors: [CONTIG_FILL_COLOR],
-          xTickValues: [],
-          yTickFormat: formatTick,
-          barOpacity: 1,
-          margins: {
-            left: 40,
-            right: 10,
-            top: 10,
-            bottom: 5,
-          },
-          innerWidth: data.total_length * barWidth,
-          numTicksY: 1,
-          labelsLarge: false,
-          onHistogramBarHover: handleHistogramBarHover,
-          onHistogramBarEnter: handleHistogramBarEnter,
-          onHistogramBarExit: handleHistogramBarExit,
-        }
+        options
       );
+
       coverageViz.update();
+      coverageViz.renderYAxisOnly(yAxisRef.current);
     };
     renderHistogram(coverageData);
-  }, [coverageData, handleHistogramBarEnter, svgWidth, barWidth]);
+  }, [coverageData, yMax, handleHistogramBarEnter, svgWidth, barWidth]);
 
   const handleHistogramBarHover = (clientX: number, clientY: number): void => {
     setHistogramTooltipLocation({
@@ -180,8 +187,11 @@ export function CoveragePlot({
       <CellTypeDropdown cellType={cellType} />
       {selectedCellTypes.length > 1 && (
         <Button
-          minimal
-          icon="trash"
+          className={cs.trashButton}
+          sdsStyle="icon"
+          sdsType="tertiary"
+          sdsSize="small"
+          icon="TrashCan"
           onClick={() =>
             dispatch({
               type: "toggle chromatin histogram",
@@ -191,7 +201,18 @@ export function CoveragePlot({
         />
       )}
 
-      <div ref={coverageVizContainer} />
+      <div className={cs.coverageVizContainer}>
+        <div
+          ref={yAxisRef}
+          style={{
+            position: "absolute",
+            zIndex: 10,
+            left: 0,
+            backgroundColor: "white",
+          }}
+        />
+        <div ref={histogramRef} />
+      </div>
 
       {histogramTooltipLocation &&
         histogramTooltipData &&

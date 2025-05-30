@@ -78,11 +78,9 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleOpenMultiomeViz = (): void => {
-    const { dispatch, gene } = this.props;
+    const { dispatch } = this.props;
 
     dispatch({ type: "open multiome viz panel" });
-
-    console.log("open multiome viz", gene);
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
