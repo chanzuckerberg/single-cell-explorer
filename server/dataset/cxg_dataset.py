@@ -3,6 +3,7 @@ import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import threading
+import time
 
 import numpy as np
 import pandas as pd
@@ -405,35 +406,47 @@ class CxgDataset(Dataset):
         Extracts ATAC coverage data for a gene and cell type from TileDB.
         """
 
-        def get_gene_start_end(gene_name, genes):
-            for gene in genes:
-                if gene["geneName"] == gene_name:
-                    return gene["geneStart"], gene["geneEnd"]
-            return None
-
-        coverage = self.open_array("coverage")
         bin_size = ATAC_BIN_SIZE
-        target_chromosome, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
+        range_buffer = ATAC_RANGE_BUFFER
 
-        gene_start, gene_end = get_gene_start_end(gene_name, sorted_genes)
-
-        range_buffer = ATAC_RANGE_BUFFER  # Buffer around the gene
+        target_chromosome, gene_start, gene_end, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
 
         # Determine genomic region of interest
         bin_start = (gene_start - range_buffer) // bin_size
         bin_end = (gene_end + range_buffer) // bin_size
 
+        CHROM_MAPPING = {
+            **{f"chr{i}": i for i in range(1, 23)},  # chr1 to chr22
+            "chrX": 23,
+            "chrY": 24,
+            "chrM": 25,
+        }
+
+        def chrom_str_to_int(chrom_str: str) -> int:
+            try:
+                return CHROM_MAPPING[chrom_str]
+            except KeyError:
+                raise ValueError(f"Unknown chromosome: {chrom_str}")
+
         chromosome = int(target_chromosome.replace("chr", ""))
 
         try:
-            result = coverage.query().df[:]
+            coverage = self.open_array("coverage")
 
-            filtered = result[
-                (result["chrom"] == chromosome)
-                & (result["cell_type"] == cell_type)
-                & (result["bin"] >= bin_start)
-                & (result["bin"] <= bin_end)
-            ].copy()
+            qc = (
+                f"(chrom == {repr(chromosome)}) and "
+                f"(cell_type == {repr(cell_type)}) and "
+                f"(bin >= {bin_start}) and "
+                f"(bin <= {bin_end})"
+            )
+
+            start = time.time()
+            result = coverage.query(cond=qc).df[:]
+            end = time.time()
+
+            print(f"Query took {end - start:.4f} seconds")
+
+            filtered = result.copy()
 
             # Map bin -> normalized_coverage
             coverage_map = dict(zip(filtered["bin"], filtered["normalized_coverage"]))
@@ -469,6 +482,8 @@ class CxgDataset(Dataset):
                 gene_data = json.load(f)
 
             target_gene = gene_data.get(gene_name)
+            gene_start, gene_end = target_gene["geneStart"], target_gene["geneEnd"]
+
             if not target_gene:
                 logging.warning(f"Gene '{gene_name}' not found in genome version '{genome_version}'.")
                 return None
@@ -487,7 +502,7 @@ class CxgDataset(Dataset):
             # Sort by geneStart
             sorted_genes = sorted(same_chr_genes, key=lambda g: g.get("geneStart", float("inf")))
 
-            return target_chromosome, sorted_genes
+            return target_chromosome, gene_start, gene_end, sorted_genes
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing gene data: {e}")
