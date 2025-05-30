@@ -11,7 +11,7 @@ import { Cytoband } from "../Cytoband/Cytoband";
 import { CoverageToScale } from "./style";
 
 export const ChromosomeMap = () => {
-  const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
+  const BAR_WIDTH = 5; // Width of each bar in the coverage plot, adjust as needed
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { selectedGene } = useChromatinViewerSelectedGene();
 
