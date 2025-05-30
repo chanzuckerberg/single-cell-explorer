@@ -462,8 +462,8 @@ class CxgDataset(Dataset):
         """
         try:
             gene_data = GENE_DATA_CACHE[genome_version]
-        except KeyError:
-            raise DatasetAccessError(f"Genome version {genome_version} not preloaded")
+        except KeyError as e:
+            raise DatasetAccessError(f"Genome version {genome_version} not preloaded") from e
 
         target_gene = gene_data.get(gene_name)
         if not target_gene:

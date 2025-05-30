@@ -2,7 +2,6 @@ import json
 
 from server.common.utils.data_locator import DataLocator
 
-
 GENE_DATA_CACHE = {}
 
 CYTOBAND_DATA_CACHE = {}

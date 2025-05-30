@@ -194,8 +194,9 @@ class Server:
         self.env = "staging" if self.env not in ["staging", "prod"] else self.env
         self.atac_base_uri = f"s3://atac-static-{self.env}"
 
-        preload_gene_data(atac_base_uri=self.atac_base_uri)
-        preload_cytoband_data(atac_base_uri=self.atac_base_uri)
+        if not os.environ.get("SKIP_ATAC_CACHE"):
+            preload_gene_data(atac_base_uri=self.atac_base_uri)
+            preload_cytoband_data(atac_base_uri=self.atac_base_uri)
 
         register_api_v3(
             app=self.app,
