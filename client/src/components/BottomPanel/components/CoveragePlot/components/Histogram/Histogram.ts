@@ -96,7 +96,7 @@ export default class Histogram {
     this.size = {
       innerWidth: this.options.innerWidth,
       width: this.options.innerWidth + this.margins.left + this.margins.right,
-      height: 50,
+      height: 80,
     };
 
     // The x-center of the last bar that was hovered over.

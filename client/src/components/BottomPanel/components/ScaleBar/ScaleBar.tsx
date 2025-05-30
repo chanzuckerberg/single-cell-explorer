@@ -7,7 +7,7 @@ export const ScaleBar = ({
   startBasePair,
   marginLeft = 7,
   marginRight = 10,
-  marginTop = 20,
+  marginTop = 0,
   marginBottom = 20, // default value for marginBottom
   labelFrequency = 1, // default value for labelFrequency
   labelScale,
@@ -41,7 +41,9 @@ export const ScaleBar = ({
 
     // this aligns the beginning of the axis with the beginning of the svg after accounting for the label overflow
     svg.attr("width", width).attr("transform", `translate(-${margin.left}, 0)`);
-    const g = svg.append("g").attr("transform", `translate(${margin.left}, 0)`);
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, -5)`);
 
     // === SCALE ===
     const xScale = d3
@@ -67,7 +69,7 @@ export const ScaleBar = ({
       .append("line")
       .attr("x1", (d) => xScale(d))
       .attr("x2", (d) => xScale(d))
-      .attr("y1", axisY - tickLength)
+      .attr("y1", axisY)
       .attr("y2", axisY + tickLength)
       .attr("stroke", "#C3C3C3")
       .attr("stroke-width", 1);
@@ -81,12 +83,12 @@ export const ScaleBar = ({
       let formatValue;
 
       switch (labelScale.toLowerCase()) {
-        // TODO: (smccanny) add support for other scales
-        // case 'kb':
-        //   increment = 1; // increment by 1 kb (which is 1000 bp)
-        //   formatValue = Math.round((startBasePair + (tickValue * 1000)) / 1000);
-        //   return formatValue.toString();
+        case "kb":
+          increment = 1; // increment by 1 kb (which is 1000 bp)
+          formatValue = Math.round((startBasePair + tickValue * 1000) / 1000);
+          return `${formatValue.toString()} ${labelScale}`;
 
+        // TODO: (smccanny) add support for other scales
         // case 'mb':
         //   increment = 0.001; // increment by 0.001 mb (which is 1000 bp)
         //   formatValue = ((startBasePair + (tickValue * 1000)) / 1000000).toFixed(3);
@@ -96,7 +98,7 @@ export const ScaleBar = ({
           // case 'bp'
           increment = 1000; // increment by 1000 bp
           formatValue = startBasePair + tickValue * increment;
-          return formatValue.toString();
+          return `${formatValue.toString()} ${labelScale}`;
       }
     };
 
@@ -122,5 +124,5 @@ export const ScaleBar = ({
     labelFrequency,
     labelScale,
   ]);
-  return <svg id="scalebar-svg" height="60" />;
+  return <svg id="scalebar-svg" height="40" />;
 };

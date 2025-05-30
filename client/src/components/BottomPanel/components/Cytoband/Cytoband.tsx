@@ -50,7 +50,7 @@ export const Cytoband = ({
       const svg = d3.select("#cytoband-svg");
       svg.selectAll("*").remove(); // Clear previous content
 
-      const chrHeight = 12;
+      const chrHeight = 8;
       const chrLength = bands.reduce(
         (maxEnd, band) => Math.max(maxEnd, band.end),
         0
@@ -154,7 +154,7 @@ export const Cytoband = ({
           .attr("class", "range-highlight");
 
         // Add position indicators at the start and end
-        const indicatorHeight = chrHeight + 4;
+        const indicatorHeight = chrHeight + 2;
 
         // Start position indicator
         svg
@@ -219,19 +219,21 @@ export const Cytoband = ({
   }
 
   // Format base pair numbers for display
-  const formatBasePair = (bp: number) => {
+  const formatBasePair = (bp: number, roundDown = false) => {
+    const roundingFn = roundDown ? Math.floor : Math.round;
+
     if (bp >= 1000000) {
-      return `${(bp / 1000000).toFixed(1)}M`;
+      return `${roundingFn(bp / 10000) / 100}M`;
     }
     if (bp >= 1000) {
-      return `${(bp / 1000).toFixed(1)}K`;
+      return `${roundingFn(bp / 10) / 100}K`;
     }
     return bp.toString();
   };
 
   const rangeText =
     startBasePair !== undefined && endBasePair !== undefined
-      ? `Range: ${formatBasePair(startBasePair)} - ${formatBasePair(
+      ? `Range: ${formatBasePair(startBasePair, true)} - ${formatBasePair(
           endBasePair
         )} bp`
       : "";

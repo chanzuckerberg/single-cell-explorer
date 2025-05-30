@@ -122,7 +122,7 @@ export const ChromosomeMap = () => {
         ...coverageQueries.map((q) => {
           const coverage = q.data?.coverage;
           if (!coverage || coverage.length === 0) return 0;
-          return Math.ceil(Math.max(...coverage.map((c) => c[0])) / 5) * 5; // Get the max y value
+          return Math.ceil(Math.max(...coverage.map((c) => c[0]))); // Get the max y value
         }),
         0 // Ensure we return at least 0
       ),
@@ -187,7 +187,8 @@ export const ChromosomeMap = () => {
           totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
           marginLeft={25}
-          labelScale="bp"
+          labelScale="kb"
+          labelFrequency={2}
         />
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot

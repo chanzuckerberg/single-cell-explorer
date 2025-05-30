@@ -33,7 +33,7 @@ export const BottomPanelHeader = styled.div`
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 16px;
+  padding: 16px 16px 4px 16px;
 `;
 
 export const BottomPanelHeaderTitle = styled.h3`
@@ -41,6 +41,8 @@ export const BottomPanelHeaderTitle = styled.h3`
   font-weight: 600;
   line-height: 22px;
   margin: 0;
+  position: relative;
+  z-index: 2;
 `;
 
 export const BottomPanelHeaderActions = styled.div`
