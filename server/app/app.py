@@ -26,6 +26,7 @@ from server.app.api.util import get_data_adaptor, get_dataset_artifact_s3_uri
 from server.app.api.v3 import register_api_v3
 from server.app.logging import configure_logging
 from server.app.request_id import generate_request_id, get_request_id
+from server.common.cache.atac_cache import preload_cytoband_data, preload_gene_data
 from server.common.config.app_config import AppConfig
 from server.common.constants import CELLGUIDE_CXG_KEY_NAME, CUSTOM_CXG_KEY_NAME
 from server.common.errors import (
@@ -188,6 +189,14 @@ class Server:
         bp_base = Blueprint("bp_base", __name__, url_prefix=api_url_prefix)
         base_resources = get_api_base_resources(bp_base)
         self.app.register_blueprint(base_resources.blueprint)
+
+        self.env = os.getenv("DEPLOYMENT_STAGE", "staging")
+        self.env = "staging" if self.env not in ["staging", "prod"] else self.env
+        self.atac_base_uri = f"s3://atac-static-{self.env}"
+
+        if not os.environ.get("SKIP_ATAC_CACHE"):
+            preload_gene_data(atac_base_uri=self.atac_base_uri)
+            preload_cytoband_data(atac_base_uri=self.atac_base_uri)
 
         register_api_v3(
             app=self.app,
