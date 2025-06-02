@@ -1,5 +1,5 @@
-from functools import lru_cache
 import json
+from functools import lru_cache
 
 from server.common.utils.data_locator import DataLocator
 
