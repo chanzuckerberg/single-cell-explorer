@@ -1,3 +1,4 @@
+from functools import lru_cache
 import json
 
 from server.common.utils.data_locator import DataLocator
@@ -7,6 +8,7 @@ GENE_DATA_CACHE = {}
 CYTOBAND_DATA_CACHE = {}
 
 
+@lru_cache(maxsize=4)
 def preload_gene_data(atac_base_uri: str, genome_versions=("hg38", "mm39")):
 
     for version in genome_versions:
@@ -19,6 +21,7 @@ def preload_gene_data(atac_base_uri: str, genome_versions=("hg38", "mm39")):
             raise RuntimeError(f"Failed to load gene data for {version}: {e}") from e
 
 
+@lru_cache(maxsize=4)
 def preload_cytoband_data(atac_base_uri: str, genome_versions=("hg38", "mm39")):
 
     for version in genome_versions:
