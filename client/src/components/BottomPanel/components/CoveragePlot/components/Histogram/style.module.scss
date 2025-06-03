@@ -1,14 +1,15 @@
 @use "~@czi-sds/components/dist/variables" as *;
 
-.xAxis {
+.xAxis,
+.yAxis {
   stroke: $sds-color-primitive-gray-300;
 }
 
 .xAxisTickText,
 .yAxisTickText {
-  font: $sds-font-caps-xxxxs-600-font;
   font-weight: 400;
-  fill: $sds-color-primitive-gray-400;
+  fill: #959595;
+  font-size: 10px;
 }
 
 .yAxisTickLine,

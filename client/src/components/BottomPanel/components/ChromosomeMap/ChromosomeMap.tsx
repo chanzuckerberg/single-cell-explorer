@@ -187,7 +187,7 @@ export const ChromosomeMap = () => {
           totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
           marginLeft={25}
-          labelScale="kb"
+          labelScale="mb"
           labelFrequency={2}
         />
         {selectedCellTypes.map((cellType) => (
