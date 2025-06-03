@@ -26,73 +26,82 @@ export const ChromosomeMap = () => {
   const formatSelectedGenes =
     parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
 
-  const coverageQueries = useCoverageQuery({
+  const coverageQuery = useCoverageQuery({
     cellTypes: selectedCellTypes,
     geneName: formatSelectedGenes,
     genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
     options: {
-      enabled: !bottomPanelHidden,
+      enabled: !bottomPanelHidden && selectedCellTypes.length > 0,
       retry: 3,
     },
   });
 
-  const isLoading = coverageQueries.some((q) => q.isLoading);
-  const isError = coverageQueries.some((q) => q.isError);
+  const { isLoading, isError } = coverageQuery;
 
-  const totalBasePairs = useMemo(
-    () =>
-      Math.max(...coverageQueries.map((q) => q.data?.coverage.length ?? 0), 0),
-    [coverageQueries]
-  );
+  const totalBasePairs = useMemo(() => {
+    const coverageByCellType = coverageQuery.data?.coverageByCellType;
+    if (!coverageByCellType) return 0;
+
+    return Math.max(
+      ...Object.values(coverageByCellType).map((coverage) => coverage.length),
+      0
+    );
+  }, [coverageQuery.data?.coverageByCellType]);
 
   const startBasePair = useMemo(() => {
-    for (const q of coverageQueries) {
-      const plot = q.data?.coverage;
-      if (plot && plot.length > 0) {
-        const start = plot[0][1]; // startBasePair
-        return start;
+    const coverageByCellType = coverageQuery.data?.coverageByCellType;
+    if (!coverageByCellType) return 0;
+
+    for (const coverage of Object.values(coverageByCellType)) {
+      if (coverage.length > 0) {
+        return coverage[0][1]; // the second element in [value, start, end]
       }
     }
+
     return 0;
-  }, [coverageQueries]);
+  }, [coverageQuery.data?.coverageByCellType]);
 
   const endBasePair = useMemo(() => {
-    for (const q of coverageQueries) {
-      const plot = q.data?.coverage;
-      if (plot && plot.length > 0) {
-        const end = plot[plot.length - 1][2]; // endBasePair
-        return end;
+    const coverageByCellType = coverageQuery.data?.coverageByCellType;
+    if (!coverageByCellType) return 0;
+
+    for (const coverage of Object.values(coverageByCellType)) {
+      if (coverage.length > 0) {
+        return coverage[coverage.length - 1][2]; // third value = end base pair
       }
     }
+
     return 0;
-  }, [coverageQueries]);
+  }, [coverageQuery.data?.coverageByCellType]);
 
   const binSize = useMemo(() => {
-    for (const q of coverageQueries) {
-      const plot = q.data?.coverage;
-      if (plot && plot.length > 1) {
-        const start = plot[0][1]; // startBasePair
-        const end = plot[0][2]; // endBasePair
+    const coverageByCellType = coverageQuery.data?.coverageByCellType;
+    if (!coverageByCellType) return 0;
+
+    for (const coverage of Object.values(coverageByCellType)) {
+      if (coverage.length > 0) {
+        // Destructure the first coverage tuple to get start and end base pairs
+        const [, start, end] = coverage[0];
         return end - start;
       }
     }
     return 0;
-  }, [coverageQueries]);
+  }, [coverageQuery.data?.coverageByCellType]);
 
   const totalBPAtScale = (totalBasePairs * binSize) / 1_000; // this gives us a scale in kb
 
-  // Find the selected gene info and calculate its position
+  // Find the selected gene info from the query result
   const selectedGeneInfo = useMemo(() => {
-    for (const q of coverageQueries) {
-      if (q.data?.geneInfo) {
-        const gene = q.data.geneInfo.find(
-          (g) => g.geneName.toLowerCase() === selectedGene.toLowerCase()
-        );
-        if (gene) return gene;
-      }
+    const geneInfoArray = coverageQuery.data?.geneInfo;
+
+    if (geneInfoArray) {
+      const gene = geneInfoArray.find(
+        (g) => g.geneName.toLowerCase() === selectedGene.toLowerCase()
+      );
+      if (gene) return gene;
     }
     return null;
-  }, [coverageQueries, selectedGene]);
+  }, [coverageQuery.data?.geneInfo, selectedGene]);
 
   useEffect(() => {
     if (selectedGeneInfo && !isLoading && totalBasePairs > 0) {
@@ -116,18 +125,22 @@ export const ChromosomeMap = () => {
     return () => {};
   }, [selectedGeneInfo, isLoading, totalBasePairs]);
 
-  const yMax = useMemo(
-    () =>
-      Math.max(
-        ...coverageQueries.map((q) => {
-          const coverage = q.data?.coverage;
-          if (!coverage || coverage.length === 0) return 0;
-          return Math.ceil(Math.max(...coverage.map((c) => c[0]))); // Get the max y value
-        }),
-        0 // Ensure we return at least 0
-      ),
-    [coverageQueries]
-  );
+  const yMax = useMemo(() => {
+    const coverageByCellType = coverageQuery.data?.coverageByCellType;
+    if (!coverageByCellType) return 0;
+
+    let maxY = 0;
+
+    for (const coverage of Object.values(coverageByCellType)) {
+      for (const [value] of coverage) {
+        if (value > maxY) {
+          maxY = value;
+        }
+      }
+    }
+
+    return Math.ceil(maxY);
+  }, [coverageQuery.data?.coverageByCellType]);
 
   if (isLoading) {
     return (
@@ -158,7 +171,7 @@ export const ChromosomeMap = () => {
     );
   }
 
-  const chromosome = coverageQueries[0]?.data?.chromosome;
+  const chromosome = coverageQuery?.data?.chromosome;
   if (!chromosome) {
     return (
       <div
@@ -193,19 +206,20 @@ export const ChromosomeMap = () => {
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot
             key={cellType}
-            chromosome={chromosome}
+            chromosome={coverageQuery.data?.chromosome ?? ""}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
             yMax={yMax}
             cellType={cellType}
-            coverageQuery={coverageQueries.find(
-              (q) => q.data?.cellType === cellType
-            )}
+            coverageQuery={
+              coverageQuery.data?.coverageByCellType?.[cellType] ?? []
+            }
           />
         ))}
+
         <GeneMap
           svgWidth={totalBasePairs * BAR_WIDTH}
-          geneInfo={coverageQueries[0]?.data?.geneInfo ?? undefined}
+          geneInfo={coverageQuery?.data?.geneInfo ?? undefined}
           startBasePair={startBasePair}
           endBasePair={endBasePair}
           formatSelectedGenes={formatSelectedGenes}

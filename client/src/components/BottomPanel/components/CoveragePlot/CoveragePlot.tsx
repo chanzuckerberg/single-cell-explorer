@@ -7,11 +7,7 @@ import React, {
 } from "react";
 import ReactDOM from "react-dom";
 import memoize from "memoize-one";
-import { UseQueryResult } from "@tanstack/react-query";
-import {
-  CoveragePlotData,
-  FetchCoverageResponse,
-} from "common/queries/coverage";
+import { CoveragePlotData } from "common/queries/coverage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "reducers";
 import { Button } from "@czi-sds/components";
@@ -65,7 +61,7 @@ export function CoveragePlot({
   chromosome: string;
   cellType: string;
   barWidth: number;
-  coverageQuery: UseQueryResult<FetchCoverageResponse> | undefined;
+  coverageQuery: [number, number, number][];
   yMax: number;
 }) {
   const [histogramTooltipLocation, setHistogramTooltipLocation] = useState<{
@@ -86,16 +82,16 @@ export function CoveragePlot({
         return [index + 1, barIndex, chromosomeId, cellType, binSize];
       });
     }
-    if (!coverageQuery?.data?.coverage) {
+    if (!coverageQuery) {
       return {};
     }
-    const coverage = transformData(coverageQuery.data.coverage);
+    const coverage = transformData(coverageQuery);
     return {
       coverage_bin_size: 1, // this is required for the histogram to render correctly - there should be a better name for this.
-      total_length: coverageQuery.data.coverage.length,
+      total_length: coverageQuery.length,
       coverage,
     };
-  }, [coverageQuery?.data?.coverage, chromosome, cellType]);
+  }, [coverageQuery, chromosome, cellType]);
 
   const handleHistogramBarEnter = useCallback(
     (hoverData: [number, number]) => {
