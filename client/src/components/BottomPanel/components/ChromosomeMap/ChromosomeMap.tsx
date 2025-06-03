@@ -206,7 +206,7 @@ export const ChromosomeMap = () => {
         {selectedCellTypes.map((cellType) => (
           <CoveragePlot
             key={cellType}
-            chromosome={coverageQuery.data?.chromosome ?? ""}
+            chromosome={chromosome}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
             yMax={yMax}
