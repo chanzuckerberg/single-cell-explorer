@@ -223,10 +223,10 @@ export const Cytoband = ({
     const roundingFn = roundDown ? Math.floor : Math.round;
 
     if (bp >= 1000000) {
-      return `${roundingFn(bp / 10000) / 100}M`;
+      return `${roundingFn(bp / 10000) / 100} mb`;
     }
     if (bp >= 1000) {
-      return `${roundingFn(bp / 10) / 100}K`;
+      return `${roundingFn(bp / 10) / 100} kb`;
     }
     return bp.toString();
   };
@@ -235,7 +235,7 @@ export const Cytoband = ({
     startBasePair !== undefined && endBasePair !== undefined
       ? `Range: ${formatBasePair(startBasePair, true)} - ${formatBasePair(
           endBasePair
-        )} bp`
+        )}`
       : "";
 
   return (

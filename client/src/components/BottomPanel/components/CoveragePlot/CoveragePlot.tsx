@@ -11,15 +11,16 @@ import { CoveragePlotData } from "common/queries/coverage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "reducers";
 import { Button } from "@czi-sds/components";
+import {
+  primitiveGray300,
+  primitiveGray500,
+} from "components/BottomPanel/constants";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
 import { CellTypeDropdown } from "./components/CellTypeDropdown/CellTypeDropdown";
-
-export const READ_FILL_COLOR = "#CCCCCC";
-export const CONTIG_FILL_COLOR = "#767676";
 
 const generateCoverageVizData = (
   coverageData: AccessionsData["coverage"],
@@ -129,13 +130,14 @@ export function CoveragePlot({
         skipBins: true,
         numBins: Math.round(data.total_length / data.coverage_bin_size),
         showStatistics: false,
-        colors: [READ_FILL_COLOR],
-        hoverColors: [CONTIG_FILL_COLOR],
+        colors: [primitiveGray300],
+        hoverColors: [primitiveGray500],
         xTickValues: [],
         yTickFormat: formatTick,
         numTicksY: 2,
         yMax,
         barOpacity: 1,
+        height: 70,
         margins: {
           left: 40,
           right: 10,
@@ -179,7 +181,7 @@ export function CoveragePlot({
   }));
 
   return (
-    <div>
+    <div className={cs.coverageVizWrapper}>
       <CellTypeDropdown cellType={cellType} />
       {selectedCellTypes.length > 1 && (
         <Button

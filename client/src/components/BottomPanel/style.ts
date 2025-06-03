@@ -33,7 +33,7 @@ export const BottomPanelHeader = styled.div`
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 16px 16px 4px 16px;
+  padding: 16px 16px 0px 16px;
 `;
 
 export const BottomPanelHeaderTitle = styled.h3`
