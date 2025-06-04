@@ -3,6 +3,7 @@ import { connect, useSelector } from "react-redux";
 import { useCellTypesQuery } from "common/queries/cellType";
 import { RootState } from "reducers";
 import { ChromatinViewerProvider } from "common/queries/useChromatinViewerSelectedGene";
+import { Tooltip } from "@blueprintjs/core";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
 import { GeneSelect } from "./components/GeneSelect/GeneSelect";
@@ -12,6 +13,7 @@ import {
   BottomPanelWrapper,
   BottomPanelButton,
   BottomPanelHeaderActions,
+  InfoIcon,
 } from "./style";
 
 const MAX_CELL_TYPES = 2;
@@ -49,12 +51,23 @@ const BottomSideBar = ({
         <BottomPanelHeader>
           <BottomPanelHeaderTitle>
             Chromatin Accessibility
+            <Tooltip
+              content="Put some text here to explain the feature."
+              position="bottom"
+            >
+              <InfoIcon
+                sdsIcon="InfoCircle"
+                sdsSize="xs"
+                sdsType="interactive"
+              />
+            </Tooltip>
           </BottomPanelHeaderTitle>
           <BottomPanelHeaderActions>
             <GeneSelect />
             <BottomPanelButton
               active={false}
               data-testid="add-cell-type"
+              id="add-cell-type-button"
               minimal
               text="Add Cell Type"
               icon="plus"
@@ -62,11 +75,9 @@ const BottomSideBar = ({
                 const cellType = cellTypes.find(
                   (type) => !selectedCellTypes.includes(type)
                 );
-
                 if (!cellType) {
                   return;
                 }
-
                 dispatch({
                   type: "toggle chromatin histogram",
                   cellType,
@@ -77,7 +88,6 @@ const BottomSideBar = ({
                 selectedCellTypes.length === MAX_CELL_TYPES
               }
             />
-
             <BottomPanelButton
               active={false}
               data-testid="minimize-bottom-panel"

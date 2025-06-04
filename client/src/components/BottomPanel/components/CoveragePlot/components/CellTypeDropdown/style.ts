@@ -9,7 +9,6 @@ export const CellTypeInputDropdown = styled(InputDropdown)`
   .styled-label {
     color: #111418;
     font-size: 14px;
-    font-weight: 600;
     line-height: 16px;
     letter-spacing: -0.084px;
   }

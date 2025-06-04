@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import { Button } from "@blueprintjs/core";
+import { Icon } from "@czi-sds/components";
 import { gray300 } from "util/theme";
 import * as globals from "../../globals";
 
@@ -27,6 +28,16 @@ export const BottomPanelButton = styled(Button)`
   &:hover {
     background-color: ${globals.lightGrey};
   }
+
+  @media (max-width: 1375px) {
+    &#add-cell-type-button .bp5-button-text {
+      display: none;
+    }
+
+    &#add-cell-type-button .bp5-icon {
+      margin-right: 0;
+    }
+  }
 `;
 
 export const BottomPanelHeader = styled.div`
@@ -49,4 +60,12 @@ export const BottomPanelHeaderActions = styled.div`
   align-items: center;
   display: flex;
   gap: 8px;
+`;
+
+export const InfoIcon = styled(Icon)`
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  position: relative;
+  top: -1px;
 `;

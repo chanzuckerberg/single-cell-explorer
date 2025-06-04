@@ -21,9 +21,9 @@ export const GeneMapSVG = ({
   const [organizedRows, setOrganizedRows] = useState<GeneInfo[][]>([]);
 
   // SVG dimensions and settings
-  const margin = { top: 20, right: 0, bottom: 0, left: 0 };
+  const margin = { top: 16, right: 0, bottom: 0, left: 0 };
   const trackHeight = 25;
-  const trackSpacing = 13;
+  const trackSpacing = 7;
 
   // Scale a genomic position to SVG x-coordinate based on viewport
   const scaleX = useMemo(
@@ -80,22 +80,7 @@ export const GeneMapSVG = ({
     const rows = organizedRows;
 
     // Render all rows
-    // let rowIndex = 0;
     rows.forEach((row) => {
-      // // Draw the track line
-      // tracks.push(
-      //   <line
-      //     key={`row-${rowIndex}-line`}
-      //     x1={margin.left}
-      //     y1={currentY + trackHeight / 2}
-      //     x2={svgWidth - margin.right}
-      //     y2={currentY + trackHeight / 2}
-      //     stroke="#EEEEEE"
-      //     strokeWidth={1}
-      //   />
-      // );
-      // rowIndex += 1;
-
       // Draw genes in this row
       row.forEach((gene) => {
         // Clip gene coordinates to viewport
@@ -220,7 +205,7 @@ export const GeneMapSVG = ({
         // Gene name
         // Display at the promoter of the gene
 
-        const yOffset = currentY - smallGraphFontSizePx / 2 + 4; // Position caret text above the gene body line
+        const yOffset = currentY - smallGraphFontSizePx / 2 + 6; // Position caret text above the gene body line
         const chevronSize = 4;
         // Add double left caret if gene starts before viewport
         if (gene.geneStart < startBasePair) {
@@ -280,7 +265,7 @@ export const GeneMapSVG = ({
             className={cs.geneLabel}
             key={`${gene.geneName}-label`}
             x={labelX}
-            y={currentY + 3} // Position above the gene body
+            y={currentY + 4} // Position above the gene body
             textAnchor={textAnchor}
             fill={getGeneColor(gene.geneName)}
             dominantBaseline="text-bottom"
