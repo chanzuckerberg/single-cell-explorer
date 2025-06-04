@@ -45,9 +45,7 @@ const BottomSideBar = ({
   return (
     <BottomPanelWrapper isHidden={bottomPanelHidden}>
       <BottomPanelHeader>
-        <BottomPanelHeaderTitle>
-          Chromatin Accessibility Viewer
-        </BottomPanelHeaderTitle>
+        <BottomPanelHeaderTitle>Chromatin Accessibility</BottomPanelHeaderTitle>
 
         <BottomPanelHeaderActions>
           <GeneSelect />
