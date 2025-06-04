@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { connect, useSelector } from "react-redux";
 import { useCellTypesQuery } from "common/queries/cellType";
 import { RootState } from "reducers";
+import { ChromatinViewerProvider } from "common/queries/useChromatinViewerSelectedGene";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
 import { GeneSelect } from "./components/GeneSelect/GeneSelect";
@@ -44,69 +45,72 @@ const BottomSideBar = ({
 
   return (
     <BottomPanelWrapper isHidden={bottomPanelHidden}>
-      <BottomPanelHeader>
-        <BottomPanelHeaderTitle>Chromatin Accessibility</BottomPanelHeaderTitle>
+      <ChromatinViewerProvider>
+        <BottomPanelHeader>
+          <BottomPanelHeaderTitle>
+            Chromatin Accessibility
+          </BottomPanelHeaderTitle>
+          <BottomPanelHeaderActions>
+            <GeneSelect />
+            <BottomPanelButton
+              active={false}
+              data-testid="add-cell-type"
+              minimal
+              text="Add Cell Type"
+              icon="plus"
+              onClick={() => {
+                const cellType = cellTypes.find(
+                  (type) => !selectedCellTypes.includes(type)
+                );
 
-        <BottomPanelHeaderActions>
-          <GeneSelect />
-          <BottomPanelButton
-            active={false}
-            data-testid="add-cell-type"
-            minimal
-            text="Add Cell Type"
-            icon="plus"
-            onClick={() => {
-              const cellType = cellTypes.find(
-                (type) => !selectedCellTypes.includes(type)
-              );
+                if (!cellType) {
+                  return;
+                }
 
-              if (!cellType) {
-                return;
+                dispatch({
+                  type: "toggle chromatin histogram",
+                  cellType,
+                });
+              }}
+              disabled={
+                cellTypesQuery.isLoading ||
+                selectedCellTypes.length === MAX_CELL_TYPES
               }
+            />
 
-              dispatch({
-                type: "toggle chromatin histogram",
-                cellType,
-              });
-            }}
-            disabled={
-              cellTypesQuery.isLoading ||
-              selectedCellTypes.length === MAX_CELL_TYPES
-            }
-          />
+            <BottomPanelButton
+              active={false}
+              data-testid="minimize-bottom-panel"
+              minimal
+              text=""
+              rightIcon={bottomPanelMinimized ? "maximize" : "minimize"}
+              onClick={() =>
+                dispatch({
+                  type: "toggle minimize multiome viz panel",
+                })
+              }
+            />
+            <BottomPanelButton
+              active={false}
+              data-testid="close-bottom-panel"
+              minimal
+              text=""
+              rightIcon="cross"
+              onClick={() =>
+                dispatch({
+                  type: "close multiome viz panel",
+                })
+              }
+            />
+          </BottomPanelHeaderActions>
+        </BottomPanelHeader>
 
-          <BottomPanelButton
-            active={false}
-            data-testid="minimize-bottom-panel"
-            minimal
-            text=""
-            rightIcon={bottomPanelMinimized ? "maximize" : "minimize"}
-            onClick={() =>
-              dispatch({
-                type: "toggle minimize multiome viz panel",
-              })
-            }
-          />
-          <BottomPanelButton
-            active={false}
-            data-testid="close-bottom-panel"
-            minimal
-            text=""
-            rightIcon="cross"
-            onClick={() =>
-              dispatch({
-                type: "close multiome viz panel",
-              })
-            }
-          />
-        </BottomPanelHeaderActions>
-      </BottomPanelHeader>
-
-      {!bottomPanelMinimized && (
-        <div>
-          <ChromosomeMap />
-        </div>
-      )}
+        {!bottomPanelMinimized && (
+          <div>
+            <ChromosomeMap />
+          </div>
+        )}
+      </ChromatinViewerProvider>
     </BottomPanelWrapper>
   );
 };

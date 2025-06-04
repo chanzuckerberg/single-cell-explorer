@@ -462,22 +462,37 @@ const Controls = (
     case "toggle chromatin histogram": {
       const { cellType, removeCellType } = action;
 
-      if (state.chromatinSelectedCellTypes.includes(cellType)) {
+      // if cellType and removeCellType are both present, replace removeCellType with cellType
+      if (cellType && removeCellType) {
+        return {
+          ...state,
+          chromatinSelectedCellTypes: state.chromatinSelectedCellTypes.map(
+            (type) => (type === removeCellType ? cellType : type)
+          ),
+        };
+      }
+
+      // if only removeCellType is present, remove it from the array
+      if (removeCellType) {
         return {
           ...state,
           chromatinSelectedCellTypes: state.chromatinSelectedCellTypes.filter(
-            (type) => type !== cellType
+            (type) => type !== removeCellType
           ),
-        }
+        };
       }
 
-      return {
-        ...state,
-        chromatinSelectedCellTypes: 
-          state.chromatinSelectedCellTypes
-            .filter(type => type !== removeCellType)
-            .concat(cellType)
-      };
+      // if only cellType is present, add it to the array
+      if (cellType) {
+        return {
+          ...state,
+          chromatinSelectedCellTypes: [
+            ...state.chromatinSelectedCellTypes,
+            cellType,
+          ],
+        };
+      }
+      return state;
     }
 
     default:

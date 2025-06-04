@@ -7,7 +7,6 @@ import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewe
 import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
-import { Cytoband } from "../Cytoband/Cytoband";
 import { CoverageToScale } from "./style";
 
 export const ChromosomeMap = () => {
@@ -188,11 +187,6 @@ export const ChromosomeMap = () => {
   }
   return (
     <>
-      <Cytoband
-        chromosomeId={chromosome}
-        startBasePair={startBasePair}
-        endBasePair={endBasePair}
-      />
       <CoverageToScale ref={scrollContainerRef}>
         <div className="margin-overlay" />
         <ScaleBar

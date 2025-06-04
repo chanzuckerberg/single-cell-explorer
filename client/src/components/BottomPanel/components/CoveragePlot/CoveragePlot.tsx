@@ -191,7 +191,7 @@ export function CoveragePlot({
           onClick={() =>
             dispatch({
               type: "toggle chromatin histogram",
-              cellType,
+              removeCellType: cellType,
             })
           }
         />
