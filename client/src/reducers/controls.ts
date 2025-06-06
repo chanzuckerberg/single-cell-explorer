@@ -459,38 +459,54 @@ const Controls = (
     /**************************
          Chromatin View
     **************************/
-    case "toggle chromatin histogram": {
+    case "toggle chromatin cell types": {
       const { cellType, removeCellType } = action;
+      const currentCellTypes = state.chromatinSelectedCellTypes || [];
 
       // if cellType and removeCellType are both present, replace removeCellType with cellType
       if (cellType && removeCellType) {
-        return {
-          ...state,
-          chromatinSelectedCellTypes: state.chromatinSelectedCellTypes.map(
-            (type) => (type === removeCellType ? cellType : type)
-          ),
-        };
+        // Only replace if removeCellType actually exists and cellType is different
+        if (
+          currentCellTypes.includes(removeCellType) &&
+          cellType !== removeCellType
+        ) {
+          return {
+            ...state,
+            chromatinSelectedCellTypes: currentCellTypes.map((type) =>
+              type === removeCellType ? cellType : type
+            ),
+          };
+        }
+        // If removeCellType doesn't exist or cellType === removeCellType, just add cellType if not present
+        if (!currentCellTypes.includes(cellType)) {
+          return {
+            ...state,
+            chromatinSelectedCellTypes: [...currentCellTypes, cellType],
+          };
+        }
+        return state;
       }
 
       // if only removeCellType is present, remove it from the array
       if (removeCellType) {
         return {
           ...state,
-          chromatinSelectedCellTypes: state.chromatinSelectedCellTypes.filter(
+          chromatinSelectedCellTypes: currentCellTypes.filter(
             (type) => type !== removeCellType
           ),
         };
       }
 
-      // if only cellType is present, add it to the array
+      // if only cellType is present, add it to the array (only if it doesn't already exist)
       if (cellType) {
-        return {
-          ...state,
-          chromatinSelectedCellTypes: [
-            ...state.chromatinSelectedCellTypes,
-            cellType,
-          ],
-        };
+        if (!currentCellTypes.includes(cellType)) {
+          return {
+            ...state,
+            chromatinSelectedCellTypes: [...currentCellTypes, cellType],
+          };
+        }
+        // Cell type already exists, return current state unchanged
+        return state;
       }
       return state;
     }

@@ -69,7 +69,7 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
 
           if (value) {
             dispatch({
-              type: "toggle chromatin histogram",
+              type: "toggle chromatin cell types",
               cellType: value.name,
               removeCellType: cellType,
             });

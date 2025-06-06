@@ -3,11 +3,12 @@ import { useCoverageQuery } from "common/queries/coverage";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
-import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
-import { ScaleBar } from "../ScaleBar/ScaleBar";
+import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
+import { ScaleBar, ScaleBarYAxis } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { CoverageToScale } from "./style";
+import { LoadingSkeleton } from "./components/LoadingSkeleton/LoadingSkeleton";
 
 export const ChromosomeMap = () => {
   const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
@@ -22,12 +23,12 @@ export const ChromosomeMap = () => {
   );
 
   const parts = selectedGene.split("_");
-  const formatSelectedGenes =
+  const selectedGeneFormatted =
     parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
 
   const coverageQuery = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    geneName: formatSelectedGenes,
+    geneName: selectedGeneFormatted,
     genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
     options: {
       enabled: !bottomPanelHidden && selectedCellTypes.length > 0,
@@ -89,32 +90,32 @@ export const ChromosomeMap = () => {
 
   const totalBPAtScale = (totalBasePairs * binSize) / 1_000; // this gives us a scale in kb
 
-  // Find the selected gene info from the query result
-  const selectedGeneInfo = useMemo(() => {
-    const geneInfoArray = coverageQuery.data?.geneInfo;
-
-    if (geneInfoArray) {
-      const gene = geneInfoArray.find(
-        (g) => g.geneName.toLowerCase() === selectedGene.toLowerCase()
-      );
-      if (gene) return gene;
-    }
-    return null;
-  }, [coverageQuery.data?.geneInfo, selectedGene]);
-
   useEffect(() => {
-    if (selectedGeneInfo && !isLoading && totalBasePairs > 0) {
+    const getSelectedGeneInfo = (geneName: string) => {
+      const geneInfoArray = coverageQuery.data?.geneInfo;
+
+      if (geneInfoArray) {
+        const gene = geneInfoArray.find(
+          (g) => g.geneName.toLowerCase() === geneName.toLowerCase()
+        );
+        if (gene) return gene;
+      }
+      return null;
+    };
+
+    if (selectedGeneFormatted && !isLoading && totalBasePairs > 0) {
       const timeoutId = setTimeout(() => {
-        const geneId = `${selectedGeneInfo.geneName}-label`;
+        const geneLabel = `${selectedGeneFormatted}-label`;
         const geneElement = scrollContainerRef.current?.querySelector(
-          `#${geneId}`
+          `#${geneLabel}`
         );
 
+        const selectedGeneInfo = getSelectedGeneInfo(selectedGeneFormatted);
         if (geneElement) {
           geneElement.scrollIntoView({
             behavior: "smooth",
             block: "center",
-            inline: "center",
+            inline: selectedGeneInfo?.geneStrand === "+" ? "start" : "end",
           });
         }
       }, 100);
@@ -122,7 +123,12 @@ export const ChromosomeMap = () => {
       return () => clearTimeout(timeoutId);
     }
     return () => {};
-  }, [selectedGeneInfo, isLoading, totalBasePairs]);
+  }, [
+    selectedGeneFormatted,
+    isLoading,
+    totalBasePairs,
+    coverageQuery.data?.geneInfo,
+  ]);
 
   const yMax = useMemo(() => {
     const coverageByCellType = coverageQuery.data?.coverageByCellType;
@@ -141,19 +147,6 @@ export const ChromosomeMap = () => {
     return Math.ceil(maxY);
   }, [coverageQuery.data?.coverageByCellType]);
 
-  if (isLoading) {
-    return (
-      <div
-        className={SKELETON}
-        style={{
-          display: "flex",
-          margin: "16px",
-          height: "50px",
-        }}
-      />
-    );
-  }
-
   // TODO: (smccanny) check if this is the error state we want to show
   if (isError) {
     return (
@@ -163,15 +156,18 @@ export const ChromosomeMap = () => {
           display: "flex",
           margin: "16px",
           height: "50px",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#d32f2f",
         }}
       >
-        Error loading data
+        Error loading chromosome data
       </div>
     );
   }
 
   const chromosome = coverageQuery?.data?.chromosome;
-  if (!chromosome) {
+  if (!chromosome && !isLoading) {
     return (
       <div
         className={SKELETON}
@@ -179,28 +175,45 @@ export const ChromosomeMap = () => {
           display: "flex",
           margin: "16px",
           height: "50px",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#666",
         }}
       >
-        No chromosome data
+        No chromosome data available
       </div>
     );
   }
   return (
-    <>
-      <CoverageToScale ref={scrollContainerRef}>
-        <div className="margin-overlay" />
+    <CoverageToScale ref={scrollContainerRef}>
+      <div className="margin-overlay" />
+
+      {!isLoading && (
+        <ScaleBarYAxis labelScale="kb" startBasePair={startBasePair} />
+      )}
+
+      {isLoading ? (
+        <LoadingSkeleton height="30px" marginBottom="7px" />
+      ) : (
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
           totalBPAtScale={totalBPAtScale}
           startBasePair={startBasePair}
           marginLeft={25}
           labelScale="kb"
-          labelFrequency={2}
+          showYAxis
+          labelFrequency={5}
         />
-        {selectedCellTypes.map((cellType) => (
+      )}
+      {selectedCellTypes.length === 0 && isLoading && (
+        <LoadingSkeleton height="112px" marginBottom="13px" />
+      )}
+      {selectedCellTypes.length > 0 &&
+        selectedCellTypes.map((cellType) => (
           <CoveragePlot
             key={cellType}
-            chromosome={chromosome}
+            isLoading={isLoading}
+            chromosome={chromosome ?? null}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
             yMax={yMax}
@@ -211,14 +224,17 @@ export const ChromosomeMap = () => {
           />
         ))}
 
+      {isLoading ? (
+        <LoadingSkeleton height="46px" marginTop="13px" />
+      ) : (
         <GeneMap
           svgWidth={totalBasePairs * BAR_WIDTH}
           geneInfo={coverageQuery?.data?.geneInfo ?? undefined}
           startBasePair={startBasePair}
           endBasePair={endBasePair}
-          formatSelectedGenes={formatSelectedGenes}
+          formatSelectedGenes={selectedGeneFormatted}
         />
-      </CoverageToScale>
-    </>
+      )}
+    </CoverageToScale>
   );
 };

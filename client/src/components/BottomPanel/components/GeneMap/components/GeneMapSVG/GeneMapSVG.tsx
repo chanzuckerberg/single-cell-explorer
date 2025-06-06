@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useMemo, ReactNode } from "react";
 import { GeneInfo } from "common/queries/coverage";
+import {
+  primaryBlue400,
+  baseBorderSecondary,
+  smallGraphFontSizePx,
+} from "components/BottomPanel/constants";
 import { GeneMapSVGProps } from "./types";
 import { organizeGenesIntoRows } from "./utils";
+import cs from "./style.module.scss";
 
 export const GeneMapSVG = ({
   data,
@@ -15,9 +21,9 @@ export const GeneMapSVG = ({
   const [organizedRows, setOrganizedRows] = useState<GeneInfo[][]>([]);
 
   // SVG dimensions and settings
-  const margin = { top: 20, right: 0, bottom: 0, left: 0 };
+  const margin = { top: 16, right: 0, bottom: 0, left: 0 };
   const trackHeight = 25;
-  const trackSpacing = 9;
+  const trackSpacing = 7;
 
   // Scale a genomic position to SVG x-coordinate based on viewport
   const scaleX = useMemo(
@@ -59,8 +65,8 @@ export const GeneMapSVG = ({
   // Determine color for each gene
   const getGeneColor = (geneName: string) => {
     // Specific gene highlighting
-    if (geneName === selectedGene) return "#3366CC"; // TODO: (smccanny) unify and parametrize this color
-    return `#c3c3c3`; // TODO: (smccanny) unify and parametrize this color
+    if (geneName === selectedGene) return primaryBlue400;
+    return baseBorderSecondary;
   };
 
   // Render gene tracks
@@ -74,22 +80,7 @@ export const GeneMapSVG = ({
     const rows = organizedRows;
 
     // Render all rows
-    let rowIndex = 0;
     rows.forEach((row) => {
-      // Draw the track line
-      tracks.push(
-        <line
-          key={`row-${rowIndex}-line`}
-          x1={margin.left}
-          y1={currentY + trackHeight / 2}
-          x2={svgWidth - margin.right}
-          y2={currentY + trackHeight / 2}
-          stroke="#EEEEEE" // TODO: (smccanny) unify and parametrize this color
-          strokeWidth={1}
-        />
-      );
-      rowIndex += 1;
-
       // Draw genes in this row
       row.forEach((gene) => {
         // Clip gene coordinates to viewport
@@ -117,7 +108,6 @@ export const GeneMapSVG = ({
               }`}
               fill="none"
               stroke={getGeneColor(gene.geneName)}
-              strokeWidth={2}
             />
           );
         } else {
@@ -130,7 +120,6 @@ export const GeneMapSVG = ({
               x2={endX}
               y2={currentY + trackHeight / 2}
               stroke={getGeneColor(gene.geneName)}
-              strokeWidth={2}
             />
           );
 
@@ -144,7 +133,6 @@ export const GeneMapSVG = ({
                 x2={startX}
                 y2={currentY + trackHeight / 2 + 4}
                 stroke={getGeneColor(gene.geneName)}
-                strokeWidth={2}
               />
             );
           }
@@ -159,14 +147,14 @@ export const GeneMapSVG = ({
                 x2={endX}
                 y2={currentY + trackHeight / 2 + 4}
                 stroke={getGeneColor(gene.geneName)}
-                strokeWidth={2}
               />
             );
           }
 
           // Draw carats along the gene line
-          const spaceBetweenCarets = 13;
+          const spaceBetweenCarets = 16;
           const numCarats = Math.floor(width / spaceBetweenCarets) + 1;
+          const caratSize = 4;
 
           let i = 0;
           while (i < numCarats) {
@@ -179,15 +167,15 @@ export const GeneMapSVG = ({
                 <path
                   key={`${gene.geneName}-carat-${i}`}
                   d={`M ${caratX - 3 * direction} ${
-                    currentY + trackHeight / 2 - 4
+                    currentY + trackHeight / 2 - caratSize
                   } 
                     L ${caratX + 1 * direction} ${currentY + trackHeight / 2} 
                     L ${caratX - 3 * direction} ${
-                    currentY + trackHeight / 2 + 4
+                    currentY + trackHeight / 2 + caratSize
                   }`}
                   fill="none"
                   stroke={getGeneColor(gene.geneName)}
-                  strokeWidth={2}
+                  strokeWidth={1}
                 />
               );
             } else {
@@ -199,15 +187,15 @@ export const GeneMapSVG = ({
                 <path
                   key={`${gene.geneName}-carat-${i}`}
                   d={`M ${caratX - 3 * direction} ${
-                    currentY + trackHeight / 2 - 4
+                    currentY + trackHeight / 2 - caratSize
                   } 
                     L ${caratX + 1 * direction} ${currentY + trackHeight / 2} 
                     L ${caratX - 3 * direction} ${
-                    currentY + trackHeight / 2 + 4
+                    currentY + trackHeight / 2 + caratSize
                   }`}
                   fill="none"
                   stroke={getGeneColor(gene.geneName)}
-                  strokeWidth={2}
+                  strokeWidth={1}
                 />
               );
             }
@@ -215,43 +203,78 @@ export const GeneMapSVG = ({
           }
         }
         // Gene name
-        // Display at the top left of the gene body
+        // Display at the promoter of the gene
 
+        const yOffset = currentY - smallGraphFontSizePx / 2 + 6; // Position caret text above the gene body line
+        const chevronSize = 4;
         // Add double left caret if gene starts before viewport
         if (gene.geneStart < startBasePair) {
           tracks.push(
-            <g>
+            <g
+              key={`${gene.geneName}-left-carets`}
+              stroke={getGeneColor(gene.geneName)}
+              fill="none"
+            >
               <path
                 key={`${gene.geneName}-left-indicator-1`}
-                d={`M ${startX + 6} ${currentY - 6 - 4} 
-                 L ${startX + 2} ${currentY - 6} 
-                 L ${startX + 6} ${currentY - 6 + 4}`}
-                fill="none"
-                stroke={getGeneColor(gene.geneName)}
-                strokeWidth={1}
+                d={`M ${startX + 6} ${yOffset - chevronSize} 
+                 L ${startX + 2} ${yOffset} 
+                 L ${startX + 6} ${yOffset + chevronSize}`}
               />
               <path
                 key={`${gene.geneName}-left-indicator-2`}
-                d={`M ${startX + 12} ${currentY - 6 - 4} 
-                 L ${startX + 8} ${currentY - 6} 
-                 L ${startX + 12} ${currentY - 6 + 4}`}
-                fill="none"
-                stroke={getGeneColor(gene.geneName)}
-                strokeWidth={1}
+                d={`M ${startX + 12} ${yOffset - chevronSize} 
+                 L ${startX + 8} ${yOffset} 
+                 L ${startX + 12} ${yOffset + chevronSize}`}
               />
             </g>
           );
         }
-        // Position label based on gene start position
-        const labelXOffset = gene.geneStart >= startBasePair ? -3 : 15;
+        // Add double right caret if gene ends after viewport
+        if (gene.geneEnd > endBasePair) {
+          tracks.push(
+            <g
+              key={`${gene.geneName}-right-carets`}
+              stroke={getGeneColor(gene.geneName)}
+              fill="none"
+            >
+              <path
+                key={`${gene.geneName}-right-indicator-1`}
+                d={`M ${endX - 6} ${yOffset - chevronSize} 
+                 L ${endX - 2} ${yOffset} 
+                 L ${endX - 6} ${yOffset + chevronSize}`}
+              />
+              <path
+                key={`${gene.geneName}-right-indicator-2`}
+                d={`M ${endX - 12} ${yOffset + chevronSize} 
+                 L ${endX - 8} ${yOffset} 
+                 L ${endX - 12} ${yOffset - chevronSize}`}
+              />
+            </g>
+          );
+        }
+
+        let labelX: number;
+        let textAnchor: "start" | "end";
+
+        if (gene.geneStrand === "+") {
+          // For positive strand: label at the "beginning" of the gene
+          labelX = gene.geneStart >= startBasePair ? startX : startX + 15;
+          textAnchor = "start";
+        } else {
+          // For negative strand: label at the "end" of the gene
+          labelX = gene.geneEnd <= endBasePair ? endX : endX - 15;
+          textAnchor = "end";
+        }
+
         tracks.push(
           <text
             id={`${gene.geneName}-label`}
+            className={cs.geneLabel}
             key={`${gene.geneName}-label`}
-            x={startX + labelXOffset} // Position at the left of the gene body
-            y={currentY - 1} // Position above the gene body
-            fontSize={10}
-            textAnchor="start"
+            x={labelX}
+            y={currentY + 4} // Position above the gene body
+            textAnchor={textAnchor}
             fill={getGeneColor(gene.geneName)}
             dominantBaseline="text-bottom"
           >

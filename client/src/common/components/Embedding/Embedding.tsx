@@ -21,18 +21,16 @@ import { LAYOUT_CHOICE_TEST_ID } from "util/constants";
 import { Schema } from "common/types/schema";
 import { AnnoMatrixObsCrossfilter } from "annoMatrix";
 import { shouldShowOpenseadragon } from "common/selectors";
-import { getFeatureFlag } from "util/featureFlags/featureFlags";
-import { FEATURES } from "util/featureFlags/features";
-import Icon from "components/icon/icon";
 import { sidePanelAttributeNameChange } from "../../../components/Graph/util";
 import * as globals from "~/globals";
-import { ImageToggleWrapper, ImageDropdownButton, ChromatinIconContainer } from "./style";
+import { ImageToggleWrapper, ImageDropdownButton } from "./style";
 import Opacities from "./components/Opacities/Opacities";
 import {
   thunkTrackColorByCategoryChangeEmbedding,
   thunkTrackColorByHistogramChangeEmbedding,
   thunkTrackLassoChangeEmbedding,
 } from "./analytics";
+import ChromatinViewerButton from "./components/ChromatinViewerButton/ChromatinViewerButton";
 
 interface StateProps {
   layoutChoice: RootState["layoutChoice"];
@@ -46,7 +44,6 @@ interface StateProps {
   imageUnderlay: RootState["controls"]["imageUnderlay"];
   // eslint-disable-next-line react/no-unused-prop-types -- used in shouldShowOpenseadragon
   unsMetadata: RootState["controls"]["unsMetadata"];
-  bottomPanelHidden: RootState["controls"]["bottomPanelHidden"];
 }
 
 interface OwnProps {
@@ -70,7 +67,6 @@ const mapStateToProps = (state: RootState, props: OwnProps): StateProps => ({
   panelEmbedding: state.panelEmbedding,
   imageUnderlay: state.controls.imageUnderlay,
   unsMetadata: state.controls.unsMetadata,
-  bottomPanelHidden: state.controls.bottomPanelHidden,
 });
 
 const Embedding = (props: Props) => {
@@ -82,7 +78,6 @@ const Embedding = (props: Props) => {
     isSidePanel,
     sideIsOpen,
     imageUnderlay,
-    bottomPanelHidden,
   } = props;
   const { annoMatrix } = crossfilter || {};
   if (!crossfilter || !annoMatrix) return null;
@@ -155,14 +150,6 @@ const Embedding = (props: Props) => {
     }
   };
 
-  const handleChromatinViewClick = () => {
-    dispatch({
-      type: bottomPanelHidden
-        ? "open multiome viz panel"
-        : "close multiome viz panel",
-    });
-  };
-
   return (
     <div
       style={{
@@ -228,17 +215,7 @@ const Embedding = (props: Props) => {
           />
         )}
 
-        {!isSidePanel && getFeatureFlag(FEATURES.MULTIOME_VIZ) && (
-          <Button
-            icon={(
-              <ChromatinIconContainer active={!bottomPanelHidden}>
-                <Icon icon="chromatin-view" />
-              </ChromatinIconContainer>
-            )}
-            onClick={handleChromatinViewClick}
-            active={!bottomPanelHidden}
-          />
-        )}
+        <ChromatinViewerButton isSidePanel={isSidePanel} />
 
         {!isSidePanel && shouldShowOpenseadragon(props) && (
           <ImageToggleWrapper>
