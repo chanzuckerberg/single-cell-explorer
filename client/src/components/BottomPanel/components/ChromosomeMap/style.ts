@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 export const CoverageToScale = styled.div`
   width: 100%;
   overflow-x: scroll;
-  padding: 13px 16px 16px 40px;
+  padding: 0px 16px 16px 40px;
   div.margin-overlay {
     position: absolute;
     width: 34px;

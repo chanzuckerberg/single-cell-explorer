@@ -3,11 +3,12 @@ import { useCoverageQuery } from "common/queries/coverage";
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
-import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
+import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
 import { ScaleBar, ScaleBarYAxis } from "../ScaleBar/ScaleBar";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { CoverageToScale } from "./style";
+import { LoadingSkeleton } from "./components/LoadingSkeleton/LoadingSkeleton";
 
 export const ChromosomeMap = () => {
   const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
@@ -146,19 +147,6 @@ export const ChromosomeMap = () => {
     return Math.ceil(maxY);
   }, [coverageQuery.data?.coverageByCellType]);
 
-  if (isLoading) {
-    return (
-      <div
-        className={SKELETON}
-        style={{
-          display: "flex",
-          margin: "16px",
-          height: "50px",
-        }}
-      />
-    );
-  }
-
   // TODO: (smccanny) check if this is the error state we want to show
   if (isError) {
     return (
@@ -168,15 +156,18 @@ export const ChromosomeMap = () => {
           display: "flex",
           margin: "16px",
           height: "50px",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#d32f2f",
         }}
       >
-        Error loading data
+        Error loading chromosome data
       </div>
     );
   }
 
   const chromosome = coverageQuery?.data?.chromosome;
-  if (!chromosome) {
+  if (!chromosome && !isLoading) {
     return (
       <div
         className={SKELETON}
@@ -184,17 +175,26 @@ export const ChromosomeMap = () => {
           display: "flex",
           margin: "16px",
           height: "50px",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#666",
         }}
       >
-        No chromosome data
+        No chromosome data available
       </div>
     );
   }
   return (
-    <>
-      <CoverageToScale ref={scrollContainerRef}>
-        <div className="margin-overlay" />
+    <CoverageToScale ref={scrollContainerRef}>
+      <div className="margin-overlay" />
+
+      {!isLoading && (
         <ScaleBarYAxis labelScale="kb" startBasePair={startBasePair} />
+      )}
+
+      {isLoading ? (
+        <LoadingSkeleton height="30px" marginBottom="7px" />
+      ) : (
         <ScaleBar
           svgWidth={totalBasePairs * BAR_WIDTH}
           totalBPAtScale={totalBPAtScale}
@@ -204,10 +204,16 @@ export const ChromosomeMap = () => {
           showYAxis
           labelFrequency={5}
         />
-        {selectedCellTypes.map((cellType) => (
+      )}
+      {selectedCellTypes.length === 0 && isLoading && (
+        <LoadingSkeleton height="112px" marginBottom="13px" />
+      )}
+      {selectedCellTypes.length > 0 &&
+        selectedCellTypes.map((cellType) => (
           <CoveragePlot
             key={cellType}
-            chromosome={chromosome}
+            isLoading={isLoading}
+            chromosome={chromosome ?? null}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
             yMax={yMax}
@@ -218,6 +224,9 @@ export const ChromosomeMap = () => {
           />
         ))}
 
+      {isLoading ? (
+        <LoadingSkeleton height="46px" marginTop="13px" />
+      ) : (
         <GeneMap
           svgWidth={totalBasePairs * BAR_WIDTH}
           geneInfo={coverageQuery?.data?.geneInfo ?? undefined}
@@ -225,7 +234,7 @@ export const ChromosomeMap = () => {
           endBasePair={endBasePair}
           formatSelectedGenes={selectedGeneFormatted}
         />
-      </CoverageToScale>
-    </>
+      )}
+    </CoverageToScale>
   );
 };

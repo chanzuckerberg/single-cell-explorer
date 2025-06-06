@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import fuzzysort from "fuzzysort";
 import { ItemRenderer, Select } from "@blueprintjs/select";
 import { useSelector } from "react-redux";
-import { useChromatinViewerSelectedGene } from "common/queries/useChromatinViewerSelectedGene";
+import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
 
 import { Dataframe } from "util/dataframe";
 import {
@@ -12,7 +12,7 @@ import {
   RenderItemProps,
 } from "components/RightSideBar/components/GeneExpression/components/InfoPanel/components/InfoPanelContainer/components/InfoSearch/types";
 import { BottomPanelButton } from "components/BottomPanel/style";
-import { SelectedGenePrefix } from "./style";
+import { SelectedGenePrefix, SelectedGeneName } from "./style";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 const usePrevious = (value: any) => {
@@ -114,8 +114,15 @@ export function GeneSelect() {
       <Select<string>
         items={geneNames || ["No genes"]}
         itemListPredicate={(query: string, items: string[]) => {
+          const sortedItems = [...items].sort((a, b) => a.localeCompare(b));
+          const selectedGeneIndex = sortedItems.indexOf(selectedGene);
+
+          if (!query && selectedGeneIndex === -1) {
+            return sortedItems.slice(0, 20);
+          }
           if (!query) {
-            return [...items].sort((a, b) => a.localeCompare(b)).slice(0, 20);
+            const end = Math.min(items.length, selectedGeneIndex + 19);
+            return sortedItems.slice(selectedGeneIndex, end);
           }
           return filterGenes(query, items) as unknown as string[];
         }}
@@ -133,10 +140,10 @@ export function GeneSelect() {
           minimal
           text={
             selectedGene ? (
-              <span>
+              <SelectedGeneName>
                 <SelectedGenePrefix>Gene:</SelectedGenePrefix>
                 {`${selectedGene}`}
-              </span>
+              </SelectedGeneName>
             ) : (
               "Select a gene..."
             )

@@ -210,7 +210,11 @@ export const GeneMapSVG = ({
         // Add double left caret if gene starts before viewport
         if (gene.geneStart < startBasePair) {
           tracks.push(
-            <g stroke={getGeneColor(gene.geneName)} fill="none">
+            <g
+              key={`${gene.geneName}-left-carets`}
+              stroke={getGeneColor(gene.geneName)}
+              fill="none"
+            >
               <path
                 key={`${gene.geneName}-left-indicator-1`}
                 d={`M ${startX + 6} ${yOffset - chevronSize} 
@@ -229,7 +233,11 @@ export const GeneMapSVG = ({
         // Add double right caret if gene ends after viewport
         if (gene.geneEnd > endBasePair) {
           tracks.push(
-            <g stroke={getGeneColor(gene.geneName)} fill="none">
+            <g
+              key={`${gene.geneName}-right-carets`}
+              stroke={getGeneColor(gene.geneName)}
+              fill="none"
+            >
               <path
                 key={`${gene.geneName}-right-indicator-1`}
                 d={`M ${endX - 6} ${yOffset - chevronSize} 
