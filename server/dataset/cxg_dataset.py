@@ -396,11 +396,10 @@ class CxgDataset(Dataset):
                     print(f"Error deserializing uns data for key {key}: {e}")
                     return None
 
-    def get_atac_coverage(self, gene_name, genome_version, cell_type):
+    def get_atac_coverage(self, gene_name, genome_version, cell_types):
         """
-        Extracts ATAC coverage data for a gene and cell type from TileDB.
+        Extracts ATAC coverage data for a gene and one or more cell types from TileDB.
         """
-
         bin_size = ATAC_BIN_SIZE
         range_buffer = ATAC_RANGE_BUFFER
 
@@ -424,9 +423,18 @@ class CxgDataset(Dataset):
         try:
             coverage = self.open_array("coverage")
 
+            # Ensure cell_types is a list
+            if isinstance(cell_types, str):
+                # Split on comma only if it's one string containing multiple values
+                cell_types = [ct.strip() for ct in cell_types.split(",")] if "," in cell_types else [cell_types]
+
+            # Escape and build proper OR query string
+            escaped_cell_types = [ct.replace("'", "\\'") for ct in cell_types]
+            cell_type_filter = " or ".join(f"(cell_type == '{ct}')" for ct in escaped_cell_types)
+
             qc = (
                 f"(chrom == {chromosome}) and "
-                f"(cell_type == '{cell_type}') and "
+                f"({cell_type_filter}) and "
                 f"(bin >= {bin_start}) and (bin <= {bin_end})"
             )
 
@@ -436,22 +444,20 @@ class CxgDataset(Dataset):
             starts = bins * bin_size
             ends = starts + bin_size
 
-            # Convert to a dict for fast lookup
-            coverage_map = dict(zip(result["bin"], result["normalized_coverage"]))
-
-            # Normalize coverage values to the bins
-            # If a bin is not present in the coverage_map, it will default to 0.0
-            norm_covs = [coverage_map.get(b, 0.0) for b in bins]
-
-            coverage_plot = list(zip(norm_covs, starts.astype(float), ends.astype(float)))
+            coverage_by_celltype = {}
+            for ct in cell_types:
+                subset = result[result["cell_type"] == ct]
+                coverage_map = dict(zip(subset["bin"], subset["normalized_coverage"]))
+                norm_covs = [coverage_map.get(b, 0.0) for b in bins]
+                coverage_plot = list(zip(norm_covs, starts.astype(float), ends.astype(float)))
+                coverage_by_celltype[ct] = coverage_plot
 
         except tiledb.libtiledb.TileDBError as e:
             raise DatasetAccessError(f"get_atac_coverage failed: {str(e)}") from e
 
         return {
             "chromosome": target_chromosome,
-            "cellType": cell_type,
-            "coverage": coverage_plot,
+            "coverageByCellType": coverage_by_celltype,
             "geneInfo": sorted_genes,
         }
 
@@ -461,7 +467,7 @@ class CxgDataset(Dataset):
         and sorted list of genes on the same chromosome.
         """
         try:
-            gene_data = GENE_DATA_CACHE[genome_version]
+            gene_data = GENE_DATA_CACHE.get(genome_version)
         except KeyError as e:
             raise DatasetAccessError(f"Genome version {genome_version} not preloaded") from e
 
@@ -491,7 +497,7 @@ class CxgDataset(Dataset):
         Given a chromosome key and genome version, returns cytoband data for that chromosome.
         """
         try:
-            cytoband_data = CYTOBAND_DATA_CACHE[genome_version]
+            cytoband_data = CYTOBAND_DATA_CACHE.get(genome_version)
             return cytoband_data.get(chr_key)
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             logging.error(f"Error accessing cytoband data: {e}")
