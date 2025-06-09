@@ -227,7 +227,7 @@ export default class Histogram {
 
     const yAxisSvg = yAxisContainer
       .append("svg")
-      .attr("width", 40 + this.options.lineWidth) // THIS NEEDS TO BE ADJUSTABLE!!!
+      .attr("width", 40 + this.options.lineWidth)
       .attr("height", this.size.height);
 
     // Calculate the same y-scale as the main chart

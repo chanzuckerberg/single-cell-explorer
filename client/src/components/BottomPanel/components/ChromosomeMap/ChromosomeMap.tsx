@@ -1,17 +1,20 @@
 import React, { useMemo, useRef, useEffect } from "react";
 import { useCoverageQuery } from "common/queries/coverage";
-import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
-import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
-import { ScaleBar, ScaleBarYAxis } from "../ScaleBar/ScaleBar";
+import {
+  useChromatinViewerGenome,
+  useChromatinViewerSelectedGene,
+} from "common/hooks/useChromatinViewerSelectedGene";
+import { ScaleBar } from "../ScaleBar/ScaleBar";
+import { ScaleBarYAxis } from "../ScaleBar/ScaleBarYAxis";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { CoverageToScale } from "./style";
 import { LoadingSkeleton } from "./components/LoadingSkeleton/LoadingSkeleton";
 
 export const ChromosomeMap = () => {
-  const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjust as needed
+  const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjustable as desired
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { selectedGene } = useChromatinViewerSelectedGene();
 
@@ -26,10 +29,11 @@ export const ChromosomeMap = () => {
   const selectedGeneFormatted =
     parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
 
+  const { genomeVersion } = useChromatinViewerGenome();
   const coverageQuery = useCoverageQuery({
     cellTypes: selectedCellTypes,
     geneName: selectedGeneFormatted,
-    genomeVersion: "hg38", // TODO: (smccanny) make this dynamic
+    genomeVersion,
     options: {
       enabled: !bottomPanelHidden && selectedCellTypes.length > 0,
       retry: 3,
@@ -54,10 +58,9 @@ export const ChromosomeMap = () => {
 
     for (const coverage of Object.values(coverageByCellType)) {
       if (coverage.length > 0) {
-        return coverage[0][1]; // the second element in [value, start, end]
+        return coverage[0][1];
       }
     }
-
     return 0;
   }, [coverageQuery.data?.coverageByCellType]);
 
@@ -67,10 +70,9 @@ export const ChromosomeMap = () => {
 
     for (const coverage of Object.values(coverageByCellType)) {
       if (coverage.length > 0) {
-        return coverage[coverage.length - 1][2]; // third value = end base pair
+        return coverage[coverage.length - 1][2];
       }
     }
-
     return 0;
   }, [coverageQuery.data?.coverageByCellType]);
 
@@ -147,18 +149,13 @@ export const ChromosomeMap = () => {
     return Math.ceil(maxY);
   }, [coverageQuery.data?.coverageByCellType]);
 
-  // TODO: (smccanny) check if this is the error state we want to show
   if (isError) {
     return (
       <div
-        className={SKELETON}
         style={{
           display: "flex",
           margin: "16px",
           height: "50px",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#d32f2f",
         }}
       >
         Error loading chromosome data
@@ -170,14 +167,10 @@ export const ChromosomeMap = () => {
   if (!chromosome && !isLoading) {
     return (
       <div
-        className={SKELETON}
         style={{
           display: "flex",
           margin: "16px",
           height: "50px",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#666",
         }}
       >
         No chromosome data available

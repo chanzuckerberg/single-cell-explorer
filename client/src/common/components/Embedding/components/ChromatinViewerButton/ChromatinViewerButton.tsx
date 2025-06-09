@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { connect, useSelector } from "react-redux";
-import { useCellTypesQuery } from "common/queries/cellType"; // Your existing hook
+import { useCellTypesQuery } from "common/queries/cellType";
 import { getFeatureFlag } from "util/featureFlags/featureFlags";
 import { FEATURES } from "util/featureFlags/features";
 import Icon from "components/icon/icon";
@@ -9,7 +9,6 @@ import { Schema } from "common/types/schema";
 import { Button } from "@blueprintjs/core";
 import { useChromatinViewerData } from "common/hooks/useChromatinViewerData";
 import { ChromatinIconContainer } from "./style";
-// import * as globals from "~/globals";
 
 type Props = StateProps & DispatchProps & OwnProps;
 
@@ -63,24 +62,19 @@ const ChromatinViewerButton = ({
     }
   }, [cellTypesQuery.data, dispatch]);
 
-  // Get selected cell types from Redux state
   const selectedCellTypes = useSelector(
     (state: RootState) => state.controls.chromatinSelectedCellTypes || []
   );
 
-  // Use the chromatin data hook to check if data exists
   const chromatinData = useChromatinViewerData(schema, selectedCellTypes);
-
   const chromatinButtonDisabled = !chromatinData.data;
 
-  // Determine whether to show the chromatin button
   const shouldShowChromatinButton =
     !isSidePanel &&
     getFeatureFlag(FEATURES.MULTIOME_VIZ) &&
     chromatinData.shouldShow;
 
   useEffect(() => {
-    // If the button is shown, we can set the genome version based on the schema
     if (shouldShowChromatinButton && chromatinButtonDisabled) {
       dispatch({
         type: "open multiome viz panel",
@@ -89,7 +83,6 @@ const ChromatinViewerButton = ({
     return () => {};
   }, [shouldShowChromatinButton, chromatinButtonDisabled, dispatch]);
 
-  // Don't render anything if we shouldn't show the button
   if (!shouldShowChromatinButton) {
     return null;
   }

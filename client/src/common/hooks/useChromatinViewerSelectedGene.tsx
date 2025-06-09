@@ -1,17 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// Define types for ATAC/coverage data
 interface ATACCoverageData {
-  // Adjust these types based on your actual data structure
   coverage: number[];
   positions: number[];
   chromosome: string;
   start: number;
   end: number;
-  // Add other properties as needed
 }
 
-// Define the context type
 interface ChromatinViewerContextType {
   selectedGene: string;
   setSelectedGene: (gene: string) => void;
@@ -23,12 +19,10 @@ interface ChromatinViewerContextType {
   setIsLoadingCoverage: (loading: boolean) => void;
 }
 
-// Create the context
 const ChromatinViewerContext = createContext<
   ChromatinViewerContextType | undefined
 >(undefined);
 
-// Provider component props
 interface ChromatinViewerProviderProps {
   children: ReactNode;
   defaultGene?: string;
@@ -87,7 +81,6 @@ export function ChromatinViewerProvider({
   );
 }
 
-// Custom hook to use the context
 export function useChromatinViewerSelectedGene(): ChromatinViewerContextType {
   const context = useContext(ChromatinViewerContext);
 
@@ -100,7 +93,6 @@ export function useChromatinViewerSelectedGene(): ChromatinViewerContextType {
   return context;
 }
 
-// Additional convenience hooks for specific parts of the context
 export function useChromatinViewerGenome() {
   const { genomeVersion, setGenomeVersion } = useChromatinViewerSelectedGene();
   return { genomeVersion, setGenomeVersion };
