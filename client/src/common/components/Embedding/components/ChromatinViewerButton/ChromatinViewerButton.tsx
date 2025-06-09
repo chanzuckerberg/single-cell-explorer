@@ -73,22 +73,21 @@ const ChromatinViewerButton = ({
 
   const chromatinButtonDisabled = !chromatinData.data;
 
-  // const getChromatinTooltipContent = (): string => {
-  //   if (!shouldEnableCellTypesQuery) return "Initializing...";
-  //   if (cellTypesQuery.isLoading) return "Loading cell types...";
-  //   if (cellTypesQuery.isError) return "Error loading cell types";
-  //   if (!cellTypesQuery.data || cellTypesQuery.data.length === 0) return "No cell types available";
-  //   if (chromatinData.isLoading) return "Loading chromatin data...";
-  //   if (chromatinData.isError) return "Error loading chromatin data";
-  //   if (chromatinData.hasValidData) return `Chromatin accessibility (${chromatinData.genomeVersion})`;
-  //   return "Loading chromatin accessibility data...";
-  // };
-
   // Determine whether to show the chromatin button
   const shouldShowChromatinButton =
     !isSidePanel &&
     getFeatureFlag(FEATURES.MULTIOME_VIZ) &&
     chromatinData.shouldShow;
+
+  useEffect(() => {
+    // If the button is shown, we can set the genome version based on the schema
+    if (shouldShowChromatinButton && chromatinButtonDisabled) {
+      dispatch({
+        type: "open multiome viz panel",
+      });
+    }
+    return () => {};
+  }, [shouldShowChromatinButton, chromatinButtonDisabled, dispatch]);
 
   // Don't render anything if we shouldn't show the button
   if (!shouldShowChromatinButton) {
@@ -96,11 +95,6 @@ const ChromatinViewerButton = ({
   }
 
   return (
-    // <Tooltip
-    //   content={getChromatinTooltipContent()}
-    //   position="top"
-    //   hoverOpenDelay={globals.tooltipHoverOpenDelay}
-    // >
     <Button
       icon={
         <ChromatinIconContainer active={!bottomPanelHidden}>
@@ -111,7 +105,6 @@ const ChromatinViewerButton = ({
       active={!bottomPanelHidden}
       disabled={chromatinButtonDisabled}
     />
-    // </Tooltip>
   );
 };
 
