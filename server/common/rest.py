@@ -548,7 +548,7 @@ def atac_coverage_get(request, data_adaptor):
 
     atac_coverage = data_adaptor.get_atac_coverage(gene_name, genome_version, cell_type)
     if atac_coverage is None:
-        return make_response("No ATAC coverage found", HTTPStatus.NOT_FOUND)
+        return make_response("No ATAC coverage found", HTTPStatus.OK)
 
     return make_response(atac_coverage, HTTPStatus.OK, {"Content-Type": "application/json"})
 
