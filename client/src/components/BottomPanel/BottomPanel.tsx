@@ -3,6 +3,8 @@ import { connect, useSelector } from "react-redux";
 import { useCellTypesQuery } from "common/queries/cellType";
 import { RootState } from "reducers";
 import { Tooltip } from "@blueprintjs/core";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
+import { FEATURES } from "util/featureFlags/features";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
 import { GeneSelect } from "./components/GeneSelect/GeneSelect";
@@ -13,6 +15,7 @@ import {
   BottomPanelButton,
   BottomPanelHeaderActions,
   InfoIcon,
+  ChromosomeMapWrapper,
 } from "./style";
 
 const MAX_CELL_TYPES = 2;
@@ -22,9 +25,24 @@ const BottomSideBar = ({
   bottomPanelMinimized = false,
   bottomPanelHidden,
 }: Props) => {
+  // Get dataset's cell types
   const cellTypesQuery = useCellTypesQuery({
-    enabled: !bottomPanelHidden && !bottomPanelMinimized,
+    enabled: getFeatureFlag(FEATURES.MULTIOME_VIZ),
   });
+
+  // Add first cell type as default to selected cell types
+  useEffect(() => {
+    const availableCellTypes = cellTypesQuery.data;
+
+    if (availableCellTypes && availableCellTypes.length > 0) {
+      const defaultCellType = availableCellTypes[0];
+      dispatch({
+        type: "toggle chromatin cell types",
+        cellType: defaultCellType,
+      });
+    }
+  }, [cellTypesQuery.data, dispatch]);
+
   const { selectedCellTypes } = useSelector((state: RootState) => ({
     selectedCellTypes: state.controls.chromatinSelectedCellTypes,
   }));
@@ -33,16 +51,6 @@ const BottomSideBar = ({
     () => cellTypesQuery.data ?? [],
     [cellTypesQuery.data]
   );
-
-  useEffect(() => {
-    if (selectedCellTypes.length === 0 && cellTypes.length > 0) {
-      // Add initial histogram if none are selected.
-      dispatch({
-        type: "toggle chromatin cell types",
-        cellType: cellTypes[0],
-      });
-    }
-  }, [cellTypes, dispatch, selectedCellTypes.length]);
 
   return (
     <BottomPanelWrapper
@@ -117,11 +125,9 @@ const BottomSideBar = ({
       </BottomPanelHeader>
 
       {!bottomPanelMinimized && (
-        <div
-          style={{ minHeight: "218px", transition: "min-height 0.5s ease-in" }}
-        >
+        <ChromosomeMapWrapper>
           <ChromosomeMap />
-        </div>
+        </ChromosomeMapWrapper>
       )}
     </BottomPanelWrapper>
   );

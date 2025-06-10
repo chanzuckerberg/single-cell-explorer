@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { connect, useSelector } from "react-redux";
-import { useCellTypesQuery } from "common/queries/cellType";
 import { getFeatureFlag } from "util/featureFlags/featureFlags";
 import { FEATURES } from "util/featureFlags/features";
 import Icon from "components/icon/icon";
@@ -44,24 +43,6 @@ const ChromatinViewerButton = ({
     });
   };
 
-  // Get dataset's cell types
-  const cellTypesQuery = useCellTypesQuery({
-    enabled: !isSidePanel && getFeatureFlag(FEATURES.MULTIOME_VIZ),
-  });
-
-  // Add first cell type as default to selected cell types
-  useEffect(() => {
-    const availableCellTypes = cellTypesQuery.data;
-
-    if (availableCellTypes && availableCellTypes.length > 0) {
-      const defaultCellType = availableCellTypes[0];
-      dispatch({
-        type: "toggle chromatin cell types",
-        cellType: defaultCellType,
-      });
-    }
-  }, [cellTypesQuery.data, dispatch]);
-
   const selectedCellTypes = useSelector(
     (state: RootState) => state.controls.chromatinSelectedCellTypes || []
   );
@@ -75,7 +56,7 @@ const ChromatinViewerButton = ({
     chromatinData.shouldShow;
 
   useEffect(() => {
-    if (shouldShowChromatinButton && chromatinButtonDisabled) {
+    if (shouldShowChromatinButton && !chromatinButtonDisabled) {
       dispatch({
         type: "open multiome viz panel",
       });

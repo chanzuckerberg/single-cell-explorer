@@ -5,6 +5,8 @@ import {
   smallGraphFontSize,
   semanticTextTertiary,
   TICK_LENGTH,
+  Y_AXIS_ID,
+  Y_AXIS_WIDTH,
 } from "components/BottomPanel/constants";
 
 export const ScaleBarYAxis = ({
@@ -17,29 +19,28 @@ export const ScaleBarYAxis = ({
   height?: number;
 }) => {
   useEffect(() => {
-    const svg = d3.select("#scalebar-yaxis-svg");
+    const svg = d3.select(`#${Y_AXIS_ID}`);
     svg.selectAll("*").remove(); // Clear previous content
 
     const axisY = height / 2;
-    const yAxisWidth = 41; // Fixed width for y-axis
 
-    svg.attr("width", yAxisWidth).attr("height", height);
+    svg.attr("width", Y_AXIS_WIDTH).attr("height", height);
 
     const g = svg.append("g").attr("transform", `translate(0, -12)`);
 
-    // Add the scale label (first tick equivalent)
+    // Add the scale label
     g.append("text")
-      .attr("x", yAxisWidth - 5) // Position near the right edge
+      .attr("x", Y_AXIS_WIDTH - 5) // Position near the right edge
       .attr("y", axisY + 6 + 16) // Same positioning as main scale bar labels
       .attr("text-anchor", "end")
       .attr("fill", semanticTextTertiary)
       .style("font-size", smallGraphFontSize)
       .text(labelScale);
 
-    // Optional: Add a small tick mark
+    // Add a first tick mark
     g.append("line")
-      .attr("x1", yAxisWidth)
-      .attr("x2", yAxisWidth)
+      .attr("x1", Y_AXIS_WIDTH)
+      .attr("x2", Y_AXIS_WIDTH)
       .attr("y1", axisY - 0.5)
       .attr("y2", axisY + TICK_LENGTH)
       .attr("stroke", baseBorderSecondary)
@@ -48,7 +49,7 @@ export const ScaleBarYAxis = ({
 
   return (
     <svg
-      id="scalebar-yaxis-svg"
+      id={Y_AXIS_ID}
       height={height}
       style={{
         position: "absolute",

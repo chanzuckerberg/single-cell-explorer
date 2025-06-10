@@ -79,3 +79,8 @@ export const InfoIcon = styled(Icon)`
   position: relative;
   top: -1px;
 `;
+
+export const ChromosomeMapWrapper = styled.div`
+  min-height: 218px;
+  transition: "min-height 0.5s ease-in";
+`;

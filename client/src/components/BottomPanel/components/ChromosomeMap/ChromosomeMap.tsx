@@ -2,10 +2,8 @@ import React, { useMemo, useRef, useEffect } from "react";
 import { useCoverageQuery } from "common/queries/coverage";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
-import {
-  useChromatinViewerGenome,
-  useChromatinViewerSelectedGene,
-} from "common/hooks/useChromatinViewerSelectedGene";
+import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
+import { formatSelectedGene } from "../../utils";
 import { ScaleBar } from "../ScaleBar/ScaleBar";
 import { ScaleBarYAxis } from "../ScaleBar/ScaleBarYAxis";
 import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
@@ -25,11 +23,9 @@ export const ChromosomeMap = () => {
     })
   );
 
-  const parts = selectedGene.split("_");
-  const selectedGeneFormatted =
-    parts.length <= 1 ? selectedGene : parts.slice(0, -1).join("_");
+  const selectedGeneFormatted = formatSelectedGene(selectedGene);
 
-  const { genomeVersion } = useChromatinViewerGenome();
+  const { genomeVersion } = useChromatinViewerSelectedGene();
   const coverageQuery = useCoverageQuery({
     cellTypes: selectedCellTypes,
     geneName: selectedGeneFormatted,

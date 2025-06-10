@@ -1,18 +1,15 @@
 import { useEffect } from "react";
 import { useCoverageQuery } from "common/queries/coverage";
 import { Schema } from "common/types/schema";
-import {
-  useChromatinViewerSelectedGene,
-  useChromatinViewerGenome,
-} from "./useChromatinViewerSelectedGene";
+import { formatSelectedGene } from "components/BottomPanel/utils";
+import { useChromatinViewerSelectedGene } from "./useChromatinViewerSelectedGene";
 
-// Custom hook to manage chromatin viewer data fetching
 export function useChromatinViewerData(
   schema: Schema | undefined,
   selectedCellTypes: string[]
 ) {
-  const { selectedGene } = useChromatinViewerSelectedGene();
-  const { genomeVersion, setGenomeVersion } = useChromatinViewerGenome();
+  const { selectedGene, genomeVersion, setGenomeVersion } =
+    useChromatinViewerSelectedGene();
 
   // Set genome version when schema changes
   useEffect(() => {
@@ -24,7 +21,7 @@ export function useChromatinViewerData(
 
   const coverageQuery = useCoverageQuery({
     cellTypes: selectedCellTypes,
-    geneName: selectedGene,
+    geneName: formatSelectedGene(selectedGene),
     genomeVersion,
     options: {
       enabled: Boolean(
@@ -50,9 +47,6 @@ export function useChromatinViewerData(
       getReferenceGenomeVersion(schema) !== null &&
       selectedCellTypes.length > 0 &&
       Boolean(selectedGene),
-
-    // Query object for advanced usage if needed
-    coverageQuery,
   };
 }
 

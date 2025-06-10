@@ -9,3 +9,5 @@ export const smallGraphFontSize = `${smallGraphFontSizePx}px`;
 
 // ts constants used in the BottomPanel component
 export const TICK_LENGTH = 6;
+export const Y_AXIS_ID = `scalebar-yaxis-svg`;
+export const Y_AXIS_WIDTH = 41; // Fixed width for y-axis
