@@ -48,7 +48,6 @@ const ChromatinViewerButton = ({
   );
 
   const chromatinData = useChromatinViewerData(schema, selectedCellTypes);
-  const chromatinButtonDisabled = !chromatinData.data;
 
   const shouldShowChromatinButton =
     !isSidePanel &&
@@ -56,13 +55,13 @@ const ChromatinViewerButton = ({
     chromatinData.shouldShow;
 
   useEffect(() => {
-    if (shouldShowChromatinButton && !chromatinButtonDisabled) {
+    if (shouldShowChromatinButton) {
       dispatch({
         type: "open multiome viz panel",
       });
     }
     return () => {};
-  }, [shouldShowChromatinButton, chromatinButtonDisabled, dispatch]);
+  }, [shouldShowChromatinButton, dispatch]);
 
   if (!shouldShowChromatinButton) {
     return null;
@@ -77,7 +76,6 @@ const ChromatinViewerButton = ({
       }
       onClick={handleChromatinViewClick}
       active={!bottomPanelHidden}
-      disabled={chromatinButtonDisabled}
     />
   );
 };
