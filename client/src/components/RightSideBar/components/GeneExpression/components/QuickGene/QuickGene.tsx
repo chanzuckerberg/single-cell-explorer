@@ -1,6 +1,12 @@
 import { H4, Icon, MenuItem } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import fuzzysort from "fuzzysort";
 import { ItemRenderer, Suggest } from "@blueprintjs/select";
 import { useSelector, useDispatch } from "react-redux";
@@ -30,6 +36,7 @@ export function QuickGene() {
   const [geneNames, setGeneNames] = useState([] as string[]);
   const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
+  const EMPTY_GENE_ITEM = { name: "No genes", id: "" };
 
   const { annoMatrix, userDefinedGenes, userDefinedGenesLoading } = useSelector(
     (state) => ({
@@ -122,6 +129,30 @@ export function QuickGene() {
     );
   };
 
+  // Memoize the filter function to avoid unnecessary re-renders
+  const itemListPredicate = useCallback((query: string, items: Item[]) => {
+    if (!query.trim()) return items;
+
+    const matches = filterGenes(
+      query,
+      items.map((i) => i.name)
+    );
+    const matchedNames = new Set(matches.map((m) => m.target));
+    return items.filter((item) => matchedNames.has(item.name));
+  }, []);
+
+  // Memoize the gene items to prevent recreation on every render
+  const geneItems = useMemo(() => {
+    if (!geneNames?.length || !geneIds?.length) {
+      return [EMPTY_GENE_ITEM];
+    }
+
+    return geneNames.map((name, i) => ({
+      name,
+      id: String(geneIds[i] ?? ""),
+    }));
+  }, [geneNames, geneIds, EMPTY_GENE_ITEM]);
+
   type Item = { name: string; id: string };
 
   const handleClick = (item: Item) => {
@@ -194,8 +225,17 @@ export function QuickGene() {
               resetOnSelect
               closeOnSelect
               resetOnClose
-              itemDisabled={userDefinedGenesLoading ? () => true : () => false}
-              noResults={<MenuItem disabled text="No matching genes." />}
+              disabled={userDefinedGenesLoading}
+              noResults={
+                <MenuItem
+                  disabled
+                  text={
+                    userDefinedGenesLoading
+                      ? "Loading genes..."
+                      : "No matching genes."
+                  }
+                />
+              }
               onItemSelect={(g) => {
                 handleClick(g);
               }}
@@ -205,21 +245,9 @@ export function QuickGene() {
                 leftIcon: IconNames.SEARCH,
               }}
               inputValueRenderer={(item) => item.name}
-              itemListPredicate={(query: string, items: Item[]) => {
-                const matches = filterGenes(
-                  query,
-                  items.map((i) => i.name)
-                );
-                const matchedNames = new Set(matches.map((m) => m.target));
-                return items.filter((item) => matchedNames.has(item.name));
-              }}
+              itemListPredicate={itemListPredicate}
               itemRenderer={renderGene}
-              items={
-                geneNames.map((name, i) => ({
-                  name,
-                  id: String(geneIds[i] ?? ""),
-                })) || [{ name: "No genes", id: "" }]
-              }
+              items={geneItems}
               popoverProps={{ minimal: true }}
               fill
             />
