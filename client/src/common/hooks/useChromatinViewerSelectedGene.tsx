@@ -1,36 +1,45 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// Define the context type
 interface ChromatinViewerContextType {
   selectedGene: string;
   setSelectedGene: (gene: string) => void;
+  genomeVersion: string;
+  setGenomeVersion: (version: string) => void;
 }
 
-// Create the context
 const ChromatinViewerContext = createContext<
   ChromatinViewerContextType | undefined
 >(undefined);
 
-// Provider component props
 interface ChromatinViewerProviderProps {
   children: ReactNode;
   defaultGene?: string;
+  defaultGenomeVersion?: string;
 }
 
 // Provider component
 export function ChromatinViewerProvider({
   children,
   defaultGene = "MYC",
+  defaultGenomeVersion = "hg38",
 }: ChromatinViewerProviderProps) {
   const [selectedGene, setSelectedGeneState] = useState<string>(defaultGene);
+  const [genomeVersion, setGenomeVersionState] =
+    useState<string>(defaultGenomeVersion);
 
   const setSelectedGene = (gene: string) => {
     setSelectedGeneState(gene);
   };
 
+  const setGenomeVersion = (version: string) => {
+    setGenomeVersionState(version);
+  };
+
   const value: ChromatinViewerContextType = {
     selectedGene,
     setSelectedGene,
+    genomeVersion,
+    setGenomeVersion,
   };
 
   return (
@@ -40,7 +49,6 @@ export function ChromatinViewerProvider({
   );
 }
 
-// Custom hook to use the context
 export function useChromatinViewerSelectedGene(): ChromatinViewerContextType {
   const context = useContext(ChromatinViewerContext);
 
