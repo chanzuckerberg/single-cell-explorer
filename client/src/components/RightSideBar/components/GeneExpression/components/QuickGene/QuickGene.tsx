@@ -58,10 +58,16 @@ export function QuickGene() {
         setStatus("pending");
         try {
           const dfIds: Dataframe = await annoMatrix.fetch("var", varIndex);
-          const dfNames: Dataframe = await annoMatrix.fetch("var", varLabel);
+          const varColumns = annoMatrix.getMatrixColumns("var");
+
+          // This is a fallback in case the varLabel is not available.
+          const labelToUse = varColumns.includes(varLabel)
+            ? varLabel
+            : varIndex;
+          const dfNames: Dataframe = await annoMatrix.fetch("var", labelToUse);
 
           const geneIdArray = dfIds.col(varIndex).asArray() as string[];
-          const geneNameArray = dfNames.col(varLabel).asArray() as string[];
+          const geneNameArray = dfNames.col(labelToUse).asArray() as string[];
 
           const isFilteredCol = "feature_is_filtered";
           const isFiltered =

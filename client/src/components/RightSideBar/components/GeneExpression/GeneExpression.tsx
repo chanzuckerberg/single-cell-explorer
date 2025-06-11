@@ -5,7 +5,7 @@ import { IconNames } from "@blueprintjs/icons";
 
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
-import { Dataframe, DataframeValue } from "util/dataframe";
+import { Dataframe } from "util/dataframe";
 
 import { GeneSet } from "./components/GeneSet/GeneSet";
 import { QuickGene } from "./components/QuickGene/QuickGene";
@@ -47,24 +47,21 @@ class GeneExpression extends React.Component<{}, State> {
     if (!schema) return;
 
     const varIndex = schema.annotations.var.index;
+    const varLabel = "feature_name";
 
-    let dfIds;
-    const df: Dataframe = await annoMatrix?.fetch("var", varIndex);
+    const dfIds: Dataframe = await annoMatrix.fetch("var", varIndex);
 
-    if (!df) return;
+    const varColumns = annoMatrix.getMatrixColumns("var");
+
+    // This is a fallback in case the varLabel is not available.
+    const labelToUse = varColumns.includes(varLabel) ? varLabel : varIndex;
+
+    const dfNames: Dataframe = await annoMatrix.fetch("var", labelToUse);
 
     this.setState({
-      geneNames: df.col(varIndex).asArray() as DataframeValue[],
+      geneIds: dfIds.col(varIndex).asArray(),
+      geneNames: dfNames.col(labelToUse).asArray(),
     });
-
-    const geneIdCol = "feature_id";
-    // if feature id column is available in var
-    if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
-      dfIds = await annoMatrix.fetch("var", geneIdCol);
-      this.setState({
-        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
-      });
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.

@@ -78,7 +78,7 @@ class Gene extends React.Component<Props, State> {
 
   handleDeleteGeneFromSet = (): void => {
     const { dispatch, gene, geneset } = this.props;
-    dispatch(actions.genesetDeleteGenes(geneset, [gene]));
+    dispatch(actions.genesetDeleteGenes(geneset, [gene.id]));
   };
 
   handleOpenMultiomeViz = (): void => {
@@ -125,8 +125,6 @@ class Gene extends React.Component<Props, State> {
     } = this.props;
     const { geneIsExpanded } = this.state;
     const geneSymbolWidth = 60 + (geneIsExpanded ? MINI_HISTOGRAM_WIDTH : 0);
-
-    console.log("Gene component rendered for gene:", gene);
 
     return (
       <div>
