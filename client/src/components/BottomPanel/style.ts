@@ -1,21 +1,31 @@
 import styled from "@emotion/styled";
 import { Button } from "@blueprintjs/core";
+import { Icon } from "@czi-sds/components";
 import { gray300 } from "util/theme";
 import * as globals from "../../globals";
 
 interface BottomPanelWrapperProps {
   isHidden: boolean;
+  isMinimized: boolean;
+}
+
+interface BottomPanelHeaderProps {
+  isMinimized: boolean;
 }
 
 export const BottomPanelWrapper = styled.div<BottomPanelWrapperProps>`
-  border-top: 1px solid ${globals.lightGrey};
+  border-top: ${(props) =>
+    props.isMinimized ? "none" : `1px solid ${globals.lightGrey};`};
+  box-shadow: ${(props) =>
+    props.isMinimized ? `rgba(153, 153, 153, 0.2) 0px 0px 3px 2px;` : "none"};
   background-color: white;
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: ${(props) => (props.isMinimized ? "12px" : "0")};
+  left: ${(props) => (props.isMinimized ? "12px" : "0")};
+  right: ${(props) => (props.isMinimized ? "60%" : 0)};
   z-index: 100;
   visibility: ${(props) => (props.isHidden ? "hidden" : "visible")};
+  border-radius: ${(props) => (props.isMinimized ? "3px 3px 0 0" : "0")};
 `;
 
 export const BottomPanelButton = styled(Button)`
@@ -27,13 +37,24 @@ export const BottomPanelButton = styled(Button)`
   &:hover {
     background-color: ${globals.lightGrey};
   }
+
+  @media (max-width: 1375px) {
+    &#add-cell-type-button .bp5-button-text {
+      display: none;
+    }
+
+    &#add-cell-type-button .bp5-icon {
+      margin-right: 0;
+    }
+  }
 `;
 
-export const BottomPanelHeader = styled.div`
+export const BottomPanelHeader = styled.div<BottomPanelHeaderProps>`
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 16px 16px 4px 16px;
+  padding: ${(props) =>
+    props.isMinimized ? "9px 10px" : "16px 16px 13px 16px"};
 `;
 
 export const BottomPanelHeaderTitle = styled.h3`
@@ -49,4 +70,17 @@ export const BottomPanelHeaderActions = styled.div`
   align-items: center;
   display: flex;
   gap: 8px;
+`;
+
+export const InfoIcon = styled(Icon)`
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+  position: relative;
+  top: -1px;
+`;
+
+export const ChromosomeMapWrapper = styled.div`
+  min-height: 218px;
+  transition: "min-height 0.5s ease-in";
 `;

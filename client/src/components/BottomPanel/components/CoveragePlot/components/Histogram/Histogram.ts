@@ -90,13 +90,14 @@ export default class Histogram {
       hoverBuffer: 5,
       xScaleType: HISTOGRAM_SCALE.LINEAR,
       yScaleType: HISTOGRAM_SCALE.LINEAR,
+      lineWidth: 1,
       ...options,
     };
 
     this.size = {
       innerWidth: this.options.innerWidth,
       width: this.options.innerWidth + this.margins.left + this.margins.right,
-      height: 80,
+      height: this.options.height ?? 80,
     };
 
     // The x-center of the last bar that was hovered over.
@@ -178,6 +179,9 @@ export default class Histogram {
       axis.tickFormat(this.options.yTickFormat);
     }
 
+    // Set tick size to 0 to remove tick lines
+    axis.tickSize(0);
+
     if (this.options.yTickFilter) {
       let tickVals = this.options.numTicksY
         ? // TODO: (smccanny) fix these types
@@ -190,15 +194,13 @@ export default class Histogram {
     }
 
     g.attr("transform", `translate(${this.margins.left},0)`).call(axis);
-    g.select(".domain").remove();
+
+    // Keep the main y-axis line (domain) instead of removing it
+    g.select(".domain").attr("class", cs.yAxis); // You may want to add this CSS class
 
     g.selectAll(".tick text").attr("class", cs.yAxisTickText);
-    g.selectAll(TICK_LINE).attr("class", cs.yAxisTickLine);
-    if (this.options.showGridlines) {
-      g.selectAll(TICK_LINE)
-        .attr("x1", -6)
-        .attr("x2", this.size.width - this.margins.left - this.margins.right);
-    }
+
+    g.selectAll(TICK_LINE).remove();
 
     g.select(".tick:last-of-type text")
       .clone()
@@ -225,7 +227,7 @@ export default class Histogram {
 
     const yAxisSvg = yAxisContainer
       .append("svg")
-      .attr("width", 40) // Just wide enough for y-axis
+      .attr("width", 40 + this.options.lineWidth)
       .attr("height", this.size.height);
 
     // Calculate the same y-scale as the main chart

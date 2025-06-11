@@ -6,50 +6,25 @@ import React, {
   useMemo,
 } from "react";
 import ReactDOM from "react-dom";
-import memoize from "memoize-one";
 import { CoveragePlotData } from "common/queries/coverage";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "reducers";
 import { Button } from "@czi-sds/components";
+import {
+  primitiveGray300,
+  primitiveGray500,
+} from "components/BottomPanel/constants";
 import Histogram from "./components/Histogram/Histogram";
 import { AccessionsData, TooltipData } from "./types";
 import { getTooltipStyle } from "./components/TooltipVizTable/utils";
 import { TooltipVizTable } from "./components/TooltipVizTable/TooltipVizTable";
 import cs from "./style.module.scss";
 import { CellTypeDropdown } from "./components/CellTypeDropdown/CellTypeDropdown";
-
-export const READ_FILL_COLOR = "#CCCCCC";
-export const CONTIG_FILL_COLOR = "#767676";
-
-const generateCoverageVizData = (
-  coverageData: AccessionsData["coverage"],
-  coverageBinSize: number
-) =>
-  coverageData.map((valueArr) => ({
-    x0: valueArr[0] * coverageBinSize - 1, // This is the start of the bin, minus 1 for correct alignment.
-    length: valueArr[1], // Actually the height. This is a d3-histogram naming convention.
-  }));
-
-// Gets called on every mouse move, so need to memoize.
-export const getHistogramTooltipData = memoize(
-  (accessionData: AccessionsData, coverageIndex: number): TooltipData[] => {
-    const coverageObj = accessionData.coverage[coverageIndex];
-
-    return [
-      {
-        name: "Chromatin Accessibility", // not shown in tooltip
-        data: [
-          ["Cell Type", `${coverageObj[3]}`],
-          ["ChromosomeID", coverageObj[2]],
-          ["Bin Size", `${coverageObj[4]}`],
-          ["Tn5 Insertions", `${coverageObj[1]}`],
-        ],
-      },
-    ];
-  }
-);
+import { LoadingSkeleton } from "../ChromosomeMap/components/LoadingSkeleton/LoadingSkeleton";
+import { generateCoverageVizData, getHistogramTooltipData } from "./utils";
 
 export function CoveragePlot({
+  isLoading,
   svgWidth,
   chromosome,
   cellType,
@@ -57,8 +32,9 @@ export function CoveragePlot({
   barWidth,
   yMax,
 }: {
+  isLoading: boolean;
   svgWidth: number;
-  chromosome: string;
+  chromosome: string | null;
   cellType: string;
   barWidth: number;
   coverageQuery: [number, number, number][];
@@ -129,13 +105,14 @@ export function CoveragePlot({
         skipBins: true,
         numBins: Math.round(data.total_length / data.coverage_bin_size),
         showStatistics: false,
-        colors: [READ_FILL_COLOR],
-        hoverColors: [CONTIG_FILL_COLOR],
+        colors: [primitiveGray300],
+        hoverColors: [primitiveGray500],
         xTickValues: [],
         yTickFormat: formatTick,
         numTicksY: 2,
         yMax,
         barOpacity: 1,
+        height: 70,
         margins: {
           left: 40,
           right: 10,
@@ -179,9 +156,10 @@ export function CoveragePlot({
   }));
 
   return (
-    <div>
+    <div className={cs.coverageVizWrapper}>
       <CellTypeDropdown cellType={cellType} />
-      {selectedCellTypes.length > 1 && (
+
+      {selectedCellTypes.length > 1 && !isLoading && (
         <Button
           className={cs.trashButton}
           sdsStyle="icon"
@@ -190,37 +168,42 @@ export function CoveragePlot({
           icon="TrashCan"
           onClick={() =>
             dispatch({
-              type: "toggle chromatin histogram",
+              type: "toggle chromatin cell types",
               removeCellType: cellType,
             })
           }
         />
       )}
 
-      <div className={cs.coverageVizContainer}>
-        <div
-          ref={yAxisRef}
-          style={{
-            position: "absolute",
-            zIndex: 10,
-            left: 0,
-            backgroundColor: "white",
-          }}
-        />
-        <div ref={histogramRef} />
-      </div>
-
-      {histogramTooltipLocation &&
-        histogramTooltipData &&
-        ReactDOM.createPortal(
-          <div
-            style={getTooltipStyle(histogramTooltipLocation)}
-            className={cs.hoverTooltip}
-          >
-            <TooltipVizTable data={histogramTooltipData} />
-          </div>,
-          document.body
-        )}
+      {isLoading ? (
+        <LoadingSkeleton height="80px" marginBottom="5px" marginTop="24px" />
+      ) : (
+        <>
+          <div className={cs.coverageVizContainer}>
+            <div
+              ref={yAxisRef}
+              style={{
+                position: "absolute",
+                zIndex: 10,
+                left: 0,
+                backgroundColor: "white",
+              }}
+            />
+            <div ref={histogramRef} />
+          </div>
+          {histogramTooltipLocation &&
+            histogramTooltipData &&
+            ReactDOM.createPortal(
+              <div
+                style={getTooltipStyle(histogramTooltipLocation)}
+                className={cs.hoverTooltip}
+              >
+                <TooltipVizTable data={histogramTooltipData} />
+              </div>,
+              document.body
+            )}
+        </>
+      )}
     </div>
   );
 }

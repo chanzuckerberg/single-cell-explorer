@@ -421,6 +421,8 @@ class CxgDataset(Dataset):
             raise ValueError(f"Unknown chromosome: {target_chromosome}")
 
         try:
+            if not self.has_array("coverage"):
+                return None
             coverage = self.open_array("coverage")
 
             # Ensure cell_types is a list
