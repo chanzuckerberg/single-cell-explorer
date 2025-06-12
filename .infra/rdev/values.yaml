@@ -2,7 +2,7 @@ stack:
   services:
     explorer:
       image:
-        tag: sha-2bfe28f
+        tag: sha-76f0e7d
       replicaCount: 1
       env:
         # env vars common to all deployment stages
