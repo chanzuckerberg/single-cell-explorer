@@ -78,7 +78,7 @@ class Gene extends React.Component<Props, State> {
 
   handleDeleteGeneFromSet = (): void => {
     const { dispatch, gene, geneset } = this.props;
-    dispatch(actions.genesetDeleteGenes(geneset, [gene.id]));
+    dispatch(actions.genesetDeleteGenes(geneset, [gene.name]));
   };
 
   handleOpenMultiomeViz = (): void => {
@@ -195,7 +195,6 @@ class Gene extends React.Component<Props, State> {
               data-testid={`delete-from-geneset:${gene.name}`}
               onClick={() => {
                 track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
-
                 if (quickGene) {
                   removeGene?.(gene.name)();
                 } else {

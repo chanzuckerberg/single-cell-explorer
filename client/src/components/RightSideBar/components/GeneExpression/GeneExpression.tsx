@@ -97,21 +97,28 @@ class GeneExpression extends React.Component<{}, State> {
         const genesetIds = [];
         const genesetNames = [];
         const displayName = name.replace(MARKER_GENE_SUFFIX_IDENTIFIER, "");
+        const updatedGenes = new Map();
 
         // find ensembl IDs for each gene in the geneset
-        for (const gene of geneset.genes) {
+        for (const [geneName, geneData] of geneset.genes) {
           const geneId = geneIds
-            ? geneIds[geneNames.indexOf(gene[0])] || ""
+            ? geneIds[geneNames.indexOf(geneName)] || ""
             : "";
-          genesetIds.push(geneId);
-          genesetNames.push(gene[0]);
+
+          if (geneId) {
+            updatedGenes.set(geneId, geneData);
+            genesetIds.push(geneId);
+            genesetNames.push(geneName);
+          } else {
+            console.warn(`No ID found for gene: ${geneName}`);
+          }
         }
 
         sets.push(
           <GeneSet
             key={name}
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; setGenes: any; setName: any; gen... Remove this comment to see the full error message
-            setGenes={geneset.genes}
+            setGenes={updatedGenes}
             setName={name}
             displayName={displayName}
             genesetDescription={geneset.genesetDescription}
