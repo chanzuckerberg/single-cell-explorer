@@ -129,7 +129,6 @@ export function QuickGene() {
     );
   };
 
-  // Memoize the filter function to avoid unnecessary re-renders
   const itemListPredicate = useCallback((query: string, items: Item[]) => {
     if (!query.trim()) return items;
 
@@ -141,7 +140,6 @@ export function QuickGene() {
     return items.filter((item) => matchedNames.has(item.name));
   }, []);
 
-  // Memoize the gene items to prevent recreation on every render
   const geneItems = useMemo(() => {
     if (!geneNames?.length || !geneIds?.length) {
       return [EMPTY_GENE_ITEM];
