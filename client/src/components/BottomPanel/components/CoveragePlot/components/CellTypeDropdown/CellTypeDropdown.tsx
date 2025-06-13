@@ -28,22 +28,26 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
   type Multiple = false;
   type DisableClearable = false;
   type FreeSolo = false;
+  const otherSelectedCellTypes = useMemo(
+    () => new Set(selectedCellTypes.filter((type) => type !== cellType)),
+    [cellType, selectedCellTypes]
+  );
 
-  const cellTypeOptions = useMemo(() => {
-    const otherSelectedCellTypes = new Set(selectedCellTypes);
-    otherSelectedCellTypes.delete(cellType);
-    return cellTypes.map<Option>((name) => ({
-      name,
-      component: (
-        <MenuItem
-          selected={cellType === name}
-          disabled={otherSelectedCellTypes.has(name)}
-        >
-          {name}
-        </MenuItem>
-      ),
-    }));
-  }, [cellType, cellTypes, selectedCellTypes]);
+  const cellTypeOptions = useMemo(
+    () =>
+      cellTypes.map<Option>((name) => ({
+        name,
+        component: (
+          <MenuItem
+            selected={cellType === name}
+            disabled={otherSelectedCellTypes.has(name)}
+          >
+            {name}
+          </MenuItem>
+        ),
+      })),
+    [cellType, cellTypes, otherSelectedCellTypes]
+  );
 
   const activeOption = useMemo(
     () => ({ name: cellType } as Option),
@@ -86,6 +90,14 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
         ) => {
           setOpen(false);
           anchorElRef.current = null;
+
+          if (
+            !value ||
+            value.name === cellType ||
+            otherSelectedCellTypes.has(value.name)
+          ) {
+            return;
+          }
 
           if (value) {
             dispatch({
