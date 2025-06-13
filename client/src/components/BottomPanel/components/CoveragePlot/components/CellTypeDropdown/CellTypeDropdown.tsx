@@ -1,11 +1,20 @@
 import React, { useMemo, useState, useRef } from "react";
 import { useCellTypesQuery } from "common/queries/cellType";
-import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
+import {
+  DefaultAutocompleteOption,
+  DropdownMenu,
+  MenuItem,
+} from "@czi-sds/components";
 import { AutocompleteValue } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "reducers";
 import { CellTypeInputDropdown } from "./style";
 
 export function CellTypeDropdown({ cellType }: { cellType: string }) {
+  const { selectedCellTypes } = useSelector((state: RootState) => ({
+    selectedCellTypes: state.controls.chromatinSelectedCellTypes,
+  }));
+
   const cellTypesQuery = useCellTypesQuery();
   const cellTypes = useMemo(
     () => cellTypesQuery.data ?? [],
@@ -19,10 +28,25 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
   type Multiple = false;
   type DisableClearable = false;
   type FreeSolo = false;
+  const otherSelectedCellTypes = useMemo(
+    () => new Set(selectedCellTypes.filter((type) => type !== cellType)),
+    [cellType, selectedCellTypes]
+  );
 
   const cellTypeOptions = useMemo(
-    () => cellTypes.map<Option>((name) => ({ name })),
-    [cellTypes]
+    () =>
+      cellTypes.map<Option>((name) => ({
+        name,
+        component: (
+          <MenuItem
+            selected={cellType === name}
+            disabled={otherSelectedCellTypes.has(name)}
+          >
+            {name}
+          </MenuItem>
+        ),
+      })),
+    [cellType, cellTypes, otherSelectedCellTypes]
   );
 
   const activeOption = useMemo(
@@ -66,6 +90,14 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
         ) => {
           setOpen(false);
           anchorElRef.current = null;
+
+          if (
+            !value ||
+            value.name === cellType ||
+            otherSelectedCellTypes.has(value.name)
+          ) {
+            return;
+          }
 
           if (value) {
             dispatch({
