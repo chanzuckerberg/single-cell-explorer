@@ -16,6 +16,7 @@ import {
   BottomPanelHeaderActions,
   InfoIcon,
   ChromosomeMapWrapper,
+  TooltipContent,
 } from "./style";
 
 const MAX_CELL_TYPES = 2;
@@ -59,9 +60,17 @@ const BottomSideBar = ({
     >
       <BottomPanelHeader isMinimized={bottomPanelMinimized}>
         <BottomPanelHeaderTitle>
-          Chromatin Accessibility
+          Chromatin Accessibility {!bottomPanelMinimized && `(scATAC-seq)`}
           <Tooltip
-            content="Put some text here to explain the feature."
+            content={
+              <TooltipContent>
+                Coverage tracks show normalized chromatin accessibility for each
+                cell type. scATAC-seq signals were aggregated across cells
+                within each type in 100bp genomic bins, divided by the cell
+                type`&apos;`s total fragment count, and multiplied by 10^6 for
+                visualization.
+              </TooltipContent>
+            }
             position="bottom"
           >
             <InfoIcon sdsIcon="InfoCircle" sdsSize="xs" sdsType="interactive" />

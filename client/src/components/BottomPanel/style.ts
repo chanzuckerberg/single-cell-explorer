@@ -84,3 +84,7 @@ export const ChromosomeMapWrapper = styled.div`
   min-height: 218px;
   transition: "min-height 0.5s ease-in";
 `;
+
+export const TooltipContent = styled.div`
+  max-width: 425px;
+`;

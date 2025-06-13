@@ -1,11 +1,20 @@
 import React, { useMemo, useState, useRef } from "react";
 import { useCellTypesQuery } from "common/queries/cellType";
-import { DefaultAutocompleteOption, DropdownMenu } from "@czi-sds/components";
+import {
+  DefaultAutocompleteOption,
+  DropdownMenu,
+  MenuItem,
+} from "@czi-sds/components";
 import { AutocompleteValue } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "reducers";
 import { CellTypeInputDropdown } from "./style";
 
 export function CellTypeDropdown({ cellType }: { cellType: string }) {
+  const { selectedCellTypes } = useSelector((state: RootState) => ({
+    selectedCellTypes: state.controls.chromatinSelectedCellTypes,
+  }));
+
   const cellTypesQuery = useCellTypesQuery();
   const cellTypes = useMemo(
     () => cellTypesQuery.data ?? [],
@@ -20,10 +29,21 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
   type DisableClearable = false;
   type FreeSolo = false;
 
-  const cellTypeOptions = useMemo(
-    () => cellTypes.map<Option>((name) => ({ name })),
-    [cellTypes]
-  );
+  const cellTypeOptions = useMemo(() => {
+    const otherSelectedCellTypes = new Set(selectedCellTypes);
+    otherSelectedCellTypes.delete(cellType);
+    return cellTypes.map<Option>((name) => ({
+      name,
+      component: (
+        <MenuItem
+          selected={cellType === name}
+          disabled={otherSelectedCellTypes.has(name)}
+        >
+          {name}
+        </MenuItem>
+      ),
+    }));
+  }, [cellType, cellTypes, selectedCellTypes]);
 
   const activeOption = useMemo(
     () => ({ name: cellType } as Option),
