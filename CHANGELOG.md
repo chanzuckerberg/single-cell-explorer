@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.11.0...v1.11.1) (2025-06-18)
+
+
+### Bug Fixes
+
+* Persist Chromatin Data info for default open state of Bottom Bar ([#1226](https://github.com/chanzuckerberg/single-cell-explorer/issues/1226)) ([c0c2d17](https://github.com/chanzuckerberg/single-cell-explorer/commit/c0c2d1744785e7961063469749521b1c17c450eb))
+
 ## [1.11.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.10.0...v1.11.0) (2025-06-16)
 
 
