@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.11.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.11.0...v1.11.1) (2025-06-18)
+
+
+### Bug Fixes
+
+* Persist Chromatin Data info for default open state of Bottom Bar ([#1226](https://github.com/chanzuckerberg/single-cell-explorer/issues/1226)) ([c0c2d17](https://github.com/chanzuckerberg/single-cell-explorer/commit/c0c2d1744785e7961063469749521b1c17c450eb))
+
+## [1.11.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.10.0...v1.11.0) (2025-06-16)
+
+
+### Misc
+
+* Remove bottom banner ([#1202](https://github.com/chanzuckerberg/single-cell-explorer/issues/1202)) ([7bdc174](https://github.com/chanzuckerberg/single-cell-explorer/commit/7bdc174b658c4c2756b65cf4040d01cec3decc31))
+* Update LICENSE.txt ([#1200](https://github.com/chanzuckerberg/single-cell-explorer/issues/1200)) ([cd3987b](https://github.com/chanzuckerberg/single-cell-explorer/commit/cd3987b795ea066e31335acf971f9f82b1acc9ea))
+* Update README.md ([#1198](https://github.com/chanzuckerberg/single-cell-explorer/issues/1198)) ([d9135a4](https://github.com/chanzuckerberg/single-cell-explorer/commit/d9135a4994cd228733f668aaeea0230ddda44d10))
+
+
+### Features
+
+* Add cellType to coverage response ([#1205](https://github.com/chanzuckerberg/single-cell-explorer/issues/1205)) ([3dd6b33](https://github.com/chanzuckerberg/single-cell-explorer/commit/3dd6b337421263f934181b519225a0f1498e626c))
+* add coverage and example dataset ([#1208](https://github.com/chanzuckerberg/single-cell-explorer/issues/1208)) ([9928065](https://github.com/chanzuckerberg/single-cell-explorer/commit/9928065e27cc7dbe9cba16268d9060fadcf9faec))
+* Add Cytoband to Chromatin Viz ([#1189](https://github.com/chanzuckerberg/single-cell-explorer/issues/1189)) ([fe56c24](https://github.com/chanzuckerberg/single-cell-explorer/commit/fe56c24b80318684a4272749e5af43a5807a7b38))
+* Add CZID histogram to Explorer  ([#1186](https://github.com/chanzuckerberg/single-cell-explorer/issues/1186)) ([fade735](https://github.com/chanzuckerberg/single-cell-explorer/commit/fade7354aa18c5849ac5c61fc822929e7513d08d))
+* Add Gene Selector and Gene Map ([#1199](https://github.com/chanzuckerberg/single-cell-explorer/issues/1199)) ([e7e957f](https://github.com/chanzuckerberg/single-cell-explorer/commit/e7e957f16a63c2d205876dba19442bfb3aa6acd0))
+* add histogram by cell type ([#1197](https://github.com/chanzuckerberg/single-cell-explorer/issues/1197)) ([361075a](https://github.com/chanzuckerberg/single-cell-explorer/commit/361075a431efa79446ad11b58d5994bafe35c4ef))
+* ATAC endpoints ([#1188](https://github.com/chanzuckerberg/single-cell-explorer/issues/1188)) ([35240bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/35240bf2866e9d11d5bfe8536121ceaf1f2ed314))
+* Connect Cytoband and Gene Map ([#1213](https://github.com/chanzuckerberg/single-cell-explorer/issues/1213)) ([eb4b9b4](https://github.com/chanzuckerberg/single-cell-explorer/commit/eb4b9b4d58a48e3c1ec8df4198397a48079967eb))
+* multiome coverage plot setup ([#1191](https://github.com/chanzuckerberg/single-cell-explorer/issues/1191)) ([486a08c](https://github.com/chanzuckerberg/single-cell-explorer/commit/486a08c2867a61a2a86ee0ae90efa2a5e0471984))
+* Read data objects from S3 ([#1193](https://github.com/chanzuckerberg/single-cell-explorer/issues/1193)) ([38531ac](https://github.com/chanzuckerberg/single-cell-explorer/commit/38531acfc63bf62ab8b988d538262dd5769ec4ae))
+* unite scales for all svgs ([#1196](https://github.com/chanzuckerberg/single-cell-explorer/issues/1196)) ([5d3963d](https://github.com/chanzuckerberg/single-cell-explorer/commit/5d3963de0b6d6b531783ae05221ac6f9b3e90585))
+* Update coverage endpoint ([#1204](https://github.com/chanzuckerberg/single-cell-explorer/issues/1204)) ([f44f1bf](https://github.com/chanzuckerberg/single-cell-explorer/commit/f44f1bfb8371ce16a2be1a044f23af9e2b2a28b1))
+
+
+### Bug Fixes
+
+* ATAC optimization part 2 ([#1219](https://github.com/chanzuckerberg/single-cell-explorer/issues/1219)) ([b22e7dd](https://github.com/chanzuckerberg/single-cell-explorer/commit/b22e7dd65198e11db22ed383c1fe8378cef83895))
+* ATAC query optimization ([#1218](https://github.com/chanzuckerberg/single-cell-explorer/issues/1218)) ([b226ee1](https://github.com/chanzuckerberg/single-cell-explorer/commit/b226ee1016f0a80c34217efe085e51e660f52220))
+* Fill in coverage gaps ([#1216](https://github.com/chanzuckerberg/single-cell-explorer/issues/1216)) ([255b1ea](https://github.com/chanzuckerberg/single-cell-explorer/commit/255b1ea2ea59e397ca8113275a566de5b6ea7dc5))
+* No duplicate cell types tracks ([#1225](https://github.com/chanzuckerberg/single-cell-explorer/issues/1225)) ([c9d992c](https://github.com/chanzuckerberg/single-cell-explorer/commit/c9d992c20ecb861e0bb6d228f09bc8fe997f4199))
+* Normalize y scale between Cell Types ([#1214](https://github.com/chanzuckerberg/single-cell-explorer/issues/1214)) ([3fe5b6b](https://github.com/chanzuckerberg/single-cell-explorer/commit/3fe5b6b14110a252a1389d3a13f4067c16806084))
+* Style fixes rebased ([#1221](https://github.com/chanzuckerberg/single-cell-explorer/issues/1221)) ([8d9d858](https://github.com/chanzuckerberg/single-cell-explorer/commit/8d9d85876c68ea7fb7b4c1c2d6703f85f0dc8130))
+
 ## [1.10.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.9.0...v1.10.0) (2025-04-25)
 
 
