@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.11.1...v1.12.0) (2025-06-20)
+
+
+### Features
+
+* Update Explorer to support index by feature_id ([#1222](https://github.com/chanzuckerberg/single-cell-explorer/issues/1222)) ([3daf593](https://github.com/chanzuckerberg/single-cell-explorer/commit/3daf59368b0a2bf0bc2d8c107d0f194354a9dc5d))
+
 ## [1.11.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.11.0...v1.11.1) (2025-06-18)
 
 
