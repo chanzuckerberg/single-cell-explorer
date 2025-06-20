@@ -36,7 +36,6 @@ export function QuickGene() {
   const [geneNames, setGeneNames] = useState([] as string[]);
   const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
   const [, setStatus] = useState("pending");
-  const EMPTY_GENE_ITEM = { name: "No genes", id: "" };
 
   const { annoMatrix, userDefinedGenes, userDefinedGenesLoading } = useSelector(
     (state) => ({
@@ -141,6 +140,7 @@ export function QuickGene() {
   }, []);
 
   const geneItems = useMemo(() => {
+    const EMPTY_GENE_ITEM = { name: "No genes", id: "" };
     if (!geneNames?.length || !geneIds?.length) {
       return [EMPTY_GENE_ITEM];
     }
@@ -149,7 +149,7 @@ export function QuickGene() {
       name,
       id: String(geneIds[i] ?? ""),
     }));
-  }, [geneNames, geneIds, EMPTY_GENE_ITEM]);
+  }, [geneNames, geneIds]);
 
   type Item = { name: string; id: string };
 
