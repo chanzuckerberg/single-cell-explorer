@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { useCoverageQuery } from "common/queries/coverage";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
@@ -14,7 +14,14 @@ import { LoadingSkeleton } from "./components/LoadingSkeleton/LoadingSkeleton";
 export const ChromosomeMap = () => {
   const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjustable as desired
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const savedScrollPosition = useRef<number>(0);
+
+  const [shouldRestoreScroll, setShouldRestoreScroll] = useState(false);
+  const [previousCellTypes, setPreviousCellTypes] = useState<string[]>([]);
+  const [lastScrolledGene, setLastScrolledGene] = useState<string>("");
+
   const { selectedGene } = useChromatinViewerSelectedGene();
+  const selectedGeneFormatted = formatSelectedGene(selectedGene);
 
   const { bottomPanelHidden, selectedCellTypes } = useSelector(
     (state: RootState) => ({
@@ -22,8 +29,6 @@ export const ChromosomeMap = () => {
       selectedCellTypes: state.controls.chromatinSelectedCellTypes,
     })
   );
-
-  const selectedGeneFormatted = formatSelectedGene(selectedGene);
 
   const { genomeVersion } = useChromatinViewerSelectedGene();
   const coverageQuery = useCoverageQuery({
@@ -88,10 +93,54 @@ export const ChromosomeMap = () => {
 
   const totalBPAtScale = (totalBasePairs * binSize) / 1_000; // this gives us a scale in kb
 
+  // add an event listener to the scroll container to save scroll position
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+    const handleScroll = (scrollContainerCurrent: HTMLDivElement) => {
+      console.log(
+        "Scroll position changed:",
+        scrollContainerCurrent.scrollLeft
+      );
+      savedScrollPosition.current = scrollContainerCurrent.scrollLeft;
+    };
+
+    if (scrollContainer && !isLoading && totalBasePairs > 0) {
+      const onScroll = () => handleScroll(scrollContainer);
+      scrollContainer.addEventListener("scroll", onScroll);
+
+      return () => {
+        scrollContainer.removeEventListener("scroll", onScroll);
+      };
+    }
+
+    return () => {};
+  }, [isLoading, totalBasePairs]);
+
+  // Detect cell type changes and mark for scroll restoration
+  useEffect(() => {
+    const currentCellTypes = selectedCellTypes || [];
+    console.log("Current cell types:", currentCellTypes);
+    console.log("Previous cell types:", previousCellTypes);
+    // Check if cell types actually changed
+    const cellTypesChanged =
+      previousCellTypes.length !== currentCellTypes.length ||
+      !previousCellTypes.every((ct) => currentCellTypes.includes(ct)) ||
+      !currentCellTypes.every((ct) => previousCellTypes.includes(ct));
+
+    console.log("Cell types changed:", cellTypesChanged);
+
+    if (cellTypesChanged && previousCellTypes.length !== 0) {
+      setShouldRestoreScroll(true);
+    }
+
+    if (cellTypesChanged) {
+      setPreviousCellTypes([...currentCellTypes]);
+    }
+  }, [selectedCellTypes, previousCellTypes]);
+
   useEffect(() => {
     const getSelectedGeneInfo = (geneName: string) => {
       const geneInfoArray = coverageQuery.data?.geneInfo;
-
       if (geneInfoArray) {
         const gene = geneInfoArray.find(
           (g) => g.geneName.toLowerCase() === geneName.toLowerCase()
@@ -101,28 +150,43 @@ export const ChromosomeMap = () => {
       return null;
     };
 
-    if (selectedGeneFormatted && !isLoading && totalBasePairs > 0) {
-      const timeoutId = setTimeout(() => {
-        const geneLabel = `${selectedGeneFormatted}-label`;
-        const geneElement = scrollContainerRef.current?.querySelector(
-          `#${geneLabel}`
-        );
+    if (!isLoading && totalBasePairs > 0) {
+      if (shouldRestoreScroll) {
+        console.log("Restoring scroll position:", savedScrollPosition.current);
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft = savedScrollPosition.current;
+            setShouldRestoreScroll(false);
+          }
+        });
+        return () => {};
+      }
+      if (selectedGeneFormatted && selectedGeneFormatted !== lastScrolledGene) {
+        const timeoutId = setTimeout(() => {
+          const geneLabel = `${selectedGeneFormatted}-label`;
+          const geneElement = scrollContainerRef.current?.querySelector(
+            `#${geneLabel}`
+          );
 
-        const selectedGeneInfo = getSelectedGeneInfo(selectedGeneFormatted);
-        if (geneElement) {
-          geneElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: selectedGeneInfo?.geneStrand === "+" ? "start" : "end",
-          });
-        }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+          const selectedGeneInfo = getSelectedGeneInfo(selectedGeneFormatted);
+          if (geneElement) {
+            geneElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: selectedGeneInfo?.geneStrand === "+" ? "start" : "end",
+            });
+            setLastScrolledGene(selectedGeneFormatted);
+          }
+        }, 100);
+        return () => clearTimeout(timeoutId);
+      }
     }
+
     return () => {};
   }, [
+    shouldRestoreScroll,
     selectedGeneFormatted,
+    lastScrolledGene,
     isLoading,
     totalBasePairs,
     coverageQuery.data?.geneInfo,
