@@ -17,7 +17,6 @@ interface ChromatinViewerProviderProps {
   defaultGenomeVersion?: string;
 }
 
-// Provider component
 export function ChromatinViewerProvider({
   children,
   defaultGene = "MYC",
