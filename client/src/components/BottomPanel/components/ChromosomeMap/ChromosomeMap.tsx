@@ -97,10 +97,6 @@ export const ChromosomeMap = () => {
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
     const handleScroll = (scrollContainerCurrent: HTMLDivElement) => {
-      console.log(
-        "Scroll position changed:",
-        scrollContainerCurrent.scrollLeft
-      );
       savedScrollPosition.current = scrollContainerCurrent.scrollLeft;
     };
 
@@ -119,15 +115,11 @@ export const ChromosomeMap = () => {
   // Detect cell type changes and mark for scroll restoration
   useEffect(() => {
     const currentCellTypes = selectedCellTypes || [];
-    console.log("Current cell types:", currentCellTypes);
-    console.log("Previous cell types:", previousCellTypes);
     // Check if cell types actually changed
     const cellTypesChanged =
       previousCellTypes.length !== currentCellTypes.length ||
       !previousCellTypes.every((ct) => currentCellTypes.includes(ct)) ||
       !currentCellTypes.every((ct) => previousCellTypes.includes(ct));
-
-    console.log("Cell types changed:", cellTypesChanged);
 
     if (cellTypesChanged && previousCellTypes.length !== 0) {
       setShouldRestoreScroll(true);
@@ -152,7 +144,6 @@ export const ChromosomeMap = () => {
 
     if (!isLoading && totalBasePairs > 0) {
       if (shouldRestoreScroll) {
-        console.log("Restoring scroll position:", savedScrollPosition.current);
         requestAnimationFrame(() => {
           if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = savedScrollPosition.current;
