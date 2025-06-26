@@ -70,7 +70,7 @@ export default (props: any) => {
   if (originalString.length === 1) {
     firstString = originalString;
   } else {
-    // If preferBeginning is true, make the first part longer
+    // If preferBeginning is true, make the first part longer for readability
     // Otherwise, split roughly in half
     const splitPoint = preferBeginning
       ? Math.floor((originalString.length * 5) / 6)

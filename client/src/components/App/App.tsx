@@ -41,6 +41,7 @@ interface StateProps {
   scatterplotXXaccessor: RootState["controls"]["scatterplotXXaccessor"];
   scatterplotYYaccessor: RootState["controls"]["scatterplotYYaccessor"];
   differentialExpressionLoading: RootState["differential"]["loading"];
+  bottomPanelSelectedGene: RootState["controls"]["bottomPanelSelectedGene"];
 }
 
 const mapStateToProps = (state: RootState): StateProps => ({
@@ -56,6 +57,7 @@ const mapStateToProps = (state: RootState): StateProps => ({
   scatterplotXXaccessor: state.controls.scatterplotXXaccessor,
   scatterplotYYaccessor: state.controls.scatterplotYYaccessor,
   differentialExpressionLoading: state.differential.loading,
+  bottomPanelSelectedGene: state.controls.bottomPanelSelectedGene,
 });
 
 class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
@@ -80,6 +82,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
       differentialExpressionLoading,
       scatterplotXXaccessor,
       scatterplotYYaccessor,
+      bottomPanelSelectedGene,
     } = this.props;
 
     const isPublished =
@@ -94,7 +97,9 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
         <StyledEngineProvider injectFirst>
           <EmotionThemeProvider theme={theme}>
             <ThemeProvider theme={theme}>
-              <ChromatinViewerProvider>
+              <ChromatinViewerProvider
+                initialSelectedGene={bottomPanelSelectedGene}
+              >
                 {loading ? <LayoutSkeleton /> : null}
                 {error ? (
                   <div

@@ -32,6 +32,7 @@ interface ControlsState {
   infoPanelMinimized: boolean;
   bottomPanelHidden: boolean;
   bottomPanelMinimized: boolean;
+  bottomPanelSelectedGene?: string;
   imageOpacity: number;
   dotOpacity: number;
   geneInfo: GeneInfo;
@@ -67,6 +68,7 @@ const Controls = (
     infoPanelMinimized: false,
     bottomPanelHidden: true,
     bottomPanelMinimized: false,
+    bottomPanelSelectedGene: undefined,
     unsMetadata: {
       imageWidth: 1955,
       imageHeight: 1955,
@@ -248,6 +250,7 @@ const Controls = (
       return {
         ...state,
         bottomPanelHidden: false,
+        bottomPanelSelectedGene: action.selectedGene,
       };
     }
     case "close multiome viz panel": {

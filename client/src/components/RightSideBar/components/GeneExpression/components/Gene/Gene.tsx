@@ -101,11 +101,22 @@ class Gene extends React.Component<Props, State> {
       return null;
     }
 
+    // For plot-x and plot-y actions, handle click directly so user can see that axis was set
+    const shouldPreventClose = action.id === "plot-x" || action.id === "plot-y";
+
     return (
       <MenuItem
         key={action.id}
         text={action.label}
-        onClick={handleClick}
+        onClick={
+          shouldPreventClose
+            ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleActionSelect(action);
+              }
+            : handleClick
+        }
         disabled={action.disabled}
         active={action.active}
       />
@@ -170,9 +181,12 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleOpenMultiomeViz = (): void => {
-    const { dispatch } = this.props;
+    const { dispatch, gene } = this.props;
 
-    dispatch({ type: "open multiome viz panel" });
+    dispatch({
+      type: "open multiome viz panel",
+      selectedGene: gene.name,
+    });
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
