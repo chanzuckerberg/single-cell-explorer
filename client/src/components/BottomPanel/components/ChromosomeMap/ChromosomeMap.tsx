@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { useCoverageQuery } from "common/queries/coverage";
 import { useSelector } from "react-redux";
 import { RootState } from "reducers";
@@ -10,11 +10,16 @@ import { CoveragePlot } from "../CoveragePlot/CoveragePlot";
 import { GeneMap } from "../GeneMap/GeneMap";
 import { CoverageToScale } from "./style";
 import { LoadingSkeleton } from "./components/LoadingSkeleton/LoadingSkeleton";
+import { useCoverageData } from "./hooks/useCoverageData";
+import { useGeneScrolling } from "./hooks/useGeneScrolling";
+import { useScrollPreservation } from "./hooks/useScrollPreservation";
+import { ErrorState } from "./components/ErrorState/ErrorState";
 
 export const ChromosomeMap = () => {
   const BAR_WIDTH = 6; // Width of each bar in the coverage plot, adjustable as desired
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { selectedGene } = useChromatinViewerSelectedGene();
+  const selectedGeneFormatted = formatSelectedGene(selectedGene);
 
   const { bottomPanelHidden, selectedCellTypes } = useSelector(
     (state: RootState) => ({
@@ -22,8 +27,6 @@ export const ChromosomeMap = () => {
       selectedCellTypes: state.controls.chromatinSelectedCellTypes,
     })
   );
-
-  const selectedGeneFormatted = formatSelectedGene(selectedGene);
 
   const { genomeVersion } = useChromatinViewerSelectedGene();
   const coverageQuery = useCoverageQuery({
@@ -38,141 +41,50 @@ export const ChromosomeMap = () => {
 
   const { isLoading, isError } = coverageQuery;
 
-  const totalBasePairs = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
+  const { totalBasePairs, startBasePair, endBasePair, yMax, totalBPAtScale } =
+    useCoverageData(coverageQuery);
 
-    return Math.max(
-      ...Object.values(coverageByCellType).map((coverage) => coverage.length),
-      0
+  const { shouldRestoreScroll, restoreScrollPosition, isRestoringScroll } =
+    useScrollPreservation(
+      scrollContainerRef,
+      isLoading,
+      totalBasePairs,
+      selectedCellTypes
     );
-  }, [coverageQuery.data?.coverageByCellType]);
 
-  const startBasePair = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-
-    for (const coverage of Object.values(coverageByCellType)) {
-      if (coverage.length > 0) {
-        return coverage[0][1];
-      }
-    }
-    return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
-
-  const endBasePair = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-
-    for (const coverage of Object.values(coverageByCellType)) {
-      if (coverage.length > 0) {
-        return coverage[coverage.length - 1][2];
-      }
-    }
-    return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
-
-  const binSize = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-
-    for (const coverage of Object.values(coverageByCellType)) {
-      if (coverage.length > 0) {
-        // Destructure the first coverage tuple to get start and end base pairs
-        const [, start, end] = coverage[0];
-        return end - start;
-      }
-    }
-    return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
-
-  const totalBPAtScale = (totalBasePairs * binSize) / 1_000; // this gives us a scale in kb
+  const { scrollToGene } = useGeneScrolling(
+    scrollContainerRef,
+    selectedGeneFormatted,
+    coverageQuery.data?.geneInfo
+  );
 
   useEffect(() => {
-    const getSelectedGeneInfo = (geneName: string) => {
-      const geneInfoArray = coverageQuery.data?.geneInfo;
-
-      if (geneInfoArray) {
-        const gene = geneInfoArray.find(
-          (g) => g.geneName.toLowerCase() === geneName.toLowerCase()
-        );
-        if (gene) return gene;
+    if (!isLoading && totalBasePairs > 0) {
+      if (shouldRestoreScroll) {
+        restoreScrollPosition();
+        return () => {};
       }
-      return null;
-    };
 
-    if (selectedGeneFormatted && !isLoading && totalBasePairs > 0) {
-      const timeoutId = setTimeout(() => {
-        const geneLabel = `${selectedGeneFormatted}-label`;
-        const geneElement = scrollContainerRef.current?.querySelector(
-          `#${geneLabel}`
-        );
-
-        const selectedGeneInfo = getSelectedGeneInfo(selectedGeneFormatted);
-        if (geneElement) {
-          geneElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-            inline: selectedGeneInfo?.geneStrand === "+" ? "start" : "end",
-          });
-        }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+      if (!isRestoringScroll) {
+        return scrollToGene();
+      }
     }
     return () => {};
   }, [
+    shouldRestoreScroll,
+    isRestoringScroll,
     selectedGeneFormatted,
     isLoading,
     totalBasePairs,
-    coverageQuery.data?.geneInfo,
+    restoreScrollPosition,
+    scrollToGene,
   ]);
 
-  const yMax = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
+  // Error states
+  if (isError) return <ErrorState>Error loading chromosome data</ErrorState>;
+  if (!coverageQuery?.data?.chromosome && !isLoading)
+    return <ErrorState>No chromosome data available</ErrorState>;
 
-    let maxY = 0;
-
-    for (const coverage of Object.values(coverageByCellType)) {
-      for (const [value] of coverage) {
-        if (value > maxY) {
-          maxY = value;
-        }
-      }
-    }
-
-    return Math.ceil(maxY);
-  }, [coverageQuery.data?.coverageByCellType]);
-
-  if (isError) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          margin: "16px",
-          height: "50px",
-        }}
-      >
-        Error loading chromosome data
-      </div>
-    );
-  }
-
-  const chromosome = coverageQuery?.data?.chromosome;
-  if (!chromosome && !isLoading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          margin: "16px",
-          height: "50px",
-        }}
-      >
-        No chromosome data available
-      </div>
-    );
-  }
   return (
     <CoverageToScale ref={scrollContainerRef}>
       <div className="margin-overlay" />
@@ -202,7 +114,7 @@ export const ChromosomeMap = () => {
           <CoveragePlot
             key={cellType}
             isLoading={isLoading}
-            chromosome={chromosome ?? null}
+            chromosome={coverageQuery?.data?.chromosome ?? null}
             svgWidth={totalBasePairs * BAR_WIDTH}
             barWidth={BAR_WIDTH}
             yMax={yMax}
