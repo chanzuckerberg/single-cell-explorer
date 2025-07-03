@@ -28,7 +28,7 @@ export function ChromatinViewerProvider({
 }: ChromatinViewerProviderProps) {
   const DEFAULT_GENE = "MYC";
   const DEFAULT_GENOME_VERSION = "hg38";
-  const [selectedGene, setSelectedGeneState] = useState<string>(
+  const [selectedGene, setSelectedGene] = useState<string>(
     initialSelectedGene || DEFAULT_GENE
   );
   const [genomeVersion, setGenomeVersionState] = useState<string>(
@@ -37,14 +37,10 @@ export function ChromatinViewerProvider({
 
   // Update selected gene when initialSelectedGene changes (from Redux)
   useEffect(() => {
-    if (initialSelectedGene && initialSelectedGene !== selectedGene) {
-      setSelectedGeneState(initialSelectedGene);
+    if (initialSelectedGene) {
+      setSelectedGene(initialSelectedGene);
     }
-  }, [initialSelectedGene, selectedGene]);
-
-  const setSelectedGene = (gene: string) => {
-    setSelectedGeneState(gene);
-  };
+  }, [initialSelectedGene]);
 
   const setGenomeVersion = (version: string) => {
     setGenomeVersionState(version);

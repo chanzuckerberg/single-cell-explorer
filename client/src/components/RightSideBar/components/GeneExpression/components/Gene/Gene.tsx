@@ -34,10 +34,14 @@ class Gene extends React.Component<Props, State> {
 
   // Define the action options
   getActionOptions = (): ActionOption[] => {
-    const { isScatterplotYYaccessor, isScatterplotXXaccessor, quickGene } =
-      this.props;
+    const {
+      isScatterplotYYaccessor,
+      isScatterplotXXaccessor,
+      quickGene,
+      hasChromatinData,
+    } = this.props;
 
-    return [
+    const options = [
       {
         id: "delete",
         label: quickGene ? "Remove Gene" : "Delete from Gene Set",
@@ -52,11 +56,16 @@ class Gene extends React.Component<Props, State> {
         label: "Set Gene on Y axis",
         active: isScatterplotYYaccessor,
       },
-      {
-        id: "multiome-viz",
-        label: "Open Multiome Viz",
-      },
     ];
+
+    if (hasChromatinData) {
+      options.push({
+        id: "multiome-viz",
+        label: "Open Chromatin Viewer",
+      });
+    }
+
+    return options;
   };
 
   // Handle action selection

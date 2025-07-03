@@ -42,6 +42,7 @@ interface ControlsState {
   geneList: string[];
   expandedCategories: string[];
   chromatinSelectedCellTypes: string[];
+  hasChromatinData: boolean;
 }
 
 const Controls = (
@@ -101,6 +102,7 @@ const Controls = (
     dotOpacity: 100,
     expandedCategories: [],
     chromatinSelectedCellTypes: [],
+    hasChromatinData: false,
   },
   action: AnyAction
 ): ControlsState => {
@@ -512,6 +514,13 @@ const Controls = (
         return state;
       }
       return state;
+    }
+
+    case "set chromatin data availability": {
+      return {
+        ...state,
+        hasChromatinData: action.hasChromatinData,
+      };
     }
 
     default:
