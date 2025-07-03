@@ -118,6 +118,7 @@ class Gene extends React.Component<Props, State> {
         key={action.id}
         text={action.label}
         onClick={
+          // TODO: smccanny: 07.04.2025 Do we need to add analytics tracking here?
           shouldPreventClose
             ? (e) => {
                 e.preventDefault();
