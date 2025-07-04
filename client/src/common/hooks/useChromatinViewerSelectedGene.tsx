@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface ChromatinViewerContextType {
   selectedGene: string;
@@ -13,23 +19,28 @@ const ChromatinViewerContext = createContext<
 
 interface ChromatinViewerProviderProps {
   children: ReactNode;
-  defaultGene?: string;
-  defaultGenomeVersion?: string;
+  initialSelectedGene?: string;
 }
 
-// Provider component
 export function ChromatinViewerProvider({
   children,
-  defaultGene = "MYC",
-  defaultGenomeVersion = "hg38",
+  initialSelectedGene,
 }: ChromatinViewerProviderProps) {
-  const [selectedGene, setSelectedGeneState] = useState<string>(defaultGene);
-  const [genomeVersion, setGenomeVersionState] =
-    useState<string>(defaultGenomeVersion);
+  const DEFAULT_GENE = "MYC";
+  const DEFAULT_GENOME_VERSION = "hg38";
+  const [selectedGene, setSelectedGene] = useState<string>(
+    initialSelectedGene || DEFAULT_GENE
+  );
+  const [genomeVersion, setGenomeVersionState] = useState<string>(
+    DEFAULT_GENOME_VERSION
+  );
 
-  const setSelectedGene = (gene: string) => {
-    setSelectedGeneState(gene);
-  };
+  // Update selected gene when initialSelectedGene changes (from Redux)
+  useEffect(() => {
+    if (initialSelectedGene) {
+      setSelectedGene(initialSelectedGene);
+    }
+  }, [initialSelectedGene]);
 
   const setGenomeVersion = (version: string) => {
     setGenomeVersionState(version);

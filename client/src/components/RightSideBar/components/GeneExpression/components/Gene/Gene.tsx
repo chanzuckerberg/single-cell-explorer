@@ -1,5 +1,6 @@
 import React from "react";
-import { Button, Icon } from "@blueprintjs/core";
+import { Button, Icon, MenuItem } from "@blueprintjs/core";
+import { Select, ItemRenderer } from "@blueprintjs/select";
 import { connect } from "react-redux";
 import BrushableHistogram from "common/components/BrushableHistogram/BrushableHistogram";
 import actions from "actions";
@@ -16,6 +17,13 @@ import Truncate from "common/components/Truncate/Truncate";
 import { State, Props, mapStateToProps, mapDispatchToProps } from "./types";
 import { MINI_HISTOGRAM_WIDTH } from "../../constants";
 
+interface ActionOption {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  active?: boolean;
+}
+
 class Gene extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -23,6 +31,107 @@ class Gene extends React.Component<Props, State> {
       geneIsExpanded: false,
     };
   }
+
+  // Define the action options
+  getActionOptions = (): ActionOption[] => {
+    const {
+      isScatterplotYYaccessor,
+      isScatterplotXXaccessor,
+      quickGene,
+      hasChromatinData,
+    } = this.props;
+
+    const options = [
+      {
+        id: "delete",
+        label: quickGene ? "Remove Gene" : "Delete from Gene Set",
+      },
+      {
+        id: "plot-x",
+        label: "Set Gene on X axis",
+        active: isScatterplotXXaccessor,
+      },
+      {
+        id: "plot-y",
+        label: "Set Gene on Y axis",
+        active: isScatterplotYYaccessor,
+      },
+    ];
+
+    if (hasChromatinData) {
+      options.push({
+        id: "multiome-viz",
+        label: "Open Chromatin Viewer",
+      });
+    }
+
+    return options;
+  };
+
+  // Handle action selection
+  handleActionSelect = (action: ActionOption): void => {
+    switch (action.id) {
+      case "delete":
+        this.handleDeleteAction();
+        break;
+      case "plot-x":
+        this.handleSetGeneAsScatterplotX();
+        break;
+      case "plot-y":
+        this.handleSetGeneAsScatterplotY();
+        break;
+      case "multiome-viz":
+        this.handleOpenMultiomeViz();
+        break;
+      default:
+        console.warn(`Unhandled action: ${action.id}`);
+        break;
+    }
+  };
+
+  // Action handlers
+  handleDeleteAction = (): void => {
+    const { quickGene, removeGene, gene } = this.props;
+    track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
+
+    if (quickGene) {
+      removeGene?.(gene.name)();
+    } else {
+      this.handleDeleteGeneFromSet();
+    }
+  };
+
+  // Render function for action items
+  renderActionItem: ItemRenderer<ActionOption> = (
+    action,
+    { handleClick, modifiers }
+  ) => {
+    if (!modifiers.matchesPredicate) {
+      return null;
+    }
+
+    // For plot-x and plot-y actions, handle click directly so user can see that axis was set
+    const shouldPreventClose = action.id === "plot-x" || action.id === "plot-y";
+
+    return (
+      <MenuItem
+        key={action.id}
+        text={action.label}
+        onClick={
+          // TODO: smccanny: 07.04.2025 Do we need to add analytics tracking here?
+          shouldPreventClose
+            ? (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleActionSelect(action);
+              }
+            : handleClick
+        }
+        disabled={action.disabled}
+        active={action.active}
+      />
+    );
+  };
 
   onColorChangeClick = async () => {
     const { dispatch, gene, isColorAccessor } = this.props;
@@ -82,9 +191,12 @@ class Gene extends React.Component<Props, State> {
   };
 
   handleOpenMultiomeViz = (): void => {
-    const { dispatch } = this.props;
+    const { dispatch, gene } = this.props;
 
-    dispatch({ type: "open multiome viz panel" });
+    dispatch({
+      type: "open multiome viz panel",
+      selectedGene: gene.name,
+    });
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
@@ -116,10 +228,6 @@ class Gene extends React.Component<Props, State> {
       gene,
       geneDescription,
       isColorAccessor,
-      isScatterplotXXaccessor,
-      isScatterplotYYaccessor,
-      quickGene,
-      removeGene,
       onGeneExpressionComplete,
       isGeneExpressionComplete,
     } = this.props;
@@ -152,6 +260,7 @@ class Gene extends React.Component<Props, State> {
             <div>
               <Truncate
                 tooltipAddendum={geneDescription && `: ${geneDescription}`}
+                preferBeginning
               >
                 <span
                   style={{
@@ -188,45 +297,7 @@ class Gene extends React.Component<Props, State> {
               </div>
             ) : null}
           </div>
-          <div style={{ flexShrink: 0, marginLeft: 2 }}>
-            <Button
-              minimal
-              small
-              data-testid={`delete-from-geneset:${gene.name}`}
-              onClick={() => {
-                track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
-                if (quickGene) {
-                  removeGene?.(gene.name)();
-                } else {
-                  this.handleDeleteGeneFromSet();
-                }
-              }}
-              intent="none"
-              style={{ fontWeight: 700, marginRight: 2 }}
-              icon={<Icon icon="trash" size={10} />}
-            />
-            <Button
-              minimal
-              small
-              data-testid={`plot-x-${gene.id}`}
-              onClick={this.handleSetGeneAsScatterplotX}
-              active={isScatterplotXXaccessor}
-              intent={isScatterplotXXaccessor ? "primary" : "none"}
-              style={{ fontWeight: 700, marginRight: 2 }}
-            >
-              x
-            </Button>
-            <Button
-              minimal
-              small
-              data-testid={`plot-y-${gene.id}`}
-              onClick={this.handleSetGeneAsScatterplotY}
-              active={isScatterplotYYaccessor}
-              intent={isScatterplotYYaccessor ? "primary" : "none"}
-              style={{ fontWeight: 700, marginRight: 2 }}
-            >
-              y
-            </Button>
+          <div style={{ flexShrink: 0, marginLeft: 2, display: "flex" }}>
             <Button
               minimal
               small
@@ -237,6 +308,25 @@ class Gene extends React.Component<Props, State> {
               icon={<Icon icon="maximize" size={10} />}
               style={{ marginRight: 2 }}
             />
+            <Select<ActionOption>
+              items={this.getActionOptions()}
+              itemRenderer={this.renderActionItem}
+              onItemSelect={this.handleActionSelect}
+              filterable={false}
+              popoverProps={{
+                minimal: true,
+                position: "bottom-right",
+              }}
+            >
+              <Button
+                minimal
+                small
+                data-testid={`more-actions:${gene.name}`}
+                intent="none"
+                icon={<Icon icon="more" size={10} />}
+                style={{ marginRight: 2 }}
+              />
+            </Select>
             <Button
               minimal
               small

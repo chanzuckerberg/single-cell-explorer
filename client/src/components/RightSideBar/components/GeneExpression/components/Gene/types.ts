@@ -10,6 +10,7 @@ export interface StateProps {
   isScatterplotXXaccessor: boolean;
   isScatterplotYYaccessor: boolean;
   isGeneInfo: boolean;
+  hasChromatinData: boolean;
 }
 
 export interface DispatchProps {
@@ -42,6 +43,7 @@ export const mapStateToProps = (
     isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene.id,
     isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene.id,
     isGeneInfo: state.controls.geneInfo.gene === gene.id,
+    hasChromatinData: state.controls.hasChromatinData,
   };
 };
 export const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({

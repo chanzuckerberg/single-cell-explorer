@@ -595,9 +595,16 @@ export async function removeGene(
   geneSymbol: string,
   page: Page
 ): Promise<void> {
-  const targetId = `delete-from-geneset:${geneSymbol}`;
-
-  await page.getByTestId(targetId).click();
+  // Click the more actions dropdown for the gene
+  await page.getByTestId(`more-actions:${geneSymbol}`).click();
+  
+  // Click the "Delete from Gene Set" menu item
+  await tryUntil(
+    async () => {
+      await page.getByText("Delete from Gene Set").click();
+    },
+    { page }
+  );
 }
 
 export async function assertGeneExistsInGeneset(

@@ -48,7 +48,12 @@ const isTest = getFeatureFlag(FEATURES.TEST);
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
 export default (props: any) => {
-  const { children, isGenesetDescription, tooltipAddendum = "" } = props;
+  const {
+    children,
+    isGenesetDescription,
+    tooltipAddendum = "",
+    preferBeginning = false,
+  } = props;
   // Truncate only support a single child with a text child
 
   if (
@@ -65,8 +70,15 @@ export default (props: any) => {
   if (originalString.length === 1) {
     firstString = originalString;
   } else {
-    firstString = originalString.substr(0, originalString.length / 2);
-    secondString = originalString.substr(originalString.length / 2);
+    // If preferBeginning is true, make the first part longer for readability
+    // Otherwise, split roughly in half
+    const splitPoint = preferBeginning
+      ? Math.floor((originalString.length * 5) / 6)
+      : Math.floor(originalString.length / 2);
+
+    firstString = originalString.substr(0, splitPoint);
+    secondString = originalString.substr(splitPoint);
+
     if (firstString.charAt(firstString.length - 1) === " ") {
       firstString = `${firstString.substr(0, firstString.length - 1)}\u00a0`;
     }
