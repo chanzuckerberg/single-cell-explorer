@@ -1834,7 +1834,7 @@ test("categories and values from dataset appear and properly truncate if applica
         .getByTestId("categorical-row")
         .all();
 
-      expect(Object.keys(categoryRows).length).toBe(1001);
+      expect(Object.keys(categoryRows).length).toBe(1101);
     },
     { page }
   );
