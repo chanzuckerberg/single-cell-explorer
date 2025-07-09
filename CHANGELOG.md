@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.0...v1.12.1) (2025-07-09)
+
+
+### Bug Fixes
+
+* GeneSets bug ([#1232](https://github.com/chanzuckerberg/single-cell-explorer/issues/1232)) ([43780a5](https://github.com/chanzuckerberg/single-cell-explorer/commit/43780a5705d0064a14bc76d09a9ed3575fa79c33))
+* skip truncate test ([#1235](https://github.com/chanzuckerberg/single-cell-explorer/issues/1235)) ([60f6cea](https://github.com/chanzuckerberg/single-cell-explorer/commit/60f6ceabeb7b9e9fbd1dd8d34426a937f65b2744))
+
 ## [1.12.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.11.1...v1.12.0) (2025-07-04)
 
 
