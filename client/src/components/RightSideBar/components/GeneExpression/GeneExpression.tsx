@@ -99,16 +99,21 @@ class GeneExpression extends React.Component<{}, State> {
         const displayName = name.replace(MARKER_GENE_SUFFIX_IDENTIFIER, "");
         const updatedGenes = new Map();
 
-        // find ensembl IDs for each gene in the geneset
         for (const [geneName, geneData] of geneset.genes) {
+          const geneIdIndex = geneIds.indexOf(geneName);
+          const geneNameIndex = geneNames.indexOf(geneName);
+
           const geneId = geneIds
-            ? geneIds[geneNames.indexOf(geneName)] || ""
+            ? geneIds[geneNameIndex] || geneIds[geneIdIndex] || ""
             : "";
+
+          const actualGeneName =
+            geneIdIndex === -1 ? geneName : geneNames[geneIdIndex];
 
           if (geneId) {
             updatedGenes.set(geneId, geneData);
             genesetIds.push(geneId);
-            genesetNames.push(geneName);
+            genesetNames.push(actualGeneName);
           } else {
             console.warn(`No ID found for gene: ${geneName}`);
           }

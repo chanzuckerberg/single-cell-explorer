@@ -93,7 +93,7 @@ default_dataset:
     about_legal_privacy: null
 
   presentation:
-    max_categories: 1000
+    max_categories: 30000
     custom_colors: true
 
   embeddings:
