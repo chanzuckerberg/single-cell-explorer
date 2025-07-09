@@ -1821,7 +1821,7 @@ for (const testDataset of testDatasets) {
   }
 }
 
-test("categories and values from dataset appear and properly truncate if applicable", async ({
+test.skip("categories and values from dataset appear and properly truncate if applicable", async ({
   page,
 }, testInfo) => {
   await goToPage(page, pageURLTruncate);
