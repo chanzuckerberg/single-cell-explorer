@@ -132,11 +132,14 @@ describe("CellGuideCXG", () => {
     // Refresh the page
     await page.reload();
 
+    // Wait for page to fully load after reload
+    await page.waitForLoadState("networkidle");
+
     await expandMarkerGeneSetsHeader(page);
 
     // Check if the geneset is added back
-    const genesetPresence = await page.locator(
-      `div[data-testid="geneset"]:has-text("enteric smooth muscle cell")`
+    const genesetPresence = await page.getByTestId(
+      "enteric smooth muscle cell - marker genes:geneset-name"
     );
     await expect(genesetPresence).toBeVisible();
   });

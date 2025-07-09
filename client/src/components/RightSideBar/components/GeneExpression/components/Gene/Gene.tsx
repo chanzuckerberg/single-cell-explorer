@@ -187,7 +187,12 @@ class Gene extends React.Component<Props, State> {
 
   handleDeleteGeneFromSet = (): void => {
     const { dispatch, gene, geneset } = this.props;
-    dispatch(actions.genesetDeleteGenes(geneset, [gene.name]));
+
+    const isDEGeneSet = geneset ? geneset.startsWith("Pop") : false;
+
+    const nameToDelete = isDEGeneSet ? gene.id : gene.name;
+
+    dispatch(actions.genesetDeleteGenes(geneset, [nameToDelete]));
   };
 
   handleOpenMultiomeViz = (): void => {
