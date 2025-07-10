@@ -57,18 +57,16 @@ export class GeneSet extends React.Component<{}, State> {
   renderGenes() {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'setName' does not exist on type 'Readonl... Remove this comment to see the full error message
     const { setName, setGenes, geneIds, geneNames } = this.props;
-    const setGenesIds = [...setGenes.keys()];
+    const setGenesNames = [...setGenes.keys()];
     return (
       <div data-testid="gene-set-genes">
-        {setGenesIds.map((geneId) => {
-          const { geneDescription } = setGenes.get(geneId);
-          const geneName = geneNames[geneIds.indexOf(geneId)];
-          const geneObject = { id: geneId, name: geneName };
-
+        {setGenesNames.map((gene) => {
+          const { geneDescription } = setGenes.get(gene);
+          const geneId = geneIds[geneNames.indexOf(gene)];
           return (
             <Gene
-              key={geneName}
-              gene={geneObject}
+              key={gene}
+              gene={gene}
               geneDescription={geneDescription}
               geneset={setName}
               geneId={geneId}

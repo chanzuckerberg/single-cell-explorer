@@ -34,7 +34,7 @@ class TestDatasetConfig(ConfigTests):
 
     def test_init_datatset_config_sets_vars_from_default_config(self):
         app_config = AppConfig()
-        self.assertEqual(app_config.default_dataset__presentation__max_categories, 30000)
+        self.assertEqual(app_config.default_dataset__presentation__max_categories, 1000)
         self.assertEqual(app_config.default_dataset__diffexp__lfc_cutoff, 0.01)
 
     def test_app_sets_script_vars(self):

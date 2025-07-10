@@ -93,7 +93,7 @@ class ConfigTests(BaseTest):
         inline_scripts=None,
         about_legal_tos="null",
         about_legal_privacy="null",
-        max_categories=30000,
+        max_categories=1000,
         custom_colors="true",
         enable_users_annotations="true",
         annotation_type="local_file_csv",

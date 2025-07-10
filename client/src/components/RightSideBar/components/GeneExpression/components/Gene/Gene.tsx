@@ -95,7 +95,7 @@ class Gene extends React.Component<Props, State> {
     track(EVENTS.EXPLORER_DELETE_FROM_GENESET_BUTTON_CLICKED);
 
     if (quickGene) {
-      removeGene?.(gene.name)();
+      removeGene?.(gene)();
     } else {
       this.handleDeleteGeneFromSet();
     }
@@ -135,13 +135,11 @@ class Gene extends React.Component<Props, State> {
 
   onColorChangeClick = async () => {
     const { dispatch, gene, isColorAccessor } = this.props;
-    const { id } = gene;
-
     if (!isColorAccessor) {
       // only track color change when turned on
       track(EVENTS.EXPLORER_COLORBY_GENE);
     }
-    dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(id));
+    dispatch(actions.requestSingleGeneExpressionCountsForColoringPOST(gene));
 
     /**
      * (thuang): Must be dispatched AFTER the actions above, as the `colorMode`
@@ -168,31 +166,24 @@ class Gene extends React.Component<Props, State> {
   handleSetGeneAsScatterplotX = (): void => {
     track(EVENTS.EXPLORER_PLOT_X_BUTTON_CLICKED);
     const { dispatch, gene } = this.props;
-    const { id } = gene;
     dispatch({
       type: "set scatterplot x",
-      data: id,
+      data: gene,
     });
   };
 
   handleSetGeneAsScatterplotY = (): void => {
     track(EVENTS.EXPLORER_PLOT_Y_BUTTON_CLICKED);
     const { dispatch, gene } = this.props;
-    const { id } = gene;
     dispatch({
       type: "set scatterplot y",
-      data: id,
+      data: gene,
     });
   };
 
   handleDeleteGeneFromSet = (): void => {
     const { dispatch, gene, geneset } = this.props;
-
-    const isDEGeneSet = geneset ? geneset.startsWith("Pop") : false;
-
-    const nameToDelete = isDEGeneSet ? gene.id : gene.name;
-
-    dispatch(actions.genesetDeleteGenes(geneset, [nameToDelete]));
+    dispatch(actions.genesetDeleteGenes(geneset, [gene]));
   };
 
   handleOpenMultiomeViz = (): void => {
@@ -200,22 +191,20 @@ class Gene extends React.Component<Props, State> {
 
     dispatch({
       type: "open multiome viz panel",
-      selectedGene: gene.name,
+      selectedGene: gene,
     });
   };
 
   handleDisplayGeneInfo = async (): Promise<void> => {
-    const { dispatch, gene } = this.props;
-    const { name, id } = gene;
-
+    const { dispatch, gene, geneId } = this.props;
     track(EVENTS.EXPLORER_VIEW_GENE_INFO, {
-      gene: name,
+      gene,
     });
 
-    dispatch({ type: "request gene info start", gene: name });
+    dispatch({ type: "request gene info start", gene });
     dispatch({ type: "toggle active info panel", activeTab: ActiveTab.Gene });
 
-    const info = await actions.fetchGeneInfo(name, id, dispatch);
+    const info = await actions.fetchGeneInfo(gene, geneId, dispatch);
 
     if (!info) {
       return;
@@ -223,7 +212,7 @@ class Gene extends React.Component<Props, State> {
 
     dispatch({
       type: "open gene info",
-      gene: name,
+      gene,
       info,
     });
   };
@@ -254,7 +243,7 @@ class Gene extends React.Component<Props, State> {
           <div
             role="menuitem"
             tabIndex={0}
-            data-testid={`${gene.name}:gene-expand`}
+            data-testid={`${gene}:gene-expand`}
             style={{
               cursor: "pointer",
               display: "flex",
@@ -272,15 +261,15 @@ class Gene extends React.Component<Props, State> {
                     width: geneSymbolWidth,
                     display: "inline-block",
                   }}
-                  data-testid={`${gene.name}:gene-label`}
+                  data-testid={`${gene}:gene-label`}
                 >
-                  {gene.name}
+                  {gene}
                 </span>
               </Truncate>
             </div>
             <InfoButtonWrapper>
               <InfoButton
-                data-testid={`get-info-${gene.name}`}
+                data-testid={`get-info-${gene}`}
                 onClick={this.handleDisplayGeneInfo}
                 disabled={!isGeneExpressionComplete}
                 sdsType="tertiary"
@@ -294,7 +283,7 @@ class Gene extends React.Component<Props, State> {
               <div style={{ width: MINI_HISTOGRAM_WIDTH }}>
                 <BrushableHistogram
                   isUserDefined
-                  field={gene.id}
+                  field={gene}
                   mini
                   width={MINI_HISTOGRAM_WIDTH}
                   onGeneExpressionComplete={onGeneExpressionComplete}
@@ -306,7 +295,7 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testid={`maximize-${gene.id}`}
+              data-testid={`maximize-${gene}`}
               onClick={this.handleGeneExpandClick}
               active={geneIsExpanded}
               intent="none"
@@ -326,7 +315,7 @@ class Gene extends React.Component<Props, State> {
               <Button
                 minimal
                 small
-                data-testid={`more-actions:${gene.name}`}
+                data-testid={`more-actions:${gene}`}
                 intent="none"
                 icon={<Icon icon="more" size={10} />}
                 style={{ marginRight: 2 }}
@@ -335,7 +324,7 @@ class Gene extends React.Component<Props, State> {
             <Button
               minimal
               small
-              data-testid={`colorby-${gene.id}`}
+              data-testid={`colorby-${gene}`}
               onClick={this.onColorChangeClick}
               active={isColorAccessor}
               intent={isColorAccessor ? "primary" : "none"}
@@ -346,7 +335,7 @@ class Gene extends React.Component<Props, State> {
         {geneIsExpanded && (
           <BrushableHistogram
             isUserDefined
-            field={gene.id}
+            field={gene}
             onGeneExpressionComplete={() => {}}
           />
         )}
