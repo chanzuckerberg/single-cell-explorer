@@ -480,15 +480,17 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   }
 
   createQuery(): [Field, Query] | null {
-    const { isObs, isGeneSetSummary, field, setGenes, annoMatrix } = this.props;
-    const { schema } = annoMatrix;
+    const { isObs, isGeneSetSummary, field, setGenes } = this.props;
     if (isObs) {
       return [Field.obs, field];
     }
-    const varIndex = schema?.annotations?.var?.index;
-    if (!varIndex) return null;
 
-    const varLabel = VAR_FEATURE_NAME_COLUMN;
+    // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+    const { annoMatrix } = this.props;
+    const varColumns = annoMatrix.getMatrixColumns(Field.var);
+    const columnName = varColumns.includes(VAR_FEATURE_NAME_COLUMN)
+      ? VAR_FEATURE_NAME_COLUMN
+      : annoMatrix.schema.annotations.var.index;
 
     if (isGeneSetSummary && setGenes) {
       return [
@@ -497,7 +499,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
           summarize: {
             method: "mean",
             field: "var",
-            column: varLabel,
+            column: columnName,
             values: [...setGenes.keys()],
           },
         },
@@ -510,7 +512,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       {
         where: {
           field: "var",
-          column: varLabel,
+          column: columnName,
           value: field,
         },
       },

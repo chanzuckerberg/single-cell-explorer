@@ -57,11 +57,19 @@ export function QuickGene() {
     (async function fetch() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
+        // Fallback
+        const varIndex = annoMatrix.schema.annotations.var.index;
         const varFeatureName = VAR_FEATURE_NAME_COLUMN;
+        // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+        const columnName = annoMatrix
+          .getMatrixColumns("var")
+          .includes(varFeatureName)
+          ? varFeatureName
+          : varIndex;
 
         setStatus("pending");
         try {
-          const df: Dataframe = await annoMatrix.fetch("var", varFeatureName);
+          const df: Dataframe = await annoMatrix.fetch("var", columnName);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
           const isFilteredCol = "feature_is_filtered";
@@ -81,12 +89,12 @@ export function QuickGene() {
             const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
             setGeneNames(
               df
-                .col(varFeatureName)
+                .col(columnName)
                 .asArray()
                 .filter((_, index) => !isFilteredArray[index] && _) as string[]
             );
           } else {
-            setGeneNames(df.col(varFeatureName).asArray() as string[]);
+            setGeneNames(df.col(columnName).asArray() as string[]);
           }
         } catch (error) {
           setStatus("error");
@@ -148,28 +156,32 @@ export function QuickGene() {
       threshold: -10000,
     });
 
-  const QuickGenes = useMemo((): JSX.Element => userDefinedGenes.map((gene: string) => {
-      let geneId = geneIds[geneNames.indexOf(gene)];
-      if (!geneId) {
-        geneId = "";
-      }
+  const QuickGenes = useMemo(
+    (): JSX.Element =>
+      userDefinedGenes.map((gene: string) => {
+        let geneId = geneIds[geneNames.indexOf(gene)];
+        if (!geneId) {
+          geneId = "";
+        }
 
-      const removeGene = (geneToRemove: string) => () => {
-        dispatch({ type: "clear user defined gene", gene: geneToRemove });
-      };
+        const removeGene = (geneToRemove: string) => () => {
+          dispatch({ type: "clear user defined gene", gene: geneToRemove });
+        };
 
-      return (
-        <Gene
-          key={`quick=${gene}`}
-          gene={gene}
-          removeGene={removeGene}
-          quickGene
-          geneId={geneId}
-          isGeneExpressionComplete
-          onGeneExpressionComplete={noop}
-        />
-      );
-    }), [userDefinedGenes, geneNames, geneIds, dispatch]);
+        return (
+          <Gene
+            key={`quick=${gene}`}
+            gene={gene}
+            removeGene={removeGene}
+            quickGene
+            geneId={geneId}
+            isGeneExpressionComplete
+            onGeneExpressionComplete={noop}
+          />
+        );
+      }),
+    [userDefinedGenes, geneNames, geneIds, dispatch]
+  );
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>

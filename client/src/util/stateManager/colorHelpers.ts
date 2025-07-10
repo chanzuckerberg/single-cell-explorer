@@ -39,6 +39,11 @@ export function createColorQuery(
   genesets: Genesets
 ): [Field, Query] | null {
   if (!colorMode || !colorByAccessor || !schema || !genesets) return null;
+  // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+  const varColumns = Object.keys(schema.annotations.varByName);
+  const varFeatureName = varColumns.includes(VAR_FEATURE_NAME_COLUMN)
+    ? VAR_FEATURE_NAME_COLUMN
+    : schema.annotations.var.index;
 
   switch (colorMode) {
     case "color by categorical metadata":
@@ -46,7 +51,6 @@ export function createColorQuery(
       return [Field.obs, colorByAccessor];
     }
     case "color by expression": {
-      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
       if (!varFeatureName) return null;
       return [
         Field.X,
@@ -60,8 +64,6 @@ export function createColorQuery(
       ];
     }
     case "color by geneset mean expression": {
-      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
-
       if (!varFeatureName) return null;
       if (!genesets) return null;
 

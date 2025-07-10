@@ -55,9 +55,18 @@ export const genesetAddGenes =
   (genesetName: any, genes: any) => async (dispatch: any, getState: any) => {
     const state = getState();
     const { obsCrossfilter: prevObsCrossfilter, annoMatrix } = state;
+    const { schema } = annoMatrix;
+    // Fallback
+    const varIndex = schema.annotations.var.index;
     const varFeatureName = VAR_FEATURE_NAME_COLUMN;
-    const df: Dataframe = await annoMatrix.fetch("var", varFeatureName);
-    const geneNames = df.col(varFeatureName).asArray();
+    // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+    const varColumns = annoMatrix.getMatrixColumns("var");
+    const columnName = varColumns.includes(varFeatureName)
+      ? varFeatureName
+      : varIndex;
+
+    const df: Dataframe = await annoMatrix.fetch("var", columnName);
+    const geneNames = df.col(columnName).asArray();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     genes = genes.reduce((acc: any, gene: any) => {
       if (geneNames.indexOf(gene.geneSymbol) === -1) {

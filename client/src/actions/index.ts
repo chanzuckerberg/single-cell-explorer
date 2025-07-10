@@ -392,8 +392,6 @@ const requestDifferentialExpression =
       */
       const { annoMatrix } = getState();
 
-      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
-
       // // Legal values are null, Array or TypedArray.  Null is initial state.
       if (!set1) set1 = new Int32Array();
       if (!set2) set2 = new Int32Array();
@@ -435,7 +433,17 @@ const requestDifferentialExpression =
 
       const response = await res.json();
 
-      const varLabel = await annoMatrix.fetch(Field.var, varFeatureName);
+      // Fallback
+      const { schema } = annoMatrix;
+      const varIndex = schema.annotations.var.index;
+      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
+      // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+      const varColumns = annoMatrix.getMatrixColumns(Field.var);
+      const columnName = varColumns.includes(varFeatureName)
+        ? varFeatureName
+        : varIndex;
+
+      const varLabel = await annoMatrix.fetch(Field.var, columnName);
 
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
@@ -445,7 +453,7 @@ const requestDifferentialExpression =
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
             // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
-            varLabel.at(v[0], varFeatureName),
+            varLabel.at(v[0], columnName),
             ...v.slice(1),
           ]
         );
