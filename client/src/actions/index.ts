@@ -5,6 +5,7 @@ import {
 } from "util/transientLocalStorage";
 import { KEYS } from "util/localStorage";
 import { fetchJson } from "util/fetch";
+import { VAR_FEATURE_NAME_COLUMN } from "common/constants";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
@@ -391,7 +392,7 @@ const requestDifferentialExpression =
       */
       const { annoMatrix } = getState();
 
-      const varFeatureName = "feature_name";
+      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
       if (!set1) set1 = new Int32Array();

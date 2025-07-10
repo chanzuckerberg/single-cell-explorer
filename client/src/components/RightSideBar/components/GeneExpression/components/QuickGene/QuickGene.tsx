@@ -8,6 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { noop } from "lodash";
 
 import { postUserErrorToast } from "components/framework/toasters";
+import { VAR_FEATURE_NAME_COLUMN } from "common/constants";
 import actions from "actions";
 import { Dataframe, DataframeValue } from "util/dataframe";
 import { track } from "analytics";
@@ -56,7 +57,7 @@ export function QuickGene() {
     (async function fetch() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
-        const varFeatureName = "feature_name";
+        const varFeatureName = VAR_FEATURE_NAME_COLUMN;
 
         setStatus("pending");
         try {

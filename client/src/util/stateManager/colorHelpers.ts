@@ -4,6 +4,7 @@
 import * as d3 from "d3";
 import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
 import memoize from "memoize-one";
+import { VAR_FEATURE_NAME_COLUMN } from "../../common/constants";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
@@ -45,7 +46,7 @@ export function createColorQuery(
       return [Field.obs, colorByAccessor];
     }
     case "color by expression": {
-      const varFeatureName = "feature_name";
+      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
       if (!varFeatureName) return null;
       return [
         Field.X,
@@ -59,7 +60,7 @@ export function createColorQuery(
       ];
     }
     case "color by geneset mean expression": {
-      const varFeatureName = "feature_name";
+      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
 
       if (!varFeatureName) return null;
       if (!genesets) return null;

@@ -3,6 +3,7 @@ import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import Async from "react-async";
 import memoize from "memoize-one";
+import { VAR_FEATURE_NAME_COLUMN } from "common/constants";
 import actions from "actions";
 import { makeContinuousDimensionName } from "util/nameCreators";
 import { Dataframe } from "util/dataframe";
@@ -487,7 +488,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     const varIndex = schema?.annotations?.var?.index;
     if (!varIndex) return null;
 
-    const varLabel = "feature_name";
+    const varLabel = VAR_FEATURE_NAME_COLUMN;
 
     if (isGeneSetSummary && setGenes) {
       return [

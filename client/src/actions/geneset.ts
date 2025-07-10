@@ -21,6 +21,7 @@ The behavior manifest in these action creators:
 Note that crossfilter indices are lazy created, as needed.
 */
 
+import { VAR_FEATURE_NAME_COLUMN } from "../common/constants";
 import { Dataframe } from "../util/dataframe";
 
 export const genesetDelete =
@@ -54,7 +55,7 @@ export const genesetAddGenes =
   (genesetName: any, genes: any) => async (dispatch: any, getState: any) => {
     const state = getState();
     const { obsCrossfilter: prevObsCrossfilter, annoMatrix } = state;
-    const varFeatureName = "feature_name";
+    const varFeatureName = VAR_FEATURE_NAME_COLUMN;
     const df: Dataframe = await annoMatrix.fetch("var", varFeatureName);
     const geneNames = df.col(varFeatureName).asArray();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -120,7 +121,7 @@ function dropGenesetSummaryDimension(
   genesetName: any
 ) {
   const { genesets } = state;
-  const varFeatureName = "feature_name";
+  const varFeatureName = VAR_FEATURE_NAME_COLUMN;
   const gs = genesets?.genesets?.get(genesetName) ?? {};
   const genes = Array.from(gs.genes.keys());
   const query = {
@@ -136,7 +137,7 @@ function dropGenesetSummaryDimension(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
 function dropGeneDimension(obsCrossfilter: any, gene: any) {
-  const varFeatureName = "feature_name";
+  const varFeatureName = VAR_FEATURE_NAME_COLUMN;
   const query = {
     where: {
       field: "var",

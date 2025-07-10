@@ -7,6 +7,7 @@ import { mat3 } from "gl-matrix";
 import memoize from "memoize-one";
 import Async from "react-async";
 
+import { VAR_FEATURE_NAME_COLUMN } from "../../common/constants";
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './scatterplot.css' or its corr... Remove this comment to see the full error message
 import styles from "./scatterplot.css";
@@ -107,7 +108,7 @@ class Scatterplot extends React.PureComponent<{}, State> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static createXQuery(geneName: any) {
-    const varFeatureName = "feature_name";
+    const varFeatureName = VAR_FEATURE_NAME_COLUMN;
     if (!varFeatureName) return null;
     return [
       "X",
