@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.1...v1.12.2) (2025-07-10)
+
+
+### Bug Fixes
+
+* Update Explorer to use feature_name ([#1237](https://github.com/chanzuckerberg/single-cell-explorer/issues/1237)) ([2c42dfc](https://github.com/chanzuckerberg/single-cell-explorer/commit/2c42dfc1be89d8aedb5e6262f1c2e6d210174c05))
+
 ## [1.12.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.0...v1.12.1) (2025-07-09)
 
 
