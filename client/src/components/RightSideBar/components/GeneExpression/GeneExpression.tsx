@@ -5,7 +5,7 @@ import { IconNames } from "@blueprintjs/icons";
 
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
-import { Dataframe, DataframeValue } from "util/dataframe";
+import { Dataframe } from "util/dataframe";
 
 import { GeneSet } from "./components/GeneSet/GeneSet";
 import { QuickGene } from "./components/QuickGene/QuickGene";
@@ -47,24 +47,21 @@ class GeneExpression extends React.Component<{}, State> {
     if (!schema) return;
 
     const varIndex = schema.annotations.var.index;
+    const varLabel = "feature_name";
 
-    let dfIds;
-    const df: Dataframe = await annoMatrix?.fetch("var", varIndex);
+    const dfIds: Dataframe = await annoMatrix.fetch("var", varIndex);
 
-    if (!df) return;
+    const varColumns = annoMatrix.getMatrixColumns("var");
+
+    // This is a fallback in case the varLabel is not available.
+    const labelToUse = varColumns.includes(varLabel) ? varLabel : varIndex;
+
+    const dfNames: Dataframe = await annoMatrix.fetch("var", labelToUse);
 
     this.setState({
-      geneNames: df.col(varIndex).asArray() as DataframeValue[],
+      geneIds: dfIds.col(varIndex).asArray(),
+      geneNames: dfNames.col(labelToUse).asArray(),
     });
-
-    const geneIdCol = "feature_id";
-    // if feature id column is available in var
-    if (annoMatrix.getMatrixColumns("var").includes(geneIdCol)) {
-      dfIds = await annoMatrix.fetch("var", geneIdCol);
-      this.setState({
-        geneIds: dfIds.col(geneIdCol).asArray() as DataframeValue[],
-      });
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types --- FIXME: disabled temporarily on migrate to TS.
@@ -100,21 +97,33 @@ class GeneExpression extends React.Component<{}, State> {
         const genesetIds = [];
         const genesetNames = [];
         const displayName = name.replace(MARKER_GENE_SUFFIX_IDENTIFIER, "");
+        const updatedGenes = new Map();
 
-        // find ensembl IDs for each gene in the geneset
-        for (const gene of geneset.genes) {
+        for (const [geneName, geneData] of geneset.genes) {
+          const geneIdIndex = geneIds.indexOf(geneName);
+          const geneNameIndex = geneNames.indexOf(geneName);
+
           const geneId = geneIds
-            ? geneIds[geneNames.indexOf(gene[0])] || ""
+            ? geneIds[geneNameIndex] || geneIds[geneIdIndex] || ""
             : "";
-          genesetIds.push(geneId);
-          genesetNames.push(gene[0]);
+
+          const actualGeneName =
+            geneIdIndex === -1 ? geneName : geneNames[geneIdIndex];
+
+          if (geneId) {
+            updatedGenes.set(geneId, geneData);
+            genesetIds.push(geneId);
+            genesetNames.push(actualGeneName);
+          } else {
+            console.warn(`No ID found for gene: ${geneName}`);
+          }
         }
 
         sets.push(
           <GeneSet
             key={name}
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ key: any; setGenes: any; setName: any; gen... Remove this comment to see the full error message
-            setGenes={geneset.genes}
+            setGenes={updatedGenes}
             setName={name}
             displayName={displayName}
             genesetDescription={geneset.genesetDescription}

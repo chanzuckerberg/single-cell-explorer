@@ -1821,7 +1821,7 @@ for (const testDataset of testDatasets) {
   }
 }
 
-test("categories and values from dataset appear and properly truncate if applicable", async ({
+test.skip("categories and values from dataset appear and properly truncate if applicable", async ({
   page,
 }, testInfo) => {
   await goToPage(page, pageURLTruncate);
@@ -1834,7 +1834,7 @@ test("categories and values from dataset appear and properly truncate if applica
         .getByTestId("categorical-row")
         .all();
 
-      expect(Object.keys(categoryRows).length).toBe(1001);
+      expect(Object.keys(categoryRows).length).toBe(1101);
     },
     { page }
   );

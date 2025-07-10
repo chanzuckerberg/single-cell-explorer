@@ -32,6 +32,7 @@ interface ControlsState {
   infoPanelMinimized: boolean;
   bottomPanelHidden: boolean;
   bottomPanelMinimized: boolean;
+  bottomPanelSelectedGene?: string;
   imageOpacity: number;
   dotOpacity: number;
   geneInfo: GeneInfo;
@@ -41,6 +42,7 @@ interface ControlsState {
   geneList: string[];
   expandedCategories: string[];
   chromatinSelectedCellTypes: string[];
+  hasChromatinData: boolean;
 }
 
 const Controls = (
@@ -67,6 +69,7 @@ const Controls = (
     infoPanelMinimized: false,
     bottomPanelHidden: true,
     bottomPanelMinimized: false,
+    bottomPanelSelectedGene: undefined,
     unsMetadata: {
       imageWidth: 1955,
       imageHeight: 1955,
@@ -99,6 +102,7 @@ const Controls = (
     dotOpacity: 100,
     expandedCategories: [],
     chromatinSelectedCellTypes: [],
+    hasChromatinData: false,
   },
   action: AnyAction
 ): ControlsState => {
@@ -248,6 +252,7 @@ const Controls = (
       return {
         ...state,
         bottomPanelHidden: false,
+        bottomPanelSelectedGene: action.selectedGene,
       };
     }
     case "close multiome viz panel": {
@@ -509,6 +514,13 @@ const Controls = (
         return state;
       }
       return state;
+    }
+
+    case "set chromatin data availability": {
+      return {
+        ...state,
+        hasChromatinData: action.hasChromatinData,
+      };
     }
 
     default:

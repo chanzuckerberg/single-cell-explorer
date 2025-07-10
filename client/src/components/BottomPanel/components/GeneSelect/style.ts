@@ -6,11 +6,9 @@ export const SelectedGenePrefix = styled.span`
 `;
 
 export const SelectedGeneName = styled.span`
-  @media (max-width: 1375px) {
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-  }
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 `;

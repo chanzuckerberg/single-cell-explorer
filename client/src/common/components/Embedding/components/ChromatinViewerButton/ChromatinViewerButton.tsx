@@ -14,6 +14,7 @@ type Props = StateProps & DispatchProps & OwnProps;
 interface StateProps {
   schema?: Schema;
   bottomPanelHidden: RootState["controls"]["bottomPanelHidden"];
+  hasChromatinData: RootState["controls"]["hasChromatinData"];
 }
 
 interface OwnProps {
@@ -27,6 +28,7 @@ interface DispatchProps {
 const mapStateToProps = (state: RootState): StateProps => ({
   schema: state.annoMatrix?.schema,
   bottomPanelHidden: state.controls.bottomPanelHidden,
+  hasChromatinData: state.controls.hasChromatinData,
 });
 
 const ChromatinViewerButton = ({
@@ -34,6 +36,7 @@ const ChromatinViewerButton = ({
   isSidePanel,
   bottomPanelHidden,
   schema,
+  hasChromatinData,
 }: Props) => {
   const handleChromatinViewClick = () => {
     dispatch({
@@ -47,12 +50,10 @@ const ChromatinViewerButton = ({
     (state: RootState) => state.controls.chromatinSelectedCellTypes || []
   );
 
-  const chromatinData = useChromatinViewerData(schema, selectedCellTypes);
+  useChromatinViewerData(schema, selectedCellTypes);
 
   const shouldShowChromatinButton =
-    !isSidePanel &&
-    getFeatureFlag(FEATURES.MULTIOME_VIZ) &&
-    chromatinData.shouldShow;
+    !isSidePanel && getFeatureFlag(FEATURES.MULTIOME_VIZ) && hasChromatinData;
 
   useEffect(() => {
     if (shouldShowChromatinButton) {

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useCoverageQuery } from "common/queries/coverage";
 import { Schema } from "common/types/schema";
 import { formatSelectedGene } from "components/BottomPanel/utils";
@@ -8,11 +9,9 @@ export function useChromatinViewerData(
   schema: Schema | undefined,
   selectedCellTypes: string[]
 ) {
+  const dispatch = useDispatch();
   const { selectedGene, genomeVersion, setGenomeVersion } =
     useChromatinViewerSelectedGene();
-
-  // Track if chromatin data is available for this dataset
-  const [hasChromatinData, setHasChromatinData] = useState(false);
 
   // Set genome version when schema changes
   useEffect(() => {
@@ -36,9 +35,12 @@ export function useChromatinViewerData(
 
   useEffect(() => {
     if (coverageQuery.data && !coverageQuery.isError) {
-      setHasChromatinData(true);
+      dispatch({
+        type: "set chromatin data availability",
+        hasChromatinData: true,
+      });
     }
-  }, [coverageQuery.data, coverageQuery.isError]);
+  }, [coverageQuery.data, coverageQuery.isError, dispatch]);
 
   return {
     isLoading: coverageQuery.isLoading,
@@ -49,13 +51,6 @@ export function useChromatinViewerData(
     // Context state
     genomeVersion,
     selectedGene,
-
-    // Computed values
-    shouldShow:
-      getReferenceGenomeVersion(schema) !== null &&
-      selectedCellTypes.length > 0 &&
-      Boolean(selectedGene) &&
-      hasChromatinData,
   };
 }
 

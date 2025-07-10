@@ -1,11 +1,11 @@
 import { MenuItem } from "@blueprintjs/core";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import fuzzysort from "fuzzysort";
 import { ItemRenderer, Select } from "@blueprintjs/select";
 import { useSelector } from "react-redux";
 import { useChromatinViewerSelectedGene } from "common/hooks/useChromatinViewerSelectedGene";
 
-import { Dataframe } from "util/dataframe";
+import { Dataframe, DataframeValue } from "util/dataframe";
 import {
   FuzzySortResult,
   Item,
@@ -27,6 +27,8 @@ export function GeneSelect() {
   const { selectedGene, setSelectedGene } = useChromatinViewerSelectedGene();
 
   const [geneNames, setGeneNames] = useState([] as string[]);
+  const [geneIds, setGeneIds] = useState([] as DataframeValue[]);
+
   const [, setStatus] = useState("pending");
 
   const { annoMatrix } = useSelector((state) => ({
@@ -43,10 +45,21 @@ export function GeneSelect() {
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
         const { schema } = annoMatrix;
         const varIndex = schema.annotations.var.index;
+        const varLabel = "feature_name";
 
         setStatus("pending");
         try {
-          const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+          const dfIds: Dataframe = await annoMatrix.fetch("var", varIndex);
+          const varColumns = annoMatrix.getMatrixColumns("var");
+
+          // This is a fallback in case the varLabel is not available.
+          const labelToUse = varColumns.includes(varLabel)
+            ? varLabel
+            : varIndex;
+          const dfNames: Dataframe = await annoMatrix.fetch("var", labelToUse);
+
+          const geneIdArray = dfIds.col(varIndex).asArray() as string[];
+          const geneNameArray = dfNames.col(labelToUse).asArray() as string[];
           const isFilteredCol = "feature_is_filtered";
           const isFiltered =
             annoMatrix.getMatrixColumns("var").includes(isFilteredCol) &&
@@ -56,14 +69,18 @@ export function GeneSelect() {
 
           if (isFiltered) {
             const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
-            setGeneNames(
-              df
-                .col(varIndex)
-                .asArray()
-                .filter((_, index) => !isFilteredArray[index] && _) as string[]
+
+            const filteredGeneNames = geneNameArray.filter(
+              (_, index) => !isFilteredArray[index] && _
             );
+            const filteredGeneIds = geneIdArray.filter(
+              (_, index) => !isFilteredArray[index] && _
+            );
+            setGeneNames(filteredGeneNames);
+            setGeneIds(filteredGeneIds);
           } else {
-            setGeneNames(df.col(varIndex).asArray() as string[]);
+            setGeneNames(geneNameArray);
+            setGeneIds(geneIdArray);
           }
         } catch (error) {
           setStatus("error");
@@ -95,6 +112,17 @@ export function GeneSelect() {
       />
     );
   };
+  const geneItems = useMemo(() => {
+    const EMPTY_GENE_ITEM = { name: "No genes", id: "" };
+    if (!geneNames?.length || !geneIds?.length) {
+      return [EMPTY_GENE_ITEM];
+    }
+
+    return geneNames.map((name, i) => ({
+      name,
+      id: String(geneIds[i] ?? ""),
+    }));
+  }, [geneNames, geneIds]);
 
   const handleClick = (g: Item) => {
     if (!g) return;
@@ -112,7 +140,7 @@ export function GeneSelect() {
   return (
     <div data-testid="gene-search">
       <Select<string>
-        items={geneNames || ["No genes"]}
+        items={geneItems.map((g) => g.name)}
         itemListPredicate={(query: string, items: string[]) => {
           const sortedItems = [...items].sort((a, b) => a.localeCompare(b));
           const selectedGeneIndex = sortedItems.indexOf(selectedGene);

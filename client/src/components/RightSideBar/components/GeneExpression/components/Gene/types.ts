@@ -10,6 +10,7 @@ export interface StateProps {
   isScatterplotXXaccessor: boolean;
   isScatterplotYYaccessor: boolean;
   isGeneInfo: boolean;
+  hasChromatinData: boolean;
 }
 
 export interface DispatchProps {
@@ -17,7 +18,7 @@ export interface DispatchProps {
 }
 
 export interface OwnProps {
-  gene: string;
+  gene: { name: string; id: string };
   quickGene?: boolean;
   removeGene?: (gene: string) => () => void;
   geneId: DataframeValue;
@@ -37,11 +38,12 @@ export const mapStateToProps = (
 
   return {
     isColorAccessor:
-      state.colors.colorAccessor === gene &&
+      state.colors.colorAccessor === gene.id &&
       state.colors.colorMode !== "color by categorical metadata",
-    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene,
-    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene,
-    isGeneInfo: state.controls.geneInfo.gene === gene,
+    isScatterplotXXaccessor: state.controls.scatterplotXXaccessor === gene.id,
+    isScatterplotYYaccessor: state.controls.scatterplotYYaccessor === gene.id,
+    isGeneInfo: state.controls.geneInfo.gene === gene.id,
+    hasChromatinData: state.controls.hasChromatinData,
   };
 };
 export const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
