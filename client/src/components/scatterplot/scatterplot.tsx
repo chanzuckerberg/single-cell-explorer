@@ -7,6 +7,7 @@ import { mat3 } from "gl-matrix";
 import memoize from "memoize-one";
 import Async from "react-async";
 
+import { VAR_FEATURE_NAME_COLUMN } from "../../common/constants";
 import * as globals from "../../globals";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './scatterplot.css' or its corr... Remove this comment to see the full error message
 import styles from "./scatterplot.css";
@@ -103,6 +104,22 @@ class Scatterplot extends React.PureComponent<{}, State> {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
     return !shallowEqual(props.watchProps, prevProps.watchProps);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+  static createXQuery(geneName: any) {
+    const varFeatureName = VAR_FEATURE_NAME_COLUMN;
+    if (!varFeatureName) return null;
+    return [
+      "X",
+      {
+        where: {
+          field: "var",
+          column: varFeatureName,
+          value: geneName,
+        },
+      },
+    ];
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
@@ -315,25 +332,6 @@ class Scatterplot extends React.PureComponent<{}, State> {
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  createXQuery(geneName: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
-    const { annoMatrix } = this.props;
-    const { schema } = annoMatrix;
-    const varIndex = schema?.annotations?.var?.index;
-    if (!varIndex) return null;
-    return [
-      "X",
-      {
-        where: {
-          field: "var",
-          column: varIndex,
-          value: geneName,
-        },
-      },
-    ];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   createColorByQuery(colors: any) {
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'annoMatrix' does not exist on type 'Read... Remove this comment to see the full error message
     const { annoMatrix, genesets } = this.props;
@@ -380,11 +378,11 @@ class Scatterplot extends React.PureComponent<{}, State> {
       [
         annoMatrix.fetch(
           // @ts-expect-error ts-migrate(2488) FIXME: Type '(string | { where: { field: string; column: ... Remove this comment to see the full error message
-          ...this.createXQuery(scatterplotXXaccessor),
+          ...Scatterplot.createXQuery(scatterplotXXaccessor),
           globals.numBinsObsX
         ),
         annoMatrix.fetch(
-          ...this.createXQuery(scatterplotYYaccessor),
+          ...Scatterplot.createXQuery(scatterplotYYaccessor),
           globals.numBinsObsX
         ),
         query

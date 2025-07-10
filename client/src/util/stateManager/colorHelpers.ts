@@ -4,6 +4,7 @@
 import * as d3 from "d3";
 import { interpolateRainbow, interpolateCool } from "d3-scale-chromatic";
 import memoize from "memoize-one";
+import { VAR_FEATURE_NAME_COLUMN } from "../../common/constants";
 import * as globals from "../../globals";
 import parseRGB from "../parseRGB";
 import { range } from "../range";
@@ -38,6 +39,11 @@ export function createColorQuery(
   genesets: Genesets
 ): [Field, Query] | null {
   if (!colorMode || !colorByAccessor || !schema || !genesets) return null;
+  // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+  const varColumns = Object.keys(schema.annotations.varByName);
+  const varFeatureName = varColumns.includes(VAR_FEATURE_NAME_COLUMN)
+    ? VAR_FEATURE_NAME_COLUMN
+    : schema.annotations.var.index;
 
   switch (colorMode) {
     case "color by categorical metadata":
@@ -45,23 +51,20 @@ export function createColorQuery(
       return [Field.obs, colorByAccessor];
     }
     case "color by expression": {
-      const varIndex = schema?.annotations?.var?.index;
-      if (!varIndex) return null;
+      if (!varFeatureName) return null;
       return [
         Field.X,
         {
           where: {
             field: "var",
-            column: varIndex,
+            column: varFeatureName,
             value: colorByAccessor,
           },
         },
       ];
     }
     case "color by geneset mean expression": {
-      const varIndex = schema?.annotations?.var?.index;
-
-      if (!varIndex) return null;
+      if (!varFeatureName) return null;
       if (!genesets) return null;
 
       const geneset = genesets.get(colorByAccessor);
@@ -73,7 +76,7 @@ export function createColorQuery(
           summarize: {
             method: "mean",
             field: "var",
-            column: varIndex,
+            column: varFeatureName,
             values: setGenes,
           },
         },

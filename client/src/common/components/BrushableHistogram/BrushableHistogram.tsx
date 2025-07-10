@@ -3,6 +3,7 @@ import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
 import Async from "react-async";
 import memoize from "memoize-one";
+import { VAR_FEATURE_NAME_COLUMN } from "common/constants";
 import actions from "actions";
 import { makeContinuousDimensionName } from "util/nameCreators";
 import { Dataframe } from "util/dataframe";
@@ -479,13 +480,17 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
   }
 
   createQuery(): [Field, Query] | null {
-    const { isObs, isGeneSetSummary, field, setGenes, annoMatrix } = this.props;
-    const { schema } = annoMatrix;
+    const { isObs, isGeneSetSummary, field, setGenes } = this.props;
     if (isObs) {
       return [Field.obs, field];
     }
-    const varIndex = schema?.annotations?.var?.index;
-    if (!varIndex) return null;
+
+    // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+    const { annoMatrix } = this.props;
+    const varColumns = annoMatrix.getMatrixColumns(Field.var);
+    const columnName = varColumns.includes(VAR_FEATURE_NAME_COLUMN)
+      ? VAR_FEATURE_NAME_COLUMN
+      : annoMatrix.schema.annotations.var.index;
 
     if (isGeneSetSummary && setGenes) {
       return [
@@ -494,7 +499,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
           summarize: {
             method: "mean",
             field: "var",
-            column: varIndex,
+            column: columnName,
             values: [...setGenes.keys()],
           },
         },
@@ -507,7 +512,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       {
         where: {
           field: "var",
-          column: varIndex,
+          column: columnName,
           value: field,
         },
       },

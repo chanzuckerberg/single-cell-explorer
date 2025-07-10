@@ -72,7 +72,14 @@ export function normalizeResponse(
       writable;
     // If "feature_id" column exists, should not normalize
     // (gene info cards require ensembl ID of any gene, and normalizing overwrites some of those IDs)
-    if (!isIndex && colLabel !== "feature_id" && isEnumType) {
+    // If "feature_name" column exists, should not normalize
+    // (gene names are needed for differential expression and should preserve individual gene identities)
+    if (
+      !isIndex &&
+      colLabel !== "feature_id" &&
+      colLabel !== "feature_name" &&
+      isEnumType
+    ) {
       response = normalizeCategorical(response, colLabel, colSchema);
     }
   }

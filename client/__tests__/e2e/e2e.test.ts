@@ -1834,7 +1834,7 @@ test.skip("categories and values from dataset appear and properly truncate if ap
         .getByTestId("categorical-row")
         .all();
 
-      expect(Object.keys(categoryRows).length).toBe(1101);
+      expect(Object.keys(categoryRows).length).toBe(1001);
     },
     { page }
   );

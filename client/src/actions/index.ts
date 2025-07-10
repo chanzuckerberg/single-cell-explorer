@@ -5,6 +5,7 @@ import {
 } from "util/transientLocalStorage";
 import { KEYS } from "util/localStorage";
 import { fetchJson } from "util/fetch";
+import { VAR_FEATURE_NAME_COLUMN } from "common/constants";
 import type { Config } from "../globals";
 import * as globals from "../globals";
 import { AnnoMatrixLoader, AnnoMatrixObsCrossfilter } from "../annoMatrix";
@@ -391,8 +392,6 @@ const requestDifferentialExpression =
       */
       const { annoMatrix } = getState();
 
-      const varIndexName = annoMatrix.schema.annotations.var.index;
-
       // // Legal values are null, Array or TypedArray.  Null is initial state.
       if (!set1) set1 = new Int32Array();
       if (!set2) set2 = new Int32Array();
@@ -434,7 +433,18 @@ const requestDifferentialExpression =
 
       const response = await res.json();
 
-      const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
+      // Fallback
+      const { schema } = annoMatrix;
+      const varIndex = schema.annotations.var.index;
+      const varFeatureName = VAR_FEATURE_NAME_COLUMN;
+      // Check if VAR_FEATURE_NAME_COLUMN exists, otherwise use the index
+      const varColumns = annoMatrix.getMatrixColumns(Field.var);
+      const columnName = varColumns.includes(varFeatureName)
+        ? varFeatureName
+        : varIndex;
+
+      const varLabel = await annoMatrix.fetch(Field.var, columnName);
+
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
         diffexpLists
@@ -443,7 +453,7 @@ const requestDifferentialExpression =
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
             // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
-            varIndex.at(v[0], varIndexName),
+            varLabel.at(v[0], columnName),
             ...v.slice(1),
           ]
         );
@@ -576,7 +586,6 @@ const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   dispatch({ type: "location update" });
   window.history.pushState(null, "", url);
 };
-
 
 export const revertToAction = (targetCount: number) => ({
   type: "@@undoable/revert-to-action",
