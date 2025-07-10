@@ -54,8 +54,6 @@ export const genesetAddGenes =
   (genesetName: any, genes: any) => async (dispatch: any, getState: any) => {
     const state = getState();
     const { obsCrossfilter: prevObsCrossfilter, annoMatrix } = state;
-    // const { schema } = annoMatrix;
-    // const varIndex = schema.annotations.var.index;
     const varFeatureName = "feature_name";
     const df: Dataframe = await annoMatrix.fetch("var", varFeatureName);
     const geneNames = df.col(varFeatureName).asArray();
@@ -121,15 +119,15 @@ function dropGenesetSummaryDimension(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   genesetName: any
 ) {
-  const { annoMatrix, genesets } = state;
-  const varIndex = annoMatrix.schema.annotations?.var?.index;
+  const { genesets } = state;
+  const varFeatureName = "feature_name";
   const gs = genesets?.genesets?.get(genesetName) ?? {};
   const genes = Array.from(gs.genes.keys());
   const query = {
     summarize: {
       method: "mean",
       field: "var",
-      column: varIndex,
+      column: varFeatureName,
       values: genes,
     },
   };
@@ -137,13 +135,12 @@ function dropGenesetSummaryDimension(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-function dropGeneDimension(obsCrossfilter: any, state: any, gene: any) {
-  const { annoMatrix } = state;
-  const varIndex = annoMatrix.schema.annotations?.var?.index;
+function dropGeneDimension(obsCrossfilter: any, gene: any) {
+  const varFeatureName = "feature_name";
   const query = {
     where: {
       field: "var",
-      column: varIndex,
+      column: varFeatureName,
       value: gene,
     },
   };
@@ -163,8 +160,7 @@ function dropGeneset(
   const { obsCrossfilter: prevObsCrossfilter } = state;
   const obsCrossfilter = geneSymbols.reduce(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-    (crossfilter: any, gene: any) =>
-      dropGeneDimension(crossfilter, state, gene),
+    (crossfilter: any, gene: any) => dropGeneDimension(crossfilter, gene),
     dropGenesetSummaryDimension(prevObsCrossfilter, state, genesetName)
   );
   dispatch({
