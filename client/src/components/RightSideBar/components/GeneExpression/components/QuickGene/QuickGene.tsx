@@ -148,16 +148,15 @@ export function QuickGene() {
       threshold: -10000,
     });
 
-  const QuickGenes = useMemo((): JSX.Element => {
-    const removeGene = (gene: string) => () => {
-      dispatch({ type: "clear user defined gene", gene });
-    };
-
-    return userDefinedGenes.map((gene: string) => {
+  const QuickGenes = useMemo((): JSX.Element => userDefinedGenes.map((gene: string) => {
       let geneId = geneIds[geneNames.indexOf(gene)];
       if (!geneId) {
         geneId = "";
       }
+
+      const removeGene = (geneToRemove: string) => () => {
+        dispatch({ type: "clear user defined gene", gene: geneToRemove });
+      };
 
       return (
         <Gene
@@ -170,8 +169,7 @@ export function QuickGene() {
           onGeneExpressionComplete={noop}
         />
       );
-    });
-  }, [userDefinedGenes, geneNames, geneIds, dispatch]);
+    }), [userDefinedGenes, geneNames, geneIds, dispatch]);
 
   return (
     <div style={{ width: "100%", marginBottom: "16px" }}>
