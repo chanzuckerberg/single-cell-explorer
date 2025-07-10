@@ -56,12 +56,11 @@ export function QuickGene() {
     (async function fetch() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on commit
       if (annoMatrix !== (prevProps as any)?.annoMatrix) {
-        const { schema } = annoMatrix;
-        const varIndex = schema.annotations.var.index;
+        const varFeatureName = "feature_name";
 
         setStatus("pending");
         try {
-          const df: Dataframe = await annoMatrix.fetch("var", varIndex);
+          const df: Dataframe = await annoMatrix.fetch("var", varFeatureName);
           let dfIds: Dataframe;
           const geneIdCol = "feature_id";
           const isFilteredCol = "feature_is_filtered";
@@ -81,12 +80,12 @@ export function QuickGene() {
             const isFilteredArray = isFiltered.col(isFilteredCol).asArray();
             setGeneNames(
               df
-                .col(varIndex)
+                .col(varFeatureName)
                 .asArray()
                 .filter((_, index) => !isFilteredArray[index] && _) as string[]
             );
           } else {
-            setGeneNames(df.col(varIndex).asArray() as string[]);
+            setGeneNames(df.col(varFeatureName).asArray() as string[]);
           }
         } catch (error) {
           setStatus("error");
