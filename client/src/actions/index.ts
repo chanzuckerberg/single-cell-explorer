@@ -391,7 +391,7 @@ const requestDifferentialExpression =
       */
       const { annoMatrix } = getState();
 
-      const varIndexName = annoMatrix.schema.annotations.var.index;
+      const varFeatureName = "feature_name";
 
       // // Legal values are null, Array or TypedArray.  Null is initial state.
       if (!set1) set1 = new Int32Array();
@@ -434,7 +434,8 @@ const requestDifferentialExpression =
 
       const response = await res.json();
 
-      const varIndex = await annoMatrix.fetch(Field.var, varIndexName);
+      const varLabel = await annoMatrix.fetch(Field.var, varFeatureName);
+
       const diffexpLists = { negative: [], positive: [] };
       for (const polarity of Object.keys(
         diffexpLists
@@ -443,7 +444,7 @@ const requestDifferentialExpression =
           // TODO: swap out with type defined at genesets reducer when made
           (v: [LabelIndex, number, number, number]) => [
             // @ts-expect-error (seve): fix downstream lint errors as a result of detailed app store typing
-            varIndex.at(v[0], varIndexName),
+            varLabel.at(v[0], varFeatureName),
             ...v.slice(1),
           ]
         );
@@ -576,7 +577,6 @@ const updateLocation = (url: string) => (dispatch: AppDispatch) => {
   dispatch({ type: "location update" });
   window.history.pushState(null, "", url);
 };
-
 
 export const revertToAction = (targetCount: number) => ({
   type: "@@undoable/revert-to-action",

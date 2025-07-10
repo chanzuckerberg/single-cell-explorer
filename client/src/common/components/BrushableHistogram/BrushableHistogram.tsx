@@ -487,6 +487,8 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
     const varIndex = schema?.annotations?.var?.index;
     if (!varIndex) return null;
 
+    const varLabel = "feature_name";
+
     if (isGeneSetSummary && setGenes) {
       return [
         Field.X,
@@ -494,7 +496,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
           summarize: {
             method: "mean",
             field: "var",
-            column: varIndex,
+            column: varLabel,
             values: [...setGenes.keys()],
           },
         },
@@ -507,7 +509,7 @@ class HistogramBrush extends React.PureComponent<BrushableHistogramProps> {
       {
         where: {
           field: "var",
-          column: varIndex,
+          column: varLabel,
           value: field,
         },
       },
