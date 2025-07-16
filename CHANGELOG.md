@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.2...v1.12.3) (2025-07-16)
+
+
+### Misc
+
+* CCIE-4332 use GH_ACTIONS_HELPER_* ([#1239](https://github.com/chanzuckerberg/single-cell-explorer/issues/1239)) ([8234395](https://github.com/chanzuckerberg/single-cell-explorer/commit/8234395c661cabbe123b436cc150c64348334825))
+* update to point dataroot to new byod workflows bucket ([#1241](https://github.com/chanzuckerberg/single-cell-explorer/issues/1241)) ([ea2e1ca](https://github.com/chanzuckerberg/single-cell-explorer/commit/ea2e1cad27fc1bf7815d354d3c13272e92d954d7))
+
 ## [1.12.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.1...v1.12.2) (2025-07-10)
 
 
