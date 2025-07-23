@@ -403,7 +403,10 @@ class CxgDataset(Dataset):
         bin_size = ATAC_BIN_SIZE
         range_buffer = ATAC_RANGE_BUFFER
 
-        target_chromosome, gene_start, gene_end, sorted_genes = self.get_atac_gene_info(gene_name, genome_version)
+        gene_info = self.get_atac_gene_info(gene_name, genome_version)
+        if gene_info is None:
+            raise DatasetAccessError(f"Gene '{gene_name}' not found in genome version '{genome_version}'")
+        target_chromosome, gene_start, gene_end, sorted_genes = gene_info
 
         # Determine genomic region of interest
         bin_start = (gene_start - range_buffer) // bin_size
