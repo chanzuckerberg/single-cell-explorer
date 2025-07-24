@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.4](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.3...v1.12.4) (2025-07-23)
+
+
+### Bug Fixes
+
+* Grab organism_ontology_term_id from config ([#1244](https://github.com/chanzuckerberg/single-cell-explorer/issues/1244)) ([b7d5c3f](https://github.com/chanzuckerberg/single-cell-explorer/commit/b7d5c3f453401b486b04f3ae4d6e253d9f6b042c))
+
 ## [1.12.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.2...v1.12.3) (2025-07-16)
 
 
