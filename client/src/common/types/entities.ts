@@ -91,6 +91,7 @@ export interface Dataset {
   dataset_deployments: DatasetDeployment[];
   name: string;
   published?: boolean;
+  organism?: OrganismMetadata[];
 }
 
 /**
@@ -144,6 +145,11 @@ export interface PublisherMetadata {
   published_day: number;
   published_month: number;
   published_year: number;
+}
+
+export interface OrganismMetadata {
+  label: string;
+  ontology_term_id: string;
 }
 
 export interface CellInfo {

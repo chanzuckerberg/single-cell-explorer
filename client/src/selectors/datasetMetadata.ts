@@ -18,3 +18,9 @@ export const selectIsSeamlessEnabled = (state: RootState): boolean => {
   const datasetMetadata = selectDatasetMetadata(state);
   return Boolean(datasetMetadata.datasetMetadata && datasetMetadata.portalUrl);
 };
+
+export const selectOrganismOntologyTermId = (
+  state: RootState
+): string | undefined =>
+  state.datasetMetadata.datasetMetadata?.collection_datasets?.[0]?.organism?.[0]
+    ?.ontology_term_id;
