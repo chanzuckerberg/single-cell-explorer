@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "../../reducers";
+import { selectOrganismOntologyTermId } from "../../selectors/datasetMetadata";
 
 interface ChromatinViewerContextType {
   selectedGene: string;
@@ -31,12 +31,8 @@ export function ChromatinViewerProvider({
   const DEFAULT_GENOME_VERSION = "hg38";
   const DEFAULT_GENE = "MYC";
 
-  // Get organism ontology term ID from config to determine genome version
-  const config = useSelector((state: RootState) => state.config);
-  const organismOntologyTermId =
-    config?.corpora_props?.organism_ontology_term_id;
+  const organismOntologyTermId = useSelector(selectOrganismOntologyTermId);
 
-  // Map organism ontology term ID to genome version
   const getGenomeVersionFromOrganism = (ontologyTermId?: string): string => {
     switch (ontologyTermId) {
       case "NCBITaxon:9606": // Human
@@ -48,7 +44,6 @@ export function ChromatinViewerProvider({
     }
   };
 
-  // Map organism ontology term ID to default gene
   const getDefaultGeneFromOrganism = (ontologyTermId?: string): string => {
     switch (ontologyTermId) {
       case "NCBITaxon:9606":
