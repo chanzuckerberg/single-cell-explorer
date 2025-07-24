@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.5](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.4...v1.12.5) (2025-07-24)
+
+
+### Bug Fixes
+
+* Add organism id to datasetMetadata ([#1246](https://github.com/chanzuckerberg/single-cell-explorer/issues/1246)) ([743daac](https://github.com/chanzuckerberg/single-cell-explorer/commit/743daac28ba792a947777a67762af40b935a9c2b))
+
 ## [1.12.4](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.3...v1.12.4) (2025-07-23)
 
 
