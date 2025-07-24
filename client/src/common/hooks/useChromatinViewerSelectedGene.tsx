@@ -6,7 +6,10 @@ import React, {
   ReactNode,
 } from "react";
 import { useSelector } from "react-redux";
-import { selectOrganismOntologyTermId } from "../../selectors/datasetMetadata";
+import {
+  selectOrganismOntologyTermId,
+  selectIsDatasetMetadataLoaded,
+} from "../../selectors/datasetMetadata";
 
 interface ChromatinViewerContextType {
   selectedGene: string;
@@ -32,6 +35,7 @@ export function ChromatinViewerProvider({
   const DEFAULT_GENE = "MYC";
 
   const organismOntologyTermId = useSelector(selectOrganismOntologyTermId);
+  const isDatasetMetadataLoaded = useSelector(selectIsDatasetMetadataLoaded);
 
   const getGenomeVersionFromOrganism = (ontologyTermId?: string): string => {
     switch (ontologyTermId) {
@@ -55,12 +59,12 @@ export function ChromatinViewerProvider({
     }
   };
 
-  const detectedGenomeVersion = getGenomeVersionFromOrganism(
-    organismOntologyTermId
-  );
-  const detectedDefaultGene = getDefaultGeneFromOrganism(
-    organismOntologyTermId
-  );
+  const detectedGenomeVersion = isDatasetMetadataLoaded
+    ? getGenomeVersionFromOrganism(organismOntologyTermId)
+    : DEFAULT_GENOME_VERSION;
+  const detectedDefaultGene = isDatasetMetadataLoaded
+    ? getDefaultGeneFromOrganism(organismOntologyTermId)
+    : DEFAULT_GENE;
 
   const [selectedGene, setSelectedGene] = useState<string>(
     initialSelectedGene || detectedDefaultGene
@@ -69,28 +73,28 @@ export function ChromatinViewerProvider({
     detectedGenomeVersion
   );
 
-  // Update selected gene when initialSelectedGene changes (from Redux)
   useEffect(() => {
     if (initialSelectedGene) {
       setSelectedGene(initialSelectedGene);
     }
   }, [initialSelectedGene]);
 
-  // Update genome version when organism ontology term ID changes
   useEffect(() => {
-    const newGenomeVersion = getGenomeVersionFromOrganism(
-      organismOntologyTermId
-    );
-    setGenomeVersionState(newGenomeVersion);
-  }, [organismOntologyTermId]);
+    if (isDatasetMetadataLoaded) {
+      const newGenomeVersion = getGenomeVersionFromOrganism(
+        organismOntologyTermId
+      );
+      setGenomeVersionState(newGenomeVersion);
+    }
+  }, [isDatasetMetadataLoaded, organismOntologyTermId]);
 
-  // Update default gene when organism ontology term ID changes (only if no initial gene provided)
+  // Update default gene when data is loaded and organism ontology term ID changes (only if no initial gene provided)
   useEffect(() => {
-    if (!initialSelectedGene) {
+    if (isDatasetMetadataLoaded && !initialSelectedGene) {
       const newDefaultGene = getDefaultGeneFromOrganism(organismOntologyTermId);
       setSelectedGene(newDefaultGene);
     }
-  }, [organismOntologyTermId, initialSelectedGene]);
+  }, [isDatasetMetadataLoaded, organismOntologyTermId, initialSelectedGene]);
 
   const setGenomeVersion = (version: string) => {
     setGenomeVersionState(version);
