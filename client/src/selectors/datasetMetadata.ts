@@ -24,3 +24,6 @@ export const selectOrganismOntologyTermId = (
 ): string | undefined =>
   state.datasetMetadata.datasetMetadata?.collection_datasets?.[0]?.organism?.[0]
     ?.ontology_term_id;
+
+export const selectIsDatasetMetadataLoaded = (state: RootState): boolean =>
+  !state.datasetMetadata.loading && !!state.datasetMetadata.datasetMetadata;
