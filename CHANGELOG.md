@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.6](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.5...v1.12.6) (2025-07-24)
+
+
+### Bug Fixes
+
+* update organism once metadata is loaded ([#1248](https://github.com/chanzuckerberg/single-cell-explorer/issues/1248)) ([8194988](https://github.com/chanzuckerberg/single-cell-explorer/commit/8194988e06f856d45d88a558ad444e09e89d11a6))
+
 ## [1.12.5](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.4...v1.12.5) (2025-07-24)
 
 
