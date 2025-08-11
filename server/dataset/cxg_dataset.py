@@ -445,6 +445,12 @@ class CxgDataset(Dataset):
 
             result = coverage.query(cond=qc).df[:]
 
+            # Handle quantized normalized_coverage data
+            # Check if normalized_coverage is quantized (uint8) and dequantize if needed
+            if result["normalized_coverage"].dtype == np.uint8:
+                # Dequantize: uint8 quantized values -> float32 original values
+                result["normalized_coverage"] = result["normalized_coverage"] / 25.5
+
             bins = np.arange(bin_start, bin_end + 1)
             starts = bins * bin_size
             ends = starts + bin_size
