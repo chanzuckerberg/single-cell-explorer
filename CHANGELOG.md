@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.6...v1.13.0) (2025-08-13)
+
+
+### Misc
+
+* CCIE-4984 conform to open sourcing guidelines ([#1252](https://github.com/chanzuckerberg/single-cell-explorer/issues/1252)) ([f9fb0ce](https://github.com/chanzuckerberg/single-cell-explorer/commit/f9fb0ced2966711eb4046cf0e06d2caab36f1fbd))
+
+
+### Features
+
+* Dequantize normalized coverage ([#1251](https://github.com/chanzuckerberg/single-cell-explorer/issues/1251)) ([16a2edf](https://github.com/chanzuckerberg/single-cell-explorer/commit/16a2edf62eea7b2df8759074f66e96ea7b4230c6))
+
 ## [1.12.6](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.5...v1.12.6) (2025-07-24)
 
 

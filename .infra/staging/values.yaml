@@ -9,7 +9,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_staging_explorer
       image:
-        tag: sha-77e3f7d
+        tag: sha-26569b8
       replicaCount: 1
       resources:
         limits:
