@@ -451,7 +451,7 @@ class CxgDataset(Dataset):
                 # Dequantize: uint8 quantized values -> float32 original values
                 result["normalized_coverage"] = result["normalized_coverage"] / 25.5
                 #   The 25.5 value comes from mapping our target data range to the uint8 storage range:
-                # 
+                #
                 #   25.5 = 255 / 10.0
                 #
                 #   Where:
