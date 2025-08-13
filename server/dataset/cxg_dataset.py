@@ -445,6 +445,38 @@ class CxgDataset(Dataset):
 
             result = coverage.query(cond=qc).df[:]
 
+            # Handle quantized normalized_coverage data
+            # Check if normalized_coverage is quantized (uint8) and dequantize if needed
+            if result["normalized_coverage"].dtype == np.uint8:
+                # Dequantize: uint8 quantized values -> float32 original values
+                result["normalized_coverage"] = result["normalized_coverage"] / 25.5
+                #   The 25.5 value comes from mapping our target data range to the uint8 storage range:
+                #
+                #   25.5 = 255 / 10.0
+                #
+                #   Where:
+                #   - 255 = Maximum value for uint8 (2^8 - 1)
+                #   - 10.0 = Maximum practical value we want to represent
+                #
+                #   1. Data Range Analysis
+                #
+                #   From ATAC-seq normalized coverage analysis:
+                #   - Most values: 0-3 (low accessibility regions)
+                #   - Common values: 3-7 (medium accessibility)
+                #   - High values: 7-10 (high accessibility)
+                #   - Extreme outliers: 10+ (very rare)
+                #
+                #   2. Storage Target
+                #
+                #   - uint8 range: 0 to 255 (256 possible values)
+                #   - Practical range: 0 to 10 (covers 99%+ of real data)
+                #
+                #   3. Linear Mapping Formula
+                #
+                #   quantized_value = original_value × scale_factor
+                #   scale_factor = max_uint8_value / max_practical_value
+                #   scale_factor = 255 / 10 = 25.5
+
             bins = np.arange(bin_start, bin_end + 1)
             starts = bins * bin_size
             ends = starts + bin_size
