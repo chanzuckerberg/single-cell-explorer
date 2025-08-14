@@ -445,7 +445,6 @@ class CxgDataset(Dataset):
 
             result = coverage.query(cond=qc).df[:]
 
-            # Handle quantized normalized_coverage data
             # Check if normalized_coverage is quantized (uint8) and dequantize if needed
             if result["normalized_coverage"].dtype == np.uint8:
                 # Dequantize: uint8 quantized values -> float32 original values
