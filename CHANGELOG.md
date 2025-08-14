@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.0...v1.13.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* trigger deployment ([#1254](https://github.com/chanzuckerberg/single-cell-explorer/issues/1254)) ([88aebbc](https://github.com/chanzuckerberg/single-cell-explorer/commit/88aebbc5b8656f0b0bf1bca26ae0edf69d14a4b4))
+
 ## [1.13.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.12.6...v1.13.0) (2025-08-13)
 
 
