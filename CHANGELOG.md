@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.1...v1.13.2) (2025-08-28)
+
+
+### Bug Fixes
+
+* Update default gene for mouse ([#1256](https://github.com/chanzuckerberg/single-cell-explorer/issues/1256)) ([220a675](https://github.com/chanzuckerberg/single-cell-explorer/commit/220a675bbf96bca762d045aba578e5c4c4020ee1))
+
 ## [1.13.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.0...v1.13.1) (2025-08-14)
 
 
