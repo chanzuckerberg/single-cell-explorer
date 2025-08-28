@@ -53,7 +53,7 @@ export function ChromatinViewerProvider({
       case "NCBITaxon:9606":
         return "MYC";
       case "NCBITaxon:10090":
-        return "Vip";
+        return "Myc";
       default:
         return DEFAULT_GENE;
     }
