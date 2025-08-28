@@ -67,7 +67,7 @@ const BottomSideBar = ({
                 Coverage tracks show normalized chromatin accessibility for each
                 cell type. scATAC-seq signals were aggregated across cells
                 within each type in 100bp genomic bins, divided by the cell
-                type`&apos;`s total fragment count, and multiplied by 10^6 for
+                type&apos;s total fragment count, and multiplied by 10^6 for
                 visualization.
               </TooltipContent>
             }
