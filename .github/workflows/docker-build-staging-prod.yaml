@@ -9,7 +9,7 @@ jobs:
     secrets: inherit
     with:
       envs: staging,prod
-      path_filters: "!.infra/**"
+      path_filters: "!**/.infra/**"
       branches_include: release-please--branches--main
       force_update_manifests: true
       images: |
