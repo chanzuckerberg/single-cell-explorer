@@ -24,11 +24,11 @@ jobs:
           },
           "explorer-vcp": {
             "context": ".",
-            "dockerfile": "hosted/Dockerfile",
+            "dockerfile": "vcp-hosted/Dockerfile",
             "argus_root": "vcp-infra",
             "platform": "linux/amd64",
             "build_args": [
               "BUILDKIT_INLINE_CACHE=1"
             ]
-          }          
+          }
         }
