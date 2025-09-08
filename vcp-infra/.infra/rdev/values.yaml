@@ -13,7 +13,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::058264139299:role/virtual-cells-platform-backend-dev
       image:
-        tag: sha-d4062ba
+        tag: sha-bdbe373
       replicaCount: 1
       env:
         # env vars common to all deployment stages
