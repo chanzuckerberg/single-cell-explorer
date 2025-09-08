@@ -35,8 +35,8 @@ ADD hosted/start.sh start.sh
 RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml
 
-ARG COMMIT_SHA=""
-LABEL commit=${COMMIT_SHA}
-ENV COMMIT_SHA=${COMMIT_SHA}
+ARG IMAGE_TAG
+LABEL commit=${IMAGE_TAG}
+ENV IMAGE_TAG=${IMAGE_TAG}
 
 CMD ["/start.sh"]

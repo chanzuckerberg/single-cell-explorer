@@ -5,9 +5,30 @@ on:
 
 jobs:
   rdev_argus_builder:
-    uses: ./.github/workflows/workflow-argus-docker-build.yaml
+    uses: chanzuckerberg/github-actions/.github/workflows/argus-docker-build.yaml@v6
     secrets: inherit
     with:
       envs: rdev
-      path_filters: '!.infra/**'
+      path_filters: "!.infra/**"
       branches_ignore: main,release-please--branches--main
+      images: |
+        {
+          "explorer": {
+            "context": ".",
+            "dockerfile": "hosted/Dockerfile",
+            "argus_root": ".",
+            "platform": "linux/amd64",
+            "build_args": [
+              "BUILDKIT_INLINE_CACHE=1"
+            ]
+          },
+          "explorer-vcp": {
+            "context": ".",
+            "dockerfile": "hosted/Dockerfile",
+            "argus_root": "vcp-infra",
+            "platform": "linux/amd64",
+            "build_args": [
+              "BUILDKIT_INLINE_CACHE=1"
+            ]
+          }          
+        }

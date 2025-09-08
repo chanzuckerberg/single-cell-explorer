@@ -1,0 +1,41 @@
+name: Update prod VCP
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prod_stack_upsert:
+    runs-on: ARM64
+    permissions:
+      id-token: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Upsert Prod Stack
+        uses: chanzuckerberg/argus-artifacts/ci/packages/create-stack@v0
+        with:
+          appName: vcp-explorer
+          envName: prod
+          waitForDeploymentSeconds: 300
+
+  prod_smoke_test:
+    needs: prod_stack_upsert
+    # (thuang): We now run the smoke tests against 2 datasets sequentially, so need longer timeout
+    timeout-minutes: 60
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prod Smoke Tests
+        uses: ./.github/actions/smoke-test
+        with:
+          env: prod
+          # ⚠️ Make sure to configure a `CHROMATIC_PROJECT_TOKEN` repository secret
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
