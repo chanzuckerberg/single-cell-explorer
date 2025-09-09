@@ -1,10 +1,16 @@
 stack:
   global:
     ingress:
-      annotations:
-        nginx.ingress.kubernetes.io/auth-type: basic
-        nginx.ingress.kubernetes.io/auth-secret: basic-auth
-        nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
+      rules:
+        - host: stunning-boar.dev-vcp.dev.czi.team
+    oidcProxy:
+      extraArgs:
+        - --cookie-refresh=45m
+        - --cookie-expire=24h
+        - --cookie-domain=.dev-vcp.dev.czi.team
+        - --whitelist-domain=vcp-dev.auth.us-west-2.amazoncognito.com
+        - --auth-logging=false
+        - --request-logging=false
   services:
     explorer:
       serviceAccount:
