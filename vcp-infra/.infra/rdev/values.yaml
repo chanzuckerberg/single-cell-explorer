@@ -4,8 +4,8 @@ stack:
       extraArgs:
         - --cookie-refresh=45m
         - --cookie-expire=24h
-        - --cookie-domain=.staging.virtual-cells.czi.technology
-        - --whitelist-domain=vcp-staging.auth.us-west-2.amazoncognito.com
+        - --cookie-domain=.dev-vcp.dev.czi.team
+        - --whitelist-domain=vcp-dev.auth.us-west-2.amazoncognito.com
         - --auth-logging=false
         - --request-logging=false
   services:
