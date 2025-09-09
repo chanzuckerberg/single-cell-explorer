@@ -1,7 +1,6 @@
 version: "3.8"
 
 services:
-
   localstack:
     image: localstack/localstack@sha256:7c6635493185d25165979995fb073fd789c72b6d8b17ef3a70b798d55576732f
     ports:
@@ -30,7 +29,7 @@ services:
         - "${DOCKER_REPO}corpora-explorer:latest"
       args:
         - BUILDKIT_INLINE_CACHE=1
-        - COMMIT_SHA
+        - IMAGE_TAG
     restart: always
     depends_on:
       - localstack

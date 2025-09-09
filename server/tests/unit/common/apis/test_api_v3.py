@@ -1173,13 +1173,13 @@ class TestDeployedVersion(BaseTest):
         cls.url = f"{test_url_base}{endpoint}"
 
     def test_get_deployed_version(self):
-        os.environ["COMMIT_SHA"] = "123"
+        os.environ["IMAGE_TAG"] = "123"
         endpoint = "deployed_version"
         url = f"/{endpoint}"
         result = self.client.get(url)
         self.assertEqual(result.status_code, 200)
         self.assertEqual(json.loads(result.data), {"Explorer": "123"})
-        del os.environ["COMMIT_SHA"]
+        del os.environ["IMAGE_TAG"]
 
 
 class MockResponse:
