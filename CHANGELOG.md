@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.2...v1.14.0) (2025-09-09)
+
+
+### Features
+
+* vcp explorer ([#1260](https://github.com/chanzuckerberg/single-cell-explorer/issues/1260)) ([1f13239](https://github.com/chanzuckerberg/single-cell-explorer/commit/1f132396760a72deb18b44181b1601e30d143d3c))
+
 ## [1.13.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.1...v1.13.2) (2025-08-28)
 
 
