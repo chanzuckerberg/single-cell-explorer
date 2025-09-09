@@ -1,5 +1,10 @@
 stack:
   global:
+    oidcProxy:
+      enabled: true
+      skipAuth:
+        - path: "/cellxgene/health"
+          method: GET
     replicaCount: 1
     autoscaling:
       enabled: false
