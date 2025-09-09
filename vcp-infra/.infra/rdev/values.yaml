@@ -1,9 +1,22 @@
 stack:
+  global:
+    ingress:
+      annotations:
+        nginx.ingress.kubernetes.io/auth-type: basic
+        nginx.ingress.kubernetes.io/auth-secret: basic-auth
+        nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
   services:
     explorer:
+      serviceAccount:
+        create: true
+        automount: true
+        annotations:
+          "eks.amazonaws.com/role-arn": arn:aws:iam::058264139299:role/virtual-cells-platform-backend-dev
       image:
         tag: sha-ff3e9da
       replicaCount: 1
+      ingress:
+        oidcProtected: false
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
@@ -21,7 +34,7 @@ stack:
           value: $(__ARGUS_STACK_INGRESS_HOST)
         - name: DATA_LOCATOR_DOMAIN
           value: $(__ARGUS_STACK_INGRESS_HOST)
-        - name: CXG_BUCKET_PATH
-          value: hosted-cellxgene-dev
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: SKIP_ATAC_CACHE
+          value: "1"

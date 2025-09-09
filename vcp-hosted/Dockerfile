@@ -30,7 +30,8 @@ WORKDIR /server/ecs
 RUN make build-ecs
 WORKDIR /
 
-ADD hosted/config.yaml config.yaml
+# Use VCP-specific config instead of hosted/config.yaml
+ADD vcp-hosted/config.yaml config.yaml
 ADD hosted/start.sh start.sh
 RUN chmod +x /start.sh
 ENV CXG_CONFIG_FILE=/config.yaml

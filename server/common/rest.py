@@ -367,7 +367,7 @@ def get_deployed_version(request):
     """
     Returns the deployed version
     """
-    version_info = {"Explorer": os.getenv("COMMIT_SHA")}
+    version_info = {"Explorer": os.getenv("IMAGE_TAG")}
     return make_response(jsonify(version_info), 200)
 
 
