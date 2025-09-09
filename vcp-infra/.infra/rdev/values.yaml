@@ -36,3 +36,5 @@ stack:
           value: hosted-cellxgene-dev
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: SKIP_ATAC_CACHE
+          value: "1"
