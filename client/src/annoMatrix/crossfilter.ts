@@ -14,6 +14,8 @@ import Crossfilter, {
 import { _getColumnSchema } from "./schema";
 import {
   Field,
+  Category,
+  AnnotationColumnSchema,
 } from "../common/types/schema";
 import AnnoMatrix from "./annoMatrix";
 import {
@@ -24,6 +26,7 @@ import { Query } from "./query";
 import { TypedArray } from "../common/types/arraytypes";
 import { LabelArray } from "../util/dataframe/types";
 import * as globals from "../globals";
+import { AnyArray } from "../common/types/arraytypes";
 
 function _dimensionNameFromDf(field: Field, df: Dataframe): string {
   const colNames = df.colIndex.labels();
@@ -51,6 +54,107 @@ export default class AnnoMatrixObsCrossfilter {
     this.obsCrossfilter =
       _obsCrossfilter || new Crossfilter<Dataframe>(annoMatrix._cache.obs);
     this.obsCrossfilter = this.obsCrossfilter.setData(annoMatrix._cache.obs);
+  }
+
+  addObsColumn(
+    colSchema: AnnotationColumnSchema,
+    Ctor: new (length: number) => AnyArray,
+    value: AnyArray | Category
+  ): AnnoMatrixObsCrossfilter {
+    const annoMatrix = this.annoMatrix.addObsColumn(colSchema, Ctor, value);
+    const obsCrossfilter = this.obsCrossfilter.setData(annoMatrix._cache.obs);
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  dropObsColumn(col: LabelType): AnnoMatrixObsCrossfilter {
+    const annoMatrix = this.annoMatrix.dropObsColumn(col);
+    const dimName = _dimensionName(Field.obs, col);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(dimName)) {
+      obsCrossfilter = obsCrossfilter.delDimension(dimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  renameObsColumn(
+    oldCol: LabelType,
+    newCol: LabelType
+  ): AnnoMatrixObsCrossfilter {
+    const annoMatrix = this.annoMatrix.renameObsColumn(oldCol, newCol);
+    const oldDimName = _dimensionName(Field.obs, oldCol);
+    const newDimName = _dimensionName(Field.obs, newCol);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(oldDimName)) {
+      obsCrossfilter = obsCrossfilter.renameDimension(oldDimName, newDimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  addObsAnnoCategory(
+    col: LabelType,
+    category: Category
+  ): AnnoMatrixObsCrossfilter {
+    const annoMatrix = this.annoMatrix.addObsAnnoCategory(col, category);
+    const dimName = _dimensionName(Field.obs, col);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(dimName)) {
+      obsCrossfilter = obsCrossfilter.delDimension(dimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  async removeObsAnnoCategory(
+    col: LabelType,
+    category: Category,
+    unassignedCategory: Category
+  ): Promise<AnnoMatrixObsCrossfilter> {
+    const annoMatrix = await this.annoMatrix.removeObsAnnoCategory(
+      col,
+      category,
+      unassignedCategory
+    );
+    const dimName = _dimensionName(Field.obs, col);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(dimName)) {
+      obsCrossfilter = obsCrossfilter.delDimension(dimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  async setObsColumnValues(
+    col: LabelType,
+    rowLabels: LabelArray,
+    value: Category
+  ): Promise<AnnoMatrixObsCrossfilter> {
+    const annoMatrix = await this.annoMatrix.setObsColumnValues(
+      col,
+      rowLabels,
+      value
+    );
+    const dimName = _dimensionName(Field.obs, col);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(dimName)) {
+      obsCrossfilter = obsCrossfilter.delDimension(dimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
+  }
+
+  async resetObsColumnValues(
+    col: LabelType,
+    oldValue: Category,
+    newValue: Category
+  ): Promise<AnnoMatrixObsCrossfilter> {
+    const annoMatrix = await this.annoMatrix.resetObsColumnValues(
+      col,
+      oldValue,
+      newValue
+    );
+    const dimName = _dimensionName(Field.obs, col);
+    let { obsCrossfilter } = this;
+    if (obsCrossfilter.hasDimension(dimName)) {
+      obsCrossfilter = obsCrossfilter.delDimension(dimName);
+    }
+    return new AnnoMatrixObsCrossfilter(annoMatrix, obsCrossfilter);
   }
 
   size(): number {

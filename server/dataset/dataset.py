@@ -1,5 +1,9 @@
 from abc import ABCMeta, abstractmethod
+from collections import defaultdict
+from copy import deepcopy
 from os.path import basename, splitext
+from threading import Lock
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -19,6 +23,11 @@ from server.common.utils.uns import spatial_metadata_get
 from server.common.utils.utils import jsonify_numpy
 
 
+_DEFAULT_COLLECTION_KEY = "__default__"
+_ANNOTATION_STORE: Dict[Tuple[str, str], Dict[str, Any]] = defaultdict(dict)
+_ANNOTATION_STORE_LOCK = Lock()
+
+
 class Dataset(metaclass=ABCMeta):
     """Base class for loading and accessing matrix data"""
 
@@ -34,6 +43,62 @@ class Dataset(metaclass=ABCMeta):
 
         # parameters set by this data adaptor based on the data.
         self.parameters = {}
+
+    # ------------------------------------------------------------------------
+    # Autosave scaffolding helpers
+
+    def _annotation_store_key(self, collection_name: Optional[str]) -> Tuple[str, str]:
+        dataset_key = self.get_location() or ""
+        collection_key = collection_name or _DEFAULT_COLLECTION_KEY
+        return dataset_key, collection_key
+
+    def _get_annotation_store(self, collection_name: Optional[str]) -> Dict[str, Any]:
+        key = self._annotation_store_key(collection_name)
+        with _ANNOTATION_STORE_LOCK:
+            store = _ANNOTATION_STORE[key]
+            # normalise buckets to simplify downstream callers
+            store.setdefault("obs_annotations", None)
+            store.setdefault("genesets", None)
+        return store
+
+    def get_saved_obs_annotations(self, collection_name: Optional[str] = None) -> Optional[pd.DataFrame]:
+        store = self._get_annotation_store(collection_name)
+        saved = store.get("obs_annotations")
+        return deepcopy(saved) if saved is not None else None
+
+    def get_saved_gene_sets(self, collection_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        store = self._get_annotation_store(collection_name)
+        saved = store.get("genesets")
+        return deepcopy(saved) if saved is not None else None
+
+    def save_obs_annotations(self, dataframe: pd.DataFrame, collection_name: Optional[str] = None) -> None:
+        """Store user-provided obs annotations until a durable backend is available."""
+
+        store = self._get_annotation_store(collection_name)
+        # Keep a deep copy so in-memory mutations elsewhere don't mutate the store.
+        store["obs_annotations"] = deepcopy(dataframe)
+
+    def save_gene_sets(
+        self,
+        genesets_payload: Dict[str, Any],
+        tid: Optional[int] = None,
+        collection_name: Optional[str] = None,
+    ) -> None:
+        """Persist gene sets and monotonic tid locally for autosave."""
+
+        if genesets_payload is None:
+            raise ValueError("genesets payload is required")
+
+        store = self._get_annotation_store(collection_name)
+        existing = store.get("genesets") or {"tid": 0, "genesets": []}
+        current_tid = existing.get("tid", 0)
+
+        if tid is None:
+            tid = current_tid + 1
+        if tid <= current_tid:
+            raise ValueError("TID must be greater than previous saved value")
+
+        store["genesets"] = {"tid": tid, "genesets": deepcopy(genesets_payload)}
 
     @staticmethod
     @abstractmethod

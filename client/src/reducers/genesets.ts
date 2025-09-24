@@ -63,8 +63,19 @@ const GeneSets = (
       const genesets = new Map();
 
       for (const gsData of genesetsData) {
+        if (
+          !gsData ||
+          typeof gsData !== "object" ||
+          Array.isArray(gsData) ||
+          typeof gsData.geneset_name !== "string"
+        ) {
+          continue;
+        }
+
         const genes = new Map();
-        for (const gene of gsData.genes) {
+        const geneEntries = Array.isArray(gsData.genes) ? gsData.genes : [];
+        for (const gene of geneEntries) {
+          if (!gene || typeof gene !== "object") continue;
           genes.set(gene.gene_symbol, {
             geneSymbol: gene.gene_symbol,
             geneDescription: gene?.gene_description ?? "",
@@ -78,9 +89,12 @@ const GeneSets = (
         genesets.set(gsData.geneset_name, gs);
       }
 
+      const tid = typeof data.tid === "number" ? data.tid : state.lastTid;
+
       return {
         ...state,
         initialized: true,
+        lastTid: tid,
         genesets,
       };
     }
@@ -326,6 +340,18 @@ const GeneSets = (
       return {
         ...state,
         genesets,
+      };
+    }
+
+    case "geneset: set tid": {
+      const { tid } = action;
+      if (typeof tid !== "number" || tid < 0)
+        throw new Error("TID must be a non-negative number");
+      if (state.lastTid !== undefined && tid < state.lastTid)
+        throw new Error("TID may not be decremented");
+      return {
+        ...state,
+        lastTid: tid,
       };
     }
 

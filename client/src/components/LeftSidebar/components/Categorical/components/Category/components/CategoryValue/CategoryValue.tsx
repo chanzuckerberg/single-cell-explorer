@@ -73,16 +73,18 @@ const mapStateToProps = (
   } = ownProps;
 
   const label = categorySummary.categoryValues[categoryIndex];
+  const labelKey = String(label);
   const isDilated =
     pointDilation.metadataField === metadataField &&
-    pointDilation.categoryField === _currentLabelAsString(label);
+    pointDilation.categoryField === _currentLabelAsString(labelKey);
 
   const category = categoricalSelection[metadataField];
   const col = categoryData.icol(0);
-  const labelName = isDataframeDictEncodedColumn(col)
-    ? col.codeMapping[parseInt(label as string, 10)]
+  const mappedLabel = isDataframeDictEncodedColumn(col)
+    ? col.codeMapping[parseInt(labelKey, 10)]
     : label;
-  const isSelected = category.get(label as string) ?? true;
+  const labelName = mappedLabel ?? labelKey;
+  const isSelected = category.get(labelKey) ?? true;
 
   const isColorBy =
     metadataField === colorAccessor &&
@@ -91,8 +93,8 @@ const mapStateToProps = (
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
-    label: label as string,
-    labelName: labelName as string,
+    label: labelKey,
+    labelName: String(labelName),
     isColorBy,
   };
 };

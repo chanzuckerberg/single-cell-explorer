@@ -3,6 +3,7 @@ Helper functions for user-editable annotations state management.
 See also reducers/annotations.js
 */
 
+import type AnnoMatrix from "../../annoMatrix/annoMatrix";
 import { Schema } from "../../common/types/schema";
 import { Dataframe, LabelType } from "../dataframe";
 
@@ -90,4 +91,8 @@ export function annotationNameIsErroneous(name: string): boolean | string {
 
   /* all is well! Indicate not erroneous with a false */
   return false;
+}
+
+export function isUserAnnotation(annoMatrix: AnnoMatrix, name: string): boolean {
+  return Boolean(annoMatrix?.schema?.annotations?.obsByName?.[name]?.writable);
 }

@@ -16,7 +16,7 @@ import actions from "actions";
 import { Dataframe } from "util/dataframe";
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
-import { RootState } from "reducers";
+import { RootState, AppDispatch } from "reducers";
 import * as globals from "~/globals";
 import { CategoryCrossfilterContext } from "../../categoryContext";
 import CategoryValue from "./components/CategoryValue/CategoryValue";
@@ -24,6 +24,7 @@ import {
   thunkTrackColorByCategoryExpand,
   thunkTrackColorByCategoryHighlightHistogram,
 } from "./analytics";
+import AddLabelDialog from "../AddLabelDialog";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 
@@ -53,7 +54,11 @@ interface StateProps {
   isCellGuideCxg: boolean;
 }
 
-type CategoryProps = PureCategoryProps & StateProps;
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type CategoryProps = PureCategoryProps & StateProps & DispatchProps;
 
 const mapStateToProps = (
   state: RootState,
@@ -72,6 +77,10 @@ const mapStateToProps = (
     isCellGuideCxg: state.controls.isCellGuideCxg,
   };
 };
+
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  dispatch,
+});
 
 class Category extends React.PureComponent<CategoryProps> {
   static getSelectionState(
@@ -106,6 +115,14 @@ class Category extends React.PureComponent<CategoryProps> {
 
   createCategorySummaryFromDfCol = memoize(createCategorySummaryFromDfCol);
 
+  handleAddLabel = (metadataField: string) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: "annotation: activate add new label mode",
+      data: metadataField,
+    });
+  };
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   getSelectionState(categorySummary: any) {
     const { categoricalSelection, metadataField } = this.props;
@@ -117,7 +134,6 @@ class Category extends React.PureComponent<CategoryProps> {
   }
 
   handleColorChange = (currentIsColorAccessor: boolean) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, categoryType } = this.props;
 
     /**
@@ -266,7 +282,6 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   toggleNone(categorySummary: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField } = this.props;
     dispatch(
       actions.selectCategoricalAllMetadataAction(
@@ -280,7 +295,6 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   toggleAll(categorySummary: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField } = this.props;
     dispatch(
       actions.selectCategoricalAllMetadataAction(
@@ -343,9 +357,11 @@ class Category extends React.PureComponent<CategoryProps> {
                 colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
+              const isUserAnnotation =
+                this.props.schema?.annotations.obsByName[metadataField]?.writable ??
+                false;
               return (
                 <CategoryRender
-                  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; checkboxID: string; is... Remove this comment to see the full error message
                   metadataField={metadataField}
                   checkboxID={checkboxID}
                   isExpanded={isExpanded}
@@ -362,6 +378,8 @@ class Category extends React.PureComponent<CategoryProps> {
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
                   colorMode={colorMode}
                   isCellGuideCxg={isCellGuideCxg}
+                  isUserAnnotation={isUserAnnotation}
+                  onAddLabelClick={() => this.handleAddLabel(metadataField)}
                 />
               );
             }}
@@ -372,7 +390,7 @@ class Category extends React.PureComponent<CategoryProps> {
   }
 }
 
-export default connect(mapStateToProps)(Category);
+export default connect(mapStateToProps, mapDispatchToProps)(Category);
 
 /**
  * We are still loading this category, so render a "busy" signal.
@@ -419,6 +437,8 @@ interface CategoryHeaderProps {
   onCategoryMenuKeyPress: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
   onCategoryToggleAllClick: any;
+  isUserAnnotation: boolean;
+  onAddLabelClick: () => void;
 }
 
 const CategoryHeader = React.memo(
@@ -432,6 +452,8 @@ const CategoryHeader = React.memo(
     onCategoryMenuClick,
     onCategoryMenuKeyPress,
     onCategoryToggleAllClick,
+    isUserAnnotation,
+    onAddLabelClick,
   }: CategoryHeaderProps) => {
     /*
     Render category name and controls (eg, color-by button).
@@ -509,6 +531,22 @@ const CategoryHeader = React.memo(
         </div>
 
         <div className="ignore-capture">
+          {isUserAnnotation ? (
+            <Tooltip
+              content="Add label"
+              position={Position.LEFT}
+              usePortal
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <Button
+                data-testid={`${metadataField}:add-label`}
+                icon="plus"
+                minimal
+                small
+                onClick={onAddLabelClick}
+              />
+            </Tooltip>
+          ) : null}
           <Tooltip
             content="Use as color scale"
             position={Position.LEFT}
@@ -533,42 +571,48 @@ const CategoryHeader = React.memo(
   }
 );
 
+interface CategoryRenderProps {
+  metadataField: string;
+  checkboxID: string;
+  isColorAccessor: boolean;
+  isExpanded: boolean;
+  selectionState: string;
+  categoryData: Dataframe;
+  categorySummary: ReturnType<typeof createCategorySummaryFromDfCol>;
+  colorAccessor: string;
+  colorData: Dataframe | null;
+  colorTable: ColorTable;
+  onColorChangeClick: (isColorAccessor: boolean) => void;
+  onCategoryMenuClick: () => void;
+  onCategoryMenuKeyPress: (event: React.KeyboardEvent<HTMLSpanElement>) => void;
+  onCategoryToggleAllClick: () => void;
+  colorMode: string;
+  isCellGuideCxg: boolean;
+  isUserAnnotation: boolean;
+  onAddLabelClick: () => void;
+}
+
 const CategoryRender = React.memo(
   ({
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
     metadataField,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'checkboxID' does not exist on type '{ ch... Remove this comment to see the full error message
     checkboxID,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
     isColorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isExpanded' does not exist on type '{ ch... Remove this comment to see the full error message
     isExpanded,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionState' does not exist on type '... Remove this comment to see the full error message
     selectionState,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type '{ ... Remove this comment to see the full error message
     categoryData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
     categorySummary,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type '{... Remove this comment to see the full error message
     colorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type '{ chi... Remove this comment to see the full error message
     colorData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
     onColorChangeClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuClick' does not exist on t... Remove this comment to see the full error message
     onCategoryMenuClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuKeyPress' does not exist o... Remove this comment to see the full error message
     onCategoryMenuKeyPress,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist... Remove this comment to see the full error message
     colorMode,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist... Remove this comment to see the full error message
     isCellGuideCxg,
-  }: {
-    onColorChangeClick: (isColorAccessor: boolean) => void;
-  }) => {
+    isUserAnnotation,
+    onAddLabelClick,
+  }: CategoryRenderProps) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
     */
@@ -609,8 +653,13 @@ const CategoryRender = React.memo(
             onCategoryToggleAllClick={onCategoryToggleAllClick}
             onCategoryMenuClick={onCategoryMenuClick}
             onCategoryMenuKeyPress={onCategoryMenuKeyPress}
+            isUserAnnotation={isUserAnnotation}
+            onAddLabelClick={onAddLabelClick}
           />
         </div>
+        {isUserAnnotation ? (
+          <AddLabelDialog metadataField={metadataField} />
+        ) : null}
         <div style={{ marginLeft: 26 }}>
           {
             /* values*/
