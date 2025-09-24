@@ -617,13 +617,72 @@ class CxgDataset(Dataset):
         if self.genesets:
             return self.genesets
         A = self.open_array("obs")
-        return json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+        raw = json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+
+        tid = 0
+        geneset_entries = []
+
+        if isinstance(raw, dict):
+            tid = raw.get("tid", 0)
+            geneset_entries = raw.get("genesets", raw)
+        elif isinstance(raw, list) and len(raw) == 2 and isinstance(raw[1], (int, float)):
+            geneset_entries, tid = raw[0], int(raw[1])
+        else:
+            geneset_entries = raw
+
+        normalized_genesets = []
+        if isinstance(geneset_entries, list):
+            for item in geneset_entries:
+                if isinstance(item, dict):
+                    normalized_genesets.append(item)
+                elif isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], dict):
+                    geneset_name = item[0]
+                    geneset_obj = item[1]
+                    if "geneset_name" not in geneset_obj:
+                        geneset_obj = {**geneset_obj, "geneset_name": geneset_name}
+                    normalized_genesets.append(geneset_obj)
+        elif isinstance(geneset_entries, dict):
+            for name, value in geneset_entries.items():
+                if isinstance(value, dict):
+                    if "geneset_name" not in value:
+                        value = {**value, "geneset_name": name}
+                    normalized_genesets.append(value)
+
+        return {"genesets": normalized_genesets, "tid": tid}
 
     def get_genesets(self):
+        saved = self.get_saved_gene_sets()
+        if saved is not None:
+            return saved
+
         if self.genesets is None:
             with self.lock:
                 self.genesets = self._get_genesets()
-        return self.genesets
+        if isinstance(self.genesets, dict):
+            geneset_entries = self.genesets.get("genesets", [])
+            normalized_genesets = []
+            if isinstance(geneset_entries, list):
+                for item in geneset_entries:
+                    if isinstance(item, dict):
+                        normalized_genesets.append(item)
+                    elif isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], dict):
+                        geneset_name = item[0]
+                        geneset_obj = item[1]
+                        if "geneset_name" not in geneset_obj:
+                            geneset_obj = {**geneset_obj, "geneset_name": geneset_name}
+                        normalized_genesets.append(geneset_obj)
+            elif isinstance(geneset_entries, dict):
+                for name, value in geneset_entries.items():
+                    if isinstance(value, dict):
+                        if "geneset_name" not in value:
+                            value = {**value, "geneset_name": name}
+                        normalized_genesets.append(value)
+            return {
+                "genesets": normalized_genesets,
+                "tid": self.genesets.get("tid", 0),
+            }
+        # Fallback - should not happen due to normalization above.
+        return {"genesets": [], "tid": 0}
 
     def annotation_to_fbs_matrix(self, axis, fields=None, num_bins=None):
         with ServerTiming.time(f"annotations.{axis}.query"):
@@ -634,7 +693,9 @@ class CxgDataset(Dataset):
 
                 categorical_dtypes = []
                 for c in self.get_schema()["annotations"]["obs"]["columns"]:
-                    if c["name"] in fields and c["type"] == "categorical":
+                    if fields and c["name"] not in fields:
+                        continue
+                    if c["type"] == "categorical":
                         categories = c.get("categories", None)
                         if categories:
                             categorical_dtypes.append((c["name"], c["categories"]))
@@ -644,7 +705,17 @@ class CxgDataset(Dataset):
                     if str(df[name].dtype).startswith("int"):
                         df[name] = pd.Categorical.from_codes(df[name], categories=categories)
                     else:
-                        df[name] = pd.Categorical(df[name])
+                        df[name] = pd.Categorical(df[name], categories=categories)
+
+                saved_annotations = self.get_saved_obs_annotations()
+                if saved_annotations is not None:
+                    for column in saved_annotations.columns:
+                        if fields and column not in fields:
+                            continue
+                        if column in df.columns:
+                            df[column] = saved_annotations[column].values
+                        else:
+                            df[column] = saved_annotations[column].values
 
                 if fields:
                     df = df[fields]

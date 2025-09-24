@@ -2,59 +2,55 @@ import { useMemo } from "react";
 import { UseQueryResult } from "@tanstack/react-query";
 import { FetchCoverageResponse } from "common/queries/coverage";
 
+type CoverageEntry = FetchCoverageResponse["coverageByCellType"][string];
+
 export const useCoverageData = (
   coverageQuery: UseQueryResult<FetchCoverageResponse>
 ) => {
-  const totalBasePairs = useMemo(() => {
+  const coverageValues = useMemo(() => {
     const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-    return Math.max(
-      ...Object.values(coverageByCellType).map((coverage) => coverage.length),
-      0
-    );
+    if (!coverageByCellType) return [] as CoverageEntry[];
+    return Object.values(coverageByCellType) as CoverageEntry[];
   }, [coverageQuery.data?.coverageByCellType]);
 
+  const totalBasePairs = useMemo(() => {
+    if (coverageValues.length === 0) return 0;
+    return Math.max(...coverageValues.map((coverage) => coverage.length), 0);
+  }, [coverageValues]);
+
   const startBasePair = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-    for (const coverage of Object.values(coverageByCellType)) {
+    for (const coverage of coverageValues) {
       if (coverage.length > 0) return coverage[0][1];
     }
     return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
+  }, [coverageValues]);
 
   const endBasePair = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-    for (const coverage of Object.values(coverageByCellType)) {
+    for (const coverage of coverageValues) {
       if (coverage.length > 0) return coverage[coverage.length - 1][2];
     }
     return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
+  }, [coverageValues]);
 
   const binSize = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
-    for (const coverage of Object.values(coverageByCellType)) {
+    for (const coverage of coverageValues) {
       if (coverage.length > 0) {
         const [, start, end] = coverage[0];
         return end - start;
       }
     }
     return 0;
-  }, [coverageQuery.data?.coverageByCellType]);
+  }, [coverageValues]);
 
   const yMax = useMemo(() => {
-    const coverageByCellType = coverageQuery.data?.coverageByCellType;
-    if (!coverageByCellType) return 0;
     let maxY = 0;
-    for (const coverage of Object.values(coverageByCellType)) {
+    for (const coverage of coverageValues) {
       for (const [value] of coverage) {
         if (value > maxY) maxY = value;
       }
     }
     return Math.ceil(maxY);
-  }, [coverageQuery.data?.coverageByCellType]);
+  }, [coverageValues]);
 
   const totalBPAtScale = (totalBasePairs * binSize) / 1_000;
 

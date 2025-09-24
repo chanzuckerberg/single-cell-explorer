@@ -19,6 +19,7 @@ import * as selnActions from "./selection";
 import * as viewActions from "./viewStack";
 import * as embActions from "./embedding";
 import * as genesetActions from "./geneset";
+import * as annotationActions from "./annotation";
 import { AppDispatch, GetState } from "../reducers";
 import { EmbeddingSchema, Field, Schema } from "../common/types/schema";
 import { ConvertedUserColors } from "../reducers/colors";
@@ -363,6 +364,7 @@ const dispatchDiffExpErrors = (
 
 const DEFAULT_GENESETS_RESPONSE = {
   genesets: [],
+  tid: 0,
 };
 const genesetsFetch = async (dispatch: AppDispatch) => {
   const response = await fetchJson("genesets");
@@ -624,4 +626,21 @@ export default {
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
   genesetDeleteGenes: genesetActions.genesetDeleteGenes,
+  annotationCreateCategoryAction:
+    annotationActions.annotationCreateCategoryAction,
+  annotationRenameCategoryAction:
+    annotationActions.annotationRenameCategoryAction,
+  annotationDeleteCategoryAction:
+    annotationActions.annotationDeleteCategoryAction,
+  annotationCreateLabelInCategory:
+    annotationActions.annotationCreateLabelInCategory,
+  annotationDeleteLabelFromCategory:
+    annotationActions.annotationDeleteLabelFromCategory,
+  annotationRenameLabelInCategory:
+    annotationActions.annotationRenameLabelInCategory,
+  annotationLabelCurrentSelection:
+    annotationActions.annotationLabelCurrentSelection,
+  saveObsAnnotationsAction: annotationActions.saveObsAnnotationsAction,
+  saveGenesetsAction: annotationActions.saveGenesetsAction,
+  needToSaveObsAnnotations: annotationActions.needToSaveObsAnnotations,
 };

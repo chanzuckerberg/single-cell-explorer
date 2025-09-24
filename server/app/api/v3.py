@@ -76,6 +76,11 @@ class GenesetsAPI(S3URIResource):
     def get(self, data_adaptor):
         return common_rest.genesets_get(data_adaptor)
 
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        return common_rest.genesets_put(request, data_adaptor)
+
 
 class ConfigAPI(S3URIResource):
     @cache_control(immutable=True, max_age=ONE_YEAR)
@@ -89,6 +94,11 @@ class AnnotationsObsAPI(S3URIResource):
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.annotations_obs_get(request, data_adaptor)
+
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        return common_rest.annotations_obs_put(request, data_adaptor)
 
 
 class AnnotationsVarAPI(S3URIResource):

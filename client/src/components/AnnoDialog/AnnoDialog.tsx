@@ -11,7 +11,7 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
     instruction,
     cancelTooltipContent,
     errorMessage,
-    validationError,
+    validationError = false,
     annoSelect,
     annoInput,
     secondaryInstructions,
@@ -21,8 +21,10 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
     primaryButtonText,
     secondaryButtonText,
     handleSecondaryButtonSubmit,
-    primaryButtonProps,
+    primaryButtonProps = {},
   } = props;
+
+  const hasValidationError = Boolean(validationError);
 
   return (
     <Dialog icon="tag" title={title} isOpen={isActive} onClose={handleCancel}>
@@ -38,7 +40,7 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
             <p
               style={{
                 marginTop: 7,
-                visibility: validationError ? "visible" : "hidden",
+                visibility: hasValidationError ? "visible" : "hidden",
                 color: Colors.ORANGE3,
               }}
             >
@@ -63,7 +65,7 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
             {handleSecondaryButtonSubmit && secondaryButtonText ? (
               <Button
                 onClick={handleSecondaryButtonSubmit}
-                disabled={!text || validationError}
+                disabled={!text || hasValidationError}
                 intent="none"
                 type="button"
               >
@@ -73,7 +75,7 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
             <Button
               {...primaryButtonProps} // Spreading props allows for modularity
               onClick={handleSubmit}
-              disabled={!text || validationError}
+              disabled={!text || hasValidationError}
               intent="primary"
               type="submit"
             >

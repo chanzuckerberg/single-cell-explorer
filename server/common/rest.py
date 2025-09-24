@@ -4,6 +4,7 @@ import logging
 import os
 import struct
 import sys
+from typing import Optional
 import zlib
 from http import HTTPStatus
 from urllib.parse import unquote as url_unquote
@@ -32,6 +33,7 @@ from server.common.errors import (
     TombstoneError,
     UnsupportedSummaryMethod,
 )
+from server.common.fbs.matrix import decode_matrix_fbs
 from server.common.utils.cell_type_info import (
     get_cell_description,
     get_celltype_metadata,
@@ -137,25 +139,60 @@ def schema_get(data_adaptor):
 def genesets_get(data_adaptor):
     """
     The genesets endpoint returns the genesets present in the obs metadata.
-
-    The genesets dictionary must be in the following format:
-        {
-            <string, a gene set name>: {
-                "geneset_name": <string, a gene set name>,
-                "geneset_description": <a string or None>,
-                "genes": [
-                    {
-                        "gene_symbol": <string, a gene symbol or name>,
-                        "gene_description": <a string or None>
-                    },
-                    ...
-                ]
-            },
-            ...
-        }
     """
+    if hasattr(data_adaptor, "get_gene_sets"):
+        try:
+            payload = data_adaptor.get_gene_sets()
+        except NotImplementedError:
+            return abort(HTTPStatus.NOT_IMPLEMENTED)
+        except Exception as error:  # pragma: no cover - defensive logging
+            return abort_and_log(
+                HTTPStatus.BAD_REQUEST,
+                f"Failed to fetch gene sets: {error}",
+                include_exc_info=True,
+            )
+
+        genesets = payload.get("genesets", []) if isinstance(payload, dict) else []
+        tid = payload.get("tid") if isinstance(payload, dict) else None
+        response = {"genesets": genesets}
+        if tid is not None:
+            response["tid"] = tid
+        return make_response(jsonify(response), HTTPStatus.OK)
+
     genesets = genesets_get_helper(data_adaptor)
-    return make_response(jsonify({"genesets": list(genesets.values())}), HTTPStatus.OK)
+    return make_response(
+        jsonify({"genesets": list(genesets.values())}),
+        HTTPStatus.OK,
+    )
+
+
+def genesets_put(request, data_adaptor):
+    if not hasattr(data_adaptor, "save_gene_sets"):
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+
+    payload = request.get_json(silent=True) or {}
+    genesets = payload.get("genesets")
+    if genesets is None:
+        return abort(HTTPStatus.BAD_REQUEST, description="Missing genesets payload")
+
+    tid = payload.get("tid")
+    anno_collection = request.args.get("annotation-collection-name")
+
+    try:
+        data_adaptor.save_gene_sets(
+            genesets,
+            tid=tid,
+            collection_name=anno_collection,
+        )
+        return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
+    except NotImplementedError:
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+    except Exception as error:  # pragma: no cover - persistence layer raises details
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to save gene sets: {error}",
+            include_exc_info=True,
+        )
 
 
 def dataset_metadata_get(app_config, url_dataroot, dataset_id):
@@ -213,6 +250,41 @@ def annotations_obs_get(request, data_adaptor):
 
 def inflate(data):
     return zlib.decompress(data)
+
+
+def annotations_obs_put(request, data_adaptor):
+    if not hasattr(data_adaptor, "save_obs_annotations"):
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+
+    compressed = request.get_data()
+    if not compressed:
+        return abort(HTTPStatus.BAD_REQUEST)
+
+    try:
+        dataframe = decode_matrix_fbs(inflate(compressed))
+    except Exception as error:  # pragma: no cover - defensive logging only
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to decode annotations payload: {error}",
+            include_exc_info=True,
+        )
+
+    anno_collection = request.args.get("annotation-collection-name")
+
+    try:
+        data_adaptor.save_obs_annotations(
+            dataframe,
+            collection_name=anno_collection,
+        )
+        return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
+    except NotImplementedError:
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+    except Exception as error:  # pragma: no cover - backend owns persistence errors
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to save annotations: {error}",
+            include_exc_info=True,
+        )
 
 
 def annotations_var_get(request, data_adaptor):
