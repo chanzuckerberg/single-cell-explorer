@@ -49,10 +49,25 @@ class WSGIServer(Server):
 
         EXPLORER_STAGING_URL = "https://cellxgene.staging.single-cell.czi.technology"
 
+        EXPLORER_VCP_STAGING_URL = "https://platform.staging.virtual-cells.czi.technology"
+
+        EXPLORER_VCP_PROD_URL = "https://virtualcellmodels.cziscience.com"
+
         csp = {
             "default-src": ["'self'", HUBSPOT_FORMS_URL, HUBSPOT_JS_URL],
             "form-action": ["'self'", HUBSPOT_FORMS_URL],
-            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, EXPLORER_DEV_URL, EXPLORER_STAGING_URL]
+            "connect-src": [
+                "'self'",
+                PLAUSIBLE_URL,
+                HUBSPOT_FORMS_URL,
+                EXPLORER_DEV_URL,
+                EXPLORER_STAGING_URL,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
+                "*.dev.czi.team",
+                "*staging.czi.team",
+                "*.prod.czi.team",
+            ]
             + extra_connect_src,
             "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
