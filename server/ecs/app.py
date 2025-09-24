@@ -69,7 +69,19 @@ class WSGIServer(Server):
                 "*.prod.czi.team",
             ]
             + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
+            "script-src": [
+                "'self'",
+                "'unsafe-eval'",
+                PLAUSIBLE_URL,
+                HUBSPOT_FORMS_URL,
+                HUBSPOT_JS_URL,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
+                "*.dev.czi.team",
+                "*staging.czi.team",
+                "*.prod.czi.team",
+            ]
+            + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com"],
             "img-src": [
@@ -78,6 +90,11 @@ class WSGIServer(Server):
                 EXPLORER_DEV_URL,
                 EXPLORER_STAGING_URL,
                 HUBSPOT_FORMS_URL_CDN,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
+                "*.dev.czi.team",
+                "*staging.czi.team",
+                "*.prod.czi.team",
             ]
             + extra_connect_src
             + ["data:", HUBSPOT_FORMS_URL],
