@@ -66,7 +66,8 @@ const mapStateToProps = (
 ): StateProps => {
   const schema = state.annoMatrix?.schema;
   const { metadataField } = ownProps;
-  const categoricalSelection = state.categoricalSelection?.[metadataField];
+  const categoricalSelection =
+    state.categoricalSelection?.[metadataField] ?? new Map();
   return {
     colors: state.colors,
     categoricalSelection,
@@ -86,9 +87,6 @@ class Category extends React.PureComponent<CategoryProps> {
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
-    // @ts-expect-error ts-migrate(6133) FIXME: 'metadataField' is declared but its value is never... Remove this comment to see the full error message
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    metadataField: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categorySummary: any
   ): string {
@@ -128,7 +126,6 @@ class Category extends React.PureComponent<CategoryProps> {
     const { categoricalSelection, metadataField } = this.props;
     return Category.getSelectionState(
       categoricalSelection,
-      metadataField,
       categorySummary
     );
   }
@@ -421,22 +418,15 @@ const ErrorLoading = ({ metadataField, error }: any) => {
 };
 
 interface CategoryHeaderProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  metadataField: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  checkboxID: any;
+  metadataField: string;
+  checkboxID: string;
   isColorAccessor: boolean;
   isExpanded: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  selectionState: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  selectionState: string;
   onColorChangeClick: (isColorAccessor: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryMenuClick: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryMenuKeyPress: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryToggleAllClick: any;
+  onCategoryMenuClick: () => void;
+  onCategoryMenuKeyPress: (event: React.KeyboardEvent<HTMLSpanElement>) => void;
+  onCategoryToggleAllClick: () => void;
   isUserAnnotation: boolean;
   onAddLabelClick: () => void;
 }
@@ -458,11 +448,12 @@ const CategoryHeader = React.memo(
     /*
     Render category name and controls (eg, color-by button).
     */
-    const checkboxRef = useRef(null);
+    const checkboxRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-      checkboxRef.current.indeterminate = selectionState === "some";
+      if (checkboxRef.current) {
+        checkboxRef.current.indeterminate = selectionState === "some";
+      }
     }, [selectionState]);
 
     const handleColorChangeClick = useCallback(() => {
@@ -495,8 +486,7 @@ const CategoryHeader = React.memo(
           </label>
           <span
             role="menuitem"
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-            tabIndex="0"
+            tabIndex={0}
             data-testid={`${metadataField}:category-expand`}
             onKeyPress={onCategoryMenuKeyPress}
             style={{
@@ -510,8 +500,7 @@ const CategoryHeader = React.memo(
                   maxWidth: LABEL_WIDTH,
                 }}
                 data-testid={`${metadataField}:category-label`}
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-                tabIndex="-1"
+                tabIndex={-1}
               >
                 {metadataField}
               </span>
@@ -579,7 +568,7 @@ interface CategoryRenderProps {
   selectionState: string;
   categoryData: Dataframe;
   categorySummary: ReturnType<typeof createCategorySummaryFromDfCol>;
-  colorAccessor: string;
+  colorAccessor: string | null;
   colorData: Dataframe | null;
   colorTable: ColorTable;
   onColorChangeClick: (isColorAccessor: boolean) => void;

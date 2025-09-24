@@ -356,14 +356,25 @@ export function encodeMatrixFBS(
   if (shape[0] > 0 && shape[1] > 0) {
     const columns = df.columns().map((col) => col.asArray());
 
-    const cols = columns.map((carr) => {
-      let { name } = carr.constructor;
+    const cols = columns.map((columnData) => {
+      let { name } = columnData.constructor;
       if (encodeSparse) {
         name = `Sparse${name}`;
       }
       name = name.replace("Array", "FBArray");
-      const uType = TypedFBArray[name as keyof typeof TypedFBArray];
-      const tarr = encodeTypedArray(builder, uType, carr);
+      let uType = TypedFBArray[name as keyof typeof TypedFBArray];
+      let dataForEncoding: any = columnData;
+
+      if (!uType) {
+        if (Array.isArray(columnData)) {
+          uType = TypedFBArray.JSONEncodedFBArray;
+          dataForEncoding = columnData;
+        } else {
+          throw new Error(`Unsupported column data type: ${name}`);
+        }
+      }
+
+      const tarr = encodeTypedArray(builder, uType, dataForEncoding);
       Column.startColumn(builder);
       Column.addUType(builder, uType);
       Column.addU(builder, tarr);

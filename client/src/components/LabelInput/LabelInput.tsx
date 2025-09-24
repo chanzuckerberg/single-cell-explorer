@@ -79,12 +79,13 @@ export class LabelInput extends React.PureComponent<
 
   renderLabelSuggestion = (
     item: SuggestItem,
-    { handleClick, modifiers }: ItemRendererProps<SuggestItem>
+    { handleClick, modifiers, ref }: ItemRendererProps
   ) => {
     const { newLabelMessage } = this.props;
     if (item.newLabel) {
       return (
         <MenuItem
+          ref={ref}
           icon="flag"
           active={modifiers.active}
           disabled={modifiers.disabled}
@@ -97,6 +98,7 @@ export class LabelInput extends React.PureComponent<
     }
     return (
       <MenuItem
+        ref={ref}
         active={modifiers.active}
         disabled={modifiers.disabled}
         key={item.target}
@@ -113,7 +115,7 @@ export class LabelInput extends React.PureComponent<
     if (query === "") {
       return labelSuggestions
         .slice(0, LabelInput.QueryResultLimit)
-        .map((target) => ({ target, score: -10000 }));
+        .map((target) => ({ target, score: -10000, indexes: [] }));
     }
 
     const options = {
@@ -144,10 +146,13 @@ export class LabelInput extends React.PureComponent<
     const hasSuggestions = Boolean(labelSuggestions && labelSuggestions.length);
 
     if (!hasSuggestions) {
+      const mergedInputProps = {
+        ...(inputProps ?? {}),
+      } as InputGroupProps2;
       return (
         <InputGroup
           autoFocus={autoFocus}
-          {...((inputProps as InputGroupProps2) ?? {})}
+          {...mergedInputProps}
           value={label}
           onChange={this.handleChange}
           onKeyDown={this.handleKeyDown}
