@@ -38,8 +38,6 @@ stack:
           memory: 2Gi
       ingress:
         oidcProtected: true
-        annotations:
-          nginx.ingress.kubernetes.io/rewrite-target: /
         paths:
-          - path: /explorer
+          - path: /w/
             pathType: Prefix
