@@ -3,7 +3,7 @@ stack:
     ingress:
       rules:
         - host: platform.staging.virtual-cells.czi.technology
-        - host: api.platform.staging.virtual-cells.czi.technology
+        - host: explorer.platform.staging.virtual-cells.czi.technology
     oidcProxy:
       extraArgs:
         - --cookie-refresh=45m
@@ -43,11 +43,11 @@ stack:
         - name: WEB_DOMAIN
           value: platform.staging.virtual-cells.czi.technology
         - name: API_DOMAIN
-          value: api.platform.staging.virtual-cells.czi.technology
+          value: explorer.platform.staging.virtual-cells.czi.technology
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
         - name: DATA_LOCATOR_DOMAIN
-          value: api.platform.staging.virtual-cells.czi.technology
+          value: explorer.platform.staging.virtual-cells.czi.technology
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-dev
         - name: BYOD_WORKFLOWS_BUCKET_PATH
