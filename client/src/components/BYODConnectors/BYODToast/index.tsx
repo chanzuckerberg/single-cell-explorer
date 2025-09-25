@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Notification, Icon } from "@czi-sds/components";
+import { Notification } from "@czi-sds/components";
 import { StyledToast, StyledMessage, StyledButton } from "./style";
 import { isToastDismissed, dismissToast } from "./utils";
 import BYODModal from "../BYODModal";
+import Icon, { IconSize } from "../../icon/icon";
+import { IconNames } from "../../icon";
 
 const BYOD_TOAST_ID = "byod-ai-workspace";
 const TOAST_MESSAGE =
@@ -39,7 +41,7 @@ export default function BYODToast(): JSX.Element | null {
           intent="info"
           slideDirection="left"
           onClose={handleClose}
-          icon={<Icon sdsIcon="Rocket" sdsSize="s" sdsType="static" />}
+          icon={<Icon icon={IconNames.SPARKLE} iconSize={IconSize.EXTRA_LARGE} />}
         >
           <StyledMessage>{TOAST_MESSAGE}</StyledMessage>
           <StyledButton
