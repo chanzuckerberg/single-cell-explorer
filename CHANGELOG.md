@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.14.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.2...v1.14.0) (2025-09-26)
+
+
+### Misc
+
+* update prod stack with new setup for vcp explorer ([#1274](https://github.com/chanzuckerberg/single-cell-explorer/issues/1274)) ([cd07048](https://github.com/chanzuckerberg/single-cell-explorer/commit/cd07048f21ad6ee51a57fcecaa6f5320ee7b2e7d))
+
+
+### Features
+
+* add url rewrite for staging ([#1267](https://github.com/chanzuckerberg/single-cell-explorer/issues/1267)) ([74b9498](https://github.com/chanzuckerberg/single-cell-explorer/commit/74b94983ee81bf3e0586902cd7f0afaaa8bc4b10))
+* vcp explorer ([#1260](https://github.com/chanzuckerberg/single-cell-explorer/issues/1260)) ([1f13239](https://github.com/chanzuckerberg/single-cell-explorer/commit/1f132396760a72deb18b44181b1601e30d143d3c))
+
+
+### Bug Fixes
+
+* add cellxgene/ path prefix for api ([#1273](https://github.com/chanzuckerberg/single-cell-explorer/issues/1273)) ([fd68fb6](https://github.com/chanzuckerberg/single-cell-explorer/commit/fd68fb6563453135286c9d20b5cf1342c0295661))
+* add data locator domain ([#1265](https://github.com/chanzuckerberg/single-cell-explorer/issues/1265)) ([d9ac5f3](https://github.com/chanzuckerberg/single-cell-explorer/commit/d9ac5f340557dcf4cb7f0c71914a3fd457a2f325))
+* add skip atac cache ([#1266](https://github.com/chanzuckerberg/single-cell-explorer/issues/1266)) ([ebf4c1c](https://github.com/chanzuckerberg/single-cell-explorer/commit/ebf4c1c1358609f96bb0372e82d44abff56bc9c5))
+* domains - use different backend url ([#1271](https://github.com/chanzuckerberg/single-cell-explorer/issues/1271)) ([9b610a4](https://github.com/chanzuckerberg/single-cell-explorer/commit/9b610a4641e8cd68a9b7b3aec1a93c65d200875d))
+* domains ([#1270](https://github.com/chanzuckerberg/single-cell-explorer/issues/1270)) ([e67fff3](https://github.com/chanzuckerberg/single-cell-explorer/commit/e67fff3c1ee92b9b4a95e047b7f010d31d45be10))
+* prefix to /w/ dataroot ([#1268](https://github.com/chanzuckerberg/single-cell-explorer/issues/1268)) ([0ea8ee8](https://github.com/chanzuckerberg/single-cell-explorer/commit/0ea8ee8fc2c007058992d3895cc39a73e4adcc15))
+* update connect-src allowlist ([#1269](https://github.com/chanzuckerberg/single-cell-explorer/issues/1269)) ([a2ab26f](https://github.com/chanzuckerberg/single-cell-explorer/commit/a2ab26f41035b5689617ee16aeead67f60e5561b))
+
 ## [1.13.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.1...v1.13.2) (2025-08-28)
 
 
