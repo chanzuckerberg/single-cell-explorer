@@ -16,7 +16,11 @@ stack:
         tag: sha-06a389d
       replicaCount: 1
       ingress:
-        oidcProtected: false
+        paths:
+          - path: /w/
+            pathType: Prefix
+          - path: /cellxgene/
+            pathType: Prefix
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
