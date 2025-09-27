@@ -1,6 +1,18 @@
+import base64
+from hashlib import blake2b
+
 from server.common.config.app_config import AppConfig
 from server.dataset.dataset import Dataset
 from server.version import display_version as cellxgene_display_version
+
+
+def _compute_user_idhash(data_adaptor: Dataset) -> str:
+    """Generate a deterministic but anonymized identifier for autosave filenames."""
+
+    dataset_location = data_adaptor.get_location() or ""
+    digest = blake2b(dataset_location.encode("utf-8"), digest_size=5).digest()
+    # base32 avoids filesystem-hostile characters while remaining short.
+    return base64.b32encode(digest).decode("utf-8").rstrip("=")
 
 
 def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:
@@ -35,14 +47,23 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "max-category-items": dataset_config.default_dataset__presentation__max_categories,
         "diffexp_lfc_cutoff": dataset_config.default_dataset__diffexp__lfc_cutoff,
         "disable-diffexp": not dataset_config.default_dataset__diffexp__enable,
+        "annotations": True,
         "annotations_genesets": True,  # feature flag
-        "annotations_genesets_readonly": True,
+        "annotations_genesets_readonly": False,
         "annotations_genesets_summary_methods": ["mean"],
         "custom_colors": dataset_config.default_dataset__presentation__custom_colors,
         "diffexp-may-be-slow": False,
         "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
         "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
     }
+
+    # Provide autosave-related client parameters. These defaults may be overridden by
+    # the adaptor's update_parameters implementation when richer configuration exists.
+    parameters.setdefault("user_annotation_collection_name_enabled", True)
+    parameters.setdefault("annotations-data-collection-is-read-only", False)
+    parameters.setdefault("annotations-data-collection-name", None)
+    parameters.setdefault("annotations_genesets_name_is_read_only", False)
+    parameters.setdefault("annotations-user-data-idhash", _compute_user_idhash(data_adaptor))
 
     # corpora dataset_props
     # TODO/Note: putting info from the dataset into the /config is not ideal.

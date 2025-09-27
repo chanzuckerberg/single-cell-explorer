@@ -33,9 +33,8 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
     [cellType, selectedCellTypes]
   );
 
-  const cellTypeOptions = useMemo(
-    () =>
-      cellTypes.map<Option>((name) => ({
+  const cellTypeOptions = useMemo(() => cellTypes.map(
+      (name): Option => ({
         name,
         component: (
           <MenuItem
@@ -45,9 +44,8 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
             {name}
           </MenuItem>
         ),
-      })),
-    [cellType, cellTypes, otherSelectedCellTypes]
-  );
+      })
+    ), [cellType, cellTypes, otherSelectedCellTypes]);
 
   const activeOption = useMemo(
     () => ({ name: cellType } as Option),

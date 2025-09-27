@@ -10,6 +10,7 @@ export interface StateProps {
   schema?: Schema;
   isCellGuideCxg: boolean;
   expandedCategories: RootState["controls"]["expandedCategories"];
+  writableCategoriesEnabled: boolean;
 }
 
 export type Props = StateProps & DispatchProps;

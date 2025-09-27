@@ -1,13 +1,13 @@
-import { MouseEvent, SyntheticEvent } from "react";
+import { MouseEvent, ReactNode, SyntheticEvent } from "react";
 
 export interface AnnoDialogProps {
   isActive: boolean;
   text: string;
   title: string;
-  instruction: string;
+  instruction: ReactNode;
   cancelTooltipContent: string;
-  errorMessage?: string;
-  validationError: boolean;
+  errorMessage?: ReactNode;
+  validationError?: boolean | string;
   annoSelect?: JSX.Element | null;
   annoInput: JSX.Element | null;
   secondaryInstructions?: string;
@@ -17,5 +17,5 @@ export interface AnnoDialogProps {
   primaryButtonText: string;
   secondaryButtonText?: string;
   handleSecondaryButtonSubmit?: () => void;
-  primaryButtonProps: Record<string, unknown>;
+  primaryButtonProps?: Record<string, unknown>;
 }
