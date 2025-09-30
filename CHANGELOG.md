@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.15.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.14.0...v1.15.0) (2025-09-30)
+
+
+### Features
+
+* Remove ATAC feature flag ([#1277](https://github.com/chanzuckerberg/single-cell-explorer/issues/1277)) ([d95b176](https://github.com/chanzuckerberg/single-cell-explorer/commit/d95b176e3a17ccab6bd32a5bedd2915de33e1cfb))
+* UW-10 explorer byod toast ([#1272](https://github.com/chanzuckerberg/single-cell-explorer/issues/1272)) ([3f77724](https://github.com/chanzuckerberg/single-cell-explorer/commit/3f777248188417ed78f4a594289a4004c6fcd9b6))
+
+
+### Bug Fixes
+
+* e2e after removing ATAC ff ([#1279](https://github.com/chanzuckerberg/single-cell-explorer/issues/1279)) ([4b24474](https://github.com/chanzuckerberg/single-cell-explorer/commit/4b24474a413a99d66d981b593426c0ba920feb22))
+
 ## [1.14.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.13.2...v1.14.0) (2025-09-26)
 
 
