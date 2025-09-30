@@ -23,7 +23,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::339713142298:role/virtual-cells-platform-backend-prod
       image:
-        tag: sha-dc596dd
+        tag: sha-773783e
       replicaCount: 3
       resources:
         limits:
