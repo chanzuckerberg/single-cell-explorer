@@ -27,9 +27,15 @@ export function useCellTypesQuery(
   return useQuery({
     queryKey: [USE_CELL_TYPES],
     queryFn: async () => {
+      // Check if the cell_type field exists in the schema (ATAC datasets only)
+      const colSchema = annoMatrix.schema.annotations.obsByName[METADATA_FIELD];
+      if (!colSchema) {
+        // Return empty array if cell_type field doesn't exist
+        return [];
+      }
+
       const categoryData = await annoMatrix.fetch(Field.obs, METADATA_FIELD);
       const column = categoryData.icol(0);
-      const colSchema = annoMatrix.schema.annotations.obsByName[METADATA_FIELD];
       const categorySummary = createCategorySummaryFromDfCol(
         column,
         colSchema as CategoricalAnnotationColumnSchema
