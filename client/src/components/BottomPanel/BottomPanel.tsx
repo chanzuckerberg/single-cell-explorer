@@ -49,6 +49,16 @@ const BottomSideBar = ({
     [cellTypesQuery.data]
   );
 
+  // Don't render if no ATAC data is available (cell types query returns empty array)
+  // Wait for the query to complete before deciding whether to render
+  if (
+    !cellTypesQuery.isLoading &&
+    cellTypesQuery.data &&
+    cellTypesQuery.data.length === 0
+  ) {
+    return null;
+  }
+
   return (
     <BottomPanelWrapper
       isHidden={bottomPanelHidden}
