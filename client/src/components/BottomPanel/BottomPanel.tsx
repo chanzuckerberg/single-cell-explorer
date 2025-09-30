@@ -3,8 +3,6 @@ import { connect, useSelector } from "react-redux";
 import { useCellTypesQuery } from "common/queries/cellType";
 import { RootState } from "reducers";
 import { Tooltip } from "@blueprintjs/core";
-import { getFeatureFlag } from "util/featureFlags/featureFlags";
-import { FEATURES } from "util/featureFlags/features";
 import { ChromosomeMap } from "./components/ChromosomeMap/ChromosomeMap";
 import { Props, mapStateToProps } from "./types";
 import { GeneSelect } from "./components/GeneSelect/GeneSelect";
@@ -26,10 +24,8 @@ const BottomSideBar = ({
   bottomPanelMinimized = false,
   bottomPanelHidden,
 }: Props) => {
-  // Get dataset's cell types
-  const cellTypesQuery = useCellTypesQuery({
-    enabled: getFeatureFlag(FEATURES.MULTIOME_VIZ),
-  });
+  // Get ATAC-seq dataset's cell types
+  const cellTypesQuery = useCellTypesQuery();
 
   // Add first cell type as default to selected cell types
   useEffect(() => {

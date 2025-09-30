@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
 import { connect, useSelector } from "react-redux";
-import { getFeatureFlag } from "util/featureFlags/featureFlags";
-import { FEATURES } from "util/featureFlags/features";
 import Icon from "components/icon/icon";
 import { AppDispatch, RootState } from "reducers";
 import { Schema } from "common/types/schema";
@@ -52,8 +50,7 @@ const ChromatinViewerButton = ({
 
   useChromatinViewerData(schema, selectedCellTypes);
 
-  const shouldShowChromatinButton =
-    !isSidePanel && getFeatureFlag(FEATURES.MULTIOME_VIZ) && hasChromatinData;
+  const shouldShowChromatinButton = !isSidePanel && hasChromatinData;
 
   useEffect(() => {
     if (shouldShowChromatinButton) {
