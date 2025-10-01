@@ -49,12 +49,33 @@ class WSGIServer(Server):
 
         EXPLORER_STAGING_URL = "https://cellxgene.staging.single-cell.czi.technology"
 
+        EXPLORER_VCP_STAGING_URL = "https://platform.staging.virtual-cells.czi.technology"
+
+        EXPLORER_VCP_PROD_URL = "https://virtualcellmodels.cziscience.com"
+
         csp = {
             "default-src": ["'self'", HUBSPOT_FORMS_URL, HUBSPOT_JS_URL],
             "form-action": ["'self'", HUBSPOT_FORMS_URL],
-            "connect-src": ["'self'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, EXPLORER_DEV_URL, EXPLORER_STAGING_URL]
+            "connect-src": [
+                "'self'",
+                PLAUSIBLE_URL,
+                HUBSPOT_FORMS_URL,
+                EXPLORER_DEV_URL,
+                EXPLORER_STAGING_URL,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
+            ]
             + extra_connect_src,
-            "script-src": ["'self'", "'unsafe-eval'", PLAUSIBLE_URL, HUBSPOT_FORMS_URL, HUBSPOT_JS_URL] + script_hashes,
+            "script-src": [
+                "'self'",
+                "'unsafe-eval'",
+                PLAUSIBLE_URL,
+                HUBSPOT_FORMS_URL,
+                HUBSPOT_JS_URL,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
+            ]
+            + script_hashes,
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com"],
             "img-src": [
@@ -63,6 +84,8 @@ class WSGIServer(Server):
                 EXPLORER_DEV_URL,
                 EXPLORER_STAGING_URL,
                 HUBSPOT_FORMS_URL_CDN,
+                EXPLORER_VCP_STAGING_URL,
+                EXPLORER_VCP_PROD_URL,
             ]
             + extra_connect_src
             + ["data:", HUBSPOT_FORMS_URL],

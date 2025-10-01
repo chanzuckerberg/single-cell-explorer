@@ -28,6 +28,7 @@ import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { AgentComponent } from "../Agent/AgentComponent";
 import BottomPanel from "../BottomPanel/BottomPanel";
 import Autosave from "../Autosave";
+import BYODToast from "../BYODConnectors/BYODToast";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -172,7 +173,8 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                     >
                       <LeftSideBar />
                       <RightSideBar />
-                      {getFeatureFlag(FEATURES.MULTIOME_VIZ) && <BottomPanel />}
+                      <BottomPanel />
+                      {getFeatureFlag(FEATURES.BYOD) && <BYODToast />}
                     </Layout>
                   </>
                 )}

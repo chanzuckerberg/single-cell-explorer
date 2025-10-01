@@ -700,12 +700,19 @@ class CxgDataset(Dataset):
         """
         Extracts ATAC coverage data for a gene and one or more cell types from TileDB.
         """
+        if not self.has_array("coverage"):
+            return None
+
         bin_size = ATAC_BIN_SIZE
         range_buffer = ATAC_RANGE_BUFFER
 
-        gene_info = self.get_atac_gene_info(gene_name, genome_version)
-        if gene_info is None:
-            raise DatasetAccessError(f"Gene '{gene_name}' not found in genome version '{genome_version}'")
+        try:
+            gene_info = self.get_atac_gene_info(gene_name, genome_version)
+            if gene_info is None:
+                return None
+        except DatasetAccessError:
+            return None
+
         target_chromosome, gene_start, gene_end, sorted_genes = gene_info
 
         # Determine genomic region of interest
@@ -724,8 +731,6 @@ class CxgDataset(Dataset):
             raise ValueError(f"Unknown chromosome: {target_chromosome}")
 
         try:
-            if not self.has_array("coverage"):
-                return None
             coverage = self.open_array("coverage")
 
             # Ensure cell_types is a list

@@ -39,5 +39,5 @@ stack:
       ingress:
         oidcProtected: true
         paths:
-          - path: /
+          - path: /w/
             pathType: Prefix

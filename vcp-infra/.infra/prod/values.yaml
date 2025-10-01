@@ -3,6 +3,7 @@ stack:
     ingress:
       rules:
         - host: virtualcellmodels.cziscience.com
+        - host: explorer.virtualcellmodels.cziscience.com
       annotations:
         # The apex alias entry for the host URL is manually created in TF (outside Argus).
         external-dns.alpha.kubernetes.io/exclude: "true"
@@ -22,7 +23,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::339713142298:role/virtual-cells-platform-backend-prod
       image:
-        tag: sha-37f8808
+        tag: sha-773783e
       replicaCount: 3
       resources:
         limits:
@@ -45,6 +46,18 @@ stack:
         - name: WEB_DOMAIN
           value: virtualcellmodels.cziscience.com
         - name: API_DOMAIN
-          value: virtualcellmodels.cziscience.com
+          value: explorer.virtualcellmodels.cziscience.com
+        - name: DATA_LOCATOR_DOMAIN
+          value: explorer.virtualcellmodels.cziscience.com
+        - name: CXG_BUCKET_PATH
+          value: hosted-cellxgene-prod
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: SKIP_ATAC_CACHE
+          value: "1"
+      ingress:
+        paths:
+          - path: /w/
+            pathType: Prefix
+          - path: /cellxgene/
+            pathType: Prefix
