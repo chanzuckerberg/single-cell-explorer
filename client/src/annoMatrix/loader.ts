@@ -39,7 +39,7 @@ import {
   DataframeValueArray,
   DataframeValue,
 } from "../util/dataframe/types";
-import { AnyArray, TypedArray } from "../common/types/arraytypes";
+import { AnyArray, TypedArray, isDictEncodedTypedArray } from "../common/types/arraytypes";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 
@@ -214,8 +214,22 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     }
 
     const existing = this._cache.obs.col(col).asArray() as AnyArray;
-    const nextData = existing.slice();
+    let nextData: AnyArray;
     const offsets = this.rowIndex.getOffsets(rowLabels);
+    
+    // If existing data is DictEncoded, convert to plain array
+    if (isDictEncodedTypedArray(existing)) {
+      // Get the actual string values from the dict-encoded array
+      nextData = new Array(existing.length);
+      for (let i = 0; i < existing.length; i++) {
+        nextData[i] = existing.vat(i);
+      }
+    } else {
+      // Plain array - just slice
+      nextData = existing.slice();
+    }
+    
+    // Modify the values
     offsets.forEach((offset) => {
       if (offset === undefined) {
         throw new Error("Unknown row label");
@@ -263,10 +277,24 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
       throw new Error("annotation data unavailable");
     }
 
-    const data = (this._cache.obs.col(col).asArray() as AnyArray).slice();
-    for (let i = 0, l = data.length; i < l; i += 1) {
-      if (data[i] === oldValue) {
-        data[i] = newValue;
+    const existing = this._cache.obs.col(col).asArray() as AnyArray;
+    let data: AnyArray;
+    
+    // If existing data is DictEncoded, convert to plain array
+    if (isDictEncodedTypedArray(existing)) {
+      // Get the actual string values from the dict-encoded array
+      data = new Array(existing.length);
+      for (let i = 0; i < existing.length; i++) {
+        const val = existing.vat(i);
+        data[i] = val === oldValue ? newValue : val;
+      }
+    } else {
+      // Plain array - just slice and modify
+      data = existing.slice();
+      for (let i = 0, l = data.length; i < l; i += 1) {
+        if (data[i] === oldValue) {
+          data[i] = newValue;
+        }
       }
     }
 

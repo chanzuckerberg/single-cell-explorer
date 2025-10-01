@@ -244,11 +244,20 @@ function _createUserColors(
   let { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
+  
+  // For dict-encoded columns, if schema categories are numeric codes,
+  // convert them to label strings using codeMapping
   if (isDataframeDictEncodedColumn(col)) {
-    categories = categories.map((cat) => col.codeMapping[cat as number]);
+    const firstCategory = categories[0];
+    if (typeof firstCategory === 'number') {
+      // Schema has numeric codes, convert to label strings
+      categories = categories.map(
+        (code) => col.codeMapping[code as number]
+      );
+    }
   }
+  
   const categoryMap = new Map();
-
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
   const scale = (idx: number) => scaleByLabel(categoryMap.get(idx));
   scale.domain = () => [0, 0];
@@ -276,10 +285,23 @@ function _createColorsByCategoricalMetadata(
     .domain([0, categories?.length || 0]);
 
   /* pre-create colors - much faster than doing it for each obs */
-  const colors = categories?.reduce((acc: CategoryColors, cat, idx) => {
+  let colors = categories?.reduce((acc: CategoryColors, cat, idx) => {
     acc[cat as string] = parseRGB(scale(idx));
     return acc;
   }, {});
+  
+  // If column is dict-encoded, convert color keys from label strings to numeric codes
+  if (isDataframeDictEncodedColumn(col)) {
+    const newColors: CategoryColors = {};
+    Object.entries(colors).forEach(([label, color]) => {
+      const code = col.invCodeMapping[label];
+      if (code !== undefined) {
+        newColors[code] = color;
+      }
+    });
+    colors = newColors;
+  }
+  
   const rgb = createRgbArray(data, colors);
   return { rgb, scale };
 }

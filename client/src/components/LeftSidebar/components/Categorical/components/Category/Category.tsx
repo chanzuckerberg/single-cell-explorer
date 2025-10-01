@@ -84,26 +84,6 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
 });
 
 class Category extends React.PureComponent<CategoryProps> {
-  constructor(props: CategoryProps) {
-    super(props);
-    console.log('[Category] constructor called for:', props.metadataField);
-  }
-
-  componentDidMount() {
-    console.log('[Category] componentDidMount for:', this.props.metadataField);
-  }
-
-  componentDidUpdate(prevProps: CategoryProps) {
-    const { metadataField } = this.props;
-    console.log(`[Category ${metadataField}] componentDidUpdate called`);
-    console.log(`[Category ${metadataField}] annoMatrix changed?`, prevProps.annoMatrix !== this.props.annoMatrix);
-    console.log(`[Category ${metadataField}] schema changed?`, prevProps.schema !== this.props.schema);
-    console.log(`[Category ${metadataField}] crossfilter changed?`, prevProps.crossfilter !== this.props.crossfilter);
-    if (prevProps.metadataField !== this.props.metadataField) {
-      console.log('[Category] metadataField changed from', prevProps.metadataField, 'to', this.props.metadataField);
-    }
-  }
-
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
@@ -128,12 +108,7 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
-    const shouldRefetch = !shallowEqual(props.watchProps, prevProps.watchProps);
-    if (shouldRefetch) {
-      console.log(`[Category ${props.watchProps.metadataField}] watchAsync triggered refetch`);
-      console.log(`[Category ${props.watchProps.metadataField}] annoMatrix changed?`, props.watchProps.annoMatrix !== prevProps?.watchProps?.annoMatrix);
-    }
-    return shouldRefetch;
+    return !shallowEqual(props.watchProps, prevProps.watchProps);
   }
 
   createCategorySummaryFromDfCol = memoize(createCategorySummaryFromDfCol);
@@ -213,16 +188,11 @@ class Category extends React.PureComponent<CategoryProps> {
   ): Promise<CategoryAsyncProps> => {
     const { annoMatrix, metadataField, colors } = props.watchProps;
 
-    console.log(`[Category ${metadataField}] fetchAsyncProps called`);
-    console.log(`[Category ${metadataField}] annoMatrix:`, annoMatrix);
-
     const [categoryData, categorySummary, colorData] = await this.fetchData(
       annoMatrix,
       metadataField,
       colors
     );
-
-    console.log(`[Category ${metadataField}] fetchAsyncProps complete - categorySummary:`, categorySummary);
 
     return {
       categoryData,
@@ -346,8 +316,6 @@ class Category extends React.PureComponent<CategoryProps> {
 
     const checkboxID = `category-select-${metadataField}`;
 
-    console.log(`[Category ${metadataField}] render called`);
-
     return (
       <CategoryCrossfilterContext.Provider value={crossfilter}>
         <Async
@@ -361,21 +329,15 @@ class Category extends React.PureComponent<CategoryProps> {
           }}
         >
           <Async.Pending initial>
-            {(() => {
-              console.log(`[Category ${metadataField}] Rendering Async.Pending`);
-              return <StillLoading />;
-            })()}
+            <StillLoading />
           </Async.Pending>
           <Async.Rejected>
-            {(error) => {
-              console.log(`[Category ${metadataField}] Rendering Async.Rejected:`, error);
-              return <ErrorLoading metadataField={metadataField} error={error} />;
-            }}
+            {(error) => (
+              <ErrorLoading metadataField={metadataField} error={error} />
+            )}
           </Async.Rejected>
           <Async.Fulfilled persist>
             {(asyncProps: CategoryAsyncProps) => {
-              console.log(`[Category ${metadataField}] Rendering Async.Fulfilled`);
-              console.log(`[Category ${metadataField}] asyncProps:`, asyncProps);
               const {
                 /**
                  * (thuang): `colorAccessor` needs to be accessed from `asyncProps` instead
