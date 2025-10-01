@@ -297,8 +297,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       groupBy
     );
 
-    const bins = histogramMap.has(categoryValue)
-      ? (histogramMap.get(categoryValue) as ContinuousHistogram)
+    // For dict-encoded columns, categoryValue is a label string but histogramMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const bins = histogramMap.has(lookupValue)
+      ? (histogramMap.get(lookupValue) as ContinuousHistogram)
       : new Array<number>(50).fill(0);
 
     const xScale = d3.scaleLinear().domain([0, bins.length]).range([0, width]);
@@ -334,7 +341,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    const occupancy = occupancyMap.get(categoryValue);
+    // For dict-encoded columns, categoryValue is a label string but occupancyMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const occupancy = occupancyMap.get(lookupValue);
 
     if (occupancy && occupancy.size > 0) {
       // not all categories have occupancy, so occupancy may be undefined.
