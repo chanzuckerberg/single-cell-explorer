@@ -46,7 +46,6 @@ const skipOnActions = new Set<string>([
   "annotation: disable category edit mode",
   "annotation: activate edit label mode",
   "annotation: cancel edit label mode",
-  "set annotations collection name",
 
   /* geneset component action */
   "geneset: activate add new geneset mode",

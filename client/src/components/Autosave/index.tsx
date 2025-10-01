@@ -6,7 +6,6 @@ import actions from "actions";
 import type { RootState, AppDispatch } from "reducers";
 import type AnnoMatrix from "../../annoMatrix/annoMatrix";
 import type { Genesets } from "../../reducers/genesets";
-import FilenameDialog from "./filenameDialog";
 
 interface StateProps {
   obsAnnotationSaveInProgress: boolean;
@@ -197,7 +196,6 @@ class Autosave extends React.PureComponent<Props, AutosaveComponentState> {
         }}
       >
         {statusContent}
-        <FilenameDialog />
       </div>
     );
   }

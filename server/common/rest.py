@@ -10,7 +10,7 @@ from http import HTTPStatus
 from urllib.parse import unquote as url_unquote
 
 import requests
-from flask import abort, current_app, jsonify, make_response, redirect
+from flask import abort, current_app, jsonify, make_response, redirect, request
 
 from server.app.api.util import get_dataset_artifact_s3_uri
 from server.common.config.client_config import get_client_config
@@ -41,6 +41,40 @@ from server.common.utils.cell_type_info import (
 )
 from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
+
+
+LOCAL_DEV_USER_ID = "local-dev-user"
+
+
+HEADER_USER_ID_CANDIDATES = (
+    "X-Amzn-Oidc-Identity",
+    "X-Amzn-Oidc-Sub",
+    "X-Cognito-Username",
+    "X-User-Id",
+    "X-Auth-Request-User",
+)
+
+
+def _get_request_user_id(req) -> Optional[str]:
+    """Best-effort extraction of the authenticated Cognito user identifier."""
+
+    if req is None:
+        return None
+
+    for header in HEADER_USER_ID_CANDIDATES:
+        user = req.headers.get(header)
+        if user:
+            return user
+    return None
+
+
+def _resolve_request_user_id(req) -> str:
+    user_id = _get_request_user_id(req)
+    if user_id:
+        return user_id
+    if current_app.debug or current_app.testing:
+        return LOCAL_DEV_USER_ID
+    abort(HTTPStatus.UNAUTHORIZED)
 
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG, include_exc_info=False):
@@ -116,23 +150,29 @@ def _query_parameter_to_filter(args):
     return result
 
 
-def schema_get_helper(data_adaptor):
+def schema_get_helper(data_adaptor, user_id=None):
     """helper function to gather the schema from the data source and annotations"""
-    schema = data_adaptor.get_schema()
+    schema = data_adaptor.get_schema(user_id=user_id)
     schema = copy.deepcopy(schema)
 
     return schema
 
 
-def genesets_get_helper(data_adaptor):
+def genesets_get_helper(data_adaptor, user_id=None):
     """helper function to get genesets present in the obs metadata"""
-    genesets = data_adaptor.get_genesets()
-    genesets = copy.deepcopy(genesets)
-    return genesets
+    payload = data_adaptor.get_genesets(user_id=user_id)
+    if isinstance(payload, dict):
+        result = copy.deepcopy(payload)
+        result.setdefault("genesets", [])
+        result.setdefault("tid", 0)
+        return result
+    genesets = copy.deepcopy(payload) if payload is not None else []
+    return {"genesets": genesets, "tid": 0}
 
 
 def schema_get(data_adaptor):
-    schema = schema_get_helper(data_adaptor)
+    user_id = _resolve_request_user_id(request)
+    schema = schema_get_helper(data_adaptor, user_id=user_id)
     return make_response(jsonify({"schema": schema}), HTTPStatus.OK)
 
 
@@ -140,9 +180,11 @@ def genesets_get(data_adaptor):
     """
     The genesets endpoint returns the genesets present in the obs metadata.
     """
+    user_id = _resolve_request_user_id(request)
+
     if hasattr(data_adaptor, "get_gene_sets"):
         try:
-            payload = data_adaptor.get_gene_sets()
+            payload = data_adaptor.get_gene_sets(user_id=user_id)
         except NotImplementedError:
             return abort(HTTPStatus.NOT_IMPLEMENTED)
         except Exception as error:  # pragma: no cover - defensive logging
@@ -159,11 +201,8 @@ def genesets_get(data_adaptor):
             response["tid"] = tid
         return make_response(jsonify(response), HTTPStatus.OK)
 
-    genesets = genesets_get_helper(data_adaptor)
-    return make_response(
-        jsonify({"genesets": list(genesets.values())}),
-        HTTPStatus.OK,
-    )
+    payload = genesets_get_helper(data_adaptor, user_id=user_id)
+    return make_response(jsonify(payload), HTTPStatus.OK)
 
 
 def genesets_put(request, data_adaptor):
@@ -171,18 +210,19 @@ def genesets_put(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
     payload = request.get_json(silent=True) or {}
+
     genesets = payload.get("genesets")
     if genesets is None:
         return abort(HTTPStatus.BAD_REQUEST, description="Missing genesets payload")
 
     tid = payload.get("tid")
-    anno_collection = request.args.get("annotation-collection-name")
+    user_id = _resolve_request_user_id(request)
 
     try:
         data_adaptor.save_gene_sets(
             genesets,
             tid=tid,
-            collection_name=anno_collection,
+            user_id=user_id,
         )
         return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
     except NotImplementedError:
@@ -241,8 +281,15 @@ def annotations_obs_get(request, data_adaptor):
     if preferred_mimetype != "application/octet-stream":
         return abort(HTTPStatus.NOT_ACCEPTABLE)
 
+    user_id = _resolve_request_user_id(request)
+
     try:
-        fbs = data_adaptor.annotation_to_fbs_matrix(Axis.OBS, fields, num_bins=nBins)
+        fbs = data_adaptor.annotation_to_fbs_matrix(
+            Axis.OBS,
+            fields,
+            num_bins=nBins,
+            user_id=user_id,
+        )
         return make_response(fbs, HTTPStatus.OK, {"Content-Type": "application/octet-stream"})
     except KeyError as e:
         return abort_and_log(HTTPStatus.BAD_REQUEST, str(e), include_exc_info=True)
@@ -269,12 +316,12 @@ def annotations_obs_put(request, data_adaptor):
             include_exc_info=True,
         )
 
-    anno_collection = request.args.get("annotation-collection-name")
+    user_id = _resolve_request_user_id(request)
 
     try:
         data_adaptor.save_obs_annotations(
             dataframe,
-            collection_name=anno_collection,
+            user_id=user_id,
         )
         return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
     except NotImplementedError:

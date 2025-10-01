@@ -22,8 +22,6 @@ from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.utils.uns import spatial_metadata_get
 from server.common.utils.utils import jsonify_numpy
 
-
-_DEFAULT_COLLECTION_KEY = "__default__"
 _ANNOTATION_STORE: Dict[Tuple[str, str], Dict[str, Any]] = defaultdict(dict)
 _ANNOTATION_STORE_LOCK = Lock()
 
@@ -47,13 +45,16 @@ class Dataset(metaclass=ABCMeta):
     # ------------------------------------------------------------------------
     # Autosave scaffolding helpers
 
-    def _annotation_store_key(self, collection_name: Optional[str]) -> Tuple[str, str]:
-        dataset_key = self.get_location() or ""
-        collection_key = collection_name or _DEFAULT_COLLECTION_KEY
-        return dataset_key, collection_key
+    def _get_user_store_key(self, user_id: Optional[str]) -> str:
+        return user_id or "__global__"
 
-    def _get_annotation_store(self, collection_name: Optional[str]) -> Dict[str, Any]:
-        key = self._annotation_store_key(collection_name)
+    def _annotation_store_key(self, user_id: Optional[str]) -> Tuple[str, str]:
+        dataset_key = self.get_location() or ""
+        user_key = self._get_user_store_key(user_id)
+        return dataset_key, user_key
+
+    def _get_annotation_store(self, user_id: Optional[str]) -> Dict[str, Any]:
+        key = self._annotation_store_key(user_id)
         with _ANNOTATION_STORE_LOCK:
             store = _ANNOTATION_STORE[key]
             # normalise buckets to simplify downstream callers
@@ -61,20 +62,30 @@ class Dataset(metaclass=ABCMeta):
             store.setdefault("genesets", None)
         return store
 
-    def get_saved_obs_annotations(self, collection_name: Optional[str] = None) -> Optional[pd.DataFrame]:
-        store = self._get_annotation_store(collection_name)
+    def get_saved_obs_annotations(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[pd.DataFrame]:
+        store = self._get_annotation_store(user_id)
         saved = store.get("obs_annotations")
         return deepcopy(saved) if saved is not None else None
 
-    def get_saved_gene_sets(self, collection_name: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        store = self._get_annotation_store(collection_name)
+    def get_saved_gene_sets(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        store = self._get_annotation_store(user_id)
         saved = store.get("genesets")
         return deepcopy(saved) if saved is not None else None
 
-    def save_obs_annotations(self, dataframe: pd.DataFrame, collection_name: Optional[str] = None) -> None:
+    def save_obs_annotations(
+        self,
+        dataframe: pd.DataFrame,
+        user_id: Optional[str] = None,
+    ) -> None:
         """Store user-provided obs annotations until a durable backend is available."""
 
-        store = self._get_annotation_store(collection_name)
+        store = self._get_annotation_store(user_id)
         # Keep a deep copy so in-memory mutations elsewhere don't mutate the store.
         store["obs_annotations"] = deepcopy(dataframe)
 
@@ -82,14 +93,11 @@ class Dataset(metaclass=ABCMeta):
         self,
         genesets_payload: Dict[str, Any],
         tid: Optional[int] = None,
-        collection_name: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> None:
         """Persist gene sets and monotonic tid locally for autosave."""
 
-        if genesets_payload is None:
-            raise ValueError("genesets payload is required")
-
-        store = self._get_annotation_store(collection_name)
+        store = self._get_annotation_store(user_id)
         existing = store.get("genesets") or {"tid": 0, "genesets": []}
         current_tid = existing.get("tid", 0)
 
@@ -210,14 +218,14 @@ class Dataset(metaclass=ABCMeta):
         return None
 
     @abstractmethod
-    def get_schema(self):
+    def get_schema(self, user_id: Optional[str] = None):
         """
         Return current schema
         """
         pass
 
     @abstractmethod
-    def get_genesets(self):
+    def get_genesets(self, user_id: Optional[str] = None):
         """
         Return genesets in the obs metadata
         """

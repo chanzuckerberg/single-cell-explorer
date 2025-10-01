@@ -9,11 +9,7 @@ import { MatrixFBS, AnnotationsHelpers } from "../util/stateManager";
 import type AnnoMatrix from "../annoMatrix/annoMatrix";
 import type { RootState, AppDispatch, GetState } from "../reducers";
 import type { Genesets } from "../reducers/genesets";
-import {
-  AnnotationColumnSchema,
-  Category,
-  Field,
-} from "../common/types/schema";
+import { AnnotationColumnSchema, Category, Field } from "../common/types/schema";
 import { AnyArray } from "../common/types/arraytypes";
 
 type ThunkResult<R = void> = ThunkAction<R, RootState, never, AnyAction>;
@@ -22,10 +18,8 @@ type ColumnValueCtor = new (length: number) => AnyArray;
 
 const { isUserAnnotation } = AnnotationsHelpers;
 
-export const annotationCreateCategoryAction = (
-  newCategoryName: string,
-  categoryToDuplicate?: string | null
-): ThunkResult =>
+export const annotationCreateCategoryAction =
+  (newCategoryName: string, categoryToDuplicate?: string | null): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
@@ -101,37 +95,37 @@ export const annotationCreateCategoryAction = (
     });
   };
 
-export const annotationRenameCategoryAction = (
-  oldCategoryName: string,
-  newCategoryName: string
-): ThunkResult => (dispatch: AppDispatch, getState: GetState) => {
-  const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
-    getState();
-  if (!prevAnnoMatrix || !prevObsCrossfilter) return;
-  if (!isUserAnnotation(prevAnnoMatrix, oldCategoryName)) {
-    throw new Error("not a user annotation");
-  }
+export const annotationRenameCategoryAction =
+  (oldCategoryName: string, newCategoryName: string): ThunkResult =>
+  (dispatch: AppDispatch, getState: GetState) => {
+    const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
+      getState();
+    if (!prevAnnoMatrix || !prevObsCrossfilter) return;
+    if (!isUserAnnotation(prevAnnoMatrix, oldCategoryName)) {
+      throw new Error("not a user annotation");
+    }
 
-  const trimmedName = newCategoryName.trim();
-  if (!trimmedName || trimmedName === oldCategoryName) return;
+    const trimmedName = newCategoryName.trim();
+    if (!trimmedName || trimmedName === oldCategoryName) return;
 
-  const obsCrossfilter = prevObsCrossfilter.renameObsColumn(
-    oldCategoryName,
-    trimmedName
-  );
+    const obsCrossfilter = prevObsCrossfilter.renameObsColumn(
+      oldCategoryName,
+      trimmedName
+    );
 
-  dispatch({
-    type: "annotation: category edited",
-    annoMatrix: obsCrossfilter.annoMatrix,
-    obsCrossfilter,
-    metadataField: oldCategoryName,
-    newCategoryText: trimmedName,
-    data: trimmedName,
-  });
-};
+    dispatch({
+      type: "annotation: category edited",
+      annoMatrix: obsCrossfilter.annoMatrix,
+      obsCrossfilter,
+      metadataField: oldCategoryName,
+      newCategoryText: trimmedName,
+      data: trimmedName,
+    });
+  };
 
 export const annotationDeleteCategoryAction =
-  (categoryName: string): ThunkResult => (dispatch: AppDispatch, getState: GetState) => {
+  (categoryName: string): ThunkResult =>
+  (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -148,11 +142,12 @@ export const annotationDeleteCategoryAction =
     });
   };
 
-export const annotationCreateLabelInCategory = (
-  categoryName: string,
-  labelName: string,
-  assignSelected: boolean
-): ThunkResult =>
+export const annotationCreateLabelInCategory =
+  (
+    categoryName: string,
+    labelName: string,
+    assignSelected: boolean
+  ): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
@@ -189,10 +184,8 @@ export const annotationCreateLabelInCategory = (
     dispatch({ type: "annotation: disable add new label mode" });
   };
 
-export const annotationDeleteLabelFromCategory = (
-  categoryName: string,
-  labelName: string
-): ThunkResult =>
+export const annotationDeleteLabelFromCategory =
+  (categoryName: string, labelName: string): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
@@ -216,11 +209,12 @@ export const annotationDeleteLabelFromCategory = (
     });
   };
 
-export const annotationRenameLabelInCategory = (
-  categoryName: string,
-  oldLabelName: string,
-  newLabelName: string
-): ThunkResult =>
+export const annotationRenameLabelInCategory =
+  (
+    categoryName: string,
+    oldLabelName: string,
+    newLabelName: string
+  ): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
@@ -253,10 +247,8 @@ export const annotationRenameLabelInCategory = (
     });
   };
 
-export const annotationLabelCurrentSelection = (
-  categoryName: string,
-  labelName: string
-): ThunkResult =>
+export const annotationLabelCurrentSelection =
+  (categoryName: string, labelName: string): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
@@ -327,8 +319,7 @@ export const needToSaveObsAnnotations = (
 export const saveObsAnnotationsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
-    const { annotations, autosave } = state;
-    const { dataCollectionNameIsReadOnly, dataCollectionName } = annotations;
+    const { autosave } = state;
     const { lastSavedAnnoMatrix, obsAnnotationSaveInProgress } = autosave;
     const annoMatrix = state.annoMatrix?.base();
 
@@ -361,17 +352,10 @@ export const saveObsAnnotationsAction =
     });
 
     try {
-      const queryString =
-        !dataCollectionNameIsReadOnly && dataCollectionName
-          ? `?annotation-collection-name=${encodeURIComponent(
-              dataCollectionName
-            )}`
-          : "";
-
       const response = await fetch(
         `${globals.API?.prefix ?? ""}${
           globals.API?.version ?? ""
-        }annotations/obs${queryString}`,
+        }annotations/obs`,
         {
           method: "PUT",
           body: requestBody,
@@ -433,7 +417,7 @@ function genesetStateToPayload(genesets: Genesets): {
 export const saveGenesetsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
-    const { config, genesets: genesetState, annotations, autosave } = state;
+    const { config, genesets: genesetState, autosave } = state;
 
     const genesetsEnabled = config?.parameters?.annotations_genesets ?? false;
     const genesetsReadonly =
@@ -462,18 +446,8 @@ export const saveGenesetsAction =
     };
 
     try {
-      const { dataCollectionNameIsReadOnly, dataCollectionName } = annotations;
-      const queryString =
-        !dataCollectionNameIsReadOnly && dataCollectionName
-          ? `?annotation-collection-name=${encodeURIComponent(
-              dataCollectionName
-            )}`
-          : "";
-
       const response = await fetch(
-        `${globals.API?.prefix ?? ""}${
-          globals.API?.version ?? ""
-        }genesets${queryString}`,
+        `${globals.API?.prefix ?? ""}${globals.API?.version ?? ""}genesets`,
         {
           method: "PUT",
           headers: new Headers({

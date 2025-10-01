@@ -102,6 +102,9 @@ class Categorical extends React.Component<Props> {
       return true;
     }
     // Only display categoricals if they have more than one value.
+    if (columnSchema.writable) {
+      return true;
+    }
     return (
       (columnSchema as CategoricalAnnotationColumnSchema).categories.length >
         1 || isCellGuideCxg
@@ -268,15 +271,21 @@ class Categorical extends React.Component<Props> {
             {authorCategoryNames.length ? (
               <Collapse>
                 <span>Author Categories</span>
-                {authorCategoryNames.map((catName: string) => (
-                  <Category
-                    key={catName}
-                    metadataField={catName}
-                    onExpansionChange={this.onExpansionChange}
-                    isExpanded={expandedCategories.includes(catName)}
-                    categoryType="author"
-                  />
-                ))}
+                {(() => {
+                  console.log('[Categorical] About to render', authorCategoryNames.length, 'author categories:', authorCategoryNames);
+                  return authorCategoryNames.map((catName: string) => {
+                    console.log('[Categorical] Rendering Category for:', catName);
+                    return (
+                      <Category
+                        key={catName}
+                        metadataField={catName}
+                        onExpansionChange={this.onExpansionChange}
+                        isExpanded={expandedCategories.includes(catName)}
+                        categoryType="author"
+                      />
+                    );
+                  });
+                })()}
               </Collapse>
             ) : null}
           </>
@@ -287,8 +296,17 @@ class Categorical extends React.Component<Props> {
 }
 
 function mapStateToProps(state: RootState): StateProps {
+  const schema = state.annoMatrix?.schema;
+  const obsCrossfilterSchema = state.obsCrossfilter?.annoMatrix?.schema;
+  
+  console.log('[Categorical] mapStateToProps - annoMatrix schema:', schema);
+  console.log('[Categorical] mapStateToProps - annoMatrix columns:', schema?.annotations.obs.columns.map(c => c.name));
+  console.log('[Categorical] mapStateToProps - obsCrossfilter schema:', obsCrossfilterSchema);
+  console.log('[Categorical] mapStateToProps - obsCrossfilter columns:', obsCrossfilterSchema?.annotations.obs.columns.map(c => c.name));
+  console.log('[Categorical] mapStateToProps - schemas are same?', schema === obsCrossfilterSchema);
+  
   return {
-    schema: state.annoMatrix?.schema,
+    schema,
     isCellGuideCxg: state.controls.isCellGuideCxg,
     expandedCategories: state.controls.expandedCategories,
     writableCategoriesEnabled: !!state.config?.parameters?.annotations,

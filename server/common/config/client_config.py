@@ -59,10 +59,6 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
 
     # Provide autosave-related client parameters. These defaults may be overridden by
     # the adaptor's update_parameters implementation when richer configuration exists.
-    parameters.setdefault("user_annotation_collection_name_enabled", True)
-    parameters.setdefault("annotations-data-collection-is-read-only", False)
-    parameters.setdefault("annotations-data-collection-name", None)
-    parameters.setdefault("annotations_genesets_name_is_read_only", False)
     parameters.setdefault("annotations-user-data-idhash", _compute_user_idhash(data_adaptor))
 
     # corpora dataset_props

@@ -64,14 +64,14 @@ const mapStateToProps = (
   state: RootState,
   ownProps: PureCategoryProps
 ): StateProps => {
-  const schema = state.annoMatrix?.schema;
+  const schema = state.obsCrossfilter?.annoMatrix?.schema ?? state.annoMatrix?.schema;
   const { metadataField } = ownProps;
   const categoricalSelection =
     state.categoricalSelection?.[metadataField] ?? new Map();
   return {
     colors: state.colors,
     categoricalSelection,
-    annoMatrix: state.annoMatrix,
+    annoMatrix: state.obsCrossfilter?.annoMatrix ?? state.annoMatrix,
     schema,
     crossfilter: state.obsCrossfilter,
     genesets: state.genesets.genesets,
@@ -84,6 +84,26 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
 });
 
 class Category extends React.PureComponent<CategoryProps> {
+  constructor(props: CategoryProps) {
+    super(props);
+    console.log('[Category] constructor called for:', props.metadataField);
+  }
+
+  componentDidMount() {
+    console.log('[Category] componentDidMount for:', this.props.metadataField);
+  }
+
+  componentDidUpdate(prevProps: CategoryProps) {
+    const { metadataField } = this.props;
+    console.log(`[Category ${metadataField}] componentDidUpdate called`);
+    console.log(`[Category ${metadataField}] annoMatrix changed?`, prevProps.annoMatrix !== this.props.annoMatrix);
+    console.log(`[Category ${metadataField}] schema changed?`, prevProps.schema !== this.props.schema);
+    console.log(`[Category ${metadataField}] crossfilter changed?`, prevProps.crossfilter !== this.props.crossfilter);
+    if (prevProps.metadataField !== this.props.metadataField) {
+      console.log('[Category] metadataField changed from', prevProps.metadataField, 'to', this.props.metadataField);
+    }
+  }
+
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
@@ -108,7 +128,12 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   static watchAsync(props: any, prevProps: any) {
-    return !shallowEqual(props.watchProps, prevProps.watchProps);
+    const shouldRefetch = !shallowEqual(props.watchProps, prevProps.watchProps);
+    if (shouldRefetch) {
+      console.log(`[Category ${props.watchProps.metadataField}] watchAsync triggered refetch`);
+      console.log(`[Category ${props.watchProps.metadataField}] annoMatrix changed?`, props.watchProps.annoMatrix !== prevProps?.watchProps?.annoMatrix);
+    }
+    return shouldRefetch;
   }
 
   createCategorySummaryFromDfCol = memoize(createCategorySummaryFromDfCol);
@@ -188,11 +213,16 @@ class Category extends React.PureComponent<CategoryProps> {
   ): Promise<CategoryAsyncProps> => {
     const { annoMatrix, metadataField, colors } = props.watchProps;
 
+    console.log(`[Category ${metadataField}] fetchAsyncProps called`);
+    console.log(`[Category ${metadataField}] annoMatrix:`, annoMatrix);
+
     const [categoryData, categorySummary, colorData] = await this.fetchData(
       annoMatrix,
       metadataField,
       colors
     );
+
+    console.log(`[Category ${metadataField}] fetchAsyncProps complete - categorySummary:`, categorySummary);
 
     return {
       categoryData,
@@ -316,6 +346,8 @@ class Category extends React.PureComponent<CategoryProps> {
 
     const checkboxID = `category-select-${metadataField}`;
 
+    console.log(`[Category ${metadataField}] render called`);
+
     return (
       <CategoryCrossfilterContext.Provider value={crossfilter}>
         <Async
@@ -329,15 +361,21 @@ class Category extends React.PureComponent<CategoryProps> {
           }}
         >
           <Async.Pending initial>
-            <StillLoading />
+            {(() => {
+              console.log(`[Category ${metadataField}] Rendering Async.Pending`);
+              return <StillLoading />;
+            })()}
           </Async.Pending>
           <Async.Rejected>
-            {(error) => (
-              <ErrorLoading metadataField={metadataField} error={error} />
-            )}
+            {(error) => {
+              console.log(`[Category ${metadataField}] Rendering Async.Rejected:`, error);
+              return <ErrorLoading metadataField={metadataField} error={error} />;
+            }}
           </Async.Rejected>
           <Async.Fulfilled persist>
             {(asyncProps: CategoryAsyncProps) => {
+              console.log(`[Category ${metadataField}] Rendering Async.Fulfilled`);
+              console.log(`[Category ${metadataField}] asyncProps:`, asyncProps);
               const {
                 /**
                  * (thuang): `colorAccessor` needs to be accessed from `asyncProps` instead
@@ -608,9 +646,10 @@ const CategoryRender = React.memo(
     const { numCategoryValues } = categorySummary;
     const isSingularValue = numCategoryValues === 1;
 
-    if (isSingularValue && !isCellGuideCxg) {
+    if (isSingularValue && !isCellGuideCxg && !isUserAnnotation) {
       /*
       Entire category has a single value, special case.
+      But always show user annotations even with single value so users can add labels.
       */
       return null;
     }

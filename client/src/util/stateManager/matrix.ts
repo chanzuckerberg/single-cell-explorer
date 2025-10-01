@@ -184,7 +184,7 @@ function encodeDictArray(
   const [dCodes, dDict] = _getCodesAndDictVectorOffset(builder, uType, uData);
   builder.startObject(2);
   builder.addFieldOffset(0, dCodes, 0);
-  builder.addFieldOffset(0, dDict, 0);
+  builder.addFieldOffset(1, dDict, 0);
   return builder.endObject();
 }
 
@@ -346,7 +346,6 @@ export function encodeMatrixFBS(
   }
 
   const shape = df.dims;
-  const utf8Encoder = new TextEncoder();
   const builder = new flatbuffers.Builder(1024);
 
   let encColIndex;
@@ -399,7 +398,7 @@ export function encodeMatrixFBS(
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
-          utf8Encoder.encode(JSON.stringify(df.colIndex.labels()))
+          df.colIndex.labels()
         );
       } else {
         throw new Error("Index type FBS encoding unsupported");
