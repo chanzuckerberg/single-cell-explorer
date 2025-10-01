@@ -55,9 +55,3 @@ stack:
           value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
-      ingress:
-        paths:
-          - path: /w/
-            pathType: Prefix
-          - path: /cellxgene/
-            pathType: Prefix
