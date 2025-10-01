@@ -167,11 +167,8 @@ export class CentroidLabels extends PureComponent {
               const selected = category.get(label) ?? true;
               // Mirror LSB middle truncation
 
+              // label is already a string (converted in centroid calculation for dict-encoded columns)
               let displayLabel = label;
-              if (isDataframeDictEncodedColumn(categoryColumn)) {
-                displayLabel = (categoryColumn as DataframeDictEncodedColumn)
-                  .codeMapping[parseInt(displayLabel, 10)];
-              }
               const fullDisplayLabel = displayLabel;
               if (displayLabel.length > categoryLabelDisplayStringLongLength) {
                 displayLabel = `${displayLabel.slice(
