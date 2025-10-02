@@ -92,21 +92,25 @@ class TestCxgDataset(unittest.TestCase):
 
     def test_save_obs_annotations_roundtrip(self):
         data = self.get_data("pbmc3k.cxg")
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-roundtrip"
         n_obs, _ = data.get_shape()
         df = pd.DataFrame({"user_label": ["label"] * n_obs})
 
         data.save_obs_annotations(df, user_id=user_id)
         saved = data.get_saved_obs_annotations(user_id=user_id)
         self.assertIsNotNone(saved)
-        self.assertTrue(df.equals(saved))
+        # Compare values rather than exact DataFrame structure since TileDB converts to categorical
+        self.assertEqual(saved.columns.tolist(), df.columns.tolist())
+        self.assertEqual(saved["user_label"].values.tolist(), df["user_label"].values.tolist())
 
         # Ensure persisted annotations can be reloaded via a new adaptor instance
         data.cleanup()
         reloaded = self.get_data("pbmc3k.cxg")
         persisted = reloaded.get_saved_obs_annotations(user_id=user_id)
         self.assertIsNotNone(persisted)
-        self.assertTrue(df.equals(persisted))
+        # Compare values rather than exact DataFrame structure since TileDB converts to categorical
+        self.assertEqual(persisted.columns.tolist(), df.columns.tolist())
+        self.assertEqual(persisted["user_label"].values.tolist(), df["user_label"].values.tolist())
         reloaded.cleanup()
 
     def test_save_gene_sets_tid_flow(self):
@@ -119,7 +123,7 @@ class TestCxgDataset(unittest.TestCase):
             }
         ]
 
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-tid-flow"
 
         data.save_gene_sets(genesets, tid=1, user_id=user_id)
         saved = data.get_saved_gene_sets(user_id=user_id)
@@ -149,7 +153,7 @@ class TestCxgDataset(unittest.TestCase):
 
     def test_user_annotation_schema_and_fetch(self):
         data = self.get_data("pbmc3k.cxg")
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-schema-fetch"
         n_obs, _ = data.get_shape()
         annotations = pd.DataFrame(
             {

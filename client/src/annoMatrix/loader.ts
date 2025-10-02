@@ -39,7 +39,11 @@ import {
   DataframeValueArray,
   DataframeValue,
 } from "../util/dataframe/types";
-import { AnyArray, TypedArray, isDictEncodedTypedArray } from "../common/types/arraytypes";
+import {
+  AnyArray,
+  TypedArray,
+  isDictEncodedTypedArray,
+} from "../common/types/arraytypes";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 
@@ -216,19 +220,19 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     const existing = this._cache.obs.col(col).asArray() as AnyArray;
     let nextData: AnyArray;
     const offsets = this.rowIndex.getOffsets(rowLabels);
-    
+
     // If existing data is DictEncoded, convert to plain array
     if (isDictEncodedTypedArray(existing)) {
       // Get the actual string values from the dict-encoded array
       nextData = new Array(existing.length);
-      for (let i = 0; i < existing.length; i++) {
+      for (let i = 0; i < existing.length; i += 1) {
         nextData[i] = existing.vat(i);
       }
     } else {
       // Plain array - just slice
       nextData = existing.slice();
     }
-    
+
     // Modify the values
     offsets.forEach((offset) => {
       if (offset === undefined) {
@@ -245,9 +249,9 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     );
 
     const columnName = col as string;
-    const columnDef = this.schema.annotations.obsByName[
-      columnName
-    ] as CategoricalAnnotationColumnSchema | undefined;
+    const columnDef = this.schema.annotations.obsByName[columnName] as
+      | CategoricalAnnotationColumnSchema
+      | undefined;
     let updatedSchema = this.schema;
     if (!columnDef?.categories?.includes(value)) {
       updatedSchema = addObsAnnoCategoryToSchema(
@@ -279,12 +283,12 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
 
     const existing = this._cache.obs.col(col).asArray() as AnyArray;
     let data: AnyArray;
-    
+
     // If existing data is DictEncoded, convert to plain array
     if (isDictEncodedTypedArray(existing)) {
       // Get the actual string values from the dict-encoded array
       data = new Array(existing.length);
-      for (let i = 0; i < existing.length; i++) {
+      for (let i = 0; i < existing.length; i += 1) {
         const val = existing.vat(i);
         data[i] = val === oldValue ? newValue : val;
       }
@@ -368,7 +372,9 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
 Utility functions below
 */
 
-function writableCheck(colSchema: AnnotationColumnSchema | ArraySchema | undefined): asserts colSchema is AnnotationColumnSchema {
+function writableCheck(
+  colSchema: AnnotationColumnSchema | ArraySchema | undefined
+): asserts colSchema is AnnotationColumnSchema {
   if (!colSchema || !(colSchema as AnnotationColumnSchema).writable) {
     throw new Error("Unknown or readonly obs column");
   }

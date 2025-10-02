@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 import os
@@ -9,9 +10,9 @@ from urllib.parse import quote, unquote
 
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_categorical_dtype
 import tiledb
 from packaging import version
+from pandas.api.types import is_categorical_dtype
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
@@ -202,10 +203,8 @@ class CxgDataset(Dataset):
 
             # Remove existing array if it exists
             if vfs.is_dir(array_uri):
-                try:
+                with contextlib.suppress(TileDBError):
                     tiledb.remove(array_uri, ctx=self.tiledb_ctx)
-                except TileDBError:
-                    pass  # Continue even if removal fails
 
             # Move temp to final location (as atomic as possible)
             vfs.move_dir(temp_array_uri, array_uri)

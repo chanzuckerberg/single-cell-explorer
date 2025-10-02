@@ -102,7 +102,7 @@ class AnnotationsObsAPI(S3URIResource):
         # Check if request includes user annotations to determine caching
         fields = request.args.getlist("annotation-name", None)
         user_id = common_rest._resolve_request_user_id(request)
-        
+
         # Check if any requested fields are user annotations (writable=True in schema)
         includes_user_annotations = False
         if user_id:
@@ -110,13 +110,12 @@ class AnnotationsObsAPI(S3URIResource):
                 # Get schema with user annotations included
                 schema = data_adaptor.get_schema(user_id=user_id)
                 obs_columns = schema.get("annotations", {}).get("obs", {}).get("columns", [])
-                
+
                 # Find all user annotation names (writable=True)
                 user_annotation_names = {
-                    col["name"] for col in obs_columns 
-                    if isinstance(col, dict) and col.get("writable", False)
+                    col["name"] for col in obs_columns if isinstance(col, dict) and col.get("writable", False)
                 }
-                
+
                 if fields:
                     # Check if any requested fields are user annotations
                     includes_user_annotations = bool(set(fields) & user_annotation_names)
@@ -126,17 +125,17 @@ class AnnotationsObsAPI(S3URIResource):
             except Exception:
                 # If we can't determine, be safe and don't cache
                 includes_user_annotations = True
-        
+
         response = common_rest.annotations_obs_get(request, data_adaptor)
-        
+
         # Apply appropriate cache headers
         if includes_user_annotations:
             # Don't cache responses that include user annotations
-            response.headers['Cache-Control'] = 'no-store, max-age=0'
+            response.headers["Cache-Control"] = "no-store, max-age=0"
         else:
             # Cache built-in columns forever
-            response.headers['Cache-Control'] = f'immutable, max-age={ONE_YEAR}'
-        
+            response.headers["Cache-Control"] = f"immutable, max-age={ONE_YEAR}"
+
         return response
 
     @cache_control(no_store=True)

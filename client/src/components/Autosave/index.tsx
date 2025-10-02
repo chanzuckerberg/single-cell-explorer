@@ -30,23 +30,21 @@ interface AutosaveComponentState {
 
 type Props = StateProps & DispatchProps;
 
-const mapStateToProps = (state: RootState): StateProps => {
-  return {
-    obsAnnotationSaveInProgress:
-      state.autosave?.obsAnnotationSaveInProgress ?? false,
-    genesetSaveInProgress: state.autosave?.genesetSaveInProgress ?? false,
-    error: state.autosave?.error ?? false,
-    writableCategoriesEnabled: !!state.config?.parameters?.annotations,
-    writableGenesetsEnabled: !(
-      state.config?.parameters?.annotations_genesets_readonly ?? true
-    ),
-    annoMatrix: state.annoMatrix,
-    genesets: state.genesets.genesets,
-    genesetsInitialized: state.genesets.initialized,
-    lastSavedAnnoMatrix: state.autosave?.lastSavedAnnoMatrix ?? null,
-    lastSavedGenesets: state.autosave?.lastSavedGenesets ?? null,
-  };
-};
+const mapStateToProps = (state: RootState): StateProps => ({
+  obsAnnotationSaveInProgress:
+    state.autosave?.obsAnnotationSaveInProgress ?? false,
+  genesetSaveInProgress: state.autosave?.genesetSaveInProgress ?? false,
+  error: state.autosave?.error ?? false,
+  writableCategoriesEnabled: !!state.config?.parameters?.annotations,
+  writableGenesetsEnabled: !(
+    state.config?.parameters?.annotations_genesets_readonly ?? true
+  ),
+  annoMatrix: state.annoMatrix,
+  genesets: state.genesets.genesets,
+  genesetsInitialized: state.genesets.initialized,
+  lastSavedAnnoMatrix: state.autosave?.lastSavedAnnoMatrix ?? null,
+  lastSavedGenesets: state.autosave?.lastSavedGenesets ?? null,
+});
 
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
   dispatch,
@@ -152,12 +150,13 @@ class Autosave extends React.PureComponent<Props, AutosaveComponentState> {
     }
 
     const saving = this.saveInProgress();
-    const hasError = typeof this.props.error === "string" && this.props.error;
+    const { error } = this.props;
+    const hasError = typeof error === "string" && error;
     const unsaved = this.needToSave();
 
     let statusContent: JSX.Element;
     if (hasError) {
-      statusContent = <span>Autosave error: {this.props.error}</span>;
+      statusContent = <span>Autosave error: {error}</span>;
     } else if (saving) {
       statusContent = (
         <span style={{ display: "inline-flex", alignItems: "center" }}>

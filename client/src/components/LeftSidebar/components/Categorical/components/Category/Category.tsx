@@ -64,7 +64,8 @@ const mapStateToProps = (
   state: RootState,
   ownProps: PureCategoryProps
 ): StateProps => {
-  const schema = state.obsCrossfilter?.annoMatrix?.schema ?? state.annoMatrix?.schema;
+  const schema =
+    state.obsCrossfilter?.annoMatrix?.schema ?? state.annoMatrix?.schema;
   const { metadataField } = ownProps;
   const categoricalSelection =
     state.categoricalSelection?.[metadataField] ?? new Map();
@@ -123,11 +124,8 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   getSelectionState(categorySummary: any) {
-    const { categoricalSelection, metadataField } = this.props;
-    return Category.getSelectionState(
-      categoricalSelection,
-      categorySummary
-    );
+    const { categoricalSelection } = this.props;
+    return Category.getSelectionState(categoricalSelection, categorySummary);
   }
 
   handleColorChange = (currentIsColorAccessor: boolean) => {
@@ -287,7 +285,9 @@ class Category extends React.PureComponent<CategoryProps> {
         categorySummary.allCategoryValues,
         false
       )
-    );
+    ).catch(() => {
+      /* ignore errors */
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -300,7 +300,9 @@ class Category extends React.PureComponent<CategoryProps> {
         categorySummary.allCategoryValues,
         true
       )
-    );
+    ).catch(() => {
+      /* ignore errors */
+    });
   }
 
   render(): JSX.Element {
@@ -354,9 +356,9 @@ class Category extends React.PureComponent<CategoryProps> {
                 colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
+              const { schema } = this.props;
               const isUserAnnotation =
-                this.props.schema?.annotations.obsByName[metadataField]?.writable ??
-                false;
+                schema?.annotations.obsByName[metadataField]?.writable ?? false;
               return (
                 <CategoryRender
                   metadataField={metadataField}
@@ -373,7 +375,7 @@ class Category extends React.PureComponent<CategoryProps> {
                   onCategoryToggleAllClick={handleCategoryToggleAllClick}
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
-                  colorMode={colorMode}
+                  colorMode={colorMode || ""}
                   isCellGuideCxg={isCellGuideCxg}
                   isUserAnnotation={isUserAnnotation}
                   onAddLabelClick={() => this.handleAddLabel(metadataField)}
@@ -658,7 +660,7 @@ const CategoryRender = React.memo(
                 metadataField={metadataField}
                 categoryData={categoryData}
                 categorySummary={categorySummary}
-                colorAccessor={colorAccessor}
+                colorAccessor={colorAccessor || ""}
                 colorData={colorData}
                 colorTable={colorTable}
                 colorMode={colorMode}

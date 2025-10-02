@@ -8,7 +8,11 @@ import { MatrixFBS, AnnotationsHelpers } from "../util/stateManager";
 import type AnnoMatrix from "../annoMatrix/annoMatrix";
 import type { RootState, AppDispatch, GetState } from "../reducers";
 import type { Genesets } from "../reducers/genesets";
-import { AnnotationColumnSchema, Category, Field } from "../common/types/schema";
+import {
+  AnnotationColumnSchema,
+  Category,
+  Field,
+} from "../common/types/schema";
 import { AnyArray } from "../common/types/arraytypes";
 
 type ThunkResult<R = void> = ThunkAction<R, RootState, never, AnyAction>;
@@ -309,7 +313,8 @@ export function changedWritableAnnotations(
       const currentHas = currentObsCache?.hasCol?.(col) ?? false;
       const lastHas = lastObsCache?.hasCol?.(col) ?? false;
       if (currentHas && lastHas) {
-        if (currentObsCache.col(col) !== lastObsCache.col(col)) changed.add(col);
+        if (currentObsCache.col(col) !== lastObsCache.col(col))
+          changed.add(col);
       } else if (currentHas && !lastHas) {
         changed.add(col);
       }
@@ -323,9 +328,8 @@ export function changedWritableAnnotations(
 export const needToSaveObsAnnotations = (
   annoMatrix: AnnoMatrix | undefined,
   lastSavedAnnoMatrix: AnnoMatrix | null
-): boolean => {
-  return changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0;
-};
+): boolean =>
+  changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0;
 
 export const saveObsAnnotationsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
@@ -340,7 +344,10 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    const changedCols = changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix);
+    const changedCols = changedWritableAnnotations(
+      annoMatrix,
+      lastSavedAnnoMatrix
+    );
     if (changedCols.length === 0) {
       dispatch({
         type: "writable obs annotations - save complete",
@@ -353,10 +360,7 @@ export const saveObsAnnotationsAction =
       type: "writable obs annotations - save started",
     });
 
-    const df = await annoMatrix.fetch(
-      Field.obs,
-      changedCols
-    );
+    const df = await annoMatrix.fetch(Field.obs, changedCols);
     const buffer = MatrixFBS.encodeMatrixFBS(df);
     const compressed = deflate(buffer);
     const requestBody = new Blob([compressed], {

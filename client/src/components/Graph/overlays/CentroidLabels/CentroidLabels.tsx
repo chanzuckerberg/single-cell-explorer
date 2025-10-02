@@ -4,10 +4,6 @@ import Async from "react-async";
 
 import calcCentroid from "util/centroid";
 import { createColorQuery } from "util/stateManager/colorHelpers";
-import {
-  DataframeDictEncodedColumn,
-  isDataframeDictEncodedColumn,
-} from "util/dataframe/types";
 import { categoryLabelDisplayStringLongLength } from "~/globals";
 import * as globals from "~/globals";
 // @ts-expect-error ts-migrate(1238) FIXME: Unable to resolve signature of class decorator whe... Remove this comment to see the full error message
