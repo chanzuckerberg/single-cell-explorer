@@ -223,6 +223,10 @@ def genesets_put(request, data_adaptor):
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
 
+    # Reject saves when authentication is disabled
+    if user_id is None:
+        return abort(HTTPStatus.UNAUTHORIZED)
+
     try:
         data_adaptor.save_gene_sets(
             genesets,
@@ -323,6 +327,10 @@ def annotations_obs_put(request, data_adaptor):
 
     user_id = _resolve_request_user_id(request)
     
+    # Reject saves when authentication is disabled
+    if user_id is None:
+        return abort(HTTPStatus.UNAUTHORIZED)
+
     # Reject saves when authentication is disabled
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)

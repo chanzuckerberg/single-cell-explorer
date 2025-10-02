@@ -1,11 +1,12 @@
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 import Truncate from "common/components/Truncate/Truncate";
+import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { createCategorySummaryFromDfCol } from "util/stateManager/controlsHelpers";
 import {
   createColorTable,
@@ -697,48 +698,80 @@ const CategoryValueList = React.memo(
     colorTable,
     colorMode,
   }: CategoryValueListProps) => {
-    const tuples = [...categorySummary.categoryValueIndices].filter(
+    const initialTuples = [...categorySummary.categoryValueIndices].filter(
       ([, index]) => categorySummary.categoryValueCounts[index] > 0
     );
 
-    // sort categorical labels in descending order by average values of whatever
-    // continuous metadata is currently being colored by
-    if (
-      colorMode === "color by continuous metadata" ||
-      colorMode === "color by expression" ||
-      colorMode === "color by geneset mean expression"
-    ) {
-      const categoryDataArray = categoryData.col(metadataField).asArray();
-      const colorDataArray = colorData.icol(0).asArray();
-      const categoryColorMap = new Map();
-      categoryDataArray.forEach((category: string, index: number) => {
-        if (!categoryColorMap.has(category)) {
-          categoryColorMap.set(category, { sum: 0, count: 0 });
-        }
-        const colorValue = colorDataArray[index];
-        const categoryColor = categoryColorMap.get(category);
-        categoryColor.sum += colorValue;
-        categoryColor.count += 1;
-      });
+    const [sortedTuples, setSortedTuples] = useState(initialTuples);
 
-      const categoryAverageColor = new Map();
-      categoryColorMap.forEach((value, key) => {
-        categoryAverageColor.set(key, value.sum / value.count);
-      });
-      tuples.sort((a, b) => {
-        const colorA = categoryAverageColor.get(a[0]);
-        const colorB = categoryAverageColor.get(b[0]);
-        return colorB - colorA;
-      });
+    useEffect(() => {
+      const tuples = [...categorySummary.categoryValueIndices].filter(
+        ([, index]) => categorySummary.categoryValueCounts[index] > 0
+      );
 
-      /*
-      Render the value list.  If this is a user annotation, we use a flipper
-      animation, if read-only, we don't bother and save a few bits of perf.
-      */
-    }
+      // sort categorical labels in descending order by average values of whatever
+      // continuous metadata is currently being colored by
+      if (
+        colorMode === "color by continuous metadata" ||
+        colorMode === "color by expression" ||
+        colorMode === "color by geneset mean expression"
+      ) {
+        const categoryColumn = categoryData.col(metadataField);
+        const categoryDataArray = categoryColumn.asArray();
+        const colorDataArray = colorData.icol(0).asArray();
+        const categoryColorMap = new Map();
+
+        // Check if the column is dict-encoded
+        const isDictEncoded = isDataframeDictEncodedColumn(categoryColumn);
+        const codeMapping = isDictEncoded ? categoryColumn.codeMapping : null;
+
+        categoryDataArray.forEach(
+          (categoryValue: string | number, index: number) => {
+            // For dict-encoded columns, convert code to label string
+            const labelString = isDictEncoded
+              ? codeMapping![categoryValue as number]
+              : categoryValue;
+
+            if (!categoryColorMap.has(labelString)) {
+              categoryColorMap.set(labelString, { sum: 0, count: 0 });
+            }
+            const colorValue = colorDataArray[index];
+            // Add safety check for non-finite values
+            if (Number.isFinite(colorValue)) {
+              const categoryColor = categoryColorMap.get(labelString);
+              categoryColor.sum += colorValue;
+              categoryColor.count += 1;
+            }
+          }
+        );
+
+        const categoryAverageColor = new Map();
+        categoryColorMap.forEach((value, key) => {
+          // Only calculate average if count > 0
+          if (value.count > 0) {
+            categoryAverageColor.set(key, value.sum / value.count);
+          }
+        });
+        tuples.sort((a, b) => {
+          const colorA = categoryAverageColor.get(a[0]) ?? 0;
+          const colorB = categoryAverageColor.get(b[0]) ?? 0;
+          return colorB - colorA;
+        });
+      }
+
+      setSortedTuples(tuples);
+    }, [
+      categorySummary.categoryValueIndices,
+      categorySummary.categoryValueCounts,
+      metadataField,
+      categoryData?.cols?.[0]?.__id,
+      colorData?.cols?.[0]?.__id,
+      colorMode,
+    ]);
+
     return (
       <>
-        {tuples.map(([value, index]) => (
+        {sortedTuples.map(([value, index]) => (
           <CategoryValue
             key={value}
             metadataField={metadataField}
