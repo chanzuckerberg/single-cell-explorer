@@ -337,8 +337,7 @@ function encodeTypedArray(
  */
 
 export function encodeMatrixFBS(
-  df: Dataframe,
-  encodeSparse = false
+  df: Dataframe
 ): Uint8Array {
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {

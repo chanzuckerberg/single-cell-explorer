@@ -123,7 +123,7 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   getSelectionState(categorySummary: any) {
-    const { categoricalSelection, metadataField } = this.props;
+    const { categoricalSelection } = this.props;
     return Category.getSelectionState(
       categoricalSelection,
       categorySummary
@@ -373,7 +373,7 @@ class Category extends React.PureComponent<CategoryProps> {
                   onCategoryToggleAllClick={handleCategoryToggleAllClick}
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
-                  colorMode={colorMode}
+                  colorMode={colorMode || ""}
                   isCellGuideCxg={isCellGuideCxg}
                   isUserAnnotation={isUserAnnotation}
                   onAddLabelClick={() => this.handleAddLabel(metadataField)}
@@ -658,7 +658,7 @@ const CategoryRender = React.memo(
                 metadataField={metadataField}
                 categoryData={categoryData}
                 categorySummary={categorySummary}
-                colorAccessor={colorAccessor}
+                colorAccessor={colorAccessor || ""}
                 colorData={colorData}
                 colorTable={colorTable}
                 colorMode={colorMode}

@@ -83,7 +83,7 @@ export const selectCategoricalMetadataAction =
     if (isDataframeDictEncodedColumn(column)) {
       const { invCodeMapping } = column as DataframeDictEncodedColumn;
       selectionValues = selectedLabels.map(
-        (labelStr) => invCodeMapping[labelStr]
+        (labelStr) => invCodeMapping[labelStr as string]
       );
     }
 

@@ -82,12 +82,10 @@ export class AddGeneToGenesetDialogue extends React.PureComponent<{}, State> {
           validationError={false}
           annoInput={
             <LabelInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ onChange: (e: any) => void; inputProps: { ... Remove this comment to see the full error message
               onChange={this.handleChange}
               inputProps={{
                 "data-testid": "add-genes-to-geneset-dialog",
                 leftIcon: "manually-entered-data",
-                intent: "none",
                 autoFocus: true,
               }}
               newLabelMessage="New category"
