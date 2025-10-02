@@ -15,9 +15,6 @@ stack:
         - --force-https-redirect=true
         - --provider=oidc
         - --set-xauthrequest=true
-        - --pass-user-headers=true
-        - --set-authorization-header=true
-        - --pass-access-token=true
   services:
     explorer:
       serviceAccount:
