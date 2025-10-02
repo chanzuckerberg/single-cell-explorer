@@ -78,7 +78,7 @@ class SchemaAPI(S3URIResource):
 
 
 class GenesetsAPI(S3URIResource):
-    @cache_control(immutable=True, max_age=ONE_YEAR)
+    @cache_control(no_store=True, max_age=0)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.genesets_get(data_adaptor)
