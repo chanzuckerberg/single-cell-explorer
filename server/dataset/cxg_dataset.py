@@ -184,14 +184,40 @@ class CxgDataset(Dataset):
         codes = categorical.codes.astype(np.int32, copy=False)
 
         array_uri = self._annotation_array_uri(user_root_uri, column_name)
-        self._ensure_annotation_array(array_uri, n_obs)
+        temp_array_uri = f"{array_uri}.tmp"
+        
+        # Write to temporary location first
+        self._ensure_annotation_array(temp_array_uri, n_obs)
 
-        with tiledb.open(array_uri, mode="w", ctx=self.tiledb_ctx) as arr:
-            arr[:] = codes.reshape((n_obs,))
-            arr.meta["value_kind"] = "categorical"
-            arr.meta["column_name"] = column_name
-            arr.meta["categories"] = json.dumps(categories)
-            arr.meta["ordered"] = json.dumps(bool(categorical.ordered))
+        try:
+            with tiledb.open(temp_array_uri, mode="w", ctx=self.tiledb_ctx) as arr:
+                arr[:] = codes.reshape((n_obs,))
+                arr.meta["value_kind"] = "categorical"
+                arr.meta["column_name"] = column_name
+                arr.meta["categories"] = json.dumps(categories)
+                arr.meta["ordered"] = json.dumps(bool(categorical.ordered))
+            
+            # Atomic move: only after successful write
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+            
+            # Remove existing array if it exists
+            if vfs.is_dir(array_uri):
+                try:
+                    tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+                except TileDBError:
+                    pass  # Continue even if removal fails
+            
+            # Move temp to final location (as atomic as possible)
+            vfs.move_dir(temp_array_uri, array_uri)
+            
+        except Exception:
+            # Clean up temp array on any failure
+            try:
+                if tiledb.object_type(temp_array_uri, ctx=self.tiledb_ctx) == "array":
+                    tiledb.remove(temp_array_uri, ctx=self.tiledb_ctx)
+            except TileDBError:
+                pass  # Best effort cleanup
+            raise
 
     def _load_annotation_column(self, array_uri: str) -> Optional[pd.Series]:
         try:
