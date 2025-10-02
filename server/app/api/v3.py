@@ -97,10 +97,47 @@ class ConfigAPI(S3URIResource):
 
 
 class AnnotationsObsAPI(S3URIResource):
-    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.annotations_obs_get(request, data_adaptor)
+        # Check if request includes user annotations to determine caching
+        fields = request.args.getlist("annotation-name", None)
+        user_id = common_rest._resolve_request_user_id(request)
+        
+        # Check if any requested fields are user annotations (writable=True in schema)
+        includes_user_annotations = False
+        if user_id:
+            try:
+                # Get schema with user annotations included
+                schema = data_adaptor.get_schema(user_id=user_id)
+                obs_columns = schema.get("annotations", {}).get("obs", {}).get("columns", [])
+                
+                # Find all user annotation names (writable=True)
+                user_annotation_names = {
+                    col["name"] for col in obs_columns 
+                    if isinstance(col, dict) and col.get("writable", False)
+                }
+                
+                if fields:
+                    # Check if any requested fields are user annotations
+                    includes_user_annotations = bool(set(fields) & user_annotation_names)
+                else:
+                    # If no specific fields requested (getting all), and user has annotations
+                    includes_user_annotations = bool(user_annotation_names)
+            except Exception:
+                # If we can't determine, be safe and don't cache
+                includes_user_annotations = True
+        
+        response = common_rest.annotations_obs_get(request, data_adaptor)
+        
+        # Apply appropriate cache headers
+        if includes_user_annotations:
+            # Don't cache responses that include user annotations
+            response.headers['Cache-Control'] = 'no-store, max-age=0'
+        else:
+            # Cache built-in columns forever
+            response.headers['Cache-Control'] = f'immutable, max-age={ONE_YEAR}'
+        
+        return response
 
     @cache_control(no_store=True)
     @rest_get_s3uri_data_adaptor
