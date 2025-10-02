@@ -64,7 +64,14 @@ class S3URIResource(Resource):
 
 class SchemaAPI(S3URIResource):
     # TODO @mdunitz separate dataset schema and user schema
-    @cache_control(immutable=True, max_age=ONE_YEAR)
+    # TODO: Add user-specific caching using ETags - schema can be cached per-user
+    #       since user annotations only affect individual users. Consider:
+    #       - ETag based on hash(base_schema + user_annotations_for_user)
+    #       - Anonymous users get ETag based only on base_schema
+    #       - This would allow long-term caching for read-only users while
+    #         still supporting fresh data for annotation creators
+    # Removed immutable cache since schema can change with user annotations
+    @cache_control(no_store=True, max_age=0)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
