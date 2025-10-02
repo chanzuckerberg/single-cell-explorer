@@ -65,7 +65,7 @@ def _resolve_request_user_id(req) -> Optional[str]:
     # Check if authentication is disabled via environment variable
     if os.environ.get("CELLXGENE_DISABLE_AUTH", "false").lower() in ("true", "1", "yes"):
         return None
-    
+
     user_id = _get_request_user_id(req)
     if user_id:
         return user_id
@@ -218,7 +218,7 @@ def genesets_put(request, data_adaptor):
 
     tid = payload.get("tid")
     user_id = _resolve_request_user_id(request)
-    
+
     # Reject saves when authentication is disabled
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
@@ -322,7 +322,7 @@ def annotations_obs_put(request, data_adaptor):
         )
 
     user_id = _resolve_request_user_id(request)
-    
+
     # Reject saves when authentication is disabled
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
