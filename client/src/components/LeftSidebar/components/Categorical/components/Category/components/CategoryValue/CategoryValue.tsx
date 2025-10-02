@@ -360,13 +360,32 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       const { categories } = schema.annotations.obsByName[colorAccessor];
 
       const dfColumn = colorData.col(colorAccessor);
-      const categoryValues = dfColumn.summarizeCategorical().categories;
+
+      // Use the same logic as normalization to get consistent categories
+      let categoryValues;
+      let normalizedOccupancy = occupancy;
+
+      if (isDataframeDictEncodedColumn(dfColumn)) {
+        // Extract unique label strings from the codeMapping
+        categoryValues = Object.values(dfColumn.codeMapping);
+
+        // Convert occupancy map keys from codes to labels
+        normalizedOccupancy = new Map();
+        occupancy.forEach((value, key) => {
+          const labelKey = dfColumn.codeMapping[key as number];
+          if (labelKey !== undefined) {
+            normalizedOccupancy.set(labelKey, value);
+          }
+        });
+      } else {
+        categoryValues = dfColumn.summarizeCategorical().categories;
+      }
 
       return {
         domainValues: categoryValues,
         scale,
         domain: categories,
-        occupancy,
+        occupancy: normalizedOccupancy,
       };
     }
     return null;
@@ -442,11 +461,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       label,
       colorMode,
     } = this.props;
+
     const isColorBy =
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
 
-    if (!schema) return null;
+    if (!schema) {
+      return null;
+    }
     if (
       !this.shouldRenderStackedBarOrHistogram ||
       colorMode === "color by expression" ||
@@ -457,17 +479,18 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       return null;
     }
 
-    const { domainValues, scale, domain, occupancy } =
-      this.createStackedGraphBins(
-        metadataField,
-        categoryData,
-        colorAccessor,
-        colorData,
-        label,
-        colorTable,
-        schema,
-        STACKED_BAR_WIDTH
-      ) ?? {};
+    const result = this.createStackedGraphBins(
+      metadataField,
+      categoryData,
+      colorAccessor,
+      colorData,
+      label,
+      colorTable,
+      schema,
+      STACKED_BAR_WIDTH
+    );
+
+    const { domainValues, scale, domain, occupancy } = result ?? {};
 
     if (!domainValues || !scale || !domain || !occupancy) {
       return null;

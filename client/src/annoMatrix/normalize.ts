@@ -153,8 +153,17 @@ export function normalizeCategorical(
   const TopN = globalConfig.maxCategoricalOptionsToDisplay;
 
   // consolidate all categories from data and schema into a single list
-  const colDataSummary = col.summarizeCategorical();
-  const allCategories = new Set<Category>(colDataSummary.categories);
+  // Use the same logic as writable path for dict-encoded columns
+  const colData = col.asArray();
+  let dataCategories: Category[];
+  if (isDictEncodedTypedArray(colData)) {
+    // Extract unique label strings from the codeMapping
+    dataCategories = Object.values(colData.codeMapping);
+  } else {
+    const colDataSummary = col.summarizeCategorical();
+    dataCategories = colDataSummary.categories;
+  }
+  const allCategories = new Set<Category>(dataCategories);
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {
@@ -173,13 +182,14 @@ export function normalizeCategorical(
   }
 
   // pick top N category labels and add overflow label
+  // Get category counts for overflow handling
+  const colDataSummary = col.summarizeCategorical();
   const topNCategories = new Set(
     [...colDataSummary.categoryCounts.keys()].slice(0, TopN)
   );
   topNCategories.add(overflowCatName);
 
   // rewrite data - consolidate all excess labels into overflow label
-  const colData = col.asArray();
   const newColData = new Array(colData.length);
   for (let i = 0; i < newColData.length; i += 1) {
     if (!topNCategories.has(colData[i])) {
