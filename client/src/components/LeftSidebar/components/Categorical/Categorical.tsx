@@ -149,12 +149,7 @@ class Categorical extends React.Component<Props, CategoricalState> {
     schema?.annotations.obsByName[catName].writable || false;
 
   render() {
-    const {
-      schema,
-      isCellGuideCxg,
-      expandedCategories,
-      writableCategoriesEnabled,
-    } = this.props;
+    const { schema, isCellGuideCxg, expandedCategories } = this.props;
     const { createCategoryDialogOpen, newCategoryName } = this.state;
 
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
@@ -189,60 +184,56 @@ class Categorical extends React.Component<Props, CategoricalState> {
           paddingBottom: 0,
         }}
       >
-        {writableCategoriesEnabled ? (
-          <>
-            <AnnoDialog
-              isActive={createCategoryDialogOpen}
-              title="Create new category"
-              instruction={labelPrompt(
-                categoryNameError,
-                "New, unique category name",
-                ":"
-              )}
-              cancelTooltipContent="Close this dialog without creating a category."
-              primaryButtonText="Create new category"
-              primaryButtonProps={{ "data-testid": "submit-category" }}
-              text={newCategoryName}
-              validationError={categoryNameError}
-              handleSubmit={this.handleCreateCategory}
-              handleCancel={this.handleCloseCreateCategory}
-              annoInput={
-                <LabelInput
-                  labelSuggestions={null}
-                  onChange={(value) => this.handleNewCategoryNameChange(value)}
-                  inputProps={{
-                    "data-testid": "new-category-name",
-                    leftIcon: "tag",
-                    intent: "none",
-                    autoFocus: true,
-                  }}
-                  newLabelMessage="New category"
-                />
-              }
-              annoSelect={null}
+        <AnnoDialog
+          isActive={createCategoryDialogOpen}
+          title="Create new category"
+          instruction={labelPrompt(
+            categoryNameError,
+            "New, unique category name",
+            ":"
+          )}
+          cancelTooltipContent="Close this dialog without creating a category."
+          primaryButtonText="Create new category"
+          primaryButtonProps={{ "data-testid": "submit-category" }}
+          text={newCategoryName}
+          validationError={categoryNameError}
+          handleSubmit={this.handleCreateCategory}
+          handleCancel={this.handleCloseCreateCategory}
+          annoInput={
+            <LabelInput
+              labelSuggestions={null}
+              onChange={(value) => this.handleNewCategoryNameChange(value)}
+              inputProps={{
+                "data-testid": "new-category-name",
+                leftIcon: "tag",
+                intent: "none",
+                autoFocus: true,
+              }}
+              newLabelMessage="New category"
             />
-            <div style={{ marginBottom: 10 }}>
-              <Tooltip
-                content="Create a new category"
-                position={Position.RIGHT}
-                hoverOpenDelay={globals.tooltipHoverOpenDelay}
-                modifiers={{
-                  preventOverflow: { enabled: false },
-                  hide: { enabled: false },
-                }}
-              >
-                <AnchorButton
-                  type="button"
-                  intent="primary"
-                  onClick={this.handleOpenCreateCategory}
-                  data-testid="open-annotation-dialog"
-                >
-                  Create new <strong>category</strong>
-                </AnchorButton>
-              </Tooltip>
-            </div>
-          </>
-        ) : null}
+          }
+          annoSelect={null}
+        />
+        <div style={{ marginBottom: 10 }}>
+          <Tooltip
+            content="Create a new category"
+            position={Position.RIGHT}
+            hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            modifiers={{
+              preventOverflow: { enabled: false },
+              hide: { enabled: false },
+            }}
+          >
+            <AnchorButton
+              type="button"
+              intent="primary"
+              onClick={this.handleOpenCreateCategory}
+              data-testid="open-annotation-dialog"
+            >
+              Create new <strong>category</strong>
+            </AnchorButton>
+          </Tooltip>
+        </div>
 
         {isCellGuideCxg ? (
           <>

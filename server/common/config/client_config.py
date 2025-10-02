@@ -1,4 +1,5 @@
 import base64
+import os
 from hashlib import blake2b
 
 from server.common.config.app_config import AppConfig
@@ -41,15 +42,18 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "about-dataset": about,
     }
 
+    # Check if authentication is disabled
+    auth_disabled = os.environ.get("CELLXGENE_DISABLE_AUTH", "false").lower() in ("true", "1", "yes")
+    
     # parameters
     parameters = {
         "layout": dataset_config.default_dataset__embeddings__names,
         "max-category-items": dataset_config.default_dataset__presentation__max_categories,
         "diffexp_lfc_cutoff": dataset_config.default_dataset__diffexp__lfc_cutoff,
         "disable-diffexp": not dataset_config.default_dataset__diffexp__enable,
-        "annotations": True,
-        "annotations_genesets": True,  # feature flag
-        "annotations_genesets_readonly": False,
+        "annotations": not auth_disabled,  # Disable annotations when auth is disabled
+        "annotations_genesets": not auth_disabled,  # Disable genesets when auth is disabled
+        "annotations_genesets_readonly": auth_disabled,  # Make readonly when auth is disabled
         "annotations_genesets_summary_methods": ["mean"],
         "custom_colors": dataset_config.default_dataset__presentation__custom_colors,
         "diffexp-may-be-slow": False,

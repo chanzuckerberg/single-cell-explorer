@@ -78,11 +78,8 @@ class CxgDataset(Dataset):
             return pd.Timestamp(value).isoformat()
         return value
 
-    def _user_token(self, user_id: Optional[str]) -> str:
-        return user_id or "__global__"
-
-    def _user_root_uri(self, user_token: str) -> str:
-        return path_join(self.url, self._encode_component(user_token))
+    def _user_root_uri(self, user_id: str) -> str:
+        return path_join(self.url, self._encode_component(user_id))
 
     def _ensure_group(self, uri: str) -> None:
         try:
@@ -98,8 +95,8 @@ class CxgDataset(Dataset):
         elif obj_type != "group":
             raise DatasetAccessError(f"Annotation storage path collision at {uri}")
 
-    def _ensure_user_storage(self, user_token: str) -> str:
-        user_root = self._user_root_uri(user_token)
+    def _ensure_user_storage(self, user_id: str) -> str:
+        user_root = self._user_root_uri(user_id)
         self._ensure_group(user_root)
         return user_root
 
@@ -274,8 +271,8 @@ class CxgDataset(Dataset):
         categorical = pd.Categorical.from_codes(raw, categories=categories, ordered=ordered)
         return pd.Series(categorical, name=column_name)
 
-    def _load_obs_annotations_from_storage(self, user_token: str) -> Optional[pd.DataFrame]:
-        user_root_uri = self._user_root_uri(user_token)
+    def _load_obs_annotations_from_storage(self, user_id: str) -> Optional[pd.DataFrame]:
+        user_root_uri = self._user_root_uri(user_id)
         arrays = self._list_annotation_arrays(user_root_uri)
         if not arrays:
             return None
@@ -291,19 +288,19 @@ class CxgDataset(Dataset):
 
         return pd.DataFrame(columns)
 
-    def _genesets_uri(self, user_token: str) -> str:
-        return path_join(self._user_root_uri(user_token), "genesets.json")
+    def _genesets_uri(self, user_id: str) -> str:
+        return path_join(self._user_root_uri(user_id), "genesets.json")
 
-    def _write_user_genesets(self, user_token: str, payload: Dict[str, Any]) -> None:
-        user_root_uri = self._ensure_user_storage(user_token)
+    def _write_user_genesets(self, user_id: str, payload: Dict[str, Any]) -> None:
+        user_root_uri = self._ensure_user_storage(user_id)
         genesets_uri = path_join(user_root_uri, "genesets.json")
         vfs = tiledb.VFS(ctx=self.tiledb_ctx)
         serialized = json.dumps(payload)
         with vfs.open(genesets_uri, "wb") as handle:
             handle.write(serialized.encode("utf-8"))
 
-    def _read_user_genesets(self, user_token: str) -> Optional[Dict[str, Any]]:
-        genesets_uri = self._genesets_uri(user_token)
+    def _read_user_genesets(self, user_id: str) -> Optional[Dict[str, Any]]:
+        genesets_uri = self._genesets_uri(user_id)
         vfs = tiledb.VFS(ctx=self.tiledb_ctx)
         if not vfs.is_file(genesets_uri):
             return None
@@ -330,13 +327,14 @@ class CxgDataset(Dataset):
         dataframe: pd.DataFrame,
         user_id: Optional[str] = None,
     ) -> None:
-        user_token = self._user_token(user_id)
+        if user_id is None:
+            raise ValueError("User ID is required for saving annotations")
 
         n_obs, _ = self.get_shape()
         if n_obs <= 0:
             return
 
-        user_root_uri = self._ensure_user_storage(user_token)
+        user_root_uri = self._ensure_user_storage(user_id)
         existing = self._list_annotation_arrays(user_root_uri)
 
         if dataframe is not None and not dataframe.empty:
@@ -349,8 +347,9 @@ class CxgDataset(Dataset):
         user_id: Optional[str] = None,
     ) -> Optional[pd.DataFrame]:
         """Always load user annotations from persistent storage (S3/filesystem)."""
-        user_token = self._user_token(user_id)
-        return self._load_obs_annotations_from_storage(user_token)
+        if user_id is None:
+            return None
+        return self._load_obs_annotations_from_storage(user_id)
 
     def save_gene_sets(
         self,
@@ -358,6 +357,9 @@ class CxgDataset(Dataset):
         tid: Optional[int] = None,
         user_id: Optional[str] = None,
     ) -> None:
+        if user_id is None:
+            raise ValueError("User ID is required for saving gene sets")
+
         # Get current state from storage to determine TID
         persisted = self.get_saved_gene_sets(user_id=user_id) or {}
         current_tid = persisted.get("tid", 0)
@@ -372,16 +374,16 @@ class CxgDataset(Dataset):
             "genesets": genesets_payload,
         }
 
-        user_token = self._user_token(user_id)
-        self._write_user_genesets(user_token, payload)
+        self._write_user_genesets(user_id, payload)
 
     def get_saved_gene_sets(
         self,
         user_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Always load user gene sets from persistent storage (S3/filesystem)."""
-        user_token = self._user_token(user_id)
-        return self._read_user_genesets(user_token)
+        if user_id is None:
+            return None
+        return self._read_user_genesets(user_id)
 
     @staticmethod
     def set_tiledb_context(context_params):
