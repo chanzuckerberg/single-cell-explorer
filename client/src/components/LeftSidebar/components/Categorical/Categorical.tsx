@@ -21,11 +21,19 @@ import * as globals from "~/globals";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
 import { Props, StateProps } from "./types";
 
-class Categorical extends React.Component<Props> {
-  state = {
-    createCategoryDialogOpen: false,
-    newCategoryName: "",
-  };
+interface CategoricalState {
+  createCategoryDialogOpen: boolean;
+  newCategoryName: string;
+}
+
+class Categorical extends React.Component<Props, CategoricalState> {
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      createCategoryDialogOpen: false,
+      newCategoryName: "",
+    };
+  }
 
   handleOpenCreateCategory = () => {
     this.setState({ createCategoryDialogOpen: true, newCategoryName: "" });
@@ -61,6 +69,7 @@ class Categorical extends React.Component<Props> {
 
     return false;
   };
+
   onExpansionChange = async (catName: string) => {
     const { expandedCategories, dispatch } = this.props;
 

@@ -28,10 +28,7 @@ interface ComponentState {
 
 type Props = StateProps & DispatchProps;
 
-class CreateGenesetDialogue extends React.PureComponent<
-  Props,
-  ComponentState
-> {
+class CreateGenesetDialogue extends React.PureComponent<Props, ComponentState> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -76,7 +73,11 @@ class CreateGenesetDialogue extends React.PureComponent<
       genesArrayFromString.forEach((gene) => {
         genesTmpHardcodedFormat.push({ geneSymbol: gene });
       });
-      dispatch(actions.genesetAddGenes(genesetName, genesTmpHardcodedFormat));
+      dispatch(
+        actions.genesetAddGenes(genesetName, genesTmpHardcodedFormat)
+      ).catch(() => {
+        /* ignore errors */
+      });
     }
 
     dispatch({ type: "geneset: disable create geneset mode" });
@@ -115,8 +116,8 @@ class CreateGenesetDialogue extends React.PureComponent<
     }
     if (
       genesetName.length > 1 &&
-      // unicode 0-31 127-65535
-      genesetName.match(/^[\u0000-\u001F\u007F-\uFFFF]|[ ]{2,}/g)?.length
+      // unicode 32-126 (printable ASCII chars only)
+      genesetName.match(/^[^\u0020-\u007E]|[ ]{2,}/g)?.length
     ) {
       this.setState({
         nameErrorMessage:
@@ -166,8 +167,9 @@ class CreateGenesetDialogue extends React.PureComponent<
                 {nameErrorMessage}
               </p>
               <p style={{ marginTop: 20 }}>
-                Optionally add a <span style={{ fontWeight: 700 }}>description</span>{" "}
-                for this gene set
+                Optionally add a{" "}
+                <span style={{ fontWeight: 700 }}>description</span> for this
+                gene set
               </p>
               <LabelInput
                 onChange={this.handleDescriptionInputChange}
@@ -180,7 +182,9 @@ class CreateGenesetDialogue extends React.PureComponent<
               />
 
               <p style={{ marginTop: 20 }}>
-                Optionally add a list of comma separated <span style={{ fontWeight: 700 }}>genes</span> to populate the gene set
+                Optionally add a list of comma separated{" "}
+                <span style={{ fontWeight: 700 }}>genes</span> to populate the
+                gene set
               </p>
               <LabelInput
                 onChange={this.handleGenesetInputChange}

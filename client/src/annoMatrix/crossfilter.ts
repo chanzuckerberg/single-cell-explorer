@@ -18,15 +18,11 @@ import {
   AnnotationColumnSchema,
 } from "../common/types/schema";
 import AnnoMatrix from "./annoMatrix";
-import {
-  Dataframe,
-  LabelType,
-} from "../util/dataframe";
+import { Dataframe, LabelType } from "../util/dataframe";
 import { Query } from "./query";
-import { TypedArray } from "../common/types/arraytypes";
+import { TypedArray, AnyArray } from "../common/types/arraytypes";
 import { LabelArray } from "../util/dataframe/types";
 import * as globals from "../globals";
-import { AnyArray } from "../common/types/arraytypes";
 
 function _dimensionNameFromDf(field: Field, df: Dataframe): string {
   const colNames = df.colIndex.labels();

@@ -64,29 +64,28 @@ const GeneSets = (
 
       for (const gsData of genesetsData) {
         if (
-          !gsData ||
-          typeof gsData !== "object" ||
-          Array.isArray(gsData) ||
-          typeof gsData.geneset_name !== "string"
+          gsData &&
+          typeof gsData === "object" &&
+          !Array.isArray(gsData) &&
+          typeof gsData.geneset_name === "string"
         ) {
-          continue;
+          const genes = new Map();
+          const geneEntries = Array.isArray(gsData.genes) ? gsData.genes : [];
+          for (const gene of geneEntries) {
+            if (gene && typeof gene === "object") {
+              genes.set(gene.gene_symbol, {
+                geneSymbol: gene.gene_symbol,
+                geneDescription: gene?.gene_description ?? "",
+              });
+            }
+          }
+          const gs = {
+            genesetName: gsData.geneset_name,
+            genesetDescription: gsData?.geneset_description ?? "",
+            genes,
+          };
+          genesets.set(gsData.geneset_name, gs);
         }
-
-        const genes = new Map();
-        const geneEntries = Array.isArray(gsData.genes) ? gsData.genes : [];
-        for (const gene of geneEntries) {
-          if (!gene || typeof gene !== "object") continue;
-          genes.set(gene.gene_symbol, {
-            geneSymbol: gene.gene_symbol,
-            geneDescription: gene?.gene_description ?? "",
-          });
-        }
-        const gs = {
-          genesetName: gsData.geneset_name,
-          genesetDescription: gsData?.geneset_description ?? "",
-          genes,
-        };
-        genesets.set(gsData.geneset_name, gs);
       }
 
       const tid = typeof data.tid === "number" ? data.tid : state.lastTid;

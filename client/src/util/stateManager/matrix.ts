@@ -336,9 +336,7 @@ function encodeTypedArray(
  * Encode the dataframe as an FBS Matrix
  */
 
-export function encodeMatrixFBS(
-  df: Dataframe
-): Uint8Array {
+export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {
     throw new Error("FBS does not support row index encoding at this time");
@@ -356,7 +354,7 @@ export function encodeMatrixFBS(
 
     const cols = columns.map((columnData) => {
       let uType: TypedFBArray | undefined;
-      let dataForEncoding: any = columnData;
+      const dataForEncoding: any = columnData;
 
       // Detect dict-encoded categoricals first
       if (isDictEncodedTypedArray(columnData)) {
@@ -368,7 +366,8 @@ export function encodeMatrixFBS(
           uType = TypedFBArray.DictEncoded32FBArray;
         } else {
           // Fallback: infer from codes typed array width
-          const codes: any = (columnData as any).codes ?? (columnData as any)._codes;
+          const codes: any =
+            (columnData as any).codes ?? (columnData as any)._codes;
           const bpe = codes?.BYTES_PER_ELEMENT;
           if (bpe === 1) uType = TypedFBArray.DictEncoded8FBArray;
           else if (bpe === 2) uType = TypedFBArray.DictEncoded16FBArray;
