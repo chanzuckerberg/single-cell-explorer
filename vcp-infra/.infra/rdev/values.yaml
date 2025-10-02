@@ -1,10 +1,16 @@
 stack:
   global:
     ingress:
-      annotations:
-        nginx.ingress.kubernetes.io/auth-type: basic
-        nginx.ingress.kubernetes.io/auth-secret: basic-auth
-        nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - foo"
+      annotations: {}
+    oidcProxy:
+      enabled: true
+      extraArgs:
+        - --cookie-refresh=45m
+        - --cookie-expire=24h
+        - --cookie-domain=.dev.virtual-cells.czi.technology
+        - --whitelist-domain=vcp-dev.auth.us-west-2.amazoncognito.com
+        - --auth-logging=false
+        - --request-logging=false
   services:
     explorer:
       serviceAccount:
@@ -16,7 +22,7 @@ stack:
         tag: sha-20e86c6
       replicaCount: 1
       ingress:
-        oidcProtected: false
+        oidcProtected: true
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION
