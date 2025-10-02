@@ -92,7 +92,7 @@ class TestCxgDataset(unittest.TestCase):
 
     def test_save_obs_annotations_roundtrip(self):
         data = self.get_data("pbmc3k.cxg")
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-roundtrip"
         n_obs, _ = data.get_shape()
         df = pd.DataFrame({"user_label": ["label"] * n_obs})
 
@@ -123,7 +123,7 @@ class TestCxgDataset(unittest.TestCase):
             }
         ]
 
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-tid-flow"
 
         data.save_gene_sets(genesets, tid=1, user_id=user_id)
         saved = data.get_saved_gene_sets(user_id=user_id)
@@ -153,7 +153,7 @@ class TestCxgDataset(unittest.TestCase):
 
     def test_user_annotation_schema_and_fetch(self):
         data = self.get_data("pbmc3k.cxg")
-        user_id = "unit-test-user"
+        user_id = "unit-test-user-schema-fetch"
         n_obs, _ = data.get_shape()
         annotations = pd.DataFrame(
             {
