@@ -7,7 +7,7 @@ stack:
       extraArgs:
         - --cookie-refresh=45m
         - --cookie-expire=24h
-        - --cookie-domain=.dev.virtual-cells.czi.technology
+        - --cookie-domain=.dev-vcp.dev.czi.team
         - --whitelist-domain=vcp-dev.auth.us-west-2.amazoncognito.com
         - --auth-logging=false
         - --request-logging=false
