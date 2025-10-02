@@ -1,9 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from collections import defaultdict
-from copy import deepcopy
 from os.path import basename, splitext
-from threading import Lock
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd

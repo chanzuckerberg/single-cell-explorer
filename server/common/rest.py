@@ -4,9 +4,9 @@ import logging
 import os
 import struct
 import sys
-from typing import Optional
 import zlib
 from http import HTTPStatus
+from typing import Optional
 from urllib.parse import unquote as url_unquote
 
 import requests
@@ -41,7 +41,6 @@ from server.common.utils.cell_type_info import (
 )
 from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
-
 
 LOCAL_DEV_USER_ID = "local-dev-user"
 RDEV_USER_ID = "rdev-user"
