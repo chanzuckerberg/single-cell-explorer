@@ -124,6 +124,13 @@ def launch_args(func):
         " to folder containing CXG datasets.",
         hidden=True,
     )  # TODO, unhide when dataroot is supported)
+    @click.option(
+        "--multi-dataroots",
+        multiple=True,
+        metavar="<base_url:path>",
+        help="Enable multiple dataroots. Specify as base_url:path pairs, e.g., 'd:example-dataset w:example-dataset'."
+        " This will override any dataroots specified in config file.",
+    )
     @click.argument("dataroot", required=False, metavar="<path to data file>")
     @click.option(
         "--open",
@@ -196,6 +203,7 @@ def launch(
     disable_diffexp,
     config_file,
     dump_default_config,
+    multi_dataroots,
 ):
     """Launch the cellxgene data viewer.
     This web app lets you explore single-cell expression data.
@@ -251,6 +259,22 @@ def launch(
         # Use a default secret if one is not provided
         if not app_config.server__app__flask_secret_key:
             updates["app__flask_secret_key"] = "SparkleAndShine"
+
+        # Process multi_dataroots if provided
+        if multi_dataroots:
+            dataroots_config = {}
+            for dataroot_spec in multi_dataroots:
+                try:
+                    base_url, path = dataroot_spec.split(":", 1)
+                    dataroots_config[base_url] = {"base_url": base_url, "dataroot": path}
+                except ValueError:
+                    raise click.ClickException(
+                        f"Invalid multi-dataroot specification: '{dataroot_spec}'. " "Expected format: 'base_url:path'"
+                    ) from None
+            # Override dataroots in config
+            updates["server__multi_dataset__dataroots"] = dataroots_config
+            # Clear the single dataroot if multi_dataroots is specified
+            updates["server__multi_dataset__dataroot"] = None
 
         app_config.update_config(**updates)
         # process the configuration

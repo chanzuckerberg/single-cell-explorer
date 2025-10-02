@@ -1,10 +1,12 @@
 import logging
 from functools import wraps
+from http import HTTPStatus
 from urllib.parse import unquote
 
 from flask import (
     Blueprint,
     current_app,
+    make_response,
     redirect,
     request,
     send_from_directory,
@@ -259,6 +261,23 @@ class AgentAPI(S3URIResource):  # Inherit from S3URIResource instead of Resource
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
+        # Check if this is a /w/ dataroot and enforce authorization
+        if hasattr(self, "url_dataroot") and self.url_dataroot == "w":
+            # Try to resolve user ID - this will fail if we're on explorer-only deployment
+            # accessing /w/ resources, which is exactly what we want
+            try:
+                user_id = common_rest._resolve_request_user_id(request)
+                if user_id is None:
+                    # No user ID means auth is disabled, which should not have access to /w/
+                    return common_rest.abort_and_log(
+                        HTTPStatus.UNAUTHORIZED, "Access to /w/ dataroot requires authentication", loglevel=logging.INFO
+                    )
+            except Exception:
+                # If we can't resolve user ID (e.g., not in VCP deployment), deny access
+                return common_rest.abort_and_log(
+                    HTTPStatus.UNAUTHORIZED, "Access to /w/ dataroot requires VCP authentication", loglevel=logging.INFO
+                )
+
         try:
             s3_uri = get_dataset_artifact_s3_uri(self.url_dataroot, dataset)
             data_adaptor = get_data_adaptor(s3_uri)
@@ -376,6 +395,20 @@ def register_api_v3(app, app_config, api_url_prefix):
 
         # Custom CXGs (only for "w" dataroot)
         if url_dataroot == "w":
+            # Add authorization check before processing any /w/ requests
+            @app.before_request
+            def check_w_dataroot_access(dataroot=url_dataroot):
+                # Only check requests to /w/ paths
+                if request.path.startswith(f"/{dataroot}/"):
+                    try:
+                        user_id = common_rest._resolve_request_user_id(request)
+                        if user_id is None:
+                            # No user ID means auth is disabled, which should not have access to /w/
+                            return make_response("Unauthorized access to /w/ dataroot", HTTPStatus.UNAUTHORIZED)
+                    except Exception:
+                        # If we can't resolve user ID (e.g., not in VCP deployment), deny access
+                        return make_response("Unauthorized access to /w/ dataroot", HTTPStatus.UNAUTHORIZED)
+
             bp_dataroot_custom = Blueprint(
                 name=f"api_dataset_{url_dataroot}_custom_cxgs_{api_version.replace('.',',')}",
                 import_name=__name__,
