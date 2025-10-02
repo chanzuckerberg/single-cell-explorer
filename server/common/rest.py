@@ -44,34 +44,32 @@ from server.dataset import dataset_metadata
 
 
 LOCAL_DEV_USER_ID = "local-dev-user"
+RDEV_USER_ID = "rdev-user"
 
 
-HEADER_USER_ID_CANDIDATES = (
-    "X-Amzn-Oidc-Identity",
-    "X-Amzn-Oidc-Sub",
-    "X-Cognito-Username",
-    "X-User-Id",
-    "X-Auth-Request-User",
-)
+HEADER_USER_ID_CANDIDATES = ()
 
 
 def _get_request_user_id(req) -> Optional[str]:
-    """Best-effort extraction of the authenticated Cognito user identifier."""
 
     if req is None:
         return None
 
-    for header in HEADER_USER_ID_CANDIDATES:
-        user = req.headers.get(header)
-        if user:
-            return user
-    return None
+    user = req.headers.get(
+        "X-Auth-Request-User",
+    )
+    if user:
+        return user
 
 
 def _resolve_request_user_id(req) -> str:
     user_id = _get_request_user_id(req)
     if user_id:
         return user_id
+
+    if os.environ.get("__ARGUS_DEPLOYMENT_STAGE") == "rdev":
+        return RDEV_USER_ID
+
     if current_app.debug or current_app.testing:
         return LOCAL_DEV_USER_ID
     abort(HTTPStatus.UNAUTHORIZED)

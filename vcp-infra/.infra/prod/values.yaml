@@ -15,6 +15,7 @@ stack:
         - --whitelist-domain=vcp-prod.auth.us-west-2.amazoncognito.com
         - --auth-logging=false
         - --request-logging=false
+        - --set-xauthrequest=true
   services:
     explorer:
       serviceAccount:

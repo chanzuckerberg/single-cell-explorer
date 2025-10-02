@@ -10,8 +10,8 @@ stack:
         - --cookie-expire=24h
         - --cookie-domain=.staging.virtual-cells.czi.technology
         - --whitelist-domain=vcp-staging.auth.us-west-2.amazoncognito.com
-        - --auth-logging=false
         - --request-logging=false
+        - --set-xauthrequest=true
   services:
     explorer:
       serviceAccount:

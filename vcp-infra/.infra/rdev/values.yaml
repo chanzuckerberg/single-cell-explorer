@@ -11,9 +11,6 @@ stack:
         - --whitelist-domain=vcp-dev.auth.us-west-2.amazoncognito.com
         - --auth-logging=true
         - --request-logging=true
-        - --approval-prompt=""
-        - --force-https-redirect=true
-        - --provider=oidc
         - --set-xauthrequest=true
   services:
     explorer:
