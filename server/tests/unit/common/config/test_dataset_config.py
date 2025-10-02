@@ -61,11 +61,11 @@ class TestDatasetConfig(ConfigTests):
         # Ensure symlinks are cleaned up and recreated
         set2_path = f"{FIXTURES_ROOT}/set2"
         set3_path = f"{FIXTURES_ROOT}/set3"
-        
+
         for path in [set2_path, set3_path]:
             if os.path.lexists(path):
                 os.unlink(path)
-        
+
         try:
             os.symlink(FIXTURES_ROOT, set2_path)
             os.symlink(FIXTURES_ROOT, set3_path)
