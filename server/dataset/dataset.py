@@ -22,9 +22,6 @@ from server.common.fbs.matrix import encode_matrix_fbs
 from server.common.utils.uns import spatial_metadata_get
 from server.common.utils.utils import jsonify_numpy
 
-_ANNOTATION_STORE: Dict[Tuple[str, str], Dict[str, Any]] = defaultdict(dict)
-_ANNOTATION_STORE_LOCK = Lock()
-
 
 class Dataset(metaclass=ABCMeta):
     """Base class for loading and accessing matrix data"""
@@ -43,70 +40,42 @@ class Dataset(metaclass=ABCMeta):
         self.parameters = {}
 
     # ------------------------------------------------------------------------
-    # Autosave scaffolding helpers
+    # Abstract methods for user annotations - implementations handle persistence
 
-    def _get_user_store_key(self, user_id: Optional[str]) -> str:
-        return user_id or "__global__"
-
-    def _annotation_store_key(self, user_id: Optional[str]) -> Tuple[str, str]:
-        dataset_key = self.get_location() or ""
-        user_key = self._get_user_store_key(user_id)
-        return dataset_key, user_key
-
-    def _get_annotation_store(self, user_id: Optional[str]) -> Dict[str, Any]:
-        key = self._annotation_store_key(user_id)
-        with _ANNOTATION_STORE_LOCK:
-            store = _ANNOTATION_STORE[key]
-            # normalise buckets to simplify downstream callers
-            store.setdefault("obs_annotations", None)
-            store.setdefault("genesets", None)
-        return store
-
+    @abstractmethod
     def get_saved_obs_annotations(
         self,
         user_id: Optional[str] = None,
     ) -> Optional[pd.DataFrame]:
-        store = self._get_annotation_store(user_id)
-        saved = store.get("obs_annotations")
-        return deepcopy(saved) if saved is not None else None
+        """Get user annotations from persistent storage."""
+        pass
 
+    @abstractmethod
     def get_saved_gene_sets(
         self,
         user_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        store = self._get_annotation_store(user_id)
-        saved = store.get("genesets")
-        return deepcopy(saved) if saved is not None else None
+        """Get user gene sets from persistent storage."""
+        pass
 
+    @abstractmethod
     def save_obs_annotations(
         self,
         dataframe: pd.DataFrame,
         user_id: Optional[str] = None,
     ) -> None:
-        """Store user-provided obs annotations until a durable backend is available."""
+        """Save user annotations to persistent storage."""
+        pass
 
-        store = self._get_annotation_store(user_id)
-        # Keep a deep copy so in-memory mutations elsewhere don't mutate the store.
-        store["obs_annotations"] = deepcopy(dataframe)
-
+    @abstractmethod
     def save_gene_sets(
         self,
         genesets_payload: Dict[str, Any],
         tid: Optional[int] = None,
         user_id: Optional[str] = None,
     ) -> None:
-        """Persist gene sets and monotonic tid locally for autosave."""
-
-        store = self._get_annotation_store(user_id)
-        existing = store.get("genesets") or {"tid": 0, "genesets": []}
-        current_tid = existing.get("tid", 0)
-
-        if tid is None:
-            tid = current_tid + 1
-        if tid <= current_tid:
-            raise ValueError("TID must be greater than previous saved value")
-
-        store["genesets"] = {"tid": tid, "genesets": deepcopy(genesets_payload)}
+        """Save gene sets to persistent storage."""
+        pass
 
     @staticmethod
     @abstractmethod

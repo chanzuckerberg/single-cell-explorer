@@ -185,7 +185,7 @@ class CxgDataset(Dataset):
 
         array_uri = self._annotation_array_uri(user_root_uri, column_name)
         temp_array_uri = f"{array_uri}.tmp"
-        
+
         # Write to temporary location first
         self._ensure_annotation_array(temp_array_uri, n_obs)
 
@@ -196,20 +196,20 @@ class CxgDataset(Dataset):
                 arr.meta["column_name"] = column_name
                 arr.meta["categories"] = json.dumps(categories)
                 arr.meta["ordered"] = json.dumps(bool(categorical.ordered))
-            
+
             # Atomic move: only after successful write
             vfs = tiledb.VFS(ctx=self.tiledb_ctx)
-            
+
             # Remove existing array if it exists
             if vfs.is_dir(array_uri):
                 try:
                     tiledb.remove(array_uri, ctx=self.tiledb_ctx)
                 except TileDBError:
                     pass  # Continue even if removal fails
-            
+
             # Move temp to final location (as atomic as possible)
             vfs.move_dir(temp_array_uri, array_uri)
-            
+
         except Exception:
             # Clean up temp array on any failure
             try:
@@ -222,7 +222,26 @@ class CxgDataset(Dataset):
     def _load_annotation_column(self, array_uri: str) -> Optional[pd.Series]:
         try:
             with tiledb.open(array_uri, mode="r", ctx=self.tiledb_ctx) as arr:
-                raw = np.array(arr[:], dtype=np.int32).reshape(-1)
+                # Read data and check what we actually got
+                data = arr[:]
+
+                # Handle different data formats that might be returned
+                if isinstance(data, dict):
+                    # If we get a dict, try to extract the 'value' attribute
+                    if "value" in data:
+                        raw = np.array(data["value"], dtype=np.int32).reshape(-1)
+                    else:
+                        logging.warning(f"TileDB array {array_uri} returned dict without 'value' key: {data}")
+                        return None
+                else:
+                    try:
+                        raw = np.array(data, dtype=np.int32).reshape(-1)
+                    except (TypeError, ValueError) as e:
+                        logging.warning(
+                            f"Failed to convert TileDB array data to int32 for {array_uri}: {type(data)}, {e}"
+                        )
+                        return None
+
                 column_name = arr.meta.get("column_name")
                 if isinstance(column_name, bytes):
                     column_name = column_name.decode("utf-8")
@@ -233,7 +252,8 @@ class CxgDataset(Dataset):
                     return None
                 categories_meta = arr.meta.get("categories")
                 ordered_meta = arr.meta.get("ordered")
-        except TileDBError:
+        except TileDBError as e:
+            logging.warning(f"TileDB error reading {array_uri}: {e}")
             return None
 
         if categories_meta is None:
@@ -311,8 +331,6 @@ class CxgDataset(Dataset):
         dataframe: pd.DataFrame,
         user_id: Optional[str] = None,
     ) -> None:
-        Dataset.save_obs_annotations(self, dataframe, user_id=user_id)
-
         user_token = self._user_token(user_id)
 
         n_obs, _ = self.get_shape()
@@ -326,26 +344,14 @@ class CxgDataset(Dataset):
             for column in dataframe.columns:
                 self._write_annotation_column(user_root_uri, column, dataframe[column], n_obs)
                 existing.pop(column, None)
-        # Remove any annotations that are no longer present.
-        for stale_uri in existing.values():
-            try:
-                tiledb.remove(stale_uri, ctx=self.tiledb_ctx)
-            except TileDBError:
-                logging.warning("Failed to remove stale annotation array %s", stale_uri)
 
     def get_saved_obs_annotations(
         self,
         user_id: Optional[str] = None,
     ) -> Optional[pd.DataFrame]:
-        cached = Dataset.get_saved_obs_annotations(self, user_id=user_id)
-        if cached is not None:
-            return cached
-
+        """Always load user annotations from persistent storage (S3/filesystem)."""
         user_token = self._user_token(user_id)
-        dataframe = self._load_obs_annotations_from_storage(user_token)
-        if dataframe is not None:
-            Dataset.save_obs_annotations(self, dataframe, user_id=user_id)
-        return dataframe
+        return self._load_obs_annotations_from_storage(user_token)
 
     def save_gene_sets(
         self,
@@ -353,12 +359,18 @@ class CxgDataset(Dataset):
         tid: Optional[int] = None,
         user_id: Optional[str] = None,
     ) -> None:
-        Dataset.save_gene_sets(self, genesets_payload, tid=tid, user_id=user_id)
+        # Get current state from storage to determine TID
+        persisted = self.get_saved_gene_sets(user_id=user_id) or {}
+        current_tid = persisted.get("tid", 0)
 
-        persisted = Dataset.get_saved_gene_sets(self, user_id=user_id) or {}
+        if tid is None:
+            tid = current_tid + 1
+        if tid <= current_tid:
+            raise ValueError("TID must be greater than previous saved value")
+
         payload = {
-            "tid": persisted.get("tid", tid),
-            "genesets": persisted.get("genesets", genesets_payload),
+            "tid": tid,
+            "genesets": genesets_payload,
         }
 
         user_token = self._user_token(user_id)
@@ -368,19 +380,9 @@ class CxgDataset(Dataset):
         self,
         user_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
-        cached = Dataset.get_saved_gene_sets(self, user_id=user_id)
-        if cached is not None:
-            return cached
-
+        """Always load user gene sets from persistent storage (S3/filesystem)."""
         user_token = self._user_token(user_id)
-        payload = self._read_user_genesets(user_token)
-        if payload is None:
-            return None
-
-        genesets = payload.get("genesets", [])
-        tid = payload.get("tid")
-        Dataset.save_gene_sets(self, genesets, tid=tid, user_id=user_id)
-        return Dataset.get_saved_gene_sets(self, user_id=user_id)
+        return self._read_user_genesets(user_token)
 
     @staticmethod
     def set_tiledb_context(context_params):
@@ -1066,9 +1068,7 @@ class CxgDataset(Dataset):
 
             try:
                 schema = self.get_schema(user_id=user_id) if axis == "obs" else self.get_schema()
-                obs_schema_columns = (
-                    schema["annotations"]["obs"]["columns"] if axis == "obs" else []
-                )
+                obs_schema_columns = schema["annotations"]["obs"]["columns"] if axis == "obs" else []
 
                 obs_column_names = {attr.name for attr in A.schema}
                 requested_fields = list(fields) if fields else None

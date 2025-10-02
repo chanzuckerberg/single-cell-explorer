@@ -1,4 +1,3 @@
-import difference from "lodash/difference";
 import { deflate } from "pako";
 
 import type { ThunkAction } from "redux-thunk";
@@ -281,39 +280,51 @@ function writableAnnotations(
     .map((column) => column.name);
 }
 
-export const needToSaveObsAnnotations = (
-  annoMatrix: AnnoMatrix | undefined,
+export function changedWritableAnnotations(
+  annoMatrix: AnnoMatrix | undefined | null,
   lastSavedAnnoMatrix: AnnoMatrix | null
-): boolean => {
-  if (!annoMatrix || !lastSavedAnnoMatrix) return false;
+): string[] {
+  if (!annoMatrix || !lastSavedAnnoMatrix) return [];
 
   const currentBase = annoMatrix.base();
   const lastBase = lastSavedAnnoMatrix.base();
 
-  if (currentBase === lastBase) return false;
+  if (currentBase === lastBase) return [];
 
   const currentWritable = writableAnnotations(currentBase);
   const lastWritable = writableAnnotations(lastBase);
 
-  if (
-    difference(currentWritable, lastWritable).length > 0 ||
-    difference(lastWritable, currentWritable).length > 0
-  ) {
-    return true;
+  const changed = new Set<string>();
+  // Columns newly added since last save
+  for (const col of currentWritable) {
+    if (!lastWritable.includes(col)) changed.add(col);
   }
-
+  // Determine which existing columns have modified data
   const currentObsCache = currentBase._cache?.[Field.obs];
   const lastObsCache = lastBase._cache?.[Field.obs];
-  if (currentObsCache === lastObsCache) return false;
 
-  return currentWritable.some((col) => {
-    const currentHas = currentObsCache?.hasCol?.(col) ?? false;
-    const lastHas = lastObsCache?.hasCol?.(col) ?? false;
-    if (currentHas && lastHas) {
-      return currentObsCache.col(col) !== lastObsCache.col(col);
+  // If caches are identical, then nothing changed beyond new/removed columns
+  if (currentObsCache !== lastObsCache) {
+    for (const col of currentWritable) {
+      const currentHas = currentObsCache?.hasCol?.(col) ?? false;
+      const lastHas = lastObsCache?.hasCol?.(col) ?? false;
+      if (currentHas && lastHas) {
+        if (currentObsCache.col(col) !== lastObsCache.col(col)) changed.add(col);
+      } else if (currentHas && !lastHas) {
+        changed.add(col);
+      }
+      // We do not attempt to save deletions here; deletions are handled by dedicated actions.
     }
-    return currentHas !== lastHas;
-  });
+  }
+
+  return Array.from(changed);
+}
+
+export const needToSaveObsAnnotations = (
+  annoMatrix: AnnoMatrix | undefined,
+  lastSavedAnnoMatrix: AnnoMatrix | null
+): boolean => {
+  return changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0;
 };
 
 export const saveObsAnnotationsAction =
@@ -329,7 +340,8 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    if (!needToSaveObsAnnotations(annoMatrix, lastSavedAnnoMatrix)) {
+    const changedCols = changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix);
+    if (changedCols.length === 0) {
       dispatch({
         type: "writable obs annotations - save complete",
         lastSavedAnnoMatrix: annoMatrix,
@@ -343,7 +355,7 @@ export const saveObsAnnotationsAction =
 
     const df = await annoMatrix.fetch(
       Field.obs,
-      writableAnnotations(annoMatrix)
+      changedCols
     );
     const buffer = MatrixFBS.encodeMatrixFBS(df);
     const compressed = deflate(buffer);
