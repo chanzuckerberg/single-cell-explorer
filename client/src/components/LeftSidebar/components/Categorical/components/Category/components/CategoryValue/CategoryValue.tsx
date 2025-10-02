@@ -73,16 +73,18 @@ const mapStateToProps = (
   } = ownProps;
 
   const label = categorySummary.categoryValues[categoryIndex];
+  const labelKey = String(label);
   const isDilated =
     pointDilation.metadataField === metadataField &&
-    pointDilation.categoryField === _currentLabelAsString(label);
+    pointDilation.categoryField === _currentLabelAsString(labelKey);
 
   const category = categoricalSelection[metadataField];
   const col = categoryData.icol(0);
-  const labelName = isDataframeDictEncodedColumn(col)
-    ? col.codeMapping[parseInt(label as string, 10)]
+  const mappedLabel = isDataframeDictEncodedColumn(col)
+    ? col.codeMapping[parseInt(labelKey, 10)]
     : label;
-  const isSelected = category.get(label as string) ?? true;
+  const labelName = mappedLabel ?? labelKey;
+  const isSelected = category.get(labelKey) ?? true;
 
   const isColorBy =
     metadataField === colorAccessor &&
@@ -91,8 +93,8 @@ const mapStateToProps = (
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
-    label: label as string,
-    labelName: labelName as string,
+    label: labelKey,
+    labelName: String(labelName),
     isColorBy,
   };
 };
@@ -295,8 +297,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       groupBy
     );
 
-    const bins = histogramMap.has(categoryValue)
-      ? (histogramMap.get(categoryValue) as ContinuousHistogram)
+    // For dict-encoded columns, categoryValue is a label string but histogramMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const bins = histogramMap.has(lookupValue)
+      ? (histogramMap.get(lookupValue) as ContinuousHistogram)
       : new Array<number>(50).fill(0);
 
     const xScale = d3.scaleLinear().domain([0, bins.length]).range([0, width]);
@@ -332,7 +341,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    const occupancy = occupancyMap.get(categoryValue);
+    // For dict-encoded columns, categoryValue is a label string but occupancyMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const occupancy = occupancyMap.get(lookupValue);
 
     if (occupancy && occupancy.size > 0) {
       // not all categories have occupancy, so occupancy may be undefined.

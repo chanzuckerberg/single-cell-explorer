@@ -2,7 +2,7 @@ stack:
   services:
     explorer:
       image:
-        tag: sha-bd8b09d
+        tag: sha-db1b04f
       replicaCount: 1
       env:
         # env vars common to all deployment stages
@@ -25,3 +25,5 @@ stack:
           value: hosted-cellxgene-dev
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: CELLXGENE_DISABLE_AUTH
+          value: "true"

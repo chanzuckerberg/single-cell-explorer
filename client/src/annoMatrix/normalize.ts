@@ -103,8 +103,18 @@ export function normalizeWritableCategoricalSchema(
   the categories array contains all unique values in the data array, AND that
   the array is UI sorted.
   */
+  // For dict-encoded columns, get label strings from codeMapping instead of numeric codes
+  let dataCategories: Category[];
+  const colData = col.asArray();
+  if (isDictEncodedTypedArray(colData)) {
+    // Extract unique label strings from the codeMapping
+    dataCategories = Object.values(colData.codeMapping);
+  } else {
+    dataCategories = col.summarizeCategorical().categories;
+  }
+
   const categorySet = new Set<Category>(
-    col.summarizeCategorical().categories.concat(
+    dataCategories.concat(
       // TODO #35: Use type guards instead of casting
       (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
     )

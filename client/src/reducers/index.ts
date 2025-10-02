@@ -27,6 +27,8 @@ import pointDilation from "./pointDilation";
 import quickGenes from "./quickGenes";
 import singleContinuousValue from "./singleContinuousValue";
 import panelEmbedding from "./panelEmbedding";
+import autosave from "./autosave";
+import annotations from "./annotations";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -52,6 +54,8 @@ const AppReducer = undoable(
     ["centroidLabels", centroidLabels],
     ["pointDilation", pointDilation],
     ["datasetMetadata", datasetMetadata],
+    ["annotations", annotations],
+    ["autosave", autosave],
   ] as Parameters<typeof cascadeReducers>[0]),
   [
     "annoMatrix",
@@ -67,6 +71,7 @@ const AppReducer = undoable(
     "centroidLabels",
     "genesets",
     "annotations",
+    "autosave",
   ],
   undoableConfig
 );
@@ -102,6 +107,8 @@ export interface RootState {
   centroidLabels: ReturnType<typeof centroidLabels>;
   pointDilation: ReturnType<typeof pointDilation>;
   datasetMetadata: ReturnType<typeof datasetMetadata>;
+  annotations: ReturnType<typeof annotations>;
+  autosave: ReturnType<typeof autosave>;
 }
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;

@@ -1,11 +1,12 @@
 import { SKELETON } from "@blueprintjs/core/lib/esnext/common/classes";
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback, useState } from "react";
 import { connect, shallowEqual } from "react-redux";
 import { FaChevronRight, FaChevronDown } from "react-icons/fa";
 import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 import Truncate from "common/components/Truncate/Truncate";
+import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { createCategorySummaryFromDfCol } from "util/stateManager/controlsHelpers";
 import {
   createColorTable,
@@ -16,7 +17,7 @@ import actions from "actions";
 import { Dataframe } from "util/dataframe";
 import { track } from "analytics";
 import { EVENTS } from "analytics/events";
-import { RootState } from "reducers";
+import { RootState, AppDispatch } from "reducers";
 import * as globals from "~/globals";
 import { CategoryCrossfilterContext } from "../../categoryContext";
 import CategoryValue from "./components/CategoryValue/CategoryValue";
@@ -24,6 +25,7 @@ import {
   thunkTrackColorByCategoryExpand,
   thunkTrackColorByCategoryHighlightHistogram,
 } from "./analytics";
+import AddLabelDialog from "../AddLabelDialog";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 
@@ -53,19 +55,25 @@ interface StateProps {
   isCellGuideCxg: boolean;
 }
 
-type CategoryProps = PureCategoryProps & StateProps;
+interface DispatchProps {
+  dispatch: AppDispatch;
+}
+
+type CategoryProps = PureCategoryProps & StateProps & DispatchProps;
 
 const mapStateToProps = (
   state: RootState,
   ownProps: PureCategoryProps
 ): StateProps => {
-  const schema = state.annoMatrix?.schema;
+  const schema =
+    state.obsCrossfilter?.annoMatrix?.schema ?? state.annoMatrix?.schema;
   const { metadataField } = ownProps;
-  const categoricalSelection = state.categoricalSelection?.[metadataField];
+  const categoricalSelection =
+    state.categoricalSelection?.[metadataField] ?? new Map();
   return {
     colors: state.colors,
     categoricalSelection,
-    annoMatrix: state.annoMatrix,
+    annoMatrix: state.obsCrossfilter?.annoMatrix ?? state.annoMatrix,
     schema,
     crossfilter: state.obsCrossfilter,
     genesets: state.genesets.genesets,
@@ -73,13 +81,14 @@ const mapStateToProps = (
   };
 };
 
+const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
+  dispatch,
+});
+
 class Category extends React.PureComponent<CategoryProps> {
   static getSelectionState(
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categoricalSelection: any,
-    // @ts-expect-error ts-migrate(6133) FIXME: 'metadataField' is declared but its value is never... Remove this comment to see the full error message
-    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-    metadataField: any,
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
     categorySummary: any
   ): string {
@@ -106,18 +115,21 @@ class Category extends React.PureComponent<CategoryProps> {
 
   createCategorySummaryFromDfCol = memoize(createCategorySummaryFromDfCol);
 
+  handleAddLabel = (metadataField: string) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: "annotation: activate add new label mode",
+      data: metadataField,
+    });
+  };
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   getSelectionState(categorySummary: any) {
-    const { categoricalSelection, metadataField } = this.props;
-    return Category.getSelectionState(
-      categoricalSelection,
-      metadataField,
-      categorySummary
-    );
+    const { categoricalSelection } = this.props;
+    return Category.getSelectionState(categoricalSelection, categorySummary);
   }
 
   handleColorChange = (currentIsColorAccessor: boolean) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField, categoryType } = this.props;
 
     /**
@@ -266,7 +278,6 @@ class Category extends React.PureComponent<CategoryProps> {
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   toggleNone(categorySummary: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField } = this.props;
     dispatch(
       actions.selectCategoricalAllMetadataAction(
@@ -275,12 +286,13 @@ class Category extends React.PureComponent<CategoryProps> {
         categorySummary.allCategoryValues,
         false
       )
-    );
+    ).catch(() => {
+      /* ignore errors */
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   toggleAll(categorySummary: any) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dispatch' does not exist on type 'Readon... Remove this comment to see the full error message
     const { dispatch, metadataField } = this.props;
     dispatch(
       actions.selectCategoricalAllMetadataAction(
@@ -289,7 +301,9 @@ class Category extends React.PureComponent<CategoryProps> {
         categorySummary.allCategoryValues,
         true
       )
-    );
+    ).catch(() => {
+      /* ignore errors */
+    });
   }
 
   render(): JSX.Element {
@@ -343,9 +357,11 @@ class Category extends React.PureComponent<CategoryProps> {
                 colorMode,
               } = asyncProps;
               const selectionState = this.getSelectionState(categorySummary);
+              const { schema } = this.props;
+              const isUserAnnotation =
+                schema?.annotations.obsByName[metadataField]?.writable ?? false;
               return (
                 <CategoryRender
-                  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ metadataField: any; checkboxID: string; is... Remove this comment to see the full error message
                   metadataField={metadataField}
                   checkboxID={checkboxID}
                   isExpanded={isExpanded}
@@ -360,8 +376,10 @@ class Category extends React.PureComponent<CategoryProps> {
                   onCategoryToggleAllClick={handleCategoryToggleAllClick}
                   onCategoryMenuClick={this.handleCategoryClick}
                   onCategoryMenuKeyPress={this.handleCategoryKeyPress}
-                  colorMode={colorMode}
+                  colorMode={colorMode || ""}
                   isCellGuideCxg={isCellGuideCxg}
+                  isUserAnnotation={isUserAnnotation}
+                  onAddLabelClick={() => this.handleAddLabel(metadataField)}
                 />
               );
             }}
@@ -372,7 +390,7 @@ class Category extends React.PureComponent<CategoryProps> {
   }
 }
 
-export default connect(mapStateToProps)(Category);
+export default connect(mapStateToProps, mapDispatchToProps)(Category);
 
 /**
  * We are still loading this category, so render a "busy" signal.
@@ -403,22 +421,17 @@ const ErrorLoading = ({ metadataField, error }: any) => {
 };
 
 interface CategoryHeaderProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  metadataField: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  checkboxID: any;
+  metadataField: string;
+  checkboxID: string;
   isColorAccessor: boolean;
   isExpanded: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  selectionState: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
+  selectionState: string;
   onColorChangeClick: (isColorAccessor: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryMenuClick: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryMenuKeyPress: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  onCategoryToggleAllClick: any;
+  onCategoryMenuClick: () => void;
+  onCategoryMenuKeyPress: (event: React.KeyboardEvent<HTMLSpanElement>) => void;
+  onCategoryToggleAllClick: () => void;
+  isUserAnnotation: boolean;
+  onAddLabelClick: () => void;
 }
 
 const CategoryHeader = React.memo(
@@ -432,15 +445,18 @@ const CategoryHeader = React.memo(
     onCategoryMenuClick,
     onCategoryMenuKeyPress,
     onCategoryToggleAllClick,
+    isUserAnnotation,
+    onAddLabelClick,
   }: CategoryHeaderProps) => {
     /*
     Render category name and controls (eg, color-by button).
     */
-    const checkboxRef = useRef(null);
+    const checkboxRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-      // @ts-expect-error ts-migrate(2531) FIXME: Object is possibly 'null'.
-      checkboxRef.current.indeterminate = selectionState === "some";
+      if (checkboxRef.current) {
+        checkboxRef.current.indeterminate = selectionState === "some";
+      }
     }, [selectionState]);
 
     const handleColorChangeClick = useCallback(() => {
@@ -473,8 +489,7 @@ const CategoryHeader = React.memo(
           </label>
           <span
             role="menuitem"
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-            tabIndex="0"
+            tabIndex={0}
             data-testid={`${metadataField}:category-expand`}
             onKeyPress={onCategoryMenuKeyPress}
             style={{
@@ -488,8 +503,7 @@ const CategoryHeader = React.memo(
                   maxWidth: LABEL_WIDTH,
                 }}
                 data-testid={`${metadataField}:category-label`}
-                // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number | ... Remove this comment to see the full error message
-                tabIndex="-1"
+                tabIndex={-1}
               >
                 {metadataField}
               </span>
@@ -509,6 +523,22 @@ const CategoryHeader = React.memo(
         </div>
 
         <div className="ignore-capture">
+          {isUserAnnotation ? (
+            <Tooltip
+              content="Add label"
+              position={Position.LEFT}
+              usePortal
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+            >
+              <Button
+                data-testid={`${metadataField}:add-label`}
+                icon="plus"
+                minimal
+                small
+                onClick={onAddLabelClick}
+              />
+            </Tooltip>
+          ) : null}
           <Tooltip
             content="Use as color scale"
             position={Position.LEFT}
@@ -533,51 +563,58 @@ const CategoryHeader = React.memo(
   }
 );
 
+interface CategoryRenderProps {
+  metadataField: string;
+  checkboxID: string;
+  isColorAccessor: boolean;
+  isExpanded: boolean;
+  selectionState: string;
+  categoryData: Dataframe;
+  categorySummary: ReturnType<typeof createCategorySummaryFromDfCol>;
+  colorAccessor: string | null;
+  colorData: Dataframe | null;
+  colorTable: ColorTable;
+  onColorChangeClick: (isColorAccessor: boolean) => void;
+  onCategoryMenuClick: () => void;
+  onCategoryMenuKeyPress: (event: React.KeyboardEvent<HTMLSpanElement>) => void;
+  onCategoryToggleAllClick: () => void;
+  colorMode: string;
+  isCellGuideCxg: boolean;
+  isUserAnnotation: boolean;
+  onAddLabelClick: () => void;
+}
+
 const CategoryRender = React.memo(
   ({
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'metadataField' does not exist on type '{... Remove this comment to see the full error message
     metadataField,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'checkboxID' does not exist on type '{ ch... Remove this comment to see the full error message
     checkboxID,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isColorAccessor' does not exist on type ... Remove this comment to see the full error message
     isColorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isExpanded' does not exist on type '{ ch... Remove this comment to see the full error message
     isExpanded,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'selectionState' does not exist on type '... Remove this comment to see the full error message
     selectionState,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categoryData' does not exist on type '{ ... Remove this comment to see the full error message
     categoryData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'categorySummary' does not exist on type ... Remove this comment to see the full error message
     categorySummary,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorAccessor' does not exist on type '{... Remove this comment to see the full error message
     colorAccessor,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorData' does not exist on type '{ chi... Remove this comment to see the full error message
     colorData,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorTable' does not exist on type '{ ch... Remove this comment to see the full error message
     colorTable,
     onColorChangeClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuClick' does not exist on t... Remove this comment to see the full error message
     onCategoryMenuClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryMenuKeyPress' does not exist o... Remove this comment to see the full error message
     onCategoryMenuKeyPress,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'onCategoryToggleAllClick' does not exist... Remove this comment to see the full error message
     onCategoryToggleAllClick,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'colorMode' does not exist... Remove this comment to see the full error message
     colorMode,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'isCellGuideCxg' does not exist... Remove this comment to see the full error message
     isCellGuideCxg,
-  }: {
-    onColorChangeClick: (isColorAccessor: boolean) => void;
-  }) => {
+    isUserAnnotation,
+    onAddLabelClick,
+  }: CategoryRenderProps) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
     */
     const { numCategoryValues } = categorySummary;
     const isSingularValue = numCategoryValues === 1;
 
-    if (isSingularValue && !isCellGuideCxg) {
+    if (isSingularValue && !isCellGuideCxg && !isUserAnnotation) {
       /*
       Entire category has a single value, special case.
+      But always show user annotations even with single value so users can add labels.
       */
       return null;
     }
@@ -609,8 +646,13 @@ const CategoryRender = React.memo(
             onCategoryToggleAllClick={onCategoryToggleAllClick}
             onCategoryMenuClick={onCategoryMenuClick}
             onCategoryMenuKeyPress={onCategoryMenuKeyPress}
+            isUserAnnotation={isUserAnnotation}
+            onAddLabelClick={onAddLabelClick}
           />
         </div>
+        {isUserAnnotation ? (
+          <AddLabelDialog metadataField={metadataField} />
+        ) : null}
         <div style={{ marginLeft: 26 }}>
           {
             /* values*/
@@ -619,7 +661,7 @@ const CategoryRender = React.memo(
                 metadataField={metadataField}
                 categoryData={categoryData}
                 categorySummary={categorySummary}
-                colorAccessor={colorAccessor}
+                colorAccessor={colorAccessor || ""}
                 colorData={colorData}
                 colorTable={colorTable}
                 colorMode={colorMode}
@@ -656,48 +698,80 @@ const CategoryValueList = React.memo(
     colorTable,
     colorMode,
   }: CategoryValueListProps) => {
-    const tuples = [...categorySummary.categoryValueIndices].filter(
+    const initialTuples = [...categorySummary.categoryValueIndices].filter(
       ([, index]) => categorySummary.categoryValueCounts[index] > 0
     );
 
-    // sort categorical labels in descending order by average values of whatever
-    // continuous metadata is currently being colored by
-    if (
-      colorMode === "color by continuous metadata" ||
-      colorMode === "color by expression" ||
-      colorMode === "color by geneset mean expression"
-    ) {
-      const categoryDataArray = categoryData.col(metadataField).asArray();
-      const colorDataArray = colorData.icol(0).asArray();
-      const categoryColorMap = new Map();
-      categoryDataArray.forEach((category: string, index: number) => {
-        if (!categoryColorMap.has(category)) {
-          categoryColorMap.set(category, { sum: 0, count: 0 });
-        }
-        const colorValue = colorDataArray[index];
-        const categoryColor = categoryColorMap.get(category);
-        categoryColor.sum += colorValue;
-        categoryColor.count += 1;
-      });
+    const [sortedTuples, setSortedTuples] = useState(initialTuples);
 
-      const categoryAverageColor = new Map();
-      categoryColorMap.forEach((value, key) => {
-        categoryAverageColor.set(key, value.sum / value.count);
-      });
-      tuples.sort((a, b) => {
-        const colorA = categoryAverageColor.get(a[0]);
-        const colorB = categoryAverageColor.get(b[0]);
-        return colorB - colorA;
-      });
+    useEffect(() => {
+      const tuples = [...categorySummary.categoryValueIndices].filter(
+        ([, index]) => categorySummary.categoryValueCounts[index] > 0
+      );
 
-      /*
-      Render the value list.  If this is a user annotation, we use a flipper
-      animation, if read-only, we don't bother and save a few bits of perf.
-      */
-    }
+      // sort categorical labels in descending order by average values of whatever
+      // continuous metadata is currently being colored by
+      if (
+        colorMode === "color by continuous metadata" ||
+        colorMode === "color by expression" ||
+        colorMode === "color by geneset mean expression"
+      ) {
+        const categoryColumn = categoryData.col(metadataField);
+        const categoryDataArray = categoryColumn.asArray();
+        const colorDataArray = colorData.icol(0).asArray();
+        const categoryColorMap = new Map();
+
+        // Check if the column is dict-encoded
+        const isDictEncoded = isDataframeDictEncodedColumn(categoryColumn);
+        const codeMapping = isDictEncoded ? categoryColumn.codeMapping : null;
+
+        categoryDataArray.forEach(
+          (categoryValue: string | number, index: number) => {
+            // For dict-encoded columns, convert code to label string
+            const labelString = isDictEncoded
+              ? codeMapping![categoryValue as number]
+              : categoryValue;
+
+            if (!categoryColorMap.has(labelString)) {
+              categoryColorMap.set(labelString, { sum: 0, count: 0 });
+            }
+            const colorValue = colorDataArray[index];
+            // Add safety check for non-finite values
+            if (Number.isFinite(colorValue)) {
+              const categoryColor = categoryColorMap.get(labelString);
+              categoryColor.sum += colorValue;
+              categoryColor.count += 1;
+            }
+          }
+        );
+
+        const categoryAverageColor = new Map();
+        categoryColorMap.forEach((value, key) => {
+          // Only calculate average if count > 0
+          if (value.count > 0) {
+            categoryAverageColor.set(key, value.sum / value.count);
+          }
+        });
+        tuples.sort((a, b) => {
+          const colorA = categoryAverageColor.get(a[0]) ?? 0;
+          const colorB = categoryAverageColor.get(b[0]) ?? 0;
+          return colorB - colorA;
+        });
+      }
+
+      setSortedTuples(tuples);
+    }, [
+      categorySummary.categoryValueIndices,
+      categorySummary.categoryValueCounts,
+      metadataField,
+      categoryData?.cols?.[0]?.__id,
+      colorData?.cols?.[0]?.__id,
+      colorMode,
+    ]);
+
     return (
       <>
-        {tuples.map(([value, index]) => (
+        {sortedTuples.map(([value, index]) => (
           <CategoryValue
             key={value}
             metadataField={metadataField}

@@ -1,6 +1,6 @@
 /* App dependencies */
-import { type AnnotationColumnSchema } from "../common/types/schema";
 import { type RootState } from "../reducers";
+import { needToSaveObsAnnotations } from "../actions/annotation";
 
 /*
  Returns true if user defined category has been created indicating work is in progress.
@@ -8,11 +8,9 @@ import { type RootState } from "../reducers";
  @returns boolean
  */
 export const selectIsUserStateDirty = (state: RootState): boolean => {
-  const { annoMatrix } = state;
+  const { annoMatrix, autosave } = state;
 
-  return Boolean(
-    annoMatrix?.schema.annotations.obs.columns.some(
-      (col: AnnotationColumnSchema) => col.writable
-    )
-  );
+  if (!annoMatrix || !autosave?.lastSavedAnnoMatrix) return false;
+
+  return needToSaveObsAnnotations(annoMatrix, autosave.lastSavedAnnoMatrix);
 };
