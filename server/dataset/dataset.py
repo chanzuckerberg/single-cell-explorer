@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from os.path import basename, splitext
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -34,6 +35,44 @@ class Dataset(metaclass=ABCMeta):
 
         # parameters set by this data adaptor based on the data.
         self.parameters = {}
+
+    # ------------------------------------------------------------------------
+    # Abstract methods for user annotations - implementations handle persistence
+
+    @abstractmethod
+    def get_saved_obs_annotations(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[pd.DataFrame]:
+        """Get user annotations from persistent storage."""
+        pass
+
+    @abstractmethod
+    def get_saved_gene_sets(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Get user gene sets from persistent storage."""
+        pass
+
+    @abstractmethod
+    def save_obs_annotations(
+        self,
+        dataframe: pd.DataFrame,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Save user annotations to persistent storage."""
+        pass
+
+    @abstractmethod
+    def save_gene_sets(
+        self,
+        genesets_payload: Dict[str, Any],
+        tid: Optional[int] = None,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Save gene sets to persistent storage."""
+        pass
 
     @staticmethod
     @abstractmethod
@@ -145,14 +184,14 @@ class Dataset(metaclass=ABCMeta):
         return None
 
     @abstractmethod
-    def get_schema(self):
+    def get_schema(self, user_id: Optional[str] = None):
         """
         Return current schema
         """
         pass
 
     @abstractmethod
-    def get_genesets(self):
+    def get_genesets(self, user_id: Optional[str] = None):
         """
         Return genesets in the obs metadata
         """

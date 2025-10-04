@@ -20,9 +20,19 @@ import {
 import _shallowClone from "./clone";
 import { _queryValidate, _queryCacheKey, Query } from "./query";
 import { GCHints } from "../common/types/entities";
-import { Field, Schema, ArraySchema, RawSchema } from "../common/types/schema";
+import {
+  AnnotationColumnSchema,
+  ArraySchema,
+  Category,
+  Field,
+  Schema,
+  RawSchema,
+} from "../common/types/schema";
 import { LabelArray } from "../util/dataframe/types";
 import { LabelIndexBase } from "../util/dataframe/labelIndex";
+import { AnyArray } from "../common/types/arraytypes";
+
+type ColumnValueCtor = new (length: number) => AnyArray;
 
 const _dataframeCache = dataframeMemo(128);
 
@@ -226,6 +236,36 @@ export default abstract class AnnoMatrix {
     while (annoMatrix.isView) annoMatrix = annoMatrix._getViewOf();
     return annoMatrix;
   }
+
+  abstract addObsColumn(
+    colSchema: AnnotationColumnSchema,
+    Ctor: ColumnValueCtor,
+    value: AnyArray | Category
+  ): AnnoMatrix;
+
+  abstract addObsAnnoCategory(col: LabelType, category: Category): AnnoMatrix;
+
+  abstract dropObsColumn(col: LabelType): AnnoMatrix;
+
+  abstract renameObsColumn(oldCol: LabelType, newCol: LabelType): AnnoMatrix;
+
+  abstract setObsColumnValues(
+    col: LabelType,
+    rowLabels: LabelArray,
+    value: Category
+  ): Promise<AnnoMatrix>;
+
+  abstract resetObsColumnValues(
+    col: LabelType,
+    oldValue: Category,
+    newValue: Category
+  ): Promise<AnnoMatrix>;
+
+  abstract removeObsAnnoCategory(
+    col: LabelType,
+    category: Category,
+    unassignedCategory: Category
+  ): Promise<AnnoMatrix>;
 
   /**
    ** Load / read interfaces

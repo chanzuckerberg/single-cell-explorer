@@ -27,6 +27,7 @@ import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import { AgentComponent } from "../Agent/AgentComponent";
 import BottomPanel from "../BottomPanel/BottomPanel";
+import Autosave from "../Autosave";
 import BYODToast from "../BYODConnectors/BYODToast";
 
 interface StateProps {
@@ -162,6 +163,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                               <Scatterplot />
                             )}
                             <PanelEmbedding />
+                            <Autosave />
                           </div>
                           <Controls bottom={0}>
                             <DatasetSelector />

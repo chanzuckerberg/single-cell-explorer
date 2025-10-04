@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Action } from "redux";
 import { connect, shallowEqual } from "react-redux";
 import * as d3 from "d3";
@@ -149,39 +149,105 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
 
 type Props = StateProps & DispatchProps;
 
-class ContinuousLegend extends React.Component<Props> {
+// Component to handle side effects
+const LegendSideEffects: React.FC<{
+  asyncProps: FetchedAsyncProps;
+  cachedAsyncPropsRef: React.MutableRefObject<FetchedAsyncProps | null>;
+  handleColorSuccess: () => void;
+}> = ({ asyncProps, cachedAsyncPropsRef, handleColorSuccess }) => {
+  const updateContinuousLegend = (props: FetchedAsyncProps) => {
+    const { colorAccessor, colorScale, range, domainMin, domainMax } = props;
+    if (
+      colorAccessor &&
+      colorScale &&
+      range &&
+      (domainMin ?? 0) < (domainMax ?? 0)
+    ) {
+      /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
+      const r = range();
+      if (!(typeof r === "function" && r()[0][0] === "#")) {
+        continuous(
+          "#continuous_legend",
+          d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
+          colorAccessor
+        );
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (
+      !shallowEqual(asyncProps, cachedAsyncPropsRef.current) &&
+      asyncProps &&
+      asyncProps.colorMode &&
+      asyncProps.colorMode !== "color by categorical metadata"
+    ) {
+      d3.select("#continuous_legend").selectAll("*").remove();
+      updateContinuousLegend(asyncProps);
+    }
+    cachedAsyncPropsRef.current = asyncProps;
+
+    // if asyncProps is null (no colorAccessor), remove legend
+    // or if colorMode is categorical, remove legend
+    if (
+      !asyncProps ||
+      asyncProps.colorMode === "color by categorical metadata"
+    ) {
+      d3.select("#continuous_legend").selectAll("*").remove();
+    }
+  }, [asyncProps, cachedAsyncPropsRef]);
+
+  // Handle color success action in separate effect
+  useEffect(() => {
+    if (
+      asyncProps?.colorMode === "color by geneset mean expression" &&
+      asyncProps.colorScale
+    ) {
+      handleColorSuccess();
+    }
+  }, [asyncProps?.colorMode, asyncProps?.colorScale, handleColorSuccess]);
+
+  return null;
+};
+
+const ContinuousLegend: React.FC<Props> = ({
+  annoMatrix,
+  colors,
+  genesets,
+  handleColorSuccess,
+}) => {
+  const cachedAsyncPropsRef = useRef<FetchedAsyncProps | null>(null);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
-  static watchAsync(props: any, prevProps: any) {
-    return !shallowEqual(props.watchProps, prevProps.watchProps);
-  }
+  const watchAsync = (props: any, prevProps: any) =>
+    !shallowEqual(props.watchProps, prevProps.watchProps);
 
-  cachedWatchProps: StateProps | null;
-
-  cachedAsyncProps: FetchedAsyncProps | null;
-
-  constructor(props: Props) {
-    super(props);
-    this.cachedWatchProps = null;
-    this.cachedAsyncProps = null;
-  }
-
-  fetchAsyncProps = async (
+  const fetchAsyncProps = async (
     props: AsyncProps<FetchedAsyncProps | null>
   ): Promise<FetchedAsyncProps | null> => {
-    const { annoMatrix, colors, genesets } = props.watchProps as StateProps;
+    const {
+      annoMatrix: watchAnnoMatrix,
+      colors: watchColors,
+      genesets: watchGenesets,
+    } = props.watchProps as StateProps;
 
-    if (!colors || !annoMatrix || !colors.colorMode || !colors.colorAccessor)
+    if (
+      !watchColors ||
+      !watchAnnoMatrix ||
+      !watchColors.colorMode ||
+      !watchColors.colorAccessor
+    )
       return null;
-    const { schema } = annoMatrix;
-    const { colorMode, colorAccessor, userColors } = colors;
+    const { schema } = watchAnnoMatrix;
+    const { colorMode, colorAccessor, userColors } = watchColors;
     const colorQuery = createColorQuery(
       colorMode,
       colorAccessor,
       schema,
-      genesets
+      watchGenesets
     );
     const colorDf = colorQuery
-      ? await annoMatrix.fetch(...colorQuery, globals.numBinsObsX)
+      ? await watchAnnoMatrix.fetch(...colorQuery, globals.numBinsObsX)
       : null;
     const colorTable = createColorTable({
       colorMode,
@@ -206,85 +272,38 @@ class ContinuousLegend extends React.Component<Props> {
     return result;
   };
 
-  updateContinuousLegend = (asyncProps: FetchedAsyncProps) => {
-    const { handleColorSuccess } = this.props;
-    const {
-      colorAccessor,
-      colorScale,
-      range,
-      domainMin,
-      domainMax,
-      colorMode,
-    } = asyncProps;
-    if (
-      colorAccessor &&
-      colorScale &&
-      range &&
-      (domainMin ?? 0) < (domainMax ?? 0)
-    ) {
-      /* fragile! continuous range is 0 to 1, not [#fa4b2c, ...], make this a flag? */
-      const r = range();
-      if (!(typeof r === "function" && r()[0][0] === "#")) {
-        continuous(
-          "#continuous_legend",
-          d3.scaleSequential(interpolateCool).domain(colorScale.domain()),
-          colorAccessor
-        );
-      }
-    }
-    if (colorScale && colorMode === "color by geneset mean expression") {
-      handleColorSuccess();
-    }
-  };
-
-  render() {
-    const { annoMatrix, colors, genesets } = this.props;
-    return (
-      <div
-        id="continuous_legend"
-        style={{
-          position: "absolute",
-          left: 8,
-          top: CELL_COUNT_ELEMENT_HEIGHT_PX + 35,
-          zIndex: 1,
-          pointerEvents: "none",
+  return (
+    <div
+      id="continuous_legend"
+      style={{
+        position: "absolute",
+        left: 8,
+        top: CELL_COUNT_ELEMENT_HEIGHT_PX + 35,
+        zIndex: 1,
+        pointerEvents: "none",
+      }}
+    >
+      <Async
+        watchFn={watchAsync}
+        promiseFn={fetchAsyncProps}
+        watchProps={{
+          annoMatrix,
+          colors,
+          genesets,
         }}
       >
-        <Async
-          watchFn={ContinuousLegend.watchAsync}
-          promiseFn={this.fetchAsyncProps}
-          watchProps={{
-            annoMatrix,
-            colors,
-            genesets,
-          }}
-        >
-          <Async.Fulfilled>
-            {(asyncProps: FetchedAsyncProps) => {
-              if (
-                !shallowEqual(asyncProps, this.cachedAsyncProps) &&
-                asyncProps &&
-                asyncProps.colorMode &&
-                asyncProps.colorMode !== "color by categorical metadata"
-              ) {
-                d3.select("#continuous_legend").selectAll("*").remove();
-                this.updateContinuousLegend(asyncProps);
-              }
-              this.cachedAsyncProps = asyncProps;
-              // if asyncProps is null (no colorAccessor), remove legend
-              // or if colorMode is categorical, remove legend
-              if (
-                !asyncProps ||
-                asyncProps.colorMode === "color by categorical metadata"
-              )
-                d3.select("#continuous_legend").selectAll("*").remove();
-              return null;
-            }}
-          </Async.Fulfilled>
-        </Async>
-      </div>
-    );
-  }
-}
+        <Async.Fulfilled>
+          {(asyncProps: FetchedAsyncProps) => (
+            <LegendSideEffects
+              asyncProps={asyncProps}
+              cachedAsyncPropsRef={cachedAsyncPropsRef}
+              handleColorSuccess={handleColorSuccess}
+            />
+          )}
+        </Async.Fulfilled>
+      </Async>
+    </div>
+  );
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(ContinuousLegend);

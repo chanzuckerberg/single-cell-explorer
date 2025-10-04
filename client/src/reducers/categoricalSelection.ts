@@ -33,6 +33,42 @@ const CategoricalSelection = (
       return newState;
     }
 
+    case "annotation: create category": {
+      const name = action.data;
+      return {
+        ...state,
+        ...CH.createCategoricalSelection([name]),
+      };
+    }
+
+    case "annotation: category edited": {
+      const name = action.metadataField;
+      const newName = action.newCategoryText;
+      const { [name]: selected, ...rest } = state;
+      return {
+        ...rest,
+        [newName]: selected ?? new Map(),
+      };
+    }
+
+    case "annotation: delete category": {
+      const name = action.metadataField;
+      const { [name]: _removed, ...rest } = state;
+      return rest;
+    }
+
+    case "annotation: add new label to category":
+    case "annotation: label edited":
+    case "annotation: delete label":
+    case "annotation: label current cell selection": {
+      const name = action.metadataField;
+      const { [name]: _removed, ...partial } = state;
+      return {
+        ...partial,
+        ...CH.createCategoricalSelection([name]),
+      };
+    }
+
     case "categorical metadata filter select":
     case "categorical metadata filter deselect":
     case "categorical metadata filter none of these":

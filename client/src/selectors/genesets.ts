@@ -8,7 +8,9 @@ import { RootState } from "../reducers";
  @returns boolean
  */
 export const selectIsUserStateDirty = (state: RootState): boolean => {
-  const { genesets } = state;
+  const { genesets, autosave } = state;
 
-  return Boolean(genesets?.genesets?.size);
+  if (!genesets?.initialized) return false;
+
+  return genesets.genesets !== autosave?.lastSavedGenesets;
 };

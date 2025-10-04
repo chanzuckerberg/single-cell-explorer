@@ -1,6 +1,19 @@
+import base64
+import os
+from hashlib import blake2b
+
 from server.common.config.app_config import AppConfig
 from server.dataset.dataset import Dataset
 from server.version import display_version as cellxgene_display_version
+
+
+def _compute_user_idhash(data_adaptor: Dataset) -> str:
+    """Generate a deterministic but anonymized identifier for autosave filenames."""
+
+    dataset_location = data_adaptor.get_location() or ""
+    digest = blake2b(dataset_location.encode("utf-8"), digest_size=5).digest()
+    # base32 avoids filesystem-hostile characters while remaining short.
+    return base64.b32encode(digest).decode("utf-8").rstrip("=")
 
 
 def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app) -> dict:
@@ -29,20 +42,28 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "about-dataset": about,
     }
 
+    # Check if authentication is disabled
+    auth_disabled = os.environ.get("CELLXGENE_DISABLE_AUTH", "false").lower() in ("true", "1", "yes")
+
     # parameters
     parameters = {
         "layout": dataset_config.default_dataset__embeddings__names,
         "max-category-items": dataset_config.default_dataset__presentation__max_categories,
         "diffexp_lfc_cutoff": dataset_config.default_dataset__diffexp__lfc_cutoff,
         "disable-diffexp": not dataset_config.default_dataset__diffexp__enable,
-        "annotations_genesets": True,  # feature flag
-        "annotations_genesets_readonly": True,
+        "annotations": not auth_disabled,  # Disable annotations when auth is disabled
+        "annotations_genesets": not auth_disabled,  # Disable genesets when auth is disabled
+        "annotations_genesets_readonly": auth_disabled,  # Make readonly when auth is disabled
         "annotations_genesets_summary_methods": ["mean"],
         "custom_colors": dataset_config.default_dataset__presentation__custom_colors,
         "diffexp-may-be-slow": False,
         "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
         "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
     }
+
+    # Provide autosave-related client parameters. These defaults may be overridden by
+    # the adaptor's update_parameters implementation when richer configuration exists.
+    parameters.setdefault("annotations-user-data-idhash", _compute_user_idhash(data_adaptor))
 
     # corpora dataset_props
     # TODO/Note: putting info from the dataset into the /config is not ideal.

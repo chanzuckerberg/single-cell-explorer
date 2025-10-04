@@ -184,7 +184,7 @@ function encodeDictArray(
   const [dCodes, dDict] = _getCodesAndDictVectorOffset(builder, uType, uData);
   builder.startObject(2);
   builder.addFieldOffset(0, dCodes, 0);
-  builder.addFieldOffset(0, dDict, 0);
+  builder.addFieldOffset(1, dDict, 0);
   return builder.endObject();
 }
 
@@ -336,17 +336,13 @@ function encodeTypedArray(
  * Encode the dataframe as an FBS Matrix
  */
 
-export function encodeMatrixFBS(
-  df: Dataframe,
-  encodeSparse = false
-): Uint8Array {
+export function encodeMatrixFBS(df: Dataframe): Uint8Array {
   /* row indexing not supported currently */
   if (!(df.rowIndex instanceof IdentityInt32Index)) {
     throw new Error("FBS does not support row index encoding at this time");
   }
 
   const shape = df.dims;
-  const utf8Encoder = new TextEncoder();
   const builder = new flatbuffers.Builder(1024);
 
   let encColIndex;
@@ -356,14 +352,51 @@ export function encodeMatrixFBS(
   if (shape[0] > 0 && shape[1] > 0) {
     const columns = df.columns().map((col) => col.asArray());
 
-    const cols = columns.map((carr) => {
-      let { name } = carr.constructor;
-      if (encodeSparse) {
-        name = `Sparse${name}`;
+    const cols = columns.map((columnData) => {
+      let uType: TypedFBArray | undefined;
+      const dataForEncoding: any = columnData;
+
+      // Detect dict-encoded categoricals first
+      if (isDictEncodedTypedArray(columnData)) {
+        if (columnData instanceof DictEncoded8Array) {
+          uType = TypedFBArray.DictEncoded8FBArray;
+        } else if (columnData instanceof DictEncoded16Array) {
+          uType = TypedFBArray.DictEncoded16FBArray;
+        } else if (columnData instanceof DictEncoded32Array) {
+          uType = TypedFBArray.DictEncoded32FBArray;
+        } else {
+          // Fallback: infer from codes typed array width
+          const codes: any =
+            (columnData as any).codes ?? (columnData as any)._codes;
+          const bpe = codes?.BYTES_PER_ELEMENT;
+          if (bpe === 1) uType = TypedFBArray.DictEncoded8FBArray;
+          else if (bpe === 2) uType = TypedFBArray.DictEncoded16FBArray;
+          else uType = TypedFBArray.DictEncoded32FBArray;
+        }
       }
-      name = name.replace("Array", "FBArray");
-      const uType = TypedFBArray[name as keyof typeof TypedFBArray];
-      const tarr = encodeTypedArray(builder, uType, carr);
+      // Plain JS arrays (strings/booleans)
+      else if (Array.isArray(columnData)) {
+        uType = TypedFBArray.JSONEncodedFBArray;
+      }
+      // Numeric typed arrays
+      else if (ArrayBuffer.isView(columnData)) {
+        const ctor = (columnData as any).constructor;
+        if (ctor === Float32Array) uType = TypedFBArray.Float32FBArray;
+        else if (ctor === Float64Array) uType = TypedFBArray.Float64FBArray;
+        else if (ctor === Int32Array) uType = TypedFBArray.Int32FBArray;
+        else if (ctor === Uint32Array) uType = TypedFBArray.Uint32FBArray;
+        else {
+          const ctorName = (ctor as any)?.name ?? "<unknown>";
+          throw new Error(`unsupported numeric array ctor: ${ctorName}`);
+        }
+      }
+      // Unsupported/unknown type
+      else {
+        const tag = Object.prototype.toString.call(columnData);
+        throw new Error(`Unsupported column data type: ${tag}`);
+      }
+
+      const tarr = encodeTypedArray(builder, uType, dataForEncoding);
       Column.startColumn(builder);
       Column.addUType(builder, uType);
       Column.addU(builder, tarr);
@@ -388,7 +421,7 @@ export function encodeMatrixFBS(
         encColIndex = encodeTypedArray(
           builder,
           encColIndexUType,
-          utf8Encoder.encode(JSON.stringify(df.colIndex.labels()))
+          df.colIndex.labels()
         );
       } else {
         throw new Error("Index type FBS encoding unsupported");

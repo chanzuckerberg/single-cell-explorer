@@ -1,6 +1,10 @@
 import { vec2 } from "gl-matrix";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
+import {
+  DataframeDictEncodedColumn,
+  isDataframeDictEncodedColumn,
+} from "../util/dataframe/types";
 
 /*
 Action creators for selection
@@ -56,8 +60,11 @@ export const selectCategoricalMetadataAction =
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   ) =>
   async (dispatch: any, getState: any) => {
-    const { obsCrossfilter: prevObsCrossfilter, categoricalSelection } =
-      getState();
+    const {
+      obsCrossfilter: prevObsCrossfilter,
+      categoricalSelection,
+      annoMatrix,
+    } = getState();
 
     const labelSelectionState = new Map(categoricalSelection[metadataField]);
     labels.forEach(
@@ -66,12 +73,26 @@ export const selectCategoricalMetadataAction =
     );
     labelSelectionState.set(label, isSelected);
 
-    const values = Array.from(labelSelectionState.keys()).filter((k) =>
+    // Get selected label strings
+    const selectedLabels = Array.from(labelSelectionState.keys()).filter((k) =>
       labelSelectionState.get(k)
     );
+
+    // For dict-encoded columns, convert label strings to codes for crossfilter
+    let selectionValues = selectedLabels;
+    // Fetch the column data to check if it's dict-encoded
+    const categoryDf = await annoMatrix.fetch("obs", metadataField);
+    const column = categoryDf.icol(0);
+    if (isDataframeDictEncodedColumn(column)) {
+      const { invCodeMapping } = column as DataframeDictEncodedColumn;
+      selectionValues = selectedLabels.map(
+        (labelStr) => invCodeMapping[labelStr as string]
+      );
+    }
+
     const selection = {
       mode: "exact",
-      values,
+      values: selectionValues,
     };
     const obsCrossfilter = await prevObsCrossfilter.select(
       "obs",
@@ -111,6 +132,8 @@ export const selectCategoricalAllMetadataAction =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     labels.forEach((label: any) => labelSelectionState.set(label, isSelected));
 
+    // Note: for "all" or "none" mode, we don't need to convert to codes
+    // since the crossfilter selects everything or nothing regardless of values
     const selection = { mode: isSelected ? "all" : "none" };
     const obsCrossfilter = await prevObsCrossfilter.select(
       "obs",

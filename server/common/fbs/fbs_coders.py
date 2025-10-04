@@ -103,7 +103,15 @@ class CategoricalCoder:
         arr.Init(u.Bytes, u.Pos)
         codes = arr.CodesAsNumpy()
         dictionary = arr.DictAsNumpy()
-        dictionary = json.loads(dictionary.tobytes().decode("utf-8"))
+        if isinstance(dictionary, (bytes, bytearray)):
+            buffer = dictionary
+        elif hasattr(dictionary, "tobytes"):
+            buffer = dictionary.tobytes()
+        elif isinstance(dictionary, (list, tuple)):
+            buffer = bytes(dictionary)
+        else:
+            buffer = bytes([dictionary]) if isinstance(dictionary, int) else bytes(dictionary)
+        dictionary = json.loads(buffer.decode("utf-8"))
         return pd.Categorical.from_codes(codes, categories=list(dictionary.values()))
 
 

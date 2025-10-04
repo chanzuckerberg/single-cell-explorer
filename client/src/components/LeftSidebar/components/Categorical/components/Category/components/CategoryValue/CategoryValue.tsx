@@ -73,16 +73,18 @@ const mapStateToProps = (
   } = ownProps;
 
   const label = categorySummary.categoryValues[categoryIndex];
+  const labelKey = String(label);
   const isDilated =
     pointDilation.metadataField === metadataField &&
-    pointDilation.categoryField === _currentLabelAsString(label);
+    pointDilation.categoryField === _currentLabelAsString(labelKey);
 
   const category = categoricalSelection[metadataField];
   const col = categoryData.icol(0);
-  const labelName = isDataframeDictEncodedColumn(col)
-    ? col.codeMapping[parseInt(label as string, 10)]
+  const mappedLabel = isDataframeDictEncodedColumn(col)
+    ? col.codeMapping[parseInt(labelKey, 10)]
     : label;
-  const isSelected = category.get(label as string) ?? true;
+  const labelName = mappedLabel ?? labelKey;
+  const isSelected = category.get(labelKey) ?? true;
 
   const isColorBy =
     metadataField === colorAccessor &&
@@ -91,8 +93,8 @@ const mapStateToProps = (
     schema: state.annoMatrix?.schema,
     isDilated,
     isSelected,
-    label: label as string,
-    labelName: labelName as string,
+    label: labelKey,
+    labelName: String(labelName),
     isColorBy,
   };
 };
@@ -295,8 +297,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       groupBy
     );
 
-    const bins = histogramMap.has(categoryValue)
-      ? (histogramMap.get(categoryValue) as ContinuousHistogram)
+    // For dict-encoded columns, categoryValue is a label string but histogramMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const bins = histogramMap.has(lookupValue)
+      ? (histogramMap.get(lookupValue) as ContinuousHistogram)
       : new Array<number>(50).fill(0);
 
     const xScale = d3.scaleLinear().domain([0, bins.length]).range([0, width]);
@@ -332,7 +341,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    const occupancy = occupancyMap.get(categoryValue);
+    // For dict-encoded columns, categoryValue is a label string but occupancyMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const occupancy = occupancyMap.get(lookupValue);
 
     if (occupancy && occupancy.size > 0) {
       // not all categories have occupancy, so occupancy may be undefined.
@@ -344,13 +360,32 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       const { categories } = schema.annotations.obsByName[colorAccessor];
 
       const dfColumn = colorData.col(colorAccessor);
-      const categoryValues = dfColumn.summarizeCategorical().categories;
+
+      // Use the same logic as normalization to get consistent categories
+      let categoryValues;
+      let normalizedOccupancy = occupancy;
+
+      if (isDataframeDictEncodedColumn(dfColumn)) {
+        // Extract unique label strings from the codeMapping
+        categoryValues = Object.values(dfColumn.codeMapping);
+
+        // Convert occupancy map keys from codes to labels
+        normalizedOccupancy = new Map();
+        occupancy.forEach((value, key) => {
+          const labelKey = dfColumn.codeMapping[key as number];
+          if (labelKey !== undefined) {
+            normalizedOccupancy.set(labelKey, value);
+          }
+        });
+      } else {
+        categoryValues = dfColumn.summarizeCategorical().categories;
+      }
 
       return {
         domainValues: categoryValues,
         scale,
         domain: categories,
-        occupancy,
+        occupancy: normalizedOccupancy,
       };
     }
     return null;
@@ -426,11 +461,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       label,
       colorMode,
     } = this.props;
+
     const isColorBy =
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
 
-    if (!schema) return null;
+    if (!schema) {
+      return null;
+    }
     if (
       !this.shouldRenderStackedBarOrHistogram ||
       colorMode === "color by expression" ||
@@ -441,17 +479,18 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       return null;
     }
 
-    const { domainValues, scale, domain, occupancy } =
-      this.createStackedGraphBins(
-        metadataField,
-        categoryData,
-        colorAccessor,
-        colorData,
-        label,
-        colorTable,
-        schema,
-        STACKED_BAR_WIDTH
-      ) ?? {};
+    const result = this.createStackedGraphBins(
+      metadataField,
+      categoryData,
+      colorAccessor,
+      colorData,
+      label,
+      colorTable,
+      schema,
+      STACKED_BAR_WIDTH
+    );
+
+    const { domainValues, scale, domain, occupancy } = result ?? {};
 
     if (!domainValues || !scale || !domain || !occupancy) {
       return null;

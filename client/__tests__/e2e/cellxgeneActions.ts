@@ -397,6 +397,27 @@ export async function assertColorLegendLabel(
 
   return expect(result).toBe(label);
 }
+
+export async function assertCategoryColorSquareVisible(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  // Wait for the category to be expanded first
+  await expandCategory(categoryName, page);
+
+  // Find the specific count element for our category-label combination
+  const specificElement = page.locator(`[data-testfield="${categoryName}-${labelName}"]`);
+  await expect(specificElement).toBeVisible();
+  
+  // Find the SVG in the same categorical row
+  // Navigate up to the categorical-row div, then find the SVG within it
+  const parentRow = specificElement.locator("xpath=ancestor::div[@data-testid='categorical-row']");
+  const svgInRow = parentRow.locator("svg");
+  
+  // The SVG should be visible after coloring by the category
+  await expect(svgInRow).toBeVisible({ timeout: 15000 });
+}
 export async function addGeneToSetAndExpand(
   genesetName: string,
   geneSymbol: string,
@@ -597,7 +618,7 @@ export async function removeGene(
 ): Promise<void> {
   // Click the more actions dropdown for the gene
   await page.getByTestId(`more-actions:${geneSymbol}`).click();
-  
+
   // Click the "Delete from Gene Set" menu item
   await tryUntil(
     async () => {
@@ -1003,6 +1024,189 @@ export async function showImageUnderlayInTestMode(page: Page) {
     },
     { page }
   );
+}
+
+/**
+ * ANNOTATION FUNCTIONS
+ */
+
+export async function createCategory(
+  categoryName: string,
+  page: Page
+): Promise<void> {
+  await page.getByTestId("open-annotation-dialog").click();
+  await typeInto("new-category-name", categoryName, page);
+  await page.getByTestId("submit-category").click();
+
+  // Wait for the category to appear
+  await tryUntil(
+    async () => {
+      await expect(
+        page.getByTestId(`${categoryName}:category-expand`)
+      ).toBeVisible();
+    },
+    { page }
+  );
+}
+
+export async function clearCellSelection(page: Page): Promise<void> {
+  // Try multiple approaches to clear cell selection
+  // First try pressing Escape key to clear any selections
+  try {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(100);
+  } catch (error) {
+    // Ignore
+  }
+
+  // Try clicking on the graph area 
+  try {
+    const graphElement = page.getByTestId('layout-graph').first();
+    await graphElement.click({ position: { x: 100, y: 100 }, timeout: 2000, force: true });
+    await page.waitForTimeout(100);
+  } catch (error) {
+    // Ignore
+  }
+
+  // Try clicking elsewhere on the page
+  try {
+    await page.mouse.click(300, 300);
+    await page.waitForTimeout(100);
+  } catch (error) {
+    // Ignore
+  }
+
+  // As a final attempt, try clicking on an empty area of the sidebar
+  try {
+    const sidebar = page.locator('[data-testid="left-sidebar"]').first();
+    if (await sidebar.isVisible()) {
+      await sidebar.click({ position: { x: 50, y: 50 }, force: true });
+    }
+  } catch (error) {
+    // Ignore
+  }
+}
+
+export async function addLabelToCategory(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  // Clear any existing cell selection first
+  await clearCellSelection(page);
+
+  // First expand the category if not already expanded
+  await expandCategory(categoryName, page);
+
+  // Click the add label button
+  await page.getByTestId(`${categoryName}:add-label`).click();
+
+  // Wait for the dialog to appear
+  await expect(page.getByTestId(`${categoryName}:new-label-name`)).toBeVisible();
+
+  // Type the label name - the test ID is dynamic based on category name
+  await typeInto(`${categoryName}:new-label-name`, labelName, page);
+
+  // Submit the label - use the exact "Add label" button (not the one with cell assignment)
+  await page.getByRole("button", { name: "Add label", exact: true }).click();
+
+  // Wait for the dialog to close (this indicates the action was attempted)
+  await expect(page.getByTestId(`${categoryName}:new-label-name`)).not.toBeVisible();
+  
+  // Note: We don't validate that the label was actually created here
+  // That validation is handled by assertLabelExists in the test itself
+  // This function just handles the UI interaction of attempting to create a label
+}
+
+export async function addLabelToCategoryWithSelection(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  // First expand the category if not already expanded
+  await expandCategory(categoryName, page);
+
+  // Click the add label button
+  await page.getByTestId(`${categoryName}:add-label`).click();
+
+  // Type the label name - the test ID is dynamic based on category name
+  await typeInto(`${categoryName}:new-label-name`, labelName, page);
+
+  // Submit the label with cell assignment - use the button that assigns selected cells
+  await page
+    .getByRole("button", { name: /Add label & assign .* selected cells/ })
+    .click();
+
+  // Wait for the label to appear
+  await tryUntil(
+    async () => {
+      await expect(
+        page.getByTestId(
+          `categorical-value-select-${categoryName}-${labelName}`
+        )
+      ).toBeVisible();
+    },
+    { page }
+  );
+}
+
+export async function selectCategoryLabel(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  await page
+    .getByTestId(`categorical-value-select-${categoryName}-${labelName}`)
+    .click({ force: true });
+}
+
+export async function colorByCategory(
+  categoryName: string,
+  page: Page
+): Promise<void> {
+  await page.getByTestId(`colorby-${categoryName}`).click();
+  await waitUntilNoSkeletonDetected(page);
+}
+
+export async function assertCategoryExists(
+  categoryName: string,
+  page: Page
+): Promise<void> {
+  await expect(
+    page.getByTestId(`${categoryName}:category-expand`)
+  ).toBeVisible();
+}
+
+export async function assertCategoryDoesNotExist(
+  categoryName: string,
+  page: Page
+): Promise<void> {
+  await expect(
+    page.getByTestId(`${categoryName}:category-expand`)
+  ).not.toBeVisible();
+}
+
+export async function assertLabelExists(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  await expect(
+    page.getByTestId(`categorical-value-select-${categoryName}-${labelName}`)
+  ).toBeVisible();
+}
+
+export async function assertLabelDoesNotExist(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  await expect(
+    page.getByTestId(`categorical-value-select-${categoryName}-${labelName}`)
+  ).not.toBeVisible();
 }
 
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */

@@ -39,6 +39,8 @@ stack:
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: CELLXGENE_DISABLE_AUTH
+          value: "true"
       ingress:
         rules:
           - host: cellxgene.cziscience.com

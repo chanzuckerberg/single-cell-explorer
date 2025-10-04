@@ -682,7 +682,7 @@ class EndPoints(BaseTest):
                 annotations_genesets_readonly = params["annotations_genesets_readonly"]
                 annotations_genesets_summary_methods = params["annotations_genesets_summary_methods"]
                 self.assertTrue(annotations_genesets)
-                self.assertTrue(annotations_genesets_readonly)
+                self.assertFalse(annotations_genesets_readonly)
                 self.assertEqual(annotations_genesets_summary_methods, ["mean"])
 
     def test_get_summaryvar(self):
