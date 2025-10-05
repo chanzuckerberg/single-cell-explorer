@@ -410,13 +410,23 @@ export async function assertCategoryColorSquareVisible(
   const specificElement = page.locator(`[data-testfield="${categoryName}-${labelName}"]`);
   await expect(specificElement).toBeVisible();
   
-  // Find the SVG in the same categorical row
-  // Navigate up to the categorical-row div, then find the SVG within it
+  // Find the color square SVG specifically - it should have a background color set
+  // and not have a data-icon attribute (which the "more" button has)
   const parentRow = specificElement.locator("xpath=ancestor::div[@data-testid='categorical-row']");
-  const svgInRow = parentRow.locator("svg");
+  const colorSquareSvg = parentRow.locator("svg:not([data-icon])").first();
   
-  // The SVG should be visible after coloring by the category
-  await expect(svgInRow).toBeVisible({ timeout: 15000 });
+  // The color square SVG should be visible after coloring by the category
+  await expect(colorSquareSvg).toBeVisible({ timeout: 15000 });
+  
+  // Additionally verify it has a background color (which indicates it's actually colored)
+  const backgroundColor = await colorSquareSvg.evaluate((el) => 
+    window.getComputedStyle(el).backgroundColor
+  );
+  
+  // The background should not be transparent or inherit
+  expect(backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  expect(backgroundColor).not.toBe("transparent");
+  expect(backgroundColor).not.toBe("inherit");
 }
 export async function addGeneToSetAndExpand(
   genesetName: string,
@@ -1099,7 +1109,7 @@ export async function addLabelToCategory(
   await expandCategory(categoryName, page);
 
   // Click the add label button
-  await page.getByTestId(`${categoryName}:add-label`).click();
+  await page.getByTestId(`${categoryName}:add-new-label-to-category`).click();
 
   // Wait for the dialog to appear
   await expect(page.getByTestId(`${categoryName}:new-label-name`)).toBeVisible();
@@ -1127,7 +1137,7 @@ export async function addLabelToCategoryWithSelection(
   await expandCategory(categoryName, page);
 
   // Click the add label button
-  await page.getByTestId(`${categoryName}:add-label`).click();
+  await page.getByTestId(`${categoryName}:add-new-label-to-category`).click();
 
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);

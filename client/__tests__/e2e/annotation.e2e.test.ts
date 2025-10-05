@@ -546,7 +546,11 @@ for (const testDataset of testDatasets) {
             await assertCategoryExists(TEST_CATEGORY_NAME, page);
 
             // Rename the category
-            await renameCategory(TEST_CATEGORY_NAME, RENAMED_CATEGORY_NAME, page);
+            await renameCategory(
+              TEST_CATEGORY_NAME,
+              RENAMED_CATEGORY_NAME,
+              page
+            );
 
             // Verify category was renamed
             await assertCategoryDoesNotExist(TEST_CATEGORY_NAME, page);
@@ -603,7 +607,11 @@ for (const testDataset of testDatasets) {
             await deleteLabel(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
 
             // Verify label was deleted
-            await assertLabelDoesNotExist(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+            await assertLabelDoesNotExist(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
 
             await snapshotTestGraph(
               page,
@@ -661,8 +669,16 @@ for (const testDataset of testDatasets) {
             );
 
             // Verify label was renamed
-            await assertLabelDoesNotExist(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
-            await assertLabelExists(TEST_CATEGORY_NAME, RENAMED_LABEL_NAME, page);
+            await assertLabelDoesNotExist(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+            await assertLabelExists(
+              TEST_CATEGORY_NAME,
+              RENAMED_LABEL_NAME,
+              page
+            );
 
             await snapshotTestGraph(
               page,
