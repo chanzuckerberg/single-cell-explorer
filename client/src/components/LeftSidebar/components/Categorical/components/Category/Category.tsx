@@ -26,6 +26,8 @@ import {
   thunkTrackColorByCategoryHighlightHistogram,
 } from "./analytics";
 import AddLabelDialog from "../AddLabelDialog";
+import AnnoMenuCategory from "./components/AnnoMenuCategory/AnnoMenuCategory";
+import AnnoDialogEditCategoryName from "./components/AnnoDialogEditCategoryName/AnnoDialogEditCategoryName";
 
 const LABEL_WIDTH = globals.leftSidebarWidth - 100;
 
@@ -53,6 +55,7 @@ interface StateProps {
   crossfilter: RootState["obsCrossfilter"];
   genesets: RootState["genesets"]["genesets"];
   isCellGuideCxg: boolean;
+  annotations: RootState["annotations"];
 }
 
 interface DispatchProps {
@@ -78,6 +81,7 @@ const mapStateToProps = (
     crossfilter: state.obsCrossfilter,
     genesets: state.genesets.genesets,
     isCellGuideCxg: state.controls.isCellGuideCxg,
+    annotations: state.annotations,
   };
 };
 
@@ -159,8 +163,13 @@ class Category extends React.PureComponent<CategoryProps> {
   };
 
   handleCategoryClick = () => {
-    const { metadataField, onExpansionChange } = this.props;
-    onExpansionChange(metadataField);
+    const { annotations, metadataField, onExpansionChange } = this.props;
+    const editingCategory =
+      annotations.isEditingCategoryName &&
+      annotations.categoryBeingEdited === metadataField;
+    if (!editingCategory) {
+      onExpansionChange(metadataField);
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
@@ -379,7 +388,6 @@ class Category extends React.PureComponent<CategoryProps> {
                   colorMode={colorMode || ""}
                   isCellGuideCxg={isCellGuideCxg}
                   isUserAnnotation={isUserAnnotation}
-                  onAddLabelClick={() => this.handleAddLabel(metadataField)}
                 />
               );
             }}
@@ -431,7 +439,6 @@ interface CategoryHeaderProps {
   onCategoryMenuKeyPress: (event: React.KeyboardEvent<HTMLSpanElement>) => void;
   onCategoryToggleAllClick: () => void;
   isUserAnnotation: boolean;
-  onAddLabelClick: () => void;
 }
 
 const CategoryHeader = React.memo(
@@ -446,7 +453,6 @@ const CategoryHeader = React.memo(
     onCategoryMenuKeyPress,
     onCategoryToggleAllClick,
     isUserAnnotation,
-    onAddLabelClick,
   }: CategoryHeaderProps) => {
     /*
     Render category name and controls (eg, color-by button).
@@ -524,20 +530,12 @@ const CategoryHeader = React.memo(
 
         <div className="ignore-capture">
           {isUserAnnotation ? (
-            <Tooltip
-              content="Add label"
-              position={Position.LEFT}
-              usePortal
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <Button
-                data-testid={`${metadataField}:add-label`}
-                icon="plus"
-                minimal
-                small
-                onClick={onAddLabelClick}
-              />
-            </Tooltip>
+            <AnnoMenuCategory
+              metadataField={metadataField}
+              createText="Add a new label to this category"
+              editText="Edit this category's name"
+              deleteText="Delete this category, all associated labels, and remove all cell assignments"
+            />
           ) : null}
           <Tooltip
             content="Use as color scale"
@@ -581,7 +579,6 @@ interface CategoryRenderProps {
   colorMode: string;
   isCellGuideCxg: boolean;
   isUserAnnotation: boolean;
-  onAddLabelClick: () => void;
 }
 
 const CategoryRender = React.memo(
@@ -603,7 +600,6 @@ const CategoryRender = React.memo(
     colorMode,
     isCellGuideCxg,
     isUserAnnotation,
-    onAddLabelClick,
   }: CategoryRenderProps) => {
     /*
     Render the core of the category, including checkboxes, controls, etc.
@@ -647,11 +643,13 @@ const CategoryRender = React.memo(
             onCategoryMenuClick={onCategoryMenuClick}
             onCategoryMenuKeyPress={onCategoryMenuKeyPress}
             isUserAnnotation={isUserAnnotation}
-            onAddLabelClick={onAddLabelClick}
           />
         </div>
         {isUserAnnotation ? (
-          <AddLabelDialog metadataField={metadataField} />
+          <>
+            <AnnoDialogEditCategoryName metadataField={metadataField} />
+            <AddLabelDialog metadataField={metadataField} />
+          </>
         ) : null}
         <div style={{ marginLeft: 26 }}>
           {

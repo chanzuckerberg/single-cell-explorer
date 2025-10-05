@@ -342,6 +342,101 @@ class CxgDataset(Dataset):
                 self._write_annotation_column(user_root_uri, column, dataframe[column], n_obs)
                 existing.pop(column, None)
 
+    def delete_obs_annotation_category(
+        self,
+        category_name: str,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Delete a user annotation category by removing its TileDB array."""
+        if user_id is None:
+            raise ValueError("User ID is required for deleting annotation category")
+
+        if not category_name or not isinstance(category_name, str):
+            raise ValueError("Category name must be a non-empty string")
+
+        user_root_uri = self._user_root_uri(user_id)
+        existing_arrays = self._list_annotation_arrays(user_root_uri)
+
+        if category_name not in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{category_name}' not found")
+
+        array_uri = existing_arrays[category_name]
+        try:
+            # Remove the TileDB array
+            tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+            logging.info(f"Deleted annotation category '{category_name}' for user {user_id}")
+        except TileDBError as e:
+            raise DatasetAccessError(f"Failed to delete annotation category '{category_name}': {str(e)}")
+
+    def rename_obs_annotation_category(
+        self,
+        old_category_name: str,
+        new_category_name: str,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Rename a user annotation category by renaming its TileDB array."""
+        if user_id is None:
+            raise ValueError("User ID is required for renaming annotation category")
+
+        if not old_category_name or not isinstance(old_category_name, str):
+            raise ValueError("Old category name must be a non-empty string")
+
+        if not new_category_name or not isinstance(new_category_name, str):
+            raise ValueError("New category name must be a non-empty string")
+
+        if old_category_name == new_category_name:
+            return  # No-op if names are the same
+
+        user_root_uri = self._user_root_uri(user_id)
+        existing_arrays = self._list_annotation_arrays(user_root_uri)
+
+        if old_category_name not in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{old_category_name}' not found")
+
+        if new_category_name in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{new_category_name}' already exists")
+
+        old_array_uri = existing_arrays[old_category_name]
+        new_array_uri = self._annotation_array_uri(user_root_uri, new_category_name)
+
+        try:
+            # Check if VFS supports move operation (works for both filesystem and S3)
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+
+            # Try VFS move first - this is atomic and works for both filesystem and S3
+            try:
+                vfs.move_dir(old_array_uri, new_array_uri)
+
+                # Update the column_name metadata in the moved array
+                with tiledb.open(new_array_uri, mode="w", ctx=self.tiledb_ctx) as new_arr:
+                    new_arr.meta["column_name"] = new_category_name
+
+                logging.info(
+                    f"Renamed annotation category '{old_category_name}' to '{new_category_name}' using VFS move"
+                )
+                return
+
+            except TileDBError:
+                # VFS move failed, fall back to copy-delete approach
+                logging.warning(f"VFS move failed for '{old_category_name}', falling back to copy-delete")
+                pass
+
+            logging.info(
+                f"Renamed annotation category '{old_category_name}' to '{new_category_name}' using copy-delete"
+            )
+
+        except TileDBError as e:
+            # If something went wrong, try to clean up the new array if it was created
+            try:
+                if tiledb.object_type(new_array_uri, ctx=self.tiledb_ctx) == "array":
+                    tiledb.remove(new_array_uri, ctx=self.tiledb_ctx)
+            except TileDBError:
+                pass  # Ignore cleanup errors
+
+            raise DatasetAccessError(
+                f"Failed to rename annotation category '{old_category_name}' to '{new_category_name}': {str(e)}"
+            )
+
     def get_saved_obs_annotations(
         self,
         user_id: Optional[str] = None,

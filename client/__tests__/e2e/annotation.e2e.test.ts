@@ -27,9 +27,14 @@ import {
   assertCategoryExists,
   assertCategoryDoesNotExist,
   assertLabelExists,
+  assertLabelDoesNotExist,
   assertCategoryColorSquareVisible,
   keyboardUndo,
   keyboardRedo,
+  deleteCategory,
+  renameCategory,
+  deleteLabel,
+  renameLabel,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -48,6 +53,8 @@ const { describe } = test;
 const TEST_CATEGORY_NAME = "test_category";
 const TEST_LABEL_NAME = "test_label";
 const SECOND_LABEL_NAME = "second_label";
+const RENAMED_CATEGORY_NAME = "renamed_category";
+const RENAMED_LABEL_NAME = "renamed_label";
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -503,6 +510,163 @@ for (const testDataset of testDatasets) {
             await snapshotTestGraph(
               page,
               `${getSnapshotPrefix(testInfo)}-final-colored`,
+              testInfo
+            );
+          });
+
+          test("delete category", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            // Create a category first
+            await createCategory(TEST_CATEGORY_NAME, page);
+            await assertCategoryExists(TEST_CATEGORY_NAME, page);
+
+            // Delete the category
+            await deleteCategory(TEST_CATEGORY_NAME, page);
+
+            // Verify category was deleted
+            await assertCategoryDoesNotExist(TEST_CATEGORY_NAME, page);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("rename category", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+
+            // Create a category first
+            await createCategory(TEST_CATEGORY_NAME, page);
+            await assertCategoryExists(TEST_CATEGORY_NAME, page);
+
+            // Rename the category
+            await renameCategory(TEST_CATEGORY_NAME, RENAMED_CATEGORY_NAME, page);
+
+            // Verify category was renamed
+            await assertCategoryDoesNotExist(TEST_CATEGORY_NAME, page);
+            await assertCategoryExists(RENAMED_CATEGORY_NAME, page);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("delete label", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Create category and add label
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection for the label
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.3,
+                y1: 0.3,
+                x2: 0.7,
+                y2: 0.7,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
+            });
+
+            // Add label with selection
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+
+            // Verify label exists
+            await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+            // Delete the label
+            await deleteLabel(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+            // Verify label was deleted
+            await assertLabelDoesNotExist(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("rename label", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Create category and add label
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection for the label
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.3,
+                y1: 0.3,
+                x2: 0.7,
+                y2: 0.7,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
+            });
+
+            // Add label with selection
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+
+            // Verify label exists
+            await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+            // Rename the label
+            await renameLabel(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              RENAMED_LABEL_NAME,
+              page
+            );
+
+            // Verify label was renamed
+            await assertLabelDoesNotExist(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+            await assertLabelExists(TEST_CATEGORY_NAME, RENAMED_LABEL_NAME, page);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
               testInfo
             );
           });

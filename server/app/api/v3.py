@@ -143,8 +143,16 @@ class AnnotationsObsAPI(S3URIResource):
     @cache_control(no_store=True)
     @rest_get_s3uri_data_adaptor
     def put(self, data_adaptor):
-        return common_rest.annotations_obs_put(request, data_adaptor)
-
+        # Check if this is a category rename operation
+        if request.args.get('rename'):
+            return common_rest.annotations_obs_category_rename(request, data_adaptor)
+        else:
+            return common_rest.annotations_obs_put(request, data_adaptor)
+    
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def delete(self, data_adaptor):
+        return common_rest.annotations_obs_category_delete(request, data_adaptor)
 
 class AnnotationsVarAPI(S3URIResource):
     @cache_control(immutable=True, max_age=ONE_YEAR)

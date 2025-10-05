@@ -100,7 +100,7 @@ export const annotationCreateCategoryAction =
 
 export const annotationRenameCategoryAction =
   (oldCategoryName: string, newCategoryName: string): ThunkResult =>
-  (dispatch: AppDispatch, getState: GetState) => {
+  async (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -111,6 +111,7 @@ export const annotationRenameCategoryAction =
     const trimmedName = newCategoryName.trim();
     if (!trimmedName || trimmedName === oldCategoryName) return;
 
+    // Update in-memory state first
     const obsCrossfilter = prevObsCrossfilter.renameObsColumn(
       oldCategoryName,
       trimmedName
@@ -124,11 +125,47 @@ export const annotationRenameCategoryAction =
       newCategoryText: trimmedName,
       data: trimmedName,
     });
+
+    // Reset autosave state to prevent trying to save stale annotation data
+    dispatch({
+      type: "writable obs annotations - save complete",
+      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+    });
+
+    // Persist to backend
+    try {
+      const response = await fetch(
+        `${globals.API?.prefix ?? ""}${
+          globals.API?.version ?? ""
+        }annotations/obs?rename=true&category_name=${encodeURIComponent(
+          oldCategoryName
+        )}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ new_name: trimmedName }),
+          headers: new Headers({
+            "Content-Type": "application/json",
+          }),
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          `Failed to rename category on backend: ${response.status} - ${response.statusText}`
+        );
+        // Note: We don't revert the local state here since the user expects the UI to reflect their action
+        // The backend rename failure will be logged but won't block the UI
+      }
+    } catch (error) {
+      console.error("Failed to rename category on backend:", error);
+      // Same as above - don't revert local state
+    }
   };
 
 export const annotationDeleteCategoryAction =
   (categoryName: string): ThunkResult =>
-  (dispatch: AppDispatch, getState: GetState) => {
+  async (dispatch: AppDispatch, getState: GetState) => {
     const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
       getState();
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
@@ -136,6 +173,7 @@ export const annotationDeleteCategoryAction =
       throw new Error("not a user annotation");
     }
 
+    // Update in-memory state first
     const obsCrossfilter = prevObsCrossfilter.dropObsColumn(categoryName);
     dispatch({
       type: "annotation: delete category",
@@ -143,6 +181,36 @@ export const annotationDeleteCategoryAction =
       obsCrossfilter,
       metadataField: categoryName,
     });
+
+    // Reset autosave state to prevent trying to save stale annotation data
+    dispatch({
+      type: "writable obs annotations - save complete",
+      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+    });
+
+    // Persist to backend
+    try {
+      const response = await fetch(
+        `${globals.API?.prefix ?? ""}${
+          globals.API?.version ?? ""
+        }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        console.error(
+          `Failed to delete category on backend: ${response.status} - ${response.statusText}`
+        );
+        // Note: We don't revert the local state here since the user expects the UI to reflect their action
+        // The backend deletion failure will be logged but won't block the UI
+      }
+    } catch (error) {
+      console.error("Failed to delete category on backend:", error);
+      // Same as above - don't revert local state
+    }
   };
 
 export const annotationCreateLabelInCategory =
@@ -318,18 +386,43 @@ export function changedWritableAnnotations(
       } else if (currentHas && !lastHas) {
         changed.add(col);
       }
-      // We do not attempt to save deletions here; deletions are handled by dedicated actions.
     }
   }
 
   return Array.from(changed);
 }
 
+export function deletedWritableAnnotations(
+  annoMatrix: AnnoMatrix | undefined | null,
+  lastSavedAnnoMatrix: AnnoMatrix | null
+): string[] {
+  if (!annoMatrix || !lastSavedAnnoMatrix) return [];
+
+  const currentBase = annoMatrix.base();
+  const lastBase = lastSavedAnnoMatrix.base();
+
+  if (currentBase === lastBase) return [];
+
+  const currentWritable = writableAnnotations(currentBase);
+  const lastWritable = writableAnnotations(lastBase);
+
+  // Find columns that existed in last save but no longer exist
+  const deleted: string[] = [];
+  for (const col of lastWritable) {
+    if (!currentWritable.includes(col)) {
+      deleted.push(col);
+    }
+  }
+
+  return deleted;
+}
+
 export const needToSaveObsAnnotations = (
   annoMatrix: AnnoMatrix | undefined,
   lastSavedAnnoMatrix: AnnoMatrix | null
 ): boolean =>
-  changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0;
+  changedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0 ||
+  deletedWritableAnnotations(annoMatrix, lastSavedAnnoMatrix).length > 0;
 
 export const saveObsAnnotationsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
@@ -348,7 +441,23 @@ export const saveObsAnnotationsAction =
       annoMatrix,
       lastSavedAnnoMatrix
     );
-    if (changedCols.length === 0) {
+    const deletedCols = deletedWritableAnnotations(
+      annoMatrix,
+      lastSavedAnnoMatrix
+    );
+
+    // If no changes or deletions, mark as complete
+    if (changedCols.length === 0 && deletedCols.length === 0) {
+      dispatch({
+        type: "writable obs annotations - save complete",
+        lastSavedAnnoMatrix: annoMatrix,
+      });
+      return;
+    }
+
+    // If only deletions (no changed data to save), mark as complete
+    // Backend category deletion will be handled separately via dedicated endpoints
+    if (changedCols.length === 0 && deletedCols.length > 0) {
       dispatch({
         type: "writable obs annotations - save complete",
         lastSavedAnnoMatrix: annoMatrix,

@@ -351,6 +351,96 @@ def annotations_obs_put(request, data_adaptor):
         )
 
 
+def annotations_obs_category_delete(request, data_adaptor):
+    if not hasattr(data_adaptor, "delete_obs_annotation_category"):
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+
+    # Get category name from query parameter
+    category_name = request.args.get('category_name')
+    if not category_name:
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            "Category name must be provided as 'category_name' query parameter",
+        )
+
+    user_id = _resolve_request_user_id(request)
+
+    # Reject operations when authentication is disabled
+    if user_id is None:
+        return abort(HTTPStatus.UNAUTHORIZED)
+
+    try:
+        data_adaptor.delete_obs_annotation_category(
+            category_name,
+            user_id=user_id,
+        )
+        return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
+    except NotImplementedError:
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+    except Exception as error:  # pragma: no cover - backend owns persistence errors
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to delete annotation category: {error}",
+            include_exc_info=True,
+        )
+
+
+def annotations_obs_category_rename(request, data_adaptor):
+    if not hasattr(data_adaptor, "rename_obs_annotation_category"):
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+
+    # Get old category name from query parameter
+    old_category_name = request.args.get('category_name')
+    if not old_category_name:
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            "Old category name must be provided as 'category_name' query parameter",
+        )
+
+    # Get new category name from request body
+    try:
+        request_data = request.get_json()
+        if not request_data or "new_name" not in request_data:
+            return abort_and_log(
+                HTTPStatus.BAD_REQUEST,
+                "Request must include 'new_name' in JSON body",
+            )
+        new_category_name = request_data["new_name"]
+        if not isinstance(new_category_name, str) or not new_category_name.strip():
+            return abort_and_log(
+                HTTPStatus.BAD_REQUEST,
+                "New category name must be a non-empty string",
+            )
+    except Exception as error:
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to parse request body: {error}",
+            include_exc_info=True,
+        )
+
+    user_id = _resolve_request_user_id(request)
+
+    # Reject operations when authentication is disabled
+    if user_id is None:
+        return abort(HTTPStatus.UNAUTHORIZED)
+
+    try:
+        data_adaptor.rename_obs_annotation_category(
+            old_category_name,
+            new_category_name.strip(),
+            user_id=user_id,
+        )
+        return make_response(jsonify({"status": "OK"}), HTTPStatus.OK)
+    except NotImplementedError:
+        return abort(HTTPStatus.NOT_IMPLEMENTED)
+    except Exception as error:  # pragma: no cover - backend owns persistence errors
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            f"Failed to rename annotation category: {error}",
+            include_exc_info=True,
+        )
+
+
 def annotations_var_get(request, data_adaptor):
     fields = request.args.getlist("annotation-name", None)
     nBins = request.args.get("nbins", None)

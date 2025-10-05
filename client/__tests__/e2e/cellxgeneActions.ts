@@ -1209,4 +1209,116 @@ export async function assertLabelDoesNotExist(
   ).not.toBeVisible();
 }
 
+/**
+ * Delete a category using the delete action in the category menu
+ */
+export async function deleteCategory(
+  categoryName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  
+  // Hover over the category actions menu button to open the menu
+  await page.getByTestId(`${categoryName}:see-actions`).hover();
+  
+  // Wait for menu to appear and click delete
+  await page.getByTestId(`${categoryName}:delete-category`).click();
+  
+  // Wait for the category to disappear
+  await expect(
+    page.getByTestId(`${categoryName}:category-expand`)
+  ).not.toBeVisible({ timeout: 10000 });
+}
+
+/**
+ * Rename a category using the edit action in the category menu
+ */
+export async function renameCategory(
+  categoryName: string,
+  newCategoryName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  
+  // Hover over the category actions menu button to open the menu
+  await page.getByTestId(`${categoryName}:see-actions`).hover();
+  
+  // Wait for menu to appear and click edit
+  await page.getByTestId(`${categoryName}:edit-category-mode`).click();
+  
+  // Wait for the edit dialog to appear and type the new name
+  const editInput = page.locator(`input[data-testid*="edit-category"], input[placeholder*="category"], input[value="${  categoryName  }"]`).first();
+  await editInput.waitFor({ state: 'visible', timeout: 5000 });
+  await editInput.clear();
+  await editInput.fill(newCategoryName);
+  
+  // Submit the edit (look for submit button)
+  const submitButton = page.getByRole('button', { name: /save|submit|change/i }).first();
+  await submitButton.click();
+  
+  // Wait for the new category name to appear
+  await expect(
+    page.getByTestId(`${newCategoryName}:category-expand`)
+  ).toBeVisible({ timeout: 10000 });
+}
+
+/**
+ * Delete a label from a category using the delete action in the label menu
+ */
+export async function deleteLabel(
+  categoryName: string,
+  labelName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  
+  // Hover over the label actions menu button to open the menu
+  await page.getByTestId(`${categoryName}:${labelName}:see-actions`).hover();
+  
+  // Wait for menu to appear and click delete
+  await page.getByTestId(`${categoryName}:${labelName}:delete-label`).click();
+  
+  // Wait for the label to disappear
+  await expect(
+    page.getByTestId(`categorical-value-select-${categoryName}-${labelName}`)
+  ).not.toBeVisible({ timeout: 10000 });
+}
+
+/**
+ * Rename a label in a category using the edit action in the label menu
+ */
+export async function renameLabel(
+  categoryName: string,
+  oldLabelName: string,
+  newLabelName: string,
+  page: Page
+): Promise<void> {
+  await expandCategory(categoryName, page);
+  
+  // Hover over the label actions menu button to open the menu
+  await page.getByTestId(`${categoryName}:${oldLabelName}:see-actions`).hover();
+  
+  // Wait for menu to appear and click edit
+  await page.getByTestId(`${categoryName}:${oldLabelName}:edit-label`).click();
+  
+  // Wait for the edit dialog to appear
+  await expect(page.locator('div[role="dialog"]')).toBeVisible({ timeout: 5000 });
+  
+  // Clear and type the new label name in the input field
+  const editInput = page.locator('input[type="text"]').last();
+  await editInput.waitFor({ state: 'visible' });
+  await editInput.clear();
+  await editInput.fill(newLabelName);
+  
+  // Submit the edit (look for the primary button)
+  const submitButton = page.getByRole('button', { name: /change|save|submit/i }).first();
+  await submitButton.click();
+  
+  // Wait for the dialog to close and new label to appear
+  await expect(page.locator('div[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
+  await expect(
+    page.getByTestId(`categorical-value-select-${categoryName}-${newLabelName}`)
+  ).toBeVisible({ timeout: 10000 });
+}
+
 /* eslint-enable no-await-in-loop -- await in loop is needed to emulate sequential user actions */
