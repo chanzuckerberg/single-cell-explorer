@@ -65,6 +65,17 @@ unit-test-server:
 smoke-test:
 	cd client && $(MAKE) smoke-test
 
+.PHONY: data-persistence-smoke-tests
+data-persistence-smoke-tests:
+	@echo "Running data persistence smoke tests..."
+	@echo "This will start the server with persistence enabled and run E2E tests"
+	cd client && \
+	start_server_and_test \
+		'SKIP_ATAC_CACHE=true PROJECT_ROOT=$(shell pwd) ../launch_dev_server.sh --config-file ../server/tests/fixtures/test_persistence_config.yaml --port 5005' \
+		5005 \
+		'CXG_URL_BASE="http://localhost:5005" npx playwright test __tests__/e2e/data.persistence.e2e.test.ts'
+
+
 # LINTING AND FORMATTING COMMANDS
 
 .PHONY: fmt
