@@ -356,7 +356,7 @@ def annotations_obs_category_delete(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
     # Get category name from query parameter
-    category_name = request.args.get('category_name')
+    category_name = request.args.get("category_name")
     if not category_name:
         return abort_and_log(
             HTTPStatus.BAD_REQUEST,
@@ -390,7 +390,7 @@ def annotations_obs_category_rename(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
 
     # Get old category name from query parameter
-    old_category_name = request.args.get('category_name')
+    old_category_name = request.args.get("category_name")
     if not old_category_name:
         return abort_and_log(
             HTTPStatus.BAD_REQUEST,

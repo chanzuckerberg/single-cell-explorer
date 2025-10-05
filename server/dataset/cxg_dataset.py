@@ -366,7 +366,7 @@ class CxgDataset(Dataset):
             tiledb.remove(array_uri, ctx=self.tiledb_ctx)
             logging.info(f"Deleted annotation category '{category_name}' for user {user_id}")
         except TileDBError as e:
-            raise DatasetAccessError(f"Failed to delete annotation category '{category_name}': {str(e)}")
+            raise DatasetAccessError(f"Failed to delete annotation category '{category_name}': {str(e)}") from e
 
     def rename_obs_annotation_category(
         self,
@@ -435,7 +435,7 @@ class CxgDataset(Dataset):
 
             raise DatasetAccessError(
                 f"Failed to rename annotation category '{old_category_name}' to '{new_category_name}': {str(e)}"
-            )
+            ) from e
 
     def get_saved_obs_annotations(
         self,
