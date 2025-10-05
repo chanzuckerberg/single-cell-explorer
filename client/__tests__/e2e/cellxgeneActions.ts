@@ -1256,17 +1256,23 @@ export async function renameCategory(
   // Wait for menu to appear and click edit
   await page.getByTestId(`${categoryName}:edit-category-mode`).click();
   
-  // Wait for the edit dialog to appear and type the new name
-  const editInput = page.locator(`input[data-testid*="edit-category"], input[placeholder*="category"], input[value="${  categoryName  }"]`).first();
-  await editInput.waitFor({ state: 'visible', timeout: 5000 });
+  // Wait for the edit dialog to appear
+  await expect(page.locator('div[role="dialog"]')).toBeVisible({ timeout: 5000 });
+  
+  // Find the input field in the dialog - try multiple selectors
+  const editInput = page.locator('input[type="text"]').last();
+  await editInput.waitFor({ state: 'visible' });
+  
+  // Clear the input and type the new name
   await editInput.clear();
   await editInput.fill(newCategoryName);
   
-  // Submit the edit (look for submit button)
-  const submitButton = page.getByRole('button', { name: /save|submit|change/i }).first();
+  // Submit the edit (look for the primary button in the dialog)
+  const submitButton = page.getByRole('button', { name: 'Edit category name' });
   await submitButton.click();
   
-  // Wait for the new category name to appear
+  // Wait for the dialog to close and new category to appear
+  await expect(page.locator('div[role="dialog"]')).not.toBeVisible({ timeout: 5000 });
   await expect(
     page.getByTestId(`${newCategoryName}:category-expand`)
   ).toBeVisible({ timeout: 10000 });

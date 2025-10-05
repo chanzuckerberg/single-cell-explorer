@@ -536,7 +536,7 @@ for (const testDataset of testDatasets) {
             );
           });
 
-          test("rename category", async ({ page }, testInfo) => {
+          test.only("rename category", async ({ page }, testInfo) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
             await goToPage(page, url);

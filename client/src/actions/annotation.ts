@@ -101,8 +101,12 @@ export const annotationCreateCategoryAction =
 export const annotationRenameCategoryAction =
   (oldCategoryName: string, newCategoryName: string): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
-    const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
-      getState();
+    const state = getState();
+    const {
+      annoMatrix: prevAnnoMatrix,
+      obsCrossfilter: prevObsCrossfilter,
+      config,
+    } = state;
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
     if (!isUserAnnotation(prevAnnoMatrix, oldCategoryName)) {
       throw new Error("not a user annotation");
@@ -131,6 +135,12 @@ export const annotationRenameCategoryAction =
       type: "writable obs annotations - save complete",
       lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
     });
+
+    // Only make backend request if annotations are enabled (not in no-auth mode)
+    const writableCategoriesEnabled = !!config?.parameters?.annotations;
+    if (!writableCategoriesEnabled) {
+      return; // Skip backend persistence in no-auth mode
+    }
 
     // Persist to backend
     try {
@@ -166,8 +176,12 @@ export const annotationRenameCategoryAction =
 export const annotationDeleteCategoryAction =
   (categoryName: string): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
-    const { annoMatrix: prevAnnoMatrix, obsCrossfilter: prevObsCrossfilter } =
-      getState();
+    const state = getState();
+    const {
+      annoMatrix: prevAnnoMatrix,
+      obsCrossfilter: prevObsCrossfilter,
+      config,
+    } = state;
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
     if (!isUserAnnotation(prevAnnoMatrix, categoryName)) {
       throw new Error("not a user annotation");
@@ -187,6 +201,12 @@ export const annotationDeleteCategoryAction =
       type: "writable obs annotations - save complete",
       lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
     });
+
+    // Only make backend request if annotations are enabled (not in no-auth mode)
+    const writableCategoriesEnabled = !!config?.parameters?.annotations;
+    if (!writableCategoriesEnabled) {
+      return; // Skip backend persistence in no-auth mode
+    }
 
     // Persist to backend
     try {
