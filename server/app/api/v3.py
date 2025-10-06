@@ -11,6 +11,7 @@ from flask import (
     redirect,
     request,
     send_from_directory,
+    escape,
 )
 from flask_restful import Api, Resource
 
@@ -413,7 +414,7 @@ def register_api_v3(app, app_config, api_url_prefix):
 
                             if not (re.search(user_id_pattern, url_path) or re.search(user_id_pattern, decoded_path)):
                                 return make_response(
-                                    f"User ID mismatch: authenticated user '{user_id}' does not match URL path",
+                                    f"User ID mismatch: authenticated user '{escape(user_id)}' does not match URL path",
                                     HTTPStatus.FORBIDDEN,
                                 )
                     except Exception:
