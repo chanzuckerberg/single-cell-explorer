@@ -9,7 +9,7 @@ server:
     dataroots:
       test_dataroot:
         base_url: d
-        dataroot: "${PROJECT_ROOT}/example-dataset"
+        dataroot: "example-dataset/"
     index: true
 
   gene_info:

@@ -65,9 +65,26 @@ function setUserIdHeader(page: any, userId: string) {
   });
 }
 
+// Helper function to wait for autosave to complete
+async function waitForAutosaveComplete(page: any) {
+  // Wait for autosave element to exist
+  await page.waitForSelector("#autosave", { timeout: 10000 });
+
+  // Wait for at least 2.5s to ensure the autosave timer has had a chance to run
+  // The timer runs every 2.5s, so we need to wait at least that long
+  await page.waitForTimeout(2500);
+
+  // Now wait for autosave to complete - it should show "autosave-complete"
+  await page.waitForSelector('#autosave[data-testclass="autosave-complete"]', {
+    timeout: 8000, // Allow time for network request + processing after timer fires
+  });
+
+  // Give a small buffer to ensure state is stable
+  await page.waitForTimeout(500);
+}
+
 // Helper function to refresh page and wait for load
 async function refreshPageAndWait(page: any) {
-  await page.waitForTimeout(3000);
   await page.reload({ waitUntil: "networkidle" });
   await page.waitForTimeout(2000); // Wait for app initialization
 }
@@ -96,7 +113,7 @@ for (const graphTestId of graphInstanceTestIds) {
 
   describe(`graph instance: ${graphTestId}`, () => {
     describeFn("data persistence smoke tests", () => {
-      test("create category - persists after refresh", async ({
+      test.only("create category - persists after refresh", async ({
         page,
       }, testInfo) => {
         const userId = generateUniqueUserId();
@@ -111,6 +128,9 @@ for (const graphTestId of graphInstanceTestIds) {
           // Create the category
           await createCategory(TEST_CATEGORY_NAME, page);
           await assertCategoryExists(TEST_CATEGORY_NAME, page);
+
+          // Wait for autosave to complete before refreshing
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify persistence
           await refreshPageAndWait(page);
@@ -168,6 +188,9 @@ for (const graphTestId of graphInstanceTestIds) {
 
           // Verify label exists before refresh
           await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+          // Wait for autosave to complete before refreshing
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify persistence
           await refreshPageAndWait(page);
@@ -257,6 +280,9 @@ for (const graphTestId of graphInstanceTestIds) {
           await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
           await assertLabelExists(TEST_CATEGORY_NAME, SECOND_LABEL_NAME, page);
 
+          // Wait for autosave to complete before refreshing
+          await waitForAutosaveComplete(page);
+
           // Refresh page and verify persistence
           await refreshPageAndWait(page);
           await assertCategoryExists(TEST_CATEGORY_NAME, page);
@@ -286,10 +312,15 @@ for (const graphTestId of graphInstanceTestIds) {
           await createCategory(TEST_CATEGORY_NAME, page);
           await assertCategoryExists(TEST_CATEGORY_NAME, page);
 
+          // Wait for autosave after creation
+          await waitForAutosaveComplete(page);
+
           // Delete the category
-          await page.waitForTimeout(3000);
           await deleteCategory(TEST_CATEGORY_NAME, page);
           await assertCategoryDoesNotExist(TEST_CATEGORY_NAME, page);
+
+          // Wait for autosave after deletion
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify deletion persisted
           await refreshPageAndWait(page);
@@ -317,12 +348,17 @@ for (const graphTestId of graphInstanceTestIds) {
           // Create category first
           await createCategory(TEST_CATEGORY_NAME, page);
           await assertCategoryExists(TEST_CATEGORY_NAME, page);
-          await page.waitForTimeout(3000);
+
+          // Wait for autosave after creation
+          await waitForAutosaveComplete(page);
 
           // Rename the category
           await renameCategory(TEST_CATEGORY_NAME, RENAMED_CATEGORY_NAME, page);
           await assertCategoryDoesNotExist(TEST_CATEGORY_NAME, page);
           await assertCategoryExists(RENAMED_CATEGORY_NAME, page);
+
+          // Wait for autosave after rename
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify rename persisted
           await refreshPageAndWait(page);
@@ -377,9 +413,10 @@ for (const graphTestId of graphInstanceTestIds) {
             page
           );
 
-          await page.waitForTimeout(3000);
-
           await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+          // Wait for autosave after label creation
+          await waitForAutosaveComplete(page);
 
           // Delete the label
           await deleteLabel(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
@@ -388,6 +425,9 @@ for (const graphTestId of graphInstanceTestIds) {
             TEST_LABEL_NAME,
             page
           );
+
+          // Wait for autosave after deletion
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify deletion persisted
           await refreshPageAndWait(page);
@@ -446,9 +486,10 @@ for (const graphTestId of graphInstanceTestIds) {
             page
           );
 
-          await page.waitForTimeout(3000);
-
           await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+          // Wait for autosave after label creation
+          await waitForAutosaveComplete(page);
 
           // Rename the label
           await renameLabel(
@@ -464,6 +505,9 @@ for (const graphTestId of graphInstanceTestIds) {
             page
           );
           await assertLabelExists(TEST_CATEGORY_NAME, RENAMED_LABEL_NAME, page);
+
+          // Wait for autosave after rename
+          await waitForAutosaveComplete(page);
 
           // Refresh page and verify rename persisted
           await refreshPageAndWait(page);

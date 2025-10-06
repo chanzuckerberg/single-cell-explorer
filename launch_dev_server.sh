@@ -8,5 +8,6 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel)
 
 export PYTHONPATH=${PROJECT_ROOT}  # permits module discovery when run from somewhere other than top level dir
 
-PROJECT_ROOT=${PROJECT_ROOT} python -m server.cli.launch -d $@
+cd "${PROJECT_ROOT}"
 
+PROJECT_ROOT=${PROJECT_ROOT} python -m server.cli.launch -d $@

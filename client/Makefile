@@ -46,7 +46,7 @@ smoke-test:
 .PHONY: data-persistence-smoke-tests
 data-persistence-smoke-tests:
 	start_server_and_test \
-		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file ../server/tests/fixtures/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
+		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file ./__tests__/e2e/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=data-persistence'
 

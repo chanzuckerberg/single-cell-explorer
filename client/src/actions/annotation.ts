@@ -115,7 +115,7 @@ export const annotationRenameCategoryAction =
     const trimmedName = newCategoryName.trim();
     if (!trimmedName || trimmedName === oldCategoryName) return;
 
-    // Update in-memory state first
+    // Update in-memory state IMMEDIATELY for optimistic UI update
     const obsCrossfilter = prevObsCrossfilter.renameObsColumn(
       oldCategoryName,
       trimmedName
@@ -130,19 +130,18 @@ export const annotationRenameCategoryAction =
       data: trimmedName,
     });
 
-    // Reset autosave state to prevent trying to save stale annotation data
-    dispatch({
-      type: "writable obs annotations - save complete",
-      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
-    });
-
     // Only make backend request if annotations are enabled (not in no-auth mode)
     const writableCategoriesEnabled = !!config?.parameters?.annotations;
     if (!writableCategoriesEnabled) {
-      return; // Skip backend persistence in no-auth mode
+      // In no-auth mode, immediately reset autosave state since there's no backend to wait for
+      dispatch({
+        type: "writable obs annotations - save complete",
+        lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+      });
+      return;
     }
 
-    // Persist to backend
+    // Persist to backend and WAIT for completion
     try {
       const response = await fetch(
         `${globals.API?.prefix ?? ""}${
@@ -171,6 +170,13 @@ export const annotationRenameCategoryAction =
       console.error("Failed to rename category on backend:", error);
       // Same as above - don't revert local state
     }
+
+    // Reset autosave state AFTER backend completes to prevent autosave from trying
+    // to save to the old category name while the backend file is being renamed
+    dispatch({
+      type: "writable obs annotations - save complete",
+      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+    });
   };
 
 export const annotationDeleteCategoryAction =
@@ -187,7 +193,7 @@ export const annotationDeleteCategoryAction =
       throw new Error("not a user annotation");
     }
 
-    // Update in-memory state first
+    // Update in-memory state IMMEDIATELY for optimistic UI update
     const obsCrossfilter = prevObsCrossfilter.dropObsColumn(categoryName);
     dispatch({
       type: "annotation: delete category",
@@ -196,19 +202,18 @@ export const annotationDeleteCategoryAction =
       metadataField: categoryName,
     });
 
-    // Reset autosave state to prevent trying to save stale annotation data
-    dispatch({
-      type: "writable obs annotations - save complete",
-      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
-    });
-
     // Only make backend request if annotations are enabled (not in no-auth mode)
     const writableCategoriesEnabled = !!config?.parameters?.annotations;
     if (!writableCategoriesEnabled) {
-      return; // Skip backend persistence in no-auth mode
+      // In no-auth mode, immediately reset autosave state since there's no backend to wait for
+      dispatch({
+        type: "writable obs annotations - save complete",
+        lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+      });
+      return;
     }
 
-    // Persist to backend
+    // Persist to backend and WAIT for completion
     try {
       const response = await fetch(
         `${globals.API?.prefix ?? ""}${
@@ -231,6 +236,13 @@ export const annotationDeleteCategoryAction =
       console.error("Failed to delete category on backend:", error);
       // Same as above - don't revert local state
     }
+
+    // Reset autosave state AFTER backend completes to prevent autosave from trying
+    // to save the deleted category while the backend file is being deleted
+    dispatch({
+      type: "writable obs annotations - save complete",
+      lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
+    });
   };
 
 export const annotationCreateLabelInCategory =
