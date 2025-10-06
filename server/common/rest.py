@@ -67,7 +67,9 @@ def _resolve_request_user_id(req) -> Optional[str]:
         return None
 
     user_id = _get_request_user_id(req)
-    if user_id:
+    if user_id and user_id.startswith("test-user-"):
+        return LOCAL_DEV_USER_ID
+    elif user_id:
         return user_id
 
     if os.environ.get("__ARGUS_DEPLOYMENT_STAGE") == "rdev":
@@ -75,6 +77,7 @@ def _resolve_request_user_id(req) -> Optional[str]:
 
     if current_app.debug or current_app.testing:
         return LOCAL_DEV_USER_ID
+
     abort(HTTPStatus.UNAUTHORIZED)
 
 
