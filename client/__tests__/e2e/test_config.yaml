@@ -1,60 +1,23 @@
 server:
   app:
-    verbose: false
+    force_https: true
+    port: 5005
     debug: false
-    host: localhost
-    port: null
-    open_browser: false
-    force_https: false
-    flask_secret_key: null
-    generate_cache_control_headers: false
-    server_timing_headers: false
-    csp_directives: null
-    api_base_url: null
-    web_base_url: null
+    verbose: false
 
   multi_dataset:
     dataroots:
       test_dataroot:
         base_url: d
-        dataroot: example-dataset/
+        dataroot: "${PROJECT_ROOT}/example-dataset"
     index: true
 
-  data_locator:
-    api_base: null
-    s3_region_name: true
-
   gene_info:
-    api_base: null
-
-  adaptor:
-    cxg_adaptor:
-      tiledb_ctx:
-        sm.tile_cache_size: 8589934592 # 8GiB
-        py.init_buffer_bytes: 536870912 # 512MiB
-
-  limits:
-    column_request_max: 32
-    diffexp_cellcount_max: null
-
+    api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"
 default_dataset:
-  app:
-    scripts: []
-    inline_scripts: []
-    about_legal_tos: null
-    about_legal_privacy: null
-
   presentation:
     max_categories: 1000
     custom_colors: true
 
   embeddings:
     names: []
-
-  diffexp:
-    enable: true
-    lfc_cutoff: 0.01
-    top_n: 10
-    count: 15
-
-  X_approximate_distribution: normal

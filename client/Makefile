@@ -43,6 +43,13 @@ smoke-test:
 			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
 			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium')
 
+.PHONY: data-persistence-smoke-tests
+data-persistence-smoke-tests:
+	start_server_and_test \
+		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file ../server/tests/fixtures/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
+		$(CXG_SERVER_PORT) \
+		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=data-persistence'
+
 .PHONY: unit-test
 unit-test:
 	node node_modules/jest/bin/jest.js --testPathIgnorePatterns e2e
