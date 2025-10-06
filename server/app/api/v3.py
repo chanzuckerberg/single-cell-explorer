@@ -7,11 +7,11 @@ from urllib.parse import unquote
 from flask import (
     Blueprint,
     current_app,
+    escape,
     make_response,
     redirect,
     request,
     send_from_directory,
-    escape,
 )
 from flask_restful import Api, Resource
 
