@@ -161,13 +161,21 @@ class Categorical extends React.Component<Props, CategoricalState> {
 
     const categoryNameError = this.categoryNameError(newCategoryName);
 
-    // Filter author categories for display; must be non-standard category name, selectable or writable.
+    // Filter author categories for display; must be non-standard category name, selectable, and NOT user-created.
     const authorCategoryNames = selectableCategoryNames.filter(
       (catName) =>
         !this.isCategoryNameStandard(catName) &&
         !this.isCategoryNameExcluded(catName) &&
-        (this.isCategoryDisplayable(schema, catName) ||
-          this.isCategoryWritable(schema, catName))
+        !this.isCategoryWritable(schema, catName) &&
+        this.isCategoryDisplayable(schema, catName)
+    );
+
+    // Filter user-created categories for display; must be non-standard category name and writable.
+    const userCategoryNames = selectableCategoryNames.filter(
+      (catName) =>
+        !this.isCategoryNameStandard(catName) &&
+        !this.isCategoryNameExcluded(catName) &&
+        this.isCategoryWritable(schema, catName)
     );
 
     // Filter standard categories for display; must be standard name and selectable.
@@ -278,6 +286,22 @@ class Categorical extends React.Component<Props, CategoricalState> {
                     onExpansionChange={this.onExpansionChange}
                     isExpanded={expandedCategories.includes(catName)}
                     categoryType="author"
+                  />
+                ))}
+              </Collapse>
+            ) : null}
+
+            {/* USER FIELDS */}
+            {userCategoryNames.length ? (
+              <Collapse>
+                <span>User Categories</span>
+                {userCategoryNames.map((catName: string) => (
+                  <Category
+                    key={catName}
+                    metadataField={catName}
+                    onExpansionChange={this.onExpansionChange}
+                    isExpanded={expandedCategories.includes(catName)}
+                    categoryType="user"
                   />
                 ))}
               </Collapse>
