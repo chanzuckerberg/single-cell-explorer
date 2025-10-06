@@ -45,6 +45,7 @@ class ServerApp(BaseModel):
     csp_directives: Optional[CspDirectives]
     api_base_url: Optional[str]
     web_base_url: Optional[str]
+    disable_auth: bool = False
 
     @root_validator(skip_on_failure=True)
     def check_port(cls, values):

@@ -42,7 +42,7 @@ from server.common.utils.cell_type_info import (
 from server.common.utils.uns import spatial_metadata_get
 from server.dataset import dataset_metadata
 
-LOCAL_DEV_USER_ID = "local-dev-user"
+LOCAL_DEV_USER_PREFIX = "test-user-"
 RDEV_USER_ID = "rdev-user"
 
 
@@ -62,13 +62,12 @@ def _get_request_user_id(req) -> Optional[str]:
 
 
 def _resolve_request_user_id(req) -> Optional[str]:
-    # Check if authentication is disabled via environment variable
-    if os.environ.get("CELLXGENE_DISABLE_AUTH", "false").lower() in ("true", "1", "yes"):
+    if current_app.app_config.server__app__disable_auth:
         return None
 
     user_id = _get_request_user_id(req)
-    if user_id and user_id.startswith("test-user-"):
-        return LOCAL_DEV_USER_ID
+    if user_id and user_id.startswith(LOCAL_DEV_USER_PREFIX):
+        return user_id
     elif user_id:
         return user_id
 
@@ -76,7 +75,7 @@ def _resolve_request_user_id(req) -> Optional[str]:
         return RDEV_USER_ID
 
     if current_app.debug or current_app.testing:
-        return LOCAL_DEV_USER_ID
+        return f"{LOCAL_DEV_USER_PREFIX}local-dev"
 
     abort(HTTPStatus.UNAUTHORIZED)
 
@@ -222,11 +221,7 @@ def genesets_put(request, data_adaptor):
     tid = payload.get("tid")
     user_id = _resolve_request_user_id(request)
 
-    # Reject saves when authentication is disabled
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
-
-    # Reject saves when authentication is disabled
+    # Reject saves when authentication is not permitted (no authenticated user)
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
 
@@ -330,11 +325,7 @@ def annotations_obs_put(request, data_adaptor):
 
     user_id = _resolve_request_user_id(request)
 
-    # Reject saves when authentication is disabled
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
-
-    # Reject saves when authentication is disabled
+    # Reject saves when no authenticated user is available
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
 
@@ -368,7 +359,7 @@ def annotations_obs_category_delete(request, data_adaptor):
 
     user_id = _resolve_request_user_id(request)
 
-    # Reject operations when authentication is disabled
+    # Reject operations when no authenticated user is available
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
 
@@ -423,7 +414,7 @@ def annotations_obs_category_rename(request, data_adaptor):
 
     user_id = _resolve_request_user_id(request)
 
-    # Reject operations when authentication is disabled
+    # Reject operations when no authenticated user is available
     if user_id is None:
         return abort(HTTPStatus.UNAUTHORIZED)
 

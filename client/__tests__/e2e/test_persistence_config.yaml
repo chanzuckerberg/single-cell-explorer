@@ -4,6 +4,7 @@ server:
     port: 5005
     debug: false
     verbose: false
+    disable_auth: false
 
   multi_dataset:
     dataroots:

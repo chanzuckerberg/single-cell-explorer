@@ -1,5 +1,4 @@
 import base64
-import os
 from hashlib import blake2b
 
 from server.common.config.app_config import AppConfig
@@ -42,8 +41,7 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "about-dataset": about,
     }
 
-    # Check if authentication is disabled
-    auth_disabled = os.environ.get("CELLXGENE_DISABLE_AUTH", "false").lower() in ("true", "1", "yes")
+    auth_disabled = app_config.server__app__disable_auth
 
     # parameters
     parameters = {

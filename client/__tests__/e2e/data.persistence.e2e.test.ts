@@ -12,6 +12,9 @@
 /* eslint-disable no-await-in-loop -- await in loop is needed to emulate sequential user actions  */
 import { test } from "@chromatic-com/playwright";
 import crypto from "crypto";
+import fs from "fs/promises";
+import path from "path";
+import { existsSync } from "fs";
 
 import mockSetup from "./playwright.global.setup";
 
@@ -45,6 +48,12 @@ const RENAMED_LABEL_NAME = "renamed_persistence_label";
 // Use persistence test URL with /w/ dataroot
 const DATASET = "pbmc3k.cxg";
 const persistenceTestURL = [APP_URL_BASE, "w", DATASET, ""].join("/");
+
+const PROJECT_ROOT =
+  process.env.PROJECT_ROOT ??
+  (existsSync(path.join(process.cwd(), "example-dataset"))
+    ? process.cwd()
+    : path.resolve(process.cwd(), ".."));
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -90,19 +99,17 @@ async function refreshPageAndWait(page: any) {
 }
 
 // Helper function to cleanup user data after test
-async function cleanupUserData(page: any) {
-  // Delete any test categories that may have been created
-  try {
-    const categoryExists = await page
-      .getByTestId(`category-${TEST_CATEGORY_NAME}`)
-      .isVisible({ timeout: 1000 })
-      .catch(() => false);
+async function cleanupUserData(userId: string) {
+  const datasetPath = path.join(
+    PROJECT_ROOT,
+    "example-dataset",
+    DATASET,
+    userId
+  );
 
-    if (categoryExists) {
-      await deleteCategory(TEST_CATEGORY_NAME, page);
-    }
+  try {
+    await fs.rm(datasetPath, { recursive: true, force: true });
   } catch (error) {
-    // Ignore cleanup errors - category may not exist
     console.log(`Cleanup error (ignored): ${error}`);
   }
 }
@@ -142,7 +149,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -203,7 +210,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -295,7 +302,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -332,7 +339,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -371,7 +378,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -444,7 +451,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
 
@@ -525,7 +532,7 @@ for (const graphTestId of graphInstanceTestIds) {
             testInfo
           );
         } finally {
-          await cleanupUserData(page);
+          await cleanupUserData(userId);
         }
       });
     });

@@ -1,6 +1,5 @@
 include ../common.mk
 
-CXG_CONFIG := $(if $(CXG_CONFIG),$(CXG_CONFIG),./__tests__/e2e/test_config.yaml)
 SERVER_PORT_FILE := ../.test_server_port.txt
 
 # Packaging
@@ -37,7 +36,7 @@ start-frontend:
 .PHONY: smoke-test
 smoke-test:
 	start_server_and_test \
-		'CELLXGENE_DISABLE_AUTH=true ../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
+		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_config.yaml --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
 		$(if $(and $(CURRENT_SHARD),$(TOTAL_SHARDS)), \
 			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
@@ -46,7 +45,7 @@ smoke-test:
 .PHONY: data-persistence-smoke-tests
 data-persistence-smoke-tests:
 	start_server_and_test \
-		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file ./__tests__/e2e/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
+		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=data-persistence'
 

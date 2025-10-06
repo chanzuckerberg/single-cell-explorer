@@ -405,7 +405,7 @@ def register_api_v3(app, app_config, api_url_prefix):
                             return make_response("Unauthorized access to /w/ dataroot", HTTPStatus.UNAUTHORIZED)
 
                         # Skip user ID path validation for local-dev-user (development/testing)
-                        if user_id != common_rest.LOCAL_DEV_USER_ID:
+                        if not user_id.startswith(common_rest.LOCAL_DEV_USER_PREFIX):
                             # Check if the user_id from header matches the user_id in the URL path
                             # For s3_uri paths, also check the decoded URL
                             user_id_pattern = f"/{re.escape(user_id)}/"
