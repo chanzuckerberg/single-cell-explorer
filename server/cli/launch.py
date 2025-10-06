@@ -214,7 +214,6 @@ def launch(
     test_config_file: str = os.path.join(project_root, "client/__tests__/e2e/test_config.yaml")
 
     config_file: str = config_file if config_file else test_config_file
-
     if dump_default_config:
         print(default_config)
         sys.exit(0)
@@ -240,7 +239,6 @@ def launch(
             default_dataset__diffexp__enable=not disable_diffexp,
             default_dataset__diffexp__lfc_cutoff=diffexp_lfc_cutoff,
         )
-        print(f"updates: {updates}")
         # Use a default secret if one is not provided
         if not app_config.server__app__flask_secret_key:
             updates["app__flask_secret_key"] = "SparkleAndShine"
