@@ -17,7 +17,7 @@ server:
     dataroots:
       test_dataroot:
         base_url: w
-        dataroot: ./example-dataset/
+        dataroot: example-dataset/
     index: true
 
   data_locator:

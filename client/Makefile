@@ -40,8 +40,8 @@ smoke-test:
 		'CELLXGENE_DISABLE_AUTH=true ../launch_dev_server.sh --config-file $(CXG_CONFIG) --port $(CXG_SERVER_PORT)' \
 		$(CXG_SERVER_PORT) \
 		$(if $(and $(CURRENT_SHARD),$(TOTAL_SHARDS)), \
-			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
-			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e')
+			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
+			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium')
 
 .PHONY: unit-test
 unit-test:
