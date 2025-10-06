@@ -50,9 +50,14 @@ jobs:
           cd client
           npx playwright install
 
-      - name: Smoke tests (without annotations feature)
+      - name: Smoke tests
         run: |
           cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
+
+      - name: User-created data persistence smoke tests
+        if: matrix.shardIndex == 1
+        run: |
+          make data-persistence-smoke-tests
 
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v4.2.0
