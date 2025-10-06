@@ -65,6 +65,10 @@ unit-test-server:
 smoke-test:
 	cd client && $(MAKE) smoke-test
 
+.PHONY: data-persistence-smoke-tests
+data-persistence-smoke-tests:
+	cd client && $(MAKE) data-persistence-smoke-tests
+
 # LINTING AND FORMATTING COMMANDS
 
 .PHONY: fmt

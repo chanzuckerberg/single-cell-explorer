@@ -60,7 +60,7 @@ export async function tryUntil(
     maxRetry = 50,
     timeoutMs = RETRY_TIMEOUT_MS,
     page,
-    silent = false,
+    silent = true,
   }: TryUntilConfigs
 ): Promise<void> {
   const WAIT_FOR_MS = 200;

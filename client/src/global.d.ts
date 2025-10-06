@@ -58,3 +58,5 @@ declare global {
     hbspt: HubSpotFormAPI.HubSpot;
   }
 }
+
+declare module "@tanstack/react-query";

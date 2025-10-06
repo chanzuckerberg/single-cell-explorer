@@ -1,7 +1,18 @@
 import { connect } from "react-redux";
 import React from "react";
 import * as d3 from "d3";
-import { Checkbox } from "@blueprintjs/core";
+import {
+  Checkbox,
+  Button,
+  Icon,
+  Menu,
+  MenuItem,
+  Popover,
+  PopoverInteractionKind,
+  Position,
+  Intent,
+} from "@blueprintjs/core";
+import { IconNames } from "@blueprintjs/icons";
 import Truncate from "common/components/Truncate/Truncate";
 import { AnnotationsHelpers } from "util/stateManager";
 import actions from "actions";
@@ -15,9 +26,13 @@ import { CategorySummary } from "util/stateManager/controlsHelpers";
 import { ColorTable } from "util/stateManager/colorHelpers";
 import { ActiveTab } from "common/types/entities";
 import { InfoButton, InfoButtonWrapper } from "common/style";
+import type { AnnoMatrixObsCrossfilter } from "annoMatrix";
 import MiniStackedBar from "./components/MiniStackedBar/MiniStackedBar";
 import MiniHistogram from "./components/MiniHistogram/MiniHistogram";
 import { labelPrompt, isLabelErroneous } from "./labelUtil";
+import { AnnoDialog } from "../../../../../../../AnnoDialog/AnnoDialog";
+import { LabelInput } from "../../../../../../../LabelInput/LabelInput";
+import { CategoryCrossfilterContext } from "../../../../categoryContext";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../../../../categorical.css";
 import * as globals from "~/globals";
@@ -46,6 +61,8 @@ interface StateProps {
   label: string;
   labelName: string;
   isColorBy: boolean;
+  annotations: RootState["annotations"];
+  isUserAnnotation: boolean;
 }
 
 interface DispatchProps {
@@ -73,33 +90,46 @@ const mapStateToProps = (
   } = ownProps;
 
   const label = categorySummary.categoryValues[categoryIndex];
+  const labelKey = String(label);
   const isDilated =
     pointDilation.metadataField === metadataField &&
-    pointDilation.categoryField === _currentLabelAsString(label);
+    pointDilation.categoryField === _currentLabelAsString(labelKey);
 
   const category = categoricalSelection[metadataField];
   const col = categoryData.icol(0);
-  const labelName = isDataframeDictEncodedColumn(col)
-    ? col.codeMapping[parseInt(label as string, 10)]
+  const mappedLabel = isDataframeDictEncodedColumn(col)
+    ? col.codeMapping[parseInt(labelKey, 10)]
     : label;
-  const isSelected = category.get(label as string) ?? true;
+  const labelName = mappedLabel ?? labelKey;
+  const isSelected = category.get(labelKey) ?? true;
 
   const isColorBy =
     metadataField === colorAccessor &&
     colorMode === "color by categorical metadata";
+
+  const schema = state.annoMatrix?.schema;
+  const isUserAnnotation =
+    schema?.annotations.obsByName[metadataField]?.writable ?? false;
+
   return {
-    schema: state.annoMatrix?.schema,
+    schema,
     isDilated,
     isSelected,
-    label: label as string,
-    labelName: labelName as string,
+    label: labelKey,
+    labelName: String(labelName),
     isColorBy,
+    annotations: state.annotations,
+    isUserAnnotation,
   };
 };
 interface InternalStateProps {
   editedLabelText: string;
 }
 class CategoryValue extends React.Component<Props, InternalStateProps> {
+  private mouseEnterTimeout: NodeJS.Timeout | null = null;
+
+  private mouseExitTimeout: NodeJS.Timeout | null = null;
+
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -119,6 +149,16 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       this.setState({
         editedLabelText: this.currentLabelAsString(),
       });
+    }
+  }
+
+  componentWillUnmount(): void {
+    // Clean up any pending timeouts to prevent memory leaks
+    if (this.mouseEnterTimeout) {
+      clearTimeout(this.mouseEnterTimeout);
+    }
+    if (this.mouseExitTimeout) {
+      clearTimeout(this.mouseExitTimeout);
     }
   }
 
@@ -154,6 +194,45 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     });
   };
 
+  handleDeleteValue = () => {
+    const { dispatch, metadataField, labelName } = this.props;
+    dispatch(
+      actions.annotationDeleteLabelFromCategory(metadataField, labelName)
+    );
+  };
+
+  handleAddCurrentSelectionToThisLabel = () => {
+    const { dispatch, metadataField, labelName } = this.props;
+    dispatch(actions.annotationLabelCurrentSelection(metadataField, labelName));
+  };
+
+  handleEditValue = (e: React.FormEvent) => {
+    const { dispatch, metadataField, labelName } = this.props;
+    const { editedLabelText } = this.state;
+
+    // Validate the label name before proceeding
+    if (this.labelNameError(editedLabelText)) {
+      e.preventDefault();
+      return;
+    }
+
+    // Cancel edit mode first to prevent state conflicts
+    this.cancelEditMode();
+
+    // Use setTimeout to ensure state update is processed before dispatching action
+    setTimeout(() => {
+      dispatch(
+        actions.annotationRenameLabelInCategory(
+          metadataField,
+          labelName,
+          editedLabelText
+        )
+      );
+    }, 0);
+
+    e.preventDefault();
+  };
+
   toggleOff = async () => {
     track(EVENTS.EXPLORER_CATEGORICAL_VALUE_SELECT_BUTTON_CLICKED);
 
@@ -178,55 +257,66 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     nextState: InternalStateProps
   ): boolean => {
     /*
-    Checks to see if at least one of the following changed:
-    * world state
-    * the color accessor (what is currently being colored by)
-    * if this categorical value's selection status has changed
-    * the crossfilter (ie, global selection state)
-    * the color mode (type of coloring occurring)
-
-    If and only if true, update the component
+    Optimized update check that reduces unnecessary re-renders by checking
+    only the most critical state changes first
     */
     const { state } = this;
     const { props } = this;
-    const { categoryIndex, categorySummary, isSelected } = props;
+
+    // Quick checks first - most common changes
+    const editingLabel = state.editedLabelText !== nextState.editedLabelText;
+    const valueSelectionChange = props.isSelected !== nextProps.isSelected;
+    const dilationChange = props.isDilated !== nextProps.isDilated;
+    const colorAccessorChange = props.colorAccessor !== nextProps.colorAccessor;
+    const colorModeChange = props.colorMode !== nextProps.colorMode;
+
+    // If any of these changed, update immediately
+    if (
+      editingLabel ||
+      valueSelectionChange ||
+      dilationChange ||
+      colorAccessorChange ||
+      colorModeChange
+    ) {
+      return true;
+    }
+
+    // Check annotation state changes (edit mode active/inactive)
+    const currentEditMode =
+      props.annotations.isEditingLabelName &&
+      props.annotations.labelEditable.category === props.metadataField &&
+      props.annotations.labelEditable.label === props.categoryIndex;
+    const nextEditMode =
+      nextProps.annotations.isEditingLabelName &&
+      nextProps.annotations.labelEditable.category ===
+        nextProps.metadataField &&
+      nextProps.annotations.labelEditable.label === nextProps.categoryIndex;
+
+    if (currentEditMode !== nextEditMode) {
+      return true;
+    }
+
+    // More expensive checks only if needed
+    const { categoryIndex, categorySummary } = props;
     const {
       categoryIndex: newCategoryIndex,
       categorySummary: newCategorySummary,
-      isSelected: newIsSelected,
     } = nextProps;
 
     const label = categorySummary.categoryValues[categoryIndex];
     const newLabel = newCategorySummary.categoryValues[newCategoryIndex];
     const labelChanged = label !== newLabel;
-    const valueSelectionChange = isSelected !== newIsSelected;
-
-    const colorAccessorChange = props.colorAccessor !== nextProps.colorAccessor;
-    const colorModeChange = props.colorMode !== nextProps.colorMode;
-    const editingLabel = state.editedLabelText !== nextState.editedLabelText;
-    const dilationChange = props.isDilated !== nextProps.isDilated;
 
     const count = categorySummary.categoryValueCounts[categoryIndex];
     const newCount = newCategorySummary.categoryValueCounts[newCategoryIndex];
     const countChanged = count !== newCount;
 
-    // If the user edits an annotation that is currently colored-by, colors may be re-assigned.
-    // This test is conservative - it may cause re-rendering of entire category (all labels)
-    // if any one changes, but only for the currently colored-by category.
+    // Conservative check for color changes - only for the currently colored-by category
     const colorMightHaveChanged =
       nextProps.colorAccessor === nextProps.metadataField &&
       props.categorySummary !== nextProps.categorySummary;
 
-    return (
-      labelChanged ||
-      valueSelectionChange ||
-      colorAccessorChange ||
-      editingLabel ||
-      dilationChange ||
-      countChanged ||
-      colorMightHaveChanged ||
-      colorModeChange
-    );
+    return labelChanged || countChanged || colorMightHaveChanged;
   };
 
   toggleOn = async () => {
@@ -248,23 +338,47 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
   };
 
   handleMouseEnter = () => {
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
-    dispatch({
-      type: "category value mouse hover start",
-      metadataField,
-      categoryIndex,
-      label,
-    });
+    // Clear any pending exit timeout
+    if (this.mouseExitTimeout) {
+      clearTimeout(this.mouseExitTimeout);
+      this.mouseExitTimeout = null;
+    }
+
+    // Debounce mouse enter to prevent rapid state changes
+    if (this.mouseEnterTimeout) return;
+
+    this.mouseEnterTimeout = setTimeout(() => {
+      const { dispatch, metadataField, categoryIndex, label } = this.props;
+      dispatch({
+        type: "category value mouse hover start",
+        metadataField,
+        categoryIndex,
+        label,
+      });
+      this.mouseEnterTimeout = null;
+    }, 50); // 50ms debounce
   };
 
   handleMouseExit = () => {
-    const { dispatch, metadataField, categoryIndex, label } = this.props;
-    dispatch({
-      type: "category value mouse hover end",
-      metadataField,
-      categoryIndex,
-      label,
-    });
+    // Clear any pending enter timeout
+    if (this.mouseEnterTimeout) {
+      clearTimeout(this.mouseEnterTimeout);
+      this.mouseEnterTimeout = null;
+    }
+
+    // Debounce mouse exit to prevent rapid state changes
+    if (this.mouseExitTimeout) return;
+
+    this.mouseExitTimeout = setTimeout(() => {
+      const { dispatch, metadataField, categoryIndex, label } = this.props;
+      dispatch({
+        type: "category value mouse hover end",
+        metadataField,
+        categoryIndex,
+        label,
+      });
+      this.mouseExitTimeout = null;
+    }, 100); // 100ms debounce (longer to avoid flickering)
   };
 
   handleTextChange = (text: string) => {
@@ -295,8 +409,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       groupBy
     );
 
-    const bins = histogramMap.has(categoryValue)
-      ? (histogramMap.get(categoryValue) as ContinuousHistogram)
+    // For dict-encoded columns, categoryValue is a label string but histogramMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const bins = histogramMap.has(lookupValue)
+      ? (histogramMap.get(lookupValue) as ContinuousHistogram)
       : new Array<number>(50).fill(0);
 
     const xScale = d3.scaleLinear().domain([0, bins.length]).range([0, width]);
@@ -332,7 +453,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    const occupancy = occupancyMap.get(categoryValue);
+    // For dict-encoded columns, categoryValue is a label string but occupancyMap is keyed by codes
+    // Convert to code for lookup
+    let lookupValue: string | number = categoryValue;
+    if (isDataframeDictEncodedColumn(groupBy)) {
+      lookupValue = groupBy.invCodeMapping[categoryValue];
+    }
+
+    const occupancy = occupancyMap.get(lookupValue);
 
     if (occupancy && occupancy.size > 0) {
       // not all categories have occupancy, so occupancy may be undefined.
@@ -344,13 +472,32 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       const { categories } = schema.annotations.obsByName[colorAccessor];
 
       const dfColumn = colorData.col(colorAccessor);
-      const categoryValues = dfColumn.summarizeCategorical().categories;
+
+      // Use the same logic as normalization to get consistent categories
+      let categoryValues;
+      let normalizedOccupancy = occupancy;
+
+      if (isDataframeDictEncodedColumn(dfColumn)) {
+        // Extract unique label strings from the codeMapping
+        categoryValues = Object.values(dfColumn.codeMapping);
+
+        // Convert occupancy map keys from codes to labels
+        normalizedOccupancy = new Map();
+        occupancy.forEach((value, key) => {
+          const labelKey = dfColumn.codeMapping[key as number];
+          if (labelKey !== undefined) {
+            normalizedOccupancy.set(labelKey, value);
+          }
+        });
+      } else {
+        categoryValues = dfColumn.summarizeCategorical().categories;
+      }
 
       return {
         domainValues: categoryValues,
         scale,
         domain: categories,
-        occupancy,
+        occupancy: normalizedOccupancy,
       };
     }
     return null;
@@ -391,8 +538,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     return _currentLabelAsString(labelName);
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
-  isAddCurrentSelectionDisabled(crossfilter: any, category: any, value: any) {
+  isAddCurrentSelectionDisabled(
+    crossfilter: AnnoMatrixObsCrossfilter | null,
+    category: string,
+    value: string
+  ): boolean {
     /*
     disable "add current selection to label", if one of the following is true:
     1. no cells are selected
@@ -400,11 +550,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
     */
     const { categoryData } = this.props;
 
-    // 1. no cells selected?
+    // 1. check if crossfilter is available
+    if (!crossfilter) {
+      return true;
+    }
+    // 2. no cells selected?
     if (crossfilter.countSelected() === 0) {
       return true;
     }
-    // 2. all selected cells already have the label
+    // 3. all selected cells already have the label
     const mask = crossfilter.allSelectedMask();
     if (
       AnnotationsHelpers.allHaveLabelByMask(categoryData, category, value, mask)
@@ -426,11 +580,14 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       label,
       colorMode,
     } = this.props;
+
     const isColorBy =
       metadataField === colorAccessor &&
       colorMode === "color by categorical metadata";
 
-    if (!schema) return null;
+    if (!schema) {
+      return null;
+    }
     if (
       !this.shouldRenderStackedBarOrHistogram ||
       colorMode === "color by expression" ||
@@ -441,17 +598,18 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       return null;
     }
 
-    const { domainValues, scale, domain, occupancy } =
-      this.createStackedGraphBins(
-        metadataField,
-        categoryData,
-        colorAccessor,
-        colorData,
-        label,
-        colorTable,
-        schema,
-        STACKED_BAR_WIDTH
-      ) ?? {};
+    const result = this.createStackedGraphBins(
+      metadataField,
+      categoryData,
+      colorAccessor,
+      colorData,
+      label,
+      colorTable,
+      schema,
+      STACKED_BAR_WIDTH
+    );
+
+    const { domainValues, scale, domain, occupancy } = result ?? {};
 
     if (!domainValues || !scale || !domain || !occupancy) {
       return null;
@@ -539,8 +697,12 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       categorySummary,
       label,
       colorMode,
+      annotations,
+      isUserAnnotation,
+      labelName,
     } = this.props;
     const colorScale = colorTable?.scale;
+    const { editedLabelText } = this.state;
 
     const count = categorySummary.categoryValueCounts[categoryIndex];
     const displayString = this.currentLabelAsString();
@@ -551,16 +713,27 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       colorMode === "color by categorical metadata";
     const { categoryValueIndices } = categorySummary;
 
+    const editModeActive =
+      isUserAnnotation &&
+      annotations.labelEditable.category === metadataField &&
+      annotations.isEditingLabelName &&
+      annotations.labelEditable.label === categoryIndex;
+
     const valueToggleLabel = `value-toggle-checkbox-${metadataField}-${displayString}`;
 
     const LEFT_MARGIN = 60;
     const CHECKBOX = 26;
     const CELL_NUMBER = 50;
+    const ANNO_MENU = 26;
     const LABEL_MARGIN = 16;
     const CHART_MARGIN = 24;
 
     const otherElementsWidth =
-      LEFT_MARGIN + CHECKBOX + CELL_NUMBER + LABEL_MARGIN;
+      LEFT_MARGIN +
+      CHECKBOX +
+      CELL_NUMBER +
+      LABEL_MARGIN +
+      (isUserAnnotation ? ANNO_MENU : 0);
 
     const labelWidth =
       colorAccessor && !isColorBy
@@ -639,6 +812,33 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 {displayString}
               </label>
             </Truncate>
+            {/* Always render dialog container to avoid mount/unmount issues */}
+            <div style={{ display: editModeActive ? "block" : "none" }}>
+              <AnnoDialog
+                isActive={editModeActive}
+                title="Edit label"
+                instruction={this.instruction(editedLabelText)}
+                cancelTooltipContent="Close this dialog without editing label text."
+                primaryButtonText="Change label text"
+                text={editedLabelText}
+                validationError={this.labelNameError(editedLabelText)}
+                handleSubmit={this.handleEditValue}
+                handleCancel={this.cancelEditMode}
+                annoInput={
+                  <LabelInput
+                    label={editedLabelText}
+                    labelSuggestions={null}
+                    onChange={this.handleTextChange}
+                    onSelect={this.handleTextChange}
+                    inputProps={{
+                      leftIcon: "tag",
+                      intent: "none",
+                      autoFocus: editModeActive, // Only autofocus when active
+                    }}
+                  />
+                }
+              />
+            </div>
             {isCellInfo && (
               <InfoButtonWrapper>
                 <InfoButton
@@ -698,6 +898,85 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 }}
               />
             </span>
+            {isUserAnnotation ? (
+              <span
+                onMouseEnter={editModeActive ? undefined : this.handleMouseExit}
+                onMouseLeave={
+                  editModeActive ? undefined : this.handleMouseEnter
+                }
+              >
+                <Popover
+                  interactionKind={PopoverInteractionKind.HOVER}
+                  position={Position.RIGHT_TOP}
+                  disabled={editModeActive}
+                  content={
+                    <Menu>
+                      <CategoryCrossfilterContext.Consumer>
+                        {(crossfilter: AnnoMatrixObsCrossfilter | null) => (
+                          <MenuItem
+                            icon="plus"
+                            data-testid={`${metadataField}:${displayString}:add-current-selection-to-this-label`}
+                            onClick={this.handleAddCurrentSelectionToThisLabel}
+                            text={
+                              <span>
+                                Re-label currently selected cells as
+                                <span
+                                  style={{
+                                    fontStyle:
+                                      displayString ===
+                                      globals.unassignedCategoryLabel
+                                        ? "italic"
+                                        : "auto",
+                                  }}
+                                >
+                                  {` ${displayString}`}
+                                </span>
+                              </span>
+                            }
+                            disabled={this.isAddCurrentSelectionDisabled(
+                              crossfilter,
+                              metadataField,
+                              labelName
+                            )}
+                          />
+                        )}
+                      </CategoryCrossfilterContext.Consumer>
+                      {displayString !== globals.unassignedCategoryLabel ? (
+                        <MenuItem
+                          icon="edit"
+                          text="Edit this label's name"
+                          data-testid={`${metadataField}:${displayString}:edit-label`}
+                          onClick={this.activateEditLabelMode}
+                          disabled={annotations.isEditingLabelName}
+                        />
+                      ) : null}
+                      {displayString !== globals.unassignedCategoryLabel ? (
+                        <MenuItem
+                          icon={IconNames.TRASH}
+                          intent={Intent.DANGER}
+                          data-testid={`${metadataField}:${displayString}:delete-label`}
+                          onClick={this.handleDeleteValue}
+                          text={`Delete this label, and reassign all cells to type '${globals.unassignedCategoryLabel}'`}
+                        />
+                      ) : null}
+                    </Menu>
+                  }
+                >
+                  <Button
+                    style={{
+                      marginLeft: 2,
+                      position: "relative",
+                      top: -1,
+                      minHeight: 16,
+                    }}
+                    data-testid={`${metadataField}:${displayString}:see-actions`}
+                    icon={<Icon icon="more" iconSize={10} />}
+                    small
+                    minimal
+                  />
+                </Popover>
+              </span>
+            ) : null}
           </span>
         </div>
       </div>

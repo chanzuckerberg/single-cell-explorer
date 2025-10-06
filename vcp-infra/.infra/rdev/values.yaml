@@ -13,7 +13,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::058264139299:role/virtual-cells-platform-backend-dev
       image:
-        tag: sha-bd8b09d
+        tag: sha-653e16a
       replicaCount: 1
       ingress:
         oidcProtected: false

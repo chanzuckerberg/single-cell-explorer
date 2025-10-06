@@ -1,13 +1,18 @@
+import contextlib
 import json
 import logging
 import os
 import pickle  # TODO: remove this after 5.3.0 migration
 import threading
+from copy import deepcopy
+from typing import Any, Dict, Optional
+from urllib.parse import quote, unquote
 
 import numpy as np
 import pandas as pd
 import tiledb
 from packaging import version
+from pandas.api.types import is_categorical_dtype
 from server_timing import Timing as ServerTiming
 from tiledb import TileDBError
 
@@ -50,11 +55,430 @@ class CxgDataset(Dataset):
 
         self._validate_and_initialize()
 
+    @staticmethod
+    def _encode_component(component: str) -> str:
+        return quote(component, safe="")
+
+    @staticmethod
+    def _decode_component(component: str) -> str:
+        try:
+            return unquote(component)
+        except Exception:
+            return component
+
+    @staticmethod
+    def _make_json_safe(value: Any) -> Any:
+        if value is None:
+            return None
+        if isinstance(value, (np.generic,)):
+            return value.item()
+        if isinstance(value, (pd.Timestamp,)):
+            return value.isoformat()
+        if isinstance(value, (np.datetime64,)):
+            return pd.Timestamp(value).isoformat()
+        return value
+
+    def _user_root_uri(self, user_id: str) -> str:
+        return path_join(self.url, self._encode_component(user_id))
+
+    def _ensure_group(self, uri: str) -> None:
+        try:
+            obj_type = tiledb.object_type(uri, ctx=self.tiledb_ctx)
+        except TileDBError:
+            obj_type = None
+
+        if obj_type is None:
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+            if not vfs.is_dir(uri):
+                vfs.create_dir(uri)
+            tiledb.group_create(uri, ctx=self.tiledb_ctx)
+        elif obj_type != "group":
+            raise DatasetAccessError(f"Annotation storage path collision at {uri}")
+
+    def _ensure_user_storage(self, user_id: str) -> str:
+        user_root = self._user_root_uri(user_id)
+        self._ensure_group(user_root)
+        return user_root
+
+    def _annotation_array_uri(self, user_root_uri: str, column_name: str) -> str:
+        return path_join(user_root_uri, self._encode_component(column_name))
+
+    def _ensure_annotation_array(self, array_uri: str, length: int) -> None:
+        if length <= 0:
+            return
+
+        try:
+            obj_type = tiledb.object_type(array_uri, ctx=self.tiledb_ctx)
+        except TileDBError:
+            obj_type = None
+
+        if obj_type == "array":
+            try:
+                with tiledb.open(array_uri, mode="r", ctx=self.tiledb_ctx) as arr:
+                    dim = arr.schema.domain.dim(0)
+                    attr = arr.schema.attr(0)
+                    domain = dim.domain
+                    dtype = attr.dtype
+                if domain != (0, length - 1) or dtype != np.int32:
+                    tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+                    obj_type = None
+            except TileDBError:
+                tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+                obj_type = None
+
+        if obj_type is None:
+            dim = tiledb.Dim(
+                name="obs_idx",
+                domain=(0, length - 1),
+                tile=max(1, min(length, 1024)),
+                dtype=np.int64,
+            )
+            attr = tiledb.Attr(name="value", dtype=np.int32)
+            schema = tiledb.ArraySchema(
+                domain=tiledb.Domain(dim),
+                attrs=(attr,),
+                cell_order="C",
+                tile_order="C",
+                sparse=False,
+            )
+            tiledb.DenseArray.create(array_uri, schema, ctx=self.tiledb_ctx)
+
+    def _list_annotation_arrays(self, user_root_uri: str) -> Dict[str, str]:
+        arrays: Dict[str, str] = {}
+        try:
+            entries = []
+            tiledb.ls(user_root_uri, lambda path, obj: entries.append((path.rstrip("/"), obj)), ctx=self.tiledb_ctx)
+        except TileDBError:
+            return arrays
+
+        for path, obj_type in entries:
+            if obj_type != "array":
+                continue
+            column_name: Optional[str] = None
+            try:
+                with tiledb.open(path, mode="r", ctx=self.tiledb_ctx) as arr:
+                    column_name = arr.meta.get("column_name", None)
+                    if isinstance(column_name, bytes):
+                        column_name = column_name.decode("utf-8")
+            except TileDBError:
+                continue
+            if not column_name:
+                column_name = self._decode_component(os.path.basename(path))
+            arrays[str(column_name)] = path
+        return arrays
+
+    def _write_annotation_column(
+        self,
+        user_root_uri: str,
+        column_name: str,
+        series: pd.Series,
+        n_obs: int,
+    ) -> None:
+        categorical = pd.Categorical(series)
+        if len(categorical) != n_obs:
+            raise DatasetAccessError("Annotation length mismatch with dataset")
+
+        categories = [self._make_json_safe(value) for value in categorical.categories.tolist()]
+        codes = categorical.codes.astype(np.int32, copy=False)
+
+        array_uri = self._annotation_array_uri(user_root_uri, column_name)
+        temp_array_uri = f"{array_uri}.tmp"
+
+        # Write to temporary location first
+        self._ensure_annotation_array(temp_array_uri, n_obs)
+
+        try:
+            with tiledb.open(temp_array_uri, mode="w", ctx=self.tiledb_ctx) as arr:
+                arr[:] = codes.reshape((n_obs,))
+                arr.meta["value_kind"] = "categorical"
+                arr.meta["column_name"] = column_name
+                arr.meta["categories"] = json.dumps(categories)
+                arr.meta["ordered"] = json.dumps(bool(categorical.ordered))
+
+            # Atomic move: only after successful write
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+
+            # Remove existing array if it exists
+            if vfs.is_dir(array_uri):
+                with contextlib.suppress(TileDBError):
+                    tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+
+            # Move temp to final location (as atomic as possible)
+            vfs.move_dir(temp_array_uri, array_uri)
+
+        except Exception:
+            # Clean up temp array on any failure
+            try:
+                if tiledb.object_type(temp_array_uri, ctx=self.tiledb_ctx) == "array":
+                    tiledb.remove(temp_array_uri, ctx=self.tiledb_ctx)
+            except TileDBError:
+                pass  # Best effort cleanup
+            raise
+
+    def _load_annotation_column(self, array_uri: str) -> Optional[pd.Series]:
+        try:
+            with tiledb.open(array_uri, mode="r", ctx=self.tiledb_ctx) as arr:
+                # Read data and check what we actually got
+                data = arr[:]
+
+                # Handle different data formats that might be returned
+                if isinstance(data, dict):
+                    # If we get a dict, try to extract the 'value' attribute
+                    if "value" in data:
+                        raw = np.array(data["value"], dtype=np.int32).reshape(-1)
+                    else:
+                        logging.warning(f"TileDB array {array_uri} returned dict without 'value' key: {data}")
+                        return None
+                else:
+                    try:
+                        raw = np.array(data, dtype=np.int32).reshape(-1)
+                    except (TypeError, ValueError) as e:
+                        logging.warning(
+                            f"Failed to convert TileDB array data to int32 for {array_uri}: {type(data)}, {e}"
+                        )
+                        return None
+
+                column_name = arr.meta.get("column_name")
+                if isinstance(column_name, bytes):
+                    column_name = column_name.decode("utf-8")
+                if not column_name:
+                    column_name = self._decode_component(os.path.basename(array_uri))
+                value_kind = arr.meta.get("value_kind", "categorical")
+                if value_kind != "categorical":
+                    return None
+                categories_meta = arr.meta.get("categories")
+                ordered_meta = arr.meta.get("ordered")
+        except TileDBError as e:
+            logging.warning(f"TileDB error reading {array_uri}: {e}")
+            return None
+
+        if categories_meta is None:
+            return None
+
+        try:
+            categories = json.loads(categories_meta)
+        except (TypeError, json.JSONDecodeError):
+            logging.warning("Failed to decode categories metadata for %s", array_uri)
+            return None
+
+        ordered = False
+        if ordered_meta is not None:
+            try:
+                ordered = bool(json.loads(ordered_meta))
+            except (TypeError, json.JSONDecodeError):
+                ordered = False
+
+        categorical = pd.Categorical.from_codes(raw, categories=categories, ordered=ordered)
+        return pd.Series(categorical, name=column_name)
+
+    def _load_obs_annotations_from_storage(self, user_id: str) -> Optional[pd.DataFrame]:
+        user_root_uri = self._user_root_uri(user_id)
+        arrays = self._list_annotation_arrays(user_root_uri)
+        if not arrays:
+            return None
+
+        columns = {}
+        for column_name, array_uri in arrays.items():
+            series = self._load_annotation_column(array_uri)
+            if series is not None:
+                columns[column_name] = series.reset_index(drop=True)
+
+        if not columns:
+            return None
+
+        return pd.DataFrame(columns)
+
+    def _genesets_uri(self, user_id: str) -> str:
+        return path_join(self._user_root_uri(user_id), "genesets.json")
+
+    def _write_user_genesets(self, user_id: str, payload: Dict[str, Any]) -> None:
+        user_root_uri = self._ensure_user_storage(user_id)
+        genesets_uri = path_join(user_root_uri, "genesets.json")
+        vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+        serialized = json.dumps(payload)
+        with vfs.open(genesets_uri, "wb") as handle:
+            handle.write(serialized.encode("utf-8"))
+
+    def _read_user_genesets(self, user_id: str) -> Optional[Dict[str, Any]]:
+        genesets_uri = self._genesets_uri(user_id)
+        vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+        if not vfs.is_file(genesets_uri):
+            return None
+        try:
+            with vfs.open(genesets_uri, "rb") as handle:
+                raw = handle.read()
+        except TileDBError:
+            return None
+
+        try:
+            return json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            logging.warning("Failed to parse genesets payload at %s", genesets_uri)
+            return None
+
     def cleanup(self):
         """close all the open tiledb arrays"""
         for array in self.arrays.values():
             array.close()
         self.arrays.clear()
+
+    def save_obs_annotations(
+        self,
+        dataframe: pd.DataFrame,
+        user_id: Optional[str] = None,
+    ) -> None:
+        if user_id is None:
+            raise ValueError("User ID is required for saving annotations")
+
+        n_obs, _ = self.get_shape()
+        if n_obs <= 0:
+            return
+
+        user_root_uri = self._ensure_user_storage(user_id)
+        existing = self._list_annotation_arrays(user_root_uri)
+
+        if dataframe is not None and not dataframe.empty:
+            for column in dataframe.columns:
+                self._write_annotation_column(user_root_uri, column, dataframe[column], n_obs)
+                existing.pop(column, None)
+
+    def delete_obs_annotation_category(
+        self,
+        category_name: str,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Delete a user annotation category by removing its TileDB array."""
+        if user_id is None:
+            raise ValueError("User ID is required for deleting annotation category")
+
+        if not category_name or not isinstance(category_name, str):
+            raise ValueError("Category name must be a non-empty string")
+
+        user_root_uri = self._user_root_uri(user_id)
+        existing_arrays = self._list_annotation_arrays(user_root_uri)
+
+        if category_name not in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{category_name}' not found")
+
+        array_uri = existing_arrays[category_name]
+        try:
+            # Remove the TileDB array
+            tiledb.remove(array_uri, ctx=self.tiledb_ctx)
+            logging.info(f"Deleted annotation category '{category_name}' for user {user_id}")
+        except TileDBError as e:
+            raise DatasetAccessError(f"Failed to delete annotation category '{category_name}': {str(e)}") from e
+
+    def rename_obs_annotation_category(
+        self,
+        old_category_name: str,
+        new_category_name: str,
+        user_id: Optional[str] = None,
+    ) -> None:
+        """Rename a user annotation category by renaming its TileDB array."""
+        if user_id is None:
+            raise ValueError("User ID is required for renaming annotation category")
+
+        if not old_category_name or not isinstance(old_category_name, str):
+            raise ValueError("Old category name must be a non-empty string")
+
+        if not new_category_name or not isinstance(new_category_name, str):
+            raise ValueError("New category name must be a non-empty string")
+
+        if old_category_name == new_category_name:
+            return  # No-op if names are the same
+
+        user_root_uri = self._user_root_uri(user_id)
+        existing_arrays = self._list_annotation_arrays(user_root_uri)
+
+        if old_category_name not in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{old_category_name}' not found")
+
+        if new_category_name in existing_arrays:
+            raise DatasetAccessError(f"Annotation category '{new_category_name}' already exists")
+
+        old_array_uri = existing_arrays[old_category_name]
+        new_array_uri = self._annotation_array_uri(user_root_uri, new_category_name)
+
+        try:
+            # Check if VFS supports move operation (works for both filesystem and S3)
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+
+            # Try VFS move first - this is atomic and works for both filesystem and S3
+            try:
+                vfs.move_dir(old_array_uri, new_array_uri)
+
+                # Update the column_name metadata in the moved array
+                with tiledb.open(new_array_uri, mode="w", ctx=self.tiledb_ctx) as new_arr:
+                    new_arr.meta["column_name"] = new_category_name
+
+                logging.info(
+                    f"Renamed annotation category '{old_category_name}' to '{new_category_name}' using VFS move"
+                )
+                return
+
+            except TileDBError:
+                # VFS move failed, fall back to copy-delete approach
+                logging.warning(f"VFS move failed for '{old_category_name}', falling back to copy-delete")
+                pass
+
+            logging.info(
+                f"Renamed annotation category '{old_category_name}' to '{new_category_name}' using copy-delete"
+            )
+
+        except TileDBError as e:
+            # If something went wrong, try to clean up the new array if it was created
+            try:
+                if tiledb.object_type(new_array_uri, ctx=self.tiledb_ctx) == "array":
+                    tiledb.remove(new_array_uri, ctx=self.tiledb_ctx)
+            except TileDBError:
+                pass  # Ignore cleanup errors
+
+            raise DatasetAccessError(
+                f"Failed to rename annotation category '{old_category_name}' to '{new_category_name}': {str(e)}"
+            ) from e
+
+    def get_saved_obs_annotations(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[pd.DataFrame]:
+        """Always load user annotations from persistent storage (S3/filesystem)."""
+        if user_id is None:
+            return None
+        return self._load_obs_annotations_from_storage(user_id)
+
+    def save_gene_sets(
+        self,
+        genesets_payload,
+        tid: Optional[int] = None,
+        user_id: Optional[str] = None,
+    ) -> None:
+        if user_id is None:
+            raise ValueError("User ID is required for saving gene sets")
+
+        # Get current state from storage to determine TID
+        persisted = self.get_saved_gene_sets(user_id=user_id) or {}
+        current_tid = persisted.get("tid", 0)
+
+        if tid is None:
+            tid = current_tid + 1
+        if tid <= current_tid:
+            raise ValueError("TID must be greater than previous saved value")
+
+        payload = {
+            "tid": tid,
+            "genesets": genesets_payload,
+        }
+
+        self._write_user_genesets(user_id, payload)
+
+    def get_saved_gene_sets(
+        self,
+        user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Always load user gene sets from persistent storage (S3/filesystem)."""
+        if user_id is None:
+            return None
+        return self._read_user_genesets(user_id)
 
     @staticmethod
     def set_tiledb_context(context_params):
@@ -612,46 +1036,193 @@ class CxgDataset(Dataset):
         schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}}
         return schema
 
-    def get_schema(self):
+    def _augment_schema_with_user_annotations(self, schema: Dict[str, Any], annotations_df: pd.DataFrame) -> None:
+        if annotations_df is None or annotations_df.empty:
+            return
+
+        obs_schema = schema.setdefault("annotations", {}).setdefault("obs", {})
+        columns = obs_schema.setdefault("columns", [])
+        columns_by_name = {col["name"]: col for col in columns if isinstance(col, dict) and "name" in col}
+
+        for column_name in annotations_df.columns:
+            series = annotations_df[column_name]
+            if is_categorical_dtype(series):
+                categories = series.cat.categories.tolist()
+            else:
+                categories = pd.Index(series).astype(str).tolist()
+            normalized_categories = [cat.decode("utf-8") if isinstance(cat, bytes) else cat for cat in categories]
+
+            column_schema = columns_by_name.get(column_name)
+            if column_schema is None:
+                column_schema = {"name": column_name}
+                columns.append(column_schema)
+                columns_by_name[column_name] = column_schema
+
+            column_schema.update(
+                {
+                    "type": "categorical",
+                    "categories": normalized_categories,
+                    "writable": True,
+                }
+            )
+
+    def get_schema(self, user_id: Optional[str] = None):
         if self.schema is None:
             with self.lock:
-                self.schema = self._get_schema()
-        return self.schema
+                if self.schema is None:
+                    self.schema = self._get_schema()
+
+        schema = deepcopy(self.schema)
+        if user_id:
+            user_annotations = self.get_saved_obs_annotations(user_id=user_id)
+            self._augment_schema_with_user_annotations(schema, user_annotations)
+        return schema
 
     def _get_genesets(self):
         if self.genesets:
             return self.genesets
         A = self.open_array("obs")
-        return json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+        raw = json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
 
-    def get_genesets(self):
+        tid = 0
+        geneset_entries = []
+
+        if isinstance(raw, dict):
+            tid = raw.get("tid", 0)
+            geneset_entries = raw.get("genesets", raw)
+        elif isinstance(raw, list) and len(raw) == 2 and isinstance(raw[1], (int, float)):
+            geneset_entries, tid = raw[0], int(raw[1])
+        else:
+            geneset_entries = raw
+
+        normalized_genesets = []
+        if isinstance(geneset_entries, list):
+            for item in geneset_entries:
+                if isinstance(item, dict):
+                    normalized_genesets.append(item)
+                elif isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], dict):
+                    geneset_name = item[0]
+                    geneset_obj = item[1]
+                    if "geneset_name" not in geneset_obj:
+                        geneset_obj = {**geneset_obj, "geneset_name": geneset_name}
+                    normalized_genesets.append(geneset_obj)
+        elif isinstance(geneset_entries, dict):
+            for name, value in geneset_entries.items():
+                if isinstance(value, dict):
+                    if "geneset_name" not in value:
+                        value = {**value, "geneset_name": name}
+                    normalized_genesets.append(value)
+
+        return {"genesets": normalized_genesets, "tid": tid}
+
+    def get_genesets(
+        self,
+        user_id: Optional[str] = None,
+    ):
+        saved = self.get_saved_gene_sets(user_id=user_id)
+        if saved is not None:
+            return saved
+
         if self.genesets is None:
             with self.lock:
                 self.genesets = self._get_genesets()
-        return self.genesets
+        if isinstance(self.genesets, dict):
+            geneset_entries = self.genesets.get("genesets", [])
+            normalized_genesets = []
+            if isinstance(geneset_entries, list):
+                for item in geneset_entries:
+                    if isinstance(item, dict):
+                        normalized_genesets.append(item)
+                    elif isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], dict):
+                        geneset_name = item[0]
+                        geneset_obj = item[1]
+                        if "geneset_name" not in geneset_obj:
+                            geneset_obj = {**geneset_obj, "geneset_name": geneset_name}
+                        normalized_genesets.append(geneset_obj)
+            elif isinstance(geneset_entries, dict):
+                for name, value in geneset_entries.items():
+                    if isinstance(value, dict):
+                        if "geneset_name" not in value:
+                            value = {**value, "geneset_name": name}
+                        normalized_genesets.append(value)
+            return {
+                "genesets": normalized_genesets,
+                "tid": self.genesets.get("tid", 0),
+            }
+        # Fallback - should not happen due to normalization above.
+        return {"genesets": [], "tid": 0}
 
-    def annotation_to_fbs_matrix(self, axis, fields=None, num_bins=None):
+    def annotation_to_fbs_matrix(
+        self,
+        axis,
+        fields=None,
+        num_bins=None,
+        user_id: Optional[str] = None,
+    ):
         with ServerTiming.time(f"annotations.{axis}.query"):
             A = self.open_array(str(axis))
 
             try:
-                data = A[:] if not fields else A.query(attrs=fields)[:]
+                schema = self.get_schema(user_id=user_id) if axis == "obs" else self.get_schema()
+                obs_schema_columns = schema["annotations"]["obs"]["columns"] if axis == "obs" else []
 
-                categorical_dtypes = []
-                for c in self.get_schema()["annotations"]["obs"]["columns"]:
-                    if c["name"] in fields and c["type"] == "categorical":
-                        categories = c.get("categories", None)
-                        if categories:
-                            categorical_dtypes.append((c["name"], c["categories"]))
+                obs_column_names = {attr.name for attr in A.schema}
+                requested_fields = list(fields) if fields else None
+                base_fields: Optional[list[str]] = None
+                if requested_fields is not None:
+                    base_fields = [field for field in requested_fields if field in obs_column_names]
 
-                df = pd.DataFrame.from_dict(data)
-                for name, categories in categorical_dtypes:
-                    if str(df[name].dtype).startswith("int"):
-                        df[name] = pd.Categorical.from_codes(df[name], categories=categories)
+                if requested_fields is None:
+                    data = A[:]
+                elif base_fields:
+                    data = A.query(attrs=base_fields)[:]
+                else:
+                    data = {}
+
+                if data:
+                    df = pd.DataFrame.from_dict(data)
+                else:
+                    n_obs = self.get_shape()[0]
+                    df = pd.DataFrame(index=range(n_obs))
+
+                if axis == "obs":
+                    categorical_dtypes = []
+                    for column_schema in obs_schema_columns:
+                        column_name = column_schema.get("name")
+                        if fields and column_name not in fields:
+                            continue
+                        if column_schema.get("type") == "categorical":
+                            categories = column_schema.get("categories", [])
+                            if categories:
+                                categorical_dtypes.append((column_name, categories))
+
+                    for name, categories in categorical_dtypes:
+                        if name in df.columns:
+                            if str(df[name].dtype).startswith("int"):
+                                df[name] = pd.Categorical.from_codes(df[name], categories=categories)
+                            else:
+                                df[name] = pd.Categorical(df[name], categories=categories)
+
+                saved_annotations = None
+                if axis == "obs":
+                    saved_annotations = self.get_saved_obs_annotations(user_id=user_id)
+
+                if saved_annotations is not None and not saved_annotations.empty:
+                    if fields:
+                        candidate_columns = [col for col in fields if col in saved_annotations.columns]
                     else:
-                        df[name] = pd.Categorical(df[name])
+                        candidate_columns = list(saved_annotations.columns)
+
+                    for column in candidate_columns:
+                        column_values = saved_annotations[column].values
+                        if len(df.index) == 0:
+                            df = pd.DataFrame(index=range(len(column_values)))
+                        df[column] = column_values
 
                 if fields:
+                    missing_columns = [col for col in fields if col not in df.columns]
+                    if missing_columns:
+                        raise KeyError(missing_columns[0])
                     df = df[fields]
             except TileDBError as e:
                 raise KeyError(e) from None

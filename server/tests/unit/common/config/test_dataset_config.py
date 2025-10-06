@@ -58,10 +58,18 @@ class TestDatasetConfig(ConfigTests):
 
     def test_multi_dataset(self):
         app_config = AppConfig()
+        # Ensure symlinks are cleaned up and recreated
+        set2_path = f"{FIXTURES_ROOT}/set2"
+        set3_path = f"{FIXTURES_ROOT}/set3"
+
+        for path in [set2_path, set3_path]:
+            if os.path.lexists(path):
+                os.unlink(path)
+
         try:
-            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set2")
-            os.symlink(FIXTURES_ROOT, f"{FIXTURES_ROOT}/set3")
-        except FileExistsError:
+            os.symlink(FIXTURES_ROOT, set2_path)
+            os.symlink(FIXTURES_ROOT, set3_path)
+        except (FileExistsError, OSError):
             pass
 
         # test that multi dataroots work end to end
@@ -108,8 +116,9 @@ class TestDatasetConfig(ConfigTests):
         response = session.get("/health")
         self.assertEqual(json.loads(response.data)["status"], "pass")
         # cleanup
-        os.unlink(f"{FIXTURES_ROOT}/set2")
-        os.unlink(f"{FIXTURES_ROOT}/set3")
+        for path in [set2_path, set3_path]:
+            if os.path.lexists(path):
+                os.unlink(path)
 
     def test_configfile_with_specialization(self):
         # test that per_dataset_config config load the default config, then the specialized config

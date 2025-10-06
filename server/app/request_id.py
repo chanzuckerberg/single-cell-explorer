@@ -21,5 +21,9 @@ class RequestIdFilter(logging.Filter):
     # the logging format. Note that we're checking if we're in a request
     # context, as we may want to log things before Flask is fully loaded.
     def filter(self, record):
-        record.request_id = flask.g.request_id if flask.has_request_context() else ""
+        try:
+            record.request_id = flask.g.request_id if flask.has_request_context() else ""
+        except AttributeError:
+            # flask.g.request_id doesn't exist, use empty string
+            record.request_id = ""
         return True

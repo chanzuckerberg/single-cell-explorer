@@ -116,13 +116,11 @@ export class EditGenesetNameDialogue extends React.PureComponent<{}, State> {
           }
           annoInput={
             <LabelInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: any; onChange: (e: any) => void; in... Remove this comment to see the full error message
               label={newGenesetName}
               onChange={this.handleChange}
               inputProps={{
                 "data-testid": "rename-geneset-modal",
                 leftIcon: "manually-entered-data",
-                intent: "none",
                 autoFocus: true,
               }}
             />
@@ -130,11 +128,9 @@ export class EditGenesetNameDialogue extends React.PureComponent<{}, State> {
           secondaryInstructions="Edit description"
           secondaryInput={
             <LabelInput
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: any; onChange: (e: any) => void; in... Remove this comment to see the full error message
               label={newGenesetDescription}
               onChange={this.handleChangeDescription}
               inputProps={{ "data-testid": "change-geneset-description" }}
-              intent="none"
               autoFocus={false}
             />
           }

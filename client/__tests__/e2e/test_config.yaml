@@ -4,6 +4,14 @@ server:
     port: 5005
     debug: false
     verbose: false
+    disable_auth: true
+
+  multi_dataset:
+    dataroots:
+      test_dataroot:
+        base_url: d
+        dataroot: "example-dataset/"
+    index: true
 
   gene_info:
     api_base: "https://api.cellxgene.dev.single-cell.czi.technology/gene_info/v1"

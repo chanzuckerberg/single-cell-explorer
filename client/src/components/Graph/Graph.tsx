@@ -173,11 +173,18 @@ class Graph extends React.Component<GraphProps, GraphState> {
   );
 
   computeHighlightFlags = memoize(
-    (nObs, pointDilationData, pointDilationLabel) => {
+    (nObs, pointDilationData, pointDilationLabel, pointDilationCol) => {
       const flags = new Float32Array(nObs);
       if (pointDilationData) {
+        // For dict-encoded columns, data contains numeric codes but label is a string
+        // We need to convert the label to a code for comparison
+        let comparisonValue = pointDilationLabel;
+        if (pointDilationCol && pointDilationCol.invCodeMapping) {
+          comparisonValue = pointDilationCol.invCodeMapping[pointDilationLabel];
+        }
+
         for (let i = 0, len = flags.length; i < len; i += 1) {
-          if (pointDilationData[i] === pointDilationLabel) {
+          if (pointDilationData[i] === comparisonValue) {
             flags[i] = flagHighlight;
           }
         }
@@ -200,7 +207,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
   });
 
   computePointFlags = memoize(
-    (crossfilter, colorByData, pointDilationData, pointDilationLabel) => {
+    (
+      crossfilter,
+      colorByData,
+      pointDilationData,
+      pointDilationLabel,
+      pointDilationCol
+    ) => {
       /*
         We communicate with the shader using three flags:
         - isNaN -- the value is a NaN. Only makes sense when we have a colorAccessor
@@ -224,7 +237,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       const highlightFlags = this.computeHighlightFlags(
         nObs,
         pointDilationData,
-        pointDilationLabel
+        pointDilationLabel,
+        pointDilationCol
       );
       const colorByFlags = this.computeColorByFlags(nObs, colorByData);
       for (let i = 0; i < nObs; i += 1) {
@@ -854,15 +868,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
       categoryField: pointDilationLabel,
     } = pointDilation;
 
-    const pointDilationData = pointDilationDf
-      ?.col(pointDilationCategory)
-      ?.asArray();
+    const pointDilationCol = pointDilationDf?.col(pointDilationCategory);
+    const pointDilationData = pointDilationCol?.asArray();
 
     const flags = this.computePointFlags(
       crossfilter,
       colorByData,
       pointDilationData,
-      pointDilationLabel
+      pointDilationLabel,
+      pointDilationCol
     );
 
     const { width, height } = viewport;

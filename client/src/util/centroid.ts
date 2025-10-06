@@ -10,6 +10,10 @@ import {
   Schema,
 } from "../common/types/schema";
 import { LayoutChoiceState } from "../reducers/layoutChoice";
+import {
+  DataframeDictEncodedColumn,
+  isDataframeDictEncodedColumn,
+} from "./dataframe/types";
 
 /*
   Centroid coordinate calculation
@@ -42,13 +46,14 @@ const getCoordinatesByLabel = (
     return coordsByCategoryLabel;
   }
 
-  const categoryArray = categoryDf.col(categoryName).asArray();
+  const categoryColumn = categoryDf.col(categoryName);
+  const categoryArray = categoryColumn.asArray();
   const layoutDimNames = layoutChoice.currentDimNames;
   const layoutXArray = layoutDf.col(layoutDimNames[0]).asArray();
   const layoutYArray = layoutDf.col(layoutDimNames[1]).asArray();
 
   const categorySummary = createCategorySummaryFromDfCol(
-    categoryDf.col(categoryName),
+    categoryColumn,
     schema.annotations.obsByName[
       categoryName
     ] as CategoricalAnnotationColumnSchema
@@ -56,13 +61,25 @@ const getCoordinatesByLabel = (
 
   const { categoryValueIndices, categoryValueCounts } = categorySummary;
 
+  // For dict-encoded columns, we need to map codes to labels for the result map keys
+  // but still use codes to look up indices (since categoryValueIndices is keyed by label strings)
+  const isDictEncoded = isDataframeDictEncodedColumn(categoryColumn);
+  const codeMapping = isDictEncoded
+    ? (categoryColumn as DataframeDictEncodedColumn).codeMapping
+    : null;
+
   // Iterate over all cells
   for (let i = 0, len = categoryArray.length; i < len; i += 1) {
-    // Fetch the label of the current cell
-    const label = categoryArray[i];
+    // Fetch the code/value of the current cell
+    const dataValue = categoryArray[i];
 
-    // Get the index of the label within the category
-    const labelIndex = categoryValueIndices.get(label);
+    // For dict-encoded, convert code to label string for lookups
+    const labelString = isDictEncoded
+      ? codeMapping![dataValue as number]
+      : dataValue;
+
+    // Get the index of the label within the category (categoryValueIndices is keyed by label strings)
+    const labelIndex = categoryValueIndices.get(labelString);
 
     // If the category's labels are truncated and this label is removed,
     //  it will not be assigned a label and will not be
@@ -70,8 +87,8 @@ const getCoordinatesByLabel = (
     // If the user created this category,
     //  do not create a coord for the `unassigned` label
     if (labelIndex !== undefined) {
-      // Create/fetch the scratchpad value
-      let coords = coordsByCategoryLabel.get(label);
+      // Use labelString as the key (so the result map is keyed by label strings, not codes)
+      let coords = coordsByCategoryLabel.get(labelString);
       if (coords === undefined) {
         // Get the number of cells which are in the label
         const numInLabel = categoryValueCounts[labelIndex];
@@ -81,7 +98,7 @@ const getCoordinatesByLabel = (
           yCoordinates: new Float32Array(numInLabel),
           length: 0,
         };
-        coordsByCategoryLabel.set(label, coords);
+        coordsByCategoryLabel.set(labelString, coords);
       }
 
       coords.hasFinite =
