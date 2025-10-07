@@ -116,3 +116,15 @@ dev-env-server:
 .PHONY: gen-package-lock
 gen-package-lock:
 	cd client && $(MAKE) install
+
+.PHONY: start-backend
+start-backend:
+	cd client && $(MAKE) start-backend
+
+.PHONY: start-backend-user-data
+start-backend-user-data:
+	cd client && $(MAKE) start-backend-user-data
+
+.PHONY: start-frontend
+start-frontend:
+	cd client && $(MAKE) start-frontend

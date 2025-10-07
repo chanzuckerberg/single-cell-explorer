@@ -33,10 +33,18 @@ start-frontend:
 	node server/development.js
 
 # start an instance of the Explorer server and run the end-to-end tests in shard mode
+.PHONY: start-backend
+start-backend:
+	SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_config.yaml --port $(CXG_SERVER_PORT)
+
+.PHONY: start-backend-user-data
+start-backend-user-data:
+	SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_persistence_config.yaml --port $(CXG_SERVER_PORT)
+
 .PHONY: smoke-test
 smoke-test:
 	start_server_and_test \
-		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_config.yaml --port $(CXG_SERVER_PORT)' \
+		'$(MAKE) start-backend' \
 		$(CXG_SERVER_PORT) \
 		$(if $(and $(CURRENT_SHARD),$(TOTAL_SHARDS)), \
 			'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=chromium --shard=$(CURRENT_SHARD)/$(TOTAL_SHARDS)', \
@@ -45,7 +53,7 @@ smoke-test:
 .PHONY: data-persistence-smoke-tests
 data-persistence-smoke-tests:
 	start_server_and_test \
-		'SKIP_ATAC_CACHE=true ../launch_dev_server.sh --config-file client/__tests__/e2e/test_persistence_config.yaml --port $(CXG_SERVER_PORT)' \
+		'$(MAKE) start-backend-user-data' \
 		$(CXG_SERVER_PORT) \
 		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=data-persistence'
 

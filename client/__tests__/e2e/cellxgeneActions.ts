@@ -783,34 +783,52 @@ export async function searchForInfoType(
  */
 
 export async function duplicateCategory(
-  categoryName: string,
+  newCategoryName: string,
+  sourceCategoryName: string,
   page: Page
 ): Promise<void> {
   await page.getByTestId("open-annotation-dialog").click();
 
-  await typeInto("new-category-name", categoryName, page);
+  await typeInto("new-category-name", newCategoryName, page);
 
-  const dropdownOptionClass = "duplicate-category-dropdown-option";
-
+  // Click on the duplicate category dropdown
   await tryUntil(
     async () => {
       await page.getByTestId("duplicate-category-dropdown").click();
-      await expect(page.getByTestId(dropdownOptionClass)).toBeTruthy();
+      // Wait for dropdown options to be visible
+      await expect(
+        page.locator('[data-testclass="duplicate-category-dropdown-option"]').first()
+      ).toBeVisible();
     },
     { page }
   );
 
-  const option = page.getByTestId(dropdownOptionClass);
-  await expect(option).toBeTruthy();
+  // Select the source category to duplicate from
+  await tryUntil(
+    async () => {
+      const options = await page.locator('[data-testclass="duplicate-category-dropdown-option"]').all();
+      let found = false;
+      for (const option of options) {
+        const text = await option.textContent();
+        if (text === sourceCategoryName) {
+          await option.click();
+          found = true;
+          break;
+        }
+      }
+      expect(found).toBe(true);
+    },
+    { page }
+  );
 
-  await option.click();
-
+  // Submit the category creation
   await tryUntil(
     async () => {
       await page.getByTestId("submit-category").click();
+      // Wait for the new category to appear
       await expect(
-        page.getByTestId(`${categoryName}:category-expand`)
-      ).toBeTruthy();
+        page.getByTestId(`${newCategoryName}:category-expand`)
+      ).toBeVisible();
     },
     { page }
   );
