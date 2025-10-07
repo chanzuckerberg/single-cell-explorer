@@ -153,6 +153,11 @@ export const annotationRenameCategoryAction =
       return;
     }
 
+    // Mark save as started to prevent autosave timer from interfering during rename
+    dispatch({
+      type: "writable obs annotations - save started",
+    });
+
     // Persist to backend and WAIT for completion
     try {
       const response = await fetch(
@@ -224,6 +229,11 @@ export const annotationDeleteCategoryAction =
       });
       return;
     }
+
+    // Mark save as started to prevent autosave timer from interfering during delete
+    dispatch({
+      type: "writable obs annotations - save started",
+    });
 
     // Persist to backend and WAIT for completion
     try {
