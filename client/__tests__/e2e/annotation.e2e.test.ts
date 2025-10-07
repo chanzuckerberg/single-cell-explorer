@@ -35,6 +35,7 @@ import {
   renameCategory,
   deleteLabel,
   renameLabel,
+  duplicateCategory,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
@@ -55,6 +56,7 @@ const TEST_LABEL_NAME = "test_label";
 const SECOND_LABEL_NAME = "second_label";
 const RENAMED_CATEGORY_NAME = "renamed_category";
 const RENAMED_LABEL_NAME = "renamed_label";
+const DUPLICATE_CATEGORY_NAME = "duplicate_category";
 
 // TODO #754
 test.beforeEach(mockSetup);
@@ -683,6 +685,130 @@ for (const testDataset of testDatasets) {
             await snapshotTestGraph(
               page,
               getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("duplicate category with labels", async ({ page }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Step 1: Create original category with labels
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection for the first label
+            const lassoSelection1 = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.2,
+                y1: 0.2,
+                x2: 0.5,
+                y2: 0.5,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection1.start,
+              end: lassoSelection1.end,
+              lasso: true,
+            });
+
+            // Add first label with selection
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+
+            // Clear any existing selections
+            await page.keyboard.press("Escape");
+            await page.waitForTimeout(500);
+
+            // Make a different selection for the second label
+            const lassoSelection2 = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.7,
+                y1: 0.1,
+                x2: 0.9,
+                y2: 0.3,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection2.start,
+              end: lassoSelection2.end,
+              lasso: true,
+            });
+
+            // Add second label with selection
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              SECOND_LABEL_NAME,
+              page
+            );
+
+            // Step 2: Verify original category has both labels
+            await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+            await assertLabelExists(
+              TEST_CATEGORY_NAME,
+              SECOND_LABEL_NAME,
+              page
+            );
+
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-original-category-created`,
+              testInfo
+            );
+
+            // Step 3: Create duplicate category
+            await duplicateCategory(
+              DUPLICATE_CATEGORY_NAME,
+              TEST_CATEGORY_NAME,
+              page
+            );
+
+            // Step 4: Verify duplicate category exists
+            await assertCategoryExists(DUPLICATE_CATEGORY_NAME, page);
+
+            // Step 5: Verify duplicate category has the same labels
+            await assertLabelExists(
+              DUPLICATE_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+            await assertLabelExists(
+              DUPLICATE_CATEGORY_NAME,
+              SECOND_LABEL_NAME,
+              page
+            );
+
+            // Step 6: Verify cell assignments were duplicated
+            // Select the first label in the duplicate category
+            await selectCategoryLabel(
+              DUPLICATE_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+
+            // Check that some cells are selected (should be > 0 since we duplicated assignments)
+            const cellCount = Number(await getCellSetCount(1, page));
+            expect(cellCount).toBeGreaterThan(0);
+
+            await snapshotTestGraph(
+              page,
+              `${getSnapshotPrefix(testInfo)}-duplicate-category-final`,
               testInfo
             );
           });

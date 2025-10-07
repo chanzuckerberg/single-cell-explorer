@@ -59,10 +59,6 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
     }
 
-    # Provide autosave-related client parameters. These defaults may be overridden by
-    # the adaptor's update_parameters implementation when richer configuration exists.
-    parameters.setdefault("annotations-user-data-idhash", _compute_user_idhash(data_adaptor))
-
     # corpora dataset_props
     # TODO/Note: putting info from the dataset into the /config is not ideal.
     # However, it is definitely not part of /schema, and we do not have a top-level

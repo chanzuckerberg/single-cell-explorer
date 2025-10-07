@@ -220,7 +220,6 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     const existing = this._cache.obs.col(col).asArray() as AnyArray;
     let nextData: AnyArray;
     const offsets = this.rowIndex.getOffsets(rowLabels);
-
     // If existing data is DictEncoded, convert to plain array
     if (isDictEncodedTypedArray(existing)) {
       // Get the actual string values from the dict-encoded array

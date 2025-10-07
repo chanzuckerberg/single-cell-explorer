@@ -20,10 +20,12 @@ import Category from "./components/Category/Category";
 import * as globals from "~/globals";
 import { CATEGORICAL_SECTION_TEST_ID } from "./constants";
 import { Props, StateProps } from "./types";
+import { DuplicateCategorySelect } from "./components/DuplicateCategorySelect";
 
 interface CategoricalState {
   createCategoryDialogOpen: boolean;
   newCategoryName: string;
+  categoryToDuplicate: string | null;
 }
 
 class Categorical extends React.Component<Props, CategoricalState> {
@@ -32,28 +34,43 @@ class Categorical extends React.Component<Props, CategoricalState> {
     this.state = {
       createCategoryDialogOpen: false,
       newCategoryName: "",
+      categoryToDuplicate: null,
     };
   }
 
   handleOpenCreateCategory = () => {
-    this.setState({ createCategoryDialogOpen: true, newCategoryName: "" });
+    this.setState({
+      createCategoryDialogOpen: true,
+      newCategoryName: "",
+      categoryToDuplicate: null,
+    });
   };
 
   handleCloseCreateCategory = () => {
-    this.setState({ createCategoryDialogOpen: false, newCategoryName: "" });
+    this.setState({
+      createCategoryDialogOpen: false,
+      newCategoryName: "",
+      categoryToDuplicate: null,
+    });
   };
 
   handleCreateCategory = async () => {
     const { dispatch } = this.props;
-    const { newCategoryName } = this.state;
+    const { newCategoryName, categoryToDuplicate } = this.state;
     const trimmedName = newCategoryName.trim();
     if (!trimmedName || this.categoryNameError(trimmedName)) return;
-    await dispatch(actions.annotationCreateCategoryAction(trimmedName));
+    await dispatch(
+      actions.annotationCreateCategoryAction(trimmedName, categoryToDuplicate)
+    );
     this.handleCloseCreateCategory();
   };
 
   handleNewCategoryNameChange = (name: string) => {
     this.setState({ newCategoryName: name });
+  };
+
+  handleModalDuplicateCategorySelection = (categoryName: string) => {
+    this.setState({ categoryToDuplicate: categoryName });
   };
 
   categoryNameError = (name: string): boolean | string => {
@@ -150,7 +167,8 @@ class Categorical extends React.Component<Props, CategoricalState> {
 
   render() {
     const { schema, isCellGuideCxg, expandedCategories } = this.props;
-    const { createCategoryDialogOpen, newCategoryName } = this.state;
+    const { createCategoryDialogOpen, newCategoryName, categoryToDuplicate } =
+      this.state;
 
     /* Names for categorical, string and boolean types, sorted in display order.  Will be rendered in this order */
     const selectableCategoryNames = ControlsHelpers.selectableCategoryNames(
@@ -220,7 +238,15 @@ class Categorical extends React.Component<Props, CategoricalState> {
               newLabelMessage="New category"
             />
           }
-          annoSelect={null}
+          annoSelect={
+            <DuplicateCategorySelect
+              handleModalDuplicateCategorySelection={
+                this.handleModalDuplicateCategorySelection
+              }
+              categoryToDuplicate={categoryToDuplicate}
+              allCategoryNames={selectableCategoryNames}
+            />
+          }
         />
         <div style={{ marginBottom: 10 }}>
           <Tooltip
