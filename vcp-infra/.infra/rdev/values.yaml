@@ -36,5 +36,7 @@ stack:
           value: $(__ARGUS_STACK_INGRESS_HOST)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
+        - name: CXG_BUCKET_PATH
+          value: hosted-cellxgene-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
