@@ -6,7 +6,6 @@ import { Button, Classes, Position, Tooltip } from "@blueprintjs/core";
 import Async, { AsyncProps } from "react-async";
 import memoize from "memoize-one";
 import Truncate from "common/components/Truncate/Truncate";
-import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { createCategorySummaryFromDfCol } from "util/stateManager/controlsHelpers";
 import {
   createColorTable,
@@ -719,29 +718,20 @@ const CategoryValueList = React.memo(
         const colorDataArray = colorData.icol(0).asArray();
         const categoryColorMap = new Map();
 
-        // Check if the column is dict-encoded
-        const isDictEncoded = isDataframeDictEncodedColumn(categoryColumn);
-        const codeMapping = isDictEncoded ? categoryColumn.codeMapping : null;
+        categoryDataArray.forEach((_: unknown, index: number) => {
+          const labelString = categoryColumn.getLabelValue(index);
 
-        categoryDataArray.forEach(
-          (categoryValue: string | number, index: number) => {
-            // For dict-encoded columns, convert code to label string
-            const labelString = isDictEncoded
-              ? codeMapping![categoryValue as number]
-              : categoryValue;
-
-            if (!categoryColorMap.has(labelString)) {
-              categoryColorMap.set(labelString, { sum: 0, count: 0 });
-            }
-            const colorValue = colorDataArray[index];
-            // Add safety check for non-finite values
-            if (Number.isFinite(colorValue)) {
-              const categoryColor = categoryColorMap.get(labelString);
-              categoryColor.sum += colorValue;
-              categoryColor.count += 1;
-            }
+          if (!categoryColorMap.has(labelString)) {
+            categoryColorMap.set(labelString, { sum: 0, count: 0 });
           }
-        );
+          const colorValue = colorDataArray[index];
+          // Add safety check for non-finite values
+          if (Number.isFinite(colorValue)) {
+            const categoryColor = categoryColorMap.get(labelString);
+            categoryColor.sum += colorValue;
+            categoryColor.count += 1;
+          }
+        });
 
         const categoryAverageColor = new Map();
         categoryColorMap.forEach((value, key) => {
@@ -765,6 +755,7 @@ const CategoryValueList = React.memo(
       categoryData?.cols?.[0]?.__id,
       colorData?.cols?.[0]?.__id,
       colorMode,
+      colorAccessor,
     ]);
 
     return (

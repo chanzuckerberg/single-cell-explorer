@@ -217,20 +217,17 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
       throw new Error("annotation data unavailable");
     }
 
-    const existing = this._cache.obs.col(col).asArray() as AnyArray;
-    let nextData: AnyArray;
-    const offsets = this.rowIndex.getOffsets(rowLabels);
-    // If existing data is DictEncoded, convert to plain array
+    const column = this._cache.obs.col(col);
+    const existing = column.asArray() as AnyArray;
+    let nextData: Category[];
+
+    // Only convert to labels if we need to modify the data
     if (isDictEncodedTypedArray(existing)) {
-      // Get the actual string values from the dict-encoded array
-      nextData = new Array(existing.length);
-      for (let i = 0; i < existing.length; i += 1) {
-        nextData[i] = existing.vat(i);
-      }
+      nextData = column.getLabelArray() as Category[];
     } else {
-      // Plain array - just slice
-      nextData = existing.slice();
+      nextData = existing.slice() as Category[];
     }
+    const offsets = this.rowIndex.getOffsets(rowLabels);
 
     // Modify the values
     offsets.forEach((offset) => {
@@ -280,24 +277,20 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
       throw new Error("annotation data unavailable");
     }
 
-    const existing = this._cache.obs.col(col).asArray() as AnyArray;
-    let data: AnyArray;
+    const column = this._cache.obs.col(col);
+    const existing = column.asArray() as AnyArray;
+    let data: Category[];
 
-    // If existing data is DictEncoded, convert to plain array
+    // Only convert to labels if we need to modify the data
     if (isDictEncodedTypedArray(existing)) {
-      // Get the actual string values from the dict-encoded array
-      data = new Array(existing.length);
-      for (let i = 0; i < existing.length; i += 1) {
-        const val = existing.vat(i);
-        data[i] = val === oldValue ? newValue : val;
-      }
+      data = column.getLabelArray() as Category[];
     } else {
-      // Plain array - just slice and modify
-      data = existing.slice();
-      for (let i = 0, l = data.length; i < l; i += 1) {
-        if (data[i] === oldValue) {
-          data[i] = newValue;
-        }
+      data = existing.slice() as Category[];
+    }
+
+    for (let i = 0, l = data.length; i < l; i += 1) {
+      if (data[i] === oldValue) {
+        data[i] = newValue;
       }
     }
 

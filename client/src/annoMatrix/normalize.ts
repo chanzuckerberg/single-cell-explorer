@@ -13,7 +13,6 @@ import {
   Category,
   CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
-import { isDictEncodedTypedArray } from "../common/types/arraytypes";
 
 export function normalizeResponse(
   field: Field,
@@ -103,22 +102,12 @@ export function normalizeWritableCategoricalSchema(
   the categories array contains all unique values in the data array, AND that
   the array is UI sorted.
   */
-  // For dict-encoded columns, get label strings from codeMapping instead of numeric codes
-  let dataCategories: Category[];
-  const colData = col.asArray();
-  if (isDictEncodedTypedArray(colData)) {
-    // Extract unique label strings from the codeMapping
-    dataCategories = Object.values(colData.codeMapping);
-  } else {
-    dataCategories = col.summarizeCategorical().categories;
-  }
+  const dataCategories = col.getUniqueLabels();
 
-  const categorySet = new Set<Category>(
-    dataCategories.concat(
-      // TODO #35: Use type guards instead of casting
-      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
-    )
-  );
+  const categorySet = new Set<Category>([
+    ...dataCategories,
+    ...((colSchema as CategoricalAnnotationColumnSchema).categories ?? []),
+  ]);
   if (!categorySet.has(unassignedCategoryLabel)) {
     categorySet.add(unassignedCategoryLabel);
   }
@@ -152,17 +141,7 @@ export function normalizeCategorical(
   // else read-only, categorical columns
   const TopN = globalConfig.maxCategoricalOptionsToDisplay;
 
-  // consolidate all categories from data and schema into a single list
-  // Use the same logic as writable path for dict-encoded columns
-  const colData = col.asArray();
-  let dataCategories: Category[];
-  if (isDictEncodedTypedArray(colData)) {
-    // Extract unique label strings from the codeMapping
-    dataCategories = Object.values(colData.codeMapping);
-  } else {
-    const colDataSummary = col.summarizeCategorical();
-    dataCategories = colDataSummary.categories;
-  }
+  const dataCategories = col.getUniqueLabels();
   const allCategories = new Set<Category>(dataCategories);
 
   // if no overflow, just UI sort schema categories and return
@@ -190,14 +169,10 @@ export function normalizeCategorical(
   topNCategories.add(overflowCatName);
 
   // rewrite data - consolidate all excess labels into overflow label
-  const newColData = new Array(colData.length);
+  const newColData = col.getLabelArray() as Category[];
   for (let i = 0; i < newColData.length; i += 1) {
-    if (!topNCategories.has(colData[i])) {
+    if (!topNCategories.has(newColData[i])) {
       newColData[i] = overflowCatName;
-    } else if (isDictEncodedTypedArray(colData)) {
-      newColData[i] = colData.vat(i);
-    } else {
-      newColData[i] = colData[i];
     }
   }
   // replace data in dataframe

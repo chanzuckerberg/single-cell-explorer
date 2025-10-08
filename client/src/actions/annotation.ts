@@ -13,7 +13,7 @@ import {
   Category,
   Field,
 } from "../common/types/schema";
-import { AnyArray, isDictEncodedTypedArray } from "../common/types/arraytypes";
+import { AnyArray } from "../common/types/arraytypes";
 
 type ThunkResult<R = void> = ThunkAction<R, RootState, never, AnyAction>;
 
@@ -59,25 +59,13 @@ export const annotationCreateCategoryAction =
         .base()
         .fetch(Field.obs, categoryToDuplicate);
       const column = catDf.col(categoryToDuplicate);
-      const columnArray = column.asArray() as AnyArray;
       const categories = column.summarizeCategorical().categories.slice();
       if (!categories.includes(globals.unassignedCategoryLabel)) {
         categories.push(globals.unassignedCategoryLabel);
       }
 
-      // If existing data is DictEncoded, convert to plain array (same pattern as setObsColumnValues in loader.ts)
-      if (isDictEncodedTypedArray(columnArray)) {
-        // Get the actual string values from the dict-encoded array
-        initialValue = new Array(columnArray.length);
-        for (let i = 0; i < columnArray.length; i += 1) {
-          initialValue[i] = columnArray.vat(i);
-        }
-        ctor = Array as unknown as ColumnValueCtor;
-      } else {
-        // Plain array - use as-is
-        initialValue = columnArray;
-        ctor = (columnArray.constructor as ColumnValueCtor) ?? Array;
-      }
+      initialValue = column.getLabelArray();
+      ctor = Array as unknown as ColumnValueCtor;
       newSchema = {
         ...sourceSchema,
         name: trimmedName,

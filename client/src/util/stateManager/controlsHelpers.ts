@@ -8,7 +8,6 @@ import {
   Schema,
 } from "../../common/types/schema";
 import { DataframeColumn } from "../dataframe";
-import { isDataframeDictEncodedColumn } from "../dataframe/types";
 
 import fromEntries from "../fromEntries";
 import { isCategoricalAnnotation } from "./annotationsHelpers";
@@ -88,40 +87,12 @@ export function createCategorySummaryFromDfCol(
   dfCol: DataframeColumn,
   colSchema: CategoricalAnnotationColumnSchema
 ): CategorySummary {
-  const summary = dfCol.summarizeCategorical();
-  let { categories: allCategoryValues } = colSchema;
-
-  // For dict-encoded columns, if schema categories are numeric codes,
-  // convert them to label strings using codeMapping
-  if (isDataframeDictEncodedColumn(dfCol)) {
-    const firstCategory = allCategoryValues[0];
-    if (typeof firstCategory === "number") {
-      // Schema has numeric codes, convert to label strings
-      allCategoryValues = allCategoryValues.map(
-        (code) => dfCol.codeMapping[code as number]
-      );
-    }
-  }
-
+  const { categories: allCategoryValues } = colSchema;
   const categoryValues = allCategoryValues;
-
-  // For dict-encoded columns, categoryCounts uses numeric codes as keys,
-  // but schema categories are label strings now. We need to map between them.
-  let categoryValueCounts: number[];
-
-  if (isDataframeDictEncodedColumn(dfCol)) {
-    // Dict-encoded: convert label strings to codes and look up counts
-    const { invCodeMapping } = dfCol;
-    categoryValueCounts = allCategoryValues.map((label: Category) => {
-      const code = invCodeMapping[String(label)];
-      return code !== undefined ? summary.categoryCounts.get(code) ?? 0 : 0;
-    });
-  } else {
-    // Plain array: label strings are used directly
-    categoryValueCounts = allCategoryValues.map(
-      (cat: Category) => summary.categoryCounts.get(cat) ?? 0
-    );
-  }
+  const labelCounts = dfCol.getLabelCounts();
+  const categoryValueCounts = allCategoryValues.map(
+    (label: Category) => labelCounts.get(String(label)) ?? 0
+  );
 
   const categoryValueIndices = new Map(categoryValues.map((v, i) => [v, i]));
   const numCategoryValues = categoryValueIndices.size;

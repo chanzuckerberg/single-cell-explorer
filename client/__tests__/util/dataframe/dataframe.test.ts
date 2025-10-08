@@ -1482,3 +1482,69 @@ describe("corner cases", () => {
     expect(df.has(0, {} as unknown as string)).toBeFalsy();
   });
 });
+
+describe("unified categorical column methods", () => {
+  test("getLabelValue and getLabelValues for plain string array", () => {
+    const df = new Dataframe.Dataframe(
+      [3, 1],
+      [["red", "blue", "green"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    expect(col.getLabelValue(0)).toBe("red");
+    expect(col.getLabelValue(1)).toBe("blue");
+    expect(col.getLabelValue(2)).toBe("green");
+
+    expect(col.getLabelValues()).toEqual(["red", "blue", "green"]);
+    expect(col.isDictEncoded).toBe(false);
+  });
+
+  test("selectByLabels for plain string array", () => {
+    const df = new Dataframe.Dataframe(
+      [4, 1],
+      [["red", "blue", "green", "red"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    const selected = col.selectByLabels(["red", "green"]);
+    expect(selected).toEqual([true, false, true, true]);
+  });
+
+  test("getUniqueLabels and getLabelCounts for plain string array", () => {
+    const df = new Dataframe.Dataframe(
+      [4, 1],
+      [["red", "blue", "green", "red"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    const uniqueLabels = col.getUniqueLabels();
+    expect(uniqueLabels.sort()).toEqual(["blue", "green", "red"]);
+
+    const counts = col.getLabelCounts();
+    expect(counts.get("red")).toBe(2);
+    expect(counts.get("blue")).toBe(1);
+    expect(counts.get("green")).toBe(1);
+  });
+
+  test("getCrossfilterValues and selectByCrossfilterValues", () => {
+    const df = new Dataframe.Dataframe(
+      [3, 1],
+      [["red", "blue", "green"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    const crossfilterValues = col.getCrossfilterValues();
+    expect(crossfilterValues).toEqual(["red", "blue", "green"]);
+
+    const selected = col.selectByCrossfilterValues(["red", "green"]);
+    expect(selected).toEqual([true, false, true]);
+  });
+});

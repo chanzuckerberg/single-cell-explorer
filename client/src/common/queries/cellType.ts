@@ -7,7 +7,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "reducers";
 import { CategoricalAnnotationColumnSchema, Field } from "common/types/schema";
 import { createCategorySummaryFromDfCol } from "util/stateManager/controlsHelpers";
-import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { ENTITIES } from "./entities";
 
 export const USE_CELL_TYPES = {
@@ -47,9 +46,7 @@ export function useCellTypesQuery(
 
       return categoryIndices.map((index) => {
         const label = categorySummary.categoryValues[index];
-        const labelName = isDataframeDictEncodedColumn(column)
-          ? column.codeMapping[parseInt(label as string, 10)]
-          : label;
+        const labelName = column.getLabelValue(parseInt(label as string, 10));
 
         return labelName as string;
       });
