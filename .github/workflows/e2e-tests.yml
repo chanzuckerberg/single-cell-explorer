@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2, 3, 4, 5]
-        shardTotal: [5]
+        shardIndex: [1, 2, 3, 4, 5, 6]
+        shardTotal: [6]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,11 +51,12 @@ jobs:
           npx playwright install
 
       - name: Smoke tests
+        if: matrix.shardIndex != 6
         run: |
-          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=${{ matrix.shardTotal }} make smoke-test
+          cd client && CURRENT_SHARD=${{ matrix.shardIndex }} TOTAL_SHARDS=5 make smoke-test
 
       - name: User-created data persistence smoke tests
-        if: matrix.shardIndex == 1
+        if: matrix.shardIndex == 6
         run: |
           make data-persistence-smoke-tests
 
