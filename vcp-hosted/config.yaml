@@ -21,9 +21,6 @@ server:
 
   multi_dataset:
     dataroots:
-      corpora_data_portal:
-        base_url: e
-        dataroot: s3://${CXG_BUCKET_PATH}
       byod_workflows:
         base_url: w
         dataroot: s3://${BYOD_WORKFLOWS_BUCKET_PATH}
