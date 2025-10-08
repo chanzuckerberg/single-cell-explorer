@@ -444,9 +444,8 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    const lookupValue = groupBy.getInternalRep(categoryValue);
-
-    const occupancy = occupancyMap.get(lookupValue);
+    // Histogram now returns label-keyed maps, so use label directly
+    const occupancy = occupancyMap.get(categoryValue);
 
     if (occupancy && occupancy.size > 0) {
       // not all categories have occupancy, so occupancy may be undefined.
@@ -462,18 +461,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       // Use unified interface - no conditional logic needed
       const categoryValues = dfColumn.summarizeCategorical().categories;
 
-      // Convert histogram keys from codes to labels if needed
-      const normalizedOccupancy = new Map();
-      occupancy.forEach((value, key) => {
-        const labelKey = dfColumn.getLabelValue(key as number);
-        normalizedOccupancy.set(labelKey, value);
-      });
-
       return {
         domainValues: categoryValues,
         scale,
         domain: categories,
-        occupancy: normalizedOccupancy,
+        occupancy,
       };
     }
     return null;
