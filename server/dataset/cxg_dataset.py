@@ -46,6 +46,9 @@ class CxgDataset(Dataset):
         if self.url[-1] != "/":
             self.url += "/"
 
+        # Extract dataset name from URL
+        self.dataset_name = self._extract_dataset_name()
+
         # caching immutable state
         self.lsuri_results = ImmutableKVCache(lambda key: self._lsuri(uri=key, tiledb_ctx=self.tiledb_ctx))
         self.arrays = ImmutableKVCache(lambda key: self._open_array(uri=key, tiledb_ctx=self.tiledb_ctx))
@@ -78,8 +81,45 @@ class CxgDataset(Dataset):
             return pd.Timestamp(value).isoformat()
         return value
 
+    def _extract_dataset_name(self) -> str:
+        """Extract dataset name from URL, keeping .cxg suffix."""
+        # Remove trailing slash if present
+        url = self.url.rstrip("/")
+
+        # Extract the last path component (dataset name with .cxg)
+        dataset_name = os.path.basename(url)
+
+        return dataset_name
+
+    def _get_centralized_user_data_bucket(self) -> str:
+        """Get the centralized user data bucket from the /w/ dataroot configuration."""
+        dataroots = self.app_config.server__multi_dataset__dataroots
+
+        # Find the /w/ dataroot (byod_workflows in the config)
+        for _, dataroot_config in dataroots.items():
+            if dataroot_config["base_url"] == "w":
+                return dataroot_config["dataroot"]
+
+        # Second: Check if single dataroot is configured (dataroot option)
+        single_dataroot = self.app_config.server__multi_dataset__dataroot
+        if single_dataroot:
+            return single_dataroot
+
+        # Final fallback if no suitable dataroot found
+        raise DatasetAccessError(
+            "Centralized user data bucket not configured (missing /w/ dataroot or single dataroot)"
+        )
+
     def _user_root_uri(self, user_id: str) -> str:
-        return path_join(self.url, self._encode_component(user_id))
+        # Get the centralized user data bucket from the /w/ dataroot configuration
+        # This will be s3://byod-workflows-dev (or whatever is configured)
+        centralized_bucket = self._get_centralized_user_data_bucket()
+
+        # All user data goes to the centralized user data bucket
+        # Format: s3://byod-workflows-dev/user-data/user_id/dataset_name/
+        return path_join(
+            centralized_bucket, "user-data", self._encode_component(user_id), self._encode_component(self.dataset_name)
+        )
 
     def _ensure_group(self, uri: str) -> None:
         try:
@@ -90,7 +130,12 @@ class CxgDataset(Dataset):
         if obj_type is None:
             vfs = tiledb.VFS(ctx=self.tiledb_ctx)
             if not vfs.is_dir(uri):
-                vfs.create_dir(uri)
+                if not uri.startswith("s3://"):
+                    # For local filesystem paths, use os.makedirs for recursive creation
+                    os.makedirs(uri, exist_ok=True)
+                else:
+                    # For S3 paths, use TileDB VFS create_dir
+                    vfs.create_dir(uri)
             tiledb.group_create(uri, ctx=self.tiledb_ctx)
         elif obj_type != "group":
             raise DatasetAccessError(f"Annotation storage path collision at {uri}")
