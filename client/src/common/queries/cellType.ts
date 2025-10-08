@@ -44,12 +44,9 @@ export function useCellTypesQuery(
         .filter(([, index]) => categorySummary.categoryValueCounts[index] > 0)
         .map(([, index]) => index);
 
-      return categoryIndices.map((index) => {
-        const label = categorySummary.categoryValues[index];
-        const labelName = column.getLabelValue(parseInt(label as string, 10));
-
-        return labelName as string;
-      });
+      return categoryIndices.map(
+        (index) => categorySummary.categoryValues[index] as string
+      );
     },
     ...options,
   });

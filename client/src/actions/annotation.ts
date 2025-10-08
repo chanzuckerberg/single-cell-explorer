@@ -65,7 +65,7 @@ export const annotationCreateCategoryAction =
       }
 
       initialValue = column.getLabelArray();
-      ctor = Array as unknown as ColumnValueCtor;
+      ctor = Array as ColumnValueCtor;
       newSchema = {
         ...sourceSchema,
         name: trimmedName,
@@ -74,7 +74,7 @@ export const annotationCreateCategoryAction =
       };
     } else {
       initialValue = globals.unassignedCategoryLabel;
-      ctor = Array as unknown as ColumnValueCtor;
+      ctor = Array as ColumnValueCtor;
       newSchema = {
         name: trimmedName,
         type: "categorical",

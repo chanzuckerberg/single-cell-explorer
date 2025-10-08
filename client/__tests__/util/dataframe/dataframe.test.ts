@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import * as Dataframe from "../../../src/util/dataframe";
+import { DictEncoded8Array } from "../../../src/util/stateManager/dict-encoded8_array";
 
 const { describe, beforeEach } = test;
 
@@ -1546,5 +1547,135 @@ describe("unified categorical column methods", () => {
 
     const selected = col.selectByCrossfilterValues(["red", "green"]);
     expect(selected).toEqual([true, false, true]);
+  });
+
+  test("getLabelArray for plain string array", () => {
+    const df = new Dataframe.Dataframe(
+      [4, 1],
+      [["red", "blue", "green", "red"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    const labelArray = col.getLabelArray();
+    expect(labelArray).toEqual(["red", "blue", "green", "red"]);
+    expect(col.isDictEncoded).toBe(false);
+  });
+
+  test("getInternalRep and getCrossfilterValuesForLabels for plain string array", () => {
+    const df = new Dataframe.Dataframe(
+      [4, 1],
+      [["red", "blue", "green", "red"]],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    expect(col.getInternalRep("red")).toBe("red");
+    expect(col.getInternalRep("blue")).toBe("blue");
+
+    const crossfilterValues = col.getCrossfilterValuesForLabels([
+      "red",
+      "green",
+    ]);
+    expect(crossfilterValues.sort()).toEqual(["green", "red", "red"]);
+  });
+
+  test("unified methods for dict-encoded arrays", () => {
+    // Create a dict-encoded column using DictEncoded8Array
+    const codes = new Uint8Array([0, 1, 2, 0]);
+    const codeMapping = { 0: "red", 1: "blue", 2: "green" };
+    const dictCol = new DictEncoded8Array(codes.buffer);
+    dictCol.setCodeMapping(codeMapping);
+
+    const df = new Dataframe.Dataframe(
+      [4, 1],
+      [dictCol],
+      null,
+      new Dataframe.KeyIndex(["color"])
+    );
+
+    const col = df.col("color");
+    expect(col.isDictEncoded).toBe(true);
+
+    // Test getLabelValue
+    expect(col.getLabelValue(0)).toBe("red");
+    expect(col.getLabelValue(1)).toBe("blue");
+    expect(col.getLabelValue(2)).toBe("green");
+    expect(col.getLabelValue(3)).toBe("red");
+
+    // Test getLabelValues
+    expect(col.getLabelValues()).toEqual(["red", "blue", "green", "red"]);
+
+    // Test getLabelArray
+    expect(col.getLabelArray()).toEqual(["red", "blue", "green", "red"]);
+
+    // Test selectByLabels
+    const selected = col.selectByLabels(["red", "green"]);
+    expect(selected).toEqual([true, false, true, true]);
+
+    // Test getUniqueLabels
+    const uniqueLabels = col.getUniqueLabels();
+    expect(uniqueLabels.sort()).toEqual(["blue", "green", "red"]);
+
+    // Test getLabelCounts
+    const counts = col.getLabelCounts();
+    expect(counts.get("red")).toBe(2);
+    expect(counts.get("blue")).toBe(1);
+    expect(counts.get("green")).toBe(1);
+
+    // Test getInternalRep
+    expect(col.getInternalRep("red")).toBe(0);
+    expect(col.getInternalRep("blue")).toBe(1);
+    expect(col.getInternalRep("green")).toBe(2);
+    expect(col.getInternalRep("nonexistent")).toBe("nonexistent");
+
+    // Test getCrossfilterValues (should return codes for dict-encoded)
+    const crossfilterValues = col.getCrossfilterValues();
+    expect(crossfilterValues).toEqual([0, 1, 2, 0]);
+
+    // Test selectByCrossfilterValues with codes
+    const selectedByCrossfilter = col.selectByCrossfilterValues([0, 2]);
+    expect(selectedByCrossfilter).toEqual([true, false, true, true]);
+
+    // Test getCrossfilterValuesForLabels
+    const crossfilterForLabels = col.getCrossfilterValuesForLabels([
+      "red",
+      "green",
+    ]);
+    expect(crossfilterForLabels.sort()).toEqual([0, 0, 2]);
+  });
+
+  test("edge cases for unified methods", () => {
+    // Empty column
+    const emptyDf = new Dataframe.Dataframe(
+      [0, 1],
+      [[]],
+      null,
+      new Dataframe.KeyIndex(["empty"])
+    );
+    const emptyCol = emptyDf.col("empty");
+    expect(emptyCol.getLabelArray()).toEqual([]);
+    expect(emptyCol.getLabelValues()).toEqual([]);
+    expect(emptyCol.getUniqueLabels()).toEqual([]);
+    expect(emptyCol.getLabelCounts().size).toBe(0);
+
+    // Single value column
+    const singleDf = new Dataframe.Dataframe(
+      [3, 1],
+      [["same", "same", "same"]],
+      null,
+      new Dataframe.KeyIndex(["single"])
+    );
+    const singleCol = singleDf.col("single");
+    expect(singleCol.getUniqueLabels()).toEqual(["same"]);
+    expect(singleCol.getLabelCounts().get("same")).toBe(3);
+
+    const selected = singleCol.selectByLabels(["same"]);
+    expect(selected).toEqual([true, true, true]);
+
+    const notSelected = singleCol.selectByLabels(["different"]);
+    expect(notSelected).toEqual([false, false, false]);
   });
 });

@@ -39,11 +39,7 @@ import {
   DataframeValueArray,
   DataframeValue,
 } from "../util/dataframe/types";
-import {
-  AnyArray,
-  TypedArray,
-  isDictEncodedTypedArray,
-} from "../common/types/arraytypes";
+import { AnyArray, TypedArray } from "../common/types/arraytypes";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
 
@@ -218,15 +214,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     }
 
     const column = this._cache.obs.col(col);
-    const existing = column.asArray() as AnyArray;
-    let nextData: Category[];
-
-    // Only convert to labels if we need to modify the data
-    if (isDictEncodedTypedArray(existing)) {
-      nextData = column.getLabelArray() as Category[];
-    } else {
-      nextData = existing.slice() as Category[];
-    }
+    const nextData = column.getLabelArray().slice() as Category[];
     const offsets = this.rowIndex.getOffsets(rowLabels);
 
     // Modify the values
@@ -278,15 +266,7 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     }
 
     const column = this._cache.obs.col(col);
-    const existing = column.asArray() as AnyArray;
-    let data: Category[];
-
-    // Only convert to labels if we need to modify the data
-    if (isDictEncodedTypedArray(existing)) {
-      data = column.getLabelArray() as Category[];
-    } else {
-      data = existing.slice() as Category[];
-    }
+    const data = column.getLabelArray().slice() as Category[];
 
     for (let i = 0, l = data.length; i < l; i += 1) {
       if (data[i] === oldValue) {
