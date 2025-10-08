@@ -3,7 +3,7 @@ import errno
 import logging
 import os
 import socket
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urlsplit
 
 import numpy as np
 from flask import json
