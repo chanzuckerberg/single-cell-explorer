@@ -3,7 +3,7 @@ import errno
 import logging
 import os
 import socket
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 import numpy as np
 from flask import json
@@ -57,9 +57,9 @@ def path_join(base, *urls):  # type: ignore
             path = os.path.join(path, utpl.path)
             path = os.path.normpath(path)
         else:
-            if not path.endswith("/"):
-                path += "/"
-            path += utpl.path
+            base_path = path if path.endswith("/") else f"{path}/"
+            next_path = utpl.path.lstrip("/")
+            path = urljoin(base_path, next_path)
     return btpl._replace(path=path).geturl()
 
 
