@@ -92,7 +92,8 @@ class CxgDataset(Dataset):
         return dataset_name
 
     def _get_centralized_user_data_bucket(self) -> str:
-        """Get the centralized user data bucket from the /w/ dataroot configuration."""
+        """Get the centralized user data bucket from the /w/ dataroot configuration.
+        Returns None if no centralized bucket is configured."""
         dataroots = self.app_config.server__multi_dataset__dataroots
 
         # Find the /w/ dataroot (byod_workflows in the config)
@@ -105,21 +106,25 @@ class CxgDataset(Dataset):
         if single_dataroot:
             return single_dataroot
 
-        # Final fallback if no suitable dataroot found
-        raise DatasetAccessError(
-            "Centralized user data bucket not configured (missing /w/ dataroot or single dataroot)"
-        )
+        # No centralized bucket configured
+        return None
 
     def _user_root_uri(self, user_id: str) -> str:
-        # Get the centralized user data bucket from the /w/ dataroot configuration
-        # This will be s3://byod-workflows-dev (or whatever is configured)
+        # Try to get the centralized user data bucket
         centralized_bucket = self._get_centralized_user_data_bucket()
 
-        # All user data goes to the centralized user data bucket
-        # Format: s3://byod-workflows-dev/user-data/user_id/dataset_name/
-        return path_join(
-            centralized_bucket, "user-data", self._encode_component(user_id), self._encode_component(self.dataset_name)
-        )
+        if centralized_bucket:
+            # All user data goes to the centralized user data bucket
+            # Format: s3://byod-workflows-dev/user-data/user_id/dataset_name/
+            return path_join(
+                centralized_bucket,
+                "user-data",
+                self._encode_component(user_id),
+                self._encode_component(self.dataset_name),
+            )
+        else:
+            # Fallback to old behavior: store alongside dataset
+            return path_join(self.url, self._encode_component(user_id))
 
     def _ensure_group(self, uri: str) -> None:
         try:
