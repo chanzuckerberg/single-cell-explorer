@@ -57,7 +57,9 @@ def path_join(base, *urls):  # type: ignore
             path = os.path.join(path, utpl.path)
             path = os.path.normpath(path)
         else:
-            path = urljoin(path, utpl.path)
+            if not path.endswith("/"):
+                path += "/"
+            path += utpl.path
     return btpl._replace(path=path).geturl()
 
 
