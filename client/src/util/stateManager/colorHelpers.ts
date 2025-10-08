@@ -26,7 +26,6 @@ import {
   ConvertedUserColors,
   UserColor,
 } from "../../reducers/colors";
-import { isDataframeDictEncodedColumn } from "../dataframe/types";
 
 /**
  * Given a color mode & accessor, generate an annoMatrix query that will
@@ -226,34 +225,16 @@ function _createUserColors(
   schema: Schema,
   userColors: ConvertedUserColors
 ): ColorTable {
-  const data = col.asArray();
+  const data = col.getCrossfilterValues();
   const { colors, scale: scaleByLabel } = userColors[colorAccessor];
-  let newColors = colors;
-  // convert the keys in the color dictionary defined by the schema
-  // to their corresponding codes.
-  if (isDataframeDictEncodedColumn(col)) {
-    newColors = Object.fromEntries(
-      Object.entries(colors).map((row) => [col.invCodeMapping[row[0]], row[1]])
-    );
-  }
+  const newColors = Object.fromEntries(
+    Object.entries(colors).map((row) => [col.getInternalRep(row[0]), row[1]])
+  );
   const rgb = createRgbArray(data, newColors);
 
-  // color scale function param is INDEX (offset) into schema categories. It is NOT label value.
-  // See createColorsByCategoricalMetadata() for another example.
-  // TODO: #35 Use type guards to insure type instead of casting
-  let { categories } = schema.annotations.obsByName[
+  const { categories } = schema.annotations.obsByName[
     colorAccessor
   ] as CategoricalAnnotationColumnSchema;
-
-  // For dict-encoded columns, if schema categories are numeric codes,
-  // convert them to label strings using codeMapping
-  if (isDataframeDictEncodedColumn(col)) {
-    const firstCategory = categories[0];
-    if (typeof firstCategory === "number") {
-      // Schema has numeric codes, convert to label strings
-      categories = categories.map((code) => col.codeMapping[code as number]);
-    }
-  }
 
   const categoryMap = new Map();
   categories?.forEach((label, idx) => categoryMap.set(idx, label));
@@ -272,7 +253,7 @@ function _createColorsByCategoricalMetadata(
   colorAccessor: LabelType,
   schema: Schema
 ): ColorTable {
-  const data = col.asArray();
+  const data = col.getCrossfilterValues();
   // TODO: #35 Use type guards to insure type instead of casting
   const { categories } = schema.annotations.obsByName[
     colorAccessor
@@ -283,22 +264,11 @@ function _createColorsByCategoricalMetadata(
     .domain([0, categories?.length || 0]);
 
   /* pre-create colors - much faster than doing it for each obs */
-  let colors = categories?.reduce((acc: CategoryColors, cat, idx) => {
-    acc[cat as string] = parseRGB(scale(idx));
+  const colors = categories?.reduce((acc: CategoryColors, cat, idx) => {
+    const internalRep = col.getInternalRep(cat as string);
+    acc[String(internalRep)] = parseRGB(scale(idx));
     return acc;
   }, {});
-
-  // If column is dict-encoded, convert color keys from label strings to numeric codes
-  if (isDataframeDictEncodedColumn(col)) {
-    const newColors: CategoryColors = {};
-    Object.entries(colors).forEach(([label, color]) => {
-      const code = col.invCodeMapping[label];
-      if (code !== undefined) {
-        newColors[code] = color;
-      }
-    });
-    colors = newColors;
-  }
 
   const rgb = createRgbArray(data, colors);
   return { rgb, scale };

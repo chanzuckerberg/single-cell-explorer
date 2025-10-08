@@ -10,10 +10,6 @@ import {
   Schema,
 } from "../common/types/schema";
 import { LayoutChoiceState } from "../reducers/layoutChoice";
-import {
-  DataframeDictEncodedColumn,
-  isDataframeDictEncodedColumn,
-} from "./dataframe/types";
 
 /*
   Centroid coordinate calculation
@@ -61,22 +57,9 @@ const getCoordinatesByLabel = (
 
   const { categoryValueIndices, categoryValueCounts } = categorySummary;
 
-  // For dict-encoded columns, we need to map codes to labels for the result map keys
-  // but still use codes to look up indices (since categoryValueIndices is keyed by label strings)
-  const isDictEncoded = isDataframeDictEncodedColumn(categoryColumn);
-  const codeMapping = isDictEncoded
-    ? (categoryColumn as DataframeDictEncodedColumn).codeMapping
-    : null;
-
   // Iterate over all cells
   for (let i = 0, len = categoryArray.length; i < len; i += 1) {
-    // Fetch the code/value of the current cell
-    const dataValue = categoryArray[i];
-
-    // For dict-encoded, convert code to label string for lookups
-    const labelString = isDictEncoded
-      ? codeMapping![dataValue as number]
-      : dataValue;
+    const labelString = categoryColumn.getLabelValue(i);
 
     // Get the index of the label within the category (categoryValueIndices is keyed by label strings)
     const labelIndex = categoryValueIndices.get(labelString);

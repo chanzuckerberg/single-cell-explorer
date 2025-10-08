@@ -21,7 +21,6 @@ import { track } from "analytics";
 import { EVENTS } from "analytics/events";
 import { RootState, AppDispatch } from "reducers";
 import { Schema, Category } from "common/types/schema";
-import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { CategorySummary } from "util/stateManager/controlsHelpers";
 import { ColorTable } from "util/stateManager/colorHelpers";
 import { ActiveTab } from "common/types/entities";
@@ -86,7 +85,6 @@ const mapStateToProps = (
     colorAccessor,
     colorMode,
     categoryIndex,
-    categoryData,
   } = ownProps;
 
   const label = categorySummary.categoryValues[categoryIndex];
@@ -96,11 +94,7 @@ const mapStateToProps = (
     pointDilation.categoryField === _currentLabelAsString(labelKey);
 
   const category = categoricalSelection[metadataField];
-  const col = categoryData.icol(0);
-  const mappedLabel = isDataframeDictEncodedColumn(col)
-    ? col.codeMapping[parseInt(labelKey, 10)]
-    : label;
-  const labelName = mappedLabel ?? labelKey;
+  const labelName = String(label);
   const isSelected = category.get(labelKey) ?? true;
 
   const isColorBy =
@@ -411,10 +405,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
 
     // For dict-encoded columns, categoryValue is a label string but histogramMap is keyed by codes
     // Convert to code for lookup
-    let lookupValue: string | number = categoryValue;
-    if (isDataframeDictEncodedColumn(groupBy)) {
-      lookupValue = groupBy.invCodeMapping[categoryValue];
-    }
+    const lookupValue = groupBy.getInternalRep(categoryValue);
 
     const bins = histogramMap.has(lookupValue)
       ? (histogramMap.get(lookupValue) as ContinuousHistogram)
@@ -453,12 +444,7 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
       .col(colorAccessor)
       .histogramCategoricalBy(groupBy);
 
-    // For dict-encoded columns, categoryValue is a label string but occupancyMap is keyed by codes
-    // Convert to code for lookup
-    let lookupValue: string | number = categoryValue;
-    if (isDataframeDictEncodedColumn(groupBy)) {
-      lookupValue = groupBy.invCodeMapping[categoryValue];
-    }
+    const lookupValue = groupBy.getInternalRep(categoryValue);
 
     const occupancy = occupancyMap.get(lookupValue);
 
@@ -473,25 +459,15 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
 
       const dfColumn = colorData.col(colorAccessor);
 
-      // Use the same logic as normalization to get consistent categories
-      let categoryValues;
-      let normalizedOccupancy = occupancy;
+      // Use unified interface - no conditional logic needed
+      const categoryValues = dfColumn.summarizeCategorical().categories;
 
-      if (isDataframeDictEncodedColumn(dfColumn)) {
-        // Extract unique label strings from the codeMapping
-        categoryValues = Object.values(dfColumn.codeMapping);
-
-        // Convert occupancy map keys from codes to labels
-        normalizedOccupancy = new Map();
-        occupancy.forEach((value, key) => {
-          const labelKey = dfColumn.codeMapping[key as number];
-          if (labelKey !== undefined) {
-            normalizedOccupancy.set(labelKey, value);
-          }
-        });
-      } else {
-        categoryValues = dfColumn.summarizeCategorical().categories;
-      }
+      // Convert histogram keys from codes to labels if needed
+      const normalizedOccupancy = new Map();
+      occupancy.forEach((value, key) => {
+        const labelKey = dfColumn.getLabelValue(key as number);
+        normalizedOccupancy.set(labelKey, value);
+      });
 
       return {
         domainValues: categoryValues,

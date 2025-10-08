@@ -1,10 +1,6 @@
 import { vec2 } from "gl-matrix";
 import { track } from "../analytics";
 import { EVENTS } from "../analytics/events";
-import {
-  DataframeDictEncodedColumn,
-  isDataframeDictEncodedColumn,
-} from "../util/dataframe/types";
 
 /*
 Action creators for selection
@@ -78,17 +74,13 @@ export const selectCategoricalMetadataAction =
       labelSelectionState.get(k)
     );
 
-    // For dict-encoded columns, convert label strings to codes for crossfilter
-    let selectionValues = selectedLabels;
-    // Fetch the column data to check if it's dict-encoded
     const categoryDf = await annoMatrix.fetch("obs", metadataField);
     const column = categoryDf.icol(0);
-    if (isDataframeDictEncodedColumn(column)) {
-      const { invCodeMapping } = column as DataframeDictEncodedColumn;
-      selectionValues = selectedLabels.map(
-        (labelStr) => invCodeMapping[labelStr as string]
-      );
-    }
+
+    // Convert selected labels to their internal representation for crossfilter
+    const selectionValues = selectedLabels.map((lbl) =>
+      column.getInternalRep(lbl)
+    );
 
     const selection = {
       mode: "exact",

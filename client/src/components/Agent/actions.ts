@@ -1,6 +1,5 @@
 import actions from "actions";
 import { Dataframe } from "util/dataframe";
-import { isDataframeDictEncodedColumn } from "util/dataframe/types";
 import { Field } from "common/types/schema";
 import { Query } from "annoMatrix/query";
 import { AppDispatch, GetState } from "../../reducers";
@@ -46,9 +45,7 @@ export const performCategoricalSelection =
     // our data
     const column = categoryData.icol(0);
 
-    const labelName = isDataframeDictEncodedColumn(column)
-      ? column.invCodeMapping[categoryValue]
-      : categoryValue;
+    const labelName = column.getInternalRep(categoryValue);
 
     if (
       obsCrossfilter.annoMatrix.nObs ===
