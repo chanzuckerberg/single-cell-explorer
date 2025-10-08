@@ -40,5 +40,7 @@ stack:
         paths:
           - path: /w/
             pathType: Prefix
+          - path: /e/
+            pathType: Prefix
           - path: /cellxgene/
             pathType: Prefix
