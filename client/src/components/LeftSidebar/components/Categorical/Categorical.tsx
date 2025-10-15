@@ -166,7 +166,13 @@ class Categorical extends React.Component<Props, CategoricalState> {
     schema?.annotations.obsByName[catName].writable || false;
 
   render() {
-    const { schema, isCellGuideCxg, expandedCategories } = this.props;
+    const {
+      schema,
+      isCellGuideCxg,
+      expandedCategories,
+      writableCategoriesEnabled,
+      writableGenesetsEnabled,
+    } = this.props;
     const { createCategoryDialogOpen, newCategoryName, categoryToDuplicate } =
       this.state;
 
@@ -248,26 +254,28 @@ class Categorical extends React.Component<Props, CategoricalState> {
             />
           }
         />
-        <div style={{ marginBottom: 10 }}>
-          <Tooltip
-            content="Create a new category"
-            position={Position.RIGHT}
-            hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            modifiers={{
-              preventOverflow: { enabled: false },
-              hide: { enabled: false },
-            }}
-          >
-            <AnchorButton
-              type="button"
-              intent="primary"
-              onClick={this.handleOpenCreateCategory}
-              data-testid="open-annotation-dialog"
+        {(writableCategoriesEnabled || writableGenesetsEnabled) && (
+          <div style={{ marginBottom: 10 }}>
+            <Tooltip
+              content="Create a new category"
+              position={Position.RIGHT}
+              hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              modifiers={{
+                preventOverflow: { enabled: false },
+                hide: { enabled: false },
+              }}
             >
-              Create new <strong>category</strong>
-            </AnchorButton>
-          </Tooltip>
-        </div>
+              <AnchorButton
+                type="button"
+                intent="primary"
+                onClick={this.handleOpenCreateCategory}
+                data-testid="open-annotation-dialog"
+              >
+                Create new <strong>category</strong>
+              </AnchorButton>
+            </Tooltip>
+          </div>
+        )}
 
         {isCellGuideCxg ? (
           <>
@@ -345,6 +353,9 @@ function mapStateToProps(state: RootState): StateProps {
     isCellGuideCxg: state.controls.isCellGuideCxg,
     expandedCategories: state.controls.expandedCategories,
     writableCategoriesEnabled: !!state.config?.parameters?.annotations,
+    writableGenesetsEnabled: !(
+      state.config?.parameters?.annotations_genesets_readonly ?? true
+    ),
   };
 }
 
