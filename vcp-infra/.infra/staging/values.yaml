@@ -54,8 +54,6 @@ stack:
           value: explorer.platform.staging.virtual-cells.czi.technology
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-staging
-        - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
         - name: CHECK_PERMISSIONS_URL
