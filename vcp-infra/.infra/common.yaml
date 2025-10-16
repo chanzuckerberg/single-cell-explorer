@@ -37,6 +37,7 @@ stack:
           cpu: 2
           memory: 2Gi
       ingress:
+        oidcProtected: true
         paths:
           - path: /w/
             pathType: Prefix
