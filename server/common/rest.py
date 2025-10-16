@@ -108,9 +108,7 @@ def _get_request_user_id(req) -> Optional[str]:
     if req is None:
         return None
 
-    bifrost_user_id = _call_bifrost_for_user_id(req)
-    if bifrost_user_id:
-        return bifrost_user_id
+    return _call_bifrost_for_user_id(req)
 
 
 def _resolve_request_user_id(req) -> Optional[str]:
