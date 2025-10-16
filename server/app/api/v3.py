@@ -399,6 +399,10 @@ def register_api_v3(app, app_config, api_url_prefix):
                 )
 
                 if should_check:
+                    # Skip authentication for OPTIONS requests (CORS preflight)
+                    if request.method == "OPTIONS":
+                        return None
+
                     try:
                         user_id = common_rest._resolve_request_user_id(request)
                         if user_id is None:

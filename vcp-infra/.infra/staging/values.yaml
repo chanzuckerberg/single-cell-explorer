@@ -16,6 +16,7 @@ stack:
         - --whitelist-domain=vcp-staging.auth.us-west-2.amazoncognito.com
         - --request-logging=false
         - --set-xauthrequest=true
+        - --skip-auth-preflight
   services:
     explorer:
       serviceAccount:
@@ -54,8 +55,6 @@ stack:
           value: explorer.platform.staging.virtual-cells.czi.technology
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-staging
-        - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
         - name: CHECK_PERMISSIONS_URL
