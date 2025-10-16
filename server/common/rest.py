@@ -115,6 +115,10 @@ def _resolve_request_user_id(req) -> Optional[str]:
     if current_app.app_config.server__app__disable_auth:
         return None
 
+    # Skip authentication for OPTIONS requests (CORS preflight)
+    if req and req.method == "OPTIONS":
+        return None
+
     user_id = _get_request_user_id(req)
     if user_id:
         return user_id
