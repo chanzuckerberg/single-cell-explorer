@@ -12,7 +12,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
-COPY hosted/nginx.conf /etc/nginx/nginx.conf
+COPY vcp-hosted/nginx.conf /etc/nginx/nginx.conf
 
 ADD server/requirements.txt .
 RUN python3 -m pip install -r requirements.txt
