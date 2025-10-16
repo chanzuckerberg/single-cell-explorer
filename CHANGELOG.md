@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.16.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.15.0...v1.16.0) (2025-10-16)
+
+
+### Misc
+
+* integrate with bifrost ([#1292](https://github.com/chanzuckerberg/single-cell-explorer/issues/1292)) ([ad0724a](https://github.com/chanzuckerberg/single-cell-explorer/commit/ad0724a658201bc2b2210c7e31fa68c736c943d0))
+* remove duplicate byod bucket env var and skip auth preflight for options ([#1293](https://github.com/chanzuckerberg/single-cell-explorer/issues/1293)) ([bbb9aed](https://github.com/chanzuckerberg/single-cell-explorer/commit/bbb9aed6706ccff36198e8478068888d3da55dc3))
+
+
+### Features
+
+* annotations ([#1284](https://github.com/chanzuckerberg/single-cell-explorer/issues/1284)) ([3721acb](https://github.com/chanzuckerberg/single-cell-explorer/commit/3721acb236428ef9c45d63a10c9f24fb92c9d400))
+
+
+### Bug Fixes
+
+* add basic auth to match vcp platform domain ([#1291](https://github.com/chanzuckerberg/single-cell-explorer/issues/1291)) ([3ea95e7](https://github.com/chanzuckerberg/single-cell-explorer/commit/3ea95e7fa5f82c77130de2068317a65331d6c3ba))
+* staging auth ([#1289](https://github.com/chanzuckerberg/single-cell-explorer/issues/1289)) ([e57fb4f](https://github.com/chanzuckerberg/single-cell-explorer/commit/e57fb4f42ff2455d84619615c5138bbe5ab3ac81))
+* staging bucket ([#1288](https://github.com/chanzuckerberg/single-cell-explorer/issues/1288)) ([3e667c5](https://github.com/chanzuckerberg/single-cell-explorer/commit/3e667c539442a9e53f1e9ebe9462120db2fb6184))
+* update nginx to forward headers ([#1290](https://github.com/chanzuckerberg/single-cell-explorer/issues/1290)) ([a9e1aed](https://github.com/chanzuckerberg/single-cell-explorer/commit/a9e1aed6f638601e706625678892ed6eb51aca90))
+
 ## [1.15.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.14.0...v1.15.0) (2025-09-30)
 
 
