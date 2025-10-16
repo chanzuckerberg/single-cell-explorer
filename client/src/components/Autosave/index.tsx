@@ -35,10 +35,8 @@ const mapStateToProps = (state: RootState): StateProps => ({
     state.autosave?.obsAnnotationSaveInProgress ?? false,
   genesetSaveInProgress: state.autosave?.genesetSaveInProgress ?? false,
   error: state.autosave?.error ?? false,
-  writableCategoriesEnabled: !!state.config?.parameters?.annotations,
-  writableGenesetsEnabled: !(
-    state.config?.parameters?.annotations_genesets_readonly ?? true
-  ),
+  writableCategoriesEnabled: state.annotations.writableCategoriesEnabled,
+  writableGenesetsEnabled: state.annotations.writableGenesetsEnabled,
   annoMatrix: state.annoMatrix,
   genesets: state.genesets.genesets,
   genesetsInitialized: state.genesets.initialized,

@@ -10,6 +10,8 @@ export interface AnnotationsState {
     category: string | null;
     label: number | null;
   };
+  writableCategoriesEnabled: boolean;
+  writableGenesetsEnabled: boolean;
 }
 
 const initialState: AnnotationsState = {
@@ -18,6 +20,8 @@ const initialState: AnnotationsState = {
   categoryBeingEdited: null,
   categoryAddingNewLabel: null,
   labelEditable: { category: null, label: null },
+  writableCategoriesEnabled: false,
+  writableGenesetsEnabled: false,
 };
 
 const Annotations = (
@@ -25,6 +29,15 @@ const Annotations = (
   action: AnyAction
 ): AnnotationsState => {
   switch (action.type) {
+    case "configuration load complete": {
+      return {
+        ...state,
+        writableCategoriesEnabled: !!action.config?.parameters?.annotations,
+        writableGenesetsEnabled: !(
+          action.config?.parameters?.annotations_genesets_readonly ?? true
+        ),
+      };
+    }
     case "annotation: activate add new label mode": {
       return {
         ...state,

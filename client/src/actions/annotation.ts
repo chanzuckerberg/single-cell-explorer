@@ -21,6 +21,33 @@ type ColumnValueCtor = new (length: number) => AnyArray;
 
 const { isUserAnnotation } = AnnotationsHelpers;
 
+/**
+ * Helper function to call annotation backend operations with consistent error handling.
+ * Logs errors but doesn't revert local state, allowing optimistic UI updates.
+ */
+async function callAnnotationBackendOperation(
+  url: string,
+  options: RequestInit,
+  operationName: string
+): Promise<void> {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      // TODO: Surface error to user once we have design input on how to display it
+      console.error(
+        `Failed to ${operationName} on backend: ${response.status} - ${response.statusText}`
+      );
+    }
+  } catch (error) {
+    // TODO: Surface error to user once we have design input on how to display it
+    console.error(`Failed to ${operationName} on backend:`, error);
+  }
+}
+
 export const annotationCreateCategoryAction =
   (newCategoryName: string, categoryToDuplicate?: string | null): ThunkResult =>
   async (dispatch: AppDispatch, getState: GetState) => {
@@ -105,7 +132,7 @@ export const annotationRenameCategoryAction =
     const {
       annoMatrix: prevAnnoMatrix,
       obsCrossfilter: prevObsCrossfilter,
-      config,
+      annotations: { writableCategoriesEnabled },
     } = state;
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
     if (!isUserAnnotation(prevAnnoMatrix, oldCategoryName)) {
@@ -131,7 +158,6 @@ export const annotationRenameCategoryAction =
     });
 
     // Only make backend request if annotations are enabled (not in no-auth mode)
-    const writableCategoriesEnabled = !!config?.parameters?.annotations;
     if (!writableCategoriesEnabled) {
       // In no-auth mode, immediately reset autosave state since there's no backend to wait for
       dispatch({
@@ -147,37 +173,27 @@ export const annotationRenameCategoryAction =
     });
 
     // Persist to backend and WAIT for completion
-    try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${
-          globals.API?.version ?? ""
-        }annotations/obs?rename=true&category_name=${encodeURIComponent(
-          oldCategoryName
-        )}`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ new_name: trimmedName }),
-          headers: new Headers({
-            "Content-Type": "application/json",
-          }),
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          `Failed to rename category on backend: ${response.status} - ${response.statusText}`
-        );
-        // Note: We don't revert the local state here since the user expects the UI to reflect their action
-        // The backend rename failure will be logged but won't block the UI
-      }
-    } catch (error) {
-      console.error("Failed to rename category on backend:", error);
-      // Same as above - don't revert local state
-    }
+    await callAnnotationBackendOperation(
+      `${globals.API?.prefix ?? ""}${
+        globals.API?.version ?? ""
+      }annotations/obs?rename=true&category_name=${encodeURIComponent(
+        oldCategoryName
+      )}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ new_name: trimmedName }),
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+      },
+      "rename category"
+    );
 
     // Reset autosave state AFTER backend completes to prevent autosave from trying
     // to save to the old category name while the backend file is being renamed
+    // NOTE: We MUST dispatch "save complete" even on backend failure to reset the
+    // autosave state machine. Without this, autosave would remain in "saving" state
+    // and block future saves.
     dispatch({
       type: "writable obs annotations - save complete",
       lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
@@ -191,7 +207,7 @@ export const annotationDeleteCategoryAction =
     const {
       annoMatrix: prevAnnoMatrix,
       obsCrossfilter: prevObsCrossfilter,
-      config,
+      annotations: { writableCategoriesEnabled },
     } = state;
     if (!prevAnnoMatrix || !prevObsCrossfilter) return;
     if (!isUserAnnotation(prevAnnoMatrix, categoryName)) {
@@ -208,7 +224,6 @@ export const annotationDeleteCategoryAction =
     });
 
     // Only make backend request if annotations are enabled (not in no-auth mode)
-    const writableCategoriesEnabled = !!config?.parameters?.annotations;
     if (!writableCategoriesEnabled) {
       // In no-auth mode, immediately reset autosave state since there's no backend to wait for
       dispatch({
@@ -224,31 +239,21 @@ export const annotationDeleteCategoryAction =
     });
 
     // Persist to backend and WAIT for completion
-    try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${
-          globals.API?.version ?? ""
-        }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          `Failed to delete category on backend: ${response.status} - ${response.statusText}`
-        );
-        // Note: We don't revert the local state here since the user expects the UI to reflect their action
-        // The backend deletion failure will be logged but won't block the UI
-      }
-    } catch (error) {
-      console.error("Failed to delete category on backend:", error);
-      // Same as above - don't revert local state
-    }
+    await callAnnotationBackendOperation(
+      `${globals.API?.prefix ?? ""}${
+        globals.API?.version ?? ""
+      }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
+      {
+        method: "DELETE",
+      },
+      "delete category"
+    );
 
     // Reset autosave state AFTER backend completes to prevent autosave from trying
     // to save the deleted category while the backend file is being deleted
+    // NOTE: We MUST dispatch "save complete" even on backend failure to reset the
+    // autosave state machine. Without this, autosave would remain in "saving" state
+    // and block future saves.
     dispatch({
       type: "writable obs annotations - save complete",
       lastSavedAnnoMatrix: obsCrossfilter.annoMatrix,
@@ -514,7 +519,7 @@ export const saveObsAnnotationsAction =
     const df = await annoMatrix.fetch(Field.obs, changedCols);
     const buffer = MatrixFBS.encodeMatrixFBS(df);
     const compressed = deflate(buffer);
-    const requestBody = new Blob([compressed], {
+    const requestBody = new Blob([new Uint8Array(compressed)], {
       type: "application/octet-stream",
     });
 
@@ -606,6 +611,8 @@ export const saveGenesetsAction =
       type: "autosave: genesets started",
     });
 
+    // TID (transaction ID) is incremented for optimistic concurrency control.
+    // Each save gets a new TID to track the version and detect conflicts.
     const tid = (lastTid ?? 0) + 1;
     const ota = {
       tid,

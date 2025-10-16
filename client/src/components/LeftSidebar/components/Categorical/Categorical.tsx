@@ -354,10 +354,8 @@ function mapStateToProps(state: RootState): StateProps {
     schema: state.annoMatrix?.schema,
     isCellGuideCxg: state.controls.isCellGuideCxg,
     expandedCategories: state.controls.expandedCategories,
-    writableCategoriesEnabled: !!state.config?.parameters?.annotations,
-    writableGenesetsEnabled: !(
-      state.config?.parameters?.annotations_genesets_readonly ?? true
-    ),
+    writableCategoriesEnabled: state.annotations.writableCategoriesEnabled,
+    writableGenesetsEnabled: state.annotations.writableGenesetsEnabled,
   };
 }
 
