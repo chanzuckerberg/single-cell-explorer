@@ -56,3 +56,5 @@ stack:
           value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
+        - name: CHECK_PERMISSIONS_URL
+          value: "http://bifrost-permissions.argus-bifrost-prod:8043/check_permissions"
