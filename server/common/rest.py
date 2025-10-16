@@ -273,10 +273,6 @@ def genesets_put(request, data_adaptor):
     tid = payload.get("tid")
     user_id = _resolve_request_user_id(request)
 
-    # Reject saves when authentication is not permitted (no authenticated user)
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
-
     try:
         data_adaptor.save_gene_sets(
             genesets,
@@ -377,10 +373,6 @@ def annotations_obs_put(request, data_adaptor):
 
     user_id = _resolve_request_user_id(request)
 
-    # Reject saves when no authenticated user is available
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
-
     try:
         data_adaptor.save_obs_annotations(
             dataframe,
@@ -410,10 +402,6 @@ def annotations_obs_category_delete(request, data_adaptor):
         )
 
     user_id = _resolve_request_user_id(request)
-
-    # Reject operations when no authenticated user is available
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
 
     try:
         data_adaptor.delete_obs_annotation_category(
@@ -458,10 +446,6 @@ def annotations_obs_category_rename(request, data_adaptor):
         )
 
     user_id = _resolve_request_user_id(request)
-
-    # Reject operations when no authenticated user is available
-    if user_id is None:
-        return abort(HTTPStatus.UNAUTHORIZED)
 
     try:
         data_adaptor.rename_obs_annotation_category(

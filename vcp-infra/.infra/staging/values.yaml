@@ -16,6 +16,7 @@ stack:
         - --whitelist-domain=vcp-staging.auth.us-west-2.amazoncognito.com
         - --request-logging=false
         - --set-xauthrequest=true
+        - --skip-auth-preflight
   services:
     explorer:
       serviceAccount:

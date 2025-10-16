@@ -16,6 +16,7 @@ stack:
         - --auth-logging=false
         - --request-logging=false
         - --set-xauthrequest=true
+        - --skip-auth-preflight
   services:
     explorer:
       serviceAccount:
