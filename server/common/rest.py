@@ -49,10 +49,80 @@ RDEV_USER_ID = "rdev-user"
 HEADER_USER_ID_CANDIDATES = ()
 
 
+def _call_bifrost_for_user_id(req) -> Optional[str]:
+    """Call Bifrost permissions service to get the bifrost user ID."""
+    check_permissions_url = os.environ.get("CHECK_PERMISSIONS_URL")
+    if not check_permissions_url:
+        current_app.logger.debug("No CHECK_PERMISSIONS_URL configured, skipping Bifrost integration")
+        return None
+
+    # Get authorization header from request
+    auth_header = req.headers.get("Authorization")
+    if not auth_header:
+        current_app.logger.debug("No Authorization header found for Bifrost call")
+        return None
+
+    try:
+        # Call Bifrost to check permissions and get user ID
+        import urllib.parse
+
+        query_params = urllib.parse.urlencode({"relation": "user", "object": "application:vcp"})
+        full_url = f"{check_permissions_url}?{query_params}"
+
+        headers = {"Authorization": auth_header, "X-Request-ID": req.headers.get("X-Request-Id", "")}
+
+        response = requests.get(full_url, headers=headers, timeout=10)
+
+        if response.status_code == 403:
+            current_app.logger.warning(f"User not authorized by Bifrost: {response.text}")
+            return None
+
+        if not response.ok:
+            current_app.logger.error(
+                f"HTTP error from Bifrost! Status: {response.status_code}, message: {response.text}"
+            )
+            return None
+
+        # Check if user is allowed
+        try:
+            response_json = response.json()
+            if not response_json.get("allowed"):
+                current_app.logger.warning(f"User not authorized by Bifrost: {response_json}")
+                return None
+        except Exception as e:
+            current_app.logger.error(f"Failed to parse Bifrost response JSON: {e}")
+            return None
+
+        # Get bifrost user ID from response headers
+        bifrost_user_id = response.headers.get("x-bifrost-user") or response.headers.get("X-Bifrost-User")
+        if not bifrost_user_id:
+            current_app.logger.warning("No x-bifrost-user header found in Bifrost response")
+            return None
+
+        current_app.logger.debug(f"Got bifrost user ID: {bifrost_user_id}")
+        return bifrost_user_id
+
+    except Exception as e:
+        current_app.logger.error(f"Error calling Bifrost: {e}")
+        return None
+
+
 def _get_request_user_id(req) -> Optional[str]:
     if req is None:
         return None
-    return req.headers.get("X-Auth-Request-User")
+
+    # First try to get user ID from Bifrost (if configured)
+    bifrost_user_id = _call_bifrost_for_user_id(req)
+    if bifrost_user_id:
+        return bifrost_user_id
+
+    # Fall back to oauth2-proxy headers
+    for header_name in ["X-Auth-Request-User", "X-Forwarded-User", "x-bifrost-user", "X-Bifrost-User"]:
+        user_id = req.headers.get(header_name)
+        if user_id:
+            return user_id
+
+    return None
 
 
 def _resolve_request_user_id(req) -> Optional[str]:
