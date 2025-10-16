@@ -10,8 +10,8 @@ stack:
         - --cookie-expire=24h
         - --cookie-domain=.staging.virtual-cells.czi.technology
         - --whitelist-domain=vcp-staging.auth.us-west-2.amazoncognito.com
-        - --auth-logging=false
         - --request-logging=false
+        - --set-xauthrequest=true
   services:
     explorer:
       serviceAccount:
@@ -54,9 +54,3 @@ stack:
           value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
           value: "1"
-      ingress:
-        paths:
-          - path: /w/
-            pathType: Prefix
-          - path: /cellxgene/
-            pathType: Prefix

@@ -1,6 +1,12 @@
 import { doBinaryRequest, doFetch } from "./fetchHelpers";
 import { matrixFBSToDataframe } from "../util/stateManager/matrix";
 import { _getColumnSchema } from "./schema";
+import {
+  addObsAnnoCategory as addObsAnnoCategoryToSchema,
+  addObsAnnoColumn,
+  removeObsAnnoCategory as removeObsAnnoCategoryFromSchema,
+  removeObsAnnoColumn,
+} from "../util/stateManager/schemaHelpers";
 import { _whereCacheCreate, WhereCache } from "./whereCache";
 import AnnoMatrix from "./annoMatrix";
 import PromiseLimit from "../util/promiseLimit";
@@ -14,11 +20,30 @@ import {
   ComplexQuery,
   Query,
 } from "./query";
-import { normalizeResponse } from "./normalize";
-import { Field, RawSchema } from "../common/types/schema";
+import {
+  normalizeResponse,
+  normalizeWritableCategoricalSchema,
+} from "./normalize";
+import {
+  AnnotationColumnSchema,
+  ArraySchema,
+  CategoricalAnnotationColumnSchema,
+  Category,
+  Field,
+  RawSchema,
+} from "../common/types/schema";
 import { Dataframe } from "../util/dataframe";
+import {
+  LabelType,
+  LabelArray,
+  DataframeValueArray,
+  DataframeValue,
+} from "../util/dataframe/types";
+import { AnyArray, TypedArray } from "../common/types/arraytypes";
 
 const promiseThrottle = new PromiseLimit<ArrayBuffer>(5);
+
+type ColumnValueCtor = new (length: number) => AnyArray;
 
 export default class AnnoMatrixLoader extends AnnoMatrix {
   baseURL: string;
@@ -43,6 +68,227 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
     }
     this.baseURL = baseURL;
     Object.seal(this);
+  }
+
+  addObsColumn(
+    colSchema: AnnotationColumnSchema,
+    Ctor: ColumnValueCtor,
+    value: AnyArray | Category
+  ): AnnoMatrix {
+    const columnName = colSchema.name;
+    if (
+      _getColumnSchema(this.schema, Field.obs, columnName) ||
+      this._cache.obs.hasCol(columnName)
+    ) {
+      throw new Error("column already exists");
+    }
+
+    const newAnnoMatrix = this._clone();
+    let columnData: AnyArray;
+    const cloneArray = (arr: AnyArray): DataframeValueArray => {
+      if (Array.isArray(arr)) {
+        return [...(arr as DataframeValue[])] as DataframeValueArray;
+      }
+      return (arr as TypedArray).slice() as unknown as DataframeValueArray;
+    };
+
+    if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+      if ((value as AnyArray).constructor !== Ctor) {
+        throw new Error("Mismatched value array type");
+      }
+      if ((value as AnyArray).length !== this.nObs) {
+        throw new Error("Value array has incorrect length");
+      }
+      columnData = cloneArray(value as AnyArray);
+    } else {
+      const initialized = new Ctor(this.nObs) as AnyArray;
+      if (typeof (initialized as any).fill !== "function") {
+        throw new Error("Column constructor must support fill");
+      }
+      (initialized as any).fill(value as Category);
+      columnData = cloneArray(initialized);
+    }
+
+    const dataframeColumn = columnData as DataframeValueArray;
+    newAnnoMatrix._cache.obs = this._cache.obs.withCol(
+      columnName,
+      dataframeColumn
+    );
+    const normalizedSchema = normalizeWritableCategoricalSchema(
+      {
+        ...colSchema,
+        writable: true,
+      },
+      newAnnoMatrix._cache.obs.col(columnName)
+    );
+    newAnnoMatrix.schema = addObsAnnoColumn(
+      this.schema,
+      columnName,
+      normalizedSchema
+    );
+    return newAnnoMatrix;
+  }
+
+  addObsAnnoCategory(col: LabelType, category: Category): AnnoMatrix {
+    const colSchema = _getColumnSchema(this.schema, Field.obs, col);
+    writableCategoryTypeCheck(colSchema);
+    const newAnnoMatrix = this._clone();
+    newAnnoMatrix.schema = addObsAnnoCategoryToSchema(
+      this.schema,
+      col as string,
+      category
+    );
+    return newAnnoMatrix;
+  }
+
+  async removeObsAnnoCategory(
+    col: LabelType,
+    category: Category,
+    unassignedCategory: Category
+  ): Promise<AnnoMatrix> {
+    const colSchema = _getColumnSchema(this.schema, Field.obs, col);
+    writableCategoryTypeCheck(colSchema);
+
+    const newAnnoMatrix = await this.resetObsColumnValues(
+      col,
+      category,
+      unassignedCategory
+    );
+    newAnnoMatrix.schema = removeObsAnnoCategoryFromSchema(
+      newAnnoMatrix.schema,
+      col as string,
+      category
+    );
+    return newAnnoMatrix;
+  }
+
+  dropObsColumn(col: LabelType): AnnoMatrix {
+    const colSchema = _getColumnSchema(this.schema, Field.obs, col);
+    writableCheck(colSchema);
+
+    const newAnnoMatrix = this._clone();
+    newAnnoMatrix._cache.obs = this._cache.obs.dropCol(col);
+    newAnnoMatrix.schema = removeObsAnnoColumn(this.schema, col as string);
+    return newAnnoMatrix;
+  }
+
+  renameObsColumn(oldCol: LabelType, newCol: LabelType): AnnoMatrix {
+    const oldColSchema = _getColumnSchema(this.schema, Field.obs, oldCol);
+    writableCheck(oldColSchema);
+
+    if (typeof newCol !== "string" || newCol.length === 0) {
+      throw new Error("new column name must be a non-empty string");
+    }
+    if (_getColumnSchema(this.schema, Field.obs, newCol)) {
+      throw new Error("column already exists");
+    }
+
+    if (!this._cache.obs.hasCol(oldCol)) {
+      throw new Error("annotation data unavailable");
+    }
+    const existing = this._cache.obs.col(oldCol).asArray() as AnyArray;
+    const ctor = existing.constructor as ColumnValueCtor;
+
+    const dropped = this.dropObsColumn(oldCol);
+    return dropped.addObsColumn(
+      {
+        ...(oldColSchema as AnnotationColumnSchema),
+        name: newCol,
+      },
+      ctor,
+      existing
+    );
+  }
+
+  async setObsColumnValues(
+    col: LabelType,
+    rowLabels: LabelArray,
+    value: Category
+  ): Promise<AnnoMatrix> {
+    const colSchema = _getColumnSchema(this.schema, Field.obs, col);
+    writableCategoryTypeCheck(colSchema);
+
+    await this.fetch(Field.obs, col);
+    if (!this._cache.obs.hasCol(col)) {
+      throw new Error("annotation data unavailable");
+    }
+
+    const column = this._cache.obs.col(col);
+    const nextData = column.getLabelArray().slice() as Category[];
+    const offsets = this.rowIndex.getOffsets(rowLabels);
+
+    // Modify the values
+    offsets.forEach((offset) => {
+      if (offset === undefined) {
+        throw new Error("Unknown row label");
+      }
+      nextData[offset] = value;
+    });
+
+    const newAnnoMatrix = this._clone();
+    const updatedColumn = nextData as unknown as DataframeValueArray;
+    newAnnoMatrix._cache.obs = this._cache.obs.replaceColData(
+      col,
+      updatedColumn
+    );
+
+    const columnName = col as string;
+    const columnDef = this.schema.annotations.obsByName[columnName] as
+      | CategoricalAnnotationColumnSchema
+      | undefined;
+    let updatedSchema = this.schema;
+    if (!columnDef?.categories?.includes(value)) {
+      updatedSchema = addObsAnnoCategoryToSchema(
+        this.schema,
+        columnName,
+        value
+      );
+    }
+    newAnnoMatrix.schema = updatedSchema;
+    return newAnnoMatrix;
+  }
+
+  async resetObsColumnValues(
+    col: LabelType,
+    oldValue: Category,
+    newValue: Category
+  ): Promise<AnnoMatrix> {
+    const colSchema = _getColumnSchema(this.schema, Field.obs, col);
+    writableCategoryTypeCheck(colSchema);
+
+    if (!colSchema.categories.includes(oldValue)) {
+      throw new Error("unknown category");
+    }
+
+    await this.fetch(Field.obs, col);
+    if (!this._cache.obs.hasCol(col)) {
+      throw new Error("annotation data unavailable");
+    }
+
+    const column = this._cache.obs.col(col);
+    const data = column.getLabelArray().slice() as Category[];
+
+    for (let i = 0, l = data.length; i < l; i += 1) {
+      if (data[i] === oldValue) {
+        data[i] = newValue;
+      }
+    }
+
+    const newAnnoMatrix = this._clone();
+    newAnnoMatrix._cache.obs = this._cache.obs.replaceColData(
+      col,
+      data as unknown as DataframeValueArray
+    );
+
+    if (!colSchema.categories.includes(newValue)) {
+      newAnnoMatrix.schema = addObsAnnoCategoryToSchema(
+        this.schema,
+        col as string,
+        newValue
+      );
+    }
+
+    return newAnnoMatrix;
   }
 
   /**
@@ -97,6 +343,23 @@ export default class AnnoMatrixLoader extends AnnoMatrix {
 /*
 Utility functions below
 */
+
+function writableCheck(
+  colSchema: AnnotationColumnSchema | ArraySchema | undefined
+): asserts colSchema is AnnotationColumnSchema {
+  if (!colSchema || !(colSchema as AnnotationColumnSchema).writable) {
+    throw new Error("Unknown or readonly obs column");
+  }
+}
+
+function writableCategoryTypeCheck(
+  colSchema: AnnotationColumnSchema | ArraySchema | undefined
+): asserts colSchema is CategoricalAnnotationColumnSchema {
+  writableCheck(colSchema as AnnotationColumnSchema | undefined);
+  if ((colSchema as AnnotationColumnSchema).type !== "categorical") {
+    throw new Error("column must be categorical");
+  }
+}
 
 function _embLoader(
   baseURL: string,

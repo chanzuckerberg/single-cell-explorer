@@ -66,6 +66,11 @@ app.get("/:baseUrl/cellguide-cxgs/:dataset", (_, res) => {
   res.sendFile(path.join(path.dirname(__dirname), "build/index.html")); // same location as prod index
 });
 
+// Same as above but for datasets located in custom-cxgs/ subdirectory (with user_id path segment)
+app.get("/:baseUrl/custom-cxgs/:userId/:dataset", (_, res) => {
+  res.sendFile(path.join(path.dirname(__dirname), "build/index.html")); // same location as prod index
+});
+
 app.use(express.static("/build"));
 
 app.use(favicon("./favicon.png"));

@@ -56,8 +56,11 @@ export const selectCategoricalMetadataAction =
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
   ) =>
   async (dispatch: any, getState: any) => {
-    const { obsCrossfilter: prevObsCrossfilter, categoricalSelection } =
-      getState();
+    const {
+      obsCrossfilter: prevObsCrossfilter,
+      categoricalSelection,
+      annoMatrix,
+    } = getState();
 
     const labelSelectionState = new Map(categoricalSelection[metadataField]);
     labels.forEach(
@@ -66,12 +69,22 @@ export const selectCategoricalMetadataAction =
     );
     labelSelectionState.set(label, isSelected);
 
-    const values = Array.from(labelSelectionState.keys()).filter((k) =>
+    // Get selected label strings
+    const selectedLabels = Array.from(labelSelectionState.keys()).filter((k) =>
       labelSelectionState.get(k)
     );
+
+    const categoryDf = await annoMatrix.fetch("obs", metadataField);
+    const column = categoryDf.icol(0);
+
+    // Convert selected labels to their internal representation for crossfilter
+    const selectionValues = selectedLabels.map((lbl) =>
+      column.getInternalRep(lbl)
+    );
+
     const selection = {
       mode: "exact",
-      values,
+      values: selectionValues,
     };
     const obsCrossfilter = await prevObsCrossfilter.select(
       "obs",
@@ -111,6 +124,8 @@ export const selectCategoricalAllMetadataAction =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any --- FIXME: disabled temporarily on migrate to TS.
     labels.forEach((label: any) => labelSelectionState.set(label, isSelected));
 
+    // Note: for "all" or "none" mode, we don't need to convert to codes
+    // since the crossfilter selects everything or nothing regardless of values
     const selection = { mode: isSelected ? "all" : "none" };
     const obsCrossfilter = await prevObsCrossfilter.select(
       "obs",

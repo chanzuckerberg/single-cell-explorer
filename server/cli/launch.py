@@ -1,6 +1,5 @@
 import errno
 import functools
-import logging
 import os
 import sys
 import webbrowser
@@ -212,16 +211,9 @@ def launch(
     """
 
     project_root = os.getenv("PROJECT_ROOT") or os.getcwd()
-    test_dataset_dir: str = os.path.join(project_root, "example-dataset/")
     test_config_file: str = os.path.join(project_root, "client/__tests__/e2e/test_config.yaml")
 
-    dataroot: str = dataroot if dataroot else test_dataset_dir
     config_file: str = config_file if config_file else test_config_file
-
-    if not os.path.isdir(dataroot):
-        logging.error(f"{dataroot} is not a directory -- please provide the root directory for your dataset(s)")
-        sys.exit(1)
-
     if dump_default_config:
         print(default_config)
         sys.exit(0)
@@ -247,7 +239,6 @@ def launch(
             default_dataset__diffexp__enable=not disable_diffexp,
             default_dataset__diffexp__lfc_cutoff=diffexp_lfc_cutoff,
         )
-
         # Use a default secret if one is not provided
         if not app_config.server__app__flask_secret_key:
             updates["app__flask_secret_key"] = "SparkleAndShine"

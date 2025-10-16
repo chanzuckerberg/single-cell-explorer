@@ -128,7 +128,19 @@ export default defineConfig<ChromaticConfig>({
   projects: [
     {
       name: "chromium",
-      testMatch: "**/e2e/*.test.ts",
+      testMatch: [
+        "**/e2e/annotation.e2e.test.ts",
+        "**/e2e/cell-guide.test.ts",
+        "**/e2e/e2e.test.ts",
+      ],
+      use: {
+        ...devices["Desktop Chrome"],
+        userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,
+      },
+    },
+    {
+      name: "data-persistence",
+      testMatch: "**/e2e/data.persistence.e2e.test.ts",
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,

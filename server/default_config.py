@@ -23,6 +23,7 @@ server:
     #     It is up to the server admin to ensure that the networking is setup correctly for this environment.
     api_base_url: null
     web_base_url: null
+    disable_auth: false
 
   multi_dataset:
     # dataroot or dataroots must be set, then cellxgene may serve multiple datasets.

@@ -35,17 +35,19 @@ export function CellTypeDropdown({ cellType }: { cellType: string }) {
 
   const cellTypeOptions = useMemo(
     () =>
-      cellTypes.map<Option>((name) => ({
-        name,
-        component: (
-          <MenuItem
-            selected={cellType === name}
-            disabled={otherSelectedCellTypes.has(name)}
-          >
-            {name}
-          </MenuItem>
-        ),
-      })),
+      cellTypes.map(
+        (name): Option => ({
+          name,
+          component: (
+            <MenuItem
+              selected={cellType === name}
+              disabled={otherSelectedCellTypes.has(name)}
+            >
+              {name}
+            </MenuItem>
+          ),
+        })
+      ),
     [cellType, cellTypes, otherSelectedCellTypes]
   );
 

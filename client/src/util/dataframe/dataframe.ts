@@ -317,9 +317,25 @@ class Dataframe {
     /*
     Summarize the column data. Lazy eval, memoized
     */
-    get.summarizeCategorical = callOnceLazy(() =>
-      _summarizeCategorical(column)
-    );
+    get.summarizeCategorical = callOnceLazy(() => {
+      const summary = _summarizeCategorical(column);
+      if (isDictEncoded) {
+        // Convert categories from codes to labels
+        return {
+          ...summary,
+          categories: summary.categories.map(
+            (code) => get.codeMapping[code as number]
+          ),
+          categoryCounts: new Map(
+            [...summary.categoryCounts.entries()].map(([code, count]) => [
+              get.codeMapping[code as number],
+              count,
+            ])
+          ),
+        };
+      }
+      return summary;
+    });
     get.summarizeContinuous = isTypedArray(column)
       ? callOnceLazy(() => _summarizeContinuous(column))
       : raiseIsNotContinuous;
@@ -359,6 +375,115 @@ class Dataframe {
     get.iget = iget;
     get.__id = __id;
     get.isContinuous = isContinuous;
+
+    get.getLabelValue = function getLabelValue(index: number): string {
+      if (isDictEncoded) {
+        return column.vat(index);
+      }
+      return column[index] as string;
+    };
+
+    get.getLabelValues = function getLabelValues(): string[] {
+      if (isDictEncoded) {
+        return iterateColumn((code) => column.codeMapping[code as number]);
+      }
+      return column as string[];
+    };
+
+    get.selectByLabels = function selectByLabels(labels: string[]): boolean[] {
+      if (isDictEncoded) {
+        return iterateColumn((code) =>
+          labels.includes(column.codeMapping[code as number])
+        );
+      }
+      return iterateColumn((value) => labels.includes(value as string));
+    };
+
+    get.getSelectedLabels = function getSelectedLabels(): string[] {
+      if (isDictEncoded) {
+        return iterateColumn((code) => column.codeMapping[code as number]);
+      }
+      return column as string[];
+    };
+
+    get.getUniqueLabels = function getUniqueLabels(): string[] {
+      if (isDictEncoded) {
+        return Object.values(column.codeMapping);
+      }
+      // For plain arrays, use the existing summary which is cached
+      return get.summarizeCategorical().categories as string[];
+    };
+
+    get.getLabelCounts = function getLabelCounts(): Map<string, number> {
+      if (isDictEncoded) {
+        const counts = new Map<string, number>();
+        iterateColumn((code) => {
+          const label = column.codeMapping[code as number];
+          counts.set(label, (counts.get(label) || 0) + 1);
+        });
+        return counts;
+      }
+      // For plain arrays, use the existing summary which is cached
+      return get.summarizeCategorical().categoryCounts as Map<string, number>;
+    };
+
+    get.getCrossfilterValues = function getCrossfilterValues(): (
+      | string
+      | number
+    )[] {
+      return column as (string | number)[];
+    };
+
+    get.selectByCrossfilterValues = function selectByCrossfilterValues(
+      values: (string | number)[]
+    ): boolean[] {
+      // Convert all values to internal representation
+      const internalValues = values.map((value) =>
+        get.getInternalRep(String(value))
+      );
+      return iterateColumn((item) =>
+        internalValues.includes(item as string | number)
+      );
+    };
+
+    get.getCrossfilterValuesForLabels = function getCrossfilterValuesForLabels(
+      labels: string[]
+    ): (string | number)[] {
+      // Use selectByCrossfilterValues to get boolean mask, then filter crossfilter values
+      const mask = get.selectByCrossfilterValues(labels);
+      const allCrossfilterValues = get.getCrossfilterValues();
+      return allCrossfilterValues.filter((_, index) => mask[index]);
+    };
+
+    get.getInternalRep = function getInternalRep(
+      label: string
+    ): string | number {
+      if (isDictEncoded) {
+        return get.invCodeMapping[label] ?? label;
+      }
+      return label;
+    };
+
+    // Helper function to iterate over column and apply a function to each element
+    const iterateColumn = function iterateColumn<T>(
+      fn: (value: DataframeValue, index: number) => T
+    ): T[] {
+      const result: T[] = [];
+      for (let i = 0; i < column.length; i += 1) {
+        result.push(fn(column[i], i));
+      }
+      return result;
+    };
+
+    get.getLabelArray = function getLabelArray(): string[] {
+      if (isDictEncoded) {
+        return iterateColumn((code) => get.codeMapping[code as number]);
+      }
+      return column as string[];
+    };
+
+    get.isDictEncoded = isDictEncoded;
+
     Object.freeze(get);
     return get;
   }

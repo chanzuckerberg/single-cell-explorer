@@ -85,7 +85,7 @@ const BottomSideBar = ({
                 icon="plus"
                 onClick={() => {
                   const cellType = cellTypes.find(
-                    (type) => !selectedCellTypes.includes(type)
+                    (type: string) => !selectedCellTypes.includes(type)
                   );
                   if (!cellType) {
                     return;

@@ -42,13 +42,14 @@ const getCoordinatesByLabel = (
     return coordsByCategoryLabel;
   }
 
-  const categoryArray = categoryDf.col(categoryName).asArray();
+  const categoryColumn = categoryDf.col(categoryName);
+  const categoryArray = categoryColumn.asArray();
   const layoutDimNames = layoutChoice.currentDimNames;
   const layoutXArray = layoutDf.col(layoutDimNames[0]).asArray();
   const layoutYArray = layoutDf.col(layoutDimNames[1]).asArray();
 
   const categorySummary = createCategorySummaryFromDfCol(
-    categoryDf.col(categoryName),
+    categoryColumn,
     schema.annotations.obsByName[
       categoryName
     ] as CategoricalAnnotationColumnSchema
@@ -58,11 +59,10 @@ const getCoordinatesByLabel = (
 
   // Iterate over all cells
   for (let i = 0, len = categoryArray.length; i < len; i += 1) {
-    // Fetch the label of the current cell
-    const label = categoryArray[i];
+    const labelString = categoryColumn.getLabelValue(i);
 
-    // Get the index of the label within the category
-    const labelIndex = categoryValueIndices.get(label);
+    // Get the index of the label within the category (categoryValueIndices is keyed by label strings)
+    const labelIndex = categoryValueIndices.get(labelString);
 
     // If the category's labels are truncated and this label is removed,
     //  it will not be assigned a label and will not be
@@ -70,8 +70,8 @@ const getCoordinatesByLabel = (
     // If the user created this category,
     //  do not create a coord for the `unassigned` label
     if (labelIndex !== undefined) {
-      // Create/fetch the scratchpad value
-      let coords = coordsByCategoryLabel.get(label);
+      // Use labelString as the key (so the result map is keyed by label strings, not codes)
+      let coords = coordsByCategoryLabel.get(labelString);
       if (coords === undefined) {
         // Get the number of cells which are in the label
         const numInLabel = categoryValueCounts[labelIndex];
@@ -81,7 +81,7 @@ const getCoordinatesByLabel = (
           yCoordinates: new Float32Array(numInLabel),
           length: 0,
         };
-        coordsByCategoryLabel.set(label, coords);
+        coordsByCategoryLabel.set(labelString, coords);
       }
 
       coords.hasFinite =

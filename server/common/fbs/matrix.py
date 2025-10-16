@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 from flatbuffers import Builder
@@ -71,6 +73,9 @@ def encode_matrix_fbs(matrix, row_idx=None, col_idx=None, num_bins=None):
     if matrix.ndim != 2:
         raise ValueError("FBS Matrix must be 2D")
 
+    if col_idx is None and isinstance(matrix, pd.DataFrame):
+        col_idx = matrix.columns
+
     if sparse.issparse(matrix):
         matrix = matrix.toarray()
 
@@ -132,7 +137,33 @@ def decode_matrix_fbs(fbs):
 
     columns_index = deserialize_typed_array((matrix.ColIndexType(), matrix.ColIndex()))
     if columns_index is None:
-        columns_index = range(0, n_cols)
+        columns_index = list(range(0, n_cols))
+    elif np.isscalar(columns_index):
+        columns_index = [columns_index]
+    elif isinstance(columns_index, np.ndarray) and columns_index.ndim == 0:
+        columns_index = [columns_index.item()]
+    elif isinstance(columns_index, range):
+        columns_index = list(columns_index)
+    else:
+        columns_index = list(columns_index)
+
+    def _normalize_column_key(key):
+        if isinstance(key, dict):
+            if "name" in key:
+                return key["name"]
+            return json.dumps(key, sort_keys=True)
+        if isinstance(key, (list, tuple, set, np.ndarray)):
+            try:
+                return "|".join(str(item) for item in key)
+            except Exception:
+                return json.dumps(list(key))
+        try:
+            hash(key)
+            return key
+        except TypeError:
+            return str(key)
+
+    columns_index = [_normalize_column_key(col) for col in columns_index]
 
     # sanity checks
     if len(columns_index) != n_cols or columns_length != n_cols:

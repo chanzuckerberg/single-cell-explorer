@@ -65,6 +65,10 @@ unit-test-server:
 smoke-test:
 	cd client && $(MAKE) smoke-test
 
+.PHONY: data-persistence-smoke-tests
+data-persistence-smoke-tests:
+	cd client && $(MAKE) data-persistence-smoke-tests
+
 # LINTING AND FORMATTING COMMANDS
 
 .PHONY: fmt
@@ -112,3 +116,15 @@ dev-env-server:
 .PHONY: gen-package-lock
 gen-package-lock:
 	cd client && $(MAKE) install
+
+.PHONY: start-backend
+start-backend:
+	cd client && $(MAKE) start-backend
+
+.PHONY: start-backend-user-data
+start-backend-user-data:
+	cd client && $(MAKE) start-backend-user-data
+
+.PHONY: start-frontend
+start-frontend:
+	cd client && $(MAKE) start-frontend

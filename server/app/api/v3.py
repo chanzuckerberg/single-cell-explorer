@@ -1,10 +1,14 @@
 import logging
+import re
 from functools import wraps
+from http import HTTPStatus
 from urllib.parse import unquote
 
 from flask import (
     Blueprint,
     current_app,
+    escape,
+    make_response,
     redirect,
     request,
     send_from_directory,
@@ -64,17 +68,29 @@ class S3URIResource(Resource):
 
 class SchemaAPI(S3URIResource):
     # TODO @mdunitz separate dataset schema and user schema
-    @cache_control(immutable=True, max_age=ONE_YEAR)
+    # TODO: Add user-specific caching using ETags - schema can be cached per-user
+    #       since user annotations only affect individual users. Consider:
+    #       - ETag based on hash(base_schema + user_annotations_for_user)
+    #       - Anonymous users get ETag based only on base_schema
+    #       - This would allow long-term caching for read-only users while
+    #         still supporting fresh data for annotation creators
+    # Removed immutable cache since schema can change with user annotations
+    @cache_control(no_store=True, max_age=0)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.schema_get(data_adaptor)
 
 
 class GenesetsAPI(S3URIResource):
-    @cache_control(immutable=True, max_age=ONE_YEAR)
+    @cache_control(no_store=True, max_age=0)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
         return common_rest.genesets_get(data_adaptor)
+
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        return common_rest.genesets_put(request, data_adaptor)
 
 
 class ConfigAPI(S3URIResource):
@@ -85,10 +101,60 @@ class ConfigAPI(S3URIResource):
 
 
 class AnnotationsObsAPI(S3URIResource):
-    @cache_control(immutable=True, max_age=ONE_YEAR)
     @rest_get_s3uri_data_adaptor
     def get(self, data_adaptor):
-        return common_rest.annotations_obs_get(request, data_adaptor)
+        # Check if request includes user annotations to determine caching
+        fields = request.args.getlist("annotation-name", None)
+        user_id = common_rest._resolve_request_user_id(request)
+
+        # Check if any requested fields are user annotations (writable=True in schema)
+        includes_user_annotations = False
+        if user_id:
+            try:
+                # Get schema with user annotations included
+                schema = data_adaptor.get_schema(user_id=user_id)
+                obs_columns = schema.get("annotations", {}).get("obs", {}).get("columns", [])
+
+                # Find all user annotation names (writable=True)
+                user_annotation_names = {
+                    col["name"] for col in obs_columns if isinstance(col, dict) and col.get("writable", False)
+                }
+
+                if fields:
+                    # Check if any requested fields are user annotations
+                    includes_user_annotations = bool(set(fields) & user_annotation_names)
+                else:
+                    # If no specific fields requested (getting all), and user has annotations
+                    includes_user_annotations = bool(user_annotation_names)
+            except Exception:
+                # If we can't determine, be safe and don't cache
+                includes_user_annotations = True
+
+        response = common_rest.annotations_obs_get(request, data_adaptor)
+
+        # Apply appropriate cache headers
+        if includes_user_annotations:
+            # Don't cache responses that include user annotations
+            response.headers["Cache-Control"] = "no-store, max-age=0"
+        else:
+            # Cache built-in columns forever
+            response.headers["Cache-Control"] = f"immutable, max-age={ONE_YEAR}"
+
+        return response
+
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        # Check if this is a category rename operation
+        if request.args.get("rename"):
+            return common_rest.annotations_obs_category_rename(request, data_adaptor)
+        else:
+            return common_rest.annotations_obs_put(request, data_adaptor)
+
+    @cache_control(no_store=True)
+    @rest_get_s3uri_data_adaptor
+    def delete(self, data_adaptor):
+        return common_rest.annotations_obs_category_delete(request, data_adaptor)
 
 
 class AnnotationsVarAPI(S3URIResource):
@@ -323,6 +389,38 @@ def register_api_v3(app, app_config, api_url_prefix):
 
         # Custom CXGs (only for "w" dataroot)
         if url_dataroot == "w":
+            # Add authorization check before processing any /w/ requests
+            @app.before_request
+            def _check_w_dataroot_access(dataroot=url_dataroot):
+                # Check both direct /w/ paths and /s3_uri/ paths that contain /w/
+                url_path = request.path
+                should_check = url_path.startswith(f"/{dataroot}/") or (
+                    "/s3_uri/" in url_path and f"/{dataroot}/" in unquote(url_path)
+                )
+
+                if should_check:
+                    try:
+                        user_id = common_rest._resolve_request_user_id(request)
+                        if user_id is None:
+                            # No user ID means auth is disabled, which should not have access to /w/
+                            return make_response("Unauthorized access to /w/ dataroot", HTTPStatus.UNAUTHORIZED)
+
+                        # Skip user ID path validation for local-dev-user (development/testing)
+                        if not user_id.startswith(common_rest.LOCAL_DEV_USER_PREFIX):
+                            # Check if the user_id from header matches the user_id in the URL path
+                            # For s3_uri paths, also check the decoded URL
+                            user_id_pattern = f"/{re.escape(user_id)}/"
+                            decoded_path = unquote(url_path)
+
+                            if not (re.search(user_id_pattern, url_path) or re.search(user_id_pattern, decoded_path)):
+                                return make_response(
+                                    f"User ID mismatch: authenticated user '{escape(user_id)}' does not match URL path",
+                                    HTTPStatus.FORBIDDEN,
+                                )
+                    except Exception:
+                        # If we can't resolve user ID (e.g., not in VCP deployment), deny access
+                        return make_response("Unauthorized access to /w/ dataroot", HTTPStatus.UNAUTHORIZED)
+
             bp_dataroot_custom = Blueprint(
                 name=f"api_dataset_{url_dataroot}_custom_cxgs_{api_version.replace('.',',')}",
                 import_name=__name__,

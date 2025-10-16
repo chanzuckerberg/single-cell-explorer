@@ -1,7 +1,10 @@
 /*
 Dataframe histogram
 */
-import { NumberArray } from "../../common/types/arraytypes";
+import {
+  NumberArray,
+  isDictEncodedTypedArray,
+} from "../../common/types/arraytypes";
 import {
   DataframeColumn,
   ContinuousHistogram,
@@ -80,6 +83,17 @@ export function histogramCategorical(
     }
     valMap.set(valBin, curCount + 1);
   }
+
+  // Convert codes to labels for dict-encoded columns
+  if (isDictEncodedTypedArray(colArray)) {
+    const labelMap = new Map();
+    valMap.forEach((count, code) => {
+      const label = colArray.codeMapping[code as number];
+      labelMap.set(label, count);
+    });
+    return labelMap;
+  }
+
   return valMap;
 }
 
@@ -107,6 +121,36 @@ export function histogramCategoricalBy(
     }
     valMap.set(valBin, curCount + 1);
   }
+
+  // Convert codes to labels for dict-encoded columns
+  const byIsDictEncoded = isDictEncodedTypedArray(byArray);
+  const colIsDictEncoded = isDictEncodedTypedArray(colArray);
+
+  if (byIsDictEncoded || colIsDictEncoded) {
+    const labelByMap = new Map();
+
+    byMap.forEach((valMap, byCode) => {
+      // Convert outer map key (by column)
+      const byLabel = byIsDictEncoded
+        ? byArray.codeMapping[byCode as number]
+        : byCode;
+
+      // Convert inner map keys (column)
+      if (colIsDictEncoded) {
+        const labelValMap = new Map();
+        valMap.forEach((count: number, colCode: number | string) => {
+          const colLabel = colArray.codeMapping[colCode as number];
+          labelValMap.set(colLabel, count);
+        });
+        labelByMap.set(byLabel, labelValMap);
+      } else {
+        labelByMap.set(byLabel, valMap);
+      }
+    });
+
+    return labelByMap;
+  }
+
   return byMap;
 }
 

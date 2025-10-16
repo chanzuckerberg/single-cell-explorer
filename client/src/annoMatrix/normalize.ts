@@ -13,7 +13,6 @@ import {
   Category,
   CategoricalAnnotationColumnSchema,
 } from "../common/types/schema";
-import { isDictEncodedTypedArray } from "../common/types/arraytypes";
 
 export function normalizeResponse(
   field: Field,
@@ -103,12 +102,12 @@ export function normalizeWritableCategoricalSchema(
   the categories array contains all unique values in the data array, AND that
   the array is UI sorted.
   */
-  const categorySet = new Set<Category>(
-    col.summarizeCategorical().categories.concat(
-      // TODO #35: Use type guards instead of casting
-      (colSchema as CategoricalAnnotationColumnSchema).categories ?? []
-    )
-  );
+  const dataCategories = col.getUniqueLabels();
+
+  const categorySet = new Set<Category>([
+    ...dataCategories,
+    ...((colSchema as CategoricalAnnotationColumnSchema).categories ?? []),
+  ]);
   if (!categorySet.has(unassignedCategoryLabel)) {
     categorySet.add(unassignedCategoryLabel);
   }
@@ -142,9 +141,8 @@ export function normalizeCategorical(
   // else read-only, categorical columns
   const TopN = globalConfig.maxCategoricalOptionsToDisplay;
 
-  // consolidate all categories from data and schema into a single list
-  const colDataSummary = col.summarizeCategorical();
-  const allCategories = new Set<Category>(colDataSummary.categories);
+  const dataCategories = col.getUniqueLabels();
+  const allCategories = new Set<Category>(dataCategories);
 
   // if no overflow, just UI sort schema categories and return
   if (allCategories.size <= TopN) {
@@ -163,21 +161,18 @@ export function normalizeCategorical(
   }
 
   // pick top N category labels and add overflow label
+  // Get category counts for overflow handling
+  const colDataSummary = col.summarizeCategorical();
   const topNCategories = new Set(
     [...colDataSummary.categoryCounts.keys()].slice(0, TopN)
   );
   topNCategories.add(overflowCatName);
 
   // rewrite data - consolidate all excess labels into overflow label
-  const colData = col.asArray();
-  const newColData = new Array(colData.length);
+  const newColData = col.getLabelArray() as Category[];
   for (let i = 0; i < newColData.length; i += 1) {
-    if (!topNCategories.has(colData[i])) {
+    if (!topNCategories.has(newColData[i])) {
       newColData[i] = overflowCatName;
-    } else if (isDictEncodedTypedArray(colData)) {
-      newColData[i] = colData.vat(i);
-    } else {
-      newColData[i] = colData[i];
     }
   }
   // replace data in dataframe

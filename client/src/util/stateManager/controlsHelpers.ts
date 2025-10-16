@@ -87,14 +87,14 @@ export function createCategorySummaryFromDfCol(
   dfCol: DataframeColumn,
   colSchema: CategoricalAnnotationColumnSchema
 ): CategorySummary {
-  const summary = dfCol.summarizeCategorical();
   const { categories: allCategoryValues } = colSchema;
   const categoryValues = allCategoryValues;
+  const labelCounts = dfCol.getLabelCounts();
   const categoryValueCounts = allCategoryValues.map(
-    (cat: Category) => summary.categoryCounts.get(cat) ?? 0
+    (label: Category) => labelCounts.get(String(label)) ?? 0
   );
-  const categoryValueIndices = new Map(categoryValues.map((v, i) => [v, i]));
 
+  const categoryValueIndices = new Map(categoryValues.map((v, i) => [v, i]));
   const numCategoryValues = categoryValueIndices.size;
 
   return {

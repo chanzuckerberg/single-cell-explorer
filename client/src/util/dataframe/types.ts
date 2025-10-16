@@ -143,6 +143,66 @@ export interface DataframeNumericColumn extends DataframeColumnGetter {
    * Return the value at the given offset, or undefined if not present.
    */
   iget: (offset: OffsetType) => DataframeValue | undefined;
+
+  /**
+   * Return string label value at the given index, handling dict-encoding internally.
+   */
+  getLabelValue: (index: number) => string;
+
+  /**
+   * Return all values as string labels, handling dict-encoding internally.
+   */
+  getLabelValues: () => string[];
+
+  /**
+   * Select rows by string labels, handling dict-encoding internally.
+   */
+  selectByLabels: (labels: string[]) => boolean[];
+
+  /**
+   * Get selected string labels from current selection.
+   */
+  getSelectedLabels: () => string[];
+
+  /**
+   * Get unique string labels in the column.
+   */
+  getUniqueLabels: () => string[];
+
+  /**
+   * Get count of each string label in the column.
+   */
+  getLabelCounts: () => Map<string, number>;
+
+  /**
+   * Get values for crossfilter operations (codes for dict-encoded, labels for plain).
+   */
+  getCrossfilterValues: () => (string | number)[];
+
+  /**
+   * Select by crossfilter values (codes for dict-encoded, labels for plain).
+   */
+  selectByCrossfilterValues: (values: (string | number)[]) => boolean[];
+
+  /**
+   * Get crossfilter values for specific labels only.
+   */
+  getCrossfilterValuesForLabels: (labels: string[]) => (string | number)[];
+
+  /**
+   * Get internal representation for a label (code for dict-encoded, label for plain).
+   */
+  getInternalRep: (label: string) => string | number;
+
+  /**
+   * Get array of string labels (converts dict-encoded codes to labels, passthrough for plain arrays).
+   */
+  getLabelArray: () => string[];
+
+  /**
+   * Whether this column uses dict-encoding internally.
+   */
+  readonly isDictEncoded: boolean;
 }
 
 /**
