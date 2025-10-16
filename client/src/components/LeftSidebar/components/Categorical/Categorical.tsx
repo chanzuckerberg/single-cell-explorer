@@ -15,6 +15,8 @@ import { toggleCategoryExpansion } from "actions/controls";
 import actions from "actions";
 import { AnnoDialog } from "components/AnnoDialog/AnnoDialog";
 import { LabelInput } from "components/LabelInput/LabelInput";
+import { FEATURES } from "util/featureFlags/features";
+import { getFeatureFlag } from "util/featureFlags/featureFlags";
 import { labelPrompt } from "./components/Category/components/CategoryValue/labelUtil";
 import Category from "./components/Category/Category";
 import * as globals from "~/globals";
@@ -173,6 +175,8 @@ class Categorical extends React.Component<Props, CategoricalState> {
       writableCategoriesEnabled,
       writableGenesetsEnabled,
     } = this.props;
+
+    const isTest = getFeatureFlag(FEATURES.TEST);
     const { createCategoryDialogOpen, newCategoryName, categoryToDuplicate } =
       this.state;
 
@@ -254,9 +258,7 @@ class Categorical extends React.Component<Props, CategoricalState> {
             />
           }
         />
-        {(writableCategoriesEnabled ||
-          writableGenesetsEnabled ||
-          process.env.NODE_ENV === "test") && (
+        {(writableCategoriesEnabled || writableGenesetsEnabled || isTest) && (
           <div style={{ marginBottom: 10 }}>
             <Tooltip
               content="Create a new category"
