@@ -49,7 +49,7 @@ stack:
         - name: DATA_LOCATOR_DOMAIN
           value: explorer.platform.staging.virtual-cells.czi.technology
         - name: CXG_BUCKET_PATH
-          value: hosted-cellxgene-dev
+          value: hosted-cellxgene-staging
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-dev
         - name: SKIP_ATAC_CACHE
