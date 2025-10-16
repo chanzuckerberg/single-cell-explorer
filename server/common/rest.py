@@ -50,15 +50,9 @@ HEADER_USER_ID_CANDIDATES = ()
 
 
 def _get_request_user_id(req) -> Optional[str]:
-
     if req is None:
         return None
-
-    user = req.headers.get(
-        "X-Auth-Request-User",
-    )
-    if user:
-        return user
+    return req.headers.get("X-Auth-Request-User")
 
 
 def _resolve_request_user_id(req) -> Optional[str]:
@@ -66,9 +60,7 @@ def _resolve_request_user_id(req) -> Optional[str]:
         return None
 
     user_id = _get_request_user_id(req)
-    if user_id and user_id.startswith(LOCAL_DEV_USER_PREFIX):
-        return user_id
-    elif user_id:
+    if user_id:
         return user_id
 
     if os.environ.get("__ARGUS_DEPLOYMENT_STAGE") == "rdev":
@@ -339,7 +331,7 @@ def annotations_obs_put(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     except Exception as error:  # pragma: no cover - backend owns persistence errors
         return abort_and_log(
-            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
             f"Failed to save annotations: {error}",
             include_exc_info=True,
         )
@@ -373,7 +365,7 @@ def annotations_obs_category_delete(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     except Exception as error:  # pragma: no cover - backend owns persistence errors
         return abort_and_log(
-            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
             f"Failed to delete annotation category: {error}",
             include_exc_info=True,
         )
@@ -392,24 +384,17 @@ def annotations_obs_category_rename(request, data_adaptor):
         )
 
     # Get new category name from request body
-    try:
-        request_data = request.get_json()
-        if not request_data or "new_name" not in request_data:
-            return abort_and_log(
-                HTTPStatus.BAD_REQUEST,
-                "Request must include 'new_name' in JSON body",
-            )
-        new_category_name = request_data["new_name"]
-        if not isinstance(new_category_name, str) or not new_category_name.strip():
-            return abort_and_log(
-                HTTPStatus.BAD_REQUEST,
-                "New category name must be a non-empty string",
-            )
-    except Exception as error:
+    request_data = request.get_json()
+    if not request_data or "new_name" not in request_data:
         return abort_and_log(
             HTTPStatus.BAD_REQUEST,
-            f"Failed to parse request body: {error}",
-            include_exc_info=True,
+            "Request must include 'new_name' in JSON body",
+        )
+    new_category_name = request_data["new_name"]
+    if not isinstance(new_category_name, str) or not new_category_name.strip():
+        return abort_and_log(
+            HTTPStatus.BAD_REQUEST,
+            "New category name must be a non-empty string",
         )
 
     user_id = _resolve_request_user_id(request)
@@ -429,7 +414,7 @@ def annotations_obs_category_rename(request, data_adaptor):
         return abort(HTTPStatus.NOT_IMPLEMENTED)
     except Exception as error:  # pragma: no cover - backend owns persistence errors
         return abort_and_log(
-            HTTPStatus.BAD_REQUEST,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
             f"Failed to rename annotation category: {error}",
             include_exc_info=True,
         )

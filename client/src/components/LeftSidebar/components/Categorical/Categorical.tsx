@@ -254,7 +254,9 @@ class Categorical extends React.Component<Props, CategoricalState> {
             />
           }
         />
-        {(writableCategoriesEnabled || writableGenesetsEnabled) && (
+        {(writableCategoriesEnabled ||
+          writableGenesetsEnabled ||
+          process.env.NODE_ENV === "test") && (
           <div style={{ marginBottom: 10 }}>
             <Tooltip
               content="Create a new category"

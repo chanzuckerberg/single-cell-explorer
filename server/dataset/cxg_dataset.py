@@ -1128,23 +1128,8 @@ class CxgDataset(Dataset):
             self._augment_schema_with_user_annotations(schema, user_annotations)
         return schema
 
-    def _get_genesets(self):
-        if self.genesets:
-            return self.genesets
-        A = self.open_array("obs")
-        raw = json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
-
-        tid = 0
-        geneset_entries = []
-
-        if isinstance(raw, dict):
-            tid = raw.get("tid", 0)
-            geneset_entries = raw.get("genesets", raw)
-        elif isinstance(raw, list) and len(raw) == 2 and isinstance(raw[1], (int, float)):
-            geneset_entries, tid = raw[0], int(raw[1])
-        else:
-            geneset_entries = raw
-
+    def _normalize_genesets(self, geneset_entries):
+        """Helper method to normalize geneset entries by ensuring they have geneset_name."""
         normalized_genesets = []
         if isinstance(geneset_entries, list):
             for item in geneset_entries:
@@ -1162,7 +1147,26 @@ class CxgDataset(Dataset):
                     if "geneset_name" not in value:
                         value = {**value, "geneset_name": name}
                     normalized_genesets.append(value)
+        return normalized_genesets
 
+    def _get_genesets(self):
+        if self.genesets:
+            return self.genesets
+        A = self.open_array("obs")
+        raw = json.loads(A.meta["genesets"]) if "genesets" in A.meta else {}
+
+        tid = 0
+        geneset_entries = []
+
+        if isinstance(raw, dict):
+            tid = raw.get("tid", 0)
+            geneset_entries = raw.get("genesets", raw)
+        elif isinstance(raw, list) and len(raw) == 2 and isinstance(raw[1], (int, float)):
+            geneset_entries, tid = raw[0], int(raw[1])
+        else:
+            geneset_entries = raw
+
+        normalized_genesets = self._normalize_genesets(geneset_entries)
         return {"genesets": normalized_genesets, "tid": tid}
 
     def get_genesets(
@@ -1178,23 +1182,7 @@ class CxgDataset(Dataset):
                 self.genesets = self._get_genesets()
         if isinstance(self.genesets, dict):
             geneset_entries = self.genesets.get("genesets", [])
-            normalized_genesets = []
-            if isinstance(geneset_entries, list):
-                for item in geneset_entries:
-                    if isinstance(item, dict):
-                        normalized_genesets.append(item)
-                    elif isinstance(item, (list, tuple)) and len(item) == 2 and isinstance(item[1], dict):
-                        geneset_name = item[0]
-                        geneset_obj = item[1]
-                        if "geneset_name" not in geneset_obj:
-                            geneset_obj = {**geneset_obj, "geneset_name": geneset_name}
-                        normalized_genesets.append(geneset_obj)
-            elif isinstance(geneset_entries, dict):
-                for name, value in geneset_entries.items():
-                    if isinstance(value, dict):
-                        if "geneset_name" not in value:
-                            value = {**value, "geneset_name": name}
-                        normalized_genesets.append(value)
+            normalized_genesets = self._normalize_genesets(geneset_entries)
             return {
                 "genesets": normalized_genesets,
                 "tid": self.genesets.get("tid", 0),

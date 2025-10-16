@@ -110,7 +110,8 @@ class CategoricalCoder:
         elif isinstance(dictionary, (list, tuple)):
             buffer = bytes(dictionary)
         else:
-            buffer = bytes([dictionary]) if isinstance(dictionary, int) else bytes(dictionary)
+            # This should not be reached in normal operation
+            raise TypeError(f"Unexpected dictionary type: {type(dictionary)}")
         dictionary = json.loads(buffer.decode("utf-8"))
         return pd.Categorical.from_codes(codes, categories=list(dictionary.values()))
 
