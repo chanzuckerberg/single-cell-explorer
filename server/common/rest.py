@@ -46,9 +46,6 @@ LOCAL_DEV_USER_PREFIX = "test-user-"
 RDEV_USER_ID = "rdev-user"
 
 
-HEADER_USER_ID_CANDIDATES = ()
-
-
 def _call_bifrost_for_user_id(req) -> Optional[str]:
     """Call Bifrost permissions service to get the bifrost user ID."""
     check_permissions_url = os.environ.get("CHECK_PERMISSIONS_URL")
@@ -111,18 +108,9 @@ def _get_request_user_id(req) -> Optional[str]:
     if req is None:
         return None
 
-    # First try to get user ID from Bifrost (if configured)
     bifrost_user_id = _call_bifrost_for_user_id(req)
     if bifrost_user_id:
         return bifrost_user_id
-
-    # Fall back to oauth2-proxy headers
-    for header_name in ["X-Auth-Request-User", "X-Forwarded-User", "x-bifrost-user", "X-Bifrost-User"]:
-        user_id = req.headers.get(header_name)
-        if user_id:
-            return user_id
-
-    return None
 
 
 def _resolve_request_user_id(req) -> Optional[str]:
