@@ -15,10 +15,11 @@ class CorporaRESTAPITest(BaseTest):
     def setUpClass(cls, app_config=None):
         if not app_config:
             app_config = AppConfig()
-        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="test")
+        app_config.update_server_config(
+            multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="test", app__testing=True
+        )
 
         super().setUpClass(app_config)
-        cls.app.testing = True
         cls.client = cls.app.test_client()
 
     def test_config(self):

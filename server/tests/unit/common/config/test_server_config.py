@@ -99,9 +99,9 @@ class TestServerConfig(ConfigTests):
             app__flask_secret_key="secret",
             app__api_base_url=f"http://localhost:{backend_port}/additional/path",
             multi_dataset__dataroot=f"{PROJECT_ROOT}/example-dataset",
+            app__testing=True,
         )
         server = self.create_app(config)
-        server.testing = True
         session = server.test_client()
         response = session.get("/additional/path/d/pbmc3k.cxg/api/v0.2/config")
 
@@ -162,10 +162,11 @@ class TestServerConfig(ConfigTests):
         )
 
         # Change this default to test if the dataroot overrides below work.
-        self.config.update_default_dataset_config(default__dataset__app__about_legal_tos="tos_default.html")
+        self.config.update_default_dataset_config(
+            default__dataset__app__about_legal_tos="tos_default.html", app__testing=True
+        )
 
         server = self.create_app(self.config)
-        server.testing = True
         session = server.test_client()
 
         def _get_v03_url(url):  # TODO inline and do not use an API call to generate

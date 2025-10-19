@@ -4,6 +4,7 @@ server:
     port: 5005
     debug: false
     verbose: false
+    testing: true
     disable_auth: false
 
   multi_dataset:

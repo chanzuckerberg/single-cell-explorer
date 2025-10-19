@@ -131,6 +131,7 @@ export default defineConfig<ChromaticConfig>({
       testMatch: [
         "**/e2e/annotation.e2e.test.ts",
         "**/e2e/cell-guide.test.ts",
+        "**/e2e/download.e2e.test.ts",
         "**/e2e/e2e.test.ts",
       ],
       use: {
