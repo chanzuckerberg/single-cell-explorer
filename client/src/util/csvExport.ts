@@ -19,19 +19,20 @@ export function downloadFile(content: string, filename: string): void {
   a.style.display = "none";
   document.body.append(a);
   a.click();
-  // Revoke the blob URL and remove the element
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-    a.remove();
-  }, 1000);
+  // Revoke the blob URL and remove the element immediately after download trigger
+  URL.revokeObjectURL(url);
+  a.remove();
 }
 
 /**
  * Escapes CSV values to handle commas, quotes, and newlines
  */
-function escapeCsvValue(value: any): string {
+function escapeCsvValue(
+  value: string | number | boolean | null | undefined,
+  fillValue = ""
+): string {
   if (value === null || value === undefined) {
-    return "";
+    return fillValue;
   }
   const stringValue = String(value);
   if (
@@ -47,8 +48,11 @@ function escapeCsvValue(value: any): string {
 /**
  * Converts an array of values to a CSV row
  */
-function arrayToCsvRow(values: any[]): string {
-  return values.map(escapeCsvValue).join(",");
+function arrayToCsvRow(
+  values: (string | number | boolean | null | undefined)[],
+  fillValue = ""
+): string {
+  return values.map((value) => escapeCsvValue(value, fillValue)).join(",");
 }
 
 /**
@@ -121,10 +125,10 @@ export async function exportCategoriesCSV(
           return obsData.rowIndex.getLabel(i) || i.toString();
         }
         const column = obsData.col(col);
-        // Use getLabelArray to get the proper string labels instead of raw codes
-        return column.getLabelArray()[i];
+        // Use getLabelValue to get the proper string labels efficiently
+        return column.getLabelValue(i);
       });
-      csvRows.push(arrayToCsvRow(rowData));
+      csvRows.push(arrayToCsvRow(rowData, "unassigned"));
     }
 
     const csvContent = csvRows.join("\n");

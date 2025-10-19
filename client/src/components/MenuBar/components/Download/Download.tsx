@@ -92,7 +92,6 @@ const Download: React.FC<DownloadProps> = ({
       <Button
         icon={IconNames.DOWNLOAD}
         loading={screenCap}
-        style={{ cursor: "pointer" }}
         data-testid="download-menu-button"
       />
     </Popover>
