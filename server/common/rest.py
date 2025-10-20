@@ -120,13 +120,18 @@ def _resolve_request_user_id(req) -> Optional[str]:
         return None
 
     user_id = _get_request_user_id(req)
+
     if user_id:
         return user_id
 
     if os.environ.get("__ARGUS_DEPLOYMENT_STAGE") == "rdev":
         return RDEV_USER_ID
 
-    if current_app.debug or current_app.testing:
+    if current_app.app_config.server__app__testing:
+        # For tests, use the X-Test-User-ID header if present
+        test_user_header = req.headers.get("X-Test-User-ID") if req else None
+        if test_user_header:
+            return test_user_header
         return f"{LOCAL_DEV_USER_PREFIX}local-dev"
 
     abort(HTTPStatus.UNAUTHORIZED)

@@ -17,9 +17,10 @@ class WithNaNs(BaseTest):
     @classmethod
     def setUpClass(cls):
         app_config = AppConfig()
-        app_config.update_server_config(multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="secret")
+        app_config.update_server_config(
+            multi_dataset__dataroot=FIXTURES_ROOT, app__flask_secret_key="secret", app__testing=True
+        )
         super().setUpClass(app_config)
-        cls.app.testing = True
         cls.client = cls.app.test_client()
 
     def setUp(self):

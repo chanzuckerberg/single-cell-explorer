@@ -25,6 +25,7 @@ import Clip from "./components/Clip/Clip";
 
 import Subset from "./components/Subset/Subset";
 import DiffexpButtons from "./components/DiffExpButtons/DiffExpButtons";
+import Download from "./components/Download/Download";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -49,6 +50,8 @@ interface StateProps {
   showCentroidLabels: RootState["centroidLabels"]["showLabels"];
   categoricalSelection: RootState["categoricalSelection"];
   screenCap: RootState["controls"]["screenCap"];
+  annoMatrix: RootState["annoMatrix"];
+  genesets: RootState["genesets"];
 }
 
 const mapStateToProps = (state: RootState): StateProps => {
@@ -77,6 +80,8 @@ const mapStateToProps = (state: RootState): StateProps => {
     showCentroidLabels: state.centroidLabels.showLabels,
     categoricalSelection: state.categoricalSelection,
     screenCap: state.controls.screenCap,
+    annoMatrix: state.annoMatrix,
+    genesets: state.genesets,
   };
 };
 
@@ -121,6 +126,8 @@ const MenuBar = ({
   subsetPossible,
   subsetResetPossible,
   screenCap,
+  annoMatrix,
+  genesets,
 }: MenuBarProps) => {
   const [pendingClipPercentiles, setPendingClipPercentiles] =
     useState(INITIAL_PERCENTILES);
@@ -278,27 +285,15 @@ const MenuBar = ({
               />
             </ButtonGroup>
 
-            <Tooltip
-              content={
-                <span data-chromatic="ignore">
-                  Download the current graph view as a PNG
-                </span>
-              }
-              position="bottom"
-              hoverOpenDelay={globals.tooltipHoverOpenDelay}
-            >
-              <AnchorButton
-                className={styles.menubarButton}
-                data-testid="download-graph-button"
-                type="button"
-                icon={IconNames.CAMERA}
-                style={{
-                  cursor: "pointer",
-                }}
-                loading={screenCap}
-                onClick={() => dispatch({ type: "graph: screencap start" })}
+            <ButtonGroup className={styles.menubarButton}>
+              <Download
+                screenCap={screenCap}
+                annoMatrix={annoMatrix}
+                genesets={genesets.genesets}
+                schema={annoMatrix.schema}
+                dispatch={dispatch}
               />
-            </Tooltip>
+            </ButtonGroup>
 
             {isTest && (
               <AnchorButton

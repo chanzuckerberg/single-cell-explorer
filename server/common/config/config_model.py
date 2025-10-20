@@ -35,6 +35,7 @@ class CspDirectives(BaseModel):
 class ServerApp(BaseModel):
     verbose: bool
     debug: bool
+    testing: bool
     host: str
     port: Optional[int]
     open_browser: bool

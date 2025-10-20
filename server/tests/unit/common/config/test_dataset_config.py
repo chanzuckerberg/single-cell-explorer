@@ -83,10 +83,9 @@ class TestDatasetConfig(ConfigTests):
         )
 
         # Change this default to test if the dataroot overrides below work.
-        app_config.update_default_dataset_config(app__about_legal_tos="tos_default.html")
+        app_config.update_default_dataset_config(app__about_legal_tos="tos_default.html", app__testing=True)
         server = self.create_app(app_config)
 
-        server.testing = True
         session = server.test_client()
 
         def _get_v03_url(url):  # TODO inline and do not use an API call to generate

@@ -21,6 +21,7 @@ ADD Makefile Makefile
 ADD common.mk common.mk
 ADD environment.default.json environment.default.json
 ADD client/ client/
+ENV DEPLOYMENT_TYPE=hosted
 RUN make build-client
 
 ADD server/ server/

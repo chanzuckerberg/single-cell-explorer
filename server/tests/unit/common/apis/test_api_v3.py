@@ -77,7 +77,7 @@ class EndPoints(BaseTest):
         cls.TEST_UNS_DATASET_URL_BASE = f"/s3_uri/{cls.TEST_UNS_S3_URI_ENCODED}"
         cls.TEST_UNS_URL_BASE = f"{cls.TEST_UNS_DATASET_URL_BASE}/api/v0.3/"
 
-        cls.app.testing = True
+        cls.app.app_config.server__app__testing = True
         cls.client = cls.app.test_client()
         os.environ["SKIP_STATIC"] = "True"
         for _i in range(90):
@@ -902,7 +902,7 @@ class TestDatasetMetadata(BaseTest):
         }
         super().setUpClass(cls.config)
 
-        cls.app.testing = True
+        cls.app.app_config.server__app__testing = True
         cls.client = cls.app.test_client()
 
     @patch("server.dataset.dataset_metadata.request_dataset_metadata_from_data_portal")
@@ -1056,7 +1056,7 @@ class TestConfigEndpoint(BaseTest):
         )
         super().setUpClass(cls.config)
 
-        cls.app.testing = True
+        cls.app.app_config.server__app__testing = True
         cls.client = cls.app.test_client()
 
     def test_config_has_collections_home_page(self):
@@ -1085,7 +1085,7 @@ class TestS3URI(BaseTest):
         )
         super().setUpClass(cls.config)
 
-        cls.app.testing = True
+        cls.app.app_config.server__app__testing = True
         cls.client = cls.app.test_client()
 
         endpoint = "s3_uri"
@@ -1163,7 +1163,7 @@ class TestDeployedVersion(BaseTest):
         )
         super().setUpClass(cls.config)
 
-        cls.app.testing = True
+        cls.app.app_config.server__app__testing = True
         cls.client = cls.app.test_client()
 
         endpoint = "s3_uri"
