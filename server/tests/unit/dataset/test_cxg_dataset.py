@@ -123,7 +123,7 @@ class TestCxgDataset(unittest.TestCase):
             }
         ]
 
-        user_id = "unit-test-user-tid-flow"
+        user_id = "test-user-tid-flow"
 
         data.save_gene_sets(genesets, tid=1, user_id=user_id)
         saved = data.get_saved_gene_sets(user_id=user_id)

@@ -1683,7 +1683,8 @@ for (const testDataset of testDatasets) {
               downloads.push(downloadData);
             });
 
-            await page.getByTestId("download-graph-button").click();
+            await page.getByTestId("download-menu-button").click();
+            await page.getByText("Current view (.png)").click();
 
             await tryUntil(
               async () => {
@@ -1749,7 +1750,8 @@ for (const testDataset of testDatasets) {
               downloads.push(downloadData);
             });
 
-            await page.getByTestId("download-graph-button").click();
+            await page.getByTestId("download-menu-button").click();
+            await page.getByText("Current view (.png)").click();
 
             /**
              * (thuang): Sometimes in GHA there's only 1 download, so we need to retry
@@ -1784,7 +1786,8 @@ for (const testDataset of testDatasets) {
               afterMinimizeDownloads.push(downloadData);
             });
 
-            await page.getByTestId("download-graph-button").click();
+            await page.getByTestId("download-menu-button").click();
+            await page.getByText("Current view (.png)").click();
 
             expect(afterMinimizeDownloads.length).toBe(1);
           });

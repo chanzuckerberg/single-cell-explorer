@@ -70,7 +70,7 @@ function generateUniqueUserId(): string {
 // Helper function to set unique user ID header for authentication
 function setUserIdHeader(page: any, userId: string) {
   return page.setExtraHTTPHeaders({
-    "X-Auth-Request-User": userId,
+    "X-Test-User-ID": userId,
   });
 }
 
