@@ -24,6 +24,8 @@ const Download: React.FC<DownloadProps> = ({
   dispatch,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDownloadingCategories, setIsDownloadingCategories] = useState(false);
+  const [isDownloadingGeneSets, setIsDownloadingGeneSets] = useState(false);
 
   const handleCurrentViewDownload = () => {
     dispatch({ type: "graph: screencap start" });
@@ -31,21 +33,27 @@ const Download: React.FC<DownloadProps> = ({
   };
 
   const handleCategoriesDownload = async () => {
+    setIsDownloadingCategories(true);
     try {
       await exportCategoriesCSV(annoMatrix, schema);
       track(EVENTS.EXPLORER_DOWNLOAD_CATEGORIES_CSV);
     } catch (error) {
       console.error("Failed to export categories CSV:", error);
+    } finally {
+      setIsDownloadingCategories(false);
     }
     setIsOpen(false);
   };
 
-  const handleGeneSetsDownload = () => {
+  const handleGeneSetsDownload = async () => {
+    setIsDownloadingGeneSets(true);
     try {
-      exportGeneSetsCSV(genesets);
+      await exportGeneSetsCSV(genesets);
       track(EVENTS.EXPLORER_DOWNLOAD_GENESETS_CSV);
     } catch (error) {
       console.error("Failed to export gene sets CSV:", error);
+    } finally {
+      setIsDownloadingGeneSets(false);
     }
     setIsOpen(false);
   };
@@ -69,14 +77,16 @@ const Download: React.FC<DownloadProps> = ({
         />
       </Tooltip>
       <MenuItem
-        icon={IconNames.DOWNLOAD}
+        icon={isDownloadingCategories ? IconNames.REFRESH : IconNames.DOWNLOAD}
         text="Categories & label annotations (.csv)"
         onClick={handleCategoriesDownload}
+        disabled={isDownloadingCategories}
       />
       <MenuItem
-        icon={IconNames.DOWNLOAD}
+        icon={isDownloadingGeneSets ? IconNames.REFRESH : IconNames.DOWNLOAD}
         text="Gene set annotations (.csv)"
         onClick={handleGeneSetsDownload}
+        disabled={isDownloadingGeneSets}
       />
     </Menu>
   );
@@ -91,7 +101,7 @@ const Download: React.FC<DownloadProps> = ({
     >
       <Button
         icon={IconNames.DOWNLOAD}
-        loading={screenCap}
+        loading={screenCap || isDownloadingCategories || isDownloadingGeneSets}
         data-testid="download-menu-button"
       />
     </Popover>
