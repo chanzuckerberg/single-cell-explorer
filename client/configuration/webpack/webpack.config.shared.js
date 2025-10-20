@@ -19,6 +19,7 @@ const rawObsoleteHTMLTemplate = fs.readFileSync(
 const obsoleteHTMLTemplate = rawObsoleteHTMLTemplate.replace(/"/g, "'");
 
 const deploymentStage = process.env.DEPLOYMENT_STAGE || "test";
+const deploymentType = process.env.DEPLOYMENT_TYPE || "hosted";
 
 module.exports = {
   entry: [
@@ -44,24 +45,24 @@ module.exports = {
       {
         test: /\.module\.scss$/,
         use: [
-          'style-loader',
+          "style-loader",
           {
-            loader: 'css-loader',
+            loader: "css-loader",
             options: {
               modules: true, // Enable CSS modules
             },
           },
-          'sass-loader'
-        ]
+          "sass-loader",
+        ],
       },
       {
         test: /\.scss$/,
         exclude: /\.module\.scss$/,
         use: [
-          'style-loader',
-          'css-loader', // regular css (no modules)
-          'sass-loader'
-        ]
+          "style-loader",
+          "css-loader", // regular css (no modules)
+          "sass-loader",
+        ],
       },
       {
         test: /\.css$/,
@@ -102,6 +103,7 @@ module.exports = {
           ? "cellxgene.cziscience.com"
           : "cellxgene.staging.single-cell.czi.technology"
       ),
+      "process.env.DEPLOYMENT_TYPE": JSON.stringify(deploymentType),
     }),
     new CopyPlugin({
       patterns: [

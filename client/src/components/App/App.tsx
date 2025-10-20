@@ -117,9 +117,10 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                 ) : null}
                 {(seamlessEnabled ||
                   datasetMetadataError === null ||
-                  isCellGuideCxg) && (
-                  <NavBar tosURL={tosURL} privacyURL={privacyURL} />
-                )}
+                  isCellGuideCxg) &&
+                  process.env.DEPLOYMENT_TYPE !== "vcp-hosted" && (
+                    <NavBar tosURL={tosURL} privacyURL={privacyURL} />
+                  )}
                 {loading || error ? null : (
                   <>
                     {getFeatureFlag(FEATURES.AGENT) && (
