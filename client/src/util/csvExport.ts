@@ -145,7 +145,7 @@ export async function exportCategoriesCSV(
 /**
  * Exports gene set annotations as CSV
  */
-export function exportGeneSetsCSV(genesets: Genesets): void {
+export async function exportGeneSetsCSV(genesets: Genesets): Promise<void> {
   const csvRows: string[] = [];
 
   // Header row
