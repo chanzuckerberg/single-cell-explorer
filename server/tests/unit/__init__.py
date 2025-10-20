@@ -98,12 +98,10 @@ class BaseTest(unittest.TestCase):
                 app__debug=True,
                 multi_dataset__dataroot=f"{FIXTURES_ROOT}",
                 multi_dataset__index=True,
+                app__testing=True,
             )
         app_config.complete_config()
 
         app = TestServer(app_config).app
-
-        app.testing = True
-        app.debug = True
 
         return app
