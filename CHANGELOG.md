@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.17.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.16.0...v1.17.0) (2025-10-20)
+
+
+### Misc
+
+* add loading spinner state for downloading annotations ([#1298](https://github.com/chanzuckerberg/single-cell-explorer/issues/1298)) ([a9c61aa](https://github.com/chanzuckerberg/single-cell-explorer/commit/a9c61aa3016ec147ec2058933376dadf7f861640))
+* do not display navbar for vcp deployments ([#1296](https://github.com/chanzuckerberg/single-cell-explorer/issues/1296)) ([a5797b8](https://github.com/chanzuckerberg/single-cell-explorer/commit/a5797b88a84b23b059e7b306f823f88147b5445c))
+* remove basic auth - not actually needed ([#1294](https://github.com/chanzuckerberg/single-cell-explorer/issues/1294)) ([eaed7a2](https://github.com/chanzuckerberg/single-cell-explorer/commit/eaed7a25dd27e481f252160e4590208b2192d524))
+
+
+### Features
+
+* annotation download feature ([#1295](https://github.com/chanzuckerberg/single-cell-explorer/issues/1295)) ([6b4438a](https://github.com/chanzuckerberg/single-cell-explorer/commit/6b4438a9829a7569c9c537a8296ad569994227f3))
+
 ## [1.16.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.15.0...v1.16.0) (2025-10-16)
 
 
