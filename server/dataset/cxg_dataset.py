@@ -1066,6 +1066,7 @@ class CxgDataset(Dataset):
                         schema["categories"] = pd.Categorical(
                             self.open_array("obs").query(attrs=[attr.name])[:][attr.name].astype("bool")
                         ).categories.tolist()
+                        schema["categories"] = [str(cat) for cat in schema["categories"]]
                     elif schema["type"] == "categorical" and "categories" in type_hint:
                         schema["categories"] = type_hint["categories"]
                 else:
@@ -1197,6 +1198,7 @@ class CxgDataset(Dataset):
         num_bins=None,
         user_id: Optional[str] = None,
     ):
+
         with ServerTiming.time(f"annotations.{axis}.query"):
             A = self.open_array(str(axis))
 
