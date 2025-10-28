@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.1...v1.17.2) (2025-10-28)
+
+
+### Bug Fixes
+
+* handle booleans properly ([#1303](https://github.com/chanzuckerberg/single-cell-explorer/issues/1303)) ([fbd6fa6](https://github.com/chanzuckerberg/single-cell-explorer/commit/fbd6fa6c35d580fb974e588ed4bb5355fb7a6a9f))
+
 ## [1.17.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.0...v1.17.1) (2025-10-28)
 
 
