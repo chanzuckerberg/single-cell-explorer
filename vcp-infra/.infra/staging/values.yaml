@@ -46,7 +46,7 @@ stack:
         - name: API_DOMAIN
           value: explorer.platform.staging.virtual-cells.czi.technology
         - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
+          value: byod-workflows-staging
         - name: DATA_LOCATOR_DOMAIN
           value: explorer.platform.staging.virtual-cells.czi.technology
         - name: CXG_BUCKET_PATH

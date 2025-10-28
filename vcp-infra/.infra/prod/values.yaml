@@ -54,7 +54,7 @@ stack:
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-prod
         - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
+          value: byod-workflows-prod
         - name: SKIP_ATAC_CACHE
           value: "1"
         - name: CHECK_PERMISSIONS_URL

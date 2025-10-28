@@ -38,7 +38,7 @@ stack:
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
+          value: byod-workflows-prod
       ingress:
         rules:
           - host: cellxgene.cziscience.com
