@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.17.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.0...v1.17.1) (2025-10-28)
+
+
+### Misc
+
+* update buckets per environment ([#1302](https://github.com/chanzuckerberg/single-cell-explorer/issues/1302)) ([d7482aa](https://github.com/chanzuckerberg/single-cell-explorer/commit/d7482aace9dc2cf64d0008df0926b434706cc3f3))
+
+
+### Bug Fixes
+
+* Add/update links on BYOD modal ([#1300](https://github.com/chanzuckerberg/single-cell-explorer/issues/1300)) ([ca87374](https://github.com/chanzuckerberg/single-cell-explorer/commit/ca87374aee4c3803c3731ec0d9eae81d405b36df))
+
 ## [1.17.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.16.0...v1.17.0) (2025-10-20)
 
 
