@@ -9,7 +9,7 @@ stack:
         annotations:
           "eks.amazonaws.com/role-arn": arn:aws:iam::699936264352:role/data_portal_staging_explorer
       image:
-        tag: sha-adf8072
+        tag: sha-5f110ed
       replicaCount: 1
       resources:
         limits:
@@ -38,7 +38,7 @@ stack:
         - name: CXG_BUCKET_PATH
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
-          value: byod-workflows-dev
+          value: byod-workflows-staging
       ingress:
         rules:
           - host: cellxgene.staging.single-cell.czi.technology

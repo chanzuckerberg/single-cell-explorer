@@ -115,7 +115,7 @@ class CxgDataset(Dataset):
 
         if centralized_bucket:
             # All user data goes to the centralized user data bucket
-            # Format: s3://byod-workflows-dev/user-data/user_id/dataset_name/
+            # Format: s3://byod-workflows-{env}/user-data/user_id/dataset_name/
             return path_join(
                 centralized_bucket,
                 "user-data",
