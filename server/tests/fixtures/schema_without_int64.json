@@ -174,7 +174,7 @@
             "writable": false,
             "type": "categorical",
             "categories": [
-              true
+              "True"
             ]
           },
           {
