@@ -415,15 +415,6 @@ class Dataframe {
     };
 
     get.getLabelCounts = function getLabelCounts(): Map<string, number> {
-      if (isDictEncoded) {
-        const counts = new Map<string, number>();
-        iterateColumn((code) => {
-          const label = column.codeMapping[code as number];
-          counts.set(label, (counts.get(label) || 0) + 1);
-        });
-        return counts;
-      }
-      // For plain arrays, use the existing summary which is cached
       return get.summarizeCategorical().categoryCounts as Map<string, number>;
     };
 
