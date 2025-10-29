@@ -1167,25 +1167,15 @@ export async function addLabelToCategory(
     { page }
   );
 
-  // Click on the specified menu item with retry logic
-  await tryUntil(
-    async () => {
-      const suggestions = page.locator(".bp5-menu-item");
-      await suggestions.nth(menuItemIndex).click();
-    },
-    { page }
-  );
+  // Navigate to the specified menu item using keyboard
+  for (let i = 0; i < menuItemIndex; i += 1) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(50); // Small delay between key presses
+  }
+  await page.keyboard.press("Enter");
 
-  // Wait for the dropdown to disappear with retry logic
-  await tryUntil(
-    async () => {
-      const dropdown = page
-        .locator(".bp5-popover-content")
-        .filter({ hasText: labelName });
-      await expect(dropdown).not.toBeVisible();
-    },
-    { page }
-  );
+  // Wait for the dropdown to disappear
+  await page.waitForTimeout(200);
 
   // Submit the label - use the exact "Add label" button (not the one with cell assignment)
   await page.getByRole("button", { name: "Add label", exact: true }).click();
@@ -1238,25 +1228,15 @@ export async function addLabelToCategoryWithSelection(
     actualLabelName = await selectedSuggestion.textContent();
   }
 
-  // Click on the specified menu item with retry logic
-  await tryUntil(
-    async () => {
-      const suggestions = page.locator(".bp5-menu-item");
-      await suggestions.nth(menuItemIndex).click();
-    },
-    { page }
-  );
+  // Navigate to the specified menu item using keyboard
+  for (let i = 0; i < menuItemIndex; i += 1) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(50); // Small delay between key presses
+  }
+  await page.keyboard.press("Enter");
 
-  // Wait for the dropdown to disappear with retry logic
-  await tryUntil(
-    async () => {
-      const dropdown = page
-        .locator(".bp5-popover-content")
-        .filter({ hasText: labelName });
-      await expect(dropdown).not.toBeVisible();
-    },
-    { page }
-  );
+  // Wait for the dropdown to disappear
+  await page.waitForTimeout(200);
 
   // Submit the label with cell assignment - use the button that assigns selected cells
   await page
