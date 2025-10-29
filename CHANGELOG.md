@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.2...v1.17.3) (2025-10-29)
+
+
+### Bug Fixes
+
+* boolean fix pt 2 - handle uint types properly ([#1305](https://github.com/chanzuckerberg/single-cell-explorer/issues/1305)) ([6ef613f](https://github.com/chanzuckerberg/single-cell-explorer/commit/6ef613f90efc5b33e7bf8bd23d79ab8a2c8212a8))
+
 ## [1.17.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.1...v1.17.2) (2025-10-28)
 
 
