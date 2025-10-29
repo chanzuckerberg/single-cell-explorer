@@ -1050,10 +1050,10 @@ for (const testDataset of testDatasets) {
             const lassoSelection2 = await calcDragCoordinates(
               graphTestId,
               {
-                x1: 0.1,
-                y1: 0.1,
-                x2: 0.3,
-                y2: 0.3,
+                x1: 0.2,
+                y1: 0.2,
+                x2: 0.4,
+                y2: 0.4,
               },
               page
             );
