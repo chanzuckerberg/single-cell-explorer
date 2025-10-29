@@ -617,6 +617,8 @@ def cell_type_list_get(request):
         raise
 
 
+
+
 def get_deployed_version(request):
     """
     Returns the deployed version

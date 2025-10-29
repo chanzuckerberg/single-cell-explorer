@@ -25,12 +25,13 @@ import { CategorySummary } from "util/stateManager/controlsHelpers";
 import { ColorTable } from "util/stateManager/colorHelpers";
 import { ActiveTab } from "common/types/entities";
 import { InfoButton, InfoButtonWrapper } from "common/style";
+import { useCellTypeSuggestions } from "common/hooks/useCellTypeSuggestions";
 import type { AnnoMatrixObsCrossfilter } from "annoMatrix";
 import MiniStackedBar from "./components/MiniStackedBar/MiniStackedBar";
 import MiniHistogram from "./components/MiniHistogram/MiniHistogram";
 import { labelPrompt, isLabelErroneous } from "./labelUtil";
 import { AnnoDialog } from "../../../../../../../AnnoDialog/AnnoDialog";
-import { LabelInput } from "../../../../../../../LabelInput/LabelInput";
+import { LabelInputWithSuggestions } from "../../../../../../../LabelInput/LabelInputWithSuggestions";
 import { CategoryCrossfilterContext } from "../../../../categoryContext";
 // @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '../categorical.css' or its cor... Remove this comment to see the full error message
 import styles from "../../../../categorical.css";
@@ -41,6 +42,40 @@ const STACKED_BAR_WIDTH = 100;
 
 function _currentLabelAsString(label: Category): string {
   return String(label);
+}
+
+interface CellTypeInfoButtonProps {
+  metadataField: string;
+  displayString: string;
+  onDisplayCellTypeInfo: (cellName: string) => void;
+}
+
+function CellTypeInfoButton({
+  metadataField,
+  displayString,
+  onDisplayCellTypeInfo,
+}: CellTypeInfoButtonProps) {
+  const cellTypeSuggestions = useCellTypeSuggestions();
+
+  // Check if the current label is a valid cell type
+  const isCellInfo = cellTypeSuggestions?.includes(displayString) ?? false;
+
+  if (!isCellInfo) {
+    return null;
+  }
+
+  return (
+    <InfoButtonWrapper>
+      <InfoButton
+        data-testid={`get-info-${metadataField}-${displayString}`}
+        onClick={() => onDisplayCellTypeInfo(displayString)}
+        sdsType="tertiary"
+        sdsStyle="icon"
+        icon="InfoCircle"
+        sdsSize="small"
+      />
+    </InfoButtonWrapper>
+  );
 }
 interface PureCategoryValueProps {
   metadataField: string;
@@ -711,8 +746,6 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
           CHART_MARGIN
         : globals.leftSidebarWidth - otherElementsWidth;
 
-    const isCellInfo = metadataField === "cell_type";
-
     return (
       <div
         className={
@@ -793,11 +826,9 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 handleSubmit={this.handleEditValue}
                 handleCancel={this.cancelEditMode}
                 annoInput={
-                  <LabelInput
+                  <LabelInputWithSuggestions
                     label={editedLabelText}
-                    labelSuggestions={null}
                     onChange={this.handleTextChange}
-                    onSelect={this.handleTextChange}
                     inputProps={{
                       leftIcon: "tag",
                       intent: "none",
@@ -807,18 +838,11 @@ class CategoryValue extends React.Component<Props, InternalStateProps> {
                 }
               />
             </div>
-            {isCellInfo && (
-              <InfoButtonWrapper>
-                <InfoButton
-                  data-testid={`get-info-${metadataField}-${displayString}`}
-                  onClick={() => this.handleDisplayCellTypeInfo(displayString)}
-                  sdsType="tertiary"
-                  sdsStyle="icon"
-                  icon="InfoCircle"
-                  sdsSize="small"
-                />
-              </InfoButtonWrapper>
-            )}
+            <CellTypeInfoButton
+              metadataField={metadataField}
+              displayString={displayString}
+              onDisplayCellTypeInfo={this.handleDisplayCellTypeInfo}
+            />
           </div>
           <span style={{ flexShrink: 0 }}>
             {this.renderMiniStackedBar()}
