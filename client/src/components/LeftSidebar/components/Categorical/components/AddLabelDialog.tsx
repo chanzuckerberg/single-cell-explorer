@@ -2,7 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { AnnoDialog } from "components/AnnoDialog/AnnoDialog";
-import { LabelInput } from "components/LabelInput/LabelInput";
+import { LabelInputWithSuggestions } from "components/LabelInput/LabelInputWithSuggestions";
 import actions from "actions";
 import type { RootState, AppDispatch } from "reducers";
 import type { Schema } from "common/types/schema";
@@ -96,8 +96,7 @@ class AddLabelDialog extends React.PureComponent<Props, ComponentState> {
         handleSubmit={() => this.handleCreate(false)}
         handleCancel={this.handleClose}
         annoInput={
-          <LabelInput
-            labelSuggestions={null}
+          <LabelInputWithSuggestions
             onChange={(value) => this.handleChange(value)}
             inputProps={{
               "data-testid": `${metadataField}:new-label-name`,

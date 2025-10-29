@@ -192,9 +192,13 @@ async function fetchGeneInfo(
 }
 
 interface CellTypeInfoAPI {
-  name: string;
-  summary: string;
+  cell_id: string;
+  cell_name: string;
+  synonyms: string[];
+  description: string;
+  references?: string[];
 }
+
 /**
  * Fetch cell type summary information
  * @param cell human-readable name of cell type

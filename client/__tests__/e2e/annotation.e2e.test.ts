@@ -36,9 +36,11 @@ import {
   deleteLabel,
   renameLabel,
   duplicateCategory,
+  expandCategory,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
+import { tryUntil } from "./puppeteerUtils";
 
 import { DATASET, testURL, pageURLSpatial } from "../common/constants";
 import {
@@ -809,6 +811,281 @@ for (const testDataset of testDatasets) {
             await snapshotTestGraph(
               page,
               `${getSnapshotPrefix(testInfo)}-duplicate-category-final`,
+              testInfo
+            );
+          });
+
+          test("cell type autocomplete in add label dialog", async ({
+            page,
+          }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Create a category first
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection to have cells to assign to the label
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.3,
+                y1: 0.3,
+                x2: 0.7,
+                y2: 0.7,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
+            });
+
+            // Test autocomplete functionality using the updated function
+            // Use menuItemIndex=1 to select the first autocomplete suggestion (B cell)
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              "B cel", // This will trigger autocomplete
+              page,
+              1 // Select the first autocomplete suggestion (B cell)
+            );
+
+            // Verify the label was created with the autocomplete value
+            await expect(
+              page.getByTestId(
+                `categorical-value-select-${TEST_CATEGORY_NAME}-B cell`
+              )
+            ).toBeVisible({ timeout: 10000 });
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("cell type autocomplete in edit label dialog", async ({
+            page,
+          }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Create a category and add a label first
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection to have cells to assign to the label
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.3,
+                y1: 0.3,
+                x2: 0.7,
+                y2: 0.7,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
+            });
+
+            // Add a label with selection
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+
+            // Verify label exists
+            await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
+
+            // Expand the category
+            await expandCategory(TEST_CATEGORY_NAME, page);
+
+            // Click the edit label button (three dots menu)
+            await page
+              .getByTestId(
+                `${TEST_CATEGORY_NAME}:${TEST_LABEL_NAME}:see-actions`
+              )
+              .click();
+
+            // Click "Edit this label's name"
+            await page
+              .getByTestId(
+                `${TEST_CATEGORY_NAME}:${TEST_LABEL_NAME}:edit-label`
+              )
+              .click();
+
+            // Wait for the edit dialog to appear
+            await expect(
+              page.getByRole("dialog", { name: "Edit label" })
+            ).toBeVisible();
+
+            // Test autocomplete functionality in edit mode
+            // The edit dialog doesn't have a specific test ID, so target input within the dialog
+            const labelInput = page
+              .getByRole("dialog", { name: "Edit label" })
+              .locator("input")
+              .first();
+
+            // Clear the input and type "T cel" to trigger autocomplete
+            await labelInput.click();
+            await page.waitForTimeout(200);
+            await labelInput.fill("T cel");
+
+            // Wait for autocomplete suggestions to appear
+            await page.waitForTimeout(500);
+
+            // Check if autocomplete suggestions are visible
+            const suggestions = page.locator(".bp5-menu-item");
+            await expect(suggestions.first()).toBeVisible({ timeout: 5000 });
+
+            // Click on the second suggestion (T cell) - first is "Create new label"
+            await suggestions.nth(1).click();
+
+            // Wait for the input value to update
+            let inputValue = "";
+            await tryUntil(
+              async () => {
+                inputValue = await labelInput.inputValue();
+                expect(inputValue).toBe("T cell");
+              },
+              { page }
+            );
+
+            // Submit the label change
+            await page
+              .getByRole("button", { name: "Change label text" })
+              .click();
+
+            // Wait for the edit dialog to close
+            await expect(
+              page.getByRole("dialog", { name: "Edit label" })
+            ).not.toBeVisible();
+
+            // Verify the label was renamed
+            await assertLabelDoesNotExist(
+              TEST_CATEGORY_NAME,
+              TEST_LABEL_NAME,
+              page
+            );
+            await assertLabelExists(TEST_CATEGORY_NAME, inputValue, page);
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
+              testInfo
+            );
+          });
+
+          test("cell type info button visibility", async ({
+            page,
+          }, testInfo) => {
+            skipIfSidePanel(graphTestId, MAIN_PANEL);
+
+            await goToPage(page, url);
+            await conditionallyToggleSidePanel(page, graphTestId, SIDE_PANEL);
+
+            // Create a category
+            await createCategory(TEST_CATEGORY_NAME, page);
+
+            // Make a lasso selection for a cell type label
+            const lassoSelection = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.3,
+                y1: 0.3,
+                x2: 0.7,
+                y2: 0.7,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection.start,
+              end: lassoSelection.end,
+              lasso: true,
+            });
+
+            // Add a cell type label (using a known cell type name)
+            // Use menuItemIndex=1 to select the first autocomplete suggestion (B cell)
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              "B cel", // This will trigger autocomplete
+              page,
+              1 // Select the first autocomplete suggestion (B cell)
+            );
+
+            // Verify label exists
+            await assertLabelExists(TEST_CATEGORY_NAME, "B cell", page);
+
+            // Expand the category
+            await expandCategory(TEST_CATEGORY_NAME, page);
+
+            // Check that the info button is visible for the cell type label
+            await expect(
+              page.getByTestId(`get-info-${TEST_CATEGORY_NAME}-B cell`)
+            ).toBeVisible();
+
+            // Add a non-cell type label
+            await page.keyboard.press("Escape");
+            await page.waitForTimeout(500);
+
+            const lassoSelection2 = await calcDragCoordinates(
+              graphTestId,
+              {
+                x1: 0.2,
+                y1: 0.2,
+                x2: 0.4,
+                y2: 0.4,
+              },
+              page
+            );
+
+            await drag({
+              page,
+              testInfo,
+              testId: graphTestId,
+              start: lassoSelection2.start,
+              end: lassoSelection2.end,
+              lasso: true,
+            });
+
+            // Add a non-cell type label (use default menuItemIndex=0 for "Create new label")
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              "custom_label", // This should NOT be a valid cell type
+              page
+              // menuItemIndex defaults to 0 (Create new label)
+            );
+
+            // Verify the non-cell type label exists
+            await assertLabelExists(TEST_CATEGORY_NAME, "custom_label", page);
+
+            // Check that the info button is NOT visible for the non-cell type label
+            await expect(
+              page.getByTestId(`get-info-${TEST_CATEGORY_NAME}-custom_label`)
+            ).not.toBeVisible();
+
+            await snapshotTestGraph(
+              page,
+              getSnapshotPrefix(testInfo),
               testInfo
             );
           });

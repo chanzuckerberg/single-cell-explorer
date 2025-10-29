@@ -1136,7 +1136,8 @@ export async function clearCellSelection(page: Page): Promise<void> {
 export async function addLabelToCategory(
   categoryName: string,
   labelName: string,
-  page: Page
+  page: Page,
+  menuItemIndex = 0
 ): Promise<void> {
   // Clear any existing cell selection first
   await clearCellSelection(page);
@@ -1155,6 +1156,27 @@ export async function addLabelToCategory(
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
 
+  // Wait for autocomplete suggestions to appear with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await expect(suggestions.nth(menuItemIndex)).toBeVisible({
+        timeout: 1000,
+      });
+    },
+    { page }
+  );
+
+  // Navigate to the specified menu item using keyboard
+  for (let i = 0; i < menuItemIndex; i += 1) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(50); // Small delay between key presses
+  }
+  await page.keyboard.press("Enter");
+
+  // Wait for the dropdown to disappear
+  await page.waitForTimeout(200);
+
   // Submit the label - use the exact "Add label" button (not the one with cell assignment)
   await page.getByRole("button", { name: "Add label", exact: true }).click();
 
@@ -1171,7 +1193,8 @@ export async function addLabelToCategory(
 export async function addLabelToCategoryWithSelection(
   categoryName: string,
   labelName: string,
-  page: Page
+  page: Page,
+  menuItemIndex = 0
 ): Promise<void> {
   // First expand the category if not already expanded
   await expandCategory(categoryName, page);
@@ -1182,17 +1205,50 @@ export async function addLabelToCategoryWithSelection(
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
 
+  // Wait for autocomplete suggestions to appear with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await expect(suggestions.nth(menuItemIndex)).toBeVisible({
+        timeout: 1000,
+      });
+    },
+    { page }
+  );
+
+  // Get the actual label name for the test ID
+  let actualLabelName: string | null = null;
+  if (menuItemIndex === 0) {
+    // For "Create new label", use the original input text
+    actualLabelName = labelName;
+  } else {
+    // For autocomplete suggestions, get the text content
+    const suggestions = page.locator(".bp5-menu-item");
+    const selectedSuggestion = suggestions.nth(menuItemIndex);
+    actualLabelName = await selectedSuggestion.textContent();
+  }
+
+  // Navigate to the specified menu item using keyboard
+  for (let i = 0; i < menuItemIndex; i += 1) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(50); // Small delay between key presses
+  }
+  await page.keyboard.press("Enter");
+
+  // Wait for the dropdown to disappear
+  await page.waitForTimeout(200);
+
   // Submit the label with cell assignment - use the button that assigns selected cells
   await page
     .getByRole("button", { name: /Add label & assign .* selected cells/ })
     .click();
 
-  // Wait for the label to appear
+  // Wait for the label to appear using the actual selected label name
   await tryUntil(
     async () => {
       await expect(
         page.getByTestId(
-          `categorical-value-select-${categoryName}-${labelName}`
+          `categorical-value-select-${categoryName}-${actualLabelName}`
         )
       ).toBeVisible();
     },
