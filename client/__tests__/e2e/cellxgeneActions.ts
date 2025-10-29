@@ -1156,17 +1156,36 @@ export async function addLabelToCategory(
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
 
-  // Wait for autocomplete suggestions to appear
-  await page.waitForTimeout(500);
+  // Wait for autocomplete suggestions to appear with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await expect(suggestions.nth(menuItemIndex)).toBeVisible({
+        timeout: 1000,
+      });
+    },
+    { page }
+  );
 
-  // Click on the specified menu item (0 = "Create new label", 1 = first autocomplete suggestion, etc.)
-  const suggestions = page.locator(".bp5-menu-item");
-  await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
-  await suggestions.nth(menuItemIndex).click();
+  // Click on the specified menu item with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await suggestions.nth(menuItemIndex).click();
+    },
+    { page }
+  );
 
-  // Wait for the dropdown to disappear - target the popover container instead of individual items
-  const dropdown = page.locator(".bp5-popover-content");
-  await expect(dropdown).not.toBeVisible();
+  // Wait for the dropdown to disappear with retry logic
+  await tryUntil(
+    async () => {
+      const dropdown = page
+        .locator(".bp5-popover-content")
+        .filter({ hasText: labelName });
+      await expect(dropdown).not.toBeVisible();
+    },
+    { page }
+  );
 
   // Submit the label - use the exact "Add label" button (not the one with cell assignment)
   await page.getByRole("button", { name: "Add label", exact: true }).click();
@@ -1196,21 +1215,48 @@ export async function addLabelToCategoryWithSelection(
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
 
-  // Wait for autocomplete suggestions to appear
-  await page.waitForTimeout(500);
+  // Wait for autocomplete suggestions to appear with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await expect(suggestions.nth(menuItemIndex)).toBeVisible({
+        timeout: 1000,
+      });
+    },
+    { page }
+  );
 
-  // Click on the specified menu item (0 = "Create new label", 1 = first autocomplete suggestion, etc.)
-  const suggestions = page.locator(".bp5-menu-item");
-  await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
+  // Get the actual label name for the test ID
+  let actualLabelName: string | null = null;
+  if (menuItemIndex === 0) {
+    // For "Create new label", use the original input text
+    actualLabelName = labelName;
+  } else {
+    // For autocomplete suggestions, get the text content
+    const suggestions = page.locator(".bp5-menu-item");
+    const selectedSuggestion = suggestions.nth(menuItemIndex);
+    actualLabelName = await selectedSuggestion.textContent();
+  }
 
-  // Get the actual text of the selected suggestion for the test ID
-  const selectedSuggestion = suggestions.nth(menuItemIndex);
-  const actualLabelName = await selectedSuggestion.textContent();
-  await selectedSuggestion.click();
+  // Click on the specified menu item with retry logic
+  await tryUntil(
+    async () => {
+      const suggestions = page.locator(".bp5-menu-item");
+      await suggestions.nth(menuItemIndex).click();
+    },
+    { page }
+  );
 
-  // Wait for the dropdown to disappear - target the popover container instead of individual items
-  const dropdown = page.locator(".bp5-popover-content");
-  await expect(dropdown).not.toBeVisible();
+  // Wait for the dropdown to disappear with retry logic
+  await tryUntil(
+    async () => {
+      const dropdown = page
+        .locator(".bp5-popover-content")
+        .filter({ hasText: labelName });
+      await expect(dropdown).not.toBeVisible();
+    },
+    { page }
+  );
 
   // Submit the label with cell assignment - use the button that assigns selected cells
   await page
