@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.3...v1.18.0) (2025-10-29)
+
+
+### Features
+
+* add cell info and cell guide autocomplete to annotation feature ([#1307](https://github.com/chanzuckerberg/single-cell-explorer/issues/1307)) ([6afee6b](https://github.com/chanzuckerberg/single-cell-explorer/commit/6afee6bb4d90efbda926b7372b11a1bd5f834f3b))
+
 ## [1.17.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.2...v1.17.3) (2025-10-29)
 
 
