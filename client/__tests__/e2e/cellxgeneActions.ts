@@ -1136,7 +1136,8 @@ export async function clearCellSelection(page: Page): Promise<void> {
 export async function addLabelToCategory(
   categoryName: string,
   labelName: string,
-  page: Page
+  page: Page,
+  menuItemIndex = 0
 ): Promise<void> {
   // Clear any existing cell selection first
   await clearCellSelection(page);
@@ -1155,6 +1156,17 @@ export async function addLabelToCategory(
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
 
+  // Wait for autocomplete suggestions to appear
+  await page.waitForTimeout(500);
+
+  // Click on the specified menu item (0 = "Create new label", 1 = first autocomplete suggestion, etc.)
+  const suggestions = page.locator(".bp5-menu-item");
+  await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
+  await suggestions.nth(menuItemIndex).click();
+
+  // Wait for suggestions to disappear before clicking the button
+  await expect(suggestions).not.toBeVisible();
+
   // Submit the label - use the exact "Add label" button (not the one with cell assignment)
   await page.getByRole("button", { name: "Add label", exact: true }).click();
 
@@ -1171,7 +1183,8 @@ export async function addLabelToCategory(
 export async function addLabelToCategoryWithSelection(
   categoryName: string,
   labelName: string,
-  page: Page
+  page: Page,
+  menuItemIndex = 0
 ): Promise<void> {
   // First expand the category if not already expanded
   await expandCategory(categoryName, page);
@@ -1181,6 +1194,17 @@ export async function addLabelToCategoryWithSelection(
 
   // Type the label name - the test ID is dynamic based on category name
   await typeInto(`${categoryName}:new-label-name`, labelName, page);
+
+  // Wait for autocomplete suggestions to appear
+  await page.waitForTimeout(500);
+
+  // Click on the specified menu item (0 = "Create new label", 1 = first autocomplete suggestion, etc.)
+  const suggestions = page.locator(".bp5-menu-item");
+  await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
+  await suggestions.nth(menuItemIndex).click();
+
+  // Wait for suggestions to disappear before clicking the button
+  await expect(suggestions).not.toBeVisible();
 
   // Submit the label with cell assignment - use the button that assigns selected cells
   await page

@@ -36,9 +36,11 @@ import {
   deleteLabel,
   renameLabel,
   duplicateCategory,
+  expandCategory,
 } from "./cellxgeneActions";
 
 import { datasets } from "./data";
+import { tryUntil } from "./puppeteerUtils";
 
 import { DATASET, testURL, pageURLSpatial } from "../common/constants";
 import {
@@ -845,56 +847,19 @@ for (const testDataset of testDatasets) {
               lasso: true,
             });
 
-            // Expand the category
-            await page
-              .getByTestId(`${TEST_CATEGORY_NAME}:category-select`)
-              .click();
-
-            // Click the add label button
-            await page
-              .getByTestId(`${TEST_CATEGORY_NAME}:add-new-label-to-category`)
-              .click();
-
-            // Wait for the dialog to appear
-            await expect(
-              page.getByTestId(`${TEST_CATEGORY_NAME}:new-label-name`)
-            ).toBeVisible();
-
-            // Test autocomplete functionality
-            const labelInput = page.getByTestId(
-              `${TEST_CATEGORY_NAME}:new-label-name`
+            // Test autocomplete functionality using the updated function
+            // Use menuItemIndex=1 to select the first autocomplete suggestion (B cell)
+            await addLabelToCategoryWithSelection(
+              TEST_CATEGORY_NAME,
+              "B cel", // This will trigger autocomplete
+              page,
+              1 // Select the first autocomplete suggestion (B cell)
             );
 
-            // Type "sperm" to trigger autocomplete
-            await labelInput.click();
-            await page.waitForTimeout(200);
-            await labelInput.fill("sperm");
-
-            // Wait for autocomplete suggestions to appear
-            await page.waitForTimeout(500);
-
-            // Check if autocomplete suggestions are visible
-            const suggestions = page.locator('[role="option"]');
-            await expect(suggestions.first()).toBeVisible({ timeout: 5000 });
-
-            // Click on the first suggestion
-            await suggestions.first().click();
-
-            // Verify the input now contains the selected suggestion
-            const inputValue = await labelInput.inputValue();
-            expect(inputValue).toMatch(/spermat/); // Should contain "spermat" from the suggestion
-
-            // Submit the label with cell assignment
-            await page
-              .getByRole("button", {
-                name: /Add label & assign .* selected cells/,
-              })
-              .click();
-
-            // Wait for the label to appear
+            // Verify the label was created with the autocomplete value
             await expect(
               page.getByTestId(
-                `categorical-value-select-${TEST_CATEGORY_NAME}-${inputValue}`
+                `categorical-value-select-${TEST_CATEGORY_NAME}-B cell`
               )
             ).toBeVisible({ timeout: 10000 });
 
@@ -948,9 +913,7 @@ for (const testDataset of testDatasets) {
             await assertLabelExists(TEST_CATEGORY_NAME, TEST_LABEL_NAME, page);
 
             // Expand the category
-            await page
-              .getByTestId(`${TEST_CATEGORY_NAME}:category-select`)
-              .click();
+            await expandCategory(TEST_CATEGORY_NAME, page);
 
             // Click the edit label button (three dots menu)
             await page
@@ -972,28 +935,36 @@ for (const testDataset of testDatasets) {
             ).toBeVisible();
 
             // Test autocomplete functionality in edit mode
-            const labelInput = page.locator(
-              'input[data-testid*="new-label-name"]'
-            );
+            // The edit dialog doesn't have a specific test ID, so target input within the dialog
+            const labelInput = page
+              .getByRole("dialog", { name: "Edit label" })
+              .locator("input")
+              .first();
 
-            // Clear the input and type "B cell" to trigger autocomplete
+            // Clear the input and type "T cel" to trigger autocomplete
             await labelInput.click();
             await page.waitForTimeout(200);
-            await labelInput.fill("B cell");
+            await labelInput.fill("T cel");
 
             // Wait for autocomplete suggestions to appear
             await page.waitForTimeout(500);
 
             // Check if autocomplete suggestions are visible
-            const suggestions = page.locator('[role="option"]');
+            const suggestions = page.locator(".bp5-menu-item");
             await expect(suggestions.first()).toBeVisible({ timeout: 5000 });
 
-            // Click on the first suggestion
-            await suggestions.first().click();
+            // Click on the second suggestion (T cell) - first is "Create new label"
+            await suggestions.nth(1).click();
 
-            // Verify the input now contains the selected suggestion
-            const inputValue = await labelInput.inputValue();
-            expect(inputValue).toMatch(/B cell/); // Should contain "B cell" from the suggestion
+            // Wait for the input value to update
+            let inputValue = "";
+            await tryUntil(
+              async () => {
+                inputValue = await labelInput.inputValue();
+                expect(inputValue).toBe("T cell");
+              },
+              { page }
+            );
 
             // Submit the label change
             await page
@@ -1053,19 +1024,19 @@ for (const testDataset of testDatasets) {
             });
 
             // Add a cell type label (using a known cell type name)
+            // Use menuItemIndex=1 to select the first autocomplete suggestion (B cell)
             await addLabelToCategoryWithSelection(
               TEST_CATEGORY_NAME,
-              "B cell", // This should be a valid cell type
-              page
+              "B cel", // This will trigger autocomplete
+              page,
+              1 // Select the first autocomplete suggestion (B cell)
             );
 
             // Verify label exists
             await assertLabelExists(TEST_CATEGORY_NAME, "B cell", page);
 
             // Expand the category
-            await page
-              .getByTestId(`${TEST_CATEGORY_NAME}:category-select`)
-              .click();
+            await expandCategory(TEST_CATEGORY_NAME, page);
 
             // Check that the info button is visible for the cell type label
             await expect(
@@ -1096,10 +1067,12 @@ for (const testDataset of testDatasets) {
               lasso: true,
             });
 
+            // Add a non-cell type label (use default menuItemIndex=0 for "Create new label")
             await addLabelToCategoryWithSelection(
               TEST_CATEGORY_NAME,
               "custom_label", // This should NOT be a valid cell type
               page
+              // menuItemIndex defaults to 0 (Create new label)
             );
 
             // Verify the non-cell type label exists
