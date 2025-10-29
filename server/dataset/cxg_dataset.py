@@ -1238,7 +1238,7 @@ class CxgDataset(Dataset):
 
                     for name, categories in categorical_dtypes:
                         if name in df.columns:
-                            if str(df[name].dtype).startswith("int"):
+                            if str(df[name].dtype).startswith("int") or str(df[name].dtype).startswith("uint"):
                                 df[name] = pd.Categorical.from_codes(df[name], categories=categories)
                             else:
                                 df[name] = pd.Categorical(df[name], categories=categories)
