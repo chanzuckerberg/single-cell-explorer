@@ -1164,8 +1164,9 @@ export async function addLabelToCategory(
   await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
   await suggestions.nth(menuItemIndex).click();
 
-  // Wait for suggestions to disappear before clicking the button
-  await expect(suggestions).not.toBeVisible();
+  // Wait for the dropdown to disappear - target the popover container instead of individual items
+  const dropdown = page.locator(".bp5-popover-content");
+  await expect(dropdown).not.toBeVisible();
 
   // Submit the label - use the exact "Add label" button (not the one with cell assignment)
   await page.getByRole("button", { name: "Add label", exact: true }).click();
@@ -1201,22 +1202,27 @@ export async function addLabelToCategoryWithSelection(
   // Click on the specified menu item (0 = "Create new label", 1 = first autocomplete suggestion, etc.)
   const suggestions = page.locator(".bp5-menu-item");
   await expect(suggestions.nth(menuItemIndex)).toBeVisible({ timeout: 5000 });
-  await suggestions.nth(menuItemIndex).click();
 
-  // Wait for suggestions to disappear before clicking the button
-  await expect(suggestions).not.toBeVisible();
+  // Get the actual text of the selected suggestion for the test ID
+  const selectedSuggestion = suggestions.nth(menuItemIndex);
+  const actualLabelName = await selectedSuggestion.textContent();
+  await selectedSuggestion.click();
+
+  // Wait for the dropdown to disappear - target the popover container instead of individual items
+  const dropdown = page.locator(".bp5-popover-content");
+  await expect(dropdown).not.toBeVisible();
 
   // Submit the label with cell assignment - use the button that assigns selected cells
   await page
     .getByRole("button", { name: /Add label & assign .* selected cells/ })
     .click();
 
-  // Wait for the label to appear
+  // Wait for the label to appear using the actual selected label name
   await tryUntil(
     async () => {
       await expect(
         page.getByTestId(
-          `categorical-value-select-${categoryName}-${labelName}`
+          `categorical-value-select-${categoryName}-${actualLabelName}`
         )
       ).toBeVisible();
     },
