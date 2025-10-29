@@ -234,8 +234,6 @@ class CellTypeListAPI(S3URIResource):
         return common_rest.cell_type_list_get(request)
 
 
-
-
 class VersionAPI(Resource):
     def get(self):
         return common_rest.get_deployed_version(request)
