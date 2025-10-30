@@ -29,6 +29,7 @@ import singleContinuousValue from "./singleContinuousValue";
 import panelEmbedding from "./panelEmbedding";
 import autosave from "./autosave";
 import annotations from "./annotations";
+import { reembedController, preprocessController, reembedParameters, workflowPolling } from "./reembed";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -56,6 +57,7 @@ const AppReducer = undoable(
     ["datasetMetadata", datasetMetadata],
     ["annotations", annotations],
     ["autosave", autosave],
+    ["reembedParameters", reembedParameters],
   ] as Parameters<typeof cascadeReducers>[0]),
   [
     "annoMatrix",
@@ -72,6 +74,7 @@ const AppReducer = undoable(
     "genesets",
     "annotations",
     "autosave",
+    "reembedParameters",
   ],
   undoableConfig
 );
@@ -82,7 +85,15 @@ const RootReducer: Reducer = (state: RootState, action: Action) => {
     state = {} as RootState;
   }
 
-  return AppReducer(state, action);
+  const newState = AppReducer(state, action);
+  
+  // Handle non-undoable controller states
+  return {
+    ...newState,
+    reembedController: reembedController(state?.reembedController, action as any),
+    preprocessController: preprocessController(state?.preprocessController, action as any),
+    workflowPolling: workflowPolling(state?.workflowPolling, action as any),
+  };
 };
 
 const store = createStore(RootReducer, applyMiddleware(thunk, annoMatrixGC));
@@ -109,6 +120,10 @@ export interface RootState {
   datasetMetadata: ReturnType<typeof datasetMetadata>;
   annotations: ReturnType<typeof annotations>;
   autosave: ReturnType<typeof autosave>;
+  reembedParameters: ReturnType<typeof reembedParameters>;
+  reembedController: ReturnType<typeof reembedController>;
+  preprocessController: ReturnType<typeof preprocessController>;
+  workflowPolling: ReturnType<typeof workflowPolling>;
 }
 
 export type AppDispatch = ThunkDispatch<RootState, never, AnyAction>;

@@ -3,6 +3,11 @@ import re
 from functools import wraps
 from http import HTTPStatus
 from urllib.parse import unquote
+import json
+import numpy as np
+import time
+import uuid
+from datetime import datetime, timezone
 
 from flask import (
     Blueprint,
@@ -26,6 +31,9 @@ from server.common.errors import (
     TombstoneError,
 )
 from server.common.utils.http_cache import ONE_YEAR, cache_control
+
+# In-memory workflow store (in production this would be database-backed)
+WORKFLOW_STORE = {}
 
 
 def rest_get_s3uri_data_adaptor(func):
@@ -269,6 +277,311 @@ class AgentAPI(S3URIResource):  # Inherit from S3URIResource instead of Resource
         return common_agent.agent_step_post(request, data_adaptor)
 
 
+class ReembedAPI(S3URIResource):
+    """Stubbed reembedding API that generates random embeddings"""
+    
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        """Generate a random embedding for the selected cells"""
+        try:
+            args = request.get_json() or {}
+            filter_params = args.get("filter", {})
+            obs_filter = filter_params.get("obs", {})
+            cell_indices = obs_filter.get("index", [])
+            params = args.get("params", {})
+            parent_name = args.get("parentName", "")
+            emb_name = args.get("embName", "random_embedding")
+            
+            # Simulate processing time
+            time.sleep(1)
+            
+            # Generate random 2D embedding
+            n_cells = len(cell_indices) if cell_indices else 1000
+            
+            # Create random embedding with some structure (spiral pattern)
+            t = np.linspace(0, 4*np.pi, n_cells)
+            noise = np.random.normal(0, 0.1, size=(n_cells, 2))
+            
+            # Create spiral pattern with noise
+            spiral_radius = np.linspace(0.1, 2, n_cells)
+            x = spiral_radius * np.cos(t) + noise[:, 0]
+            y = spiral_radius * np.sin(t) + noise[:, 1]
+            
+            # Create embedding data in the format expected by the frontend
+            embedding_data = {
+                "schema": {
+                    "dataframe": {
+                        "nObs": n_cells,
+                        "nVar": data_adaptor.get_shape()[1],  # Keep original var count
+                        "nEmb": {
+                            emb_name: [0, 1]  # 2D embedding
+                        }
+                    }
+                },
+                "embedding": {
+                    emb_name: {
+                        "coordinates": np.column_stack([x, y]).tolist(),
+                        "dims": ["x", "y"]
+                    }
+                }
+            }
+            
+            # Create mock layout schema response
+            layout_schema = {
+                "name": emb_name,
+                "type": "embedding",
+                "dims": 2,
+                "coordinates": embedding_data["embedding"][emb_name]["coordinates"]
+            }
+            
+            response_data = {
+                "layoutSchema": layout_schema,
+                "schema": embedding_data["schema"]
+            }
+            
+            return make_response(
+                json.dumps(response_data),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"}
+            )
+            
+        except Exception as e:
+            logging.error(f"Error in reembedding: {str(e)}")
+            return common_rest.abort_and_log(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Reembedding failed: {str(e)}",
+                include_exc_info=True
+            )
+
+
+class PreprocessAPI(S3URIResource):
+    """Stubbed preprocessing API"""
+    
+    @rest_get_s3uri_data_adaptor
+    def put(self, data_adaptor):
+        """Simulate preprocessing of data"""
+        try:
+            args = request.get_json() or {}
+            filter_params = args.get("filter", {})
+            obs_filter = filter_params.get("obs", {})
+            cell_indices = obs_filter.get("index", [])
+            params = args.get("params", {})
+            
+            # Simulate processing time
+            time.sleep(0.5)
+            
+            # Return current schema (preprocessing doesn't change schema structure)
+            n_cells = len(cell_indices) if cell_indices else data_adaptor.get_shape()[0]
+            n_vars = data_adaptor.get_shape()[1]
+            
+            schema_data = {
+                "schema": {
+                    "dataframe": {
+                        "nObs": n_cells,
+                        "nVar": n_vars,
+                    }
+                }
+            }
+            
+            return make_response(
+                json.dumps(schema_data),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"}
+            )
+            
+        except Exception as e:
+            logging.error(f"Error in preprocessing: {str(e)}")
+            return common_rest.abort_and_log(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Preprocessing failed: {str(e)}",
+                include_exc_info=True
+            )
+
+
+class WorkflowSubmissionAPI(S3URIResource):
+    """Stubbed workflow submission API (proxies Argo Workflows)"""
+    
+    @rest_get_s3uri_data_adaptor
+    def post(self, data_adaptor):
+        """Submit a reembedding or preprocessing workflow"""
+        try:
+            args = request.get_json() or {}
+            workflow_type = args.get("workflowType", "reembedding")
+            parameters = args.get("parameters", {})
+            metadata = args.get("metadata", {})
+            
+            # Generate unique workflow ID
+            workflow_id = str(uuid.uuid4())
+            created_at = datetime.now(timezone.utc).isoformat()
+            
+            # Create workflow entry in store
+            workflow_data = {
+                "workflowId": workflow_id,
+                "workflowType": workflow_type,
+                "parameters": parameters,
+                "metadata": metadata,
+                "createdAt": created_at,
+                "status": {
+                    "phase": "Pending",
+                    "startedAt": None,
+                    "finishedAt": None,
+                    "progress": {
+                        "current": 0,
+                        "total": 100,
+                        "percentage": 0
+                    },
+                    "message": "Workflow submitted and queued for execution",
+                    "nodes": {}
+                },
+                "result": None
+            }
+            
+            WORKFLOW_STORE[workflow_id] = workflow_data
+            
+            # Estimate duration based on workflow type and data size
+            cell_count = len(parameters.get("filter", {}).get("obs", {}).get("index", []))
+            if workflow_type == "reembedding":
+                estimated_duration = max(2, cell_count / 1000)  # ~1 min per 1000 cells
+            else:
+                estimated_duration = max(1, cell_count / 2000)  # Preprocessing faster
+            
+            response_data = {
+                "workflowId": workflow_id,
+                "status": workflow_data["status"],
+                "createdAt": created_at,
+                "estimatedDurationMinutes": estimated_duration
+            }
+            
+            logging.info(f"Submitted {workflow_type} workflow {workflow_id} for {cell_count} cells")
+            
+            return make_response(
+                json.dumps(response_data),
+                HTTPStatus.CREATED,
+                {"Content-Type": "application/json"}
+            )
+            
+        except Exception as e:
+            logging.error(f"Error submitting workflow: {str(e)}")
+            return common_rest.abort_and_log(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Workflow submission failed: {str(e)}",
+                include_exc_info=True
+            )
+
+
+class WorkflowStatusAPI(S3URIResource):
+    """Stubbed workflow status API (polls Argo Workflows status)"""
+    
+    @rest_get_s3uri_data_adaptor  
+    def get(self, data_adaptor):
+        """Get workflow status by ID"""
+        try:
+            workflow_id = request.args.get("workflow_id")
+            if not workflow_id:
+                return common_rest.abort_and_log(
+                    HTTPStatus.BAD_REQUEST,
+                    "workflow_id parameter is required"
+                )
+            
+            if workflow_id not in WORKFLOW_STORE:
+                return common_rest.abort_and_log(
+                    HTTPStatus.NOT_FOUND,
+                    f"Workflow {workflow_id} not found"
+                )
+            
+            workflow_data = WORKFLOW_STORE[workflow_id]
+            
+            # Simulate workflow progress
+            current_time = datetime.now(timezone.utc)
+            created_time = datetime.fromisoformat(workflow_data["createdAt"].replace('Z', '+00:00'))
+            elapsed_seconds = (current_time - created_time).total_seconds()
+            
+            # Update workflow status based on elapsed time
+            if workflow_data["status"]["phase"] == "Pending" and elapsed_seconds > 5:
+                # Start running after 5 seconds
+                workflow_data["status"]["phase"] = "Running"
+                workflow_data["status"]["startedAt"] = current_time.isoformat()
+                workflow_data["status"]["message"] = "Workflow is running..."
+                workflow_data["status"]["progress"]["current"] = 10
+                workflow_data["status"]["progress"]["percentage"] = 10
+                
+            elif workflow_data["status"]["phase"] == "Running":
+                # Simulate progress over time
+                if elapsed_seconds < 30:
+                    # First 30 seconds: setup and preprocessing
+                    progress = min(30, int(elapsed_seconds * 2))
+                    workflow_data["status"]["progress"]["current"] = progress
+                    workflow_data["status"]["progress"]["percentage"] = progress
+                    workflow_data["status"]["message"] = "Preprocessing data..."
+                elif elapsed_seconds < 60:
+                    # Next 30 seconds: main computation
+                    progress = 30 + min(60, int((elapsed_seconds - 30) * 2))
+                    workflow_data["status"]["progress"]["current"] = progress
+                    workflow_data["status"]["progress"]["percentage"] = progress
+                    workflow_data["status"]["message"] = "Computing embedding..."
+                else:
+                    # Complete after 1 minute
+                    workflow_data["status"]["phase"] = "Succeeded"
+                    workflow_data["status"]["finishedAt"] = current_time.isoformat()
+                    workflow_data["status"]["progress"]["current"] = 100
+                    workflow_data["status"]["progress"]["percentage"] = 100
+                    workflow_data["status"]["message"] = "Workflow completed successfully"
+                    
+                    # Generate result for reembedding workflows
+                    if workflow_data["workflowType"] == "reembedding":
+                        # Generate random embedding like the old endpoint
+                        cell_indices = workflow_data["parameters"]["filter"]["obs"]["index"]
+                        n_cells = len(cell_indices)
+                        emb_name = workflow_data["parameters"].get("embName", "workflow_embedding")
+                        
+                        # Create spiral pattern embedding
+                        t = np.linspace(0, 4*np.pi, n_cells)
+                        noise = np.random.normal(0, 0.1, size=(n_cells, 2))
+                        spiral_radius = np.linspace(0.1, 2, n_cells)
+                        x = spiral_radius * np.cos(t) + noise[:, 0]
+                        y = spiral_radius * np.sin(t) + noise[:, 1]
+                        
+                        workflow_data["result"] = {
+                            "layoutSchema": {
+                                "name": emb_name,
+                                "type": "embedding", 
+                                "dims": 2,
+                                "coordinates": np.column_stack([x, y]).tolist()
+                            },
+                            "schema": {
+                                "dataframe": {
+                                    "nObs": n_cells,
+                                    "nVar": data_adaptor.get_shape()[1],
+                                    "nEmb": {
+                                        emb_name: [0, 1]
+                                    }
+                                }
+                            }
+                        }
+            
+            response_data = {
+                "workflowId": workflow_id,
+                "status": workflow_data["status"],
+                "createdAt": workflow_data["createdAt"],
+                "updatedAt": current_time.isoformat(),
+                "result": workflow_data.get("result")
+            }
+            
+            return make_response(
+                json.dumps(response_data),
+                HTTPStatus.OK,
+                {"Content-Type": "application/json"}
+            )
+            
+        except Exception as e:
+            logging.error(f"Error getting workflow status: {str(e)}")
+            return common_rest.abort_and_log(
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                f"Failed to get workflow status: {str(e)}",
+                include_exc_info=True
+            )
+
+
 def rest_get_dataset_explorer_location_data_adaptor(func):
     @wraps(func)
     def wrapped_function(self, dataset=None):
@@ -339,6 +652,12 @@ def get_api_s3uri_resources(bp_dataroot, s3uri_path):
     add_resource(DiffExpObsAPI, "/diffexp/obs")
     add_resource(DiffExpObs2API, "/diffexp/obs2")
     add_resource(LayoutObsAPI, "/layout/obs")
+    # Reembedding routes (stubbed)
+    add_resource(ReembedAPI, "/reembed")
+    add_resource(PreprocessAPI, "/preprocess")
+    # Workflow routes (async workflow submission and polling)
+    add_resource(WorkflowSubmissionAPI, "/workflows/submit")
+    add_resource(WorkflowStatusAPI, "/workflows/status")
     # Uns/Spatial
     add_resource(UnsMetaAPI, "/uns/meta")
     # ATAC

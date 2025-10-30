@@ -26,6 +26,7 @@ import Clip from "./components/Clip/Clip";
 import Subset from "./components/Subset/Subset";
 import DiffexpButtons from "./components/DiffExpButtons/DiffExpButtons";
 import Download from "./components/Download/Download";
+import ReembeddingDialog from "./ReembeddingDialog";
 import { getEmbSubsetView } from "../../util/stateManager/viewStackHelpers";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -293,6 +294,10 @@ const MenuBar = ({
                 schema={annoMatrix.schema}
                 dispatch={dispatch}
               />
+            </ButtonGroup>
+
+            <ButtonGroup className={styles.menubarButton}>
+              <ReembeddingDialog />
             </ButtonGroup>
 
             {isTest && (
