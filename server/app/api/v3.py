@@ -441,9 +441,9 @@ class WorkflowSubmissionAPI(S3URIResource):
             # Estimate duration based on workflow type and data size
             cell_count = len(parameters.get("filter", {}).get("obs", {}).get("index", []))
             if workflow_type == "reembedding":
-                estimated_duration = max(2, cell_count / 1000)  # ~1 min per 1000 cells
+                estimated_duration = 0.1  # 5 seconds for testing
             else:
-                estimated_duration = max(1, cell_count / 2000)  # Preprocessing faster
+                estimated_duration = 0.05  # 2.5 seconds for preprocessing
             
             response_data = {
                 "workflowId": workflow_id,
@@ -506,21 +506,18 @@ class WorkflowStatusAPI(S3URIResource):
                 workflow_data["status"]["progress"]["percentage"] = 10
                 
             elif workflow_data["status"]["phase"] == "Running":
-                # Simulate progress over time
-                if elapsed_seconds < 30:
-                    # First 30 seconds: setup and preprocessing
-                    progress = min(30, int(elapsed_seconds * 2))
+                # Simulate progress over time - complete after 5 seconds total
+                if elapsed_seconds < 5:
+                    # Progress from 10% to 100% over 5 seconds
+                    progress = 10 + int((elapsed_seconds / 5) * 90)
                     workflow_data["status"]["progress"]["current"] = progress
                     workflow_data["status"]["progress"]["percentage"] = progress
-                    workflow_data["status"]["message"] = "Preprocessing data..."
-                elif elapsed_seconds < 60:
-                    # Next 30 seconds: main computation
-                    progress = 30 + min(60, int((elapsed_seconds - 30) * 2))
-                    workflow_data["status"]["progress"]["current"] = progress
-                    workflow_data["status"]["progress"]["percentage"] = progress
-                    workflow_data["status"]["message"] = "Computing embedding..."
+                    if elapsed_seconds < 2.5:
+                        workflow_data["status"]["message"] = "Preprocessing data..."
+                    else:
+                        workflow_data["status"]["message"] = "Computing embedding..."
                 else:
-                    # Complete after 1 minute
+                    # Complete after 5 seconds
                     workflow_data["status"]["phase"] = "Succeeded"
                     workflow_data["status"]["finishedAt"] = current_time.isoformat()
                     workflow_data["status"]["progress"]["current"] = 100
@@ -540,13 +537,14 @@ class WorkflowStatusAPI(S3URIResource):
                         spiral_radius = np.linspace(0.1, 2, n_cells)
                         x = spiral_radius * np.cos(t) + noise[:, 0]
                         y = spiral_radius * np.sin(t) + noise[:, 1]
+                        coordinates = np.column_stack([x, y])
                         
                         workflow_data["result"] = {
                             "layoutSchema": {
                                 "name": emb_name,
                                 "type": "embedding", 
                                 "dims": 2,
-                                "coordinates": np.column_stack([x, y]).tolist()
+                                "coordinates": coordinates.tolist()
                             },
                             "schema": {
                                 "dataframe": {
@@ -558,6 +556,28 @@ class WorkflowStatusAPI(S3URIResource):
                                 }
                             }
                         }
+                        
+                        # TEMPORARY STUB: Write embedding to TileDB
+                        # TODO: Remove this once Argo workflows handle the write path
+                        # The Argo workflow will write directly to user-data/{userId}/{dataset}/emb/
+                        try:
+                            from server.common.rest import _resolve_request_user_id
+                            user_id = _resolve_request_user_id(request)
+                            # Use default user_id when auth is disabled (for testing)
+                            if not user_id:
+                                user_id = "test-user"
+                                logging.info(f"Using default user_id for testing: {user_id}")
+                            
+                            user_root_uri = data_adaptor._user_root_uri(user_id)
+                            data_adaptor.write_user_embedding(
+                                user_root_uri=user_root_uri,
+                                embedding_name=emb_name,
+                                coordinates=coordinates.astype(np.float32)
+                            )
+                            logging.info(f"TEMPORARY STUB: Wrote embedding {emb_name} to user-data for user {user_id}")
+                        except Exception as e:
+                            logging.error(f"TEMPORARY STUB: Failed to write embedding {emb_name}: {e}")
+                            # Don't fail the workflow if write fails - this is just for testing
             
             response_data = {
                 "workflowId": workflow_id,

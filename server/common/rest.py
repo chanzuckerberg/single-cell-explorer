@@ -696,7 +696,13 @@ def layout_obs_get(request, data_adaptor):
     if nBins is not None:
         nBins = int(nBins)
 
-    num_columns_requested = len(data_adaptor.get_embedding_names()) if len(fields) == 0 else len(fields)
+    # Get user_id for user embeddings
+    user_id = _resolve_request_user_id(request)
+    # Use default user_id when auth is disabled (for testing)
+    if not user_id:
+        user_id = "test-user"
+    
+    num_columns_requested = len(data_adaptor.get_embedding_names(user_id=user_id)) if len(fields) == 0 else len(fields)
     if data_adaptor.app_config.exceeds_limit("column_request_max", num_columns_requested):
         return abort(HTTPStatus.BAD_REQUEST)
 
@@ -711,7 +717,7 @@ def layout_obs_get(request, data_adaptor):
 
     try:
         return make_response(
-            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins, spatial=spatial),
+            data_adaptor.layout_to_fbs_matrix(fields, num_bins=nBins, spatial=spatial, user_id=user_id),
             HTTPStatus.OK,
             {"Content-Type": "application/octet-stream"},
         )

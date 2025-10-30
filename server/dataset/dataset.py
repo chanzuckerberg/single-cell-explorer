@@ -423,7 +423,7 @@ class Dataset(metaclass=ABCMeta):
 
         return normalized_layout
 
-    def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None):
+    def layout_to_fbs_matrix(self, fields, num_bins=None, spatial=None, user_id=None):
         """
         :param num_bins: number of bins for lossy integer compression. if None, no compression is performed.
         return specified embeddings as a flatbuffer, using the cellxgene matrix fbs encoding.
@@ -435,11 +435,11 @@ class Dataset(metaclass=ABCMeta):
         * does not support filtering
 
         """
-        embeddings = self.get_embedding_names() if fields is None or len(fields) == 0 else fields
+        embeddings = self.get_embedding_names(user_id=user_id) if fields is None or len(fields) == 0 else fields
         layout_data = []
         with ServerTiming.time("layout.query"):
             for ename in embeddings:
-                embedding = self.get_embedding_array(ename, 2)
+                embedding = self.get_embedding_array(ename, 2, user_id=user_id)
                 normalized_layout = Dataset.normalize_embedding(embedding, ename, spatial)
                 layout_data.append(pd.DataFrame(normalized_layout, columns=[f"{ename}_0", f"{ename}_1"]))
 

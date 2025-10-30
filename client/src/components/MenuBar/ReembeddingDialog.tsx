@@ -11,24 +11,22 @@ import {
   Dialog,
   ControlGroup,
   Button,
+  InputGroup,
+  FormGroup,
 } from "@blueprintjs/core";
 
 import * as globals from "../../globals";
-import { requestReembed, requestPreprocessing } from "../../actions/reembed";
+import { requestReembed } from "../../actions/reembed";
 import { RootState, AppDispatch } from "../../reducers";
 import {
   ReembeddingParameters,
   ReembeddingController,
   PreprocessingController,
 } from "../../common/types/reembed";
-import { PreprocessingPanel } from "./PreprocessingPanel";
-import { DimensionalityReductionPanel } from "./DimensionalityReductionPanel";
-import { DefaultsIO } from "./DefaultsIO";
 
 interface ReembeddingDialogState {
   setReembedDialogActive: boolean;
   embName: string;
-  reembeddingPanel: boolean;
 }
 
 interface AnnoMatrixLike {
@@ -69,7 +67,6 @@ class ReembeddingDialog extends Component<
     this.state = {
       setReembedDialogActive: false,
       embName: "",
-      reembeddingPanel: false,
     };
   }
 
@@ -83,14 +80,6 @@ class ReembeddingDialog extends Component<
     });
   };
 
-  handleRunAndDisablePreprocessingDialog = async (): Promise<void> => {
-    const { dispatch, reembedParams } = this.props;
-
-    await dispatch(requestPreprocessing(reembedParams));
-    this.setState({
-      setReembedDialogActive: false,
-    });
-  };
 
   handleRunAndDisableReembedDialog = async (): Promise<void> => {
     const {
@@ -102,6 +91,11 @@ class ReembeddingDialog extends Component<
       selectedGenesLassoIndices,
     } = this.props;
     const { embName } = this.state;
+
+    // Validate embedding name
+    if (!embName.trim()) {
+      return; // Don't submit if no name provided
+    }
 
     let parentName: string;
 
@@ -146,15 +140,12 @@ class ReembeddingDialog extends Component<
   };
 
   render(): JSX.Element {
-    const { setReembedDialogActive, embName, reembeddingPanel } = this.state;
+    const { setReembedDialogActive, embName } = this.state;
     const {
       reembedController,
-      idhash,
       annoMatrix,
       obsCrossfilter,
       preprocessController,
-      reembedParams,
-      userLoggedIn,
       hostedMode,
     } = this.props;
 
@@ -162,19 +153,17 @@ class ReembeddingDialog extends Component<
     const loading =
       !!reembedController?.pendingFetch || !!preprocessController?.pendingFetch;
     const tipContent =
-      "Click to perform preprocessing and dimensionality reduction on the currently selected cells.";
+      "Click to create a child embedding from the currently selected cells.";
     const cS = obsCrossfilter.countSelected();
 
     const runDisabled = cS > 50000 && hostedMode;
 
-    const title = `${
-      reembeddingPanel ? "Reembedding" : "Preprocessing"
-    } on ${cS}/${annoMatrix.schema.dataframe.nObs} ${cOrG}s.`;
+    const title = `Create Child Embedding on ${cS}/${annoMatrix.schema.dataframe.nObs} ${cOrG}s.`;
 
     return (
       <div>
         <Dialog
-          icon="info-sign"
+          icon="new-object"
           onClose={this.handleDisableReembedDialog}
           title={title}
           autoFocus
@@ -187,91 +176,42 @@ class ReembeddingDialog extends Component<
           {runDisabled ? (
             <div style={{ paddingBottom: "20px" }}>
               <AnchorButton fill minimal icon="warning-sign" intent="danger">
-                You cannot preprocess or reembed on greater than 50,000 cells.
+                You cannot create child embeddings on greater than 50,000 cells.
               </AnchorButton>
             </div>
           ) : null}
 
-          <DefaultsIO />
-
-          <ControlGroup fill vertical={false}>
-            <AnchorButton
-              onClick={() => {
-                this.setState({ reembeddingPanel: false });
-              }}
-              text="Preprocessing"
-              intent={!reembeddingPanel ? "primary" : undefined}
-            />
-            <AnchorButton
-              onClick={() => {
-                this.setState({ reembeddingPanel: true });
-              }}
-              text="Reembedding"
-              intent={reembeddingPanel ? "primary" : undefined}
-            />
-          </ControlGroup>
-
-          {!reembeddingPanel ? (
-            <div
-              style={{
-                paddingTop: "20px",
-                marginLeft: "10px",
-                marginRight: "10px",
-              }}
-            >
-              <PreprocessingPanel idhash={idhash} />
-              <ControlGroup
-                style={{ paddingTop: "15px" }}
-                fill
-                vertical={false}
-              >
-                <Button onClick={this.handleDisableReembedDialog}>Close</Button>
-                <Button
-                  onClick={() => {
-                    this.setState({ reembeddingPanel: true });
-                  }}
-                >
-                  Next
-                </Button>
-              </ControlGroup>
-            </div>
-          ) : (
-            <div
-              style={{
-                paddingTop: "20px",
-                marginLeft: "10px",
-                marginRight: "10px",
-              }}
-            >
-              <DimensionalityReductionPanel
-                embName={embName}
+          <div
+            style={{
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+            }}
+          >
+            <FormGroup label="Child Embedding Name" labelFor="embName">
+              <InputGroup
+                id="embName"
+                value={embName}
                 onChange={this.onNameChange}
-                idhash={idhash}
-              />
-              <ControlGroup
-                style={{ paddingTop: "15px" }}
+                placeholder="Enter child embedding name..."
                 fill
-                vertical={false}
+                autoFocus
+              />
+            </FormGroup>
+
+            <ControlGroup fill vertical={false}>
+              <Button onClick={this.handleDisableReembedDialog}>Cancel</Button>
+              <Button
+                disabled={!embName.trim() || runDisabled}
+                onClick={this.handleRunAndDisableReembedDialog}
+                intent="primary"
+                loading={loading}
               >
-                <Button onClick={this.handleDisableReembedDialog}>Close</Button>
-                <Button
-                  disabled={
-                    (reembedParams.doBatch && reembedParams.batchKey === "") ||
-                    (reembedParams.doBatchPrep &&
-                      (reembedParams.batchPrepKey === "" ||
-                        reembedParams.batchPrepLabel === "")) ||
-                    runDisabled ||
-                    (reembedParams.embeddingMode === "Run UMAP" &&
-                      reembedParams.latentSpace === "")
-                  }
-                  onClick={this.handleRunAndDisableReembedDialog}
-                  intent="primary"
-                >
-                  {reembedParams.embeddingMode}
-                </Button>
-              </ControlGroup>
-            </div>
-          )}
+                Create Child Embedding
+              </Button>
+            </ControlGroup>
+          </div>
         </Dialog>
 
         <Tooltip
@@ -282,7 +222,7 @@ class ReembeddingDialog extends Component<
           <AnchorButton
             icon="new-object"
             loading={loading}
-            disabled={!userLoggedIn}
+            // disabled={!userLoggedIn}
             onClick={this.handleEnableReembedDialog}
             data-testid="reembedding-options"
           />

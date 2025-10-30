@@ -530,6 +530,89 @@ class CxgDataset(Dataset):
             return None
         return self._read_user_genesets(user_id)
 
+    def write_user_embedding(
+        self,
+        user_root_uri: str,
+        embedding_name: str,
+        coordinates: np.ndarray,  # shape (n_cells, 2)
+    ) -> None:
+        """
+        TEMPORARY: For stub testing only. Will be removed once Argo workflows
+        handle embedding generation and persistence.
+
+        Write a user-generated embedding to TileDB in the user-data location.
+        """
+        if coordinates.shape[1] != 2:
+            raise ValueError("Embedding coordinates must be 2D (n_cells, 2)")
+
+        n_cells = coordinates.shape[0]
+        if n_cells <= 0:
+            return
+
+        # Ensure emb/ subdirectory exists
+        emb_root = path_join(user_root_uri, "emb")
+        self._ensure_group(emb_root)
+
+        # Create embedding array URI
+        embedding_uri = path_join(emb_root, embedding_name)
+        temp_embedding_uri = f"{embedding_uri}.tmp"
+
+        # Create TileDB schema for 2D dense array (based on vcp-workflows)
+        filters = tiledb.FilterList([tiledb.ZstdFilter()])
+        attrs = [tiledb.Attr(dtype=coordinates.dtype, filters=filters)]
+        dimensions = [
+            tiledb.Dim(
+                domain=(0, n_cells - 1),
+                tile=min(n_cells, 1000),
+                dtype=np.uint32,
+            ),
+            tiledb.Dim(
+                domain=(0, 1),  # 2D embedding (x, y)
+                tile=2,
+                dtype=np.uint32,
+            ),
+        ]
+        domain = tiledb.Domain(*dimensions)
+        schema = tiledb.ArraySchema(
+            domain=domain,
+            sparse=False,
+            attrs=attrs,
+            capacity=1_000_000,
+            cell_order="row-major",
+            tile_order="row-major",
+        )
+
+        # Write to temporary location first
+        tiledb.DenseArray.create(temp_embedding_uri, schema, ctx=self.tiledb_ctx)
+
+        try:
+            with tiledb.open(temp_embedding_uri, mode="w", ctx=self.tiledb_ctx) as arr:
+                arr[:] = coordinates
+                # Add metadata similar to other CXG arrays
+                arr.meta["embedding_name"] = embedding_name
+                arr.meta["n_cells"] = str(n_cells)
+                arr.meta["dims"] = "2"
+
+            # Atomic move: only after successful write
+            vfs = tiledb.VFS(ctx=self.tiledb_ctx)
+
+            # Remove existing array if it exists
+            if vfs.is_dir(embedding_uri):
+                with contextlib.suppress(TileDBError):
+                    tiledb.remove(embedding_uri, ctx=self.tiledb_ctx)
+
+            # Move temp to final location (as atomic as possible)
+            vfs.move_dir(temp_embedding_uri, embedding_uri)
+
+        except Exception:
+            # Clean up temp array on any failure
+            try:
+                if tiledb.object_type(temp_embedding_uri, ctx=self.tiledb_ctx) == "array":
+                    tiledb.remove(temp_embedding_uri, ctx=self.tiledb_ctx)
+            except TileDBError:
+                pass  # Best effort cleanup
+            raise
+
     @staticmethod
     def set_tiledb_context(context_params):
         """Set the tiledb context.  This should be set before any instances of CxgDataset are created"""
@@ -701,9 +784,30 @@ class CxgDataset(Dataset):
         except tiledb.libtiledb.TileDBError:
             raise DatasetAccessError(name) from None
 
-    def get_embedding_array(self, ename, dims=2):
-        array = self.open_array(f"emb/{ename}")
-        return array[:, 0:dims]
+    def get_embedding_array(self, ename, dims=2, user_id: Optional[str] = None):
+        # Try user embedding first if user_id provided (works for both stub and Argo-generated)
+        if user_id:
+            user_root_uri = self._user_root_uri(user_id)
+            user_emb_uri = path_join(user_root_uri, f"emb/{ename}")
+            logging.info(f"Trying user embedding: {user_emb_uri} for user_id: {user_id}")
+            try:
+                array = tiledb.open(user_emb_uri, mode="r", ctx=self.tiledb_ctx)
+                logging.info(f"Successfully opened user embedding: {user_emb_uri}")
+                return array[:, 0:dims]
+            except TileDBError as e:
+                logging.info(f"User embedding not found: {user_emb_uri}, error: {e}")
+                pass  # Fall through to static embedding
+        else:
+            logging.info(f"No user_id provided, trying static embedding for: {ename}")
+
+        # Try static embedding
+        try:
+            array = self.open_array(f"emb/{ename}")
+            logging.info(f"Successfully opened static embedding: emb/{ename}")
+            return array[:, 0:dims]
+        except DatasetAccessError as e:
+            logging.error(f"Static embedding not found: emb/{ename}, error: {e}")
+            raise
 
     def compute_diffexp_ttest(self, setA, setB, top_n=None, lfc_cutoff=None, selector_lists=False):
         if top_n is None:
@@ -1020,15 +1124,28 @@ class CxgDataset(Dataset):
 
     # function to get the embedding
     # this function to iterate through embeddings.
-    def get_embedding_names(self):
+    def get_embedding_names(self, user_id: Optional[str] = None):
         with ServerTiming.time("layout.lsuri"):
+            # Get static embeddings (existing code)
             pemb = self.get_path("emb")
             embeddings = [os.path.basename(p) for (p, t) in self.lsuri(pemb) if t == "array"]
+
+            # Get user embeddings if user_id provided
+            # This will work with both stub-generated and Argo-generated embeddings
+            if user_id:
+                user_root_uri = self._user_root_uri(user_id)
+                user_emb_uri = path_join(user_root_uri, "emb")
+                try:
+                    user_embeddings = [os.path.basename(p) for (p, t) in self.lsuri(user_emb_uri) if t == "array"]
+                    embeddings.extend(user_embeddings)
+                except TileDBError:
+                    pass  # No user embeddings yet
+
         if len(embeddings) == 0:
             raise DatasetAccessError("cxg matrix missing embeddings")
         return embeddings
 
-    def _get_schema(self):
+    def _get_schema(self, user_id: Optional[str] = None):
         if self.schema:
             return self.schema
 
@@ -1079,9 +1196,24 @@ class CxgDataset(Dataset):
                 annotations[ax].update({"index": schema_hints["index"]})
 
         obs_layout = []
-        embeddings = self.get_embedding_names()
+        embeddings = self.get_embedding_names(user_id=user_id)  # Pass user_id
         for ename in embeddings:
-            A = self.open_array(f"emb/{ename}")
+            # Try to open from user location first if user_id provided, then static location
+            # This will work with both stub and Argo-generated embeddings
+            A = None
+            if user_id:
+                user_root_uri = self._user_root_uri(user_id)
+                user_emb_uri = path_join(user_root_uri, f"emb/{ename}")
+                try:
+                    A = tiledb.open(user_emb_uri, mode="r", ctx=self.tiledb_ctx)
+                except TileDBError:
+                    pass  # Fall through to static embedding
+
+            if A is None:
+                try:
+                    A = self.open_array(f"emb/{ename}")
+                except DatasetAccessError:
+                    raise
             obs_layout.append({"name": ename, "type": "float32", "dims": [f"{ename}_{d}" for d in range(0, A.ndim)]})
 
         schema = {"dataframe": dataframe, "annotations": annotations, "layout": {"obs": obs_layout}}
@@ -1118,10 +1250,11 @@ class CxgDataset(Dataset):
             )
 
     def get_schema(self, user_id: Optional[str] = None):
-        if self.schema is None:
+        # Always regenerate schema when user_id is provided to include user embeddings
+        if self.schema is None or user_id:
             with self.lock:
-                if self.schema is None:
-                    self.schema = self._get_schema()
+                if self.schema is None or user_id:
+                    self.schema = self._get_schema(user_id=user_id)
 
         schema = deepcopy(self.schema)
         if user_id:

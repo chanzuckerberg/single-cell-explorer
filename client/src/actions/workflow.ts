@@ -247,18 +247,23 @@ export const stopPollingWorkflow: ActionCreator<
 // Handle reembedding workflow completion
 export const handleReembeddingComplete: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<string>>
-> = (embName: string, result: any) => async (): Promise<void> => {
+> = (embName: string, result: any) => async (dispatch: AppDispatch): Promise<void> => {
   try {
-    // In a real implementation, you would:
-    // 1. Add the new embedding to the annoMatrix
-    // 2. Update the available embeddings list
-    // 3. Switch to the new embedding
-
-    // For now, we'll just log the completion
+    // Add the new embedding to the available list and switch to it
     if (result.layoutSchema && embName) {
       console.log(`Reembedding completed: ${embName}`, result);
-      // Switch to the new embedding (this may fail if embedding isn't properly registered)
-      // await dispatch(layoutChoiceAction(embName));
+      console.log(`Dispatching reembed: add reembedding action for: ${embName}`);
+      
+      // Dispatch action to add the new embedding to the layout choice
+      dispatch({
+        type: "reembed: add reembedding",
+        name: embName,
+        schema: result.layoutSchema,
+      });
+      
+      console.log(`Action dispatched for embedding: ${embName}`);
+    } else {
+      console.warn(`Missing layoutSchema or embName:`, { embName, result });
     }
   } catch (error: any) {
     console.error("Error handling reembedding completion:", error);

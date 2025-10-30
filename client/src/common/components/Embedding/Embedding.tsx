@@ -1,4 +1,4 @@
-import React, { FormEvent } from "react";
+import React, { FormEvent, useState } from "react";
 import { connect } from "react-redux";
 import { useAsync } from "react-async";
 import {
@@ -10,6 +10,7 @@ import {
   RadioGroup,
   Tooltip,
   Popover,
+  AnchorButton,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import actions from "actions";
@@ -304,6 +305,83 @@ const loadAllEmbeddingCounts = async ({ annoMatrix, available }: any) => {
   }));
 };
 
+// Helper function to close all children when expanding a node
+const closeAllChildren = (node: string, tree: any, expanded: any) => {
+  const children = tree[node]?.children;
+  if (children) {
+    expanded[node] = false;
+    for (const child of children) {
+      closeAllChildren(child, tree, expanded);
+    }
+  }
+};
+
+// Recursively render the indented embedding tree
+const IndentedEmbeddingTree = (
+  node: string,
+  roots: string[],
+  tree: any,
+  padding: number,
+  els: JSX.Element[],
+  currView: string,
+  isEmbeddingExpanded: any,
+  handleEmbeddingExpansionChange: (e: any, node: string, val: boolean, tree: any) => void,
+  initEmbeddings: string[]
+) => {
+  const children = tree[node]?.children;
+  const isExpanded = isEmbeddingExpanded?.[node] ?? tree[node]?.expandedByDefault ?? false;
+  const isVisible = isEmbeddingExpanded?.[tree[node]?.parent] ?? tree[tree[node]?.parent]?.expandedByDefault ?? true;
+
+  if (isVisible) {
+    els.push(
+      <Radio
+        label={`${node.split(';;').at(-1)}: ${tree[node]?.sizeHint || '0 cells'}`}
+        value={node}
+        key={node}
+        style={{
+          display: "flex",
+          verticalAlign: "middle",
+          paddingLeft: `${padding + 26}px`
+        }}
+        children={
+          <div style={{
+            paddingLeft: "5px",
+          }}>
+            {children && !(tree[node]?.disable ?? false) ? 
+              <AnchorButton
+                icon={isExpanded ? "chevron-down" : "chevron-right"}
+                data-testid={`${node}:expand-embeddings`}
+                onClick={(e) => handleEmbeddingExpansionChange(e, node, isExpanded, tree)}
+                minimal
+                style={{
+                  cursor: "pointer",
+                  marginLeft: "auto",
+                  marginTop: "-5px"
+                }}                    
+              /> : null}
+          </div> 
+        }
+      />
+    );
+  }
+
+  if (children && isExpanded) {
+    for (const child of children) {
+      IndentedEmbeddingTree(
+        child,
+        roots,
+        tree,
+        padding + 26,
+        els,
+        currView,
+        isEmbeddingExpanded,
+        handleEmbeddingExpansionChange,
+        initEmbeddings
+      );
+    }
+  }
+};
+
 interface EmbeddingChoiceProps {
   onChange: (e: FormEvent<HTMLInputElement>) => Promise<void>;
   annoMatrix: AnnoMatrixObsCrossfilter["annoMatrix"];
@@ -316,18 +394,137 @@ const EmbeddingChoices = ({
   layoutChoice,
 }: EmbeddingChoiceProps) => {
   const { available } = layoutChoice;
+  const [isEmbeddingExpanded, setIsEmbeddingExpanded] = useState<Record<string, boolean>>({});
+  const [renderedEmbeddingTree, setRenderedEmbeddingTree] = useState<JSX.Element | null>(null);
+
   const { data, error, isPending } = useAsync({
     promiseFn: loadAllEmbeddingCounts,
     annoMatrix,
     available,
   });
 
+  const handleEmbeddingExpansionChange = (e: any, node: string, val: boolean, tree: any) => {
+    const newExpanded = { ...isEmbeddingExpanded };
+    if (val) {
+      closeAllChildren(node, tree, newExpanded);
+      setIsEmbeddingExpanded(newExpanded);
+    } else {
+      setIsEmbeddingExpanded({ ...newExpanded, [node]: true });
+    }
+    if (e) {
+      e.preventDefault();
+    }
+  };
+
+  React.useEffect(() => {
+    if (data) {
+      console.log(`EmbeddingChoices: Building tree with data:`, data);
+      const name = layoutChoice.current;
+      console.log(`Current embedding: ${name}`);
+      
+      let parentName: string;
+      if (name.includes(";;")) {
+        parentName = name.replace(`;;${name.split(";;").at(-1)}`, "");
+      } else {
+        parentName = "";
+      }
+      console.log(`Parent name: ${parentName}`);
+
+      const embeddingTree: any = {};
+      data.forEach((summary: any) => {
+        const { discreteCellIndex, embeddingName: queryName } = summary;
+        console.log(`Processing embedding: ${queryName}`);
+        
+        let queryParent: string;
+        if (queryName.includes(";;")) {
+          queryParent = queryName.replace(`;;${queryName.split(";;").at(-1)}`, "");
+        } else {
+          queryParent = "";
+        }
+        console.log(`Query parent: ${queryParent}`);
+
+        const sizeHint = `${discreteCellIndex.size()} cells`;
+        
+        // Add queryName to children of queryParent
+        if (embeddingTree?.[queryParent]?.children) {
+          embeddingTree[queryParent].children.push(queryName);
+        } else if (embeddingTree?.[queryParent]) {
+          embeddingTree[queryParent] = { ...embeddingTree[queryParent], children: [queryName] };
+        } else {
+          embeddingTree[queryParent] = { children: [queryName] };
+        }
+
+        const expandedByDefault = (queryParent === "" || queryName === name);
+
+        if (embeddingTree?.[queryName]) {
+          embeddingTree[queryName] = { 
+            ...embeddingTree[queryName], 
+            sizeHint: sizeHint, 
+            expandedByDefault: expandedByDefault, 
+            parent: queryParent 
+          };
+        } else {
+          embeddingTree[queryName] = { 
+            sizeHint: sizeHint, 
+            expandedByDefault: expandedByDefault, 
+            parent: queryParent 
+          };
+        }
+      });
+      
+      console.log(`Built embedding tree:`, embeddingTree);
+
+      const els: JSX.Element[] = [];
+      let iterable: string[];
+      let roots: string[] | undefined;
+
+      if (parentName === "") {
+        iterable = embeddingTree[""]?.children || [];
+      } else {
+        let currNode = parentName;
+        let iterate = true;
+        roots = [currNode];
+        embeddingTree[currNode].expandedByDefault = true;
+        embeddingTree[currNode].disable = true;
+        while (iterate) {
+          if (embeddingTree[currNode].parent === "") {
+            iterate = false;
+          } else {
+            currNode = embeddingTree[currNode].parent;
+            embeddingTree[currNode].expandedByDefault = true;
+            embeddingTree[currNode].disable = true;
+            roots.push(currNode);
+          }
+        }
+        iterable = [currNode];
+      }
+
+      for (const c of iterable) {
+        IndentedEmbeddingTree(
+          c,
+          roots ?? iterable.filter((item) => item !== c),
+          embeddingTree,
+          0,
+          els,
+          name,
+          isEmbeddingExpanded,
+          handleEmbeddingExpansionChange,
+          [] // initEmbeddings - empty for now
+        );
+      }
+
+      setRenderedEmbeddingTree(
+        <RadioGroup onChange={onChange} selectedValue={layoutChoice.current}>
+          {els}
+        </RadioGroup>
+      );
+    }
+  }, [data, layoutChoice, isEmbeddingExpanded, onChange]);
+
   if (error) {
-    /* log, as this is unexpected */
     console.error(error);
   }
   if (error || isPending) {
-    /* still loading, or errored out - just omit counts (TODO: spinner?) */
     return (
       <RadioGroup onChange={onChange} selectedValue={layoutChoice.current}>
         {layoutChoice.available.map((name) => (
@@ -337,30 +534,7 @@ const EmbeddingChoices = ({
     );
   }
   if (data) {
-    return (
-      <RadioGroup onChange={onChange} selectedValue={layoutChoice.current}>
-        {data.map((summary: any) => {
-          const { discreteCellIndex, embeddingName } = summary;
-          const sizeHint = `${discreteCellIndex.size()} cells`;
-          return (
-            <Radio
-              label={
-                (
-                  <span
-                    data-testid={`${LAYOUT_CHOICE_TEST_ID}-label-${embeddingName}`}
-                  >
-                    {embeddingName}: {sizeHint}
-                  </span>
-                ) as unknown as string // (thuang): `label` does accept React.Node, but the BlueprintJS type is incorrect
-              }
-              data-testid={`${LAYOUT_CHOICE_TEST_ID}-radio-${embeddingName}`}
-              value={embeddingName}
-              key={embeddingName}
-            />
-          );
-        })}
-      </RadioGroup>
-    );
+    return renderedEmbeddingTree;
   }
   return null;
 };
