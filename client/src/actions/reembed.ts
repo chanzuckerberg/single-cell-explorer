@@ -6,8 +6,8 @@
 
 import { Action, ActionCreator } from "redux";
 import { ThunkAction } from "redux-thunk";
-import type { AppDispatch, GetState, RootState } from "../reducers";
-import { 
+import type { AppDispatch, RootState } from "../reducers";
+import {
   postNetworkErrorToast,
   postAsyncFailureToast,
 } from "../components/framework/toasters";
@@ -16,9 +16,9 @@ import {
   ReembeddingAction,
   PreprocessingAction,
 } from "../common/types/reembed";
-import { 
+import {
   submitWorkflow,
-  handleReembeddingComplete as workflowHandleReembeddingComplete 
+  handleReembeddingComplete as workflowHandleReembeddingComplete,
 } from "./workflow";
 
 // Legacy actions that are no longer needed with async workflows
@@ -27,51 +27,61 @@ import {
 // Request reembedding action - now uses async workflow system
 export const requestReembed: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<string>>
-> = (
-  reembedParams: ReembeddingParameters,
-  parentName: string,
-  embName: string,
-  otherSelector?: number[]
-) => 
-async (dispatch: AppDispatch): Promise<void> => {
-  try {
-    // Use the new async workflow submission system
-    await dispatch(submitWorkflow("reembedding", reembedParams, parentName, embName, otherSelector));
-  } catch (error: any) {
-    dispatch({
-      type: "reembed: request aborted",
-    } as ReembeddingAction);
+> =
+  (
+    reembedParams: ReembeddingParameters,
+    parentName: string,
+    embName: string,
+    otherSelector?: number[]
+  ) =>
+  async (dispatch: AppDispatch): Promise<void> => {
+    try {
+      // Use the new async workflow submission system
+      await dispatch(
+        submitWorkflow(
+          "reembedding",
+          reembedParams,
+          parentName,
+          embName,
+          otherSelector
+        )
+      );
+    } catch (error: any) {
+      dispatch({
+        type: "reembed: request aborted",
+      } as ReembeddingAction);
 
-    if (error.name === "AbortError") {
-      postAsyncFailureToast("Re-embedding calculation was aborted.");
-    } else {
-      postNetworkErrorToast(`Re-embedding: ${error.message}`);
+      if (error.name === "AbortError") {
+        postAsyncFailureToast("Re-embedding calculation was aborted.");
+      } else {
+        postNetworkErrorToast(`Re-embedding: ${error.message}`);
+      }
+      console.log("Reembed exception:", error, error.name, error.message);
     }
-    console.log("Reembed exception:", error, error.name, error.message);
-  }
-};
+  };
 
 // Request preprocessing action - now uses async workflow system
 export const requestPreprocessing: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<string>>
-> = (reembedParams: ReembeddingParameters) =>
-async (dispatch: AppDispatch): Promise<void> => {
-  try {
-    // Use the new async workflow submission system
-    await dispatch(submitWorkflow("preprocessing", reembedParams));
-  } catch (error: any) {
-    dispatch({
-      type: "preprocess: request aborted",
-    } as PreprocessingAction);
+> =
+  (reembedParams: ReembeddingParameters) =>
+  async (dispatch: AppDispatch): Promise<void> => {
+    try {
+      // Use the new async workflow submission system
+      await dispatch(submitWorkflow("preprocessing", reembedParams));
+    } catch (error: any) {
+      dispatch({
+        type: "preprocess: request aborted",
+      } as PreprocessingAction);
 
-    if (error.name === "AbortError") {
-      postAsyncFailureToast("Preprocessing calculation was aborted.");
-    } else {
-      postNetworkErrorToast(`Preprocessing: ${error.message}`);
+      if (error.name === "AbortError") {
+        postAsyncFailureToast("Preprocessing calculation was aborted.");
+      } else {
+        postNetworkErrorToast(`Preprocessing: ${error.message}`);
+      }
+      console.log("Preprocess exception:", error, error.name, error.message);
     }
-    console.log("Preprocess exception:", error, error.name, error.message);
-  }
-};
+  };
 
 // Load reembedding parameters
 export const loadReembeddingParameters: ActionCreator<
@@ -105,7 +115,7 @@ export const completeReembedding: ActionCreator<
   type: "reembed: request completed",
 });
 
-// Complete preprocessing request  
+// Complete preprocessing request
 export const completePreprocessing: ActionCreator<
   Action<"preprocess: request completed">
 > = () => ({
@@ -130,19 +140,19 @@ export const cancelPreprocessing: ActionCreator<
 // This is now a wrapper around the workflow-based completion handler
 export const handleReembeddingComplete: ActionCreator<
   ThunkAction<Promise<void>, RootState, never, Action<string>>
-> = (embName: string, data: any) =>
-async (dispatch: AppDispatch): Promise<void> => {
-  try {
-    // Mark reembedding as completed
-    dispatch({
-      type: "reembed: request completed",
-    } as ReembeddingAction);
+> =
+  (embName: string, data: any) =>
+  async (dispatch: AppDispatch): Promise<void> => {
+    try {
+      // Mark reembedding as completed
+      dispatch({
+        type: "reembed: request completed",
+      } as ReembeddingAction);
 
-    // Use the workflow-based completion handler
-    await dispatch(workflowHandleReembeddingComplete(embName, data));
-
-  } catch (error: any) {
-    console.error("Error handling reembedding completion:", error);
-    postNetworkErrorToast(`Failed to load new embedding: ${error.message}`);
-  }
-};
+      // Use the workflow-based completion handler
+      await dispatch(workflowHandleReembeddingComplete(embName, data));
+    } catch (error: any) {
+      console.error("Error handling reembedding completion:", error);
+      postNetworkErrorToast(`Failed to load new embedding: ${error.message}`);
+    }
+  };

@@ -5,15 +5,7 @@
 
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import {
-  Checkbox,
-  FormGroup,
-  HTMLSelect,
-  NumericInput,
-  Intent,
-  Card,
-  Elevation,
-} from "@blueprintjs/core";
+import { Card, Checkbox, Elevation, FormGroup, H4, HTMLSelect, NumericInput } from "@blueprintjs/core";
 
 import { RootState, AppDispatch } from "../../reducers";
 import { setReembeddingParameter } from "../../actions/reembed";
@@ -29,33 +21,38 @@ interface PreprocessingPanelConnectedProps extends PreprocessingPanelProps {
 }
 
 class PreprocessingPanel extends Component<PreprocessingPanelConnectedProps> {
-  handleParameterChange = (key: keyof ReembeddingParameters) => (value: any) => {
-    const { dispatch } = this.props;
-    dispatch(setReembeddingParameter(key, value));
-  };
+  handleParameterChange =
+    (key: keyof ReembeddingParameters) => (value: any) => {
+      const { dispatch } = this.props;
+      dispatch(setReembeddingParameter(key, value));
+    };
 
-  handleInputChange = (key: keyof ReembeddingParameters) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const { dispatch } = this.props;
-    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
-    dispatch(setReembeddingParameter(key, value));
-  };
+  handleInputChange =
+    (key: keyof ReembeddingParameters) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const { dispatch } = this.props;
+      const value =
+        event.target.type === "checkbox"
+          ? event.target.checked
+          : event.target.value;
+      dispatch(setReembeddingParameter(key, value));
+    };
 
-  handleSelectChange = (key: keyof ReembeddingParameters) => (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const { dispatch } = this.props;
-    dispatch(setReembeddingParameter(key, event.target.value));
-  };
+  handleSelectChange =
+    (key: keyof ReembeddingParameters) =>
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const { dispatch } = this.props;
+      dispatch(setReembeddingParameter(key, event.target.value));
+    };
 
   render(): JSX.Element {
     const { reembedParams, annoMatrix } = this.props;
 
     // Get available categorical columns for batch preparation
-    const categoricalColumns = annoMatrix?.schema?.annotations?.obs?.columns
-      ?.filter((col: any) => col.type === "categorical")
-      ?.map((col: any) => col.name) || [];
+    const categoricalColumns =
+      annoMatrix?.schema?.annotations?.obs?.columns
+        ?.filter((col: any) => col.type === "categorical")
+        ?.map((col: any) => col.name) || [];
 
     // Get available layers
     const availableLayers = ["X", "raw.X"]; // TODO: Get from actual data
@@ -63,8 +60,8 @@ class PreprocessingPanel extends Component<PreprocessingPanelConnectedProps> {
     return (
       <div style={{ padding: "10px" }}>
         <Card elevation={Elevation.ONE} style={{ marginBottom: "10px" }}>
-          <h4>Cell and Gene Filtering</h4>
-          
+          <H4>Cell and Gene Filtering</H4>
+
           <FormGroup label="Minimum counts per cell" labelFor="minCountsCF">
             <NumericInput
               id="minCountsCF"
@@ -123,8 +120,8 @@ class PreprocessingPanel extends Component<PreprocessingPanelConnectedProps> {
         </Card>
 
         <Card elevation={Elevation.ONE} style={{ marginBottom: "10px" }}>
-          <h4>Highly Variable Genes</h4>
-          
+          <H4>Highly Variable Genes</H4>
+
           <FormGroup label="Number of top genes" labelFor="nTopGenesHVG">
             <NumericInput
               id="nTopGenesHVG"
@@ -151,7 +148,7 @@ class PreprocessingPanel extends Component<PreprocessingPanelConnectedProps> {
         </Card>
 
         <Card elevation={Elevation.ONE} style={{ marginBottom: "10px" }}>
-          <h4>Normalization</h4>
+          <H4>Normalization</H4>
 
           <FormGroup label="Data layer" labelFor="dataLayer">
             <HTMLSelect
@@ -182,7 +179,7 @@ class PreprocessingPanel extends Component<PreprocessingPanelConnectedProps> {
         </Card>
 
         <Card elevation={Elevation.ONE}>
-          <h4>Batch Preprocessing</h4>
+          <H4>Batch Preprocessing</H4>
 
           <Checkbox
             checked={reembedParams.doBatchPrep}
@@ -234,6 +231,7 @@ const mapStateToProps = (state: RootState) => ({
   annoMatrix: state.annoMatrix,
 });
 
-const ConnectedPreprocessingPanel = connect(mapStateToProps)(PreprocessingPanel);
+const ConnectedPreprocessingPanel =
+  connect(mapStateToProps)(PreprocessingPanel);
 
 export { ConnectedPreprocessingPanel as PreprocessingPanel };

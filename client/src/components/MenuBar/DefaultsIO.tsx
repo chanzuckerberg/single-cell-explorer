@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@blueprintjs/core";
 
-import { RootState, AppDispatch } from "../../reducers";
+import { RootState } from "../../reducers";
 import {
   loadReembeddingParameters,
   setReembeddingParameters,
@@ -23,7 +23,10 @@ import {
   DefaultsIOProps,
   DEFAULT_REEMBEDDING_PARAMS,
 } from "../../common/types/reembed";
-import { postAsyncFailureToast, postAsyncSuccessToast } from "../framework/toasters";
+import {
+  postAsyncFailureToast,
+  postAsyncSuccessToast,
+} from "../framework/toasters";
 
 interface DefaultsIOConnectedProps extends DefaultsIOProps {
   reembedParams: ReembeddingParameters;
@@ -34,12 +37,12 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
 
   handleSaveDefaults = (): void => {
     const { reembedParams } = this.props;
-    
+
     try {
       const dataStr = JSON.stringify(reembedParams, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
-      
+
       const link = document.createElement("a");
       link.href = url;
       link.download = "reembedding_parameters.json";
@@ -47,7 +50,7 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       postAsyncSuccessToast("Parameters saved successfully");
     } catch (error) {
       console.error("Error saving parameters:", error);
@@ -58,7 +61,7 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
   handleLoadDefaults = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const { dispatch } = this.props;
     const file = event.target.files?.[0];
-    
+
     if (!file) return;
 
     const reader = new FileReader();
@@ -66,7 +69,7 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
       try {
         const content = e.target?.result as string;
         const params = JSON.parse(content) as ReembeddingParameters;
-        
+
         // Validate that loaded params have expected structure
         if (typeof params === "object" && params !== null) {
           dispatch(loadReembeddingParameters(params));
@@ -76,12 +79,14 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
         }
       } catch (error) {
         console.error("Error loading parameters:", error);
-        postAsyncFailureToast("Failed to load parameters. Please check file format.");
+        postAsyncFailureToast(
+          "Failed to load parameters. Please check file format."
+        );
       }
     };
-    
+
     reader.readAsText(file);
-    
+
     // Reset the input
     if (this.fileInputRef.current) {
       this.fileInputRef.current.value = "";
@@ -96,7 +101,13 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
 
   render(): JSX.Element {
     return (
-      <div style={{ padding: "10px 0", borderBottom: "1px solid #ccc", marginBottom: "10px" }}>
+      <div
+        style={{
+          padding: "10px 0",
+          borderBottom: "1px solid #ccc",
+          marginBottom: "10px",
+        }}
+      >
         <ButtonGroup fill>
           <Tooltip content="Save current parameters to a JSON file">
             <Button
@@ -106,7 +117,7 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
               small
             />
           </Tooltip>
-          
+
           <Tooltip content="Load parameters from a JSON file">
             <FileInput
               text="Load Params"
@@ -120,7 +131,7 @@ class DefaultsIO extends Component<DefaultsIOConnectedProps> {
               small
             />
           </Tooltip>
-          
+
           <Tooltip content="Reset all parameters to their default values">
             <Button
               icon="refresh"

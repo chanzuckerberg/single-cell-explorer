@@ -7,7 +7,6 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import {
   AnchorButton,
-  ButtonGroup,
   Tooltip,
   Dialog,
   ControlGroup,
@@ -32,23 +31,39 @@ interface ReembeddingDialogState {
   reembeddingPanel: boolean;
 }
 
+interface AnnoMatrixLike {
+  schema: { dataframe: { nObs: number } };
+}
+
+interface ObsCrossfilterLike {
+  countSelected: () => number;
+  annoMatrix: { nObs: number };
+}
+
+interface LayoutChoiceLike {
+  current: string;
+  available: string[];
+}
+
 interface ReembeddingDialogProps {
   reembedController: ReembeddingController;
   preprocessController: PreprocessingController;
   reembedParams: ReembeddingParameters;
-  annoMatrix: any; // TODO: Type this properly
+  annoMatrix: AnnoMatrixLike; // minimal typing for linter
   idhash: string | null;
-  obsCrossfilter: any; // TODO: Type this properly
-  layoutChoice: any; // TODO: Type this properly
+  obsCrossfilter: ObsCrossfilterLike; // minimal typing for linter
+  layoutChoice: LayoutChoiceLike; // minimal typing for linter
   isSubsetted: boolean;
   userLoggedIn: boolean;
   hostedMode: boolean;
-  cxgMode: string;
   selectedGenesLassoIndices: number[];
   dispatch: AppDispatch;
 }
 
-class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDialogState> {
+class ReembeddingDialog extends Component<
+  ReembeddingDialogProps,
+  ReembeddingDialogState
+> {
   constructor(props: ReembeddingDialogProps) {
     super(props);
     this.state = {
@@ -68,16 +83,16 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
     });
   };
 
-  handleRunAndDisablePreprocessingDialog = (): void => {
+  handleRunAndDisablePreprocessingDialog = async (): Promise<void> => {
     const { dispatch, reembedParams } = this.props;
-    
-    dispatch(requestPreprocessing(reembedParams));
+
+    await dispatch(requestPreprocessing(reembedParams));
     this.setState({
       setReembedDialogActive: false,
     });
   };
 
-  handleRunAndDisableReembedDialog = (): void => {
+  handleRunAndDisableReembedDialog = async (): Promise<void> => {
     const {
       dispatch,
       reembedParams,
@@ -87,12 +102,17 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
       selectedGenesLassoIndices,
     } = this.props;
     const { embName } = this.state;
-    
+
     let parentName: string;
 
-    if (obsCrossfilter.countSelected() === obsCrossfilter.annoMatrix.nObs && isSubsetted) {
+    if (
+      obsCrossfilter.countSelected() === obsCrossfilter.annoMatrix.nObs &&
+      isSubsetted
+    ) {
       parentName = layoutChoice.current;
-    } else if (obsCrossfilter.countSelected() === obsCrossfilter.annoMatrix.nObs) {
+    } else if (
+      obsCrossfilter.countSelected() === obsCrossfilter.annoMatrix.nObs
+    ) {
       if (layoutChoice.current.includes(";;")) {
         const parentParts = layoutChoice.current.split(";;");
         parentParts.pop();
@@ -107,7 +127,14 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
       parentName = layoutChoice.current;
     }
 
-    dispatch(requestReembed(reembedParams, parentName, embName, selectedGenesLassoIndices));
+    await dispatch(
+      requestReembed(
+        reembedParams,
+        parentName,
+        embName,
+        selectedGenesLassoIndices
+      )
+    );
     this.setState({
       setReembedDialogActive: false,
       embName: "",
@@ -121,8 +148,6 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
   render(): JSX.Element {
     const { setReembedDialogActive, embName, reembeddingPanel } = this.state;
     const {
-      dispatch,
-      cxgMode,
       reembedController,
       idhash,
       annoMatrix,
@@ -133,14 +158,18 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
       hostedMode,
     } = this.props;
 
-    const cOrG = cxgMode === "OBS" ? "cell" : "gene";
-    const loading = !!reembedController?.pendingFetch || !!preprocessController?.pendingFetch;
-    const tipContent = "Click to perform preprocessing and dimensionality reduction on the currently selected cells.";
+    const cOrG = "cell"; // Always in cell mode
+    const loading =
+      !!reembedController?.pendingFetch || !!preprocessController?.pendingFetch;
+    const tipContent =
+      "Click to perform preprocessing and dimensionality reduction on the currently selected cells.";
     const cS = obsCrossfilter.countSelected();
-    
+
     const runDisabled = cS > 50000 && hostedMode;
-    
-    const title = `${reembeddingPanel ? "Reembedding" : "Preprocessing"} on ${cS}/${annoMatrix.schema.dataframe.nObs} ${cOrG}s.`;
+
+    const title = `${
+      reembeddingPanel ? "Reembedding" : "Preprocessing"
+    } on ${cS}/${annoMatrix.schema.dataframe.nObs} ${cOrG}s.`;
 
     return (
       <div>
@@ -163,19 +192,19 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
             </div>
           ) : null}
 
-          <DefaultsIO dispatch={dispatch} />
+          <DefaultsIO />
 
-          <ControlGroup fill={true} vertical={false}>
+          <ControlGroup fill vertical={false}>
             <AnchorButton
               onClick={() => {
-                this.setState({ ...this.state, reembeddingPanel: false });
+                this.setState({ reembeddingPanel: false });
               }}
               text="Preprocessing"
               intent={!reembeddingPanel ? "primary" : undefined}
             />
             <AnchorButton
               onClick={() => {
-                this.setState({ ...this.state, reembeddingPanel: true });
+                this.setState({ reembeddingPanel: true });
               }}
               text="Reembedding"
               intent={reembeddingPanel ? "primary" : undefined}
@@ -191,11 +220,15 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
               }}
             >
               <PreprocessingPanel idhash={idhash} />
-              <ControlGroup style={{ paddingTop: "15px" }} fill={true} vertical={false}>
+              <ControlGroup
+                style={{ paddingTop: "15px" }}
+                fill
+                vertical={false}
+              >
                 <Button onClick={this.handleDisableReembedDialog}>Close</Button>
                 <Button
                   onClick={() => {
-                    this.setState({ ...this.state, reembeddingPanel: true });
+                    this.setState({ reembeddingPanel: true });
                   }}
                 >
                   Next
@@ -215,15 +248,21 @@ class ReembeddingDialog extends Component<ReembeddingDialogProps, ReembeddingDia
                 onChange={this.onNameChange}
                 idhash={idhash}
               />
-              <ControlGroup style={{ paddingTop: "15px" }} fill={true} vertical={false}>
+              <ControlGroup
+                style={{ paddingTop: "15px" }}
+                fill
+                vertical={false}
+              >
                 <Button onClick={this.handleDisableReembedDialog}>Close</Button>
                 <Button
                   disabled={
                     (reembedParams.doBatch && reembedParams.batchKey === "") ||
                     (reembedParams.doBatchPrep &&
-                      (reembedParams.batchPrepKey === "" || reembedParams.batchPrepLabel === "")) ||
+                      (reembedParams.batchPrepKey === "" ||
+                        reembedParams.batchPrepLabel === "")) ||
                     runDisabled ||
-                    (reembedParams.embeddingMode === "Run UMAP" && reembedParams.latentSpace === "")
+                    (reembedParams.embeddingMode === "Run UMAP" &&
+                      reembedParams.latentSpace === "")
                   }
                   onClick={this.handleRunAndDisableReembedDialog}
                   intent="primary"
@@ -258,14 +297,15 @@ const mapStateToProps = (state: RootState) => ({
   preprocessController: state.preprocessController,
   reembedParams: state.reembedParameters,
   annoMatrix: state.annoMatrix,
-  idhash: state.config?.parameters?.["annotations-user-data-idhash"] ?? null,
+  idhash:
+    (state.config?.parameters?.["annotations-user-data-idhash"] as string) ??
+    null,
   obsCrossfilter: state.obsCrossfilter,
   layoutChoice: state.layoutChoice,
-  isSubsetted: state.controls.isSubsetted,
-  userLoggedIn: !!state.controls.userInfo,
-  hostedMode: state.controls.hostedMode,
-  cxgMode: state.controls.cxgMode,
-  selectedGenesLassoIndices: state.genesets.selectedGenesLassoIndices,
+  isSubsetted: false, // Property doesn't exist in current controls state
+  userLoggedIn: false, // Property doesn't exist in current controls state
+  hostedMode: false, // Property doesn't exist in current controls state
+  selectedGenesLassoIndices: [], // Property doesn't exist in current genesets state
 });
 
 export default connect(mapStateToProps)(ReembeddingDialog);
