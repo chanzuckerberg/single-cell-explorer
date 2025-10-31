@@ -174,6 +174,7 @@ class Categorical extends React.Component<Props, CategoricalState> {
       expandedCategories,
       writableCategoriesEnabled,
       writableGenesetsEnabled,
+      isVcpDeployment,
     } = this.props;
 
     const isTest = getFeatureFlag(FEATURES.TEST);
@@ -294,9 +295,9 @@ class Categorical extends React.Component<Props, CategoricalState> {
                 />
               ))}
           </>
-        ) : writableCategoriesEnabled ? (
+        ) : isVcpDeployment ? (
           <>
-            {/* DATASET FIELDS - Combined standard and author categories when user annotations are enabled */}
+            {/* DATASET FIELDS - Combined standard and author categories when VCP deployment is enabled */}
             {(standardCategoryNames.length > 0 ||
               authorCategoryNames.length > 0) && (
               <Collapse>
@@ -404,6 +405,7 @@ function mapStateToProps(state: RootState): StateProps {
     expandedCategories: state.controls.expandedCategories,
     writableCategoriesEnabled: state.annotations.writableCategoriesEnabled,
     writableGenesetsEnabled: state.annotations.writableGenesetsEnabled,
+    isVcpDeployment: state.annotations.isVcpDeployment,
   };
 }
 

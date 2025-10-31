@@ -6,6 +6,7 @@ server:
     verbose: false
     testing: true
     disable_auth: false
+    is_vcp_deployment: true
 
   multi_dataset:
     dataroots:

@@ -57,6 +57,7 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "diffexp-may-be-slow": False,
         "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
         "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
+        "is_vcp_deployment": getattr(app_config, "server__app__is_vcp_deployment", False),
     }
 
     # corpora dataset_props

@@ -140,8 +140,11 @@ export default defineConfig<ChromaticConfig>({
       },
     },
     {
-      name: "data-persistence",
-      testMatch: "**/e2e/data.persistence.e2e.test.ts",
+      name: "vcp-deployment",
+      testMatch: [
+        "**/e2e/data.persistence.e2e.test.ts",
+        "**/e2e/vcp-ui.test.ts",
+      ],
       use: {
         ...devices["Desktop Chrome"],
         userAgent: devices["Desktop Chrome"].userAgent + CZI_CHECKER,

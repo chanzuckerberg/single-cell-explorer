@@ -12,6 +12,7 @@ export interface StateProps {
   expandedCategories: RootState["controls"]["expandedCategories"];
   writableCategoriesEnabled: boolean;
   writableGenesetsEnabled: boolean;
+  isVcpDeployment: boolean;
 }
 
 export type Props = StateProps & DispatchProps;

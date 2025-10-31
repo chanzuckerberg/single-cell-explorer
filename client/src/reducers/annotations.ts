@@ -12,6 +12,7 @@ export interface AnnotationsState {
   };
   writableCategoriesEnabled: boolean;
   writableGenesetsEnabled: boolean;
+  isVcpDeployment: boolean;
 }
 
 const initialState: AnnotationsState = {
@@ -22,6 +23,7 @@ const initialState: AnnotationsState = {
   labelEditable: { category: null, label: null },
   writableCategoriesEnabled: false,
   writableGenesetsEnabled: false,
+  isVcpDeployment: false,
 };
 
 const Annotations = (
@@ -36,6 +38,7 @@ const Annotations = (
         writableGenesetsEnabled: !(
           action.config?.parameters?.annotations_genesets_readonly ?? true
         ),
+        isVcpDeployment: !!action.config?.parameters?.is_vcp_deployment,
       };
     }
     case "annotation: activate add new label mode": {
