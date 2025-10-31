@@ -25,6 +25,7 @@ server:
     api_base_url: null
     web_base_url: null
     disable_auth: false
+    is_vcp_deployment: false
 
   multi_dataset:
     # dataroot or dataroots must be set, then cellxgene may serve multiple datasets.

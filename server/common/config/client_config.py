@@ -42,6 +42,7 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
     }
 
     auth_disabled = app_config.server__app__disable_auth
+    is_vcp_deployment = app_config.server__app__is_vcp_deployment
 
     # parameters
     parameters = {
@@ -57,7 +58,7 @@ def get_client_config(app_config: AppConfig, data_adaptor: Dataset, current_app)
         "diffexp-may-be-slow": False,
         "about_legal_tos": dataset_config.default_dataset__app__about_legal_tos,
         "about_legal_privacy": dataset_config.default_dataset__app__about_legal_privacy,
-        "is_vcp_deployment": getattr(app_config, "server__app__is_vcp_deployment", False),
+        "is_vcp_deployment": is_vcp_deployment,
     }
 
     # corpora dataset_props
