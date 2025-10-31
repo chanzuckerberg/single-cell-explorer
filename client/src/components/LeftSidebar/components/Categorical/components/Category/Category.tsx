@@ -695,16 +695,14 @@ const CategoryValueList = React.memo(
     colorTable,
     colorMode,
   }: CategoryValueListProps) => {
-    const initialTuples = [...categorySummary.categoryValueIndices].filter(
-      ([, index]) => categorySummary.categoryValueCounts[index] > 0
-    );
+    // Keep all tuples, including those with 0 counts
+    const initialTuples = [...categorySummary.categoryValueIndices];
 
     const [sortedTuples, setSortedTuples] = useState(initialTuples);
 
     useEffect(() => {
-      const tuples = [...categorySummary.categoryValueIndices].filter(
-        ([, index]) => categorySummary.categoryValueCounts[index] > 0
-      );
+      // Keep all tuples, including those with 0 counts
+      const tuples = [...categorySummary.categoryValueIndices];
 
       // sort categorical labels in descending order by average values of whatever
       // continuous metadata is currently being colored by
@@ -741,9 +739,30 @@ const CategoryValueList = React.memo(
           }
         });
         tuples.sort((a, b) => {
+          const countA = categorySummary.categoryValueCounts[a[1]];
+          const countB = categorySummary.categoryValueCounts[b[1]];
+
+          // Sort labels with 0 counts to the bottom
+          if (countA === 0 && countB > 0) return 1;
+          if (countA > 0 && countB === 0) return -1;
+
+          // Both have counts > 0 or both are 0, sort by color average
           const colorA = categoryAverageColor.get(a[0]) ?? 0;
           const colorB = categoryAverageColor.get(b[0]) ?? 0;
           return colorB - colorA;
+        });
+      } else {
+        // Default sort: labels with counts > 0 first, then labels with 0 counts
+        tuples.sort((a, b) => {
+          const countA = categorySummary.categoryValueCounts[a[1]];
+          const countB = categorySummary.categoryValueCounts[b[1]];
+
+          // Sort labels with 0 counts to the bottom
+          if (countA === 0 && countB > 0) return 1;
+          if (countA > 0 && countB === 0) return -1;
+
+          // Both have same zero/non-zero status, maintain original order
+          return 0;
         });
       }
 

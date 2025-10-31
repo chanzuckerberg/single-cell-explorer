@@ -294,6 +294,52 @@ class Categorical extends React.Component<Props, CategoricalState> {
                 />
               ))}
           </>
+        ) : writableCategoriesEnabled ? (
+          <>
+            {/* DATASET FIELDS - Combined standard and author categories when user annotations are enabled */}
+            {(standardCategoryNames.length > 0 ||
+              authorCategoryNames.length > 0) && (
+              <Collapse>
+                <span>Dataset Categories</span>
+                <>
+                  {standardCategoryNames.map((catName: string) => (
+                    <Category
+                      key={catName}
+                      metadataField={catName}
+                      onExpansionChange={this.onExpansionChange}
+                      isExpanded={expandedCategories.includes(catName)}
+                      categoryType="standard"
+                    />
+                  ))}
+                  {authorCategoryNames.map((catName: string) => (
+                    <Category
+                      key={catName}
+                      metadataField={catName}
+                      onExpansionChange={this.onExpansionChange}
+                      isExpanded={expandedCategories.includes(catName)}
+                      categoryType="author"
+                    />
+                  ))}
+                </>
+              </Collapse>
+            )}
+
+            {/* USER FIELDS */}
+            {userCategoryNames.length ? (
+              <Collapse>
+                <span>User Categories</span>
+                {userCategoryNames.map((catName: string) => (
+                  <Category
+                    key={catName}
+                    metadataField={catName}
+                    onExpansionChange={this.onExpansionChange}
+                    isExpanded={expandedCategories.includes(catName)}
+                    categoryType="user"
+                  />
+                ))}
+              </Collapse>
+            ) : null}
+          </>
         ) : (
           <>
             {/* STANDARD FIELDS */}
