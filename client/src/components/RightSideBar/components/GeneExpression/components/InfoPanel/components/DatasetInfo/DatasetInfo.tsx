@@ -6,7 +6,8 @@ import { Props, mapStateToProps } from "./types";
 import { useConnect } from "./connect";
 
 function DatasetInfo(props: Props) {
-  const { datasetMetadata, schema, singleContinuousValues } = props;
+  const { datasetMetadata, schema, singleContinuousValues, isVcpDeployment } =
+    props;
   const { allSingleValues } = useConnect({ schema, singleContinuousValues });
 
   return (
@@ -14,6 +15,7 @@ function DatasetInfo(props: Props) {
       {...{
         datasetMetadata,
         allSingleValues,
+        isVcpDeployment,
       }}
     />
   );

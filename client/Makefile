@@ -55,7 +55,7 @@ data-persistence-smoke-tests:
 	start_server_and_test \
 		'$(MAKE) start-backend-user-data' \
 		$(CXG_SERVER_PORT) \
-		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=data-persistence'
+		'CXG_URL_BASE="http://localhost:$(CXG_SERVER_PORT)" npm run e2e -- --project=vcp-deployment'
 
 .PHONY: unit-test
 unit-test:

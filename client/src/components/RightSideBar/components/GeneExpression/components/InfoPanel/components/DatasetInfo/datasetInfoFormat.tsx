@@ -37,6 +37,7 @@ interface MetadataView {
 interface Props {
   datasetMetadata: RootState["datasetMetadata"]["datasetMetadata"];
   allSingleValues: SingleValues;
+  isVcpDeployment: boolean;
 }
 
 export type SingleValues = Map<string, Category>;
@@ -372,15 +373,17 @@ const buildDatasetMetadataViews = (
     })
     .map(([key, value]) => ({ key, value: String(value) }));
 
-const InfoFormat = React.memo<Props>(({ datasetMetadata, allSingleValues }) => (
-  <div className={Classes.DRAWER_BODY}>
-    <div className={Classes.DIALOG_BODY} style={{ margin: "12px" }}>
-      <H3>{datasetMetadata?.collection_name || "Collection"}</H3>
-      {datasetMetadata && <p>{datasetMetadata.collection_description}</p>}
-      {renderCollectionLinks(datasetMetadata)}
-      {renderDatasetMetadata(allSingleValues)}
+const InfoFormat = React.memo<Props>(
+  ({ datasetMetadata, allSingleValues, isVcpDeployment }) => (
+    <div className={Classes.DRAWER_BODY}>
+      <div className={Classes.DIALOG_BODY} style={{ margin: "12px" }}>
+        <H3>{datasetMetadata?.collection_name || "Collection"}</H3>
+        {datasetMetadata && <p>{datasetMetadata.collection_description}</p>}
+        {!isVcpDeployment && renderCollectionLinks(datasetMetadata)}
+        {renderDatasetMetadata(allSingleValues)}
+      </div>
     </div>
-  </div>
-));
+  )
+);
 
 export default InfoFormat;

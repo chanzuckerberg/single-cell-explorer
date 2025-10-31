@@ -77,7 +77,7 @@ export function AnnoDialog(props: AnnoDialogProps): JSX.Element {
               onClick={handleSubmit}
               disabled={!text || hasValidationError}
               intent="primary"
-              type="submit"
+              type="button"
             >
               {primaryButtonText}
             </Button>

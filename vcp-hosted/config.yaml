@@ -18,6 +18,7 @@ server:
 
     api_base_url: https://${API_DOMAIN}/cellxgene/
     web_base_url: https://${WEB_DOMAIN}/
+    is_vcp_deployment: true
 
   multi_dataset:
     dataroots:

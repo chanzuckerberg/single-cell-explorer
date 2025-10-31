@@ -174,6 +174,7 @@ class Categorical extends React.Component<Props, CategoricalState> {
       expandedCategories,
       writableCategoriesEnabled,
       writableGenesetsEnabled,
+      isVcpDeployment,
     } = this.props;
 
     const isTest = getFeatureFlag(FEATURES.TEST);
@@ -294,6 +295,52 @@ class Categorical extends React.Component<Props, CategoricalState> {
                 />
               ))}
           </>
+        ) : isVcpDeployment ? (
+          <>
+            {/* DATASET FIELDS - Combined standard and author categories when VCP deployment is enabled */}
+            {(standardCategoryNames.length > 0 ||
+              authorCategoryNames.length > 0) && (
+              <Collapse>
+                <span>Dataset Categories</span>
+                <>
+                  {standardCategoryNames.map((catName: string) => (
+                    <Category
+                      key={catName}
+                      metadataField={catName}
+                      onExpansionChange={this.onExpansionChange}
+                      isExpanded={expandedCategories.includes(catName)}
+                      categoryType="standard"
+                    />
+                  ))}
+                  {authorCategoryNames.map((catName: string) => (
+                    <Category
+                      key={catName}
+                      metadataField={catName}
+                      onExpansionChange={this.onExpansionChange}
+                      isExpanded={expandedCategories.includes(catName)}
+                      categoryType="author"
+                    />
+                  ))}
+                </>
+              </Collapse>
+            )}
+
+            {/* USER FIELDS */}
+            {userCategoryNames.length ? (
+              <Collapse>
+                <span>User Categories</span>
+                {userCategoryNames.map((catName: string) => (
+                  <Category
+                    key={catName}
+                    metadataField={catName}
+                    onExpansionChange={this.onExpansionChange}
+                    isExpanded={expandedCategories.includes(catName)}
+                    categoryType="user"
+                  />
+                ))}
+              </Collapse>
+            ) : null}
+          </>
         ) : (
           <>
             {/* STANDARD FIELDS */}
@@ -358,6 +405,7 @@ function mapStateToProps(state: RootState): StateProps {
     expandedCategories: state.controls.expandedCategories,
     writableCategoriesEnabled: state.annotations.writableCategoriesEnabled,
     writableGenesetsEnabled: state.annotations.writableGenesetsEnabled,
+    isVcpDeployment: state.annotations.isVcpDeployment,
   };
 }
 
