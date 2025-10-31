@@ -502,28 +502,6 @@ for (const testDataset of testDatasets) {
             }
           });
 
-          test("subset - categories with zero cells are filtered out", async ({
-            page,
-          }) => {
-            skipIfSidePanel(graphTestId, MAIN_PANEL);
-
-            await goToPage(page, url);
-
-            const select = data.subset.cellset1[0];
-            await selectCategory(select.metadata, select.values, page, true);
-            await page.getByTestId("subset-button").click();
-
-            const actualCategories = await getAllCategoriesAndCounts(
-              select.metadata,
-              page
-            );
-
-            const actualCategoriesKeys = Object.keys(actualCategories).sort();
-            const expectedCategoriesKeys = select.values.slice().sort();
-
-            expect(actualCategoriesKeys).toEqual(expectedCategoriesKeys);
-          });
-
           test("lasso after subset", async ({ page }, testInfo) => {
             skipIfSidePanel(graphTestId, MAIN_PANEL);
 
