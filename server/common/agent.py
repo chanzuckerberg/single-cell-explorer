@@ -1,18 +1,14 @@
+import json
 import logging
 import sys
 from http import HTTPStatus
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
+import anthropic
 from flask import abort, current_app, jsonify, make_response
-from langchain.agents import create_openai_tools_agent
-from langchain.agents.output_parsers.tools import ToolAgentAction
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.schema import AIMessage, FunctionMessage, HumanMessage
-from langchain_core.agents import AgentFinish
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
-from server.common.openai_utils import get_cached_openai_api_key
+from server.common.anthropic_utils import get_cached_anthropic_api_key
 from server.common.tools import create_tools
 
 
@@ -21,6 +17,7 @@ class AgentMessage(BaseModel):
     content: str
     name: Optional[str] = None
     type: Literal["summary", "tool", "message"] = "message"
+    tool_use_id: Optional[str] = None  # Required for tool results to reference the original tool_use
 
 
 def get_system_prompt() -> str:
@@ -53,24 +50,73 @@ Terminology:
 - **Metadata**: Any other information about the data points that is not a gene or geneset."""
 
 
-def get_prompt_template() -> ChatPromptTemplate:
-    """Create the chat prompt template"""
-    return ChatPromptTemplate.from_messages(
-        [
-            ("system", get_system_prompt()),
-            (
-                "system",
-                "The following conversation history includes completed workflows. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested:",
-            ),
-            MessagesPlaceholder(variable_name="chat_history", optional=True),
-            (
-                "system",
-                "The following conversation has not yet been summarized and is part of the current workflow. Do NOT summarize the conversation history when using the no_more_steps tool.",
-            ),
-            MessagesPlaceholder(variable_name="input"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ]
-    )
+def convert_to_anthropic_messages(messages: List[AgentMessage]) -> List[Dict[str, Any]]:
+    """
+    Convert application message format to Anthropic's message format.
+
+    Anthropic expects messages with role (user/assistant) and content.
+    Tool results are sent as user messages with tool_result content blocks.
+    """
+    anthropic_messages = []
+
+    for msg in messages:
+        if msg.role == "user":
+            # Wrap content with type tags if present
+            content = f"<{msg.type}>{msg.content}</{msg.type}>" if msg.type else msg.content
+            anthropic_messages.append(
+                {
+                    "role": "user",
+                    "content": content,
+                }
+            )
+        elif msg.role == "assistant":
+            # Check if this is a tool_use message (has tool_use_id and name)
+            if msg.tool_use_id and msg.name:
+                # This is an assistant message representing a tool_use
+                # Convert to Anthropic's tool_use content block format
+                tool_input = json.loads(msg.content) if isinstance(msg.content, str) else msg.content
+                anthropic_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": [
+                            {
+                                "type": "tool_use",
+                                "id": msg.tool_use_id,
+                                "name": msg.name,
+                                "input": tool_input,
+                            }
+                        ],
+                    }
+                )
+            else:
+                # Regular assistant message
+                content = f"<{msg.type}>{msg.content}</{msg.type}>" if msg.type else msg.content
+                anthropic_messages.append(
+                    {
+                        "role": "assistant",
+                        "content": content,
+                    }
+                )
+        elif msg.role == "function":
+            # Function/tool results must be sent as user messages with tool_result content blocks
+            # Anthropic requires the tool_use_id to link the result to the original tool call
+            if not msg.tool_use_id:
+                raise ValueError(f"function message missing required tool_use_id: {msg}")
+
+            anthropic_messages.append(
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": msg.tool_use_id,
+                            "content": msg.content,
+                        }
+                    ],
+                }
+            )
+
+    return anthropic_messages
 
 
 def agent_step_post(request, data_adaptor):
@@ -78,18 +124,6 @@ def agent_step_post(request, data_adaptor):
     try:
         data = request.get_json()
         messages: List[AgentMessage] = [AgentMessage(**msg) for msg in data["messages"]]
-
-        # Convert messages to LangChain format
-        formatted_messages = []
-        for msg in messages:
-            type = msg.type
-            content = f"<{type}>{msg.content}</{type}>" if type else msg.content
-            if msg.role == "user":
-                formatted_messages.append(HumanMessage(content=content))
-            elif msg.role == "assistant":
-                formatted_messages.append(AIMessage(content=content))
-            elif msg.role == "function":
-                formatted_messages.append(FunctionMessage(content=content, name=msg.name or "function"))
 
         # Find index of last summary message
         last_summary_idx = -1
@@ -99,73 +133,130 @@ def agent_step_post(request, data_adaptor):
                 break
 
         # Split messages into chat history and current request
-        chat_history = formatted_messages[: last_summary_idx + 1]
-        current_request = formatted_messages[last_summary_idx + 1 :]
+        chat_history = messages[: last_summary_idx + 1]
+        current_request = messages[last_summary_idx + 1 :]
+
         print("chat_history:")
         for msg in chat_history:
-            print(f"{msg.type}: {msg.content}")
+            print(f"{msg.role} ({msg.type}): {msg.content[:100]}...")
         print("current_request:")
         for msg in current_request:
-            print(f"{msg.type}: {msg.content}")
-        # Initialize LLM and create agent with data_adaptor-aware tools
+            print(f"{msg.role} ({msg.type}): {msg.content[:100]}...")
 
-        api_key = get_cached_openai_api_key()
-        llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=api_key)
-        tools = create_tools(data_adaptor)
-        agent = create_openai_tools_agent(llm, tools, get_prompt_template())
-        # Get structured response with split history
-        next_step = agent.invoke(
-            {
-                "input": current_request,
-                "chat_history": chat_history,
-                "intermediate_steps": [],
-            }
+        # Convert to Anthropic format
+        anthropic_chat_history = convert_to_anthropic_messages(chat_history)
+        anthropic_current_request = convert_to_anthropic_messages(current_request)
+
+        # Combine all messages for the API call
+        all_messages = anthropic_chat_history + anthropic_current_request
+
+        # Initialize Anthropic client and get tools
+        api_key = get_cached_anthropic_api_key()
+        client = anthropic.Anthropic(api_key=api_key)
+        tools_data = create_tools(data_adaptor)
+        tool_definitions = tools_data["definitions"]
+        tool_functions = tools_data["functions"]
+
+        # Add system message about conversation history if we have it
+        system_prompt = get_system_prompt()
+        if anthropic_chat_history:
+            system_prompt += "\n\nThe following conversation history includes completed workflows. Use it to understand references and previous actions, but do not re-execute completed workflows unless specifically requested."
+        system_prompt += "\n\nThe current request has not yet been completed. Process the request and take the next appropriate action."
+
+        # Call Anthropic API
+        response = client.messages.create(
+            model="claude-sonnet-4-5-20250929",
+            max_tokens=4096,
+            system=system_prompt,
+            messages=all_messages,
+            tools=tool_definitions,
         )
 
-        response = {}
-        if isinstance(next_step, AgentFinish):
-            # Strip any type tags from the output
-            content = next_step.return_values["output"]
-            # Remove any wrapping tags like <message>, <summary>, <tool>
-            if content.startswith("<") and content.endswith(">"):
-                # Find the first closing bracket and last opening bracket
-                first_close = content.find(">")
-                last_open = content.rfind("<")
-                if first_close != -1 and last_open != -1:
-                    content = content[first_close + 1 : last_open]
-            response = {
-                "type": "message",
-                "content": content,
-            }
-        elif isinstance(next_step, list) and isinstance(next_step[0], ToolAgentAction):
-            tool_action = next_step[0]
-            if tool_action.tool == "no_more_steps":
-                response = {"type": "summary", "content": tool_action.tool_input["summary"]}
-            else:
-                # Find the matching tool
-                selected_tool = next(tool for tool in tools if tool.name == tool_action.tool)
+        print(f"Response stop_reason: {response.stop_reason}")
+        print(f"Response content: {response.content}")
 
-                # Execute the tool with its arguments
-                # If the tool input is a string, then there is no argument schema and so we have no arguments.
-                tool_arguments = {} if isinstance(tool_action.tool_input, str) else tool_action.tool_input
+        # Process the response
+        response_data = {}
+
+        if response.stop_reason == "tool_use":
+            # Find the tool use block
+            tool_use_block = None
+            for content in response.content:
+                if content.type == "tool_use":
+                    tool_use_block = content
+                    break
+
+            if tool_use_block is None:
+                raise ValueError("stop_reason is tool_use but no tool_use block found")
+
+            tool_name = tool_use_block.name
+            tool_input = tool_use_block.input
+            tool_use_id = tool_use_block.id  # Preserve the ID for tool result tracking
+
+            print(f"Tool use: {tool_name} (id: {tool_use_id}) with input: {tool_input}")
+
+            # Handle no_more_steps specially
+            if tool_name == "no_more_steps":
+                response_data = {
+                    "type": "summary",
+                    "content": tool_input.get("summary", ""),
+                }
+            else:
+                # Execute the tool
+                if tool_name not in tool_functions:
+                    error_message = f"Unknown tool: {tool_name}"
+                    current_app.logger.error(error_message)
+                    return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, error_message, loglevel=logging.ERROR)
 
                 try:
-                    # Execute the tool and get results
-                    tool_result = selected_tool.func(**tool_arguments)
+                    tool_func = tool_functions[tool_name]
+                    # Execute the tool with its arguments
+                    tool_result = tool_func(**tool_input)
 
-                    response = {
+                    response_data = {
                         "type": "tool",
-                        "tool": {"name": tool_action.tool, "result": tool_result},
+                        "tool": {
+                            "name": tool_name,
+                            "result": tool_result,
+                            "tool_use_id": tool_use_id,  # Include ID for client to reference in next request
+                        },
+                        "assistant_tool_use": {
+                            "tool_use_id": tool_use_id,
+                            "tool_name": tool_name,
+                            "tool_input": tool_input,
+                        },
                     }
                 except Exception as tool_error:
                     # Handle tool execution errors
-                    error_message = f"Error executing tool {tool_action.tool}: {str(tool_error)}"
+                    error_message = f"Error executing tool {tool_name}: {str(tool_error)}"
                     current_app.logger.error(error_message, exc_info=True)
                     return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, error_message, loglevel=logging.ERROR)
-        else:
-            raise ValueError(f"Unknown agent step type: {type(next_step)}")
 
-        return make_response(jsonify(response), HTTPStatus.OK)
+        elif response.stop_reason == "end_turn":
+            # Extract text content
+            text_content = ""
+            for content in response.content:
+                if content.type == "text":
+                    text_content += content.text
+
+            # Strip any type tags from the output
+            if text_content.startswith("<") and text_content.endswith(">"):
+                # Find the first closing bracket and last opening bracket
+                first_close = text_content.find(">")
+                last_open = text_content.rfind("<")
+                if first_close != -1 and last_open != -1:
+                    text_content = text_content[first_close + 1 : last_open]
+
+            response_data = {
+                "type": "message",
+                "content": text_content,
+            }
+
+        else:
+            # Unexpected stop reason
+            raise ValueError(f"Unexpected stop_reason: {response.stop_reason}")
+
+        return make_response(jsonify(response_data), HTTPStatus.OK)
 
     except Exception as e:
         return abort_and_log(HTTPStatus.INTERNAL_SERVER_ERROR, str(e), loglevel=logging.ERROR)

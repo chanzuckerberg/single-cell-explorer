@@ -1,12 +1,12 @@
 from enum import Enum
 from functools import partial
-from typing import Annotated, List, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar
 
-from langchain_core.tools import Tool
-from langchain_openai import ChatOpenAI
+import anthropic
 from pydantic import BaseModel, Field
+from typing_extensions import Annotated
 
-from server.common.openai_utils import get_cached_openai_api_key
+from server.common.anthropic_utils import get_cached_anthropic_api_key
 
 
 class ColorByGeneSchema(BaseModel):
@@ -305,108 +305,167 @@ def no_more_steps(summary: str):
 T = TypeVar("T", bound=BaseModel)
 
 
-def call_llm_with_structured_output(query: str, schema: Type[T]) -> T:
-    llm = ChatOpenAI(temperature=0, model_name="gpt-4o", api_key=get_cached_openai_api_key()).with_structured_output(
-        schema
+def pydantic_to_anthropic_schema(schema: Type[BaseModel]) -> Dict[str, Any]:
+    """Convert a Pydantic model to Anthropic tool input schema format."""
+    json_schema = schema.model_json_schema()
+
+    # Anthropic expects a simplified JSON schema
+    properties = {}
+    required = json_schema.get("required", [])
+
+    for field_name, field_info in json_schema.get("properties", {}).items():
+        properties[field_name] = {
+            "type": field_info.get("type", "string"),
+            "description": field_info.get("description", ""),
+        }
+        # Handle enum types
+        if "enum" in field_info:
+            properties[field_name]["enum"] = field_info["enum"]
+        # Handle array types
+        if field_info.get("type") == "array":
+            properties[field_name]["items"] = field_info.get("items", {})
+
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+    }
+
+
+def call_llm_with_structured_output(query: str, schema: Type[T]) -> Dict[str, Any]:
+    """Use Anthropic's tool forcing pattern to get structured output."""
+    client = anthropic.Anthropic(api_key=get_cached_anthropic_api_key())
+
+    # Create a tool definition from the schema
+    tool_name = "structured_output"
+    tool_def = {
+        "name": tool_name,
+        "description": "Provide structured output matching the required schema",
+        "input_schema": pydantic_to_anthropic_schema(schema),
+    }
+
+    # Force the model to use this tool
+    response = client.messages.create(
+        model="claude-sonnet-4-5-20250929",
+        max_tokens=4096,
+        tools=[tool_def],
+        tool_choice={"type": "tool", "name": tool_name},
+        messages=[{"role": "user", "content": query}],
     )
-    return llm.invoke(query).model_dump()
+
+    # Extract the tool use from the response
+    for content in response.content:
+        if content.type == "tool_use" and content.name == tool_name:
+            return content.input
+
+    raise ValueError("No tool use found in response")
 
 
-def create_tools(data_adaptor):
-    return [
-        # TODO, FIXME: This is still summarizing actions that were already taken.
-        Tool(
-            name="no_more_steps",
-            description="When a workflow is complete, this tool MUST BE USED to summarize the actions taken. Do NOT summarize the previous conversation history when using this tool.",
-            func=no_more_steps,
-            args_schema=SummarySchema,
-        ),
-        Tool(
-            name="subset",
-            description="Filter dataset to show only currently selected data points",
-            func=subset,
-        ),
-        Tool(
-            name="unsubset",
-            description="Reset the current subset and return to the full dataset",
-            func=unsubset,
-        ),
-        Tool(
-            name="categorical_selection",
-            description="Highlight data points matching a specific category value (does not filter/subset the data)",
-            func=partial(select_category, data_adaptor),
-            args_schema=CategoricalSelectionSchema,
-        ),
-        Tool(
-            name="histogram_selection",
-            description="Perform a histogram selection. For geneset histograms, returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
-            func=partial(histogram_selection, data_adaptor),
-            args_schema=HistogramSelectionSchema,
-        ),
-        Tool(
-            name="color_by_gene",
-            description="Color the visualization by gene expression",
-            func=color_by_gene,
-            args_schema=ColorByGeneSchema,
-        ),
-        Tool(
-            name="expand_gene",
-            description="Expand the gene element to show more information about the gene",
-            func=expand_gene,
-            args_schema=ExpandGeneSchema,
-        ),
-        Tool(
-            name="color_by_geneset",
-            description="Color by average expression of a geneset. Returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
-            func=color_by_geneset,
-            args_schema=ColorByGenesetSchema,
-        ),
-        Tool(
-            name="color_by_metadata",
-            description="Color the visualization by metadata",
-            func=partial(color_by_metadata, data_adaptor),
-            args_schema=MetadataColorBySchema,
-        ),
-        Tool(
-            name="expand_category",
-            description="Expand the category element to show more information about the category",
-            func=partial(expand_category, data_adaptor),
-            args_schema=ExpandCategorySchema,
-        ),
-        Tool(
-            name="create_geneset",
-            description="Create a new geneset",
-            func=create_geneset,
-            args_schema=CreateGenesetSchema,
-        ),
-        # Tool(
-        #     name="xy_scatterplot",
-        #     description="Create an XY scatterplot",
-        #     func=xy_scatterplot,
-        # ),
-        # Tool(
-        #     name="show_cell_guide",
-        #     description="Show the cell guide",
-        #     func=show_cell_guide,
-        # ),
-        # Tool(
-        #     name="show_gene_card",
-        #     description="Show the gene card",
-        #     func=show_gene_card,
-        # ),
-        # Tool(
-        #     name="panning",
-        #     description="Perform panning on the current view",
-        #     func=panning,
-        # ),
-        # Tool(
-        #     name="zoom_in",
-        #     description="Zoom in on the current view",
-        #     func=zoom_in,
-        # ),
-        # Tool(
-        #     name="zoom_out",
-        #     description="Zoom out on the current view",
-        #     func=zoom_out,
-        # ),
+def create_tools(data_adaptor) -> Dict[str, Any]:
+    """
+    Create tools for Anthropic API.
+
+    Returns a dict with:
+    - 'definitions': List of tool definitions for Anthropic API
+    - 'functions': Dict mapping tool names to their callable functions
+    """
+
+    # Define all tools with their metadata
+    tool_specs = [
+        {
+            "name": "no_more_steps",
+            "description": "When a workflow is complete, this tool MUST BE USED to summarize the actions taken. Do NOT summarize the previous conversation history when using this tool.",
+            "schema": SummarySchema,
+            "func": no_more_steps,
+        },
+        {
+            "name": "subset",
+            "description": "Filter dataset to show only currently selected data points",
+            "schema": None,
+            "func": subset,
+        },
+        {
+            "name": "unsubset",
+            "description": "Reset the current subset and return to the full dataset",
+            "schema": None,
+            "func": unsubset,
+        },
+        {
+            "name": "categorical_selection",
+            "description": "Highlight data points matching a specific category value (does not filter/subset the data)",
+            "schema": CategoricalSelectionSchema,
+            "func": partial(select_category, data_adaptor),
+        },
+        {
+            "name": "histogram_selection",
+            "description": "Perform a histogram selection. For geneset histograms, returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
+            "schema": HistogramSelectionSchema,
+            "func": partial(histogram_selection, data_adaptor),
+        },
+        {
+            "name": "color_by_gene",
+            "description": "Color the visualization by gene expression",
+            "schema": ColorByGeneSchema,
+            "func": color_by_gene,
+        },
+        {
+            "name": "expand_gene",
+            "description": "Expand the gene element to show more information about the gene",
+            "schema": ExpandGeneSchema,
+            "func": expand_gene,
+        },
+        {
+            "name": "color_by_geneset",
+            "description": "Color by average expression of a geneset. Returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
+            "schema": ColorByGenesetSchema,
+            "func": color_by_geneset,
+        },
+        {
+            "name": "color_by_metadata",
+            "description": "Color the visualization by metadata",
+            "schema": MetadataColorBySchema,
+            "func": partial(color_by_metadata, data_adaptor),
+        },
+        {
+            "name": "expand_category",
+            "description": "Expand the category element to show more information about the category",
+            "schema": ExpandCategorySchema,
+            "func": partial(expand_category, data_adaptor),
+        },
+        {
+            "name": "create_geneset",
+            "description": "Create a new geneset",
+            "schema": CreateGenesetSchema,
+            "func": create_geneset,
+        },
     ]
+
+    # Convert to Anthropic format
+    definitions = []
+    functions = {}
+
+    for spec in tool_specs:
+        # Create tool definition
+        tool_def = {
+            "name": spec["name"],
+            "description": spec["description"],
+        }
+
+        # Add input schema if provided
+        if spec["schema"]:
+            tool_def["input_schema"] = pydantic_to_anthropic_schema(spec["schema"])
+        else:
+            # Tools without parameters still need an empty schema
+            tool_def["input_schema"] = {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            }
+
+        definitions.append(tool_def)
+        functions[spec["name"]] = spec["func"]
+
+    return {
+        "definitions": definitions,
+        "functions": functions,
+    }
