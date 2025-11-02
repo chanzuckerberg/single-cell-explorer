@@ -3,7 +3,7 @@ repos:
     rev: 22.3.0 # Must be kept in sync with black version in requirements.txt
     hooks:
       - id: black
-        stages: [commit]
+        stages: [pre-commit]
         args: ["--config", "pyproject.toml"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
@@ -12,7 +12,7 @@ repos:
       - id: ruff
         args: ["--config=pyproject.toml", "--fix"]
         exclude: "tests"
-        stages: [commit]
+        stages: [pre-commit]
 # We can't have mypy in the pre-commit hook without having it run on all files
 # in the repo, because (probably) the --all-files argument in pre-commit overrides
 # the more narrow specifying of files in pyproject.toml

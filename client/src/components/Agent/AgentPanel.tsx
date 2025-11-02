@@ -65,6 +65,7 @@ const AgentPanel: FC<AgentPanelProps> = ({
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const editInputRef = useRef<HTMLInputElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Resize state
   const [panelHeight, setPanelHeight] = useState<number>(400);
@@ -103,9 +104,19 @@ const AgentPanel: FC<AgentPanelProps> = ({
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaY = startY - e.clientY;
+      // Get container height from the parent (RightSidebarWrapper)
+      // Since the wrapper is absolutely positioned, we need to find its containing block
+      let containerHeight = window.innerHeight;
+      if (wrapperRef.current) {
+        const parent = wrapperRef.current.parentElement;
+        if (parent) {
+          containerHeight = parent.offsetHeight;
+        }
+      }
+      const maxHeight = containerHeight - 20; // Leave some padding
       const newHeight = Math.max(
         200,
-        Math.min(window.innerHeight - 100, startHeight + deltaY)
+        Math.min(maxHeight, startHeight + deltaY)
       );
       setPanelHeight(newHeight);
     };
@@ -232,6 +243,7 @@ const AgentPanel: FC<AgentPanelProps> = ({
 
   return (
     <AgentPanelWrapper
+      ref={wrapperRef}
       isHidden={agentPanelHidden}
       isMinimized={agentPanelMinimized}
       height={panelHeight}

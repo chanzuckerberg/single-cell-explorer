@@ -8,17 +8,26 @@ export const AgentPanelWrapper = styled.div<{
   display: ${(props) => (props.isHidden ? "none" : "flex")};
   flex-direction: column;
   height: ${(props) =>
-    props.isMinimized ? "auto" : props.height ? `${props.height}px` : "100%"};
+    props.isMinimized ? "auto" : props.height ? `${props.height}px` : "400px"};
   min-height: ${(props) =>
-    props.isMinimized ? "auto" : props.height ? `${props.height}px` : "100%"};
+    props.isMinimized ? "auto" : props.height ? `${props.height}px` : "200px"};
   max-height: ${(props) =>
-    props.isMinimized ? "auto" : props.height ? `${props.height}px` : "100%"};
+    props.isMinimized
+      ? "auto"
+      : props.height
+      ? `${props.height}px`
+      : "calc(100% - 20px)"};
   flex-shrink: 0;
   flex-grow: 0;
   border-top: 1px solid #e5e5e5;
   background-color: white;
   overflow: hidden;
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 export const AgentPanelHeader = styled.div`
