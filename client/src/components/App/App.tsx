@@ -175,7 +175,7 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                       <LeftSideBar />
                       <RightSideBar />
                       <BottomPanel />
-                      {getFeatureFlag(FEATURES.BYOD) && <BYODToast />}
+                      <BYODToast />
                     </Layout>
                   </>
                 )}
