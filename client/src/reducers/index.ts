@@ -71,7 +71,9 @@ const AppReducer = undoable(
     "centroidLabels",
     "genesets",
     "annotations",
-    "autosave",
+    // NOTE: autosave is intentionally NOT included in undo history.
+    // When undoing, we want lastSaved* to stay at the pre-undo checkpoint
+    // so autosave can detect what changed and sync the backend.
   ],
   undoableConfig
 );

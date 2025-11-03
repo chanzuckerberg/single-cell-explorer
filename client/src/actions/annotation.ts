@@ -502,13 +502,44 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    // If only deletions (no changed data to save), mark as complete
-    // Backend category deletion will be handled separately via dedicated endpoints
+    // If only deletions (no changed data to save), call DELETE for each deleted column
     if (changedCols.length === 0 && deletedCols.length > 0) {
       dispatch({
-        type: "writable obs annotations - save complete",
-        lastSavedAnnoMatrix: annoMatrix,
+        type: "writable obs annotations - save started",
       });
+
+      try {
+        // Call DELETE for each deleted annotation
+        for (const categoryName of deletedCols) {
+          const response = await fetch(
+            `${globals.API?.prefix ?? ""}${
+              globals.API?.version ?? ""
+            }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
+            {
+              method: "DELETE",
+              credentials: "include",
+            }
+          );
+
+          if (!response.ok) {
+            dispatch({
+              type: "writable obs annotations - save error",
+              message: `Failed to delete annotation ${categoryName}: HTTP ${response.status}`,
+            });
+            return;
+          }
+        }
+
+        dispatch({
+          type: "writable obs annotations - save complete",
+          lastSavedAnnoMatrix: annoMatrix,
+        });
+      } catch (error: unknown) {
+        dispatch({
+          type: "writable obs annotations - save error",
+          message: (error as Error).toString(),
+        });
+      }
       return;
     }
 
