@@ -8,7 +8,7 @@ import anthropic
 from flask import abort, current_app, jsonify, make_response
 from pydantic import BaseModel
 
-from server.common.anthropic_utils import get_cached_anthropic_api_key
+from server.common.anthropic_utils import get_anthropic_api_key
 from server.common.tools import create_tools
 
 
@@ -151,7 +151,7 @@ def agent_step_post(request, data_adaptor):
         all_messages = anthropic_chat_history + anthropic_current_request
 
         # Initialize Anthropic client and get tools
-        api_key = get_cached_anthropic_api_key()
+        api_key = get_anthropic_api_key()
         client = anthropic.Anthropic(api_key=api_key)
         tools_data = create_tools(data_adaptor)
         tool_definitions = tools_data["definitions"]

@@ -6,7 +6,7 @@ import anthropic
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
-from server.common.anthropic_utils import get_cached_anthropic_api_key
+from server.common.anthropic_utils import get_anthropic_api_key
 
 
 class ColorByGeneSchema(BaseModel):
@@ -334,7 +334,7 @@ def pydantic_to_anthropic_schema(schema: Type[BaseModel]) -> Dict[str, Any]:
 
 def call_llm_with_structured_output(query: str, schema: Type[T]) -> Dict[str, Any]:
     """Use Anthropic's tool forcing pattern to get structured output."""
-    client = anthropic.Anthropic(api_key=get_cached_anthropic_api_key())
+    client = anthropic.Anthropic(api_key=get_anthropic_api_key())
 
     # Create a tool definition from the schema
     tool_name = "structured_output"
