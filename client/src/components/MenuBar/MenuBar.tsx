@@ -52,6 +52,7 @@ interface StateProps {
   screenCap: RootState["controls"]["screenCap"];
   annoMatrix: RootState["annoMatrix"];
   genesets: RootState["genesets"];
+  agentPanelHidden: boolean;
 }
 
 const mapStateToProps = (state: RootState): StateProps => {
@@ -82,6 +83,7 @@ const mapStateToProps = (state: RootState): StateProps => {
     screenCap: state.controls.screenCap,
     annoMatrix: state.annoMatrix,
     genesets: state.genesets,
+    agentPanelHidden: state.controls.agentPanelHidden,
   };
 };
 
@@ -128,6 +130,7 @@ const MenuBar = ({
   screenCap,
   annoMatrix,
   genesets,
+  agentPanelHidden,
 }: MenuBarProps) => {
   const [pendingClipPercentiles, setPendingClipPercentiles] =
     useState(INITIAL_PERCENTILES);
@@ -256,6 +259,7 @@ const MenuBar = ({
   const isColoredByCategorical = !!categoricalSelection?.[colorAccessor || ""];
 
   const isTest = getFeatureFlag(FEATURES.TEST);
+  const isAgentEnabled = getFeatureFlag(FEATURES.AGENT);
 
   // constants used to create selection tool button
   const selectionTooltip = "select";
@@ -284,6 +288,32 @@ const MenuBar = ({
                 data-testid="drawer"
               />
             </ButtonGroup>
+
+            {isAgentEnabled && (
+              <ButtonGroup className={styles.menubarButton}>
+                <Tooltip
+                  content="AI Assistant"
+                  position="bottom"
+                  hoverOpenDelay={globals.tooltipHoverOpenDelay}
+                >
+                  <AnchorButton
+                    type="button"
+                    icon={IconNames.CHAT}
+                    onClick={() => {
+                      dispatch({
+                        type: "toggle agent panel",
+                      });
+                    }}
+                    style={{
+                      cursor: "pointer",
+                    }}
+                    active={!agentPanelHidden}
+                    intent={!agentPanelHidden ? "primary" : "none"}
+                    data-testid="agent-panel-toggle"
+                  />
+                </Tooltip>
+              </ButtonGroup>
+            )}
 
             <ButtonGroup className={styles.menubarButton}>
               <Download

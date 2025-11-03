@@ -24,6 +24,5 @@ s3fs==0.4.2
 tiledb==0.34.0
 Werkzeug==3.0.6
 python-json-logger==2.0.7
-langchain<1.0.0
-langchain-openai<1.0.0
+anthropic>=0.40.0
 

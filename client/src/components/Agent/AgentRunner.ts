@@ -78,26 +78,40 @@ export class AgentRunner {
         return finalResponse;
       }
 
-      if (step.type === "tool" && step.tool) {
+      if (step.type === "tool" && step.tool && step.assistant_tool_use) {
         const toolMessageId = Date.now();
         const tool = this.tools[step.tool.name];
         if (!tool) {
           throw new Error(`Unknown tool: ${step.tool.name}`);
         }
 
+        // First, add the assistant's tool_use message (what Anthropic sent)
+        this.messages.push({
+          role: "assistant",
+          content: JSON.stringify(step.assistant_tool_use.tool_input),
+          type: MessageType.Tool,
+          messageId: toolMessageId,
+          tool_use_id: step.assistant_tool_use.tool_use_id,
+          name: step.assistant_tool_use.tool_name,
+        });
+
+        // Then execute the tool and add the result
         const result = await tool.invoke(JSON.stringify(step.tool.result));
         this.messages.push({
           role: "function",
           name: step.tool.name,
           content: JSON.stringify(step.tool.result),
           type: MessageType.Tool,
-          messageId: toolMessageId,
+          messageId: toolMessageId + 1,
+          tool_use_id: step.tool.tool_use_id,
         });
+
+        // Finally, add the UI confirmation message
         this.messages.push({
           role: "assistant",
           content: result,
           type: MessageType.Message,
-          messageId: toolMessageId + 1,
+          messageId: toolMessageId + 2,
         });
       }
     }
