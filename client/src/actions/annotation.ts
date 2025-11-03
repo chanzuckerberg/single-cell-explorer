@@ -503,15 +503,6 @@ export const saveObsAnnotationsAction =
       (col) => writableAnnotations(lastSavedAnnoMatrix).includes(col) === false
     );
 
-    console.log(
-      "[AUTOSAVE] Detected changes - deletedCols:",
-      deletedCols,
-      "changedCols:",
-      changedCols,
-      "addedCols:",
-      addedCols
-    );
-
     // If we have exactly one deleted and one added, but the added one doesn't have the same data
     // as what was deleted, treat deleted one as needing cleanup (rename undo case)
     if (
