@@ -179,21 +179,21 @@ def agent_step_post(request, data_adaptor):
         response_data = {}
 
         if response.stop_reason == "tool_use":
-            # Find the tool use block
-            tool_use_block = None
-            for content in response.content:
-                if content.type == "tool_use":
-                    tool_use_block = content
-                    break
+            # Find all tool use blocks
+            tool_use_blocks = [content for content in response.content if content.type == "tool_use"]
 
-            if tool_use_block is None:
+            if not tool_use_blocks:
                 raise ValueError("stop_reason is tool_use but no tool_use block found")
 
+            # Process only the first tool use block (Claude requires sequential execution)
+            tool_use_block = tool_use_blocks[0]
             tool_name = tool_use_block.name
             tool_input = tool_use_block.input
             tool_use_id = tool_use_block.id  # Preserve the ID for tool result tracking
 
             print(f"Tool use: {tool_name} (id: {tool_use_id}) with input: {tool_input}")
+            if len(tool_use_blocks) > 1:
+                print(f"Note: {len(tool_use_blocks) - 1} additional tool(s) will be processed in subsequent steps")
 
             # Handle no_more_steps specially
             if tool_name == "no_more_steps":
