@@ -155,6 +155,9 @@ export const annotationRenameCategoryAction =
       metadataField: oldCategoryName,
       newCategoryText: trimmedName,
       data: trimmedName,
+      __isRename: true,
+      __renameFrom: oldCategoryName,
+      __renameTo: trimmedName,
     });
 
     // Only make backend request if annotations are enabled (not in no-auth mode)
@@ -474,7 +477,7 @@ export const needToSaveObsAnnotations = (
 export const saveObsAnnotationsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
-    const { autosave } = state;
+    const { autosave, annotationMetadata } = state;
     const { lastSavedAnnoMatrix, obsAnnotationSaveInProgress } = autosave;
     const annoMatrix = state.annoMatrix?.base();
 
@@ -484,68 +487,43 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    const changedCols = changedWritableAnnotations(
-      annoMatrix,
-      lastSavedAnnoMatrix
-    );
-    const deletedCols = deletedWritableAnnotations(
-      annoMatrix,
-      lastSavedAnnoMatrix
-    );
-
-    // Detect potential rename: a column disappeared and a different one appeared
-    // This happens when user undoes a rename - the "new name" column was rolled back
-    // (from backend perspective it wasn't explicitly deleted, so we need to DELETE it).
-    // However, we also need to distinguish this from a legitimate delete + create.
-    // We use a simple heuristic: if exactly one column was deleted and exactly one was added,
-    // it's likely a rename undo that we need to clean up on the backend.
-    const addedCols = changedCols.filter(
-      (col) => writableAnnotations(lastSavedAnnoMatrix).includes(col) === false
-    );
-
-    // If we have exactly one deleted and one added, but the added one doesn't have the same data
-    // as what was deleted, treat deleted one as needing cleanup (rename undo case)
-    if (
-      deletedCols.length === 1 &&
-      addedCols.length === 0 &&
-      changedCols.length === 0
-    ) {
-      // Pure deletion - handle normally below
-    } else if (deletedCols.length === 0 && changedCols.length > 0) {
-      // Pure changes/additions - handle normally below
-    } else if (deletedCols.length === 1 && changedCols.length > 0) {
-      // This could be a rename where both old and new columns appear
-      // The deleted one needs to be cleaned up on backend
-      const deletedColName = deletedCols[0];
+    // Check if there's rename metadata indicating a rename that was undone
+    // Since annotationMetadata is NOT in undoableKeys, it persists across undo/redo
+    const renameMetadata = annotationMetadata?.lastRenameOp;
+    if (renameMetadata) {
+      const { oldName, newName } = renameMetadata;
       console.log(
-        "[AUTOSAVE] Detected potential rename undo: deleting",
-        deletedColName
+        "[AUTOSAVE] Handling inverse rename on undo: deleting",
+        newName,
+        "and uploading",
+        oldName
       );
       dispatch({
         type: "writable obs annotations - save started",
       });
 
       try {
-        const response = await fetch(
+        // First, delete the "new name" that was rolled back
+        const deleteResponse = await fetch(
           `${globals.API?.prefix ?? ""}${
             globals.API?.version ?? ""
-          }annotations/obs?category_name=${encodeURIComponent(deletedColName)}`,
+          }annotations/obs?category_name=${encodeURIComponent(newName)}`,
           {
             method: "DELETE",
             credentials: "include",
           }
         );
 
-        if (!response.ok) {
+        if (!deleteResponse.ok) {
           dispatch({
             type: "writable obs annotations - save error",
-            message: `Failed to delete undone rename ${deletedColName}: HTTP ${response.status}`,
+            message: `Failed to delete undone rename ${newName}: HTTP ${deleteResponse.status}`,
           });
           return;
         }
 
-        // After deleting the old name, also save the changed columns
-        const df = await annoMatrix.fetch(Field.obs, changedCols);
+        // Second, upload the restored "old name" annotation data
+        const df = await annoMatrix.fetch(Field.obs, [oldName]);
         const buffer = MatrixFBS.encodeMatrixFBS(df);
         const compressed = deflate(buffer);
         const requestBody = new Blob([new Uint8Array(compressed)], {
@@ -566,17 +544,23 @@ export const saveObsAnnotationsAction =
           }
         );
 
-        if (putResponse.ok) {
-          dispatch({
-            type: "writable obs annotations - save complete",
-            lastSavedAnnoMatrix: annoMatrix,
-          });
-        } else {
+        if (!putResponse.ok) {
           dispatch({
             type: "writable obs annotations - save error",
-            message: `HTTP error ${putResponse.status} - ${putResponse.statusText}`,
+            message: `Failed to upload restored annotation ${oldName}: HTTP ${putResponse.status}`,
           });
+          return;
         }
+
+        dispatch({
+          type: "writable obs annotations - save complete",
+          lastSavedAnnoMatrix: annoMatrix,
+        });
+
+        // Clear rename metadata to prevent handling the same rename again
+        dispatch({
+          type: "annotation: clear rename metadata",
+        });
       } catch (error: unknown) {
         dispatch({
           type: "writable obs annotations - save error",
@@ -586,14 +570,14 @@ export const saveObsAnnotationsAction =
       return;
     }
 
-    // If no changes or deletions, mark as complete
-    if (changedCols.length === 0 && deletedCols.length === 0) {
-      dispatch({
-        type: "writable obs annotations - save complete",
-        lastSavedAnnoMatrix: annoMatrix,
-      });
-      return;
-    }
+    const changedCols = changedWritableAnnotations(
+      annoMatrix,
+      lastSavedAnnoMatrix
+    );
+    const deletedCols = deletedWritableAnnotations(
+      annoMatrix,
+      lastSavedAnnoMatrix
+    );
 
     // If only deletions (no changed data to save), call DELETE for each deleted column
     if (changedCols.length === 0 && deletedCols.length > 0) {
