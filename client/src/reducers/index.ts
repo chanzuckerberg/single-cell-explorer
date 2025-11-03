@@ -29,6 +29,7 @@ import singleContinuousValue from "./singleContinuousValue";
 import panelEmbedding from "./panelEmbedding";
 import autosave from "./autosave";
 import annotations from "./annotations";
+import annotationMetadata from "./annotationMetadata";
 
 import { gcMiddleware as annoMatrixGC } from "../annoMatrix";
 
@@ -55,6 +56,7 @@ const AppReducer = undoable(
     ["pointDilation", pointDilation],
     ["datasetMetadata", datasetMetadata],
     ["annotations", annotations],
+    ["annotationMetadata", annotationMetadata],
     ["autosave", autosave],
   ] as Parameters<typeof cascadeReducers>[0]),
   [
@@ -71,6 +73,7 @@ const AppReducer = undoable(
     "centroidLabels",
     "genesets",
     "annotations",
+    "annotationMetadata",
     // NOTE: autosave is intentionally NOT included in undo history.
     // When undoing, we want lastSaved* to stay at the pre-undo checkpoint
     // so autosave can detect what changed and sync the backend.
@@ -110,6 +113,7 @@ export interface RootState {
   pointDilation: ReturnType<typeof pointDilation>;
   datasetMetadata: ReturnType<typeof datasetMetadata>;
   annotations: ReturnType<typeof annotations>;
+  annotationMetadata: ReturnType<typeof annotationMetadata>;
   autosave: ReturnType<typeof autosave>;
 }
 

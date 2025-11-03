@@ -493,6 +493,108 @@ export const saveObsAnnotationsAction =
       lastSavedAnnoMatrix
     );
 
+    // Detect potential rename: a column disappeared and a different one appeared
+    // This happens when user undoes a rename - the "new name" column was rolled back
+    // (from backend perspective it wasn't explicitly deleted, so we need to DELETE it).
+    // However, we also need to distinguish this from a legitimate delete + create.
+    // We use a simple heuristic: if exactly one column was deleted and exactly one was added,
+    // it's likely a rename undo that we need to clean up on the backend.
+    const addedCols = changedCols.filter(
+      (col) => writableAnnotations(lastSavedAnnoMatrix).includes(col) === false
+    );
+
+    console.log(
+      "[AUTOSAVE] Detected changes - deletedCols:",
+      deletedCols,
+      "changedCols:",
+      changedCols,
+      "addedCols:",
+      addedCols
+    );
+
+    // If we have exactly one deleted and one added, but the added one doesn't have the same data
+    // as what was deleted, treat deleted one as needing cleanup (rename undo case)
+    if (
+      deletedCols.length === 1 &&
+      addedCols.length === 0 &&
+      changedCols.length === 0
+    ) {
+      // Pure deletion - handle normally below
+    } else if (deletedCols.length === 0 && changedCols.length > 0) {
+      // Pure changes/additions - handle normally below
+    } else if (deletedCols.length === 1 && changedCols.length > 0) {
+      // This could be a rename where both old and new columns appear
+      // The deleted one needs to be cleaned up on backend
+      const deletedColName = deletedCols[0];
+      console.log(
+        "[AUTOSAVE] Detected potential rename undo: deleting",
+        deletedColName
+      );
+      dispatch({
+        type: "writable obs annotations - save started",
+      });
+
+      try {
+        const response = await fetch(
+          `${globals.API?.prefix ?? ""}${
+            globals.API?.version ?? ""
+          }annotations/obs?category_name=${encodeURIComponent(deletedColName)}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `Failed to delete undone rename ${deletedColName}: HTTP ${response.status}`,
+          });
+          return;
+        }
+
+        // After deleting the old name, also save the changed columns
+        const df = await annoMatrix.fetch(Field.obs, changedCols);
+        const buffer = MatrixFBS.encodeMatrixFBS(df);
+        const compressed = deflate(buffer);
+        const requestBody = new Blob([new Uint8Array(compressed)], {
+          type: "application/octet-stream",
+        });
+
+        const putResponse = await fetch(
+          `${globals.API?.prefix ?? ""}${
+            globals.API?.version ?? ""
+          }annotations/obs`,
+          {
+            method: "PUT",
+            body: requestBody,
+            headers: new Headers({
+              "Content-Type": "application/octet-stream",
+            }),
+            credentials: "include",
+          }
+        );
+
+        if (putResponse.ok) {
+          dispatch({
+            type: "writable obs annotations - save complete",
+            lastSavedAnnoMatrix: annoMatrix,
+          });
+        } else {
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `HTTP error ${putResponse.status} - ${putResponse.statusText}`,
+          });
+        }
+      } catch (error: unknown) {
+        dispatch({
+          type: "writable obs annotations - save error",
+          message: (error as Error).toString(),
+        });
+      }
+      return;
+    }
+
     // If no changes or deletions, mark as complete
     if (changedCols.length === 0 && deletedCols.length === 0) {
       dispatch({
@@ -510,16 +612,25 @@ export const saveObsAnnotationsAction =
 
       try {
         // Call DELETE for each deleted annotation
-        for (const categoryName of deletedCols) {
-          const response = await fetch(
-            `${globals.API?.prefix ?? ""}${
-              globals.API?.version ?? ""
-            }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
-            {
-              method: "DELETE",
-              credentials: "include",
-            }
-          );
+        const responses = await Promise.all(
+          deletedCols.map((categoryName) =>
+            fetch(
+              `${globals.API?.prefix ?? ""}${
+                globals.API?.version ?? ""
+              }annotations/obs?category_name=${encodeURIComponent(
+                categoryName
+              )}`,
+              {
+                method: "DELETE",
+                credentials: "include",
+              }
+            )
+          )
+        );
+
+        for (let i = 0; i < responses.length; i += 1) {
+          const response = responses[i];
+          const categoryName = deletedCols[i];
 
           if (!response.ok) {
             dispatch({
