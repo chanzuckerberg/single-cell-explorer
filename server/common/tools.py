@@ -135,8 +135,8 @@ def unsubset():
     return {"status": "success"}
 
 
-def select_category(data_adaptor, category_value: str, column_name: str | None = None):
-    schema = data_adaptor.get_schema()
+def select_category(data_adaptor, category_value: str, column_name: str | None = None, user_id: str | None = None):
+    schema = data_adaptor.get_schema(user_id=user_id)
 
     prompt = "IMPORTANT: Be flexible with matching - for example, 'B cells' should match 'B cell', plurals should match singular forms, and common variations should be recognized. Only return an error if there is no conceptually matching category.\n"
     prompt += "IMPORTANT: You must return the exact category value from the dataset, not the user's input value.\n"
@@ -162,6 +162,7 @@ def histogram_selection(
     range_low: float,
     range_high: float | None = None,
     available_genesets: List[str] | None = None,
+    user_id: str | None = None,
 ):
     if histogram_type == HistogramType.GENESET.value:
         if available_genesets is None:
@@ -183,7 +184,7 @@ def histogram_selection(
             "range_high": range_high,
         }
     elif histogram_type == HistogramType.METADATA.value:
-        schema = data_adaptor.get_schema()
+        schema = data_adaptor.get_schema(user_id=user_id)
         prompt = f"The metadata name the user wishes to perform histogram selection on is: {histogram_name}."
         cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" not in i and i != "name_0"]
         prompt += f"The valid metadata columns are: {cols}. Please select one of the column names to perform histogram selection on."
@@ -249,8 +250,8 @@ def color_by_geneset(geneset: str, available_genesets: List[str] | None = None):
     return call_llm_with_structured_output(prompt, GenesetSelectionSchema)
 
 
-def color_by_metadata(data_adaptor, metadata_name: str):
-    schema = data_adaptor.get_schema()
+def color_by_metadata(data_adaptor, metadata_name: str, user_id: str | None = None):
+    schema = data_adaptor.get_schema(user_id=user_id)
     prompt = "IMPORTANT: Be flexible with matching - for example, 'cell types' should match 'cell_type', plurals should match singular forms, and common variations should be recognized. Only return an error if there is no conceptually matching metadata.\n"
     prompt += "IMPORTANT: You must return the exact metadata name from the dataset, not the user's input value.\n"
     prompt += f"The metadata name the user wishes to color by is: {metadata_name}.\n"
@@ -273,8 +274,8 @@ def create_geneset(geneset_name: str, geneset_description: str, genes_to_populat
     }
 
 
-def expand_category(data_adaptor, category_name: str):
-    schema = data_adaptor.get_schema()
+def expand_category(data_adaptor, category_name: str, user_id: str | None = None):
+    schema = data_adaptor.get_schema(user_id=user_id)
     prompt = f"The category name the user wishes to perform expand by is: {category_name}."
     categorical_cols = [i["name"] for i in schema["annotations"]["obs"]["columns"] if "categories" in i]
     prompt += f"The valid categorical metadata columns are: {categorical_cols}."
@@ -361,9 +362,13 @@ def call_llm_with_structured_output(query: str, schema: Type[T]) -> Dict[str, An
     raise ValueError("No tool use found in response")
 
 
-def create_tools(data_adaptor) -> Dict[str, Any]:
+def create_tools(data_adaptor, user_id=None) -> Dict[str, Any]:
     """
     Create tools for Anthropic API.
+
+    Args:
+        data_adaptor: The data adaptor instance
+        user_id: Optional user ID for including user annotations
 
     Returns a dict with:
     - 'definitions': List of tool definitions for Anthropic API
@@ -394,13 +399,13 @@ def create_tools(data_adaptor) -> Dict[str, Any]:
             "name": "categorical_selection",
             "description": "Highlight data points matching a specific category value (does not filter/subset the data)",
             "schema": CategoricalSelectionSchema,
-            "func": partial(select_category, data_adaptor),
+            "func": partial(select_category, data_adaptor, user_id=user_id),
         },
         {
             "name": "histogram_selection",
             "description": "Perform a histogram selection. For geneset histograms, returns a flag if available genesets aren't provided, expecting them in a subsequent call.",
             "schema": HistogramSelectionSchema,
-            "func": partial(histogram_selection, data_adaptor),
+            "func": partial(histogram_selection, data_adaptor, user_id=user_id),
         },
         {
             "name": "color_by_gene",
@@ -424,13 +429,13 @@ def create_tools(data_adaptor) -> Dict[str, Any]:
             "name": "color_by_metadata",
             "description": "Color the visualization by metadata",
             "schema": MetadataColorBySchema,
-            "func": partial(color_by_metadata, data_adaptor),
+            "func": partial(color_by_metadata, data_adaptor, user_id=user_id),
         },
         {
             "name": "expand_category",
             "description": "Expand the category element to show more information about the category",
             "schema": ExpandCategorySchema,
-            "func": partial(expand_category, data_adaptor),
+            "func": partial(expand_category, data_adaptor, user_id=user_id),
         },
         {
             "name": "create_geneset",

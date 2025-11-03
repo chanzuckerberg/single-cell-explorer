@@ -53,6 +53,7 @@ interface StateProps {
   annoMatrix: RootState["annoMatrix"];
   genesets: RootState["genesets"];
   agentPanelHidden: boolean;
+  isVcpDeployment: boolean;
 }
 
 const mapStateToProps = (state: RootState): StateProps => {
@@ -84,6 +85,7 @@ const mapStateToProps = (state: RootState): StateProps => {
     annoMatrix: state.annoMatrix,
     genesets: state.genesets,
     agentPanelHidden: state.controls.agentPanelHidden,
+    isVcpDeployment: state.annotations.isVcpDeployment,
   };
 };
 
@@ -131,6 +133,7 @@ const MenuBar = ({
   annoMatrix,
   genesets,
   agentPanelHidden,
+  isVcpDeployment,
 }: MenuBarProps) => {
   const [pendingClipPercentiles, setPendingClipPercentiles] =
     useState(INITIAL_PERCENTILES);
@@ -259,7 +262,7 @@ const MenuBar = ({
   const isColoredByCategorical = !!categoricalSelection?.[colorAccessor || ""];
 
   const isTest = getFeatureFlag(FEATURES.TEST);
-  const isAgentEnabled = getFeatureFlag(FEATURES.AGENT);
+  const isAgentEnabled = getFeatureFlag(FEATURES.AGENT) || isVcpDeployment;
 
   // constants used to create selection tool button
   const selectionTooltip = "select";

@@ -125,29 +125,27 @@ class TestCxgDataset(unittest.TestCase):
 
         user_id = "test-user-tid-flow"
 
+        # Save genesets - TID parameter is accepted but ignored
         data.save_gene_sets(genesets, tid=1, user_id=user_id)
         saved = data.get_saved_gene_sets(user_id=user_id)
         self.assertIsNotNone(saved)
-        self.assertEqual(saved["tid"], 1)
         self.assertEqual(saved["genesets"], genesets)
+        # TID is not saved in payload anymore
 
-        with self.assertRaises(ValueError):
-            data.save_gene_sets(genesets, tid=1, user_id=user_id)
-
-        data.save_gene_sets(genesets, tid=2, user_id=user_id)
+        # Saving again with same TID should not raise an error (validation removed)
+        data.save_gene_sets(genesets, tid=1, user_id=user_id)
         saved_again = data.get_saved_gene_sets(user_id=user_id)
-        self.assertEqual(saved_again["tid"], 2)
         self.assertEqual(saved_again["genesets"], genesets)
 
+        # Save without TID
         data.save_gene_sets(genesets, tid=None, user_id=user_id)
         auto_saved = data.get_saved_gene_sets(user_id=user_id)
-        self.assertEqual(auto_saved["tid"], 3)
+        self.assertEqual(auto_saved["genesets"], genesets)
 
         data.cleanup()
         reloaded = self.get_data("pbmc3k.cxg")
         persisted = reloaded.get_saved_gene_sets(user_id=user_id)
         self.assertIsNotNone(persisted)
-        self.assertEqual(persisted["tid"], 3)
         self.assertEqual(persisted["genesets"], genesets)
         reloaded.cleanup()
 

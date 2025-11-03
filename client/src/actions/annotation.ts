@@ -712,7 +712,7 @@ export const saveGenesetsAction =
     const genesetsReadonly =
       config?.parameters?.annotations_genesets_readonly ?? true;
 
-    const { genesets, lastTid } = genesetState;
+    const { genesets } = genesetState;
 
     if (!genesetsEnabled || genesetsReadonly) {
       dispatch({
@@ -728,11 +728,7 @@ export const saveGenesetsAction =
       type: "autosave: genesets started",
     });
 
-    // TID (transaction ID) is incremented for optimistic concurrency control.
-    // Each save gets a new TID to track the version and detect conflicts.
-    const tid = (lastTid ?? 0) + 1;
-    const ota = {
-      tid,
+    const payload = {
       genesets: genesetStateToPayload(genesets),
     };
 
@@ -745,7 +741,7 @@ export const saveGenesetsAction =
             Accept: "application/json",
             "Content-Type": "application/json",
           }),
-          body: JSON.stringify(ota),
+          body: JSON.stringify(payload),
           credentials: "include",
         }
       );
@@ -762,10 +758,6 @@ export const saveGenesetsAction =
       dispatch({
         type: "autosave: genesets complete",
         lastSavedGenesets: genesets,
-      });
-      dispatch({
-        type: "geneset: set tid",
-        tid,
       });
     } catch (error: unknown) {
       dispatch({

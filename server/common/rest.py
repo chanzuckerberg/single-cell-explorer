@@ -275,6 +275,7 @@ def genesets_put(request, data_adaptor):
     if genesets is None:
         return abort(HTTPStatus.BAD_REQUEST, description="Missing genesets payload")
 
+    # TID is accepted for backward compatibility but is ignored (no validation)
     tid = payload.get("tid")
     user_id = _resolve_request_user_id(request)
 

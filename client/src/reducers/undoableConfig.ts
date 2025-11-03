@@ -23,7 +23,6 @@ const skipOnActions = new Set<string>([
   "reset colorscale",
   "reset centroid labels",
   "geneset: initial load",
-  "geneset: set tid",
 
   "graph brush change",
   "continuous metadata histogram brush",
