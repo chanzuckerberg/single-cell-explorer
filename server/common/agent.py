@@ -9,8 +9,8 @@ from flask import abort, current_app, jsonify, make_response
 from pydantic import BaseModel
 
 from server.common.anthropic_utils import get_anthropic_api_key
-from server.common.tools import create_tools
 from server.common.rest import _resolve_request_user_id
+from server.common.tools import create_tools
 
 
 class AgentMessage(BaseModel):
@@ -154,10 +154,10 @@ def agent_step_post(request, data_adaptor):
         # Initialize Anthropic client and get tools
         api_key = get_anthropic_api_key()
         client = anthropic.Anthropic(api_key=api_key)
-        
+
         # Get user_id from request for user annotations
         user_id = _resolve_request_user_id(request)
-        
+
         tools_data = create_tools(data_adaptor, user_id=user_id)
         tool_definitions = tools_data["definitions"]
         tool_functions = tools_data["functions"]
