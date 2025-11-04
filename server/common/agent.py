@@ -2,9 +2,9 @@ import json
 import logging
 import re
 import sys
+from html import escape
 from http import HTTPStatus
 from typing import Any, Dict, List, Literal, Optional
-from html import escape
 
 import anthropic
 from flask import abort, current_app, jsonify, make_response
@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from server.common.anthropic_utils import get_anthropic_api_key
 from server.common.rest import _resolve_request_user_id
-from server.common.tools import create_tools
+from server.common.tools import create_tools, get_claude_model
 
 
 class AgentMessage(BaseModel):

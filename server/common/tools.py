@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 
 from server.common.anthropic_utils import get_anthropic_api_key
 
-
 # Default Claude model to use
 CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 
@@ -16,6 +15,7 @@ CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
 def get_claude_model() -> str:
     """Get the Claude model name to use. Can be overridden via environment variable ANTHROPIC_MODEL."""
     import os
+
     return os.getenv("ANTHROPIC_MODEL", CLAUDE_MODEL)
 
 
