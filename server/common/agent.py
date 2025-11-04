@@ -1,8 +1,10 @@
 import json
 import logging
+import re
 import sys
 from http import HTTPStatus
 from typing import Any, Dict, List, Literal, Optional
+from html import escape
 
 import anthropic
 from flask import abort, current_app, jsonify, make_response
@@ -62,8 +64,9 @@ def convert_to_anthropic_messages(messages: List[AgentMessage]) -> List[Dict[str
 
     for msg in messages:
         if msg.role == "user":
-            # Wrap content with type tags if present
-            content = f"<{msg.type}>{msg.content}</{msg.type}>" if msg.type else msg.content
+            # Wrap content with type tags if present, escaping content to prevent injection
+            escaped_content = escape(msg.content)
+            content = f"<{msg.type}>{escaped_content}</{msg.type}>" if msg.type else escaped_content
             anthropic_messages.append(
                 {
                     "role": "user",
@@ -90,8 +93,9 @@ def convert_to_anthropic_messages(messages: List[AgentMessage]) -> List[Dict[str
                     }
                 )
             else:
-                # Regular assistant message
-                content = f"<{msg.type}>{msg.content}</{msg.type}>" if msg.type else msg.content
+                # Regular assistant message, escaping content to prevent injection
+                escaped_content = escape(msg.content)
+                content = f"<{msg.type}>{escaped_content}</{msg.type}>" if msg.type else escaped_content
                 anthropic_messages.append(
                     {
                         "role": "assistant",
@@ -137,13 +141,6 @@ def agent_step_post(request, data_adaptor):
         chat_history = messages[: last_summary_idx + 1]
         current_request = messages[last_summary_idx + 1 :]
 
-        print("chat_history:")
-        for msg in chat_history:
-            print(f"{msg.role} ({msg.type}): {msg.content[:100]}...")
-        print("current_request:")
-        for msg in current_request:
-            print(f"{msg.role} ({msg.type}): {msg.content[:100]}...")
-
         # Convert to Anthropic format
         anthropic_chat_history = convert_to_anthropic_messages(chat_history)
         anthropic_current_request = convert_to_anthropic_messages(current_request)
@@ -170,15 +167,12 @@ def agent_step_post(request, data_adaptor):
 
         # Call Anthropic API
         response = client.messages.create(
-            model="claude-sonnet-4-5-20250929",
+            model=get_claude_model(),
             max_tokens=4096,
             system=system_prompt,
             messages=all_messages,
             tools=tool_definitions,
         )
-
-        print(f"Response stop_reason: {response.stop_reason}")
-        print(f"Response content: {response.content}")
 
         # Process the response
         response_data = {}
@@ -195,10 +189,6 @@ def agent_step_post(request, data_adaptor):
             tool_name = tool_use_block.name
             tool_input = tool_use_block.input
             tool_use_id = tool_use_block.id  # Preserve the ID for tool result tracking
-
-            print(f"Tool use: {tool_name} (id: {tool_use_id}) with input: {tool_input}")
-            if len(tool_use_blocks) > 1:
-                print(f"Note: {len(tool_use_blocks) - 1} additional tool(s) will be processed in subsequent steps")
 
             # Handle no_more_steps specially
             if tool_name == "no_more_steps":
@@ -244,13 +234,9 @@ def agent_step_post(request, data_adaptor):
                 if content.type == "text":
                     text_content += content.text
 
-            # Strip any type tags from the output
-            if text_content.startswith("<") and text_content.endswith(">"):
-                # Find the first closing bracket and last opening bracket
-                first_close = text_content.find(">")
-                last_open = text_content.rfind("<")
-                if first_close != -1 and last_open != -1:
-                    text_content = text_content[first_close + 1 : last_open]
+            # Strip any type tags from the output using regex to handle nested tags
+            # Pattern matches opening and closing tags: <tag>content</tag>
+            text_content = re.sub(r"<[^>]+>.*?</[^>]+>", "", text_content)
 
             response_data = {
                 "type": "message",
@@ -269,8 +255,5 @@ def agent_step_post(request, data_adaptor):
 
 def abort_and_log(code, logmsg, loglevel=logging.DEBUG):
     """Log the message, then abort with HTTP code"""
-    print("ABORTING")
-    exc_info = sys.exc_info()
-    print(exc_info)
-    current_app.logger.log(loglevel, logmsg, exc_info=exc_info)
+    current_app.logger.log(loglevel, logmsg, exc_info=sys.exc_info())
     return abort(code)

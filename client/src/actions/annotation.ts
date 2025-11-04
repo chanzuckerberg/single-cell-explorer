@@ -22,6 +22,26 @@ type ColumnValueCtor = new (length: number) => AnyArray;
 const { isUserAnnotation } = AnnotationsHelpers;
 
 /**
+ * Builds a URL for annotation backend operations
+ */
+function buildAnnotationUrl(
+  path: string,
+  params?: Record<string, string>
+): string {
+  const baseUrl = `${globals.API?.prefix ?? ""}${
+    globals.API?.version ?? ""
+  }${path}`;
+  if (!params || Object.keys(params).length === 0) {
+    return baseUrl;
+  }
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    searchParams.append(key, value);
+  }
+  return `${baseUrl}?${searchParams.toString()}`;
+}
+
+/**
  * Helper function to call annotation backend operations with consistent error handling.
  * Logs errors but doesn't revert local state, allowing optimistic UI updates.
  */
@@ -177,11 +197,10 @@ export const annotationRenameCategoryAction =
 
     // Persist to backend and WAIT for completion
     await callAnnotationBackendOperation(
-      `${globals.API?.prefix ?? ""}${
-        globals.API?.version ?? ""
-      }annotations/obs?rename=true&category_name=${encodeURIComponent(
-        oldCategoryName
-      )}`,
+      buildAnnotationUrl("annotations/obs", {
+        rename: "true",
+        category_name: oldCategoryName,
+      }),
       {
         method: "PUT",
         body: JSON.stringify({ new_name: trimmedName }),
@@ -243,9 +262,9 @@ export const annotationDeleteCategoryAction =
 
     // Persist to backend and WAIT for completion
     await callAnnotationBackendOperation(
-      `${globals.API?.prefix ?? ""}${
-        globals.API?.version ?? ""
-      }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
+      buildAnnotationUrl("annotations/obs", {
+        category_name: categoryName,
+      }),
       {
         method: "DELETE",
       },
@@ -505,9 +524,9 @@ export const saveObsAnnotationsAction =
       try {
         // First, delete the "new name" that was rolled back
         const deleteResponse = await fetch(
-          `${globals.API?.prefix ?? ""}${
-            globals.API?.version ?? ""
-          }annotations/obs?category_name=${encodeURIComponent(newName)}`,
+          buildAnnotationUrl("annotations/obs", {
+            category_name: newName,
+          }),
           {
             method: "DELETE",
             credentials: "include",
@@ -515,10 +534,18 @@ export const saveObsAnnotationsAction =
         );
 
         if (!deleteResponse.ok) {
+          // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+          const isRetryable = deleteResponse.status >= 500;
           dispatch({
             type: "writable obs annotations - save error",
             message: `Failed to delete undone rename ${newName}: HTTP ${deleteResponse.status}`,
           });
+          // Clear metadata for non-retryable errors (4xx) since they indicate bad data
+          if (!isRetryable) {
+            dispatch({
+              type: "annotation: clear rename metadata",
+            });
+          }
           return;
         }
 
@@ -530,25 +557,28 @@ export const saveObsAnnotationsAction =
           type: "application/octet-stream",
         });
 
-        const putResponse = await fetch(
-          `${globals.API?.prefix ?? ""}${
-            globals.API?.version ?? ""
-          }annotations/obs`,
-          {
-            method: "PUT",
-            body: requestBody,
-            headers: new Headers({
-              "Content-Type": "application/octet-stream",
-            }),
-            credentials: "include",
-          }
-        );
+        const putResponse = await fetch(buildAnnotationUrl("annotations/obs"), {
+          method: "PUT",
+          body: requestBody,
+          headers: new Headers({
+            "Content-Type": "application/octet-stream",
+          }),
+          credentials: "include",
+        });
 
         if (!putResponse.ok) {
+          // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+          const isRetryable = putResponse.status >= 500;
           dispatch({
             type: "writable obs annotations - save error",
             message: `Failed to upload restored annotation ${oldName}: HTTP ${putResponse.status}`,
           });
+          // Clear metadata for non-retryable errors (4xx) since they indicate bad data
+          if (!isRetryable) {
+            dispatch({
+              type: "annotation: clear rename metadata",
+            });
+          }
           return;
         }
 
@@ -590,11 +620,9 @@ export const saveObsAnnotationsAction =
         const responses = await Promise.all(
           deletedCols.map((categoryName) =>
             fetch(
-              `${globals.API?.prefix ?? ""}${
-                globals.API?.version ?? ""
-              }annotations/obs?category_name=${encodeURIComponent(
-                categoryName
-              )}`,
+              buildAnnotationUrl("annotations/obs", {
+                category_name: categoryName,
+              }),
               {
                 method: "DELETE",
                 credentials: "include",
@@ -603,17 +631,29 @@ export const saveObsAnnotationsAction =
           )
         );
 
+        // Collect errors instead of early returning to ensure all deletions are attempted
+        const errors: string[] = [];
         for (let i = 0; i < responses.length; i += 1) {
           const response = responses[i];
           const categoryName = deletedCols[i];
 
           if (!response.ok) {
-            dispatch({
-              type: "writable obs annotations - save error",
-              message: `Failed to delete annotation ${categoryName}: HTTP ${response.status}`,
-            });
-            return;
+            // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+            const isRetryable = response.status >= 500;
+            errors.push(
+              `${categoryName}: HTTP ${response.status}${
+                isRetryable ? " (retryable)" : ""
+              }`
+            );
           }
+        }
+
+        if (errors.length > 0) {
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `Failed to delete annotation(s): ${errors.join(", ")}`,
+          });
+          return;
         }
 
         dispatch({
@@ -641,19 +681,14 @@ export const saveObsAnnotationsAction =
     });
 
     try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${
-          globals.API?.version ?? ""
-        }annotations/obs`,
-        {
-          method: "PUT",
-          body: requestBody,
-          headers: new Headers({
-            "Content-Type": "application/octet-stream",
-          }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(buildAnnotationUrl("annotations/obs"), {
+        method: "PUT",
+        body: requestBody,
+        headers: new Headers({
+          "Content-Type": "application/octet-stream",
+        }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         dispatch({
@@ -733,18 +768,15 @@ export const saveGenesetsAction =
     };
 
     try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${globals.API?.version ?? ""}genesets`,
-        {
-          method: "PUT",
-          headers: new Headers({
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify(payload),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(buildAnnotationUrl("genesets"), {
+        method: "PUT",
+        headers: new Headers({
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
 
       if (!response.ok) {
         dispatch({

@@ -9,6 +9,16 @@ from typing_extensions import Annotated
 from server.common.anthropic_utils import get_anthropic_api_key
 
 
+# Default Claude model to use
+CLAUDE_MODEL = "claude-sonnet-4-5-20250929"
+
+
+def get_claude_model() -> str:
+    """Get the Claude model name to use. Can be overridden via environment variable ANTHROPIC_MODEL."""
+    import os
+    return os.getenv("ANTHROPIC_MODEL", CLAUDE_MODEL)
+
+
 class ColorByGeneSchema(BaseModel):
     gene: Annotated[
         str,
@@ -193,14 +203,12 @@ def histogram_selection(
         class MetadataSelectionSchema(BaseModel):
             metadata_name: str
 
-        response = {
+        return {
             "histogram_name": call_llm_with_structured_output(prompt, MetadataSelectionSchema)["metadata_name"],
             "histogram_type": histogram_type,
             "range_low": range_low,
             "range_high": range_high,
         }
-        print(response)
-        return response
     elif histogram_type == HistogramType.GENE.value:
         return {
             "histogram_name": histogram_name.upper(),
@@ -347,7 +355,7 @@ def call_llm_with_structured_output(query: str, schema: Type[T]) -> Dict[str, An
 
     # Force the model to use this tool
     response = client.messages.create(
-        model="claude-sonnet-4-5-20250929",
+        model=get_claude_model(),
         max_tokens=4096,
         tools=[tool_def],
         tool_choice={"type": "tool", "name": tool_name},

@@ -67,8 +67,14 @@ const AgentPanel: FC<AgentPanelProps> = ({
   const editInputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // Constants
+  const DEFAULT_PANEL_HEIGHT = 400;
+  const MIN_PANEL_HEIGHT = 200;
+  const PANEL_PADDING = 20;
+  const SCROLL_TO_BOTTOM_DELAY = 100;
+
   // Resize state
-  const [panelHeight, setPanelHeight] = useState<number>(400);
+  const [panelHeight, setPanelHeight] = useState<number>(DEFAULT_PANEL_HEIGHT);
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
@@ -113,9 +119,9 @@ const AgentPanel: FC<AgentPanelProps> = ({
           containerHeight = parent.offsetHeight;
         }
       }
-      const maxHeight = containerHeight - 20; // Leave some padding
+      const maxHeight = containerHeight - PANEL_PADDING;
       const newHeight = Math.max(
-        200,
+        MIN_PANEL_HEIGHT,
         Math.min(maxHeight, startHeight + deltaY)
       );
       setPanelHeight(newHeight);
@@ -140,6 +146,21 @@ const AgentPanel: FC<AgentPanelProps> = ({
     }
   };
 
+  const handleAgentError = (error: unknown) => {
+    console.error("Agent Runner Error:", error);
+    const errorMessage: ChatMessage = {
+      role: "assistant",
+      content: "Sorry, something went wrong. Please try again.",
+      timestamp: Date.now(),
+      type: MessageType.Message,
+      messageId: Date.now(),
+      actionCount,
+    };
+    agentRunner.chatHistory.push(errorMessage);
+    setChatHistory(agentRunner.chatHistory);
+    setTimeout(scrollToBottom, SCROLL_TO_BOTTOM_DELAY);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
@@ -160,7 +181,7 @@ const AgentPanel: FC<AgentPanelProps> = ({
 
     agentRunner.chatHistory.push(userMessage);
     setChatHistory(agentRunner.chatHistory);
-    setTimeout(scrollToBottom, 100);
+    setTimeout(scrollToBottom, SCROLL_TO_BOTTOM_DELAY);
 
     const currentInput = input;
     setInput("");
@@ -173,20 +194,9 @@ const AgentPanel: FC<AgentPanelProps> = ({
         lastMessage.actionCount = actionCount;
       }
       setChatHistory(agentRunner.chatHistory);
-      setTimeout(scrollToBottom, 0);
+      setTimeout(scrollToBottom, SCROLL_TO_BOTTOM_DELAY);
     } catch (error) {
-      console.error("Agent Runner Error:", error);
-      const errorMessage = {
-        role: "assistant" as const,
-        content: "Sorry, something went wrong. Please try again.",
-        timestamp: Date.now(),
-        type: MessageType.Message,
-        messageId: Date.now(),
-        actionCount,
-      };
-      agentRunner.chatHistory.push(errorMessage);
-      setChatHistory(agentRunner.chatHistory);
-      setTimeout(scrollToBottom, 100);
+      handleAgentError(error);
     } finally {
       setIsLoading(false);
       setTimeout(() => {
@@ -222,20 +232,9 @@ const AgentPanel: FC<AgentPanelProps> = ({
     try {
       await agentRunner.processQuery(editText, 20, true);
       setChatHistory(agentRunner.chatHistory);
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, SCROLL_TO_BOTTOM_DELAY);
     } catch (error) {
-      console.error("Agent Runner Error:", error);
-      const errorMessage = {
-        role: "assistant" as const,
-        content: "Sorry, something went wrong. Please try again.",
-        timestamp: Date.now(),
-        type: MessageType.Message,
-        messageId: Date.now(),
-        actionCount,
-      };
-      agentRunner.chatHistory.push(errorMessage);
-      setChatHistory(agentRunner.chatHistory);
-      setTimeout(scrollToBottom, 100);
+      handleAgentError(error);
     } finally {
       setIsLoading(false);
     }
