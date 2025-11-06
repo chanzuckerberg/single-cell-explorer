@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.18.0...v1.18.1) (2025-10-31)
+
+
+### Misc
+
+* bug bash fixes ([#1309](https://github.com/chanzuckerberg/single-cell-explorer/issues/1309)) ([573282a](https://github.com/chanzuckerberg/single-cell-explorer/commit/573282a340d2d6ebd0c48c9c7c04dd35d451f1c1))
+
 ## [1.18.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.3...v1.18.0) (2025-10-29)
 
 
