@@ -40,14 +40,12 @@ export type Genesets = Map<Geneset["genesetName"], Geneset>;
 
 export interface GeneSetsState {
   initialized: boolean;
-  lastTid?: number;
   genesets: Genesets;
 }
 
 const GeneSets = (
   state: GeneSetsState = {
     initialized: false,
-    lastTid: undefined,
     genesets: new Map(),
   },
   action: AnyAction
@@ -88,12 +86,9 @@ const GeneSets = (
         }
       }
 
-      const tid = typeof data.tid === "number" ? data.tid : state.lastTid;
-
       return {
         ...state,
         initialized: true,
-        lastTid: tid,
         genesets,
       };
     }
@@ -339,18 +334,6 @@ const GeneSets = (
       return {
         ...state,
         genesets,
-      };
-    }
-
-    case "geneset: set tid": {
-      const { tid } = action;
-      if (typeof tid !== "number" || tid < 0)
-        throw new Error("TID must be a non-negative number");
-      if (state.lastTid !== undefined && tid < state.lastTid)
-        throw new Error("TID may not be decremented");
-      return {
-        ...state,
-        lastTid: tid,
       };
     }
 

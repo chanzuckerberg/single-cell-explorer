@@ -505,17 +505,10 @@ class CxgDataset(Dataset):
         if user_id is None:
             raise ValueError("User ID is required for saving gene sets")
 
-        # Get current state from storage to determine TID
-        persisted = self.get_saved_gene_sets(user_id=user_id) or {}
-        current_tid = persisted.get("tid", 0)
-
-        if tid is None:
-            tid = current_tid + 1
-        if tid <= current_tid:
-            raise ValueError("TID must be greater than previous saved value")
+        # TID parameter is accepted for backward compatibility but is ignored
+        # No validation or monotonicity requirement
 
         payload = {
-            "tid": tid,
             "genesets": genesets_payload,
         }
 
@@ -528,7 +521,13 @@ class CxgDataset(Dataset):
         """Always load user gene sets from persistent storage (S3/filesystem)."""
         if user_id is None:
             return None
-        return self._read_user_genesets(user_id)
+        saved = self._read_user_genesets(user_id)
+        if saved is None:
+            return None
+        # Ensure genesets key exists, TID is optional (for backward compatibility)
+        if "genesets" not in saved:
+            return None
+        return saved
 
     @staticmethod
     def set_tiledb_context(context_params):
@@ -1176,7 +1175,11 @@ class CxgDataset(Dataset):
     ):
         saved = self.get_saved_gene_sets(user_id=user_id)
         if saved is not None:
-            return saved
+            # Return saved genesets, TID is optional (for backward compatibility)
+            return {
+                "genesets": saved.get("genesets", []),
+                "tid": saved.get("tid", 0),  # Return 0 if TID not present
+            }
 
         if self.genesets is None:
             with self.lock:
@@ -1186,7 +1189,7 @@ class CxgDataset(Dataset):
             normalized_genesets = self._normalize_genesets(geneset_entries)
             return {
                 "genesets": normalized_genesets,
-                "tid": self.genesets.get("tid", 0),
+                "tid": self.genesets.get("tid", 0),  # Return 0 if TID not present
             }
         # Fallback - should not happen due to normalization above.
         return {"genesets": [], "tid": 0}

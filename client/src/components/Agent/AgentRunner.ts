@@ -39,8 +39,35 @@ export class AgentRunner {
 
     const userMessageId = Date.now();
 
-    // Only add to internal messages array - chat history is handled by the component
-    if (!isEdit) {
+    // Ensure user message is in messages array
+    // When editing, replaceMessage should have already updated it, but we need to ensure
+    // it's present before calling getNextAgentStep
+    if (isEdit) {
+      // When editing, find the last user message and ensure it matches the edited content
+      let lastUserMessageIndex = -1;
+      for (let i = this.messages.length - 1; i >= 0; i -= 1) {
+        if (this.messages[i].role === "user") {
+          lastUserMessageIndex = i;
+          break;
+        }
+      }
+      if (lastUserMessageIndex !== -1) {
+        // Update the existing user message with edited content
+        this.messages[lastUserMessageIndex] = {
+          ...this.messages[lastUserMessageIndex],
+          content: userInput,
+        };
+      } else {
+        // If no user message found (shouldn't happen), add it
+        this.messages.push({
+          role: "user",
+          content: userInput,
+          type: MessageType.Message,
+          messageId: userMessageId,
+        });
+      }
+    } else {
+      // Add new user message to messages array
       this.messages.push({
         role: "user",
         content: userInput,
@@ -78,26 +105,40 @@ export class AgentRunner {
         return finalResponse;
       }
 
-      if (step.type === "tool" && step.tool) {
+      if (step.type === "tool" && step.tool && step.assistant_tool_use) {
         const toolMessageId = Date.now();
         const tool = this.tools[step.tool.name];
         if (!tool) {
           throw new Error(`Unknown tool: ${step.tool.name}`);
         }
 
+        // First, add the assistant's tool_use message (what Anthropic sent)
+        this.messages.push({
+          role: "assistant",
+          content: JSON.stringify(step.assistant_tool_use.tool_input),
+          type: MessageType.Tool,
+          messageId: toolMessageId,
+          tool_use_id: step.assistant_tool_use.tool_use_id,
+          name: step.assistant_tool_use.tool_name,
+        });
+
+        // Then execute the tool and add the result
         const result = await tool.invoke(JSON.stringify(step.tool.result));
         this.messages.push({
           role: "function",
           name: step.tool.name,
           content: JSON.stringify(step.tool.result),
           type: MessageType.Tool,
-          messageId: toolMessageId,
+          messageId: toolMessageId + 1,
+          tool_use_id: step.tool.tool_use_id,
         });
+
+        // Finally, add the UI confirmation message
         this.messages.push({
           role: "assistant",
           content: result,
           type: MessageType.Message,
-          messageId: toolMessageId + 1,
+          messageId: toolMessageId + 2,
         });
       }
     }
@@ -123,24 +164,32 @@ export class AgentRunner {
     newContent: string,
     actionCount: number
   ): void {
-    // Replace in messages array
+    // Find the message in both arrays
     const messageIndex = this.messages.findIndex(
       (m) => m.messageId === messageId
     );
+    const chatIndex = this.chatHistory.findIndex(
+      (m) => m.messageId === messageId
+    );
+
+    // Truncate arrays to the edited message (inclusive)
+    // The backend will find the last summary message to split chat history vs current request
     if (messageIndex !== -1) {
+      // Truncate to include everything up to and including the edited message
       this.messages = this.messages.slice(0, messageIndex + 1);
+
+      // Update the edited message content
       this.messages[messageIndex] = {
         ...this.messages[messageIndex],
         content: newContent,
       };
     }
 
-    // Replace in chat history
-    const chatIndex = this.chatHistory.findIndex(
-      (m) => m.messageId === messageId
-    );
     if (chatIndex !== -1) {
+      // Truncate to include everything up to and including the edited message
       this.chatHistory = this.chatHistory.slice(0, chatIndex + 1);
+
+      // Update the edited message content
       this.chatHistory[chatIndex] = {
         ...this.chatHistory[chatIndex],
         content: newContent,

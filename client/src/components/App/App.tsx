@@ -25,7 +25,6 @@ import { selectIsSeamlessEnabled } from "../../selectors/datasetMetadata";
 import Graph from "../Graph/Graph";
 import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
-import { AgentComponent } from "../Agent/AgentComponent";
 import BottomPanel from "../BottomPanel/BottomPanel";
 import Autosave from "../Autosave";
 import BYODToast from "../BYODConnectors/BYODToast";
@@ -123,18 +122,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                   )}
                 {loading || error ? null : (
                   <>
-                    {getFeatureFlag(FEATURES.AGENT) && (
-                      <div
-                        style={{
-                          position: "fixed",
-                          bottom: 20,
-                          right: 20,
-                          zIndex: 9999,
-                        }}
-                      >
-                        <AgentComponent />
-                      </div>
-                    )}
                     <Layout
                       addTopPadding={!datasetMetadataError || isCellGuideCxg}
                       renderGraph={(viewportRef: HTMLDivElement) => (

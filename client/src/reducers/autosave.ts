@@ -84,6 +84,19 @@ const Autosave = (
         lastSavedGenesets: action.lastSavedGenesets ?? null,
       };
     }
+    case "@@undoable/undo":
+    case "@@undoable/redo":
+    case "@@undoable/revert-to-action": {
+      // When undoing/redoing, keep autosave state unchanged so that
+      // autosave can detect differences and sync with backend.
+      // Do NOT update lastSaved* - this allows autosave to see that
+      // current state differs from the last saved checkpoint.
+      return {
+        ...state,
+        obsAnnotationSaveInProgress: false,
+        genesetSaveInProgress: false,
+      };
+    }
     default:
       return state;
   }

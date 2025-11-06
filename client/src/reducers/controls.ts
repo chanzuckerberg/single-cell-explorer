@@ -30,6 +30,8 @@ interface ControlsState {
   activeTab: ActiveTab;
   infoPanelHidden: boolean;
   infoPanelMinimized: boolean;
+  agentPanelHidden: boolean;
+  agentPanelMinimized: boolean;
   bottomPanelHidden: boolean;
   bottomPanelMinimized: boolean;
   bottomPanelSelectedGene?: string;
@@ -67,6 +69,8 @@ const Controls = (
     activeTab: ActiveTab.Dataset,
     infoPanelHidden: true,
     infoPanelMinimized: false,
+    agentPanelHidden: true,
+    agentPanelMinimized: false,
     bottomPanelHidden: true,
     bottomPanelMinimized: false,
     bottomPanelSelectedGene: undefined,
@@ -243,6 +247,28 @@ const Controls = (
       return {
         ...state,
         infoPanelMinimized: !state.infoPanelMinimized,
+      };
+    }
+    /**************************
+          Agent Panel
+    **************************/
+    case "toggle agent panel": {
+      return {
+        ...state,
+        agentPanelHidden: !state.agentPanelHidden,
+        agentPanelMinimized: false,
+      };
+    }
+    case "close agent panel": {
+      return {
+        ...state,
+        agentPanelHidden: true,
+      };
+    }
+    case "minimize/maximize agent panel": {
+      return {
+        ...state,
+        agentPanelMinimized: !state.agentPanelMinimized,
       };
     }
     /**************************
