@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.18.1...v1.19.0) (2025-11-06)
+
+
+### Features
+
+* agent upgrade - switch to anthropic and ui update ([#1312](https://github.com/chanzuckerberg/single-cell-explorer/issues/1312)) ([613289f](https://github.com/chanzuckerberg/single-cell-explorer/commit/613289f4bdbcb8cdd358a2a84083b92a3201d04b))
+
 ## [1.18.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.18.0...v1.18.1) (2025-10-31)
 
 
