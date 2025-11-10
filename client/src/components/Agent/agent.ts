@@ -53,6 +53,7 @@ export async function getNextAgentStep(
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ messages, toolResults }),
     }
   );
