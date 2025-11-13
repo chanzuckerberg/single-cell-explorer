@@ -125,7 +125,7 @@
     "@babel/runtime": "^7.13.16",
     "@blueprintjs/eslint-plugin": "^0.3.0",
     "@chromatic-com/playwright": "^0.6.18",
-    "@playwright/test": "^1.46.1",
+    "@playwright/test": "^1.56.1",
     "@sentry/webpack-plugin": "^1.15.0",
     "@storybook/addon-essentials": "^7.6.12",
     "@storybook/addon-interactions": "^7.6.12",
