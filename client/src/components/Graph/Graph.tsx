@@ -431,8 +431,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     }
 
     // Cancel animation frame loop if active
-    if (this.state.animationFrameLoop) {
-      this.state.animationFrameLoop.cancel();
+    const { animationFrameLoop } = this.state;
+    if (animationFrameLoop) {
+      animationFrameLoop.cancel();
     }
   }
 
@@ -1148,7 +1149,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       needToRenderCanvas = true;
     }
     if (positionsEnd !== prevAsyncProps?.positions) {
-      // Get row indices if available
+      // Get row indices if available - these map row positions in the dataframe
+      // to their original indices in the full dataset
       const oldRowIndex = prevAsyncProps?.layoutDf?.rowIndex;
       const newRowIndex = layoutDf?.rowIndex;
       const oldIndices =
@@ -1160,22 +1162,30 @@ class Graph extends React.Component<GraphProps, GraphState> {
           ? (newRowIndex.rindex as Int32Array | (string | number)[])
           : null;
 
+      // Prepare position buffers for animation interpolation
+      // oldPos: starting positions for animation
+      // newPos: ending positions for animation
+      // termPos: final positions after animation completes
       let oldPos: Float32Array | number[];
       let newPos: Float32Array | number[] = positionsEnd;
       const termPos = positionsEnd;
 
+      // Case 1: Old layout has row indices, new layout doesn't
+      // Map old positions to new array structure using old indices
+      // Fill with NaN where positions don't exist in new layout
       if (oldIndices && !newIndices) {
         newPos = new Float32Array(newPos.length);
         newPos.fill(NaN);
         oldPos = new Float32Array(newPos.length);
         oldPos.fill(NaN);
         for (let i = 0; i < oldIndices.length; i += 1) {
-          const idx =
+          const idxValue =
             oldIndices instanceof Int32Array
               ? oldIndices[i]
               : typeof oldIndices[i] === "number"
               ? oldIndices[i]
               : i;
+          const idx = typeof idxValue === "number" ? idxValue : i;
           const x = 2 * idx;
           const y = 2 * idx + 1;
           if (x < positionsEnd.length && y < positionsEnd.length) {
@@ -1185,15 +1195,20 @@ class Graph extends React.Component<GraphProps, GraphState> {
           oldPos[x] = positionsStart[2 * i];
           oldPos[y] = positionsStart[2 * i + 1];
         }
-      } else if (!oldIndices && newIndices) {
+      }
+      // Case 2: New layout has row indices, old layout doesn't
+      // Extract positions from old array using new indices
+      // This handles the case where we're switching to a subset view
+      else if (!oldIndices && newIndices) {
         oldPos = [];
         for (let i = 0; i < newIndices.length; i += 1) {
-          const idx =
+          const idxValue =
             newIndices instanceof Int32Array
               ? newIndices[i]
               : typeof newIndices[i] === "number"
               ? newIndices[i]
               : i;
+          const idx = typeof idxValue === "number" ? idxValue : i;
           const x = 2 * idx;
           const y = 2 * idx + 1;
           if (x < positionsStart.length && y < positionsStart.length) {
@@ -1204,35 +1219,53 @@ class Graph extends React.Component<GraphProps, GraphState> {
             oldPos.push(NaN);
           }
         }
-      } else if (!oldIndices && !newIndices) {
+      }
+      // Case 3: Neither layout has row indices
+      // Direct mapping - positions arrays are aligned by index
+      else if (!oldIndices && !newIndices) {
         oldPos = positionsStart;
-      } else {
-        // Both have indices - convert to arrays for indexOf/includes
+      }
+      // Case 4: Both layouts have row indices
+      // Match indices between old and new layouts to create aligned position arrays
+      // If no indices match, disable animation (set duration to 0)
+      else {
+        // Convert to arrays for indexOf/includes operations
         const oldIndicesArray = Array.isArray(oldIndices)
           ? oldIndices
-          : Array.from(oldIndices);
+          : oldIndices !== null
+          ? Array.from(oldIndices)
+          : [];
         const newIndicesArray = Array.isArray(newIndices)
           ? newIndices
-          : Array.from(newIndices);
+          : newIndices !== null
+          ? Array.from(newIndices)
+          : [];
         oldPos = [];
         newPos = [];
-        let flag = true;
+        // Track if we found any matching indices (start with false, set to true if we find matches)
+        let hasMatchingIndices = false;
         for (let i = 0; i < newIndicesArray.length; i += 1) {
+          // Check if this new index exists in the old layout
           if (oldIndicesArray.includes(newIndicesArray[i])) {
+            // Find the position of this index in the old layout
             const index = oldIndicesArray.indexOf(newIndicesArray[i]);
+            // Map old position to new position for animation
             oldPos.push(positionsStart[2 * index]);
             oldPos.push(positionsStart[2 * index + 1]);
             newPos.push(positionsEnd[2 * i]);
             newPos.push(positionsEnd[2 * i + 1]);
-            flag = false;
+            hasMatchingIndices = true; // Found at least one match
           } else {
+            // No matching index - fill with NaN (point won't animate)
             oldPos.push(NaN);
             oldPos.push(NaN);
             newPos.push(NaN);
             newPos.push(NaN);
           }
         }
-        if (flag) {
+        // If no indices matched at all, disable animation
+        // (no meaningful transition possible)
+        if (!hasMatchingIndices) {
           this.duration = 0;
         }
       }
@@ -1478,19 +1511,26 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     const { imageHeight, scaleref, spotDiameterFullres } = unsMetadata;
 
-    const { pointBufferStart, pointBufferEnd, pointBufferTerminal } =
-      this.state;
+    const {
+      pointBufferStart,
+      pointBufferEnd,
+      pointBufferTerminal,
+      animationFrameLoop,
+    } = this.state;
 
-    const duration = this.duration;
-
-    // Cancel any existing animation frame loop
-    if (this.state.animationFrameLoop) {
-      this.state.animationFrameLoop.cancel();
-      this.setState({ animationFrameLoop: null });
+    // Cancel any existing animation frame loop to prevent overlapping animations
+    // This ensures we don't have multiple animation loops running simultaneously
+    if (animationFrameLoop) {
+      animationFrameLoop.cancel();
+      this.setState((state) => ({ ...state, animationFrameLoop: null }));
     }
 
     // If duration is 0, render immediately without animation
-    if (duration === 0) {
+    // This happens when:
+    // - No layout change occurred
+    // - Previous positions don't exist
+    // - No matching indices between layouts (can't create meaningful transition)
+    if (this.duration === 0) {
       regl.poll();
       drawPoints({
         distance: camera?.distance() ?? 1,
@@ -1516,16 +1556,22 @@ class Graph extends React.Component<GraphProps, GraphState> {
       return;
     }
 
-    // Animation loop
+    // Animation loop: Use regl.frame() to create a continuous rendering loop
+    // that interpolates between start and end positions over the animation duration
     let startTime: number | undefined;
     const frameLoop = regl.frame(async ({ time }) => {
+      // Capture the start time on the first frame
+      // This is used to calculate elapsed time for the animation
       if (startTime === undefined) {
         startTime = time;
       }
+      // Clear the canvas with white background before each frame
       regl.clear({
         depth: 1,
         color: [1, 1, 1, 1],
       });
+      // Render points with interpolated positions based on elapsed time
+      // The shader handles the interpolation using easeCubicInOut easing
       drawPoints({
         distance: camera?.distance() ?? 1,
         color: colorBuffer,
@@ -1541,21 +1587,28 @@ class Graph extends React.Component<GraphProps, GraphState> {
         scaleref,
         spotDiameterFullres,
         isSpatial: isSpatialMode(this.props),
-        duration,
+        duration: this.duration,
         startTime: startTime ?? 0,
       });
 
-      if (startTime !== undefined && time - startTime > duration / 1000) {
+      // Check if animation has completed (elapsed time exceeds duration)
+      // Convert duration from milliseconds to seconds for comparison
+      if (startTime !== undefined && time - startTime > this.duration / 1000) {
+        // Animation complete: cancel the frame loop and clean up
         frameLoop.cancel();
-        this.setState({ animationFrameLoop: null });
+        this.setState((state) => ({ ...state, animationFrameLoop: null }));
+        // Handle screen capture if requested (only after animation completes)
         if (screenCap) {
           await this.handleImageDownload(regl);
         }
+        // Flush WebGL commands to ensure final frame is rendered
         regl._gl.flush();
       }
     });
 
-    this.setState({ animationFrameLoop: frameLoop });
+    // Store the frame loop reference so we can cancel it if needed
+    // (e.g., on component unmount or when a new animation starts)
+    this.setState((state) => ({ ...state, animationFrameLoop: frameLoop }));
   }
 
   render(): JSX.Element {

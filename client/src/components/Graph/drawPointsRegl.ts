@@ -5,6 +5,10 @@ import {
   glPointSizeSpatial,
 } from "../../util/glHelpers";
 
+interface ReglContext {
+  time: number;
+}
+
 interface ReglProps {
   positionsStart: Float32Array;
   positionsEnd: Float32Array;
@@ -140,8 +144,14 @@ export default function drawPointsRegl(regl: Regl) {
       ),
       isSpatial: regl.prop<ReglProps, "isSpatial">("isSpatial"),
       duration: regl.prop<ReglProps, "duration">("duration"),
-      elapsed: ({ time }: { time: number }, { startTime = 0 }: ReglProps) =>
-        (time - startTime) * 1000,
+      elapsed: (
+        context: ReglContext,
+        props: Record<string, unknown>
+      ): number => {
+        const time = context.time ?? 0;
+        const startTime = (props as unknown as ReglProps).startTime ?? 0;
+        return (time - startTime) * 1000;
+      },
     },
 
     count: regl.prop<ReglProps, "count">("count"),
