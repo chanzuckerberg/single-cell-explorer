@@ -23,7 +23,6 @@ const skipOnActions = new Set<string>([
   "reset colorscale",
   "reset centroid labels",
   "geneset: initial load",
-  "geneset: set tid",
 
   "graph brush change",
   "continuous metadata histogram brush",
@@ -83,9 +82,13 @@ const clearOnActions = new Set<string>([
 ]);
 
 /*
-An immediate history save will be done for these
+an immediate history save will be done for these
 */
 const saveOnActions = new Set<string>([
+  /* undo/redo operations - trigger immediate autosave */
+  "@@undoable/undo",
+  "@@undoable/redo",
+  "@@undoable/revert-to-action",
   "categorical metadata filter select",
   "categorical metadata filter deselect",
   "categorical metadata filter all of these",

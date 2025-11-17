@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.19.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.19.0...v1.19.1) (2025-11-10)
+
+
+### Misc
+
+* upgrade argo helm chart ([#1315](https://github.com/chanzuckerberg/single-cell-explorer/issues/1315)) ([6e40f45](https://github.com/chanzuckerberg/single-cell-explorer/commit/6e40f450653f348ede6c82a5e04bc6fa5ce42532))
+
+
+### Bug Fixes
+
+* include creds for agent ([#1317](https://github.com/chanzuckerberg/single-cell-explorer/issues/1317)) ([b74295f](https://github.com/chanzuckerberg/single-cell-explorer/commit/b74295f546a708f2ffde0cff456ecda1337c1e10))
+
+## [1.19.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.18.1...v1.19.0) (2025-11-06)
+
+
+### Features
+
+* agent upgrade - switch to anthropic and ui update ([#1312](https://github.com/chanzuckerberg/single-cell-explorer/issues/1312)) ([613289f](https://github.com/chanzuckerberg/single-cell-explorer/commit/613289f4bdbcb8cdd358a2a84083b92a3201d04b))
+
+## [1.18.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.18.0...v1.18.1) (2025-10-31)
+
+
+### Misc
+
+* bug bash fixes ([#1309](https://github.com/chanzuckerberg/single-cell-explorer/issues/1309)) ([573282a](https://github.com/chanzuckerberg/single-cell-explorer/commit/573282a340d2d6ebd0c48c9c7c04dd35d451f1c1))
+
 ## [1.18.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.17.3...v1.18.0) (2025-10-29)
 
 

@@ -22,6 +22,26 @@ type ColumnValueCtor = new (length: number) => AnyArray;
 const { isUserAnnotation } = AnnotationsHelpers;
 
 /**
+ * Builds a URL for annotation backend operations
+ */
+function buildAnnotationUrl(
+  path: string,
+  params?: Record<string, string>
+): string {
+  const baseUrl = `${globals.API?.prefix ?? ""}${
+    globals.API?.version ?? ""
+  }${path}`;
+  if (!params || Object.keys(params).length === 0) {
+    return baseUrl;
+  }
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    searchParams.append(key, value);
+  }
+  return `${baseUrl}?${searchParams.toString()}`;
+}
+
+/**
  * Helper function to call annotation backend operations with consistent error handling.
  * Logs errors but doesn't revert local state, allowing optimistic UI updates.
  */
@@ -155,6 +175,9 @@ export const annotationRenameCategoryAction =
       metadataField: oldCategoryName,
       newCategoryText: trimmedName,
       data: trimmedName,
+      __isRename: true,
+      __renameFrom: oldCategoryName,
+      __renameTo: trimmedName,
     });
 
     // Only make backend request if annotations are enabled (not in no-auth mode)
@@ -174,11 +197,10 @@ export const annotationRenameCategoryAction =
 
     // Persist to backend and WAIT for completion
     await callAnnotationBackendOperation(
-      `${globals.API?.prefix ?? ""}${
-        globals.API?.version ?? ""
-      }annotations/obs?rename=true&category_name=${encodeURIComponent(
-        oldCategoryName
-      )}`,
+      buildAnnotationUrl("annotations/obs", {
+        rename: "true",
+        category_name: oldCategoryName,
+      }),
       {
         method: "PUT",
         body: JSON.stringify({ new_name: trimmedName }),
@@ -240,9 +262,9 @@ export const annotationDeleteCategoryAction =
 
     // Persist to backend and WAIT for completion
     await callAnnotationBackendOperation(
-      `${globals.API?.prefix ?? ""}${
-        globals.API?.version ?? ""
-      }annotations/obs?category_name=${encodeURIComponent(categoryName)}`,
+      buildAnnotationUrl("annotations/obs", {
+        category_name: categoryName,
+      }),
       {
         method: "DELETE",
       },
@@ -474,13 +496,107 @@ export const needToSaveObsAnnotations = (
 export const saveObsAnnotationsAction =
   (): ThunkResult => async (dispatch: AppDispatch, getState: GetState) => {
     const state = getState();
-    const { autosave } = state;
+    const { autosave, annotationMetadata } = state;
     const { lastSavedAnnoMatrix, obsAnnotationSaveInProgress } = autosave;
     const annoMatrix = state.annoMatrix?.base();
 
     if (!annoMatrix) return;
 
     if (obsAnnotationSaveInProgress || annoMatrix === lastSavedAnnoMatrix) {
+      return;
+    }
+
+    // Check if there's rename metadata indicating a rename that was undone
+    // Since annotationMetadata is NOT in undoableKeys, it persists across undo/redo
+    const renameMetadata = annotationMetadata?.lastRenameOp;
+    if (renameMetadata) {
+      const { oldName, newName } = renameMetadata;
+      console.log(
+        "[AUTOSAVE] Handling inverse rename on undo: deleting",
+        newName,
+        "and uploading",
+        oldName
+      );
+      dispatch({
+        type: "writable obs annotations - save started",
+      });
+
+      try {
+        // First, delete the "new name" that was rolled back
+        const deleteResponse = await fetch(
+          buildAnnotationUrl("annotations/obs", {
+            category_name: newName,
+          }),
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+        if (!deleteResponse.ok) {
+          // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+          const isRetryable = deleteResponse.status >= 500;
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `Failed to delete undone rename ${newName}: HTTP ${deleteResponse.status}`,
+          });
+          // Clear metadata for non-retryable errors (4xx) since they indicate bad data
+          if (!isRetryable) {
+            dispatch({
+              type: "annotation: clear rename metadata",
+            });
+          }
+          return;
+        }
+
+        // Second, upload the restored "old name" annotation data
+        const df = await annoMatrix.fetch(Field.obs, [oldName]);
+        const buffer = MatrixFBS.encodeMatrixFBS(df);
+        const compressed = deflate(buffer);
+        const requestBody = new Blob([new Uint8Array(compressed)], {
+          type: "application/octet-stream",
+        });
+
+        const putResponse = await fetch(buildAnnotationUrl("annotations/obs"), {
+          method: "PUT",
+          body: requestBody,
+          headers: new Headers({
+            "Content-Type": "application/octet-stream",
+          }),
+          credentials: "include",
+        });
+
+        if (!putResponse.ok) {
+          // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+          const isRetryable = putResponse.status >= 500;
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `Failed to upload restored annotation ${oldName}: HTTP ${putResponse.status}`,
+          });
+          // Clear metadata for non-retryable errors (4xx) since they indicate bad data
+          if (!isRetryable) {
+            dispatch({
+              type: "annotation: clear rename metadata",
+            });
+          }
+          return;
+        }
+
+        dispatch({
+          type: "writable obs annotations - save complete",
+          lastSavedAnnoMatrix: annoMatrix,
+        });
+
+        // Clear rename metadata to prevent handling the same rename again
+        dispatch({
+          type: "annotation: clear rename metadata",
+        });
+      } catch (error: unknown) {
+        dispatch({
+          type: "writable obs annotations - save error",
+          message: (error as Error).toString(),
+        });
+      }
       return;
     }
 
@@ -493,22 +609,63 @@ export const saveObsAnnotationsAction =
       lastSavedAnnoMatrix
     );
 
-    // If no changes or deletions, mark as complete
-    if (changedCols.length === 0 && deletedCols.length === 0) {
-      dispatch({
-        type: "writable obs annotations - save complete",
-        lastSavedAnnoMatrix: annoMatrix,
-      });
-      return;
-    }
-
-    // If only deletions (no changed data to save), mark as complete
-    // Backend category deletion will be handled separately via dedicated endpoints
+    // If only deletions (no changed data to save), call DELETE for each deleted column
     if (changedCols.length === 0 && deletedCols.length > 0) {
       dispatch({
-        type: "writable obs annotations - save complete",
-        lastSavedAnnoMatrix: annoMatrix,
+        type: "writable obs annotations - save started",
       });
+
+      try {
+        // Call DELETE for each deleted annotation
+        const responses = await Promise.all(
+          deletedCols.map((categoryName) =>
+            fetch(
+              buildAnnotationUrl("annotations/obs", {
+                category_name: categoryName,
+              }),
+              {
+                method: "DELETE",
+                credentials: "include",
+              }
+            )
+          )
+        );
+
+        // Collect errors instead of early returning to ensure all deletions are attempted
+        const errors: string[] = [];
+        for (let i = 0; i < responses.length; i += 1) {
+          const response = responses[i];
+          const categoryName = deletedCols[i];
+
+          if (!response.ok) {
+            // Distinguish retryable (5xx) vs non-retryable (4xx) errors
+            const isRetryable = response.status >= 500;
+            errors.push(
+              `${categoryName}: HTTP ${response.status}${
+                isRetryable ? " (retryable)" : ""
+              }`
+            );
+          }
+        }
+
+        if (errors.length > 0) {
+          dispatch({
+            type: "writable obs annotations - save error",
+            message: `Failed to delete annotation(s): ${errors.join(", ")}`,
+          });
+          return;
+        }
+
+        dispatch({
+          type: "writable obs annotations - save complete",
+          lastSavedAnnoMatrix: annoMatrix,
+        });
+      } catch (error: unknown) {
+        dispatch({
+          type: "writable obs annotations - save error",
+          message: (error as Error).toString(),
+        });
+      }
       return;
     }
 
@@ -524,19 +681,14 @@ export const saveObsAnnotationsAction =
     });
 
     try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${
-          globals.API?.version ?? ""
-        }annotations/obs`,
-        {
-          method: "PUT",
-          body: requestBody,
-          headers: new Headers({
-            "Content-Type": "application/octet-stream",
-          }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(buildAnnotationUrl("annotations/obs"), {
+        method: "PUT",
+        body: requestBody,
+        headers: new Headers({
+          "Content-Type": "application/octet-stream",
+        }),
+        credentials: "include",
+      });
 
       if (response.ok) {
         dispatch({
@@ -595,7 +747,7 @@ export const saveGenesetsAction =
     const genesetsReadonly =
       config?.parameters?.annotations_genesets_readonly ?? true;
 
-    const { genesets, lastTid } = genesetState;
+    const { genesets } = genesetState;
 
     if (!genesetsEnabled || genesetsReadonly) {
       dispatch({
@@ -611,27 +763,20 @@ export const saveGenesetsAction =
       type: "autosave: genesets started",
     });
 
-    // TID (transaction ID) is incremented for optimistic concurrency control.
-    // Each save gets a new TID to track the version and detect conflicts.
-    const tid = (lastTid ?? 0) + 1;
-    const ota = {
-      tid,
+    const payload = {
       genesets: genesetStateToPayload(genesets),
     };
 
     try {
-      const response = await fetch(
-        `${globals.API?.prefix ?? ""}${globals.API?.version ?? ""}genesets`,
-        {
-          method: "PUT",
-          headers: new Headers({
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          }),
-          body: JSON.stringify(ota),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(buildAnnotationUrl("genesets"), {
+        method: "PUT",
+        headers: new Headers({
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
 
       if (!response.ok) {
         dispatch({
@@ -645,10 +790,6 @@ export const saveGenesetsAction =
       dispatch({
         type: "autosave: genesets complete",
         lastSavedGenesets: genesets,
-      });
-      dispatch({
-        type: "geneset: set tid",
-        tid,
       });
     } catch (error: unknown) {
       dispatch({

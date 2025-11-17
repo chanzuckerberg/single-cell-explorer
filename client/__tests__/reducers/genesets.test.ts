@@ -8,7 +8,6 @@ describe("initial reducer state", () => {
   test("some other action", () => {
     expect(genesetsReducer(undefined, { type: "foo" })).toMatchObject({
       initialized: false,
-      lastTid: undefined,
       genesets: new Map(),
     });
   });
@@ -34,7 +33,6 @@ describe("geneset: initial load", () => {
       })
     ).toMatchObject({
       initialized: true,
-      lastTid: 0,
       genesets: new Map(),
     });
   });
@@ -65,7 +63,6 @@ describe("geneset: initial load", () => {
       })
     ).toMatchObject({
       initialized: true,
-      lastTid: 99,
       genesets: new Map([
         [
           "G1",
@@ -186,7 +183,6 @@ describe("geneset: delete", () => {
       )
     ).toMatchObject({
       initialized: true,
-      lastTid: 0,
       genesets: new Map(),
     });
   });
@@ -492,39 +488,3 @@ describe("geneset: set gene description", () => {
   });
 });
 
-describe("geneset: set tid", () => {
-  test("simple set", () => {
-    expect(
-      genesetsReducer(undefined, {
-        type: "geneset: set tid",
-        tid: 1,
-      })
-    ).toMatchObject({ lastTid: 1 });
-  });
-
-  test("not a number error", () => {
-    expect(() => {
-      genesetsReducer(
-        // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'undefined... Remove this comment to see the full error message
-        { lastTid: 1 },
-        {
-          type: "geneset: set tid",
-          tid: "0",
-        }
-      );
-    }).toThrow("must be a positive integer");
-  });
-
-  test("decrement error", () => {
-    expect(() => {
-      genesetsReducer(
-        // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'undefined... Remove this comment to see the full error message
-        { lastTid: 1 },
-        {
-          type: "geneset: set tid",
-          tid: 0,
-        }
-      );
-    }).toThrow("may not be decremented");
-  });
-});

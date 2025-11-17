@@ -38,15 +38,6 @@ export const performCategoricalSelection =
     const { categories: allCategoryValues } = colSchema;
     const categoryValue = args.category_value;
 
-    const [categoryData]: [Dataframe] = await Promise.all([
-      annoMatrix.fetch(Field.obs, columnName),
-    ]);
-
-    // our data
-    const column = categoryData.icol(0);
-
-    const labelName = column.getInternalRep(categoryValue);
-
     if (
       obsCrossfilter.annoMatrix.nObs ===
       obsCrossfilter.obsCrossfilter.countSelected()
@@ -66,7 +57,7 @@ export const performCategoricalSelection =
         "categorical metadata filter select",
         columnName,
         allCategoryValues,
-        labelName,
+        categoryValue,
         true
       )
     );

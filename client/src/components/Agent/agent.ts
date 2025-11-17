@@ -9,9 +9,17 @@ const AgentStepResponseSchema = z.object({
         z.string(),
         z.union([z.string(), z.array(z.string()), z.number(), z.null()])
       ),
+      tool_use_id: z.string(),
     })
     .optional(),
   content: z.string().optional(),
+  assistant_tool_use: z
+    .object({
+      tool_use_id: z.string(),
+      tool_name: z.string(),
+      tool_input: z.record(z.string(), z.any()),
+    })
+    .optional(),
 });
 
 export type AgentStepResponse = z.infer<typeof AgentStepResponseSchema>;
@@ -25,6 +33,7 @@ export interface AgentMessage extends BaseMessage {
   content: string;
   name?: string;
   type: MessageType;
+  tool_use_id?: string;
 }
 
 export enum MessageType {
@@ -44,6 +53,7 @@ export async function getNextAgentStep(
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify({ messages, toolResults }),
     }
   );
