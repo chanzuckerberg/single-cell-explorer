@@ -184,6 +184,11 @@ export const maxMenuItemCount = 9;
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
 
+/* animation constants */
+export const numInterpolationSteps = 50;
+export const animationFPS = 3 * numInterpolationSteps;
+export const animationLength = 1000; /* milliseconds */
+
 /* number of bins to use for lossy integer compression */
 export const numBinsEmb = 5000;
 export const numBinsObsX = 500;
