@@ -62,6 +62,8 @@ interface GraphAsyncProps {
   imageUnderlay: boolean;
   screenCap: boolean;
   unsMetadata: DatasetUnsMetadata;
+  layoutDf: Dataframe;
+  layoutChoice: RootState["layoutChoice"];
 }
 
 const mapStateToProps = (state: RootState, ownProps: OwnProps): StateProps => ({
@@ -97,6 +99,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
     regl: Regl;
     drawPoints: DrawCommand;
     pointBuffer: _regl.Buffer;
+    pointBufferStart: _regl.Buffer;
+    pointBufferEnd: _regl.Buffer;
+    pointBufferTerminal: _regl.Buffer;
     colorBuffer: _regl.Buffer;
     flagBuffer: _regl.Buffer;
   } {
@@ -110,6 +115,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     // preallocate webgl buffers
     const pointBuffer = regl.buffer(0);
+    const pointBufferStart = regl.buffer(0);
+    const pointBufferEnd = regl.buffer(0);
+    const pointBufferTerminal = regl.buffer(0);
     const colorBuffer = regl.buffer(0);
     const flagBuffer = regl.buffer(0);
 
@@ -118,6 +126,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl,
       drawPoints,
       pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
+      pointBufferTerminal,
       colorBuffer,
       flagBuffer,
     };
@@ -142,6 +153,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
   cachedAsyncProps: GraphAsyncProps | null;
 
   reglCanvas: HTMLCanvasElement | null;
+
+  duration = 0;
 
   private openseadragon: Viewer | null = null;
 
@@ -272,6 +285,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl: null,
       drawPoints: null,
       pointBuffer: null,
+      pointBufferStart: null,
+      pointBufferEnd: null,
+      pointBufferTerminal: null,
       colorBuffer: null,
       flagBuffer: null,
       // component rendering derived state - these must stay synchronized
@@ -457,6 +473,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
         this.openseadragon
       )
     ) {
+      this.duration = 0;
       this.renderCanvas();
       this.setState((state: GraphState) => ({
         ...state,
@@ -890,6 +907,8 @@ class Graph extends React.Component<GraphProps, GraphState> {
       imageUnderlay,
       screenCap,
       unsMetadata,
+      layoutDf,
+      layoutChoice,
     };
   };
 
@@ -1068,7 +1087,9 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl,
       drawPoints,
       colorBuffer,
-      pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
+      pointBufferTerminal,
       flagBuffer,
       camera,
       projectionTF,
@@ -1078,7 +1099,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl,
       drawPoints,
       colorBuffer,
-      pointBuffer,
+      pointBufferStart,
+      pointBufferEnd,
+      pointBufferTerminal,
+      this.duration,
       flagBuffer,
       camera,
       projectionTF
@@ -1090,24 +1114,115 @@ class Graph extends React.Component<GraphProps, GraphState> {
     prevAsyncProps: GraphAsyncProps | null
   ): void {
     const {
-      positions,
+      positions: positionsEnd,
       colors,
       flags,
       height,
       width,
       imageUnderlay,
       screenCap,
+      layoutChoice,
+      layoutDf,
     } = asyncProps;
-
+    const positionsStart = prevAsyncProps?.positions ?? positionsEnd;
+    const prevLayoutChoice = prevAsyncProps?.layoutChoice;
+    this.duration =
+      layoutChoice.current !== prevLayoutChoice?.current &&
+      prevAsyncProps?.positions
+        ? globals.animationLength
+        : 0;
     this.cachedAsyncProps = asyncProps;
-    const { pointBuffer, colorBuffer, flagBuffer } = this.state;
+
+    const {
+      pointBufferStart,
+      pointBufferEnd,
+      pointBufferTerminal,
+      colorBuffer,
+      flagBuffer,
+    } = this.state;
     let needToRenderCanvas = false;
+
     if (height !== prevAsyncProps?.height || width !== prevAsyncProps?.width) {
       needToRenderCanvas = true;
     }
-    if (positions !== prevAsyncProps?.positions) {
+    if (positionsEnd !== prevAsyncProps?.positions) {
+      // Access rowIndex.rindex - it exists on KeyIndex and DenseInt32Index
+      const oldRowIndex = prevAsyncProps?.layoutDf?.rowIndex;
+      const newRowIndex = layoutDf?.rowIndex;
+      const oldIndices =
+        oldRowIndex && "rindex" in oldRowIndex
+          ? (oldRowIndex.rindex as Int32Array | Array<number | string>)
+          : null;
+      const newIndices =
+        newRowIndex && "rindex" in newRowIndex
+          ? (newRowIndex.rindex as Int32Array | Array<number | string>)
+          : null;
+
+      let oldPos: Float32Array | number[];
+      let newPos: Float32Array | number[] = positionsEnd;
+      let termPos: Float32Array | number[] = positionsEnd;
+
+      if (oldIndices && !newIndices) {
+        newPos = new Float32Array(newPos.length);
+        newPos.fill(NaN);
+        oldPos = new Float32Array(newPos.length);
+        oldPos.fill(NaN);
+        for (let i = 0; i < oldIndices.length; i += 1) {
+          const idx = oldIndices[i];
+          const x = 2 * (idx as number);
+          const y = 2 * (idx as number) + 1;
+          if (x < positionsEnd.length && y < positionsEnd.length) {
+            newPos[x] = positionsEnd[x];
+            newPos[y] = positionsEnd[y];
+            oldPos[x] = positionsStart[2 * i];
+            oldPos[y] = positionsStart[2 * i + 1];
+          }
+        }
+      } else if (!oldIndices && newIndices) {
+        oldPos = [];
+        for (let i = 0; i < newIndices.length; i += 1) {
+          const idx = newIndices[i];
+          const x = 2 * (idx as number);
+          const y = 2 * (idx as number) + 1;
+          if (x < positionsStart.length && y < positionsStart.length) {
+            oldPos.push(positionsStart[x]);
+            oldPos.push(positionsStart[y]);
+          }
+        }
+      } else if (!oldIndices && !newIndices) {
+        oldPos = positionsStart;
+      } else {
+        oldPos = [];
+        newPos = [];
+        let flag = true;
+        for (let i = 0; i < newIndices!.length; i += 1) {
+          const newIdx = newIndices![i];
+          if (oldIndices!.includes(newIdx)) {
+            const index = oldIndices!.indexOf(newIdx);
+            oldPos.push(positionsStart[2 * index]);
+            oldPos.push(positionsStart[2 * index + 1]);
+            newPos.push(positionsEnd[2 * i]);
+            newPos.push(positionsEnd[2 * i + 1]);
+            flag = false;
+          } else {
+            oldPos.push(NaN);
+            oldPos.push(NaN);
+            newPos.push(NaN);
+            newPos.push(NaN);
+          }
+        }
+        if (flag) {
+          this.duration = 0;
+        }
+      }
+
       // @ts-expect-error (seve): need to look into arg mismatch
-      pointBuffer?.({ data: positions, dimension: 2 });
+      pointBufferStart?.({ data: oldPos, dimension: 2 });
+      // @ts-expect-error (seve): need to look into arg mismatch
+      pointBufferEnd?.({ data: newPos, dimension: 2 });
+      // @ts-expect-error (seve): need to look into arg mismatch
+      pointBufferTerminal?.({ data: termPos, dimension: 2 });
+
       needToRenderCanvas = true;
     }
     if (colors !== prevAsyncProps?.colors) {
@@ -1313,14 +1428,17 @@ class Graph extends React.Component<GraphProps, GraphState> {
     regl: GraphState["regl"],
     drawPoints: GraphState["drawPoints"],
     colorBuffer: GraphState["colorBuffer"],
-    pointBuffer: GraphState["pointBuffer"],
+    pointBufferStart: GraphState["pointBufferStart"],
+    pointBufferEnd: GraphState["pointBufferEnd"],
+    pointBufferTerminal: GraphState["pointBufferTerminal"],
+    duration: number,
     flagBuffer: GraphState["flagBuffer"],
     camera: GraphState["camera"],
     projectionTF: GraphState["projectionTF"]
   ): Promise<void> {
-    const { annoMatrix, unsMetadata } = this.props;
+    const { annoMatrix, unsMetadata, screenCap, layoutChoice } = this.props;
 
-    if (!this.reglCanvas || !annoMatrix) return;
+    if (!this.reglCanvas || !annoMatrix || !regl || !drawPoints) return;
 
     const { schema } = annoMatrix;
 
@@ -1335,13 +1453,21 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     const { imageHeight, scaleref, spotDiameterFullres } = unsMetadata;
 
-    regl?.poll();
-
-    if (drawPoints) {
+    let startTime: number | undefined;
+    const frameLoop = regl.frame(async ({ time }) => {
+      if (startTime === undefined) {
+        startTime = time;
+      }
+      regl.clear({
+        depth: 1,
+        color: [1, 1, 1, 1],
+      });
       drawPoints({
-        distance: camera?.distance(),
+        distance: camera?.distance() ?? 1,
         color: colorBuffer,
-        position: pointBuffer,
+        positionsStart: pointBufferStart,
+        positionsEnd: pointBufferEnd,
+        positionsFinal: pointBufferTerminal,
         flag: flagBuffer,
         count: annoMatrix.nObs,
         projView,
@@ -1351,12 +1477,49 @@ class Graph extends React.Component<GraphProps, GraphState> {
         scaleref,
         spotDiameterFullres,
         isSpatial: isSpatialMode(this.props),
+        duration,
+        startTime: startTime ?? 0,
       });
+
+      if (startTime !== undefined && time - startTime > duration / 1000) {
+        frameLoop.cancel();
+        if (screenCap) {
+          await this.handleImageDownload(regl);
+        }
+        regl._gl.flush();
+      }
+    });
+
+    // If duration is 0, cancel immediately and render once
+    if (duration === 0) {
+      frameLoop.cancel();
+      regl.clear({
+        depth: 1,
+        color: [1, 1, 1, 1],
+      });
+      drawPoints({
+        distance: camera?.distance() ?? 1,
+        color: colorBuffer,
+        positionsStart: pointBufferStart,
+        positionsEnd: pointBufferEnd,
+        positionsFinal: pointBufferTerminal,
+        flag: flagBuffer,
+        count: annoMatrix.nObs,
+        projView,
+        nPoints: schema.dataframe.nObs,
+        minViewportDimension: Math.min(width, height),
+        imageHeight,
+        scaleref,
+        spotDiameterFullres,
+        isSpatial: isSpatialMode(this.props),
+        duration: 0,
+        startTime: 0,
+      });
+      if (screenCap) {
+        await this.handleImageDownload(regl);
+      }
+      regl._gl.flush();
     }
-
-    await this.handleImageDownload(regl);
-
-    regl?._gl.flush();
   }
 
   render(): JSX.Element {

@@ -17,6 +17,9 @@ export type GraphState = {
   drawPoints: DrawCommand | null;
   colorBuffer: _regl.Buffer | null;
   pointBuffer: _regl.Buffer | null;
+  pointBufferStart: _regl.Buffer | null;
+  pointBufferEnd: _regl.Buffer | null;
+  pointBufferTerminal: _regl.Buffer | null;
   flagBuffer: _regl.Buffer | null;
   camera: Camera | null;
   projectionTF: mat3;

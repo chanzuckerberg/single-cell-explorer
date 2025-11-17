@@ -184,6 +184,9 @@ export const maxMenuItemCount = 9;
 export const tooltipHoverOpenDelay = 1000; /* ms delay before a tooltip displays */
 export const tooltipHoverOpenDelayQuick = 500;
 
+/* animation duration for point transitions when switching layouts */
+export const animationLength = 1000; /* ms */
+
 /* number of bins to use for lossy integer compression */
 export const numBinsEmb = 5000;
 export const numBinsObsX = 500;
