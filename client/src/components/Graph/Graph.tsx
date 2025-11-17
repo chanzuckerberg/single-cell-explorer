@@ -6,7 +6,14 @@ import { mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async, { AsyncProps } from "react-async";
-import { Button, Icon } from "@blueprintjs/core";
+import {
+  Button,
+  Card,
+  Elevation,
+  Icon,
+  Popover,
+  Position,
+} from "@blueprintjs/core";
 import Openseadragon, { Viewer } from "openseadragon";
 import "./openseadragon-scalebar";
 import { throttle } from "lodash";
@@ -22,8 +29,10 @@ import renderThrottle from "util/renderThrottle";
 import { flagBackground, flagSelected, flagHighlight } from "util/glHelpers";
 import { Dataframe } from "util/dataframe";
 import { RootState } from "reducers";
+import parseRGB from "util/parseRGB";
 import { Field } from "common/types/schema";
 import { Query } from "annoMatrix/query";
+import AnnoMatrixObsCrossfilter from "annoMatrix/crossfilter";
 import { getSlideSize, THROTTLE_MS } from "util/constants";
 import { isSpatialMode, shouldShowOpenseadragon } from "common/selectors";
 import { fetchDeepZoomImageFailed } from "actions/config";
@@ -52,6 +61,7 @@ import {
 } from "./util";
 import { COMMON_CANVAS_STYLE } from "./constants";
 import { GraphProps, OwnProps, GraphState, StateProps } from "./types";
+import "./graph.css";
 
 interface GraphAsyncProps {
   positions: Float32Array;
@@ -292,6 +302,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
       updateOverlay: false,
       testImageSrc: null,
       isImageLayerInViewport: true,
+      lidarRadius: null,
+      lidarFocused: false,
+      lidarCrossfilter: null,
+      numCellsInLidar: null,
+      screenX: null,
+      screenY: null,
+      pointX: null,
+      pointY: null,
+      renderedMetadata: null,
     };
 
     this.throttledHandleResize = throttle(
@@ -308,6 +327,13 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.graphRef.current.addEventListener("wheel", this.disableScroll, {
         passive: false,
       });
+      this.graphRef.current.addEventListener(
+        "wheel",
+        this.handleLidarWheelEvent,
+        {
+          passive: false,
+        }
+      );
     }
   }
 
@@ -410,6 +436,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     if (this.graphRef.current) {
       this.graphRef.current.removeEventListener("wheel", this.disableScroll);
+      this.graphRef.current.removeEventListener(
+        "wheel",
+        this.handleLidarWheelEvent
+      );
     }
   }
 
@@ -585,6 +615,286 @@ class Graph extends React.Component<GraphProps, GraphState> {
     const { selectionTool } = this.props;
     if (selectionTool === "brush") await this.handleBrushDeselectAction();
     if (selectionTool === "lasso") await this.handleLassoDeselectAction();
+  }
+
+  handleLidarWheelEvent = (e: WheelEvent): void => {
+    const { graphInteractionMode } = this.props;
+    if (graphInteractionMode === "lidar") {
+      const { lidarRadius } = this.state;
+      e.preventDefault();
+      const offset = e.deltaY < 0 ? -1.5 : 1.5;
+
+      const radius = (lidarRadius ?? 20) + offset;
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarRadius: radius < 10 ? 10 : radius,
+      }));
+    }
+  };
+
+  handleLidarEvent = (e: MouseEvent<SVGSVGElement>): void => {
+    if (e.type === "mousemove") {
+      if (e.currentTarget.id === "lidar-layer") {
+        this.setState((state: GraphState) => ({
+          ...state,
+          lidarFocused: true,
+        }));
+      }
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenX = e.pageX - rect.left;
+      const screenY = e.pageY - rect.top;
+      const point = this.mapScreenToPoint([screenX, screenY]);
+      this.setState((state: GraphState) => ({
+        ...state,
+        screenX,
+        screenY,
+        pointX: point[0],
+        pointY: point[1],
+      }));
+    } else if (e.type === "mousedown") {
+      this.fetchLidarCrossfilter().catch((error: unknown) => {
+        console.error("Error in fetchLidarCrossfilter:", error);
+      });
+    } else if (e.type === "mouseleave") {
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarFocused: false,
+        renderedMetadata: (
+          <Card interactive elevation={Elevation.TWO}>
+            No cells in range.
+          </Card>
+        ),
+      }));
+    }
+  };
+
+  renderMetadata(
+    lidarCrossfilterOverride?: AnnoMatrixObsCrossfilter | null,
+    numCellsInLidarOverride?: number | null
+  ): JSX.Element {
+    const { annoMatrix, colors } = this.props;
+    const {
+      colorState,
+      lidarCrossfilter: stateLidarCrossfilter,
+      numCellsInLidar: stateNumCellsInLidar,
+    } = this.state;
+    // Use override values if provided (for immediate updates), otherwise use state
+    const lidarCrossfilter = lidarCrossfilterOverride ?? stateLidarCrossfilter;
+    const numCellsInLidar = numCellsInLidarOverride ?? stateNumCellsInLidar;
+
+    if (colors.colorMode && colorState.colorDf && colorState.colorTable) {
+      const { colorDf: colorData, colorTable } = colorState;
+      const { colorAccessor, colorMode } = colors;
+      if (
+        colorMode === "color by categorical metadata" &&
+        lidarCrossfilter &&
+        colorAccessor
+      ) {
+        const arr = new Float32Array(annoMatrix.nObs);
+        lidarCrossfilter.fillByIsSelected(arr, 1, 0);
+        let df;
+        try {
+          df = colorData.withCol("New", arr);
+        } catch (e) {
+          return (
+            <Card interactive elevation={Elevation.TWO}>
+              {`Hovering over ${numCellsInLidar ?? 0} cells.`}
+            </Card>
+          );
+        }
+
+        let dfcol;
+        try {
+          dfcol = df.col(colorAccessor);
+        } catch (e) {
+          return (
+            <Card interactive elevation={Elevation.TWO}>
+              {`Hovering over ${numCellsInLidar ?? 0} cells.`}
+            </Card>
+          );
+        }
+        let els: JSX.Element[] | undefined;
+        let nums: number[] | undefined;
+        if (dfcol) {
+          const { categories, categoryCounts } = dfcol.summarizeCategorical();
+          const groupBy = df.col("New");
+          const occupancyMap = df
+            .col(colorAccessor)
+            .histogramCategoricalBy(groupBy);
+          const occupancy = occupancyMap.get(1) as
+            | Map<unknown, number>
+            | undefined;
+          // Build color dictionary using the scale function from colorTable
+          // This ensures colors match the scatterplot display
+          const colorDict: Record<string, [number, number, number]> = {};
+          const { schema } = annoMatrix;
+          const colSchema = schema.annotations.obsByName[colorAccessor] as
+            | import("common/types/schema").CategoricalAnnotationColumnSchema
+            | undefined;
+
+          if (colSchema?.categories && colorTable.scale) {
+            // Use schema categories to get the correct order and indices
+            const schemaCategories = colSchema.categories;
+            const colorDataCol = colorData.col(colorAccessor);
+
+            // Create a map from category value to its index in the schema
+            const categoryToIndex = new Map<string | number, number>();
+            schemaCategories.forEach((cat, idx) => {
+              try {
+                // Get internal representation for dict-encoded columns
+                const internalRep = colorDataCol.getInternalRep(String(cat));
+                const key =
+                  typeof internalRep === "string" ||
+                  typeof internalRep === "number"
+                    ? internalRep
+                    : String(internalRep);
+                categoryToIndex.set(key, idx);
+                // Also map the string value
+                const catKey =
+                  typeof cat === "string" || typeof cat === "number"
+                    ? cat
+                    : String(cat);
+                categoryToIndex.set(catKey, idx);
+              } catch (e) {
+                // Fallback: use the category value directly
+                const catKey =
+                  typeof cat === "string" || typeof cat === "number"
+                    ? cat
+                    : String(cat);
+                categoryToIndex.set(catKey, idx);
+              }
+            });
+
+            // For each category, get its color using the scale function
+            categories.forEach((cat) => {
+              const catKey =
+                typeof cat === "string" || typeof cat === "number"
+                  ? cat
+                  : String(cat);
+              const idx = categoryToIndex.get(catKey);
+              if (idx !== undefined && colorTable.scale) {
+                const colorString = colorTable.scale(idx);
+                // Parse RGB from color string using parseRGB utility
+                const rgb = parseRGB(colorString);
+                if (rgb) {
+                  colorDict[String(cat)] = rgb;
+                }
+              }
+            });
+          }
+          if (occupancy) {
+            els = [];
+            nums = [];
+            for (const key of categories) {
+              const count = occupancy.get(key);
+              if (count && count > 0) {
+                const c = colorDict[String(key)];
+                const color = c
+                  ? `rgb(${c.map((x) => (x * 255).toFixed(0)).join(",")})`
+                  : "black";
+                nums.push(count);
+                els.push(
+                  <div
+                    key={String(key)}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        color: `${color}`,
+                      }}
+                    >
+                      {String(key)?.concat(" ")}
+                    </strong>
+                    <div style={{ paddingLeft: "10px" }}>
+                      {`${count} / ${categoryCounts.get(key) ?? 0}`}
+                    </div>
+                  </div>
+                );
+              }
+            }
+            const dsu = (arr1: JSX.Element[], arr2: number[]) =>
+              arr1
+                .map(
+                  (item, index) => [arr2[index], item] as [number, JSX.Element]
+                )
+                .sort(([arg1], [arg2]) => arg2 - arg1)
+                .map(([, item]) => item);
+
+            els = dsu(els, nums);
+          }
+        }
+
+        return (
+          <Card interactive elevation={Elevation.TWO}>
+            {els ?? `No cells in range`}
+          </Card>
+        );
+      }
+      if (lidarCrossfilter && colorData && colorAccessor) {
+        const arr = new Float32Array(annoMatrix.nObs);
+        lidarCrossfilter.fillByIsSelected(arr, 1, 0);
+        const col = colorData.icol(0);
+        const colArray = col.asArray();
+        const subsetArray: number[] = [];
+        for (let i = 0; i < arr.length; i += 1) {
+          if (arr[i] && typeof colArray[i] === "number") {
+            subsetArray.push(colArray[i] as number);
+          }
+        }
+        let mean: number;
+        let std: number;
+        if (subsetArray.length > 0) {
+          const n = subsetArray.length;
+          mean = subsetArray.reduce((a, b) => a + b) / n;
+          std = Math.sqrt(
+            subsetArray.map((x) => (x - mean) ** 2).reduce((a, b) => a + b) / n
+          );
+        } else {
+          mean = 0;
+          std = 0;
+        }
+        return (
+          <Card interactive elevation={Elevation.TWO}>
+            <div style={{ paddingBottom: "10px" }}>
+              <strong>{colorAccessor.split("//;;//").join("")}</strong>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexDirection: "row",
+              }}
+            >
+              <div>
+                <strong>Mean</strong>
+              </div>
+              <div style={{ paddingLeft: "10px" }}>
+                <strong>Std. Dev.</strong>
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexDirection: "row",
+              }}
+            >
+              <div>{mean.toFixed(3)}</div>
+              <div style={{ paddingLeft: "10px" }}>{std.toFixed(3)}</div>
+            </div>
+          </Card>
+        );
+      }
+    }
+    return (
+      <Card interactive elevation={Elevation.TWO}>
+        {`Hovering over ${numCellsInLidar ?? 0} cells.`}
+      </Card>
+    );
   }
 
   async handleImageDownload(regl: GraphState["regl"]) {
@@ -779,8 +1089,18 @@ class Graph extends React.Component<GraphProps, GraphState> {
     lasso
       .selectAll(sidePanelAttributeNameChange(`.lasso-group`, isSidePanel))
       .remove();
-    // Don't render or recreate toolSVG if currently in zoom mode
-    if (graphInteractionMode !== "select") {
+    // Clear lidar layer
+    const lidar = d3.select(
+      sidePanelAttributeNameChange(`#lidar-layer`, isSidePanel)
+    );
+    if (!lidar.empty()) {
+      lidar
+        .selectAll(sidePanelAttributeNameChange(`.lidar-group`, isSidePanel))
+        .remove();
+    }
+
+    // Don't render or recreate toolSVG if currently in zoom mode or lidar mode
+    if (graphInteractionMode !== "select" && graphInteractionMode !== "lidar") {
       // don't return "change" of state unless we are really changing it!
       const { toolSVG } = this.state;
       if (toolSVG === undefined) return {};
@@ -892,6 +1212,53 @@ class Graph extends React.Component<GraphProps, GraphState> {
       unsMetadata,
     };
   };
+
+  async fetchLidarCrossfilter(): Promise<void> {
+    const { lidarRadius, pointX, pointY, screenX, screenY } = this.state;
+    const { crossfilter, layoutChoice } = this.props;
+
+    if (
+      pointX === null ||
+      pointY === null ||
+      screenX === null ||
+      screenY === null ||
+      !layoutChoice?.current
+    ) {
+      return;
+    }
+
+    const dummyPoint = this.mapScreenToPoint([
+      screenX - (lidarRadius ?? 20),
+      screenY,
+    ]);
+    const radius = Math.sqrt(
+      (dummyPoint[0] - pointX) ** 2 + (dummyPoint[1] - pointY) ** 2
+    );
+    const selection = {
+      mode: "within-lidar" as const,
+      center: [pointX, pointY] as [number, number],
+      radius,
+    };
+
+    try {
+      const query: Query = layoutChoice.current;
+      const cf = await crossfilter.select(Field.emb, query, selection);
+      const count = cf ? cf.obsCrossfilter.countSelected() : 0;
+
+      // Render metadata with the new crossfilter before updating state
+      const metadata = this.renderMetadata(cf, count);
+
+      this.setState((state: GraphState) => ({
+        ...state,
+        numCellsInLidar: count,
+        lidarCrossfilter: cf,
+        renderedMetadata: metadata,
+      }));
+    } catch (error) {
+      // Silently handle errors
+      console.error("Error fetching lidar crossfilter:", error);
+    }
+  }
 
   async drawImageLayerForDownload({
     offscreenCanvas,
@@ -1382,6 +1749,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl,
       testImageSrc,
       isImageLayerInViewport,
+      lidarFocused,
+      screenX,
+      screenY,
+      lidarRadius,
+      renderedMetadata,
     } = this.state;
 
     const cameraTF = camera?.view()?.slice();
@@ -1453,6 +1825,68 @@ class Graph extends React.Component<GraphProps, GraphState> {
           height={viewport.height}
           pointerEvents={graphInteractionMode === "select" ? "auto" : "none"}
         />
+        <svg
+          id={sidePanelAttributeNameChange(`lidar-layer`, isSidePanel)}
+          className="graph-svg"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            zIndex: 2,
+          }}
+          width={viewport.width}
+          height={viewport.height}
+          pointerEvents={graphInteractionMode === "lidar" ? "auto" : "none"}
+          onMouseDown={this.handleLidarEvent}
+          onMouseMove={this.handleLidarEvent}
+          onMouseLeave={this.handleLidarEvent}
+        />
+        {graphInteractionMode === "lidar" && lidarFocused && (
+          <Popover
+            position={Position.BOTTOM_LEFT}
+            minimal={false}
+            content={renderedMetadata || undefined}
+            isOpen
+            popoverClassName="lidar-metadata-popover"
+            modifiers={{
+              preventOverflow: { enabled: false },
+              hide: { enabled: false },
+            }}
+            targetProps={{
+              style: {
+                position: "fixed",
+                bottom: 20,
+                left: 20,
+                width: 0,
+                height: 0,
+                pointerEvents: "none",
+              },
+            }}
+          >
+            <div />
+          </Popover>
+        )}
+        {graphInteractionMode === "lidar" &&
+        lidarFocused &&
+        screenX !== null &&
+        screenY !== null ? (
+          <div
+            style={{
+              position: "absolute",
+              left: `${screenX - (lidarRadius ?? 20)}px`,
+              top: `${screenY - (lidarRadius ?? 20)}px`,
+              width: `${(lidarRadius ?? 20) * 2}px`,
+              height: `${(lidarRadius ?? 20) * 2}px`,
+              borderColor: "black",
+              borderWidth: "0.1px",
+              borderStyle: "solid",
+              borderRadius: "50%",
+              paddingLeft: `${(lidarRadius ?? 20) / 2}px`,
+              paddingTop: `${(lidarRadius ?? 20) / 2}px`,
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
         {shouldShowOpenseadragon(this.props) && (
           <div
             id={sidePanelAttributeNameChange(`openseadragon`, isSidePanel)}
@@ -1542,6 +1976,41 @@ class Graph extends React.Component<GraphProps, GraphState> {
             {(asyncProps: GraphAsyncProps) => {
               if (regl && !shallowEqual(asyncProps, this.cachedAsyncProps)) {
                 this.updateReglAndRender(asyncProps, this.cachedAsyncProps);
+                // Update colorState when async props change
+                const { colors: colorsProp, layoutChoice: layoutChoiceProp } =
+                  this.props;
+                this.fetchData(
+                  annoMatrix,
+                  layoutChoiceProp,
+                  colorsProp,
+                  pointDilation
+                )
+                  .then(([layoutDf, colorDf, pointDilationDf]) => {
+                    const colorTable = this.updateColorTable(
+                      colorsProp,
+                      colorDf,
+                      isSpatialMode(this.props)
+                    );
+                    this.setState((state: GraphState) => ({
+                      ...state,
+                      colorState: {
+                        colors: null, // Not used in this implementation
+                        colorDf,
+                        colorTable,
+                      },
+                      layoutState: {
+                        layoutDf,
+                        layoutChoice: layoutChoiceProp?.current ?? null,
+                      },
+                      pointDilationState: {
+                        pointDilation: pointDilation.metadataField ?? null,
+                        pointDilationDf,
+                      },
+                    }));
+                  })
+                  .catch((error) => {
+                    console.error("Error updating colorState:", error);
+                  });
               }
               return null;
             }}

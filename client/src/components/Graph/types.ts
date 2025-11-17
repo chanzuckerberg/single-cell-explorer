@@ -12,6 +12,10 @@ import { type LassoFunctionWithAttributes } from "./setupLasso";
 
 import { AppDispatch, RootState } from "../../reducers";
 
+import AnnoMatrixObsCrossfilter from "../../annoMatrix/crossfilter";
+
+import { ColorTable } from "../../util/stateManager/colorHelpers";
+
 export type GraphState = {
   regl: Regl | null;
   drawPoints: DrawCommand | null;
@@ -33,7 +37,7 @@ export type GraphState = {
   colorState: {
     colors: string[] | null;
     colorDf: Dataframe | null;
-    colorTable: Dataframe | null;
+    colorTable: ColorTable | null;
   };
   pointDilationState: {
     pointDilation: string | null;
@@ -43,6 +47,15 @@ export type GraphState = {
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
   isImageLayerInViewport: boolean;
+  lidarRadius: number | null;
+  lidarFocused: boolean;
+  lidarCrossfilter: AnnoMatrixObsCrossfilter | null;
+  numCellsInLidar: number | null;
+  screenX: number | null;
+  screenY: number | null;
+  pointX: number | null;
+  pointY: number | null;
+  renderedMetadata: JSX.Element | null;
 };
 
 export interface StateProps {

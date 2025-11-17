@@ -14,3 +14,19 @@ circle {
 :local(.hidden) {
   display: none;
 }
+
+:global(.lidar-metadata-popover) {
+  z-index: 10 !important;
+}
+
+:global(.lidar-metadata-popover .bp4-popover-content) {
+  padding: 16px !important;
+  min-width: 250px;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+:global(.lidar-metadata-popover .bp4-card) {
+  margin: 0 !important;
+  padding: 12px !important;
+}
