@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.20.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.19.1...v1.20.0) (2025-11-18)
+
+
+### Misc
+
+* upgrade chart version to fix domain bug ([#1318](https://github.com/chanzuckerberg/single-cell-explorer/issues/1318)) ([ede6567](https://github.com/chanzuckerberg/single-cell-explorer/commit/ede6567ab13d66eb1932c0f7e9d8318ee1b53db9))
+
+
+### Features
+
+* remove BYOD feature flag and enable for all users ([#1313](https://github.com/chanzuckerberg/single-cell-explorer/issues/1313)) ([e1ee20e](https://github.com/chanzuckerberg/single-cell-explorer/commit/e1ee20e3a5e8ccbc02b057be283b7ef126711524))
+
+
+### Bug Fixes
+
+* upgrade dependencies to address critical and high security vulnerabilities ([#1320](https://github.com/chanzuckerberg/single-cell-explorer/issues/1320)) ([94255fe](https://github.com/chanzuckerberg/single-cell-explorer/commit/94255fec10950a5a6bc601360e1e59cfa0ca26ef))
+
 ## [1.19.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.19.0...v1.19.1) (2025-11-10)
 
 
