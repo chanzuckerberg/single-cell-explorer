@@ -8,8 +8,6 @@ import actions from "actions";
 import { RootState, AppDispatch } from "reducers";
 import Controls from "common/components/Controls/Controls";
 import { theme } from "util/theme";
-import { getFeatureFlag } from "util/featureFlags/featureFlags";
-import { FEATURES } from "util/featureFlags/features";
 import DatasetSelector from "../DatasetSelector/DatasetSelector";
 import DiffexNotice from "../DiffexNotice/DiffexNotice";
 import Container from "../framework/container";
