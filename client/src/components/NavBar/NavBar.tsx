@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AnchorButton,
   Menu,
@@ -6,6 +6,7 @@ import {
   Position,
   Popover,
 } from "@blueprintjs/core";
+import { Button } from "@czi-sds/components";
 import { IconNames as CXGIconNames } from "../icon";
 import { track } from "../../analytics";
 import { EVENTS } from "../../analytics/events";
@@ -24,6 +25,7 @@ import {
   Wrapper,
 } from "./style";
 import NavDivider from "./components/NavDivider/NavDivider";
+import BYODModal from "../BYODConnectors/BYODModal";
 
 function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
@@ -37,6 +39,16 @@ interface HeaderProps {
 }
 function Header(props: HeaderProps) {
   const { tosURL, privacyURL } = props;
+  const [isBYODModalOpen, setIsBYODModalOpen] = useState(false);
+
+  const handleExploreYourDataClick = () => {
+    setIsBYODModalOpen(true);
+  };
+
+  const handleBYODModalClose = () => {
+    setIsBYODModalOpen(false);
+  };
+
   return (
     <Wrapper data-testid="header">
       <MainWrapper>
@@ -144,6 +156,13 @@ function Header(props: HeaderProps) {
           </Nav>
         </Left>
         <Right>
+          <Button
+            sdsStyle="square"
+            sdsType="primary"
+            onClick={handleExploreYourDataClick}
+          >
+            Explore Your Data
+          </Button>
           <LinkWrapper>
             <Popover
               hasBackdrop
@@ -207,6 +226,7 @@ function Header(props: HeaderProps) {
           </LinkWrapper>
         </Right>
       </MainWrapper>
+      <BYODModal open={isBYODModalOpen} onClose={handleBYODModalClose} />
     </Wrapper>
   );
 
