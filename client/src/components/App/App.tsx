@@ -160,7 +160,9 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                       <LeftSideBar />
                       <RightSideBar />
                       <BottomPanel />
-                      <BYODToast />
+                      {process.env.DEPLOYMENT_TYPE !== "vcp-hosted" && (
+                        <BYODToast />
+                      )}
                     </Layout>
                   </>
                 )}
