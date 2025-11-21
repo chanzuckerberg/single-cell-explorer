@@ -5,8 +5,14 @@ import {
   glPointSizeSpatial,
 } from "../../util/glHelpers";
 
+interface ReglContext {
+  time: number;
+}
+
 interface ReglProps {
-  position: Float32Array;
+  positionsStart: Float32Array;
+  positionsEnd: Float32Array;
+  positionsFinal: Float32Array;
   color: Float32Array;
   flag: Float32Array;
   distance: number;
@@ -18,14 +24,29 @@ interface ReglProps {
   scaleref: number;
   spotDiameterFullres: number;
   isSpatial: boolean;
+  duration: number;
+  startTime: number;
 }
 
 export default function drawPointsRegl(regl: Regl) {
   return regl({
     vert: `
+    float easeCubicInOut(float t) {
+      t *= 2.0;
+      t = (t <= 1.0 ? t * t * t : (t -= 2.0) * t * t + 2.0) / 2.0;
+
+      if (t > 1.0) {
+        t = 1.0;
+      }
+
+      return t;
+    }
+
     precision mediump float;
 
-    attribute vec2 position;
+    attribute vec2 positionsStart;
+    attribute vec2 positionsEnd;
+    attribute vec2 positionsFinal;
     attribute vec3 color;
     attribute float flag;
 
@@ -38,6 +59,8 @@ export default function drawPointsRegl(regl: Regl) {
     uniform float scaleref;
     uniform float spotDiameterFullres;
     uniform bool isSpatial;
+    uniform float duration;
+    uniform float elapsed;
 
     varying lowp vec4 fragColor;
 
@@ -55,6 +78,13 @@ export default function drawPointsRegl(regl: Regl) {
     ${glPointSizeSpatial}
 
     void main() {
+      float t;
+      if (duration == 0.0) {
+        t = 1.0;
+      } else {
+        t = easeCubicInOut(elapsed / duration);
+      }
+
       bool isBackground, isSelected, isHighlight;
       float size;
       
@@ -69,6 +99,12 @@ export default function drawPointsRegl(regl: Regl) {
       gl_PointSize = size * pow(distance, 0.5);
 
       float z = isBackground ? zBottom : (isHighlight ? zTop : zMiddle);
+      vec2 position;
+      if (t >= 1.0) {
+        position = positionsFinal;
+      } else {
+        position = mix(positionsStart, positionsEnd, t);
+      }
       vec3 xy = projView * vec3(position, 1.);
       gl_Position = vec4(xy.xy, z, 1.);
 
@@ -87,7 +123,9 @@ export default function drawPointsRegl(regl: Regl) {
     }`,
 
     attributes: {
-      position: regl.prop<ReglProps, "position">("position"),
+      positionsStart: regl.prop<ReglProps, "positionsStart">("positionsStart"),
+      positionsEnd: regl.prop<ReglProps, "positionsEnd">("positionsEnd"),
+      positionsFinal: regl.prop<ReglProps, "positionsFinal">("positionsFinal"),
       color: regl.prop<ReglProps, "color">("color"),
       flag: regl.prop<ReglProps, "flag">("flag"),
     },
@@ -105,6 +143,15 @@ export default function drawPointsRegl(regl: Regl) {
         "spotDiameterFullres"
       ),
       isSpatial: regl.prop<ReglProps, "isSpatial">("isSpatial"),
+      duration: regl.prop<ReglProps, "duration">("duration"),
+      elapsed: (
+        context: ReglContext,
+        props: Record<string, unknown>
+      ): number => {
+        const time = context.time ?? 0;
+        const startTime = (props as unknown as ReglProps).startTime ?? 0;
+        return (time - startTime) * 1000;
+      },
     },
 
     count: regl.prop<ReglProps, "count">("count"),
