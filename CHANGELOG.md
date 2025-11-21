@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.0...v1.20.1) (2025-11-21)
+
+
+### Bug Fixes
+
+* BYOD nav button ([#1328](https://github.com/chanzuckerberg/single-cell-explorer/issues/1328)) ([d4d4d7b](https://github.com/chanzuckerberg/single-cell-explorer/commit/d4d4d7bd439c178495b8a9b7f2a78012553555b0))
+* do not show byod toast in vcp ([#1329](https://github.com/chanzuckerberg/single-cell-explorer/issues/1329)) ([644c34d](https://github.com/chanzuckerberg/single-cell-explorer/commit/644c34d1b7753bfc81c3455d975195dd2d18c7be))
+
 ## [1.20.0](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.19.1...v1.20.0) (2025-11-18)
 
 
