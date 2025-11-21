@@ -286,3 +286,54 @@ export const setCellSetFromSelection =
       data: selected.length > 0 ? selected : null,
     });
   };
+
+/*
+Differential expression set selection with inversion
+Assigns current selection to pop 1 and inverted selection (all remaining cells) to pop 2
+*/
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+export const setCellSetsFromSelectionAndInvert =
+  () =>
+  (
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    dispatch: any,
+    // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any -- - FIXME: disabled temporarily on migrate to TS.
+    getState: any
+  ) => {
+    const { obsCrossfilter } = getState();
+    
+    // Get current selection (combines all dimensions: lasso, histogram, categoricals)
+    const selected = obsCrossfilter.allSelectedLabels();
+    
+    // Get all available labels
+    const allLabels = obsCrossfilter.annoMatrix.rowIndex.labels();
+    
+    // Convert to Sets for efficient difference computation
+    const selectedSet = new Set(
+      Array.isArray(selected) ? selected : Array.from(selected)
+    );
+    const allLabelsArray = Array.isArray(allLabels) ? allLabels : Array.from(allLabels);
+    
+    // Compute inverted labels (all labels not in selected set)
+    const invertedLabels = allLabelsArray.filter(
+      (label) => !selectedSet.has(label)
+    );
+    
+    // Convert back to Int32Array if original was Int32Array, otherwise keep as array
+    const invertedLabelsArray = 
+      allLabels instanceof Int32Array 
+        ? new Int32Array(invertedLabels.filter((l): l is number => typeof l === "number"))
+        : invertedLabels;
+    
+    // Assign selected labels to pop 1
+    dispatch({
+      type: "store current cell selection as differential set 1",
+      data: selected.length > 0 ? selected : null,
+    });
+    
+    // Assign inverted labels to pop 2
+    dispatch({
+      type: "store current cell selection as differential set 2",
+      data: invertedLabelsArray.length > 0 ? invertedLabelsArray : null,
+    });
+  };

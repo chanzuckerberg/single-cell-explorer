@@ -627,6 +627,8 @@ export default {
   layoutChoiceAction: embActions.layoutChoiceAction,
   swapLayoutChoicesAction: embActions.swapLayoutChoicesAction,
   setCellSetFromSelection: selnActions.setCellSetFromSelection,
+  setCellSetsFromSelectionAndInvert:
+    selnActions.setCellSetsFromSelectionAndInvert,
   genesetDelete: genesetActions.genesetDelete,
   genesetAddGenes: genesetActions.genesetAddGenes,
   genesetDeleteGenes: genesetActions.genesetDeleteGenes,

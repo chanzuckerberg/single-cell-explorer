@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { AppDispatch, GetState } from "../../reducers";
 import { track } from "../../analytics";
 import { subsetAction, resetSubsetAction } from "../../actions/viewStack";
+import actions from "../../actions";
 import { EVENTS } from "../../analytics/events";
 import * as globals from "../../globals";
 
@@ -12,6 +13,8 @@ interface DispatchProps {
   redo: () => void;
   subset: () => void;
   unsubset: () => void;
+  setCellSetsFromSelectionAndInvert: () => void;
+  computeDiffExp: () => void;
 }
 type Props = DispatchProps;
 
@@ -29,6 +32,22 @@ const performSubset = () => (dispatch: AppDispatch, getState: GetState) => {
   }
 };
 
+const performDiffExp = () => (dispatch: AppDispatch, getState: GetState) => {
+  const state = getState();
+  const { differential } = state;
+  
+  if (differential.celllist1 && differential.celllist2) {
+    dispatch(
+      actions.requestDifferentialExpression(
+        differential.celllist1,
+        differential.celllist2
+      )
+    ).catch((error) => {
+      console.error("Failed to request differential expression:", error);
+    });
+  }
+};
+
 const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
   undo: () => {
     track(EVENTS.EXPLORER_UNDO_BUTTON_CLICKED);
@@ -43,9 +62,20 @@ const mapDispatchToProps = (dispatch: AppDispatch): DispatchProps => ({
     track(EVENTS.EXPLORER_RESET_SUBSET_BUTTON_CLICKED);
     dispatch(resetSubsetAction());
   },
+  setCellSetsFromSelectionAndInvert: () => {
+    dispatch(actions.setCellSetsFromSelectionAndInvert());
+  },
+  computeDiffExp: () => dispatch(performDiffExp()),
 });
 
-const GlobalHotkeys: FC<Props> = ({ undo, redo, subset, unsubset }) => {
+const GlobalHotkeys: FC<Props> = ({
+  undo,
+  redo,
+  subset,
+  unsubset,
+  setCellSetsFromSelectionAndInvert,
+  computeDiffExp,
+}) => {
   const hotkeys = useMemo(
     () => [
       {
@@ -80,8 +110,24 @@ const GlobalHotkeys: FC<Props> = ({ undo, redo, subset, unsubset }) => {
           unsubset();
         },
       },
+      {
+        combo: "SHIFT+I",
+        global: true,
+        label: "Assign selection to pop 1, inverted to pop 2.",
+        onKeyDown: () => {
+          setCellSetsFromSelectionAndInvert();
+        },
+      },
+      {
+        combo: "SHIFT+D",
+        global: true,
+        label: "Compute differential expression.",
+        onKeyDown: () => {
+          computeDiffExp();
+        },
+      },
     ],
-    []
+    [undo, redo, subset, unsubset, setCellSetsFromSelectionAndInvert, computeDiffExp]
   );
   const { handleKeyDown, handleKeyUp } = useHotkeys(hotkeys);
 
