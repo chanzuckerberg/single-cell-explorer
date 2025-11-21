@@ -15,7 +15,7 @@ interface ControlsState {
   loading: boolean;
   error: Error | string | null;
   resettingInterface: boolean;
-  graphInteractionMode: "zoom" | "select";
+  graphInteractionMode: "zoom" | "select" | "lidar";
   scatterplotXXaccessor: string | false;
   scatterplotYYaccessor: string | false;
   scatterplotIsMinimized: boolean;

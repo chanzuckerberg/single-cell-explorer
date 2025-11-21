@@ -6,7 +6,7 @@ import { mat3, vec2 } from "gl-matrix";
 import _regl, { DrawCommand, Regl } from "regl";
 import memoize from "memoize-one";
 import Async, { AsyncProps } from "react-async";
-import { Button, Icon } from "@blueprintjs/core";
+import { Button, Icon, Card, Elevation } from "@blueprintjs/core";
 import Openseadragon, { Viewer } from "openseadragon";
 import "./openseadragon-scalebar";
 import { throttle } from "lodash";
@@ -292,6 +292,15 @@ class Graph extends React.Component<GraphProps, GraphState> {
       updateOverlay: false,
       testImageSrc: null,
       isImageLayerInViewport: true,
+      lidarRadius: 20,
+      lidarFocused: false,
+      lidarCrossfilter: undefined,
+      numCellsInLidar: undefined,
+      renderedMetadata: undefined,
+      screenX: undefined,
+      screenY: undefined,
+      pointX: undefined,
+      pointY: undefined,
     };
 
     this.throttledHandleResize = throttle(
@@ -308,6 +317,11 @@ class Graph extends React.Component<GraphProps, GraphState> {
       this.graphRef.current.addEventListener("wheel", this.disableScroll, {
         passive: false,
       });
+      this.graphRef.current.addEventListener(
+        "wheel",
+        this.handleLidarWheelEvent,
+        { passive: false }
+      );
     }
   }
 
@@ -410,6 +424,10 @@ class Graph extends React.Component<GraphProps, GraphState> {
 
     if (this.graphRef.current) {
       this.graphRef.current.removeEventListener("wheel", this.disableScroll);
+      this.graphRef.current.removeEventListener(
+        "wheel",
+        this.handleLidarWheelEvent
+      );
     }
   }
 
@@ -463,6 +481,478 @@ class Graph extends React.Component<GraphProps, GraphState> {
         updateOverlay: !state.updateOverlay,
       }));
     }
+  };
+
+  handleLidarWheelEvent = (e: WheelEvent): void => {
+    const { graphInteractionMode } = this.props;
+    if (graphInteractionMode === "lidar") {
+      const { lidarRadius } = this.state;
+      e.preventDefault();
+      const offset = e.deltaY < 0 ? -1.5 : 1.5;
+
+      const radius = (lidarRadius ?? 20) + offset;
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarRadius: radius < 10 ? 10 : radius,
+      }));
+    }
+  };
+
+  handleLidarEvent = (e: React.MouseEvent<SVGSVGElement>): void => {
+    if (e.type === "mousemove") {
+      // Only update coordinates on mousemove, don't show overlay
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenX = e.pageX - rect.left;
+      const screenY = e.pageY - rect.top;
+      const point = this.mapScreenToPoint([screenX, screenY]);
+      this.setState((state: GraphState) => ({
+        ...state,
+        screenX,
+        screenY,
+        pointX: point[0],
+        pointY: point[1],
+      }));
+    } else if (e.type === "mousedown") {
+      // Only show overlay on click
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenX = e.pageX - rect.left;
+      const screenY = e.pageY - rect.top;
+      const point = this.mapScreenToPoint([screenX, screenY]);
+      this.setState(
+        (state: GraphState) => ({
+          ...state,
+          screenX,
+          screenY,
+          pointX: point[0],
+          pointY: point[1],
+          lidarFocused: true,
+        }),
+        () => {
+          // Fetch crossfilter after state is updated
+          this.fetchLidarCrossfilter().catch(() => {
+            // Handle error silently
+          });
+        }
+      );
+    } else if (e.type === "mouseleave") {
+      // Clear everything when mouse leaves
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarFocused: false,
+        lidarCrossfilter: undefined,
+        numCellsInLidar: undefined,
+        renderedMetadata: undefined,
+      }));
+    }
+  };
+
+  fetchLidarCrossfilter = async (): Promise<void> => {
+    console.log("=== fetchLidarCrossfilter called ===");
+    const { lidarRadius, pointX, pointY, screenX, screenY } = this.state;
+    const { crossfilter, layoutChoice } = this.props;
+
+    console.log("pointX:", pointX, "pointY:", pointY);
+    console.log("screenX:", screenX, "screenY:", screenY);
+    console.log("lidarRadius:", lidarRadius);
+
+    if (
+      pointX === undefined ||
+      pointY === undefined ||
+      screenX === undefined ||
+      screenY === undefined ||
+      lidarRadius === undefined
+    ) {
+      console.log("Missing required coordinates, clearing state");
+      // Clear state if coordinates are invalid
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarCrossfilter: undefined,
+        numCellsInLidar: undefined,
+        renderedMetadata: undefined,
+      }));
+      return;
+    }
+
+    // Calculate radius in data coordinates
+    const dummyPoint = this.mapScreenToPoint([screenX - lidarRadius, screenY]);
+    const radius = Math.sqrt(
+      (dummyPoint[0] - pointX) ** 2 + (dummyPoint[1] - pointY) ** 2
+    );
+    const selection = {
+      mode: "within-lidar" as const,
+      center: [pointX, pointY] as [number, number],
+      radius,
+    };
+    console.log("Selection:", selection);
+    try {
+      // Fetch color data if not already in state
+      const { colors: colorsProp, annoMatrix } = this.props;
+      const { colorState } = this.state;
+
+      // Fetch color data if needed
+      if (!colorState.colorDf && colorsProp.colorAccessor) {
+        console.log("Fetching color data...");
+        const query = this.createColorByQuery(colorsProp);
+        if (query) {
+          const colorDf = await annoMatrix.fetch(...query, globals.numBinsObsX);
+          const colorTable = this.updateColorTable(
+            colorsProp,
+            colorDf,
+            isSpatialMode(this.props)
+          );
+          console.log("Fetched colorDf:", colorDf);
+          console.log("Created colorTable:", colorTable);
+          this.setState((state: GraphState) => ({
+            ...state,
+            colorState: {
+              ...state.colorState,
+              colorDf,
+              colorTable,
+            },
+          }));
+        }
+      }
+
+      const cf = await crossfilter.select(
+        "emb" as any,
+        layoutChoice.current,
+        selection
+      );
+      console.log("Crossfilter result:", cf);
+      let count = 0;
+      if (cf) {
+        // Count cells in selection - simplified approach
+        const arr = new Float32Array(crossfilter.size());
+        cf.fillByIsSelected(arr, 1, 0);
+        count = Array.from(arr).filter((v) => v === 1).length;
+        console.log("Cell count:", count);
+      }
+
+      // Only update state if we have valid data
+      console.log("Calling renderMetadata with count:", count);
+      const metadata = this.renderMetadata(count, cf);
+      console.log("Rendered metadata:", metadata);
+      this.setState((state: GraphState) => ({
+        ...state,
+        numCellsInLidar: count,
+        lidarCrossfilter: cf,
+        renderedMetadata: metadata,
+      }));
+    } catch (error) {
+      // Clear state on error
+      console.error("Error fetching lidar crossfilter:", error);
+      this.setState((state: GraphState) => ({
+        ...state,
+        lidarCrossfilter: undefined,
+        numCellsInLidar: undefined,
+        renderedMetadata: undefined,
+      }));
+    }
+  };
+
+  renderMetadata = (
+    count?: number,
+    lidarCrossfilter?: any
+  ): React.ReactNode => {
+    const { annoMatrix, colors } = this.props;
+    const {
+      colorState,
+      numCellsInLidar: stateCount,
+      lidarCrossfilter: stateCf,
+    } = this.state;
+    const numCellsInLidar = count ?? stateCount ?? 0;
+    const cf = lidarCrossfilter ?? stateCf;
+
+    console.log("=== renderMetadata called ===");
+    console.log("numCellsInLidar:", numCellsInLidar);
+    console.log("cf:", cf);
+    console.log("colors.colorMode:", colors.colorMode);
+    console.log("colors.colorAccessor:", colors.colorAccessor);
+    console.log("colorState.colorDf:", colorState.colorDf);
+
+    if (!cf || numCellsInLidar === 0) {
+      console.log("Early return: no cf or no cells");
+      return (
+        <Card interactive elevation={Elevation.TWO}>
+          No cells in range.
+        </Card>
+      );
+    }
+
+    // Use colorState from state if available, otherwise we'll need to fetch it
+    // For now, return a placeholder that will trigger async fetch
+    if (colors.colorMode && colors.colorAccessor) {
+      const { colorDf: colorData, colorTable } = colorState;
+      const { colorAccessor, colorMode } = colors;
+      console.log("colorMode:", colorMode);
+      console.log("colorTable:", colorTable);
+
+      // If colorDf is not available, show a simple count for now
+      // The async fetch will populate it
+      if (!colorData) {
+        console.log("colorData not available yet");
+        return (
+          <Card interactive elevation={Elevation.TWO}>
+            {`Hovering over ${numCellsInLidar} cells.`}
+          </Card>
+        );
+      }
+
+      if (colorMode === "color by categorical metadata") {
+        console.log("=== CATEGORICAL METADATA PATH ===");
+        // Show categorical composition with colors and counts
+        const arr = new Array(annoMatrix.nObs);
+        cf.fillByIsSelected(arr, 1, 0);
+        let df;
+        try {
+          df = colorData.withCol("New", arr);
+        } catch (e) {
+          console.error("Failed to add New column to df:", e);
+          return (
+            <Card interactive elevation={Elevation.TWO}>
+              {`Hovering over ${numCellsInLidar} cells.`}
+            </Card>
+          );
+        }
+
+        const dfcol = df.col(colorAccessor);
+        let els: React.ReactNode[] | undefined;
+        let nums: number[] | undefined;
+        if (dfcol) {
+          const { categories, categoryCounts } = dfcol.summarizeCategorical();
+          const groupBy = df.col("New");
+          const occupancyMap = df
+            .col(colorAccessor)
+            .histogramCategoricalBy(groupBy);
+          console.log("occupancyMap:", occupancyMap);
+          console.log("occupancyMap keys:", Array.from(occupancyMap.keys()));
+          const occupancy = occupancyMap.get(1);
+          console.log("occupancy for key 1:", occupancy);
+          console.log(
+            "occupancy keys:",
+            occupancy ? Array.from(occupancy.keys()) : "none"
+          );
+          console.log("categories:", categories);
+          const colorDict: { [key: string]: [number, number, number] } = {};
+
+          // Build color dictionary mapping category values to RGB colors
+          // Use the scale function from colorTable to get colors by category index
+          if (colorTable && colorTable.scale) {
+            const { schema } = annoMatrix;
+            const catSchema = schema.annotations.obsByName[
+              colorAccessor
+            ] as any;
+            const schemaCategories = catSchema?.categories;
+
+            if (schemaCategories && Array.isArray(schemaCategories)) {
+              // Map each category to its color using the scale function
+              schemaCategories.forEach((cat: string, idx: number) => {
+                const rgbColor = colorTable.scale?.(idx);
+                if (
+                  rgbColor &&
+                  typeof rgbColor === "object" &&
+                  "r" in rgbColor
+                ) {
+                  const d3Color = rgbColor as d3.RGBColor;
+                  // Store using both the category value and its string representation
+                  colorDict[String(cat)] = [
+                    d3Color.r / 255,
+                    d3Color.g / 255,
+                    d3Color.b / 255,
+                  ];
+                }
+              });
+            }
+
+            // Fallback: extract from rgb array if scale doesn't work
+            if (Object.keys(colorDict).length === 0 && colorTable.rgb) {
+              const rgbArray = colorTable.rgb;
+              const colorDataArray = colorData.col(colorAccessor).asArray();
+
+              // Extract RGB for each unique category value
+              colorDataArray.forEach((val, index) => {
+                const valStr = String(val);
+                // Only set if not already set (first occurrence wins)
+                if (!colorDict[valStr]) {
+                  const r = rgbArray[3 * index];
+                  const g = rgbArray[3 * index + 1];
+                  const b = rgbArray[3 * index + 2];
+                  if (
+                    r !== undefined &&
+                    g !== undefined &&
+                    b !== undefined &&
+                    Number.isFinite(r) &&
+                    Number.isFinite(g) &&
+                    Number.isFinite(b)
+                  ) {
+                    colorDict[valStr] = [r, g, b];
+                  }
+                }
+              });
+            }
+            console.log("colorDict keys:", Object.keys(colorDict));
+            console.log(
+              "colorDict sample:",
+              Object.entries(colorDict).slice(0, 3)
+            );
+          }
+
+          // Check if occupancy exists and is a Map (matching reference: if (occupancy))
+          if (occupancy && occupancy instanceof Map && occupancy.size > 0) {
+            els = [];
+            nums = [];
+            console.log("Processing categories for display...");
+            const dfcolForColor = colorData.col(colorAccessor);
+            for (const key of categories) {
+              // Try both the key directly and as a string (handles dict-encoded vs plain)
+              const occValue =
+                occupancy.get(key) ?? occupancy.get(String(key)) ?? 0;
+              console.log(
+                `Category ${key} (type: ${typeof key}): occValue=${occValue}`
+              );
+              if (occValue && occValue > 0) {
+                // Try multiple ways to get the color
+                let c = colorDict[String(key)];
+                if (!c && dfcolForColor) {
+                  // Try using internal representation if dict-encoded
+                  try {
+                    const internalRep = dfcolForColor.getInternalRep(
+                      String(key)
+                    );
+                    c = colorDict[String(internalRep)];
+                  } catch (e) {
+                    // Ignore if getInternalRep doesn't exist or fails
+                  }
+                }
+                const color = c
+                  ? `rgb(${Math.round(c[0] * 255)},${Math.round(
+                      c[1] * 255
+                    )},${Math.round(c[2] * 255)})`
+                  : "black";
+                const num = typeof occValue === "number" ? occValue : 0;
+                nums.push(num);
+                const totalCount =
+                  categoryCounts.get(key) ??
+                  categoryCounts.get(String(key)) ??
+                  0;
+                els.push(
+                  <div
+                    key={String(key)}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <strong
+                      style={{
+                        color: `${color}`,
+                      }}
+                    >
+                      {String(key).concat(" ")}
+                    </strong>
+                    <div style={{ paddingLeft: "10px" }}>
+                      {`${num} / ${totalCount}`}
+                    </div>
+                  </div>
+                );
+              }
+            }
+            // Sort by count descending
+            if (els.length > 0 && nums.length > 0) {
+              const dsu = (arr1: React.ReactNode[], arr2: number[]) =>
+                arr1
+                  .map((item, index) => [arr2[index], item])
+                  .sort(([arg1], [arg2]) => (arg2 as number) - (arg1 as number))
+                  .map(([, item]) => item);
+
+              els = dsu(els, nums);
+            }
+          }
+        }
+
+        // Return categorical display if we have elements, otherwise fallback
+        if (els && els.length > 0) {
+          return (
+            <Card interactive elevation={Elevation.TWO}>
+              {els}
+            </Card>
+          );
+        }
+
+        // Fallback: show simple count if categorical display didn't work
+        return (
+          <Card interactive elevation={Elevation.TWO}>
+            {`Hovering over ${numCellsInLidar} cells.`}
+          </Card>
+        );
+      }
+
+      // Continuous metadata - calculate mean and std dev
+      const arr = new Array(annoMatrix.nObs);
+      cf.fillByIsSelected(arr, 1, 0);
+      try {
+        const col = colorData.col(colorAccessor);
+        if (col) {
+          const colArray = col.asArray();
+          const subsetArray: number[] = [];
+          for (let i = 0; i < arr.length; i += 1) {
+            if (arr[i] && typeof colArray[i] === "number") {
+              subsetArray.push(colArray[i] as number);
+            }
+          }
+          let mean = 0;
+          let std = 0;
+          if (subsetArray.length > 0) {
+            const n = subsetArray.length;
+            mean = subsetArray.reduce((a, b) => a + b) / n;
+            std = Math.sqrt(
+              subsetArray.map((x) => (x - mean) ** 2).reduce((a, b) => a + b) /
+                n
+            );
+          }
+          return (
+            <Card interactive elevation={Elevation.TWO}>
+              <div style={{ paddingBottom: "10px" }}>
+                <strong>{colorAccessor.split("//;;//").join("")}</strong>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <div>
+                  <strong>Mean</strong>
+                </div>
+                <div style={{ paddingLeft: "10px" }}>
+                  <strong>Std. Dev.</strong>
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <div>{mean.toFixed(3)}</div>
+                <div style={{ paddingLeft: "10px" }}>{std.toFixed(3)}</div>
+              </div>
+            </Card>
+          );
+        }
+      } catch (error) {
+        // Fall through to default display
+      }
+    }
+
+    return (
+      <Card interactive elevation={Elevation.TWO}>
+        {`Hovering over ${numCellsInLidar ?? 0} cells.`}
+      </Card>
+    );
   };
 
   async handleBrushDragAction(): Promise<void> {
@@ -780,7 +1270,7 @@ class Graph extends React.Component<GraphProps, GraphState> {
       .selectAll(sidePanelAttributeNameChange(`.lasso-group`, isSidePanel))
       .remove();
     // Don't render or recreate toolSVG if currently in zoom mode
-    if (graphInteractionMode !== "select") {
+    if (graphInteractionMode !== "select" && graphInteractionMode !== "lidar") {
       // don't return "change" of state unless we are really changing it!
       const { toolSVG } = this.state;
       if (toolSVG === undefined) return {};
@@ -1382,6 +1872,12 @@ class Graph extends React.Component<GraphProps, GraphState> {
       regl,
       testImageSrc,
       isImageLayerInViewport,
+      lidarFocused,
+      lidarRadius,
+      renderedMetadata,
+      screenX,
+      screenY,
+      numCellsInLidar,
     } = this.state;
 
     const cameraTF = camera?.view()?.slice();
@@ -1453,6 +1949,64 @@ class Graph extends React.Component<GraphProps, GraphState> {
           height={viewport.height}
           pointerEvents={graphInteractionMode === "select" ? "auto" : "none"}
         />
+        <svg
+          id="lidar-layer"
+          className="graph-svg"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            zIndex: 2,
+          }}
+          width={viewport.width}
+          height={viewport.height}
+          pointerEvents={graphInteractionMode === "lidar" ? "auto" : "none"}
+          onMouseDown={this.handleLidarEvent}
+          onMouseMove={this.handleLidarEvent}
+          onMouseLeave={this.handleLidarEvent}
+        />
+        {/* Circular overlay - show when lidar mode is active and mouse is over */}
+        {graphInteractionMode === "lidar" &&
+        screenX !== undefined &&
+        screenY !== undefined &&
+        lidarRadius !== undefined ? (
+          <div
+            style={{
+              position: "absolute",
+              left: `${screenX - lidarRadius}px`,
+              top: `${screenY - lidarRadius}px`,
+              width: `${lidarRadius * 2}px`,
+              height: `${lidarRadius * 2}px`,
+              borderColor: "black",
+              borderWidth: "1px",
+              borderStyle: "solid",
+              borderRadius: "50%",
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
+        {/* Drawer in bottom-left - only show when clicked and has cells */}
+        {graphInteractionMode === "lidar" &&
+        lidarFocused &&
+        renderedMetadata &&
+        numCellsInLidar !== undefined &&
+        numCellsInLidar > 0 ? (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "20px",
+              left: "20px",
+              zIndex: 1000,
+              maxWidth: "400px",
+              maxHeight: "300px",
+              overflow: "auto",
+              backgroundColor: "white",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            {renderedMetadata}
+          </div>
+        ) : null}
         {shouldShowOpenseadragon(this.props) && (
           <div
             id={sidePanelAttributeNameChange(`openseadragon`, isSidePanel)}

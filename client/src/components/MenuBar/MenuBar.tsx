@@ -418,6 +418,24 @@ const MenuBar = ({
                   }}
                 />
               </Tooltip>
+              <Tooltip
+                content="Show metadata information for hovered cells"
+                position="bottom"
+                hoverOpenDelay={globals.tooltipHoverOpenDelay}
+              >
+                <AnchorButton
+                  type="button"
+                  data-testid="mode-lidar"
+                  icon={IconNames.AIRPLANE}
+                  active={graphInteractionMode === "lidar"}
+                  onClick={() => {
+                    dispatch({
+                      type: "change graph interaction mode",
+                      data: "lidar",
+                    });
+                  }}
+                />
+              </Tooltip>
             </ButtonGroup>
             <Subset
               subsetPossible={subsetPossible}
