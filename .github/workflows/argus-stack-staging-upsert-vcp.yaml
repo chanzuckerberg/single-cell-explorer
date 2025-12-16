@@ -39,7 +39,7 @@ jobs:
           appName: vcp-explorer
           envName: staging
           waitForDeploymentSeconds: 300
-          postStackDetails: false
+          postStackDetails: comment
 
   staging_smoke_test:
     needs: staging_stack_upsert
