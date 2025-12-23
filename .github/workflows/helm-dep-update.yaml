@@ -3,7 +3,7 @@ name: HelmDep Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: 52 7 * * *
+    - cron: '52 7 * * *'
 
 jobs:
   helm_dependency_update:
