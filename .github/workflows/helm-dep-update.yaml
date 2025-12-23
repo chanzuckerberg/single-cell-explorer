@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: '52 7 * * *'
 
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
 jobs:
   helm_dependency_update:
     uses: chanzuckerberg/github-actions/.github/workflows/argus-helm-chart-update.yaml@v6
