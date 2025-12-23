@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.20.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.1...v1.20.2) (2025-12-23)
+
+
+### Misc
+
+* Change postStackDetails from false to comment in staging workflow ([#1336](https://github.com/chanzuckerberg/single-cell-explorer/issues/1336)) ([524ce71](https://github.com/chanzuckerberg/single-cell-explorer/commit/524ce7114318e7c38064ca89930804a8374439d9))
+* Change postStackDetails to 'comment' in staging workflow ([#1334](https://github.com/chanzuckerberg/single-cell-explorer/issues/1334)) ([c09a10f](https://github.com/chanzuckerberg/single-cell-explorer/commit/c09a10fb97951b99277fd16fce9f8e055a4857ba))
+* configure helm dependency updater workflow ([#1339](https://github.com/chanzuckerberg/single-cell-explorer/issues/1339)) ([553df5f](https://github.com/chanzuckerberg/single-cell-explorer/commit/553df5fe16e75b81db1cb0e4e2c83ed024b80d23))
+
 ## [1.20.1](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.0...v1.20.1) (2025-11-21)
 
 
