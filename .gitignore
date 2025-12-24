@@ -39,6 +39,7 @@ __pycache__
 data
 tags
 myconfig.yaml
+excellxgene/
 
 # Jekyll
 docs/_site/
