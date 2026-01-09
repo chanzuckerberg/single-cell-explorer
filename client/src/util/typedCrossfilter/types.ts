@@ -26,6 +26,7 @@ export enum SelectionMode {
   Range = "range",
   WithinRect = "within-rect",
   WithinPolygon = "within-polygon",
+  WithinLidar = "within-lidar",
 }
 
 export interface SelectAll {
@@ -62,13 +63,20 @@ export interface SelectWithinPolygon {
   graphId: string;
 }
 
+export interface SelectWithinLidar {
+  mode: SelectionMode.WithinLidar | "within-lidar";
+  center: [number, number];
+  radius: number;
+}
+
 export type CrossfilterSelector =
   | SelectAll
   | SelectNone
   | SelectExact
   | SelectRange
   | SelectWithinRect
-  | SelectWithinPolygon;
+  | SelectWithinPolygon
+  | SelectWithinLidar;
 
 /**
  * Add dimension to crossfilter - see Crossfilter.addDimension()
