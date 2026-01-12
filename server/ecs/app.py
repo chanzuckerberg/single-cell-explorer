@@ -111,6 +111,8 @@ class WSGIServer(Server):
                     [
                         "https://canary-cellxgene.dev.single-cell.czi.technology/",
                         r"^http://localhost:\d+",
+                        r"^https://.*\.dev-vcp\.dev\.czi\.team$",
+                        "https://platform.staging.virtual-cells.czi.technology",
                     ]
                 )
             CORS(app, supports_credentials=True, origins=allowed_origins)
