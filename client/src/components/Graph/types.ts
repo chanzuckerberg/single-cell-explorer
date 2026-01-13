@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import React from "react";
 
 import { ReadonlyMat3, mat3 } from "gl-matrix";
 
@@ -11,6 +12,7 @@ import { Dataframe } from "../../util/dataframe";
 import { type LassoFunctionWithAttributes } from "./setupLasso";
 
 import { AppDispatch, RootState } from "../../reducers";
+import { ColorTable } from "../../util/stateManager/colorHelpers";
 
 export type GraphState = {
   regl: Regl | null;
@@ -33,7 +35,7 @@ export type GraphState = {
   colorState: {
     colors: string[] | null;
     colorDf: Dataframe | null;
-    colorTable: Dataframe | null;
+    colorTable: ColorTable | null;
   };
   pointDilationState: {
     pointDilation: string | null;
@@ -43,6 +45,15 @@ export type GraphState = {
   modelInvTF: ReadonlyMat3;
   testImageSrc: string | null;
   isImageLayerInViewport: boolean;
+  lidarRadius?: number;
+  lidarFocused: boolean;
+  lidarCrossfilter?: any; // Crossfilter type - TODO: properly type this
+  numCellsInLidar?: number;
+  renderedMetadata?: React.ReactNode;
+  screenX?: number;
+  screenY?: number;
+  pointX?: number;
+  pointY?: number;
 };
 
 export interface StateProps {
