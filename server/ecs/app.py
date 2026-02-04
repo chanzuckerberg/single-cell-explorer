@@ -115,6 +115,12 @@ class WSGIServer(Server):
                         "https://platform.staging.virtual-cells.czi.technology",
                     ]
                 )
+            elif os.getenv("DEPLOYMENT_STAGE") in ["Prod", "prod"]:
+                allowed_origins.extend(
+                    [
+                        "https://virtualcellmodels.cziscience.com",
+                    ]
+                )
             CORS(app, supports_credentials=True, origins=allowed_origins)
 
         Talisman(
