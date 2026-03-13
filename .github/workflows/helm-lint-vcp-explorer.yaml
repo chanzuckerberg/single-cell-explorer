@@ -1,4 +1,4 @@
-name: "Lint argus stack helm chart - vcp-explorer"
+name: "Lint argus helm chart - vcp-explorer"
 
 on:
   - pull_request

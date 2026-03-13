@@ -1,4 +1,4 @@
-name: "Lint argus stack helm chart - single-cell-explorer"
+name: "Lint argus helm chart - single-cell-explorer"
 
 on:
   - pull_request
