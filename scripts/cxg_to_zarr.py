@@ -37,9 +37,7 @@ def _coerce(values, col_schema):
         arr = np.asarray(values)
         if arr.dtype.kind in ("i", "u"):
             return pd.Categorical.from_codes(arr, categories=categories)
-        return pd.Categorical(
-            [v.decode() if isinstance(v, bytes) else str(v) for v in arr], categories=categories
-        )
+        return pd.Categorical([v.decode() if isinstance(v, bytes) else str(v) for v in arr], categories=categories)
     s = pd.Series(values)
     if pd.api.types.is_categorical_dtype(s):
         return s.values

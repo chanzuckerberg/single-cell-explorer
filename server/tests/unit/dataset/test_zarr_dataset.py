@@ -50,9 +50,7 @@ class TestZarrDataset(unittest.TestCase):
             {c["name"] for c in sz["annotations"]["obs"]["columns"]},
             {c["name"] for c in sc["annotations"]["obs"]["columns"]},
         )
-        self.assertEqual(
-            sz["annotations"]["obs"]["index"], sc["annotations"]["obs"]["index"]
-        )
+        self.assertEqual(sz["annotations"]["obs"]["index"], sc["annotations"]["obs"]["index"])
 
     def test_x_slice(self):
         var_mask = np.zeros(self.cxg.get_shape()[1], dtype=bool)
@@ -89,12 +87,8 @@ class TestZarrDataset(unittest.TestCase):
         rz = self.zarr.compute_diffexp_ttest(maskA, maskB, top_n=10)
         rc = self.cxg.compute_diffexp_ttest(maskA, maskB, top_n=10)
         # same top gene indices
-        self.assertEqual(
-            [r[0] for r in rz["positive"]], [r[0] for r in rc["positive"]]
-        )
-        np.testing.assert_allclose(
-            [r[1] for r in rz["positive"]], [r[1] for r in rc["positive"]], rtol=1e-4
-        )
+        self.assertEqual([r[0] for r in rz["positive"]], [r[0] for r in rc["positive"]])
+        np.testing.assert_allclose([r[1] for r in rz["positive"]], [r[1] for r in rc["positive"]], rtol=1e-4)
 
 
 if __name__ == "__main__":

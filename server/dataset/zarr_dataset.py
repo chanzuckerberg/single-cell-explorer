@@ -117,7 +117,7 @@ class ZarrDataset(Dataset):
         return ename if ename in self.adata.obsm else f"X_{ename}"
 
     def get_embedding_names(self):
-        names = [k[2:] if k.startswith("X_") else k for k in self.adata.obsm.keys()]
+        names = [k[2:] if k.startswith("X_") else k for k in self.adata.obsm]
         if not names:
             raise DatasetAccessError("zarr matrix missing embeddings")
         return names
@@ -169,9 +169,14 @@ class ZarrDataset(Dataset):
         meanA, varA, nA = mean_var_n(self.get_X_array(mask(rowsA)), dist)
         meanB, varB, nB = mean_var_n(self.get_X_array(mask(rowsB)), dist)
         return diffexp_ttest_from_mean_var(
-            meanA=meanA.astype(dtype), varA=varA.astype(dtype), nA=nA,
-            meanB=meanB.astype(dtype), varB=varB.astype(dtype), nB=nB,
-            top_n=top_n, diffexp_lfc_cutoff=lfc_cutoff,
+            meanA=meanA.astype(dtype),
+            varA=varA.astype(dtype),
+            nA=nA,
+            meanB=meanB.astype(dtype),
+            varB=varB.astype(dtype),
+            nB=nB,
+            top_n=top_n,
+            diffexp_lfc_cutoff=lfc_cutoff,
         )
 
     # ---- metadata: colors, uns, genesets ----------------------------------
