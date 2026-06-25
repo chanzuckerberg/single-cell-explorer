@@ -1,11 +1,18 @@
+import functools
+import os
+import tempfile
+import threading
 from copy import deepcopy
 from typing import Optional
+from urllib.parse import urlparse
 
 import anndata
+import boto3
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 import zarr
+from botocore.exceptions import BotoCoreError, ClientError
 
 from server.common.constants import XApproximateDistribution
 from server.common.errors import DatasetAccessError
@@ -16,6 +23,43 @@ from server.common.utils.type_conversion_utils import (
 )
 from server.compute.diffexp_cxg import diffexp_ttest_from_mean_var, mean_var_n
 from server.dataset.dataset import Dataset
+
+# Serializes concurrent first-time downloads of the same prefix (lru_cache memoizes the
+# *result* but not the compute, so two requests could otherwise download in parallel).
+_S3_DOWNLOAD_LOCK = threading.Lock()
+
+
+@functools.lru_cache(maxsize=8)  # small set of demo datasets per process; not a general cache
+def _materialize_s3_zarr(uri: str) -> str:
+    """Download an s3:// zarr prefix to a local temp dir and return the path.
+
+    ponytail: the pinned fsspec (0.7.4) is too old for zarr's FSStore array reads
+    (FSMap lacks getitems), so we download instead of stream.
+
+    Known limits (acceptable for the demo, not production):
+    - Assumes the dataset is immutable: a path present locally is never re-fetched,
+      so updates to the same s3 uri won't be picked up until the process restarts.
+    - The temp dir is a deliberate cache and is not cleaned up during the process
+      lifetime; the OS reclaims tempdir on reboot.
+    Upgrade path: bump fsspec/s3fs and read via FSStore, or go lazy (out-of-core)."""
+    parsed = urlparse(uri)
+    bucket, prefix = parsed.netloc, parsed.path.lstrip("/").rstrip("/") + "/"
+    local_root = os.path.join(tempfile.gettempdir(), "zarr_cache", bucket, prefix.rstrip("/"))
+    s3 = boto3.client("s3")
+    try:
+        with _S3_DOWNLOAD_LOCK:
+            for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
+                for obj in page.get("Contents", []):
+                    rel = obj["Key"][len(prefix) :]
+                    if not rel:
+                        continue
+                    dest = os.path.join(local_root, rel)
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    if not os.path.exists(dest):
+                        s3.download_file(bucket, obj["Key"], dest)
+    except (BotoCoreError, ClientError) as e:
+        raise DatasetAccessError(f"Failed to fetch zarr dataset from {uri}: {e}") from None
+    return local_root
 
 
 class ZarrDataset(Dataset):
@@ -29,7 +73,10 @@ class ZarrDataset(Dataset):
 
     def __init__(self, data_locator, app_config=None):
         super().__init__(data_locator, app_config)
-        self.adata = anndata.read_zarr(data_locator.uri_or_path)
+        path = data_locator.uri_or_path
+        if str(path).startswith("s3://"):
+            path = _materialize_s3_zarr(str(path))
+        self.adata = anndata.read_zarr(path)
         self.schema = None
         self._obs_index_name = self.adata.obs.index.name or "name_0"
         self._var_index_name = self.adata.var.index.name or "name_0"
