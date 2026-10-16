@@ -25,7 +25,6 @@ import Scatterplot from "../scatterplot/scatterplot";
 import PanelEmbedding from "../PanelEmbedding/PanelEmbedding";
 import BottomPanel from "../BottomPanel/BottomPanel";
 import Autosave from "../Autosave";
-import BYODToast from "../BYODConnectors/BYODToast";
 
 interface StateProps {
   loading: RootState["controls"]["loading"];
@@ -160,9 +159,6 @@ class App extends React.Component<StateProps & { dispatch: AppDispatch }> {
                       <LeftSideBar />
                       <RightSideBar />
                       <BottomPanel />
-                      {process.env.DEPLOYMENT_TYPE !== "vcp-hosted" && (
-                        <BYODToast />
-                      )}
                     </Layout>
                   </>
                 )}
