@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.20.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.2...v1.20.3) (2026-10-20)
+
+
+### Misc
+
+* add helm-lint GitHub Actions workflow ([#1362](https://github.com/chanzuckerberg/single-cell-explorer/issues/1362)) ([dbbcef3](https://github.com/chanzuckerberg/single-cell-explorer/commit/dbbcef32857a44f2f40eaa44b78c27a784e82671))
+* remove AI Workspace promotion from the explorer ([#1390](https://github.com/chanzuckerberg/single-cell-explorer/issues/1390)) ([dc679ef](https://github.com/chanzuckerberg/single-cell-explorer/commit/dc679eff73f14808a52c1b3cddf1ca56ed14f736))
+
 ## [1.20.2](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.1...v1.20.2) (2026-02-05)
 
 
