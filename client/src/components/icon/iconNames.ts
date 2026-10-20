@@ -5,4 +5,3 @@ export const ABOUT = "about";
 export const HELP = "help";
 export const SLACK = "slack";
 export const CHROMATIN_VIEW = "chromatin-view";
-export const SPARKLE = "sparkle";

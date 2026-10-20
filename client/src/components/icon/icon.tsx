@@ -1,28 +1,20 @@
 /* core dependencies */
 import React from "react";
-import { Classes } from "@blueprintjs/core";
+import { Classes, IconSize } from "@blueprintjs/core";
 
 /* app dependencies */
 import { IconName } from "./iconName";
 import { IconSvgPaths } from "./iconSvgPaths";
 
-export enum IconSize {
-  SMALL = 12, // 12px
-  STANDARD = 16, // 16px
-  LARGE = 20, // 20px
-  EXTRA_LARGE = 24 // 24px
-}
-
 interface Props {
   icon: IconName;
-  iconSize?: IconSize;
 }
 
 /**
  * Renders custom icons outside of standard Blueprint icon set. Implementation based on Blueprint's Icon component.
  */
 function Icon(props: Props): JSX.Element | null {
-  const { icon, iconSize = IconSize.STANDARD } = props;
+  const { icon } = props;
 
   /*
    Determine the SVG path configuration for the given icon name.
@@ -39,6 +31,7 @@ function Icon(props: Props): JSX.Element | null {
     ));
   };
 
+  const iconSize = IconSize.STANDARD;
   const viewBox = `0 0 ${iconSize} ${iconSize}`;
   const paths = renderSvgPaths(icon);
 
