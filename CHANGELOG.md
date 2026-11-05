@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.4](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.3...v1.20.4) (2026-11-05)
+
+
+### Misc
+
+* **deps:** remove unused @aws-sdk/client-secrets-manager from client ([#1401](https://github.com/chanzuckerberg/single-cell-explorer/issues/1401)) ([69eee60](https://github.com/chanzuckerberg/single-cell-explorer/commit/69eee606d544fc68ba033dd655287c5bfbf0a88a))
+
 ## [1.20.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.2...v1.20.3) (2026-10-20)
 
 
