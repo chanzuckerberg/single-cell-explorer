@@ -3,6 +3,9 @@ stack:
     ingress:
       annotations:
         external-dns.alpha.kubernetes.io/exclude: "true"
+    gateway:
+      annotations:
+        external-dns.alpha.kubernetes.io/exclude: "true"
   services:
     explorer:
       serviceAccount:
@@ -40,6 +43,26 @@ stack:
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-staging
       ingress:
+        enabled: true
+        annotations:
+          nginx.ingress.kubernetes.io/affinity: cookie
+          nginx.ingress.kubernetes.io/session-cookie-name: argus_sticky_session
+          nginx.ingress.kubernetes.io/session-cookie-max-age: "600"
         rules:
           - host: cellxgene.staging.single-cell.czi.technology
           - host: api.cellxgene.staging.single-cell.czi.technology
+      gateway:
+        enabled: true
+        dnsOwner: ingress
+        paths:
+          - path: /
+            pathType: Prefix
+        sessionAffinity:
+          enabled: true
+        rules:
+          - host: cellxgene.staging.single-cell.czi.technology
+            vanity:
+              enabled: true
+          - host: api.cellxgene.staging.single-cell.czi.technology
+            vanity:
+              enabled: true
