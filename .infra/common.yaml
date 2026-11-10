@@ -31,7 +31,3 @@ stack:
         requests:
           cpu: 2
           memory: 2Gi
-      ingress:
-        paths:
-          - path: /
-            pathType: Prefix

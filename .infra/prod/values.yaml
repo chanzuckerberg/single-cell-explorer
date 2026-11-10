@@ -1,8 +1,5 @@
 stack:
   global:
-    ingress:
-      annotations:
-        external-dns.alpha.kubernetes.io/exclude: "true"
     gateway:
       annotations:
         external-dns.alpha.kubernetes.io/exclude: "true"
@@ -42,18 +39,8 @@ stack:
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-prod
-      ingress:
-        enabled: true
-        annotations:
-          nginx.ingress.kubernetes.io/affinity: cookie
-          nginx.ingress.kubernetes.io/session-cookie-name: argus_sticky_session
-          nginx.ingress.kubernetes.io/session-cookie-max-age: "600"
-        rules:
-          - host: cellxgene.cziscience.com
-          - host: api.cellxgene.cziscience.com
       gateway:
         enabled: true
-        dnsOwner: ingress
         paths:
           - path: /
             pathType: Prefix
