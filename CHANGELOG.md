@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.4](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.3...v1.20.4) (2026-11-13)
+
+
+### Misc
+
+* **deps:** remove unused @aws-sdk/client-secrets-manager from client ([#1401](https://github.com/chanzuckerberg/single-cell-explorer/issues/1401)) ([69eee60](https://github.com/chanzuckerberg/single-cell-explorer/commit/69eee606d544fc68ba033dd655287c5bfbf0a88a))
+* **infra:** add the prod Envoy Gateway routes alongside nginx (CCIE-7399) ([#1415](https://github.com/chanzuckerberg/single-cell-explorer/issues/1415)) ([149daf1](https://github.com/chanzuckerberg/single-cell-explorer/commit/149daf1ee6127c0656924a21ec94d8c38c516d4b))
+* **infra:** add the staging Envoy Gateway routes alongside nginx (CCIE-7399) ([#1413](https://github.com/chanzuckerberg/single-cell-explorer/issues/1413)) ([96b9250](https://github.com/chanzuckerberg/single-cell-explorer/commit/96b9250011f62b8bf143d77002ee3e17fdc57f30))
+* **infra:** remove the prod nginx Ingress after the gateway cutover (CCIE-7399) ([#1416](https://github.com/chanzuckerberg/single-cell-explorer/issues/1416)) ([4706d24](https://github.com/chanzuckerberg/single-cell-explorer/commit/4706d2421866617c609f69c8bccec72e06ead4a8))
+* **infra:** remove the staging nginx Ingress after the gateway cutover (CCIE-7399) ([#1414](https://github.com/chanzuckerberg/single-cell-explorer/issues/1414)) ([5de0b02](https://github.com/chanzuckerberg/single-cell-explorer/commit/5de0b029265fa9f475a623fc82181ee65fb96216))
+* **infra:** route rdev through Envoy Gateway (CCIE-7399) ([#1412](https://github.com/chanzuckerberg/single-cell-explorer/issues/1412)) ([d89fa47](https://github.com/chanzuckerberg/single-cell-explorer/commit/d89fa47966e61b31eeff9af6914f95fd5f9096fe))
+
 ## [1.20.3](https://github.com/chanzuckerberg/single-cell-explorer/compare/v1.20.2...v1.20.3) (2026-10-20)
 
 
