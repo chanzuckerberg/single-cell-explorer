@@ -29,7 +29,7 @@ function handleMenuClick() {
   track(EVENTS.EXPLORER_MENU_BUTTON_CLICKED);
 }
 
-const CENSUS_DOCS_LINK = "https://cellxgene-census.readthedocs.io/en/latest";
+const CENSUS_DOCS_LINK = "https://cellxgene-census.readthedocs.io/en/lates";
 
 interface HeaderProps {
   tosURL?: string;
