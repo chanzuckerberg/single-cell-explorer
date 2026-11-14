@@ -14,9 +14,15 @@ class DataLoader(object):
         if not self.location.exists():
             raise DatasetAccessError("Dataset does not exist.", HTTPStatus.NOT_FOUND)
 
-        from server.dataset.cxg_dataset import CxgDataset
+        # ponytail: suffix dispatch; a registry only if a 3rd backend appears.
+        if str(self.location.uri_or_path).rstrip("/").endswith(".zarr"):
+            from server.dataset.zarr_dataset import ZarrDataset
 
-        self.matrix_type = CxgDataset
+            self.matrix_type = ZarrDataset
+        else:
+            from server.dataset.cxg_dataset import CxgDataset
+
+            self.matrix_type = CxgDataset
 
     def __resolve_dataset_config(self):
         dataset_config = self.app_config.default_dataset
