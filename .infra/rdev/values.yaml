@@ -4,6 +4,13 @@ stack:
       image:
         tag: sha-14fc6b5
       replicaCount: 1
+      gateway:
+        enabled: true
+        paths:
+          - path: /
+            pathType: Prefix
+        sessionAffinity:
+          enabled: true
       env:
         # env vars common to all deployment stages
         - name: AWS_REGION

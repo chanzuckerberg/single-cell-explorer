@@ -1,6 +1,6 @@
 stack:
   global:
-    ingress:
+    gateway:
       annotations:
         external-dns.alpha.kubernetes.io/exclude: "true"
   services:
@@ -39,7 +39,17 @@ stack:
           value: hosted-cellxgene-$(__ARGUS_DEPLOYMENT_STAGE)
         - name: BYOD_WORKFLOWS_BUCKET_PATH
           value: byod-workflows-staging
-      ingress:
+      gateway:
+        enabled: true
+        paths:
+          - path: /
+            pathType: Prefix
+        sessionAffinity:
+          enabled: true
         rules:
           - host: cellxgene.staging.single-cell.czi.technology
+            vanity:
+              enabled: true
           - host: api.cellxgene.staging.single-cell.czi.technology
+            vanity:
+              enabled: true
