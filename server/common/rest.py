@@ -307,7 +307,7 @@ def dataset_metadata_get(app_config, url_dataroot, dataset_id):
 def s3_uri_get(app_config, url_dataroot_id, dataset_id):
     # This is a hack to work around the fact that the flask routes
     # need to hardcode the key name prefix in the blueprint.
-    if not dataset_id.endswith(".cxg"):
+    if not dataset_id.endswith(".cxg") and not dataset_id.endswith(".zarr"):  # ponytail: .zarr POC
         if url_dataroot_id == "w":
             dataset_id = f"{CUSTOM_CXG_KEY_NAME}/{dataset_id}.cxg"
         else:
